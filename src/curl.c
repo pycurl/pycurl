@@ -414,6 +414,7 @@ do_setopt(CurlObject *self, PyObject *args)
     FILE *fp;
     int res = -1;
     struct curl_slist **slist;
+    struct curl_slist *nlist;
     int len;
     char *str;
     int i;
@@ -465,11 +466,10 @@ do_setopt(CurlObject *self, PyObject *args)
             self->options[opt_masked] = NULL;
         }
         /* Allocate memory to hold the string */
-        buf = (char *)malloc((strlen(stringdata)*sizeof(char))+sizeof(char));
+        buf = strdup(stringdata);
         if (buf == NULL) {
             return PyErr_NoMemory();
         }
-        strcpy(buf, stringdata);
         /* Call setopt */
         res = curl_easy_setopt(self->handle, option, buf);
         /* Check for errors */
@@ -537,7 +537,7 @@ do_setopt(CurlObject *self, PyObject *args)
             return Py_None;
         }
         else {
-              CURLERROR();
+            CURLERROR();
         }
     }
 
@@ -567,29 +567,33 @@ do_setopt(CurlObject *self, PyObject *args)
             return NULL;
         }
 
+        len = PyList_Size(obj);
+        if (len == 0) {
+            /* Empty list - do nothing */
+            Py_INCREF(Py_None);
+            return Py_None;
+        }
+
         /* Handle HTTPPOST different since we construct a HttpPost form struct */
         if (option == CURLOPT_HTTPPOST) {
-            if (self->httppost != NULL) {
-                curl_formfree(self->httppost);
-                self->httppost = NULL;
-            }
-            len = PyList_Size(obj);
+            /* Free previously allocated httppost */
+            curl_formfree(self->httppost);
+            self->httppost = NULL;
+
             last = NULL;
             for (i = 0; i < len; i++) {
                 listitem = PyList_GetItem(obj, i);
                 if (!PyString_Check(listitem)) {
-                    PyErr_SetString(PyExc_TypeError, "list items must be string objects");
                     curl_formfree(self->httppost);
+                    self->httppost = NULL;
+                    PyErr_SetString(PyExc_TypeError, "list items must be string objects");
                     return NULL;
                 }
                 str = PyString_AsString(listitem);
-                buf = (char *)malloc((sizeof(char)*strlen(str)) + sizeof(char));
-                if (buf == NULL)
-                    return PyErr_NoMemory();
-                strcpy(buf, str);
-                res = curl_formparse(buf, &self->httppost, &last);
+                res = curl_formparse(str, &self->httppost, &last);
                 if (res != CURLE_OK) {
                     curl_formfree(self->httppost);
+                    self->httppost = NULL;
                     CURLERROR();
                 }
             }
@@ -601,6 +605,7 @@ do_setopt(CurlObject *self, PyObject *args)
             }
             else {
                 curl_formfree(self->httppost);
+                self->httppost = NULL;
                 CURLERROR();
             }
         }
@@ -608,26 +613,28 @@ do_setopt(CurlObject *self, PyObject *args)
         /* Just to be sure we do not bug off here */
         assert(slist != NULL);
 
+        /* Free previously allocated list */
+        curl_slist_free_all(*slist);
+        *slist = NULL;
+
         /* Handle regular list operations on the other options */
-        if (*slist != NULL) {
-            /* Free previously allocated list */
-            curl_slist_free_all(*slist);
-            *slist = NULL;
-        }
-        len = PyList_Size(obj);
         for (i = 0; i < len; i++) {
             listitem = PyList_GetItem(obj, i);
             if (!PyString_Check(listitem)) {
                 curl_slist_free_all(*slist);
+                *slist = NULL;
                 PyErr_SetString(PyExc_TypeError, "list items must be string objects");
                 return NULL;
             }
+            /* INFO: curl_slist_append() internally does strdup() the data */
             str = PyString_AsString(listitem);
-            buf = (char *)malloc((sizeof(char)*strlen(str)) + sizeof(char));
-            if (buf == NULL)
+            nlist = curl_slist_append(*slist, str);
+            if (nlist == NULL || nlist->data == NULL) {
+                curl_slist_free_all(*slist);
+                *slist = NULL;
                 return PyErr_NoMemory();
-            strcpy(buf, str);
-            *slist = curl_slist_append(*slist, buf);
+            }
+            *slist = nlist;
         }
         res = curl_easy_setopt(self->handle, option, *slist);
         /* Check for errors */
@@ -637,6 +644,7 @@ do_setopt(CurlObject *self, PyObject *args)
         }
         else {
             curl_slist_free_all(*slist);
+            *slist = NULL;
             CURLERROR();
         }
     }
