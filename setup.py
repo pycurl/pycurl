@@ -48,7 +48,7 @@ else:
 ###############################################################################
 
 setup (name="pycurl",
-       version="7.9.7",
+       version="7.9.8",
        description="PycURL -- cURL library module for Python",
        author="Kjetil Jacobsen",
        author_email="kjetilja@cs.uit.no",
