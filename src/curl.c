@@ -106,8 +106,8 @@ typedef struct {
     char error[CURL_ERROR_SIZE+1];
 } CurlObject;
 
-static PyTypeObject* p_Curl_Type;
-static PyTypeObject* p_CurlMulti_Type;
+static PyTypeObject *p_Curl_Type;
+static PyTypeObject *p_CurlMulti_Type;
 
 /* Throw exception based on return value `res' and `self->error' */
 #define CURLERROR_RETVAL() do {\
@@ -121,7 +121,7 @@ static PyTypeObject* p_CurlMulti_Type;
 /* Throw exception with custom message */
 #define CURLERROR_MSG(msg) do {\
     PyObject *v; \
-    v = Py_BuildValue("(is)", (int) (res), msg); \
+    v = Py_BuildValue("(is)", (int) (res), (msg)); \
     PyErr_SetObject(ErrorObject, v); \
     Py_DECREF(v); \
     return NULL; \
@@ -866,17 +866,68 @@ debug_callback(CURL *curlobj,
 }
 
 
-/* --------------- setopt/getinfo --------------- */
+/* --------------- unsetopt/setopt/getinfo --------------- */
+
+static PyObject *
+util_curl_unsetopt(CurlObject *self, int option)
+{
+    int opt_masked = -1;
+    int res = -1;
+
+    /* FIXME: implement more options */
+    switch (option)
+    {
+    case CURLOPT_USERPWD:
+    case CURLOPT_PROXYUSERPWD:
+        opt_masked = PYCURL_OPT(option);
+        res = curl_easy_setopt(self->handle, (CURLoption)option, (char *)0);
+        break;
+    default:
+        PyErr_SetString(PyExc_TypeError, "unsetopt() is not supported for this option");
+        return NULL;
+    }
+
+    /* Check for errors */
+    if (res != CURLE_OK) {
+        CURLERROR_RETVAL();
+    }
+
+    if (opt_masked >= 0 && self->options[opt_masked] != NULL) {
+        free(self->options[opt_masked]);
+        self->options[opt_masked] = NULL;
+    }
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+
+static PyObject *
+do_curl_unsetopt(CurlObject *self, PyObject *args)
+{
+    int option;
+
+    /* Check that we have a valid curl handle for the object */
+    if (self->handle == NULL) {
+        PyErr_SetString(ErrorObject, "cannot invoke unsetopt, no curl handle");
+        return NULL;
+    }
+    if (get_thread_state(self) != NULL) {
+        PyErr_SetString(ErrorObject, "cannot invoke unsetopt, perform() is running");
+        return NULL;
+    }
+    if (!PyArg_ParseTuple(args, "i:unsetopt", &option)) {
+        return NULL;
+    }
+    return util_curl_unsetopt(self, option);
+}
+
 
 static PyObject *
 do_curl_setopt(CurlObject *self, PyObject *args)
 {
     int option, opt_masked;
-    char *stringdata;
-    long longdata;
-    char *buf;
     PyObject *obj;
-    FILE *fp;
     int res;
     int len;
     char *str;
@@ -892,8 +943,22 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         return NULL;
     }
 
+    if (!PyArg_ParseTuple(args, "iO:setopt", &option, &obj)) {
+        return NULL;
+    }
+
+#if 0 /* XXX - should we ??? */
+    /* Handle the case of None */
+    if (obj == Py_None) {
+        return util_curl_unsetopt(self, option);
+    }
+#endif
+
     /* Handle the case of string arguments */
-    if (PyArg_ParseTuple(args, "is:setopt", &option, &stringdata)) {
+    if (PyString_Check(obj)) {
+        const char *stringdata = PyString_AsString(obj);
+        char *buf;
+
         /* Check that the option specified a string as well as the input */
         if (!(option == CURLOPT_URL ||
               option == CURLOPT_PROXY ||
@@ -949,10 +1014,10 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         return Py_None;
     }
 
-    PyErr_Clear();
-
     /* Handle the case of integer arguments */
-    if (PyArg_ParseTuple(args, "il:setopt", &option, &longdata)) {
+    if (PyInt_Check(obj)) {
+        long longdata = PyInt_AsLong(obj);
+
         /* Check that option is integer as well as the input data */
         if (option <= 0 || (option >= CURLOPTTYPE_OBJECTPOINT && option != CURLOPT_FILETIME)) {
             PyErr_SetString(PyExc_TypeError, "integers are not supported for this option");
@@ -967,10 +1032,10 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         return Py_None;
     }
 
-    PyErr_Clear();
-
     /* Handle the case of file objects */
-    if (PyArg_ParseTuple(args, "iO!:setopt", &option, &PyFile_Type, &obj)) {
+    if (PyFile_Check(obj)) {
+        FILE *fp;
+
         /* Ensure the option specified a file as well as the input */
         if (!(option == CURLOPT_WRITEDATA ||
               option == CURLOPT_READDATA ||
@@ -1017,10 +1082,8 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         return Py_None;
     }
 
-    PyErr_Clear();
-
     /* Handle the case of list objects */
-    if (PyArg_ParseTuple(args, "iO!:setopt", &option, &PyList_Type, &obj)) {
+    if (PyList_Check(obj)) {
         struct curl_slist **slist = NULL;
 
         switch (option) {
@@ -1129,13 +1192,8 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         return Py_None;
     }
 
-    PyErr_Clear();
-
     /* Handle the case of function objects for callbacks */
-    if (PyArg_ParseTuple(args, "iO!:setopt", &option, &PyFunction_Type, &obj) ||
-        PyArg_ParseTuple(args, "iO!:setopt", &option, &PyCFunction_Type, &obj) ||
-        PyArg_ParseTuple(args, "iO!:setopt", &option, &PyMethod_Type, &obj))
-      {
+    if (PyFunction_Check(obj) || PyCFunction_Check(obj) || PyMethod_Check(obj)) {
         /* We use function types here to make sure that our callback
          * definitions exactly match the <curl/curl.h> interface.
          */
@@ -1145,8 +1203,6 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         const curl_progress_callback pro_cb = progress_callback;
         const curl_passwd_callback pwd_cb = password_callback;
         const curl_debug_callback d_cb = debug_callback;
-
-        PyErr_Clear();
 
         switch(option) {
         case CURLOPT_WRITEFUNCTION:
@@ -1205,8 +1261,6 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         Py_INCREF(Py_None);
         return Py_None;
     }
-
-    PyErr_Clear();
 
     /* Failed to match any of the function signatures -- return error */
     PyErr_SetString(PyExc_TypeError, "invalid arguments to setopt");
@@ -1791,12 +1845,14 @@ static char co_close_doc [] = "close() -> None.  Close handle and end curl sessi
 static char co_copy_doc [] = "copy() -> New curl object. FIXME\n";
 #endif
 static char co_errstr_doc [] = "errstr() -> String.  Return the internal libcurl error buffer string.\n";
-static char co_perform_doc [] = "perform() -> None.  Perform a file transfer.  Throws pycurl.error exception upon failure.\n";
-static char co_setopt_doc [] = "setopt(option, parameter) -> None.  Set curl session options.  Throws pycurl.error exception upon failure.\n";
 static char co_getinfo_doc [] = "getinfo(info) -> Res.  Extract and return information from a curl session.  Throws pycurl.error exception upon failure.\n";
+static char co_perform_doc [] = "perform() -> None.  Perform a file transfer.  Throws pycurl.error exception upon failure.\n";
+static char co_setopt_doc [] = "setopt(option, parameter) -> None.  Set curl session option.  Throws pycurl.error exception upon failure.\n";
+static char co_unsetopt_doc [] = "unsetopt(option) -> None.  Reset curl session option to default value.  Throws pycurl.error exception upon failure.\n";
+
 static char co_multi_fdset_doc [] = "fdset() -> Tuple.  Returns a tuple of three lists that can be passed to the select.select() method .\n";
-static char co_multi_select_doc [] = "select([timeout]) -> Int.  Returns result from doing a select() on the curl multi file descriptor with the given timeout.\n";
 static char co_multi_info_read_doc [] = "info_read([max_objects]) -> Tuple. Returns a tuple (number of queued handles, [curl objects]).\n";
+static char co_multi_select_doc [] = "select([timeout]) -> Int.  Returns result from doing a select() on the curl multi file descriptor with the given timeout.\n";
 
 static PyMethodDef curlobject_methods[] = {
     {"cleanup", (PyCFunction)do_curl_close, METH_VARARGS, co_cleanup_doc},
@@ -1805,21 +1861,22 @@ static PyMethodDef curlobject_methods[] = {
     {"copy", (PyCFunction)do_curl_copy, METH_VARARGS, co_copy_doc},
 #endif
     {"errstr", (PyCFunction)do_curl_errstr, METH_VARARGS, co_errstr_doc},
+    {"getinfo", (PyCFunction)do_curl_getinfo, METH_VARARGS, co_getinfo_doc},
     {"perform", (PyCFunction)do_curl_perform, METH_VARARGS, co_perform_doc},
     {"setopt", (PyCFunction)do_curl_setopt, METH_VARARGS, co_setopt_doc},
-    {"getinfo", (PyCFunction)do_curl_getinfo, METH_VARARGS, co_getinfo_doc},
+    {"unsetopt", (PyCFunction)do_curl_unsetopt, METH_VARARGS, co_unsetopt_doc},
     {NULL, NULL, 0, NULL}
 };
 
 static PyMethodDef curlmultiobject_methods[] = {
+    {"add_handle", (PyCFunction)do_multi_add_handle, METH_VARARGS, NULL},
     {"cleanup", (PyCFunction)do_multi_close, METH_VARARGS, NULL},
     {"close", (PyCFunction)do_multi_close, METH_VARARGS, NULL},
-    {"perform", (PyCFunction)do_multi_perform, METH_VARARGS, NULL},
-    {"add_handle", (PyCFunction)do_multi_add_handle, METH_VARARGS, NULL},
-    {"remove_handle", (PyCFunction)do_multi_remove_handle, METH_VARARGS, NULL},
     {"fdset", (PyCFunction)do_multi_fdset, METH_VARARGS, co_multi_fdset_doc},
-    {"select", (PyCFunction)do_multi_select, METH_VARARGS, co_multi_select_doc},
     {"info_read", (PyCFunction)do_multi_info_read, METH_VARARGS, co_multi_info_read_doc},
+    {"perform", (PyCFunction)do_multi_perform, METH_VARARGS, NULL},
+    {"remove_handle", (PyCFunction)do_multi_remove_handle, METH_VARARGS, NULL},
+    {"select", (PyCFunction)do_multi_select, METH_VARARGS, co_multi_select_doc},
     {NULL, NULL, 0, NULL}
 };
 
