@@ -24,7 +24,7 @@ install install_lib:
 
 clean:
 	-rm -rf build dist
-	-rm -f *.pyc *.pyo */*.pyc */*.pyo
+	-rm -f *.pyc *.pyo */*.pyc */*.pyo */*/*.pyc */*/*.pyo
 	-rm -f MANIFEST
 	cd src && $(MAKE) clean
 
