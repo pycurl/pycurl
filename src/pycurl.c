@@ -1625,7 +1625,7 @@ do_multi_add_handle(CurlMultiObject *self, PyObject *args)
     }
     assert(obj->multi_stack == NULL);
     res = curl_multi_add_handle(self->multi_handle, obj->handle);
-    if (res != CURLM_CALL_MULTI_PERFORM) {
+    if (res != CURLM_OK) {
         CURLERROR_MSG("curl_multi_add_handle() failed due to internal errors");
     }
     obj->multi_stack = self;
