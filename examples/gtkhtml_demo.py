@@ -23,11 +23,10 @@ NUM_THREADS = 4
 
 # About
 def about(button):
-    GnomeAbout('GtkHTML Test with PycURL', '',
+    GnomeAbout('GtkHTML and PycURL Demo', '',
                 'License GPL2',
                 ['Original code by Matt Wilson, modified by Kjetil Jacobsen'],
-                ('This is a useless application demonstrating the '
-                'GtkHTML widget with Python and PycURL.')).show()
+                ('This is an application demonstrating the GtkHTML widget with Python and PycURL.')).show()
 
 # HTML template for reporting internal errors
 internal_error = """
@@ -42,6 +41,22 @@ internal_error = """
 </html>
 """
 
+# HTML template for directory listings
+directory_listing = """
+<html>
+<head>
+<title>Directory listing of %s</title>
+</head>
+<body>
+<h1>Directory listing of %s</h1>
+<hr>
+<a href="%s">Parent directory</a><p>
+"""
+
+# Images used for directory listings (stolen from mc)
+I_DIRECTORY = '<img src="file:///tmp/i-directory.png" align=middle>'
+I_REGULAR = '<img src="file:///tmp/i-regular.png" align=middle>'
+
 
 # Worker threads downloads objects and passes them to the renderer
 class WorkerThread(threading.Thread):
@@ -55,14 +70,36 @@ class WorkerThread(threading.Thread):
         curl = pycurl.Curl()
         curl.setopt(pycurl.FOLLOWLOCATION, 1)
         curl.setopt(pycurl.MAXREDIRS, 5)
-        curl.setopt(pycurl.NOSIGNAL, 1)
-        curl.setopt(pycurl.HTTPHEADER, ["User-Agent: GtkHTML/PycURL demo browser"])
+#        curl.setopt(pycurl.NOSIGNAL, 1)
+        curl.setopt(pycurl.HTTPHEADER, ["User-Agent: GtkHTML/PycURL demo"])
         while 1:
             url, handle = self.queue.get()
             if url == None:
                 curl.close()
                 raise SystemExit
             b = cStringIO.StringIO()
+            if url[:5] == 'file:':
+                path = os.path.normpath(url[5:])
+                if path[:2] == '//':  path = path[1:]
+                if os.path.isdir(path):
+                    try:
+                        contents = os.listdir(path)
+                    except OSError, msg:
+                        b.write(internal_error % msg[1])
+                        self.render.append((b, handle))
+                        continue
+                    contents.sort()
+                    parentdir = os.path.normpath(os.path.join(path, '..'))
+                    b.write(directory_listing % (path, path, 'file://' + parentdir))
+                    for f in contents:
+                        target = 'file://%s/%s' % (path, f)
+                        if os.path.isdir(os.path.join(path, f)):
+                            b.write('%s<a href="%s">%s</a><br>' % (I_DIRECTORY, target, f))
+                        else:
+                            b.write('%s<a href="%s">%s</a><br>' % (I_REGULAR, target, f))
+                    b.write('<hr></body></html>')
+                    self.render.append((b, handle))
+                    continue
             curl.setopt(pycurl.WRITEFUNCTION, b.write)
             curl.setopt(pycurl.URL, url)
             try:
@@ -163,7 +200,6 @@ class HtmlWindow(GtkHTML):
         self.load_url(html, url)
 
 
-
 # Setup windows and menus
 html = HtmlWindow()
 
@@ -184,7 +220,7 @@ toolbar = [
     UIINFO_ITEM_STOCK('Reload', 'Reload current page', html.do_reload, STOCK_MENU_REFRESH)
 ]
 
-win = GnomeApp("html_demo", "Python GtkHTML Test")
+win = GnomeApp("html_demo", "GtkHTML and PycURL Demo")
 win.set_wmclass("gtk_html_test", "GtkHTMLTest")
 win.connect('delete_event', html.mainquit)
 
@@ -220,9 +256,10 @@ win.create_toolbar(toolbar)
 
 html.statusbar = status
 html.load_empty()
-
 win.show_all()
 
 threads_enter()
+if len(sys.argv) > 1:
+    html.load_url(html, sys.argv[1])
 mainloop()
 threads_leave()
