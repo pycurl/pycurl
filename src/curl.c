@@ -1324,6 +1324,7 @@ do_multi_new(PyObject *dummy, PyObject *args)
     return self;
 }
 
+
 static void
 util_multi_close(CurlMultiObject *self)
 {
@@ -1335,6 +1336,7 @@ util_multi_close(CurlMultiObject *self)
         curl_multi_cleanup(multi_handle);
     }
 }
+
 
 static void
 do_multi_dealloc(CurlMultiObject *self)
@@ -1360,6 +1362,7 @@ do_multi_dealloc(CurlMultiObject *self)
     Py_TRASHCAN_SAFE_END(self)
 #endif
 }
+
 
 static PyObject *
 do_multi_close(CurlMultiObject *self, PyObject *args)
