@@ -30,4 +30,7 @@ settings in setup.py defined by the following variables:
 	W32_LIB - Path to the libcurl 'lib' directory
 	W32_EXTRA_OBJ - Path to libcurl library file itself
 
-Then run 'python setup.py install' as usual.
+Then run 'python setup.py install' as usual.  Note that you need to
+have Visual C/C++ installed to install.  If someone can provide the
+necessary modifications to setup.py to build with other compilers
+(e.g. Cygwin or Borland/Inprise) I'd be happy to include that.
