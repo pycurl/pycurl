@@ -1,12 +1,18 @@
+# $Id$
+
+## PycURL module
 import pycurl
+
 
 def body(buf):
     print buf
     return len(buf)
 
+
 def header(buf):
     print buf
     return len(buf)
+
 
 c = pycurl.init()
 c.setopt(pycurl.URL, 'http://www.python.org/')

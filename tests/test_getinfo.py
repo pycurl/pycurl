@@ -1,12 +1,16 @@
+# $Id$
+
+## PycURL module
 import pycurl
+
 
 def progress(download_t, download_d, upload_t, upload_d):
     print 'total to download %d bytes, have %d bytes so far' % (download_t, download_d)
     return 0 # Anything else indicates an error
 
+
 f = open('body', 'w')
 h = open('header', 'w')
-
 c = pycurl.init()
 c.setopt(pycurl.URL, 'http://curl.haxx.se')
 c.setopt(pycurl.FILE, f)
