@@ -1,1 +1,1 @@
-* Read function callbacks are not supported
+* Test with gtk and threads to see how that works
