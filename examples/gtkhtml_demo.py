@@ -48,6 +48,7 @@ class WorkerThread(threading.Thread):
         curl = pycurl.Curl()
         curl.setopt(pycurl.FOLLOWLOCATION, 1)
         curl.setopt(pycurl.MAXREDIRS, 5)
+        curl.setopt(pycurl.HTTPHEADER, ["User-Agent: GtkHTML/PycURL demo browser"])
         while 1:
             url, handle = self.queue.get()
             if url == None:
