@@ -39,8 +39,6 @@
 #undef NDEBUG
 #include <assert.h>
 
-#define SUPPORTED_LIBCURL_VERSION 0x070b02
-
 /* Ensure we have updated versions */
 #if !defined(PY_VERSION_HEX) || (PY_VERSION_HEX < 0x02020000)
 #  error "Need Python version 2.2 or greater to compile pycurl."
