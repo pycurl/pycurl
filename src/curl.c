@@ -280,12 +280,12 @@ do_curl_new(PyObject *dummy, PyObject *args)
     memset(self->error, 0, sizeof(self->error));
 
     /* Enable NOPROGRESS by default, i.e. no progress output */
-    res = curl_easy_setopt(self->handle, CURLOPT_NOPROGRESS, 1);
+    res = curl_easy_setopt(self->handle, CURLOPT_NOPROGRESS, (long)1);
     if (res != CURLE_OK)
         goto error;
 
     /* Disable VERBOSE by default, i.e. no verbose output */
-    res = curl_easy_setopt(self->handle, CURLOPT_VERBOSE, 0);
+    res = curl_easy_setopt(self->handle, CURLOPT_VERBOSE, (long)0);
     if (res != CURLE_OK)
         goto error;
 
@@ -455,14 +455,11 @@ util_curl_close(CurlObject *self)
     /* Decref multi stuff which uses this handle */
     util_curl_xdecref(self, 2, handle);
 
-    /* Cleanup curl handle */
-    if (handle != NULL) {
-        /* Must be done without the gil */
-        Py_BEGIN_ALLOW_THREADS
-        curl_easy_cleanup(handle);
-        Py_END_ALLOW_THREADS
-        handle = NULL;
-    }
+    /* Cleanup curl handle - must be done without the gil */
+    Py_BEGIN_ALLOW_THREADS
+    curl_easy_cleanup(handle);
+    Py_END_ALLOW_THREADS
+    handle = NULL;
 
     /* Decref callbacks and file handles */
     util_curl_xdecref(self, 4 | 8, handle);
@@ -793,7 +790,6 @@ password_callback(void *client, const char *prompt, char* buffer, int buflen)
     PyObject *result;
     CurlObject *self;
     PyThreadState *tmp_state;
-    char *buf;
     int ret = 1;       /* assume error */
 
     self = (CurlObject *)client;
@@ -815,7 +811,7 @@ password_callback(void *client, const char *prompt, char* buffer, int buflen)
             PyErr_Print();
         }
         else {
-            buf = PyString_AsString(result);
+            char *buf = PyString_AsString(result);
             if ((int)strlen(buf) > buflen) {
                 PyErr_SetString(ErrorObject, "string from PASSWDFUNCTION callback is too long");
                 PyErr_Print();
@@ -871,20 +867,29 @@ debug_callback(CURL *curlobj,
 static PyObject *
 util_curl_unsetopt(CurlObject *self, int option)
 {
+    int res;
     int opt_masked = -1;
-    int res = -1;
+
+#define SETOPT2(o,x) \
+    if ((res = curl_easy_setopt(self->handle, (o), (x))) != CURLE_OK) goto error
+#define SETOPT(x)   SETOPT2((CURLoption)option, (x))
 
     /* FIXME: implement more options. Have to check lib/url.c in the
      *   libcurl source code to see if it's actually safe to simply
      *   unset the option. */
     switch (option)
     {
+    case CURLOPT_HTTPPOST:
+        SETOPT((void *) 0);
+        curl_formfree(self->httppost);
+        self->httppost = NULL;
+        /* FIXME: what about data->set.httpreq ?? */
+        break;
     case CURLOPT_INFILESIZE:
-        res = curl_easy_setopt(self->handle, (CURLoption)option, (long)-1);
+        SETOPT((long) -1);
         break;
     case CURLOPT_WRITEHEADER:
-        res = curl_easy_setopt(self->handle, (CURLoption)option, (void *)0);
-        if (res != CURLE_OK) goto error;
+        SETOPT((void *) 0);
         ZAP(self->writeheader);
         self->writeheader_set = 0;
         break;
@@ -899,20 +904,15 @@ util_curl_unsetopt(CurlObject *self, int option)
     case CURLOPT_RANDOM_FILE:
     case CURLOPT_SSL_CIPHER_LIST:
     case CURLOPT_USERPWD:
+        SETOPT((char *) 0);
         opt_masked = PYCURL_OPT(option);
-        res = curl_easy_setopt(self->handle, (CURLoption)option, (char *)0);
         break;
+
     /* info: we explicitly list unsupported options here */
     case CURLOPT_COOKIEFILE:
     default:
         PyErr_SetString(PyExc_TypeError, "unsetopt() is not supported for this option");
         return NULL;
-    }
-
-    /* Check for errors */
-    if (res != CURLE_OK) {
-error:
-        CURLERROR_RETVAL();
     }
 
     if (opt_masked >= 0 && self->options[opt_masked] != NULL) {
@@ -922,6 +922,12 @@ error:
 
     Py_INCREF(Py_None);
     return Py_None;
+
+error:
+    CURLERROR_RETVAL();
+
+#undef SETOPT
+#undef SETOPT2
 }
 
 
@@ -1230,7 +1236,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
         switch(option) {
         case CURLOPT_WRITEFUNCTION:
-            if (self->writeheader_set == 1) {
+            if (self->writeheader_set) {
                 PyErr_SetString(ErrorObject, "cannot combine WRITEFUNCTION with WRITEHEADER option.");
                 return NULL;
             }
@@ -2237,7 +2243,7 @@ insobj2(PyObject *dict1, PyObject *dict2, char *name, PyObject *value)
     Py_DECREF(value);
     return;
 error:
-    Py_FatalError("pycurl: insobj2");
+    Py_FatalError("pycurl: FATAL: insobj2() failed");
     assert(0);
 }
 
@@ -2388,7 +2394,7 @@ initpycurl(void)
     insint_c(d, "PROGRESSFUNCTION", CURLOPT_PROGRESSFUNCTION);
     insint_c(d, "PROGRESSDATA", CURLOPT_PROGRESSDATA);
     insint_c(d, "SSL_VERIFYPEER", CURLOPT_SSL_VERIFYPEER);
-    insint_c(d, "CAPATH", CURLOPT_CAINFO);
+    insint_c(d, "CAPATH", CURLOPT_CAPATH);
     insint_c(d, "CAINFO", CURLOPT_CAINFO);
     insint_c(d, "PASSWDFUNCTION", CURLOPT_PASSWDFUNCTION);
     insint_c(d, "PASSWDDATA", CURLOPT_PASSWDDATA);
