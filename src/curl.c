@@ -68,7 +68,7 @@ static int PYCURL_OPT(int o)
 }
 
 
-static PyObject *ErrorObject;
+static PyObject *ErrorObject = NULL;
 
 typedef struct {
     PyObject_HEAD
@@ -106,7 +106,13 @@ typedef struct {
     char error[CURL_ERROR_SIZE+1];
 } CurlObject;
 
-#if !defined(__cplusplus)
+/* forward declarations */
+#if defined(__cplusplus)
+static PyTypeObject& get_Curl_Type();
+static PyTypeObject& get_CurlMulti_Type();
+#define Curl_Type       get_Curl_Type()
+#define CurlMulti_Type  get_CurlMulti_Type()
+#else
 staticforward PyTypeObject Curl_Type;
 staticforward PyTypeObject CurlMulti_Type;
 #endif
@@ -1882,6 +1888,9 @@ do_multi_getattr(CurlMultiObject *co, char *name)
 
 /* --------------- actual type definitions --------------- */
 
+#undef Curl_Type
+#undef CurlMulti_Type
+
 statichere PyTypeObject Curl_Type = {
     PyObject_HEAD_INIT(NULL)
     0,                          /* ob_size */
@@ -1951,6 +1960,11 @@ statichere PyTypeObject CurlMulti_Type = {
      * safely ignore any compiler warnings about missing initializers.
      */
 };
+
+#if defined(__cplusplus)
+static PyTypeObject& get_Curl_Type() { return Curl_Type; }
+static PyTypeObject& get_CurlMulti_Type() { return CurlMulti_Type; }
+#endif
 
 
 /*************************************************************************
