@@ -14,6 +14,14 @@ following commands:
 
 $VER should be substituted with the version number, e.g. 7.9.7.
 
+Note that the installation script assumes that 'curl-config' can be
+located in your path setting.  If curl-config is installed outside your path
+or you want to force installation to use a particular version of 
+curl-config, use the '--curl-config' commandline option to specify
+the location of curl-config.  Example:
+
+        python setup.py install --curl-config=/usr/local/bin/curl-config
+
 To build pycurl for Python 1.5.2 you also need the distutils package,
 which you can download from:
 
@@ -29,6 +37,7 @@ Windows
 
 When installing on Windows, you need to manually configure the path to
 the curl source tree, specified with the CURL_DIR variable in the file
-'setup.py'.
+'setup.py'.  The CURL_DIR variable can also be set using the commandline
+option '--curl-dir':
 
-Then run the command 'python setup.py install' as usual.
+        python setup.py install --curl-dir=c:\curl-7.9.8
