@@ -1,7 +1,8 @@
-cURL Python module
+PycURL - cURL Python module
+---------------------------
 
-- handle function objects as callbacks (READ/WRITEFUNCTION)
-- handle getinfo function
-- type checking on setopt (currently some segfaults here if the
+* handle function objects as callbacks (READ/WRITEFUNCTION)
+* handle getinfo function
+* type checking on setopt (currently some segfaults here if the
   wrong type is passed as argument)
-- distutils instead of hand-carved Makefile
+* distutils instead of hand-crafted Makefile
