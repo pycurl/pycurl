@@ -8,7 +8,7 @@ assert sys.platform == "win32"
 
 
 CURL_DIR = r"c:\src\build\curl-7.10.3"
-OPENSSL_DIR = r"c:\src\build\openssl-0.9.6g"
+OPENSSL_DIR = r"c:\src\build\openssl-0.9.6h"
 ZLIB_DIR = r"c:\src\build\zlib-1.1.4"
 sys.argv.insert(1, "--curl-dir=" + CURL_DIR)
 
