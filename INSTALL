@@ -7,17 +7,17 @@ Assuming that distutils is installed (which it is by default on Python
 versions greater than 1.5.2) build and install pycurl with the
 following commands:
 
-	(if necessary, become root)
-	tar -zxvf pycurl-$VER.tar.gz
-	cd pycurl-$VER
-	python setup.py install
+        (if necessary, become root)
+        tar -zxvf pycurl-$VER.tar.gz
+        cd pycurl-$VER
+        python setup.py install
 
 $VER should be substituted with the version number, e.g. 7.9.7.
 
 To build pycurl for Python 1.5.2 you also need the distutils package,
 which you can download from:
 
-	http://www.python.org/sigs/distutils-sig/download.html
+        http://www.python.org/sigs/distutils-sig/download.html
 
 ... or be brave and manually tweak the Makefile in the 'src'
 directory to match your installation (the Makefile should work
