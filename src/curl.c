@@ -2355,6 +2355,7 @@ DL_EXPORT(void)
     if (vi->version_num < LIBCURL_VERSION_NUM) {
         Py_FatalError("pycurl: libcurl link-time version is older than compile-time version!");
     }
+
     /* Finally initialize global interpreter lock */
     PyEval_InitThreads();
 }
