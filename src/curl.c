@@ -1217,6 +1217,10 @@ DL_EXPORT(void)
     insint(d, "NETRC_IGNORED", CURL_NETRC_IGNORED);
     insint(d, "NETRC_REQUIRED", CURL_NETRC_REQUIRED);
 
+    /* TIMECONDITION constants for setopt */
+    insint(d, "TIMECOND_IFMODSINCE", TIMECOND_IFMODSINCE);
+    insint(d, "TIMECOND_IFUNMODSINCE", TIMECOND_IFUNMODSINCE);
+
     /* global_init options */
     insint(d, "GLOBAL_ALL", CURL_GLOBAL_ALL);
     insint(d, "GLOBAL_NOTHING", CURL_GLOBAL_NOTHING);

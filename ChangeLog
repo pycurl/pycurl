@@ -6,6 +6,9 @@ Version 7.9.8
 
 	* Added option constants for CURLOPT_NETRC: CURL_NETRC_OPTIONAL,
 	CURL_NETRC_IGNORED and CURL_NETRC_REQUIRED.
+
+	* Added option constants for CURLOPT_TIMECONDITION:
+	TIMECOND_IFMODSINCE and TIMECOND_IFUNMODSINCE.
 	
  	* Disallow recursive callback invocations (by Markus Oberhumer).
 
