@@ -7,7 +7,6 @@ include ChangeLog
 include COPYING
 include INSTALL
 include Makefile
-include MANIFEST.in
 include README
 include TODO
 include src/Makefile
