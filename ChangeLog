@@ -5,7 +5,12 @@ Version 7.12.0 [requires libcurl-7.10.3 or better]
 
         * Do not use the deprecated curl_formparse function.
           API CHANGE: HTTPPOST now takes a list of tuples where each
-          tuple contains a form name and a form value, both strings.
+          tuple contains a form name and a form value, both strings
+          (see test/test_post2.py for example usage).
+
+        * Found a possible reference count bug in the multithreading
+          code which may have contributed to the long-standing GC
+          segfault which has haunted pycurl.  Fingers crossed.
 
 
 Version 7.11.2
