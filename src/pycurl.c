@@ -683,11 +683,12 @@ util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *strea
         return ret;
     if (size <= 0 || (size_t)write_size / size != nmemb)
         return ret;
-    arglist = Py_BuildValue("(s#)", ptr, write_size);
-    if (arglist == NULL)
-        return ret;
-
     PyEval_AcquireThread(tmp_state);
+    arglist = Py_BuildValue("(s#)", ptr, write_size);
+    if (arglist == NULL) {
+        PyEval_ReleaseThread(tmp_state);
+        return ret;
+    }
     result = PyEval_CallObject(cb, arglist);
     Py_DECREF(arglist);
     if (result == NULL) {
@@ -741,11 +742,12 @@ read_callback(char *ptr, size_t size, size_t nmemb, void  *stream)
         return ret;
     if (size <= 0 || (size_t)read_size / size != nmemb)
         return ret;
-    arglist = Py_BuildValue("(i)", read_size);
-    if (arglist == NULL)
-        return ret;
-
     PyEval_AcquireThread(tmp_state);
+    arglist = Py_BuildValue("(i)", read_size);
+    if (arglist == NULL) {
+        PyEval_ReleaseThread(tmp_state);
+        return ret;
+    }
     result = PyEval_CallObject(self->r_cb, arglist);
     Py_DECREF(arglist);
     if (result == NULL) {
@@ -797,11 +799,12 @@ progress_callback(void *client,
     if (tmp_state == NULL || self->pro_cb == NULL) {
         return ret;
     }
-    arglist = Py_BuildValue("(dddd)", dltotal, dlnow, ultotal, ulnow);
-    if (arglist == NULL)
-        return ret;
-
     PyEval_AcquireThread(tmp_state);
+    arglist = Py_BuildValue("(dddd)", dltotal, dlnow, ultotal, ulnow);
+    if (arglist == NULL) {
+        PyEval_ReleaseThread(tmp_state);
+        return ret;
+    }
     result = PyEval_CallObject(self->pro_cb, arglist);
     Py_DECREF(arglist);
     if (result == NULL) {
@@ -840,11 +843,12 @@ debug_callback(CURL *curlobj,
     }
     if ((int)size < 0 || (size_t)((int)size) != size)
         return ret;
-    arglist = Py_BuildValue("(is#)", (int)type, buffer, (int)size);
-    if (arglist == NULL)
-        return ret;
-
     PyEval_AcquireThread(tmp_state);
+    arglist = Py_BuildValue("(is#)", (int)type, buffer, (int)size);
+    if (arglist == NULL) {
+        PyEval_ReleaseThread(tmp_state);
+        return ret;
+    }
     result = PyEval_CallObject(self->d_cb, arglist);
     Py_DECREF(arglist);
     if (result == NULL) {
@@ -853,17 +857,6 @@ debug_callback(CURL *curlobj,
     PyEval_ReleaseThread(tmp_state);
     return ret;
 }
-
-
-#if 0 && (LIBCURL_VERSION_NUM >= 0x070a06)
-static CURLcode
-ssl_ctx_callback(CURL *curlobj, void *ssl_ctx, void *userptr)
-{
-    /* FIXME */
-    UNUSED(curlobj); UNUSED(ssl_ctx); UNUSED(userptr);
-    return CURLE_UNSUPPORTED_PROTOCOL;
-}
-#endif
 
 
 /* --------------- unsetopt/setopt/getinfo --------------- */
@@ -1009,13 +1002,6 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_USERAGENT:
         case CURLOPT_USERPWD:
             break;
-#if (LIBCURL_VERSION_NUM >= 0x070a06)
-#if 0
-        case CURLOPT_SSL_CTX_DATA:
-            /* FIXME - implement this */
-            /* FIXME - fall through for now */
-#endif
-#endif
         default:
             PyErr_SetString(PyExc_TypeError, "strings are not supported for this option");
             return NULL;
@@ -1286,11 +1272,6 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         const curl_write_callback h_cb = header_callback;
         const curl_progress_callback pro_cb = progress_callback;
         const curl_debug_callback d_cb = debug_callback;
-#if (LIBCURL_VERSION_NUM >= 0x070a06)
-#if 0
-        const curl_ssl_ctx_callback ssl_ctx_cb = ssl_ctx_callback;
-#endif
-#endif
 
         switch(option) {
         case CURLOPT_WRITEFUNCTION:
