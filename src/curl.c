@@ -1579,6 +1579,66 @@ error:
     CURLERROR2("fdset failed due to internal errors");
 }
 
+/* --------------- select --------------- */
+
+static PyObject *
+do_multi_select(CurlMultiObject *self, PyObject *args)
+{
+    int max_fd, n;
+    double timeout;
+    long seconds;
+    struct timeval tv, *tvp;
+    PyObject *tout = Py_None;
+    CURLMcode res = -1;
+
+    /* Sanity checks */
+    if (!PyArg_ParseTuple(args, "O:fdset", &tout)) {
+        return NULL;
+    }
+
+    if (self->multi_handle == NULL) {
+        PyErr_SetString(ErrorObject, "cannot invoke fdset, no curl-multi handle");
+        return NULL;
+    }
+
+    if (tout == Py_None)
+        tvp = (struct timeval *)0;
+    else if (!PyArg_Parse(tout, "d", &timeout)) {
+                PyErr_SetString(PyExc_TypeError,
+                                "timeout must be a float or None");
+                return NULL;
+        }
+        else {
+                if (timeout > (double)LONG_MAX) {
+                        PyErr_SetString(PyExc_OverflowError,
+                                        "timeout period too long");
+                        return NULL;
+                }
+                seconds = (long)timeout;
+                timeout = timeout - (double)seconds;
+                tv.tv_sec = seconds;
+                tv.tv_usec = (long)(timeout*1000000.0);
+                tvp = &tv;
+        }
+
+    FD_ZERO(&self->read_fd_set);
+    FD_ZERO(&self->write_fd_set);
+    FD_ZERO(&self->exc_fd_set);
+
+    res = curl_multi_fdset(self->multi_handle, &self->read_fd_set,
+                           &self->write_fd_set, &self->exc_fd_set, &max_fd);
+    if (res != CURLM_OK) {
+        CURLERROR2("multi_fdset failed");
+    }
+
+    Py_BEGIN_ALLOW_THREADS
+    n = select(max_fd + 1, &self->read_fd_set, &self->write_fd_set, &self->exc_fd_set, tvp)
+;
+    Py_END_ALLOW_THREADS
+
+    return PyInt_FromLong(n);
+}
+
 
 /*************************************************************************
 // type definitions
@@ -1611,6 +1671,7 @@ static PyMethodDef curlmultiobject_methods[] = {
     {"add_handle", (PyCFunction)do_multi_add_handle, METH_VARARGS, NULL},
     {"remove_handle", (PyCFunction)do_multi_remove_handle, METH_VARARGS, NULL},
     {"fdset", (PyCFunction)do_multi_fdset, METH_VARARGS, co_multi_fdset_doc},
+    {"select", (PyCFunction)do_multi_select, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}
 };
 
