@@ -179,7 +179,7 @@ get_thread_state(const CurlObject *self)
 
 /* assert some CurlObject invariants */
 static void
-assert_curl_object(const CurlObject *self)
+assert_curl_state(const CurlObject *self)
 {
     assert(self != NULL);
     assert(self->ob_type == p_Curl_Type);
@@ -189,13 +189,45 @@ assert_curl_object(const CurlObject *self)
 
 /* assert some CurlMultiObject invariants */
 static void
-assert_curl_multi_object(const CurlMultiObject *self)
+assert_multi_state(const CurlMultiObject *self)
 {
     assert(self != NULL);
     assert(self->ob_type == p_CurlMulti_Type);
     if (self->state != NULL) {
         assert(self->multi_handle != NULL);
     }
+}
+
+
+/* check state for methods */
+static int
+check_curl_state(const CurlObject *self, int flags, const char *name)
+{
+    assert_curl_state(self);
+    if ((flags & 1) && self->handle == NULL) {
+        PyErr_Format(ErrorObject, "cannot invoke %s() - no curl handle", name);
+        return -1;
+    }
+    if ((flags & 2) && get_thread_state(self) != NULL) {
+        PyErr_Format(ErrorObject, "cannot invoke %s() - perform() is currently running", name);
+        return -1;
+    }
+    return 0;
+}
+
+static int
+check_multi_state(const CurlMultiObject *self, int flags, const char *name)
+{
+    assert_multi_state(self);
+    if ((flags & 1) && self->multi_handle == NULL) {
+        PyErr_Format(ErrorObject, "cannot invoke %s() - no multi handle", name);
+        return -1;
+    }
+    if ((flags & 2) && self->state != NULL) {
+        PyErr_Format(ErrorObject, "cannot invoke %s() - multi_perform() is currently running", name);
+        return -1;
+    }
+    return 0;
 }
 
 
@@ -317,16 +349,10 @@ do_curl_copy(const CurlObject *self, PyObject *args)
     int res;
     int i;
 
-    /* Sanity checks */
     if (!PyArg_ParseTuple(args, ":copy")) {
         return NULL;
     }
-    if (self->handle == NULL) {
-        PyErr_SetString(ErrorObject, "cannot invoke copy, no curl handle");
-        return NULL;
-    }
-    if (get_thread_state(self) != NULL) {
-        PyErr_SetString(ErrorObject, "cannot invoke copy - already running");
+    if (check_curl_state(self, 1+2, "copy") != 0) {
         return NULL;
     }
 
@@ -524,8 +550,7 @@ do_curl_close(CurlObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, ":close")) {
         return NULL;
     }
-    if (get_thread_state(self) != NULL) {
-        PyErr_SetString(ErrorObject, "cannot invoke close, perform() is running");
+    if (check_curl_state(self, 2, "close") != 0) {
         return NULL;
     }
     util_curl_close(self);
@@ -540,8 +565,7 @@ do_curl_errstr(CurlObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, ":errstr")) {
         return NULL;
     }
-    if (get_thread_state(self) != NULL) {
-        PyErr_SetString(ErrorObject, "cannot invoke errstr, perform() is running");
+    if (check_curl_state(self, 1+2, "errstr") != 0) {
         return NULL;
     }
     return PyString_FromString(self->error);
@@ -597,17 +621,10 @@ do_curl_perform(CurlObject *self, PyObject *args)
 {
     int res;
 
-    /* Sanity checks */
     if (!PyArg_ParseTuple(args, ":perform")) {
         return NULL;
     }
-
-    if (self->handle == NULL) {
-        PyErr_SetString(ErrorObject, "cannot invoke perform, no curl handle");
-        return NULL;
-    }
-    if (get_thread_state(self) != NULL) {
-        PyErr_SetString(ErrorObject, "cannot invoke perform - already running");
+    if (check_curl_state(self, 1+2, "perform") != 0) {
         return NULL;
     }
 
@@ -941,18 +958,13 @@ do_curl_unsetopt(CurlObject *self, PyObject *args)
 {
     int option;
 
-    /* Check that we have a valid curl handle for the object */
-    if (self->handle == NULL) {
-        PyErr_SetString(ErrorObject, "cannot invoke unsetopt, no curl handle");
-        return NULL;
-    }
-    if (get_thread_state(self) != NULL) {
-        PyErr_SetString(ErrorObject, "cannot invoke unsetopt, perform() is running");
-        return NULL;
-    }
     if (!PyArg_ParseTuple(args, "i:unsetopt", &option)) {
         return NULL;
     }
+    if (check_curl_state(self, 1+2, "unsetopt") != 0) {
+        return NULL;
+    }
+
     return util_curl_unsetopt(self, option);
 }
 
@@ -964,17 +976,10 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     PyObject *obj;
     int res;
 
-    /* Check that we have a valid curl handle for the object */
-    if (self->handle == NULL) {
-        PyErr_SetString(ErrorObject, "cannot invoke setopt, no curl handle");
-        return NULL;
-    }
-    if (get_thread_state(self) != NULL) {
-        PyErr_SetString(ErrorObject, "cannot invoke setopt, perform() is running");
-        return NULL;
-    }
-
     if (!PyArg_ParseTuple(args, "iO:setopt", &option, &obj)) {
+        return NULL;
+    }
+    if (check_curl_state(self, 1+2, "setopt") != 0) {
         return NULL;
     }
 
@@ -1309,18 +1314,10 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
     int option;
     int res;
 
-    /* Check that we have a valid curl handle for the object */
-    if (self->handle == NULL) {
-        PyErr_SetString(ErrorObject, "cannot invoke getinfo, no curl handle");
-        return NULL;
-    }
-    if (get_thread_state(self) != NULL) {
-        PyErr_SetString(ErrorObject, "cannot invoke getinfo, perform() is running");
-        return NULL;
-    }
-
-    /* Parse option */
     if (!PyArg_ParseTuple(args, "i:getinfo", &option)) {
+        return NULL;
+    }
+    if (check_curl_state(self, 1+2, "getinfo") != 0) {
         return NULL;
     }
 
@@ -1481,8 +1478,7 @@ do_multi_close(CurlMultiObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, ":close")) {
         return NULL;
     }
-    if (self->state != NULL) {
-        PyErr_SetString(ErrorObject, "cannot invoke close, perform() is running");
+    if (check_multi_state(self, 2, "close") != 0) {
         return NULL;
     }
     util_multi_close(self);
@@ -1527,17 +1523,10 @@ do_multi_perform(CurlMultiObject *self, PyObject *args)
     CURLMcode res;
     int running = -1;
 
-    /* Sanity checks */
     if (!PyArg_ParseTuple(args, ":perform")) {
         return NULL;
     }
-
-    if (self->multi_handle == NULL) {
-        PyErr_SetString(ErrorObject, "cannot invoke perform, no curl-multi handle");
-        return NULL;
-    }
-    if (self->state != NULL) {
-        PyErr_SetString(ErrorObject, "cannot invoke perform - already running");
+    if (check_multi_state(self, 1+2, "perform") != 0) {
         return NULL;
     }
 
@@ -1563,10 +1552,10 @@ do_multi_perform(CurlMultiObject *self, PyObject *args)
 
 /* static utility function */
 static int
-check_multi_handle(const CurlMultiObject *self, const CurlObject *obj)
+check_multi_add_remove(const CurlMultiObject *self, const CurlObject *obj)
 {
     /* check CurlMultiObject status */
-    assert_curl_multi_object(self);
+    assert_multi_state(self);
     if (self->multi_handle == NULL) {
         PyErr_SetString(ErrorObject, "cannot add/remove handle - multi-stack is closed");
         return -1;
@@ -1576,7 +1565,7 @@ check_multi_handle(const CurlMultiObject *self, const CurlObject *obj)
         return -1;
     }
     /* check CurlObject status */
-    assert_curl_object(obj);
+    assert_curl_state(obj);
     if (obj->state != NULL) {
         PyErr_SetString(ErrorObject, "cannot add/remove handle - perform() of curl object already running");
         return -1;
@@ -1598,7 +1587,7 @@ do_multi_add_handle(CurlMultiObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "O!:add_handle", p_Curl_Type, &obj)) {
         return NULL;
     }
-    if (check_multi_handle(self, obj) != 0) {
+    if (check_multi_add_remove(self, obj) != 0) {
         return NULL;
     }
     if (obj->handle == NULL) {
@@ -1612,7 +1601,7 @@ do_multi_add_handle(CurlMultiObject *self, PyObject *args)
     assert(obj->multi_stack == NULL);
     res = curl_multi_add_handle(self->multi_handle, obj->handle);
     if (res != CURLM_CALL_MULTI_PERFORM) {
-        CURLERROR_MSG("add_handle failed");
+        CURLERROR_MSG("curl_multi_add_handle() failed due to internal errors");
     }
     obj->multi_stack = self;
     Py_INCREF(self);
@@ -1630,11 +1619,11 @@ do_multi_remove_handle(CurlMultiObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "O!:remove_handle", p_Curl_Type, &obj)) {
         return NULL;
     }
-    if (check_multi_handle(self, obj) != 0) {
+    if (check_multi_add_remove(self, obj) != 0) {
         return NULL;
     }
     if (obj->handle == NULL) {
-        /* handle already closed -- ignore */
+        /* CurlObject handle already closed -- ignore */
         goto done;
     }
     if (obj->multi_stack != self) {
@@ -1643,7 +1632,7 @@ do_multi_remove_handle(CurlMultiObject *self, PyObject *args)
     }
     res = curl_multi_remove_handle(self->multi_handle, obj->handle);
     if (res != CURLM_OK) {
-        CURLERROR_MSG("remove_handle failed");
+        CURLERROR_MSG("curl_multi_remove_handle() failed due to internal errors");
     }
     assert(obj->multi_stack == self);
     obj->multi_stack = NULL;
@@ -1665,16 +1654,10 @@ do_multi_fdset(CurlMultiObject *self, PyObject *args)
     PyObject *read_list = NULL, *write_list = NULL, *except_list = NULL;
     PyObject *py_fd = NULL;
 
-    /* Sanity checks */
     if (!PyArg_ParseTuple(args, ":fdset")) {
         return NULL;
     }
-    if (self->multi_handle == NULL) {
-        PyErr_SetString(ErrorObject, "cannot invoke fdset, no curl-multi handle");
-        return NULL;
-    }
-    if (self->state != NULL) {
-        PyErr_SetString(ErrorObject, "cannot invoke fdset - multi_perform() is running");
+    if (check_multi_state(self, 1+2, "fdset") != 0) {
         return NULL;
     }
 
@@ -1687,7 +1670,7 @@ do_multi_fdset(CurlMultiObject *self, PyObject *args)
     res = curl_multi_fdset(self->multi_handle, &self->read_fd_set,
                            &self->write_fd_set, &self->exc_fd_set, &max_fd);
     if (res != CURLM_OK || max_fd < 0) {
-        CURLERROR_MSG("fdset failed due to internal errors");
+        CURLERROR_MSG("curl_multi_fdset() failed due to internal errors");
     }
 
     /* Allocate lists. */
@@ -1742,18 +1725,11 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "|i:info_read", &num_results)) {
         return NULL;
     }
-
-    if (self->multi_handle == NULL) {
-        PyErr_SetString(ErrorObject, "cannot invoke info_read, no curl-multi handle");
-        return NULL;
-    }
-    if (self->state != NULL) {
-        PyErr_SetString(ErrorObject, "cannot invoke info_read - multi_perform() is running");
-        return NULL;
-    }
-
     if (num_results <= 0) {
         PyErr_SetString(ErrorObject, "argument to info_read must be greater than zero");
+        return NULL;
+    }
+    if (check_multi_state(self, 1+2, "info_read") != 0) {
         return NULL;
     }
 
@@ -1814,17 +1790,10 @@ do_multi_select(CurlMultiObject *self, PyObject *args)
     struct timeval tv, *tvp;
     CURLMcode res;
 
-    /* Sanity checks */
     if (!PyArg_ParseTuple(args, "|d:select", &timeout)) {
         return NULL;
     }
-
-    if (self->multi_handle == NULL) {
-        PyErr_SetString(ErrorObject, "cannot invoke select, no curl-multi handle");
-        return NULL;
-    }
-    if (self->state != NULL) {
-        PyErr_SetString(ErrorObject, "cannot invoke select - multi_perform() is running");
+    if (check_multi_state(self, 1+2, "select") != 0) {
         return NULL;
     }
 
@@ -1958,21 +1927,21 @@ my_getattr(PyObject *co, char *name, PyObject *dict1, PyObject *dict2, PyMethodD
 static int
 do_curl_setattr(CurlObject *co, char *name, PyObject *v)
 {
-    assert_curl_object(co);
+    assert_curl_state(co);
     return my_setattr(&co->dict, name, v);
 }
 
 static int
 do_multi_setattr(CurlMultiObject *co, char *name, PyObject *v)
 {
-    assert_curl_multi_object(co);
+    assert_multi_state(co);
     return my_setattr(&co->dict, name, v);
 }
 
 static PyObject *
 do_curl_getattr(CurlObject *co, char *name)
 {
-    assert_curl_object(co);
+    assert_curl_state(co);
     return my_getattr((PyObject *)co, name, co->dict,
                       curlobject_constants, curlobject_methods);
 }
@@ -1980,7 +1949,7 @@ do_curl_getattr(CurlObject *co, char *name)
 static PyObject *
 do_multi_getattr(CurlMultiObject *co, char *name)
 {
-    assert_curl_multi_object(co);
+    assert_multi_state(co);
     return my_getattr((PyObject *)co, name, co->dict,
                       curlmultiobject_constants, curlmultiobject_methods);
 }
