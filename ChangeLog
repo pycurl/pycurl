@@ -1,13 +1,3 @@
-Notes for Kjetil:
-
-- do you agree on the new API ? otherwise I can put the old tests back.
-
-- test_post2.py does not seem to work any longer, even with older
-  pycurl versions ??? have there been some changes in the curl lib ?
-
-
-
-
 Version 7.9.8.4
 
 2002-07-20  Markus F.X.J. Oberhumer <mfx>
