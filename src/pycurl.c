@@ -540,22 +540,31 @@ do_curl_perform(CurlObject *self, PyObject *args)
 
 /* --------------- callback handlers --------------- */
 
+/* IMPORTANT NOTE: due to threading issues, we cannot call _any_ Python
+ * function without acquiring the thread state in the callback handlers.
+ */
+
 static size_t
 util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *stream)
 {
     CurlObject *self;
-    PyThreadState *tmp_state = NULL;
-    int have_tmp_state = 0;
+    PyThreadState *tmp_state;
     PyObject *arglist;
     PyObject *result = NULL;
     size_t ret = 0;     /* assume error */
     PyObject *cb;
     int total_size;
 
+    /* acquire thread */
     self = (CurlObject *)stream;
     tmp_state = get_thread_state(self);
+    if (tmp_state == NULL)
+        return ret;
+    PyEval_AcquireThread(tmp_state);
+
+    /* check args */
     cb = flags ? self->h_cb : self->w_cb;
-    if (tmp_state == NULL || cb == NULL)
+    if (cb == NULL)
         goto silent_error;
     if (size <= 0 || nmemb <= 0)
         goto done;
@@ -565,8 +574,7 @@ util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *strea
         goto verbose_error;
     }
 
-    PyEval_AcquireThread(tmp_state);
-    have_tmp_state = 1;
+    /* run callback */
     arglist = Py_BuildValue("(s#)", ptr, total_size);
     if (arglist == NULL)
         goto verbose_error;
@@ -574,6 +582,8 @@ util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *strea
     Py_DECREF(arglist);
     if (result == NULL)
         goto verbose_error;
+
+    /* handle result */
     if (result == Py_None) {
         ret = total_size;           /* None means success */
     }
@@ -593,7 +603,7 @@ util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *strea
 done:
 silent_error:
     Py_XDECREF(result);
-    if (have_tmp_state) PyEval_ReleaseThread(tmp_state);
+    PyEval_ReleaseThread(tmp_state);
     return ret;
 verbose_error:
     PyErr_Print();
@@ -618,16 +628,21 @@ static size_t
 read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
 {
     CurlObject *self;
-    PyThreadState *tmp_state = NULL;
-    int have_tmp_state = 0;
+    PyThreadState *tmp_state;
     PyObject *arglist;
     PyObject *result = NULL;
     size_t ret = 0;     /* assume error */
     int total_size;
 
+    /* acquire thread */
     self = (CurlObject *)stream;
     tmp_state = get_thread_state(self);
-    if (tmp_state == NULL || self->r_cb == NULL)
+    if (tmp_state == NULL)
+        return ret;
+    PyEval_AcquireThread(tmp_state);
+
+    /* check args */
+    if (self->r_cb == NULL)
         goto silent_error;
     if (size <= 0 || nmemb <= 0)
         goto done;
@@ -637,8 +652,7 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
         goto verbose_error;
     }
 
-    PyEval_AcquireThread(tmp_state);
-    have_tmp_state = 1;
+    /* run callback */
     arglist = Py_BuildValue("(i)", total_size);
     if (arglist == NULL)
         goto verbose_error;
@@ -646,6 +660,8 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
     Py_DECREF(arglist);
     if (result == NULL)
         goto verbose_error;
+
+    /* handle result */
     if (PyString_Check(result)) {
         char *buf = NULL;
         int obj_size = -1;
@@ -665,7 +681,7 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
 done:
 silent_error:
     Py_XDECREF(result);
-    if (have_tmp_state) PyEval_ReleaseThread(tmp_state);
+    PyEval_ReleaseThread(tmp_state);
     return ret;
 verbose_error:
     PyErr_Print();
@@ -674,23 +690,27 @@ verbose_error:
 
 
 static int
-progress_callback(void *client,
+progress_callback(void *stream,
                   double dltotal, double dlnow, double ultotal, double ulnow)
 {
     CurlObject *self;
-    PyThreadState *tmp_state = NULL;
-    int have_tmp_state = 0;
+    PyThreadState *tmp_state;
     PyObject *arglist;
     PyObject *result = NULL;
     int ret = 1;       /* assume error */
 
-    self = (CurlObject *)client;
+    /* acquire thread */
+    self = (CurlObject *)stream;
     tmp_state = get_thread_state(self);
-    if (tmp_state == NULL || self->pro_cb == NULL)
+    if (tmp_state == NULL)
+        return ret;
+    PyEval_AcquireThread(tmp_state);
+
+    /* check args */
+    if (self->pro_cb == NULL)
         goto silent_error;
 
-    PyEval_AcquireThread(tmp_state);
-    have_tmp_state = 1;
+    /* run callback */
     arglist = Py_BuildValue("(dddd)", dltotal, dlnow, ultotal, ulnow);
     if (arglist == NULL)
         goto verbose_error;
@@ -698,6 +718,8 @@ progress_callback(void *client,
     Py_DECREF(arglist);
     if (result == NULL)
         goto verbose_error;
+
+    /* handle result */
     if (result == Py_None) {
         ret = 0;        /* None means success */
     }
@@ -710,7 +732,7 @@ progress_callback(void *client,
 
 silent_error:
     Py_XDECREF(result);
-    if (have_tmp_state) PyEval_ReleaseThread(tmp_state);
+    PyEval_ReleaseThread(tmp_state);
     return ret;
 verbose_error:
     PyErr_Print();
@@ -720,27 +742,32 @@ verbose_error:
 
 static int
 debug_callback(CURL *curlobj, curl_infotype type,
-               char *buffer, size_t total_size, void *data)
+               char *buffer, size_t total_size, void *stream)
 {
     CurlObject *self;
-    PyThreadState *tmp_state = NULL;
-    int have_tmp_state = 0;
+    PyThreadState *tmp_state;
     PyObject *arglist;
     PyObject *result = NULL;
     int ret = 0;       /* always success */
 
     UNUSED(curlobj);
-    self = (CurlObject *)data;
+
+    /* acquire thread */
+    self = (CurlObject *)stream;
     tmp_state = get_thread_state(self);
-    if (tmp_state == NULL || self->debug_cb == NULL)
+    if (tmp_state == NULL)
+        return ret;
+    PyEval_AcquireThread(tmp_state);
+
+    /* check args */
+    if (self->debug_cb == NULL)
         goto silent_error;
     if ((int)total_size < 0 || (size_t)((int)total_size) != total_size) {
         PyErr_SetString(ErrorObject, "integer overflow in debug callback");
         goto verbose_error;
     }
 
-    PyEval_AcquireThread(tmp_state);
-    have_tmp_state = 1;
+    /* run callback */
     arglist = Py_BuildValue("(is#)", (int)type, buffer, (int)total_size);
     if (arglist == NULL)
         goto verbose_error;
@@ -760,7 +787,7 @@ debug_callback(CURL *curlobj, curl_infotype type,
 
 silent_error:
     Py_XDECREF(result);
-    if (have_tmp_state) PyEval_ReleaseThread(tmp_state);
+    PyEval_ReleaseThread(tmp_state);
     return ret;
 verbose_error:
     PyErr_Print();
