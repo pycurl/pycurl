@@ -14,6 +14,9 @@
 	* Allow None as success result of write, header and progress
 	callback invocations (by Markus F.X.J. Oberhumer
 	<markus@oberhumer.com>).
+
+	* Added the 'basicfirst2.py' file which demonstrates the use of a
+	class method as callback instead of just a function.
 	
 2001-08-21  Kjetil Jacobsen  <kjetilja>
 
