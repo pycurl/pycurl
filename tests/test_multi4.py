@@ -25,7 +25,7 @@ m.add_handle(c2)
 m.add_handle(c3)
 
 # Number of seconds to wait for a timeout to happen
-SELECT_TIMEOUT = 10
+SELECT_TIMEOUT = 1.0
 
 # Stir the state machine into action
 while 1:

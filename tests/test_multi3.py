@@ -51,7 +51,7 @@ while num_handles:
             break
     # currently no more I/O is pending, could do something in the meantime
     # (display a progress bar, etc.)
-    m.select()
+    m.select(1.0)
 
 # close handles
 for c in m.handles:
