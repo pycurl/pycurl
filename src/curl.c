@@ -333,6 +333,8 @@ do_setopt(CurlObject *self, PyObject *args)
 	      option == CURLOPT_KRB4LEVEL ||
 	      option == CURLOPT_CAINFO ||
 	      option == CURLOPT_RANDOM_FILE ||
+	      option == CURLOPT_COOKIEJAR ||
+	      option == CURLOPT_SSL_CIPHER_LIST ||
 	      option == CURLOPT_EGDSOCKET))
 	    {
 		PyErr_SetString(ErrorObject, "strings are not supported for this option");
@@ -970,7 +972,15 @@ DL_EXPORT(void)
     insint(d, "RANDOM_FILE", CURLOPT_RANDOM_FILE);
     insint(d, "EGDSOCKET", CURLOPT_EGDSOCKET);
     insint(d, "CONNECTTIMEOUT", CURLOPT_CONNECTTIMEOUT);
-
+    
+    insint(d, "HTTPGET", CURLOPT_HTTPGET);
+    insint(d, "SSL_VERIFYHOST", CURLOPT_SSL_VERIFYHOST);
+    insint(d, "COOKIEJAR", CURLOPT_COOKIEJAR);
+    insint(d, "SSL_CIPHER_LIST", CURLOPT_SSL_CIPHER_LIST);
+    insint(d, "HTTP_VERSION", CURLOPT_HTTP_VERSION);
+    insint(d, "HTTP_VERSION_1_0", CURL_HTTP_VERSION_1_0);
+    insint(d, "HTTP_VERSION_1_1", CURL_HTTP_VERSION_1_1);
+    
     /* Symbolic constants for getinfo */
     insint(d, "EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL);
     insint(d, "HTTP_CODE", CURLINFO_HTTP_CODE);
@@ -982,7 +992,8 @@ DL_EXPORT(void)
     insint(d, "SIZE_DOWNLOAD", CURLINFO_SIZE_DOWNLOAD);
     insint(d, "SPEED_DOWNLOAD", CURLINFO_SPEED_DOWNLOAD);
     insint(d, "SPEED_UPLOAD", CURLINFO_SPEED_UPLOAD);
-    insint(d, "REQUEST_SIZE", CURLINFO_HEADER_SIZE);
+    insint(d, "REQUEST_SIZE", CURLINFO_REQUEST_SIZE);
+    insint(d, "HEADER_SIZE", CURLINFO_HEADER_SIZE);
     insint(d, "SSL_VERIFYRESULT", CURLINFO_SSL_VERIFYRESULT);
     insint(d, "FILETIME", CURLINFO_FILETIME);
     insint(d, "CONTENT_LENGTH_DOWNLOAD", CURLINFO_CONTENT_LENGTH_DOWNLOAD);

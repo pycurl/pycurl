@@ -1,3 +1,8 @@
+2001-11-05  Kjetil Jacobsen  <kjetilja>
+
+	* Some of the newer options to setopt were missing, this should
+	now be fixed.
+
 2001-11-04  Kjetil Jacobsen  <kjetilja>
 
 	* Exception handling has been improved and should no longer throw
