@@ -14,7 +14,6 @@ static PyObject *ErrorObject;
 typedef struct {
     PyObject_HEAD
     CURL *handle;
-    char *url;
     struct HttpPost *httppost;
     struct curl_slist *httpheader;
     struct curl_slist *quote;
@@ -26,6 +25,7 @@ typedef struct {
     PyObject *pwd_cb;
     PyThreadState *state;
     char error[CURL_ERROR_SIZE];
+    void *options[CURLOPT_LASTENTRY];
 } CurlObject;
 
 #if !defined(__cplusplus)
@@ -34,11 +34,11 @@ staticforward PyTypeObject Curl_Type;
 
 #define CURLERROR() \
 {\
-  PyObject *v; \
-  v = Py_BuildValue("(is)", res, self->error); \
-  PyErr_SetObject(ErrorObject, v); \
-  Py_DECREF(v); \
-  return NULL; \
+    PyObject *v; \
+    v = Py_BuildValue("(is)", res, self->error); \
+    PyErr_SetObject(ErrorObject, v); \
+    Py_DECREF(v); \
+    return NULL; \
 }
 
 /* --------------------------------------------------------------------- */
@@ -46,13 +46,11 @@ staticforward PyTypeObject Curl_Type;
 static void
 self_cleanup(CurlObject *self)
 {
+    int i;
+
     if (self->handle != NULL) {
 	curl_easy_cleanup(self->handle);
         self->handle = NULL;
-    }
-    if (self->url != NULL) {
-	free(self->url);
-	self->url = NULL;
     }
     if (self->httpheader != NULL) {
 	curl_slist_free_all(self->httpheader);
@@ -69,6 +67,12 @@ self_cleanup(CurlObject *self)
     if (self->httppost != NULL) {
 	curl_formfree(self->httppost);
 	self->httppost = NULL;
+    }
+    for (i = 0; i < CURLOPT_LASTENTRY; i++) {
+      if (self->options[i] != NULL) {
+	free(self->options[i]);
+	self->options[i] = NULL;
+      }
     }
     Py_XDECREF(self->w_cb);
     Py_XDECREF(self->r_cb);
@@ -304,7 +308,7 @@ int read_callback(void *ptr,
 static PyObject *
 do_setopt(CurlObject *self, PyObject *args)
 {
-    int option;
+    int option, opt_masked;
     char *stringdata;
     long longdata;
     char *buf;
@@ -356,22 +360,20 @@ do_setopt(CurlObject *self, PyObject *args)
 		PyErr_SetString(ErrorObject, "strings are not supported for this option");
 		return NULL;
 	    }
-	if (option == CURLOPT_URL) {
-	    /* Need to store uri for later use if the option is CURLOPT_URL */
-	    buf = (char *)malloc((strlen(stringdata)*sizeof(char))+sizeof(char));
-	    if (buf == NULL)
-	        return PyErr_NoMemory();
-	    if (self->url != NULL) {
-		free(self->url);
-	    }
-	    strcpy(buf, stringdata);
-	    self->url = buf;
-	    res = curl_easy_setopt(self->handle, CURLOPT_URL, self->url);
+	/* Free previously allocated memory to option */
+	opt_masked = option & 0xff;
+	if (self->options[opt_masked] != NULL) {
+	  free(self->options[opt_masked]);
 	}
-	else {
-	    /* Handle the regular cases of string arguments */
-	    res = curl_easy_setopt(self->handle, option, stringdata);
-	}
+	/* Allocate memory to hold the string */
+	buf = (char *)malloc((strlen(stringdata)*sizeof(char))+sizeof(char));
+	if (buf == NULL)
+	  return PyErr_NoMemory();
+	strcpy(buf, stringdata);
+	self->options[opt_masked] = buf;
+	/* Call setopt */
+	res = curl_easy_setopt(self->handle, option, 
+			       (char *)self->options[opt_masked]);
 	/* Check for errors */
 	if (res == 0) {
 	    Py_INCREF(Py_None);
@@ -766,7 +768,6 @@ do_init(PyObject *arg)
 
     /* Setup python curl object initial values */
     self->handle = NULL;
-    self->url = NULL;
     self->httpheader = NULL;
     self->quote = NULL;
     self->postquote = NULL;
@@ -789,6 +790,9 @@ do_init(PyObject *arg)
     if (res != 0)
         goto error;
     memset(self->error, 0, sizeof(char) * CURL_ERROR_SIZE);
+    
+    /* Zero memory buffer for setopt */
+    memset(self->options, 0, sizeof(void *) * CURLOPT_LASTENTRY);
 
     /* Set NOPROGRESS to 1 by default */
     res = curl_easy_setopt(self->handle, CURLOPT_NOPROGRESS, 1);

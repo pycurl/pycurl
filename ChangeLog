@@ -1,3 +1,8 @@
+2002-02-26  Kjetil Jacobsen  <kjetilja>
+
+	* Fixed a bug where string arguments to setopt sometimes were
+	prematurely deallocated.
+
 2002-02-21  Kjetil Jacobsen  <kjetilja>
 
 	* Added the 'xmlrpc_curl.py' file which implements a transport
