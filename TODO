@@ -2,6 +2,8 @@
 
 If you want to hack on pycurl, here's our list of unresolved issues:
 
+    * Use curl_formadd() instead of the deprecated curl_formparse().
+
     * The current curl HLI only works on Python 2.2 or better. Either
       fix this, or change the docs and setup.py accordingly.
 

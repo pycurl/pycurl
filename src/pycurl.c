@@ -34,6 +34,7 @@
 #  define WIN32 1
 #endif
 #include <Python.h>
+#define CURL_OLDSTYLE 1     /* needed for curl_formparse - FIXME */
 #include <curl/curl.h>
 #include <curl/multi.h>
 #undef NDEBUG
