@@ -145,10 +145,21 @@ class HtmlWindow(GtkHTML):
         url = url.strip()
         self.request_url(html, url, handle)
         self.urlentry.set_text(url)
+        pbar = self.statusbar.get_progress()
+        pbar.set_activity_mode(1)
+        progress = 0.0
+        round = 0
         # Render incoming objects
         while self.num_obj > 0:
             if len(self.render) == 0:
-                mainiteration(0)
+                progress += 0.01
+                round += 1
+                if progress > 1.0:  progress = 0.0
+                if round > 100:
+                    self.statusbar.set_progress(progress)
+                    round = 0
+                while events_pending():
+                    mainiteration(0)
                 continue
             self.num_obj -= 1
             buf, handle = self.render.pop(0)
@@ -158,7 +169,9 @@ class HtmlWindow(GtkHTML):
             html.end(handle, HTML_STREAM_OK)
         # Finished rendering page
         t2 = time.time()
-        self.statusbar.set_text("Done (%.3f seconds)" % (t2-t1))
+        pbar.set_activity_mode(0)
+        self.statusbar.set_progress(0.0)
+        self.statusbar.set_status("Done (%.3f seconds)" % (t2-t1))
 
     def submit(self, html, method, path, params):
         if method != 'GET':
@@ -171,7 +184,7 @@ class HtmlWindow(GtkHTML):
     def request_url(self, html, url, handle):
         if self.current_doc:
             url = urllib.basejoin(self.current_doc, url)
-        self.statusbar.set_text("Requesting URL: %s" % url)
+        self.statusbar.set_status("Requesting URL: %s" % url)
         self.queue.put((url, handle))
         self.num_obj += 1
 
@@ -230,9 +243,11 @@ vbox.pack_start(sw)
 sep = GtkHSeparator()
 vbox.pack_start(sep, expand=FALSE)
 
-status = GtkLabel('')
-status.set_justify(JUSTIFY_LEFT)
-status.set_alignment(0.0, 0.5)
+#status = GtkLabel('')
+#status.set_justify(JUSTIFY_LEFT)
+#status.set_alignment(0.0, 0.5)
+
+status = GnomeAppBar()
 win.set_statusbar(status)
 win.create_menus(menus)
 win.create_toolbar(toolbar)
