@@ -1503,15 +1503,19 @@ done:
     return Py_None;
 }
 
+
 /* --------------- fdset ---------------------- */
 
 static PyObject *
 do_multi_fdset(CurlMultiObject *self, PyObject *args)
 {
-    CURLMcode res;
-    fd_set read_fd_set, write_fd_set, exc_fd_set;
+    CURLMcode res = -1;
+    fd_set read_fd_set;
+    fd_set write_fd_set;
+    fd_set exc_fd_set;
     int max_fd, fd;
-    PyObject *list, *read_list, *write_list, *except_list;
+    PyObject *fdset_list = NULL, *read_list = NULL, *write_list = NULL,
+             *except_list = NULL, *py_fd = NULL;
 
     /* Sanity checks */
     if (!PyArg_ParseTuple(args, ":fdset")) {
@@ -1519,16 +1523,19 @@ do_multi_fdset(CurlMultiObject *self, PyObject *args)
     }
 
     if (self->multi_handle == NULL) {
-        PyErr_SetString(ErrorObject,
-                        "cannot invoke perform, no curl-multi handle");
+        PyErr_SetString(ErrorObject, "cannot invoke fdset, no curl-multi handle");
         return NULL;
     }
 
-    if (self->state != NULL) {
-        PyErr_SetString(ErrorObject,
-                        "cannot obtain fdset - multi_perform() is running");
-        return NULL;
-    }
+    /* Allocate lists */
+    if ((fdset_list = PyList_New(0)) == NULL) goto error;
+    if ((read_list = PyList_New(0)) == NULL) goto error;
+    if ((write_list = PyList_New(0)) == NULL) goto error;
+    if ((except_list = PyList_New(0)) == NULL) goto error;
+
+    if (PyList_Append(fdset_list, read_list) == -1) goto error;
+    if (PyList_Append(fdset_list, write_list) == -1) goto error;
+    if (PyList_Append(fdset_list, except_list) == -1) goto error;
 
     /* Clear file descriptor sets */
     FD_ZERO(&read_fd_set);
@@ -1538,37 +1545,36 @@ do_multi_fdset(CurlMultiObject *self, PyObject *args)
     /* Don't bother releasing the gil as this is just a data structure operation */
     res = curl_multi_fdset(self->multi_handle, &read_fd_set, &write_fd_set,
                            &exc_fd_set, &max_fd);
-    if (res != CURLM_OK) {
-        CURLERROR2("fdset failed");
-    }
 
-    /* Initialize lists */
-    list = PyList_New(0);
-    read_list = PyList_New(0);
-    write_list = PyList_New(0);
-    except_list = PyList_New(0);
-    PyList_Append(list, read_list);
-    PyList_Append(list, write_list);
-    PyList_Append(list, except_list);
+    /* We assume these errors are ok, otherwise throw exception */
+    if (res != CURLM_OK) goto error;
 
-    /* Populate read, write and exception lists */
-    for (fd = 0; fd < max_fd+1; fd++) {
+    /* Populate lists */
+    for (fd = 0; fd < max_fd + 1; fd++) {
         if (FD_ISSET(fd, &read_fd_set)) {
-            PyList_Append(read_list, PyInt_FromLong((long)fd));
+            if ((py_fd = PyInt_FromLong((long)fd)) == NULL) goto error;
+            if (PyList_Append(read_list, py_fd) == -1) goto error;
         }
         if (FD_ISSET(fd, &write_fd_set)) {
-            PyList_Append(write_list, PyInt_FromLong((long)fd));
+            if ((py_fd = PyInt_FromLong((long)fd)) == NULL) goto error;
+            if (PyList_Append(write_list, py_fd) == -1) goto error;
         }
         if (FD_ISSET(fd, &exc_fd_set)) {
-            PyList_Append(except_list, PyInt_FromLong((long)fd));
+            if ((py_fd = PyInt_FromLong((long)fd)) == NULL) goto error;
+            if (PyList_Append(except_list, py_fd) == -1) goto error;
         }
     }
+    return fdset_list;
 
-    /* FIXME: If any of the PyList_Append operations fail, objects on
-       the lists should be decref'ed as well as the lists themselves.
-       Hence, the current implementation will at best be leaking
-       memory should any of the list operations fail.  */
-    return list;
+    /* We reached this part of the code due to some error */
+error:
+    Py_XDECREF(py_fd);
+    Py_XDECREF(read_list);
+    Py_XDECREF(write_list);
+    Py_XDECREF(except_list);
+    Py_XDECREF(fdset_list);
+
+    CURLERROR2("fdset failed due to internal errors");
 }
 
 
@@ -1584,7 +1590,7 @@ static char co_copy_doc [] = "copy() -> New curl object. FIXME\n";
 static char co_perform_doc [] = "perform() -> None.  Perform a file transfer.  Throws pycurl.error exception upon failure.\n";
 static char co_setopt_doc [] = "setopt(option, parameter) -> None.  Set curl session options.  Throws pycurl.error exception upon failure.\n";
 static char co_getinfo_doc [] = "getinfo(info) -> res.  Extract and return information from a curl session.  Throws pycurl.error exception upon failure.\n";
-static char co_multi_fdset_doc [] = "fdset() -> dict.  Returns a list of three lists that can be passed to the select.select() method .\n";
+static char co_multi_fdset_doc [] = "fdset() -> List.  Returns a list of three lists that can be passed to the select.select() method .\n";
 
 static PyMethodDef curlobject_methods[] = {
     {"cleanup", (PyCFunction)do_curl_cleanup, METH_VARARGS, co_cleanup_doc},
