@@ -1619,7 +1619,7 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
     int in_queue, res, num_results;
     CURLMsg *msg;
     CurlObject *co;
-    PyObject *list;
+    PyObject *ok_list, *err_list;
 
     /* Sanity checks */
     if (!PyArg_ParseTuple(args, "i:info_read", &num_results)) {
@@ -1636,8 +1636,13 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
         return NULL;
     }
 
-    list = PyList_New(0);
-    if (list == NULL) {
+    ok_list = PyList_New(0);
+    if (ok_list == NULL) {
+        return NULL;
+    }
+    err_list = PyList_New(0);
+    if (err_list == NULL) {
+        Py_DECREF(ok_list);
         return NULL;
     }
     in_queue = 0;
@@ -1653,15 +1658,28 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
         co = NULL;
         res = curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, &co);
         if (res != CURLE_OK || co == NULL) {
-            Py_DECREF(list);
+            Py_DECREF(ok_list);
+            Py_DECREF(err_list);
             CURLERROR_MSG("Unable to fetch curl handle from curl object");
         }
         assert(co != NULL);
         assert(co->ob_type == &Curl_Type);
-        /* Append curl object to list of returned objects */
-        if (PyList_Append(list, (PyObject *)co) == -1) {
-            Py_DECREF(list);
-            return NULL;
+        if (msg->data.result == CURLE_OK) {
+            /* Append curl object to list of objects which succeeded */
+            if (PyList_Append(ok_list, (PyObject *)co) == -1) {
+                Py_DECREF(ok_list);
+                Py_DECREF(err_list);
+                return NULL;
+            }
+        }
+        else {
+            /* Append curl object to list of objects which failed */
+            if (PyList_Append(err_list, Py_BuildValue("(isO)", msg->data.result,
+                                        co->error, (PyObject *)co)) == -1) {
+                Py_DECREF(ok_list);
+                Py_DECREF(err_list);
+                return NULL;
+            }
         }
         /* Check for termination */
         num_results--;
@@ -1671,7 +1689,7 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
     }
 
     /* Return (number of queued messages, [curl objects]) */
-    return Py_BuildValue("(iO)", in_queue, list);
+    return Py_BuildValue("(iOO)", in_queue, ok_list, err_list);
 }
 
 /* --------------- select --------------- */
