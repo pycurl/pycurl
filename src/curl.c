@@ -734,6 +734,13 @@ do_init(PyObject *arg)
     }
     memset(self->error, 0, sizeof(char) * CURL_ERROR_SIZE);
 
+    /* Set NOPROGRESS to 1 by default */
+    res = curl_easy_setopt(curlhandle, CURLOPT_NOPROGRESS, 1);
+    if (res != 0) {
+	curl_easy_cleanup(curlhandle);
+	return NULL;
+    }
+
     /* Setup python curl object initial values and return object */
     self->handle = curlhandle;
     self->url = NULL;
