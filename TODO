@@ -6,13 +6,13 @@ If you want to hack on pycurl, here's our list of unresolved issues:
 
 NEW FEATURES:
 
-    * The current curl HLI only works on Python 2.2 or better. Either
-      fix this, or change the docs and setup.py accordingly.
+    * HTTPPOST should take a dict instead of a list of tuples, this way it
+      would have the same interface as POSTFIELDS.
+
+    * Support more of the CURLFORM_* API in HTTPPOST.
 
     * Add docs to the high-level interface.
 
     * Add more options to the undocumented and currently mostly useless
       Curl.unsetopt() method. Have to carefully check the libcurl source
       code for each option we want to support.
-
-    * Support more of the CURLFORM_* API in HTTPPOST.

@@ -32,15 +32,6 @@ applies only if there is more than one version of libcurl installed,
 e.g. one in /usr/lib and one in /usr/local/lib.
 
 
-Makefile
---------
-
-To build pycurl for Python 1.5.2 without the distutils package, be
-brave and manually tweak the Makefile in the 'src' directory to match
-your installation (the default Makefile should work fine for older
-RedHat distributions with Python 1.5.2).
-
-
 Windows
 -------
 

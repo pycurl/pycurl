@@ -39,24 +39,18 @@
 #undef NDEBUG
 #include <assert.h>
 
+#define SUPPORTED_LIBCURL_VERSION 0x070b02
+
 /* Ensure we have updated versions */
-#if !defined(PY_VERSION_HEX) || (PY_VERSION_HEX < 0x010502f0)
-#  error "Need Python version 1.5.2 or greater to compile pycurl."
+#if !defined(PY_VERSION_HEX) || (PY_VERSION_HEX < 0x02020000)
+#  error "Need Python version 2.2 or greater to compile pycurl."
 #endif
-#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x070a03)
-#  error "Need libcurl version 7.10.3 or greater to compile pycurl."
+#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x070b02)
+#  error "Need libcurl version 7.11.2 or greater to compile pycurl."
 #endif
 #if (LIBCURL_VERSION_NUM < 0x070b01)
 #  define curl_off_t off_t
 #endif
-
-#undef USE_GC
-#if defined(WITHOUT_GC)
-#elif (PY_VERSION_HEX < 0x02020000)
-#else
-#  define USE_GC 1
-#endif
-
 
 #undef UNUSED
 #define UNUSED(var)     ((void)&var)
@@ -112,7 +106,6 @@ typedef struct {
     PyObject *pro_cb;
     PyObject *pwd_cb;
     PyObject *d_cb;
-    PyObject *ssl_ctx_cb;
     /* file objects */
     PyObject *readdata_fp;
     PyObject *writedata_fp;
@@ -140,7 +133,7 @@ typedef struct {
 } while (0)
 
 
-/* safe XDECREF for object states that handles nested deallocations */
+/* Safe XDECREF for object states that handles nested deallocations */
 #define ZAP(v) { \
     PyObject *tmp = (PyObject *)(v); \
     (v) = NULL; \
@@ -250,16 +243,12 @@ util_curl_new(void)
 {
     CurlObject *self;
 
-#if defined(USE_GC)
     self = (CurlObject *) PyObject_GC_New(CurlObject, p_Curl_Type);
-    if (self) PyObject_GC_Track(self);
-#elif (PY_VERSION_HEX >= 0x01060000)
-    self = (CurlObject *) PyObject_New(CurlObject, p_Curl_Type);
-#else
-    self = (CurlObject *) PyObject_NEW(CurlObject, p_Curl_Type);
-#endif
-    if (self == NULL)
+    if (self) { 
+        PyObject_GC_Track(self);
+    } else {
         return NULL;
+    }
 
     /* Set python curl object initial values */
     self->dict = NULL;
@@ -280,7 +269,6 @@ util_curl_new(void)
     self->pro_cb = NULL;
     self->pwd_cb = NULL;
     self->d_cb = NULL;
-    self->ssl_ctx_cb = NULL;
 
     /* Set file object pointers to NULL by default */
     self->readdata_fp = NULL;
@@ -348,86 +336,6 @@ error:
 }
 
 
-#if 0 /* FIXME: Curl.copy() needs some more work */
-static CurlObject *
-do_curl_copy(const CurlObject *self, PyObject *args)
-{
-    CurlObject *copy = NULL;
-    int res;
-    int i;
-
-    if (!PyArg_ParseTuple(args, ":copy")) {
-        return NULL;
-    }
-    if (check_curl_state(self, 1+2, "copy") != 0) {
-        return NULL;
-    }
-
-    /* FIXME FIXME FIXME
-    **   - we really need some sane semantics
-    **   - have to carefully check what curl_easy_duphandle() actually does
-    **
-    ** refuse to copy ?
-    **   - when we have open file objects
-    ** deep copy ?
-    **   - dict
-    ** shallow copy ?
-    **   - callbacks
-    ** NOT copy ?
-    **   - multi_stack
-    **   - callbacks
-    **/
-
-#if 1
-    /* for now we refuse to copy if *ANY* value except multi_stack is set */
-    /* this makes copy() pretty useless */
-    if (self->dict)
-        goto cannot_copy;
-    if (self->httppost || self->httpheader || self->http200aliases || self->quote || self->postquote ||  self->prequote)
-        goto cannot_copy;
-    if (self->w_cb || self->r_cb || self->pro_cb || self->pwd_cb || self->d_cb || self->ssl_ctx_cb)
-        goto cannot_copy;
-    if (self->readdata_fp || self->writedata_fp || self->writeheader_fp)
-        goto cannot_copy;
-    for (i = 0; i < OPTIONS_SIZE; i++) {
-        if (self->options[i] != NULL) {
-            goto cannot_copy;
-        }
-    }
-#endif
-
-    /* Allocate python curl object */
-    copy = util_curl_new();
-    if (copy == NULL)
-        return NULL;
-
-    /* Copy curl handle */
-    copy->handle = curl_easy_duphandle(self->handle);
-    if (copy->handle == NULL)
-        goto error;
-
-    /* Set curl error buffer and copy it */
-    res = curl_easy_setopt(copy->handle, CURLOPT_ERRORBUFFER, copy->error);
-    if (res != CURLE_OK)
-        goto error;
-    memcpy(copy->error, self->error, sizeof(self->error));
-
-    /* Success - return new object */
-    return copy;
-
-error:
-    Py_XDECREF(copy);    /* this also closes copy->handle */
-    PyErr_SetString(ErrorObject, "initializing curl failed");
-    return NULL;
-
-cannot_copy:
-    Py_XDECREF(copy);    /* this also closes copy->handle */
-    PyErr_SetString(ErrorObject, "Curl object is in a state that cannot get copied");
-    return NULL;
-}
-#endif /* #if 0 */
-
-
 /* util function shared by close() and clear() */
 static void
 util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
@@ -457,7 +365,6 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
         ZAP(self->pwd_cb);
         ZAP(self->h_cb);
         ZAP(self->d_cb);
-        ZAP(self->ssl_ctx_cb);
     }
 
     if (flags & 8) {
@@ -529,25 +436,14 @@ util_curl_close(CurlObject *self)
 static void
 do_curl_dealloc(CurlObject *self)
 {
-#if defined(USE_GC)
     PyObject_GC_UnTrack(self);
     Py_TRASHCAN_SAFE_BEGIN(self)
-#endif
 
     ZAP(self->dict);
     util_curl_close(self);
 
-#if defined(USE_GC)
     PyObject_GC_Del(self);
-#elif (PY_VERSION_HEX >= 0x01060000)
-    PyObject_Del(self);
-#else
-    PyMem_DEL(self);
-#endif
-
-#if defined(USE_GC)
     Py_TRASHCAN_SAFE_END(self)
-#endif
 }
 
 
@@ -582,8 +478,6 @@ do_curl_errstr(CurlObject *self, PyObject *args)
 
 /* --------------- GC support --------------- */
 
-#if defined(USE_GC)
-
 /* Drop references that may have created reference cycles. */
 static int
 do_curl_clear(CurlObject *self)
@@ -610,7 +504,6 @@ do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
     VISIT(self->pwd_cb);
     VISIT(self->h_cb);
     VISIT(self->d_cb);
-    VISIT(self->ssl_ctx_cb);
 
     VISIT(self->readdata_fp);
     VISIT(self->writedata_fp);
@@ -619,8 +512,6 @@ do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
     return 0;
 #undef VISIT
 }
-
-#endif /* USE_GC */
 
 
 /* --------------- perform --------------- */
@@ -760,12 +651,7 @@ read_callback(char *ptr, size_t size, size_t nmemb, void  *stream)
             PyErr_Print();
         }
         else {
-#if (PY_VERSION_HEX >= 0x02000000)
             PyString_AsStringAndSize(result, &buf, &obj_size);
-#else
-            buf = PyString_AS_STRING(result);
-            obj_size = PyString_GET_SIZE(result);
-#endif
             if (obj_size > read_size) {
                 PyErr_SetString(ErrorObject, "string from READFUNCTION callback is too long");
                 PyErr_Print();
@@ -1049,14 +935,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
     /* Handle the case of long arguments (used by *LARGE options) */
     if (PyLong_Check(obj)) {
-#if (PY_VERSION_HEX >= 0x02020000)
         curl_off_t longdata = PyLong_AsLongLong(obj);
-#else
-#  if defined(__GNUC__)
-#    warning "Long longs are not properly supported by this Python version, this may affect largefile support"
-#  endif
-        curl_off_t longdata = PyLong_AsLong(obj);
-#endif
         if (option < CURLOPTTYPE_OFF_T) {
             PyErr_SetString(PyExc_TypeError, "longs are not supported for this option");
             return NULL;
@@ -1344,13 +1223,9 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
     case CURLINFO_REDIRECT_COUNT:
     case CURLINFO_REQUEST_SIZE:
     case CURLINFO_SSL_VERIFYRESULT:
-#if (LIBCURL_VERSION_NUM >= 0x070a07)
     case CURLINFO_HTTP_CONNECTCODE:
-#endif
-#if (LIBCURL_VERSION_NUM >= 0x070a08)
     case CURLINFO_HTTPAUTH_AVAIL:
     case CURLINFO_PROXYAUTH_AVAIL:
-#endif
         {
             /* Return PyInt as result */
             long l_res = -1;
@@ -1429,16 +1304,13 @@ do_multi_new(PyObject *dummy, PyObject *args)
     }
 
     /* Allocate python curl-multi object */
-#if defined(USE_GC)
     self = (CurlMultiObject *) PyObject_GC_New(CurlMultiObject, p_CurlMulti_Type);
-    if (self) PyObject_GC_Track(self);
-#elif (PY_VERSION_HEX >= 0x01060000)
-    self = (CurlMultiObject *) PyObject_New(CurlMultiObject, p_CurlMulti_Type);
-#else
-    self = (CurlMultiObject *) PyObject_NEW(CurlMultiObject, p_CurlMulti_Type);
-#endif
-    if (self == NULL)
+    if (self) {
+        PyObject_GC_Track(self);
+    }
+    else {
         return NULL;
+    }
 
     /* Initialize object attributes */
     self->dict = NULL;
@@ -1471,25 +1343,14 @@ util_multi_close(CurlMultiObject *self)
 static void
 do_multi_dealloc(CurlMultiObject *self)
 {
-#if defined(USE_GC)
     PyObject_GC_UnTrack(self);
     Py_TRASHCAN_SAFE_BEGIN(self)
-#endif
 
     ZAP(self->dict);
     util_multi_close(self);
 
-#if defined(USE_GC)
     PyObject_GC_Del(self);
-#elif (PY_VERSION_HEX >= 0x01060000)
-    PyObject_Del(self);
-#else
-    PyMem_DEL(self);
-#endif
-
-#if defined(USE_GC)
     Py_TRASHCAN_SAFE_END(self)
-#endif
 }
 
 
@@ -1509,8 +1370,6 @@ do_multi_close(CurlMultiObject *self, PyObject *args)
 
 
 /* --------------- GC support --------------- */
-
-#if defined(USE_GC)
 
 /* Drop references that may have created reference cycles. */
 static int
@@ -1533,10 +1392,8 @@ do_multi_traverse(CurlMultiObject *self, visitproc visit, void *arg)
 #undef VISIT
 }
 
-#endif /* USE_GC */
-
-
 /* --------------- perform --------------- */
+
 
 static PyObject *
 do_multi_perform(CurlMultiObject *self, PyObject *args)
@@ -1844,7 +1701,8 @@ do_multi_select(CurlMultiObject *self, PyObject *args)
 
     if (max_fd < 0) {
         n = 0;
-    } else {
+    } 
+    else {
         Py_BEGIN_ALLOW_THREADS
         n = select(max_fd + 1, &self->read_fd_set, &self->write_fd_set, &self->exc_fd_set, tvp);
         Py_END_ALLOW_THREADS
@@ -1865,9 +1723,6 @@ do_multi_select(CurlMultiObject *self, PyObject *args)
 /* --------------- methods --------------- */
 
 static char co_close_doc [] = "close() -> None.  Close handle and end curl session.\n";
-#if 0
-static char co_copy_doc [] = "copy() -> New curl object. FIXME\n";
-#endif
 static char co_errstr_doc [] = "errstr() -> String.  Return the internal libcurl error buffer string.\n";
 static char co_getinfo_doc [] = "getinfo(info) -> Res.  Extract and return information from a curl session.  Throws pycurl.error exception upon failure.\n";
 static char co_perform_doc [] = "perform() -> None.  Perform a file transfer.  Throws pycurl.error exception upon failure.\n";
@@ -1880,9 +1735,6 @@ static char co_multi_select_doc [] = "select([timeout]) -> Int.  Returns result 
 
 static PyMethodDef curlobject_methods[] = {
     {"close", (PyCFunction)do_curl_close, METH_VARARGS, co_close_doc},
-#if 0
-    {"copy", (PyCFunction)do_curl_copy, METH_VARARGS, co_copy_doc},
-#endif
     {"errstr", (PyCFunction)do_curl_errstr, METH_VARARGS, co_errstr_doc},
     {"getinfo", (PyCFunction)do_curl_getinfo, METH_VARARGS, co_getinfo_doc},
     {"perform", (PyCFunction)do_curl_perform, METH_VARARGS, co_perform_doc},
@@ -1997,14 +1849,10 @@ static PyTypeObject Curl_Type = {
     0,                          /* tp_getattro */
     0,                          /* tp_setattro */
     0,                          /* tp_as_buffer */
-#if defined(USE_GC)
     Py_TPFLAGS_HAVE_GC,         /* tp_flags */
     0,                          /* tp_doc */
     (traverseproc)do_curl_traverse, /* tp_traverse */
     (inquiry)do_curl_clear      /* tp_clear */
-#else
-    0                           /* tp_flags */
-#endif
     /* More fields follow here, depending on your Python version. You can
      * safely ignore any compiler warnings about missing initializers.
      */
@@ -2032,14 +1880,10 @@ static PyTypeObject CurlMulti_Type = {
     0,                          /* tp_getattro */
     0,                          /* tp_setattro */
     0,                          /* tp_as_buffer */
-#if defined(USE_GC)
     Py_TPFLAGS_HAVE_GC,         /* tp_flags */
     0,                          /* tp_doc */
     (traverseproc)do_multi_traverse, /* tp_traverse */
     (inquiry)do_multi_clear     /* tp_clear */
-#else
-    0                           /* tp_flags */
-#endif
     /* More fields follow here, depending on your Python version. You can
      * safely ignore any compiler warnings about missing initializers.
      */
@@ -2187,11 +2031,6 @@ static PyMethodDef curl_methods[] = {
     {"version_info", (PyCFunction)do_version_info, METH_VARARGS, pycurl_version_info_doc},
     {"Curl", (PyCFunction)do_curl_new, METH_VARARGS, pycurl_curl_new_doc},
     {"CurlMulti", (PyCFunction)do_multi_new, METH_VARARGS, pycurl_multi_new_doc},
-#if 0
-    /* deprecated and finally removed 2003-06-10 */
-    {"init", (PyCFunction)do_curl_new, METH_VARARGS, NULL},
-    {"multi_init", (PyCFunction)do_multi_new, METH_VARARGS, NULL},
-#endif
     {NULL, NULL, 0, NULL}
 };
 
@@ -2353,7 +2192,6 @@ initpycurl(void)
     insint_c(d, "PROXY_SOCKS5", CURLPROXY_SOCKS5);
 
     /* curl_httpauth: constants for setopt(HTTPAUTH, x) */
-#if (LIBCURL_VERSION_NUM >= 0x070a06)
     insint_c(d, "HTTPAUTH_NONE", CURLAUTH_NONE);
     insint_c(d, "HTTPAUTH_BASIC", CURLAUTH_BASIC);
     insint_c(d, "HTTPAUTH_DIGEST", CURLAUTH_DIGEST);
@@ -2361,7 +2199,6 @@ initpycurl(void)
     insint_c(d, "HTTPAUTH_NTLM", CURLAUTH_NTLM);
     insint_c(d, "HTTPAUTH_ANY", CURLAUTH_ANY);
     insint_c(d, "HTTPAUTH_ANYSAFE", CURLAUTH_ANYSAFE);
-#endif
 
     /* CURLoption: symbolic constants for setopt() */
 /* FIXME: reorder these to match <curl/curl.h> */
@@ -2453,40 +2290,26 @@ initpycurl(void)
     insint_c(d, "PROXYTYPE", CURLOPT_PROXYTYPE);
     insint_c(d, "ENCODING", CURLOPT_ENCODING);
     insint_c(d, "HTTP200ALIASES", CURLOPT_HTTP200ALIASES);
-#if (LIBCURL_VERSION_NUM >= 0x070a04)
     insint_c(d, "UNRESTRICTED_AUTH", CURLOPT_UNRESTRICTED_AUTH);
-#endif
-#if (LIBCURL_VERSION_NUM >= 0x070a05)
     insint_c(d, "FTP_USE_EPRT", CURLOPT_FTP_USE_EPRT);
-#endif
-#if (LIBCURL_VERSION_NUM >= 0x070a06)
     insint_c(d, "HTTPAUTH", CURLOPT_HTTPAUTH);
-#endif
-#if (LIBCURL_VERSION_NUM >= 0x070a07)
     insint_c(d, "FTP_CREATE_MISSING_DIRS", CURLOPT_FTP_CREATE_MISSING_DIRS);
     insint_c(d, "PROXYAUTH", CURLOPT_PROXYAUTH);
-#endif
-#if (LIBCURL_VERSION_NUM >= 0x070a08)
     insint_c(d, "FTP_RESPONSE_TIMEOUT", CURLOPT_FTP_RESPONSE_TIMEOUT);
     insint_c(d, "IPRESOLVE", CURLOPT_IPRESOLVE);
     insint_c(d, "MAXFILESIZE", CURLOPT_MAXFILESIZE);
-#endif
 
-#if (LIBCURL_VERSION_NUM >= 0x070a08)
     /* constants for setopt(IPRESOLVE, x) */
     insint_c(d, "IPRESOLVE_WHATEVER", CURL_IPRESOLVE_WHATEVER);
     insint_c(d, "IPRESOLVE_V4", CURL_IPRESOLVE_V4);
     insint_c(d, "IPRESOLVE_V6", CURL_IPRESOLVE_V6);
-#endif
 
-#if (LIBCURL_VERSION_NUM >= 0x070a07)
     /* constants for setopt(HTTP_VERSION, x) */
     insint_c(d, "HTTP_VERSION", CURLOPT_HTTP_VERSION);
     insint_c(d, "CURL_HTTP_VERSION_NONE", CURL_HTTP_VERSION_NONE);
     insint_c(d, "CURL_HTTP_VERSION_1_0", CURL_HTTP_VERSION_1_0);
     insint_c(d, "CURL_HTTP_VERSION_1_1", CURL_HTTP_VERSION_1_1);
     insint_c(d, "CURL_HTTP_VERSION_LAST", CURL_HTTP_VERSION_LAST);
-#endif
 
     /* CURL_NETRC_OPTION: constants for setopt(NETRC, x) */
     insint_c(d, "NETRC_OPTIONAL", CURL_NETRC_OPTIONAL);
@@ -2503,7 +2326,6 @@ initpycurl(void)
     /* CURLINFO: symbolic constants for getinfo(x) */
     insint_c(d, "EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL);
     insint_c(d, "HTTP_CODE", CURLINFO_HTTP_CODE);
-    /* new name since 7.10.8 */
     insint_c(d, "RESPONSE_CODE", CURLINFO_HTTP_CODE);
     insint_c(d, "TOTAL_TIME", CURLINFO_TOTAL_TIME);
     insint_c(d, "NAMELOOKUP_TIME", CURLINFO_NAMELOOKUP_TIME);
@@ -2523,29 +2345,16 @@ initpycurl(void)
     insint_c(d, "CONTENT_TYPE", CURLINFO_CONTENT_TYPE);
     insint_c(d, "REDIRECT_TIME", CURLINFO_REDIRECT_TIME);
     insint_c(d, "REDIRECT_COUNT", CURLINFO_REDIRECT_COUNT);
-#if (LIBCURL_VERSION_NUM >= 0x070a07)
     insint_c(d, "HTTP_CONNECTCODE", CURLINFO_HTTP_CONNECTCODE);
-#endif
-#if (LIBCURL_VERSION_NUM >= 0x070a08)
     insint_c(d, "HTTPAUTH_AVAIL", CURLINFO_HTTPAUTH_AVAIL);
     insint_c(d, "PROXYAUTH_AVAIL", CURLINFO_PROXYAUTH_AVAIL);
-#endif
-
-#if (LIBCURL_VERSION_NUM >= 0x070b00)
     insint_c(d, "FTP_SSL", CURLOPT_FTP_SSL);
     insint_c(d, "NETRC_FILE", CURLOPT_NETRC_FILE);
     insint_c(d, "MAXFILESIZE_LARGE", CURLOPT_MAXFILESIZE_LARGE);
     insint_c(d, "RESUME_FROM_LARGE", CURLOPT_RESUME_FROM_LARGE);
     insint_c(d, "INFILESIZE_LARGE", CURLOPT_INFILESIZE_LARGE);
-#endif
-
-#if (LIBCURL_VERSION_NUM >= 0x070b02)
     insint_c(d, "TCP_NODELAY", CURLOPT_TCP_NODELAY);
-#endif
-
-#ifdef CURL_VERSION_LARGEFILE
     insint_c(d, "POSTFIELDSIZE_LARGE", CURLOPT_POSTFIELDSIZE_LARGE);
-#endif
 
     /* curl_closepolicy: constants for setopt(CLOSEPOLICY, x) */
     insint_c(d, "CLOSEPOLICY_OLDEST", CURLCLOSEPOLICY_OLDEST);
@@ -2582,17 +2391,11 @@ initpycurl(void)
     insint(d, "VERSION_FEATURE_KERBEROS4", CURL_VERSION_KERBEROS4);
     insint(d, "VERSION_FEATURE_SSL", CURL_VERSION_SSL);
     insint(d, "VERSION_FEATURE_LIBZ", CURL_VERSION_LIBZ);
-#if (LIBCURL_VERSION_NUM >= 0x070a06)
     insint(d, "VERSION_FEATURE_NTLM", CURL_VERSION_NTLM);
     insint(d, "VERSION_FEATURE_GSSNEGOTIATE", CURL_VERSION_GSSNEGOTIATE);
     insint(d, "VERSION_FEATURE_DEBUG", CURL_VERSION_DEBUG);
-#endif
-#if (LIBCURL_VERSION_NUM >= 0x070a07)
     insint(d, "VERSION_FEATURE_ASYNCHDNS", CURL_VERSION_ASYNCHDNS);
-#endif
-#if (LIBCURL_VERSION_NUM >= 0x070a08)
     insint(d, "VERSION_FEATURE_SPNEGO", CURL_VERSION_SPNEGO);
-#endif
 #endif
 
     /**
