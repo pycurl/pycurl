@@ -25,7 +25,7 @@ class WorkerThread(threading.Thread):
             try:
                 url, filename = self.queue.get_nowait()
             except Queue.Empty:
-                break
+                raise SystemExit
             f = open(filename, "wb")
             curl = pycurl.Curl()
             curl.setopt(pycurl.HTTPHEADER, ["User-Agent: PycURL"])
@@ -34,10 +34,13 @@ class WorkerThread(threading.Thread):
             curl.setopt(pycurl.URL, url)
             curl.setopt(pycurl.WRITEDATA, f)
             curl.setopt(pycurl.NOSIGNAL, 1)
+            curl.setopt(pycurl.CONNECTTIMEOUT, 30)
             try:
                 curl.perform()
             except:
-                pass
+                import traceback
+                traceback.print_exc(file=sys.stderr)
+                sys.stderr.flush()
             curl.close()
             f.close()
             sys.stdout.write(".")
