@@ -1,6 +1,8 @@
-#!/usr/local/bin/python
+#! /usr/bin/env python2.2
 #
 # sfquery -- Source Forge query script
+#
+# Requires Python 2.2 or better.
 #
 # Retrieves a SourceForge XML export object for a given project.
 # Specify the *numeric* project ID. the user name, and the password,
@@ -10,7 +12,9 @@
 # Illustrates GET and POST transactions over HTTPS, response callbacks,
 # and enabling basic cookie echoing for stateful sessions.
 #
-# Requires Python 2.1 or better.
+# ** mfx NOTE: this program uses "black magic" using COOKIEFILE in
+#    combination with a non-existant file name. See the libcurl docs
+#    for more info.
 #
 # By Eric S. Raymond, August 2002.  All rites reversed.
 
@@ -25,7 +29,7 @@ class CGIClient:
         self.verbosity = 0
         # Nothing past here should be modified by the caller.
         self.response = ""
-        self.curlobj = pycurl.init()
+        self.curlobj = pycurl.Curl()
         # Verify that we've got the right site...
         self.curlobj.setopt(pycurl.SSL_VERIFYHOST, 2)
         # Follow redirects in case it wants to take us to a CGI...
@@ -34,7 +38,7 @@ class CGIClient:
         # Setting this option with even a nonexistent file makes libcurl
         # handle cookie capture and playback automatically.
         self.curlobj.setopt(pycurl.COOKIEFILE, "/foo/bar")
-        # Set up a callback to capture 
+        # Set up a callback to capture
         def response_callback(x):
             self.response += x
         self.curlobj.setopt(pycurl.WRITEFUNCTION, response_callback)
@@ -48,20 +52,20 @@ class CGIClient:
         self.curlobj.setopt(pycurl.URL, os.path.join(self.base_url, cgi))
         self.curlobj.setopt(pycurl.HTTPGET, 1)
         self.response = ""
-	return self.curlobj.perform()
+        self.curlobj.perform()
     def post(self, cgi, params):
         "Ship a POST request to a specified CGI, capture the response body.."
         self.curlobj.setopt(pycurl.URL, os.path.join(self.base_url, cgi))
         self.curlobj.setopt(pycurl.POST, 1)
         self.curlobj.setopt(pycurl.POSTFIELDS, urllib.urlencode(params))
         self.response = ""
-	return self.curlobj.perform()
+        self.curlobj.perform()
     def answered(self, check):
         "Does a given check string occur in the response?"
         return self.response.find(check) > -1
-    def cleanup(self):
-        "Finish a session, freeing resources."
-        self.curlobj.cleanup()
+    def close(self):
+        "Close a session, freeing resources."
+        self.curlobj.close()
 
 class SourceForgeUserSession(CGIClient):
     # SourceForge-specific methods.  Sensitive to changes in site design.
