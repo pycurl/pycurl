@@ -16,7 +16,7 @@
 number of callbacks to be associated with each connection. In
 pycurl, callbacks are defined using the <code>setopt()</code> method for
 Curl objects with options WRITEFUNCTION, READFUNCTION, HEADERFUNCTION,
-PROGRESSFUNCTION or DEBUGFUNCTION. These options
+PROGRESSFUNCTION, IOCTLFUNCTION, or DEBUGFUNCTION. These options
 correspond to the libcurl options with CURLOPT_* prefix removed.  A
 callback in pycurl must be either a regular Python function, a class
 method or an extension type function.</p>
@@ -24,13 +24,14 @@ method or an extension type function.</p>
 <p>There are some limitations to some of the options which can be used
 concurrently with the pycurl callbacks compared to the libcurl callbacks.
 This is to allow different callback functions to be associated with
-different Curl objects.  More specifically, WRITEFUNCTION cannot
-be used with WRITEDATA, READFUNCTION cannot be used with READDATA,
-HEADERFUNCTION cannot be used with WRITEHEADER, PROGRESSFUNCTION cannot be
-used with PROGRESSDATA, and DEBUGFUNCTION cannot be used with DEBUGDATA.
+different Curl objects.  More specifically, WRITEDATA cannot
+be used with WRITEFUNCTION, READDATA cannot be used with READFUNCTION,
+WRITEHEADER cannot be used with HEADERFUNCTION, PROGRESSDATA cannot be
+used with PROGRESSFUNCTION, IOCTLDATA cannot be used with IOCTLFUNCTION,
+and DEBUGDATA cannot be used with DEBUGFUNCTION.
 In practice, these limitations can be overcome by having a callback
 function be a class instance method and rather use the class instance
-attributes to store per object data used in the callbacks.</p>
+attributes to store per object data such as files used in the callbacks.</p>
 
 The signature of each callback used in pycurl is as follows:<br/>
 <br/>
@@ -46,6 +47,9 @@ string</em><br/>
 <br/>
 <code>DEBUGFUNCTION(</code><em>debug message type, debug message string</em><code>)</code>
 <em>-&gt; None<br/></em>
+<br/>
+<code>IOCTLFUNCTION(</code><em>ioctl cmd</em><code>)</code>
+<em>-&gt; status<br/></em>
 <br/>
 <hr/>
 
