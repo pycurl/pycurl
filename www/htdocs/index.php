@@ -6,10 +6,11 @@ $version = "7.10.1";
 <html>
 
 <head>
-  <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1" />
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
   <title>PycURL Home Page</title>
-  <meta name="author" content="Kjetil Jacobsen" />
+  <meta name="author" content="Kjetil Jacobsen, Markus F.X.J. Oberhumer" />
   <meta name="description" content="PycURL Homepage" />
+  <meta name="keywords" content="pycurl, curl, libcurl, python, wget, file transfer" />
 </head>
 
 <body bgcolor="#ffffff" link="#0000ee" vlink="#551a8b" alink="#0000ee">
@@ -23,20 +24,36 @@ $version = "7.10.1";
 
 <p>
 PycURL is a Python module interface to the
-<a href="http://curl.haxx.se/">cURL</a> library.
+<a href="http://curl.haxx.se/libcurl/">cURL library</a>.
 PycURL can be used to fetch documents identified by a URI
 from within a Python program.
 </p>
 
-<p>
-<a href="http://curl.haxx.se/">cURL</a>
-is a library for transferring files with URL syntax,
-supporting FTP, FTPS, HTTP, HTTPS, GOPHER, TELNET, DICT, FILE and LDAP.
-Curl supports HTTPS certificates, HTTP POST, HTTP PUT, FTP uploading,
-kerberos, HTTP form based upload, proxies, cookies, user+password
-authentication, file transfer resume, http proxy tunneling and a busload of
-other <a href="http://curl.haxx.se/docs/features.html">useful tricks</a>.
-</p>
+<h2>Overview</h2>
+<ul>
+  <li>
+    <a href="http://curl.haxx.se/libcurl/">libcurl</a>
+    is a free and easy-to-use client-side URL transfer library,
+    supporting FTP, FTPS, HTTP, HTTPS, GOPHER, TELNET, DICT, FILE and LDAP.
+    libcurl supports HTTPS certificates, HTTP POST, HTTP PUT, FTP uploading,
+    kerberos, HTTP form based upload, proxies, cookies, user+password
+    authentication, file transfer resume, http proxy tunneling and more!
+  </li>
+  <li style="list-style: none"><br /></li>
+  <li>
+    libcurl is highly portable, it builds and works identically on numerous
+    platforms, including Solaris, Net/Free/Open BSD, Darwin, HPUX, IRIX,
+    AIX, Tru64, Linux, Windows, Amiga, OS/2, BeOs, Mac OS X, Ultrix,
+    QNX, OpenVMS, RISC OS and more...
+  </li>
+  <li style="list-style: none"><br /></li>
+  <li>
+    libcurl is thread-safe, IPv6 compatible and fast.
+  </li>
+</ul>
+
+
+<h2>Download</h2>
 
 <p>
 <a href="download/pycurl-7.10.1.tar.gz">Download</a>
@@ -73,9 +90,10 @@ collection for FreeBSD and in the
 collection for NetBSD.
 </p>
 
+
+<h2>License</h2>
 <p>
 <pre>
-
 LICENSE
 -------
 Copyright (c) 2001-2002 by Kjetil Jacobsen
