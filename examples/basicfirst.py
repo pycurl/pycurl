@@ -13,7 +13,7 @@ class Test:
     def body_callback(self, buf):
         self.contents = self.contents + buf
 
-print 'Testing', pycurl.version
+print >>sys.stderr, 'Testing', pycurl.version
 
 t = Test()
 c = pycurl.Curl()
