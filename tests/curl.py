@@ -43,11 +43,12 @@ class Curl:
         if self.h != []:
             self.c.setopt(pycurl.HTTPHEADER, self.h)
         self.c.perform()
-        return self.c.getinfo(pycurl.HTTP_CODE)
+        self.fp.seek(0,0)
+        return (self.fp, self.info())
 
     def info(self):
         self.server_reply.seek(0,0)
-        self.server_reply.readline() # FIXME: won't work well on non-http replies
+        self.server_reply.readline() # FIXME: won't work well on non-http headers 
         m = mimetools.Message(self.server_reply)
         m['http-code'] = str(self.c.getinfo(pycurl.HTTP_CODE))
         m['total-time'] = str(self.c.getinfo(pycurl.TOTAL_TIME))
@@ -78,6 +79,6 @@ class Curl:
 
 if __name__ == "__main__":
     c = Curl('http://curl.haxx.se/')
-    c.retrieve()
-    print c.info()
+    file, info = c.retrieve()
+    print info, file.read()
     c.close()
