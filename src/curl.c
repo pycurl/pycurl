@@ -67,6 +67,7 @@ typedef struct {
     CurlMultiObject *multi_stack;
     struct curl_httppost *httppost;
     struct curl_slist *httpheader;
+    struct curl_slist *http200aliases;
     struct curl_slist *quote;
     struct curl_slist *postquote;
     struct curl_slist *prequote;
@@ -200,6 +201,7 @@ util_curl_new(void)
     self->multi_stack = NULL;
     self->httppost = NULL;
     self->httpheader = NULL;
+    self->http200aliases = NULL;
     self->quote = NULL;
     self->postquote = NULL;
     self->prequote = NULL;
@@ -452,6 +454,7 @@ util_curl_close(CurlObject *self)
 #undef SFREE
 #define SFREE(v)   if (v != NULL) (curl_slist_free_all(v), v = NULL)
     SFREE(self->httpheader);
+    SFREE(self->http200aliases);
     SFREE(self->quote);
     SFREE(self->postquote);
     SFREE(self->prequote);
@@ -987,6 +990,9 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         struct curl_slist **slist = NULL;
 
         switch (option) {
+        case CURLOPT_HTTP200ALIASES:
+            slist = &self->http200aliases;
+            break;
         case CURLOPT_HTTPHEADER:
             slist = &self->httpheader;
             break;
@@ -2265,6 +2271,7 @@ DL_EXPORT(void)
     insint_c(d, "SHARE", CURLOPT_SHARE);
     insint_c(d, "PROXYTYPE", CURLOPT_PROXYTYPE);
     insint_c(d, "ENCODING", CURLOPT_ENCODING);
+    insint_c(d, "HTTP200ALIASES", CURLOPT_HTTP200ALIASES);
 
     /* CURL_NETRC_OPTION: constants for setopt(NETRC, x) */
     insint_c(d, "NETRC_OPTIONAL", CURL_NETRC_OPTIONAL);
