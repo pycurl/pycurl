@@ -88,7 +88,6 @@ while num_processed < num_urls:
         ret, num_handles = m.perform()
         if ret != pycurl.E_CALL_MULTI_PERFORM:
             break
-    print ret
     # Check for curl objects which have terminated, and add them to the freelist
     while 1:
         num_q, ok_list, err_list = m.info_read()
