@@ -74,7 +74,7 @@ features as listed above then PycURL is for you.
 </p>
 
 <p>
-The main drawback with PycURL is that it is a relative thin layer above
+The main drawback with PycURL is that it is a relative thin layer over
 libcurl without any of those nice Pythonic class hierarchies.
 This means it has a somewhat steep learning curve unless you
 are already familiar with libcurl's C API.
