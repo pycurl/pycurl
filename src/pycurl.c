@@ -1040,6 +1040,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_COOKIEJAR:
         case CURLOPT_CUSTOMREQUEST:
         case CURLOPT_EGDSOCKET:
+        case CURLOPT_ENCODING:
         case CURLOPT_FTPPORT:
         case CURLOPT_INTERFACE:
         case CURLOPT_KRB4LEVEL:
