@@ -24,6 +24,10 @@ try:
 except ImportError:
     pickle = None
 
+# update sys.path when running in the build directory
+from util import get_sys_path
+sys.path = get_sys_path()
+
 import pycurl
 from pycurl import Curl, CurlMulti
 
