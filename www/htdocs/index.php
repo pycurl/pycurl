@@ -18,7 +18,7 @@
     &gt;&gt;&gt; print pycurl.__doc__<br>
 <br>
 PycURL is a Python module interface to the <a
-href="http://curl.haxx.se">cURL</a> library.<br>
+href="http://curl.haxx.se/">cURL</a> library.<br>
 PycURL can be used to fetch documents identified by a URI
 from within a Python program.<br>
 <br>
