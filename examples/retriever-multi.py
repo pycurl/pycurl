@@ -3,8 +3,7 @@
 # vi:ts=4:et
 # $Id$
 
-import sys
-assert sys.version[:3] >= "2.2", "requires Python 2.2 or better"
+import string, sys
 import pycurl
 # We should ignore SIGPIPE when using pycurl.NOSIGNAL - see the libcurl
 # documentation `libcurl-the-guide' for more info.
@@ -29,12 +28,12 @@ except:
 queue = []
 fileno = 1
 for url in urls:
-    url = url.strip()
+    url = string.strip(url)
     if not url or url[0] == "#":
         continue
     filename = "doc_%d" % (fileno)
     queue.append((url, filename))
-    fileno += 1
+    fileno = fileno + 1
 del fileno, url, urls
 
 # Check args
@@ -42,6 +41,7 @@ assert queue, "no URLs given"
 num_urls = len(queue)
 num_conn = min(num_conn, num_urls)
 assert 1 <= num_conn <= 10000, "invalid number of connections"
+print "PycURL %s (compiled against 0x%x)" % (pycurl.version, pycurl.COMPILE_LIBCURL_VERSION_NUM)
 print "----- Getting", num_urls, "URLs using", num_conn, "connections -----"
 
 # Preallocate a list of curl objects
@@ -69,6 +69,9 @@ while num_processed < num_urls:
         c.setopt(pycurl.URL, url)
         c.setopt(pycurl.WRITEDATA, c.fp)
         m.add_handle(c)
+        # store some info
+        c.filename = filename
+        c.url = url
     # Run the internal curl state machine for the multi stack
     while 1:
         ret, num_handles = m.perform()
@@ -76,30 +79,32 @@ while num_processed < num_urls:
             break
     # Check for curl objects which have terminated, and add them to the freelist
     while 1:
-        num_q, ok, err = m.info_read()
-        for c in ok:
+        num_q, ok_list, err_list = m.info_read()
+        for c in ok_list:
             c.fp.close()
             c.fp = None
             m.remove_handle(c)
-            print "Success:", c
+            print "Success:", c.filename, c.url, c.getinfo(pycurl.EFFECTIVE_URL)
             freelist.append(c)
-        for c, errno, errmsg in err:
+        for c, errno, errmsg in err_list:
             c.fp.close()
             c.fp = None
             m.remove_handle(c)
-            print "Failed:", c, errno, errmsg
+            print "Failed: ", c.filename, c.url, errno, errmsg
             freelist.append(c)
-        num_processed += len(ok) + len(err)
+        num_processed = num_processed + len(ok_list) + len(err_list)
         if num_q == 0:
             break
-    # currently no more I/O is pending, could do something in the meantime
-    # (display a progress bar, etc.)
+    # Currently no more I/O is pending, could do something in the meantime
+    # (display a progress bar, etc.).
+    # We just use select() to wait until some more data is available.
     m.select()
 
 # Cleanup
 for c in m.handles:
     if c.fp is not None:
         c.fp.close()
+        c.fp = None
     c.close()
 m.close()
 
