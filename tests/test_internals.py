@@ -112,7 +112,7 @@ if 1 and gc:
     c = pycurl.init()
     c.m = pycurl.multi_init()
     c.m.add_handle(c)
-    # create some cyclic references
+    # create some nasty cyclic references
     c.c = c
     c.c.c1 = c
     c.c.c2 = c
@@ -120,6 +120,10 @@ if 1 and gc:
     c.c.c4 = c.m
     c.m.c = c
     # delete
+    gc.collect()
+    flags = gc.DEBUG_COLLECTABLE | gc.DEBUG_UNCOLLECTABLE | gc.DEBUG_OBJECTS
+    flags = flags | gc.DEBUG_STATS
+    gc.set_debug(flags)
     gc.collect()
     ##print gc.get_referrers(c)
     ##print gc.get_objects()

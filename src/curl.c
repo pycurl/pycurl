@@ -21,7 +21,6 @@
     - add interface to the multi_read method, otherwise it's hard to use this
       for anything
     - how do we best interface with the fd_set stuff?
-    - check the cyclic garbage collection
 */
 
 #undef NDEBUG
@@ -260,6 +259,51 @@ error:
 }
 
 
+/* util function shared by cleanup and clear */
+static void
+util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
+{
+#undef XDECREF
+#define XDECREF(v)  Py_XDECREF(v); v = NULL
+
+    if (flags & 1) {
+        /* Decrement refcount for attributes dictionary. */
+        XDECREF(self->dict);
+    }
+
+    if (flags & 2) {
+        /* Decrement refcount for multi_stack. */
+        if (self->multi_stack != NULL) {
+            CurlMultiObject *multi_stack = self->multi_stack;
+            self->multi_stack = NULL;
+            if (multi_stack->multi_handle != NULL && handle != NULL) {
+                (void) curl_multi_remove_handle(multi_stack->multi_handle, handle);
+            }
+            Py_DECREF(multi_stack);
+        }
+    }
+
+    if (flags & 4) {
+        /* Decrement refcount for python callbacks. */
+        XDECREF(self->w_cb);
+        XDECREF(self->r_cb);
+        XDECREF(self->pro_cb);
+        XDECREF(self->pwd_cb);
+        XDECREF(self->h_cb);
+        XDECREF(self->d_cb);
+    }
+
+    if (flags & 8) {
+        /* Decrement refcount for python file objects. */
+        XDECREF(self->readdata);
+        XDECREF(self->writedata);
+        XDECREF(self->writeheader);
+        self->writeheader_set = 0;
+    }
+#undef XDECREF
+}
+
+
 static void
 util_curl_cleanup(CurlObject *self)
 {
@@ -281,15 +325,7 @@ util_curl_cleanup(CurlObject *self)
     }
     self->state = NULL;
 
-    /* Disconnect from multi_stack, remove_handle in any case */
-    if (self->multi_stack != NULL) {
-        CurlMultiObject *multi_stack = self->multi_stack;
-        self->multi_stack = NULL;
-        if (multi_stack->multi_handle != NULL && handle != NULL) {
-            (void) curl_multi_remove_handle(multi_stack->multi_handle, handle);
-        }
-        Py_DECREF(multi_stack);
-    }
+    util_curl_xdecref(self, 2 | 4 | 8, handle);
 
     /* Free all variables allocated by setopt */
 #undef SFREE
@@ -308,22 +344,6 @@ util_curl_cleanup(CurlObject *self)
             self->options[i] = NULL;
         }
     }
-
-#undef XDECREF
-#define XDECREF(v)  Py_XDECREF(v); v = NULL
-    /* Decrement refcount for python callbacks */
-    XDECREF(self->w_cb);
-    XDECREF(self->r_cb);
-    XDECREF(self->pro_cb);
-    XDECREF(self->pwd_cb);
-    XDECREF(self->h_cb);
-    XDECREF(self->d_cb);
-    /* Decrement refcount for python file objects */
-    XDECREF(self->readdata);
-    XDECREF(self->writedata);
-    XDECREF(self->writeheader);
-    self->writeheader_set = 0;
-#undef XDECREF
 
     /* Finally free the curl handle */
     if (handle != NULL) {
@@ -384,36 +404,36 @@ do_curl_cleanup(CurlObject *self, PyObject *args)
 static int
 do_curl_clear(CurlObject *self)
 {
-    Py_XDECREF(self->dict);
-    self->dict = NULL;
-
-    /* Disconnect from multi_stack, remove_handle in any case */
-    if (self->multi_stack != NULL) {
-        CurlMultiObject *multi_stack = self->multi_stack;
-        self->multi_stack = NULL;
-        if (multi_stack->multi_handle != NULL && self->handle != NULL) {
-            (void) curl_multi_remove_handle(multi_stack->multi_handle, self->handle);
-        }
-        Py_DECREF(multi_stack);
-    }
-
+    assert(get_thread_state(self) == NULL);
+    util_curl_xdecref(self, 1 | 2 | 4 | 8, self->handle);
     return 0;
 }
 
+/* Traverse all refcounted objects. */
 static int
 do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
 {
     int err;
+#undef VISIT
+#define VISIT(v)    if ((v) != NULL && ((err = visit(v, arg)) != 0)) return err
 
-    if (self->dict != NULL) {
-        if ((err = visit(self->dict, arg)) != 0)
-            return err;
-    }
-    if (self->multi_stack != NULL) {
-        if ((err = visit((PyObject *) self->multi_stack, arg)) != 0)
-            return err;
-    }
+    VISIT(self->dict);
+    VISIT((PyObject *) self->multi_stack);
+
+    VISIT(self->w_cb);
+    VISIT(self->r_cb);
+    VISIT(self->pro_cb);
+    VISIT(self->pwd_cb);
+    VISIT(self->h_cb);
+    VISIT(self->d_cb);
+
+    VISIT(self->readdata);
+    VISIT(self->writedata);
+    VISIT(self->writeheader);
+
     return 0;
+
+#undef VISIT
 }
 
 #endif /* USE_GC */
