@@ -7,12 +7,15 @@
 # documentation `libcurl-the-guide' for more info.
 try:
     import signal
+    from signal import SIGPIPE, SIG_IGN
     signal.signal(signal.SIGPIPE, signal.SIG_IGN)
-except ImportError:  pass
-
+except ImportError:
+    pass
+try:
+    import cStringIO as StringIO
+except:
+    import StringIO
 import xmlrpclib, pycurl
-try:  import cStringIO as StringIO
-except:  import StringIO
 
 
 class CURLTransport(xmlrpclib.Transport):
