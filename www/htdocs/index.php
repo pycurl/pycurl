@@ -64,11 +64,24 @@ from a Python program, similar to the
   </li>
 </ul>
 
-<h2>Documentation</h2>
+
+<h2>Intended Audience</h2>
 
 <p>
-Take a look at the <a href="ChangeLog">ChangeLog</a>.
+PycURL is targeted at the advanced developer - if you need dozens of
+concurrent reliable connections or any of the sophisiticated
+features as listed above then PycURL is for you.
 </p>
+
+<p>
+The main drawback with PycURL is that it is a relative thin layer above
+libcurl without any of those nice Pythonic class hierarchies.
+This means it has a somewhat steep learning curve unless you already
+do know libcurl's API.
+</p>
+
+
+<h2>Documentation</h2>
 
 <p>
 PycURL now includes API documentation in the <i><a href="doc/pycurl.html">doc</a></i> directory of the distribution,
@@ -76,6 +89,11 @@ as well as a number of test and example scripts in the <i><a href="http://cvs.so
 and <i><a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/pycurl/pycurl/examples/">examples</a></i>
 directories of the distribution.
 </p>
+
+<p>
+Also have a look at the <a href="ChangeLog">ChangeLog</a>.
+</p>
+
 
 <h2>Download</h2>
 
@@ -108,6 +126,7 @@ collection for OpenBSD.
 
 
 <h2>License</h2>
+
 Copyright (C) 2001-2003 Kjetil Jacobsen<br />
 Copyright (C) 2001-2003 Markus F.X.J. Oberhumer<br />
 <br />
@@ -125,7 +144,7 @@ version 2.1 of the License, or (at your option) any later version.
       width="88" height="31" border="0" alt="" /></a>
       </td>
 
-      <td><a href="http://sourceforge.net/"><img
+      <td><a href="http://sourceforge.net/projects/pycurl/"><img
       src="http://sourceforge.net/sflogo.php?group_id=28236&amp;type=1"
       width="88" height="31" border="0" alt="" /></a>
       </td>
