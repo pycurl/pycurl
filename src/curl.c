@@ -42,6 +42,13 @@
 #  error "Need libcurl version 7.9.8 or greater to compile pycurl."
 #endif
 
+/* Beginning with Python 2.2 we support Cyclic Garbarge Collection */
+#undef USE_GC
+#if 0 && (PY_VERSION_HEX >= 0x02020000)
+#  define USE_GC
+#endif
+
+
 static PyObject *ErrorObject;
 
 typedef struct {
@@ -112,7 +119,8 @@ get_thread_state(const CurlObject *self)
     /* Get the thread state for callbacks to run in.
      * This is either `self->state' when running inside perform() or
      * `self->multi_stack->state' when running inside multi_perform().
-     * When the result is != NULL also implicitly asserts a valid `self->handle'.
+     * When the result is != NULL we also implicitly assert
+     * a valid `self->handle'.
      */
     if (self == NULL)
         return NULL;
@@ -173,15 +181,18 @@ do_init(PyObject *dummy, PyObject *args)
     int res;
 
     UNUSED(dummy);
-    if (!PyArg_ParseTuple(args, ":do_init")) {
+    if (!PyArg_ParseTuple(args, ":init")) {
         return NULL;
     }
 
     /* Allocate python curl object */
-#if (PY_VERSION_HEX < 0x01060000)
-    self = (CurlObject *) PyObject_NEW(CurlObject, &Curl_Type);
-#else
+#if defined(USE_GC)
+    self = (CurlObject *) PyObject_GC_New(CurlObject, &Curl_Type);
+    if (self) PyObject_GC_Track(self);
+#elif (PY_VERSION_HEX >= 0x01060000)
     self = (CurlObject *) PyObject_New(CurlObject, &Curl_Type);
+#else
+    self = (CurlObject *) PyObject_NEW(CurlObject, &Curl_Type);
 #endif
     if (self == NULL)
         return NULL;
@@ -246,7 +257,7 @@ error:
 
 
 static void
-self_cleanup(CurlObject *self)
+util_curl_cleanup(CurlObject *self)
 {
     CURL *handle;
     int i;
@@ -321,20 +332,32 @@ self_cleanup(CurlObject *self)
 
 
 static void
-curl_dealloc(CurlObject *self)
+do_curl_dealloc(CurlObject *self)
 {
+#if defined(USE_GC)
+    PyObject_GC_UnTrack(self);
+    Py_TRASHCAN_SAFE_BEGIN(self)
+#endif
+
     Py_XDECREF(self->dict);
-    self_cleanup(self);
-#if (PY_VERSION_HEX < 0x01060000)
-    PyMem_DEL(self);
-#else
+    self->dict = NULL;
+    util_curl_cleanup(self);
+#if defined(USE_GC)
+    PyObject_GC_Del(self);
+#elif (PY_VERSION_HEX >= 0x01060000)
     PyObject_Del(self);
+#else
+    PyMem_DEL(self);
+#endif
+
+#if defined(USE_GC)
+    Py_TRASHCAN_SAFE_END(self)
 #endif
 }
 
 
 static PyObject *
-do_cleanup(CurlObject *self, PyObject *args)
+do_curl_cleanup(CurlObject *self, PyObject *args)
 {
     if (!PyArg_ParseTuple(args, ":cleanup")) {
         return NULL;
@@ -343,16 +366,52 @@ do_cleanup(CurlObject *self, PyObject *args)
         PyErr_SetString(ErrorObject, "cannot invoke cleanup, perform() is running");
         return NULL;
     }
-    self_cleanup(self);
+    util_curl_cleanup(self);
     Py_INCREF(Py_None);
     return Py_None;
 }
 
 
+/* --------------- GC support --------------- */
+
+#if defined(USE_GC)
+
+/* Drop references that may have created reference cycles. */
+static int
+do_curl_clear(CurlObject *self)
+{
+    Py_XDECREF(self->dict);
+    self->dict = NULL;
+
+    /* Disconnect from multi_stack, remove_handle in any case */
+    if (self->multi_stack != NULL) {
+        CurlMultiObject *multi_stack = self->multi_stack;
+        self->multi_stack = NULL;
+        if (multi_stack->multi_handle != NULL && self->handle != NULL) {
+            (void) curl_multi_remove_handle(multi_stack->multi_handle, self->handle);
+        }
+        Py_DECREF(multi_stack);
+    }
+
+    return 0;
+}
+
+static int
+do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
+{
+    int rv;
+    if (self->dict && (rv = visit(self->dict, arg)) != 0)
+        return rv;
+    return 0;
+}
+
+#endif /* USE_GC */
+
+
 /* --------------- perform --------------- */
 
 static PyObject *
-do_perform(CurlObject *self, PyObject *args)
+do_curl_perform(CurlObject *self, PyObject *args)
 {
     int res;
 
@@ -393,11 +452,7 @@ do_perform(CurlObject *self, PyObject *args)
 /* --------------- callback handlers --------------- */
 
 static size_t
-do_write_callback(int flags,
-                  char *ptr,
-                  size_t size,
-                  size_t nmemb,
-                  void *stream)
+util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *stream)
 {
     PyObject *arglist;
     PyObject *result;
@@ -445,13 +500,13 @@ do_write_callback(int flags,
 static size_t
 write_callback(char *ptr, size_t size, size_t nmemb, void *stream)
 {
-    return do_write_callback(0, ptr, size, nmemb, stream);
+    return util_write_callback(0, ptr, size, nmemb, stream);
 }
 
 static size_t
 header_callback(char *ptr, size_t size, size_t nmemb, void *stream)
 {
-    return do_write_callback(1, ptr, size, nmemb, stream);
+    return util_write_callback(1, ptr, size, nmemb, stream);
 }
 
 
@@ -492,11 +547,11 @@ size_t read_callback(char *ptr,
             PyErr_Print();
         }
         else {
-#if (PY_VERSION_HEX < 0x02000000)
+#if (PY_VERSION_HEX >= 0x02000000)
+            PyString_AsStringAndSize(result, &buf, &obj_size);
+#else
             buf = PyString_AS_STRING(result);
             obj_size = PyString_GET_SIZE(result);
-#else
-            PyString_AsStringAndSize(result, &buf, &obj_size);
 #endif
             if (obj_size > read_size) {
                 PyErr_SetString(ErrorObject, "string from READFUNCTION callback is too long");
@@ -639,7 +694,7 @@ int debug_callback(CURL *curlobj,
 /* --------------- setopt/getinfo --------------- */
 
 static PyObject *
-do_setopt(CurlObject *self, PyObject *args)
+do_curl_setopt(CurlObject *self, PyObject *args)
 {
     int option, opt_masked;
     char *stringdata;
@@ -980,7 +1035,7 @@ do_setopt(CurlObject *self, PyObject *args)
 
 
 static PyObject *
-do_getinfo(CurlObject *self, PyObject *args)
+do_curl_getinfo(CurlObject *self, PyObject *args)
 {
     int option;
     int res;
@@ -1082,15 +1137,18 @@ do_multi_init(PyObject *dummy, PyObject *args)
     CurlMultiObject *self;
 
     UNUSED(dummy);
-    if (!PyArg_ParseTuple(args, ":do_multi_init")) {
+    if (!PyArg_ParseTuple(args, ":multi_init")) {
         return NULL;
     }
 
     /* Allocate python curl-multi object */
-#if (PY_VERSION_HEX < 0x01060000)
-    self = (CurlMultiObject *) PyObject_NEW(CurlMultiObject, &CurlMulti_Type);
-#else
+#if defined(USE_GC)
+    self = (CurlMultiObject *) PyObject_GC_New(CurlMultiObject, &CurlMulti_Type);
+    if (self) PyObject_GC_Track(self);
+#elif (PY_VERSION_HEX >= 0x01060000)
     self = (CurlMultiObject *) PyObject_New(CurlMultiObject, &CurlMulti_Type);
+#else
+    self = (CurlMultiObject *) PyObject_NEW(CurlMultiObject, &CurlMulti_Type);
 #endif
     if (self == NULL)
         return NULL;
@@ -1110,7 +1168,7 @@ do_multi_init(PyObject *dummy, PyObject *args)
 }
 
 static void
-self_multi_cleanup(CurlMultiObject *self)
+util_multi_cleanup(CurlMultiObject *self)
 {
     assert(self != NULL);
     self->state = NULL;
@@ -1122,14 +1180,26 @@ self_multi_cleanup(CurlMultiObject *self)
 }
 
 static void
-curl_multi_dealloc(CurlMultiObject *self)
+do_multi_dealloc(CurlMultiObject *self)
 {
+#if defined(USE_GC)
+    PyObject_GC_UnTrack(self);
+    Py_TRASHCAN_SAFE_BEGIN(self)
+#endif
+
     Py_XDECREF(self->dict);
-    self_multi_cleanup(self);
-#if (PY_VERSION_HEX < 0x01060000)
-    PyMem_DEL(self);
-#else
+    self->dict = NULL;
+    util_multi_cleanup(self);
+#if defined(USE_GC)
+    PyObject_GC_Del(self);
+#elif (PY_VERSION_HEX >= 0x01060000)
     PyObject_Del(self);
+#else
+    PyMem_DEL(self);
+#endif
+
+#if defined(USE_GC)
+    Py_TRASHCAN_SAFE_END(self)
 #endif
 }
 
@@ -1143,10 +1213,35 @@ do_multi_cleanup(CurlMultiObject *self, PyObject *args)
         PyErr_SetString(ErrorObject, "cannot invoke cleanup, perform() is running");
         return NULL;
     }
-    self_multi_cleanup(self);
+    util_multi_cleanup(self);
     Py_INCREF(Py_None);
     return Py_None;
 }
+
+
+/* --------------- GC support --------------- */
+
+#if defined(USE_GC)
+
+/* Drop references that may have created reference cycles. */
+static int
+do_multi_clear(CurlMultiObject *self)
+{
+    Py_XDECREF(self->dict);
+    self->dict = NULL;
+    return 0;
+}
+
+static int
+do_multi_traverse(CurlMultiObject *self, visitproc visit, void *arg)
+{
+    int rv;
+    if (self->dict && (rv = visit(self->dict, arg)) != 0)
+        return rv;
+    return 0;
+}
+
+#endif /* USE_GC */
 
 
 /* --------------- perform --------------- */
@@ -1292,10 +1387,10 @@ static char co_getinfo_doc [] = "getinfo(info) -> res.  Extract and return infor
 
 
 static PyMethodDef curlobject_methods[] = {
-    {"cleanup", (PyCFunction)do_cleanup, METH_VARARGS, co_cleanup_doc},
-    {"perform", (PyCFunction)do_perform, METH_VARARGS, co_perform_doc},
-    {"setopt", (PyCFunction)do_setopt, METH_VARARGS, co_setopt_doc},
-    {"getinfo", (PyCFunction)do_getinfo, METH_VARARGS, co_getinfo_doc},
+    {"cleanup", (PyCFunction)do_curl_cleanup, METH_VARARGS, co_cleanup_doc},
+    {"perform", (PyCFunction)do_curl_perform, METH_VARARGS, co_perform_doc},
+    {"setopt", (PyCFunction)do_curl_setopt, METH_VARARGS, co_setopt_doc},
+    {"getinfo", (PyCFunction)do_curl_getinfo, METH_VARARGS, co_getinfo_doc},
     {NULL, NULL, 0, NULL}
 };
 
@@ -1343,28 +1438,28 @@ my_getattr(PyObject *co, char *name, PyObject *dict, PyMethodDef *m)
 }
 
 static int
-curl_setattr(CurlObject *co, char *name, PyObject *v)
+do_curl_setattr(CurlObject *co, char *name, PyObject *v)
 {
     assert_curl_object(co);
     return my_setattr(&co->dict, name, v);
 }
 
 static int
-curl_multi_setattr(CurlMultiObject *co, char *name, PyObject *v)
+do_multi_setattr(CurlMultiObject *co, char *name, PyObject *v)
 {
     assert_curl_multi_object(co);
     return my_setattr(&co->dict, name, v);
 }
 
 static PyObject *
-curl_getattr(CurlObject *co, char *name)
+do_curl_getattr(CurlObject *co, char *name)
 {
     assert_curl_object(co);
     return my_getattr((PyObject *)co, name, co->dict, curlobject_methods);
 }
 
 static PyObject *
-curl_multi_getattr(CurlMultiObject *co, char *name)
+do_multi_getattr(CurlMultiObject *co, char *name)
 {
     assert_curl_multi_object(co);
     return my_getattr((PyObject *)co, name, co->dict, curlmultiobject_methods);
@@ -1380,16 +1475,29 @@ statichere PyTypeObject Curl_Type = {
     sizeof(CurlObject),         /* tp_basicsize */
     0,                          /* tp_itemsize */
     /* Methods */
-    (destructor)curl_dealloc,   /* tp_dealloc */
+    (destructor)do_curl_dealloc,   /* tp_dealloc */
     0,                          /* tp_print */
-    (getattrfunc)curl_getattr,  /* tp_getattr */
-    (setattrfunc)curl_setattr,  /* tp_setattr */
+    (getattrfunc)do_curl_getattr,  /* tp_getattr */
+    (setattrfunc)do_curl_setattr,  /* tp_setattr */
     0,                          /* tp_compare */
     0,                          /* tp_repr */
     0,                          /* tp_as_number */
     0,                          /* tp_as_sequence */
     0,                          /* tp_as_mapping */
-    0                           /* tp_hash */
+    0,                          /* tp_hash */
+    0,                          /* tp_call */
+    0,                          /* tp_str */
+    0,                          /* tp_getattro */
+    0,                          /* tp_setattro */
+    0,                          /* tp_as_buffer */
+#if defined(USE_GC)
+    Py_TPFLAGS_HAVE_GC,         /* tp_flags */
+    0,                          /* tp_doc */
+    (traverseproc)do_curl_traverse, /* tp_traverse */
+    (inquiry)do_curl_clear      /* tp_clear */
+#else
+    0                           /* tp_flags */
+#endif
     /* More fields follow here, depending on your Python version.
      * You can safely ignore any compiler warnings.
      */
@@ -1402,16 +1510,29 @@ statichere PyTypeObject CurlMulti_Type = {
     sizeof(CurlMultiObject),    /* tp_basicsize */
     0,                          /* tp_itemsize */
     /* Methods */
-    (destructor)curl_multi_dealloc,   /* tp_dealloc */
+    (destructor)do_multi_dealloc,   /* tp_dealloc */
     0,                          /* tp_print */
-    (getattrfunc)curl_multi_getattr,  /* tp_getattr */
-    (setattrfunc)curl_multi_setattr,  /* tp_setattr */
+    (getattrfunc)do_multi_getattr,  /* tp_getattr */
+    (setattrfunc)do_multi_setattr,  /* tp_setattr */
     0,                          /* tp_compare */
     0,                          /* tp_repr */
     0,                          /* tp_as_number */
     0,                          /* tp_as_sequence */
     0,                          /* tp_as_mapping */
-    0                           /* tp_hash */
+    0,                          /* tp_hash */
+    0,                          /* tp_call */
+    0,                          /* tp_str */
+    0,                          /* tp_getattro */
+    0,                          /* tp_setattro */
+    0,                          /* tp_as_buffer */
+#if defined(USE_GC)
+    Py_TPFLAGS_HAVE_GC,         /* tp_flags */
+    0,                          /* tp_doc */
+    (traverseproc)do_multi_traverse, /* tp_traverse */
+    (inquiry)do_multi_clear     /* tp_clear */
+#else
+    0                           /* tp_flags */
+#endif
     /* More fields follow here, depending on your Python version.
      * You can safely ignore any compiler warnings.
      */
@@ -1420,7 +1541,8 @@ statichere PyTypeObject CurlMulti_Type = {
 
 /*************************************************************************
 // module level
-// Note that the constructors are implemented as module-level functions.
+// Note that the object constructors (do_curl_init, do_curl_multi_init)
+// are also implemented as module-level functions.
 **************************************************************************/
 
 static PyObject *
@@ -1455,7 +1577,7 @@ static PyObject *
 do_global_cleanup(PyObject *dummy, PyObject *args)
 {
     UNUSED(dummy);
-    if (!PyArg_ParseTuple(args, ":do_global_cleanup")) {
+    if (!PyArg_ParseTuple(args, ":global_cleanup")) {
         return NULL;
     }
 
