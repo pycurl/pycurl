@@ -110,7 +110,6 @@ class WorkerThread(threading.Thread):
             except:
                 msg = "Error retrieving URL: %s" % url
                 b.write(internal_error % msg)
-            print curl.getinfo(pycurl.CONTENT_TYPE)
             # Flag empty documents to the renderer
             if b.tell() == 0:
                 b.close()
