@@ -31,6 +31,8 @@ while 1:
 
 # Keep going until all the connections have terminated
 while num_handles:
+    # The select method uses fdset internally to determine which file descriptors
+    # to check.
     m.select(SELECT_TIMEOUT)
     while 1:
         ret, num_handles = m.perform()
