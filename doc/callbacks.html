@@ -31,14 +31,8 @@ used with PROGRESSFUNCTION, IOCTLDATA cannot be used with IOCTLFUNCTION,
 and DEBUGDATA cannot be used with DEBUGFUNCTION.
 In practice, these limitations can be overcome by having a callback
 function be a class instance method and rather use the class instance
-attributes to store per object data such as files used in the callbacks.</p>
-
-<p><b>Note:</b> On Win32 libcurl READDATA must be used in combination with
-READFUNCTION if libcurl is used as a DLL.  Thus, in pycurl you have to
-use READFUNCTION in combination with a class instance to mimic this
-behaviour since READFUNCTION cannot be used with READDATA. The file
-'examples/file_upload.py' in the distribution contains example code
-which may be useful here.</p>
+attributes to store per object data such as files used in the callbacks.
+</p>
 
 The signature of each callback used in pycurl is as follows:<br/>
 <br/>
@@ -124,6 +118,15 @@ VERBOSE option must be enabled for this callback to be invoked.</p>
     c.setopt(pycurl.DEBUGFUNCTION, test)
     c.perform()
 </pre>
+
+<h2>Other examples</h2>
+The pycurl distribution also contains a number of test scripts and
+examples which show how to use the various callbacks in libcurl.
+For instance, the file 'examples/file_upload.py' in the distribution contains
+example code for using READFUNCTION, 'tests/test_cb.py' shows
+WRITEFUNCTION and HEADERFUNCTION, 'tests/test_debug.py' shows DEBUGFUNCTION,
+and 'tests/test_getinfo.py' shows PROGRESSFUNCTION.</p>
+
 
 <hr />
 <p>
