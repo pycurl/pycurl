@@ -874,14 +874,36 @@ util_curl_unsetopt(CurlObject *self, int option)
     int opt_masked = -1;
     int res = -1;
 
-    /* FIXME: implement more options */
+    /* FIXME: implement more options. Have to check lib/url.c in the
+     *   libcurl source code to see if it's actually safe to simply
+     *   unset the option. */
     switch (option)
     {
-    case CURLOPT_USERPWD:
+    case CURLOPT_INFILESIZE:
+        res = curl_easy_setopt(self->handle, (CURLoption)option, (long)-1);
+        break;
+    case CURLOPT_WRITEHEADER:
+        res = curl_easy_setopt(self->handle, (CURLoption)option, (void *)0);
+        if (res != CURLE_OK) goto error;
+        ZAP(self->writeheader);
+        self->writeheader_set = 0;
+        break;
+    case CURLOPT_CAINFO:
+    case CURLOPT_CAPATH:
+    case CURLOPT_COOKIE:
+    case CURLOPT_COOKIEJAR:
+    case CURLOPT_CUSTOMREQUEST:
+    case CURLOPT_EGDSOCKET:
+    case CURLOPT_FTPPORT:
     case CURLOPT_PROXYUSERPWD:
+    case CURLOPT_RANDOM_FILE:
+    case CURLOPT_SSL_CIPHER_LIST:
+    case CURLOPT_USERPWD:
         opt_masked = PYCURL_OPT(option);
         res = curl_easy_setopt(self->handle, (CURLoption)option, (char *)0);
         break;
+    /* info: we explicitly list unsupported options here */
+    case CURLOPT_COOKIEFILE:
     default:
         PyErr_SetString(PyExc_TypeError, "unsetopt() is not supported for this option");
         return NULL;
@@ -889,6 +911,7 @@ util_curl_unsetopt(CurlObject *self, int option)
 
     /* Check for errors */
     if (res != CURLE_OK) {
+error:
         CURLERROR_RETVAL();
     }
 
@@ -926,7 +949,7 @@ do_curl_unsetopt(CurlObject *self, PyObject *args)
 static PyObject *
 do_curl_setopt(CurlObject *self, PyObject *args)
 {
-    int option, opt_masked;
+    int option;
     PyObject *obj;
     int res;
 
@@ -955,6 +978,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     if (PyString_Check(obj)) {
         const char *stringdata = PyString_AsString(obj);
         char *buf;
+        int opt_masked;
 
         /* Check that the option specified a string as well as the input */
         if (!(option == CURLOPT_URL ||
