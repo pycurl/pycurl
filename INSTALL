@@ -21,7 +21,7 @@ which you can download from:
 
 ... or be brave and manually tweak the Makefile in the 'src'
 directory to match your installation (the Makefile should work
-fine for RedHat distros).
+fine for RedHat distros with Python 1.5.2).
 
 
 Windows
