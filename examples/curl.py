@@ -47,8 +47,11 @@ class Curl:
 
     def info(self):
         self.server_reply.seek(0,0)
-        self.server_reply.readline() # FIXME: won't work well on non-http headers
+        url = self.c.getinfo(pycurl.EFFECTIVE_URL)
+        if url[:5] == 'http:':
+            self.server_reply.readline()
         m = mimetools.Message(self.server_reply)
+        m['effective-url'] = url
         m['http-code'] = str(self.c.getinfo(pycurl.HTTP_CODE))
         m['total-time'] = str(self.c.getinfo(pycurl.TOTAL_TIME))
         m['namelookup-time'] = str(self.c.getinfo(pycurl.NAMELOOKUP_TIME))
@@ -63,8 +66,7 @@ class Curl:
         m['request-size'] = str(self.c.getinfo(pycurl.REQUEST_SIZE))
         m['content-length-download'] = str(self.c.getinfo(pycurl.CONTENT_LENGTH_DOWNLOAD))
         m['content-length-upload'] = str(self.c.getinfo(pycurl.CONTENT_LENGTH_UPLOAD))
-        m['effective-url'] = self.c.getinfo(pycurl.EFFECTIVE_URL)
-        m['content-type'] = self.c.getinfo(pycurl.CONTENT_TYPE)
+        m['content-type'] = self.c.getinfo(pycurl.CONTENT_TYPE) or ''
         return m
 
     def close(self):
