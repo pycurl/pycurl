@@ -64,16 +64,17 @@ while processed < len(urls):
         num_q, ok, err = multi.info_read(num_conn)
         for h in ok:
             h.f.close()
-            multi.remove_handle(h)
             freelist.append(h)
+            multi.remove_handle(h)
         for errno, errmsg, h in err:
             h.f.close()
-            multi.remove_handle(h)
             freelist.append(h)
+            multi.remove_handle(h)
             print 'Failed:', h, errno, errmsg
         processed += len(ok) + len(err)
         if num_q == 0:
             break
+    multi.select(1)
 
 # Cleanup
 for c in freelist:
