@@ -2,88 +2,67 @@
 <html>
 <head>
   <title>CurlMulti Objects</title>
-
+                                                       
   <meta http-equiv="content-type"
  content="text/html; charset=ISO-8859-1">
 </head>
   <body>
-
+               
 <h2>CurlMulti Ojects<br>
-</h2>
-<p>
-    CurlMulti objects have the following methods:
-</p>
-
-    <b>close()</b> -&gt; <i>None</i><br>
-
+   </h2>
+     
+<p>     CurlMulti objects have the following methods: </p>
+        <b>close()</b> -&gt; <i>None</i><br>
+             
 <blockquote> Corresponds to <b>curl_multi_cleanup()</b> in libcurl. &nbsp;This
- method is automatically called by pycurl when a CurlMulti object no longer
- has any references to it, but can also be called explicitly.<br>
-   </blockquote>
-    <b> perform()</b> -&gt; <i>tuple of status and the number of active Curl
-  objects</i><br>
-
+   method is automatically called by pycurl when a CurlMulti object no longer
+   has any references to it, but can also be called explicitly.<br>
+      </blockquote>
+       <b> perform()</b> -&gt; <i>tuple of status and the number of active
+ Curl   objects</i><br>
+            
 <blockquote>  Corresponds to <b>curl_multi_perform()</b> in libcurl. <br>
-    </blockquote>
-    <b> add_handle(</b><i>Curl Object</i><b>) </b>-&gt; <i>None</i><br>
-
-<blockquote>   Corresponds to <b>curl_multi_add_handle()</b> in libcurl. &nbsp;This
-method  adds an existing and valid Curl object to the CurlMulti object.</blockquote>
- <b>remove_handle(</b><i>Curl Object</i><b>)</b> -&gt; <i>None</i><br>
-
-<blockquote>  Corresponds to <b>curl_multi_remove_handle()</b> in libcurl.
- &nbsp;This method removes an existing and valud Curl object from the CurlMulti
- object.<br>
-    </blockquote>
-    <b> fdset()</b> -&gt; <i>triple of lists with active file descriptors,
-readable,  writeable, exceptions.</i><br>
-
-<blockquote>  Corresponds to <b>curl_multi_fdset() </b>in libcurl. &nbsp;This
- method extracts  the file descriptor information from a CurlMulti object.
- &nbsp;The returned  lists can be used with the <b>select</b> module to poll
- for events.<br>
-    <br>
-    Example usage:<br>
-
-<pre>import pycurl
-c = pycurl.Curl()
-c.setopt(pycurl.URL, 'http://curl.haxx.se')
-m = pycurl.CurlMulti()
-m.add_handle(c)
-while 1:
-    ret, num_handles = m.perform()
-    if ret != pycurl.E_CALL_MULTI_PERFORM: break
-while num_handles:
-    apply(select.select, m.fdset() + (1,))
-    while 1:
-        ret, num_handles = m.perform()
-        if ret != pycurl.E_CALL_MULTI_PERFORM: break
-</pre>
-   </blockquote>
-     <b>select(</b><i>timeout</i><b>)</b> -&gt; <i>number of ready file descriptors
-  or -1 on timeout<br>
-    </i>
-<blockquote>    This is a convenience function which simplifies the combined
-use of <b>fdset()</b>   and the <b>select</b> module. &nbsp;<br>
-    <br>
-    Example usage:<br>
-
-  <pre>import pycurl
-c = pycurl.Curl()
-c.setopt(pycurl.URL, 'http://curl.haxx.se')
-m = pycurl.CurlMulti()
-m.add_handle(c)
-while 1:
-    ret, num_handles = m.perform()
-    if ret != pycurl.E_CALL_MULTI_PERFORM: break
-while num_handles:
-    ret = m.select(1)
-    if ret == -1:  continue
-    while 1:
-        ret, num_handles = m.perform()
-        if ret != pycurl.E_CALL_MULTI_PERFORM: break
-</pre>
-    </blockquote>
-
+       </blockquote>
+       <b> add_handle(</b><i>Curl Object</i><b>) </b>-&gt; <i>None</i><br>
+         
+<blockquote>   Corresponds to <b>curl_multi_add_handle()</b> in libcurl.
+&nbsp;This method  adds an existing and valid Curl object to the CurlMulti
+object.</blockquote>
+    <b>remove_handle(</b><i>Curl Object</i><b>)</b> -&gt; <i>None</i><br>
+            
+<blockquote>  Corresponds to <b>curl_multi_remove_handle()</b> in libcurl. 
+  &nbsp;This method removes an existing and valud Curl object from the CurlMulti 
+  object.<br>
+       </blockquote>
+       <b> fdset()</b> -&gt; <i>triple of lists with active file descriptors,
+  readable,  writeable, exceptions.</i><br>
+            
+<blockquote>  Corresponds to <b>curl_multi_fdset() </b>in libcurl. &nbsp;This 
+  method extracts  the file descriptor information from a CurlMulti object. 
+  &nbsp;The returned  lists can be used with the <b>select</b> module to poll
+  for events.<br>
+       <br>
+       Example usage:<br>
+                     
+  <pre>import pycurl<br>c = pycurl.Curl()<br>c.setopt(pycurl.URL, 'http://curl.haxx.se')<br>m = pycurl.CurlMulti()<br>m.add_handle(c)<br>while 1:<br>    ret, num_handles = m.perform()<br>    if ret != pycurl.E_CALL_MULTI_PERFORM: break<br>while num_handles:<br>    apply(select.select, m.fdset() + (1,))<br>    while 1:<br>        ret, num_handles = m.perform()<br>        if ret != pycurl.E_CALL_MULTI_PERFORM: break<br></pre>
+      </blockquote>
+        <b>select(</b><i>timeout</i><b>)</b> -&gt; <i>number of ready file
+ descriptors   or -1 on timeout<br>
+       </i>   
+<blockquote>    This is a convenience function which simplifies the combined 
+ use of <b>fdset()</b>   and the <b>select</b> module. &nbsp;<br>
+       <br>
+       Example usage:<br>
+                   
+  <pre>import pycurl<br>c = pycurl.Curl()<br>c.setopt(pycurl.URL, 'http://curl.haxx.se')<br>m = pycurl.CurlMulti()<br>m.add_handle(c)<br>while 1:<br>    ret, num_handles = m.perform()<br>    if ret != pycurl.E_CALL_MULTI_PERFORM: break<br>while num_handles:<br>    ret = m.select(1)<br>    if ret == -1:  continue<br>    while 1:<br>        ret, num_handles = m.perform()<br>        if ret != pycurl.E_CALL_MULTI_PERFORM: break<br></pre>
+       </blockquote>
+         <b>info_read(</b><i>max</i><b>)</b> -&gt; <i>tuple with number of
+ queued messages and a list of at most max messages<br>
+  </i> 
+<blockquote>Corresponds to the <b>curl_multi_info_read</b> function in libcurl. 
+&nbsp;This method extracts at most <i>max</i> messages from the multi stack 
+and returns them. &nbsp; The number of queued messages after this method has
+been called is also returned. </blockquote>
+   
 </body>
 </html>
