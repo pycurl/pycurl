@@ -24,9 +24,18 @@ $version = "7.10.1";
 <p>
 PycURL is a Python module interface to the
 <a href="http://curl.haxx.se/">cURL</a> library.
-<br />
 PycURL can be used to fetch documents identified by a URI
 from within a Python program.
+</p>
+
+<p>
+<a href="http://curl.haxx.se/">cURL</a>
+is a library for transferring files with URL syntax,
+supporting FTP, FTPS, HTTP, HTTPS, GOPHER, TELNET, DICT, FILE and LDAP.
+Curl supports HTTPS certificates, HTTP POST, HTTP PUT, FTP uploading,
+kerberos, HTTP form based upload, proxies, cookies, user+password
+authentication, file transfer resume, http proxy tunneling and a busload of
+other <a href="http://curl.haxx.se/docs/features.html">useful tricks</a>.
 </p>
 
 <p>
@@ -39,9 +48,6 @@ or try the code from
 <p>
 You can get older versions as well as prebuilt Win32 modules from the
 <a href="download/?M=D">download area</a>.
-</p>
-
-<p>
 Please note that the prebuilt versions are <b>unsupported</b>
 and provided for your convenience only - use them at your own risk!
 </p>
