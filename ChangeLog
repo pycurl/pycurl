@@ -2,6 +2,10 @@ Version 7.9.8
 
 2002-06-18  Kjetil Jacobsen  <kjetilja>
 
+	* Use CURLOPT_READDATA instead of CURLOPT_INFILE, and
+	CURLOPT_WRITEDATA instead of CURLOPT_FILE.  Also fixed some
+	reference counting bugs with file objects.
+	
 	* CURLOPT_FILETIME and CURLINFO_FILETIME had a namespace clash
 	which caused them not to work.  Use OPT_FILETIME for setopt() and
 	INFO_FILETIME for getinfo().  See example usage in
