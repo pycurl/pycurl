@@ -1,6 +1,20 @@
 Version 7.13.0 [requires libcurl-7.13.0 or better]
 --------------
 
+2005-02-10  Kjetil Jacobsen  <kjetilja>
+
+        * Added file_upload.py to examples, shows how to upload
+          a file.
+
+        * Added CURLOPT_IOCTLFUNCTION/DATA.
+
+        * Added options from libcurl 7.13.0: FTP_ACCOUNT, SOURCE_URL,
+          SOURCE_QUOTE.
+
+        * Obsoleted options: SOURCE_HOST, SOURCE_PATH, SOURCE_PORT,
+          PASV_HOST.
+
+
 Version 7.12.3
 --------------
 
