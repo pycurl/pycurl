@@ -16,4 +16,4 @@ install: all
 	$(CP) pycurlmodule.so /usr/lib/python1.5/site-packages
 
 clean:
-	$(RM) -f *~ *.o *.so
+	$(RM) -f *~ *.o *obj *.so
