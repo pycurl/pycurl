@@ -1,3 +1,5 @@
+/* $Id$ */
+
 /* cURL Python module by Kjetil Jacobsen <kjetilja @ cs.uit.no> */
 
 #include "Python.h"
