@@ -1,3 +1,11 @@
+Version 7.9.9
+
+2002-06-24  Kjetil Jacobsen  <kjetilja>
+
+	* Added example code on how to upload a file using HTTPPOST in
+	pycurl (code by Amit Mongia <amit_mongia@hotmail.com>).  See the
+	file 'test_fileupload.py' for details.
+	
 Version 7.9.8
 
 2002-06-24  Kjetil Jacobsen  <kjetilja>
