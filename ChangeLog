@@ -1,5 +1,13 @@
+Version 7.10.9 [requires libcurl-7.10.3 or better]
+--------------
 
-Version 7.10.8 [requires libcurl-7.10.3 or better]
+2003-11-16  Markus F.X.J. Oberhumer <mfx>
+
+        * Added support for these new libcurl 7.10.9 features:
+          CURLOPT_NETRC_FILE.
+
+
+Version 7.10.8
 --------------
 
 2003-11-04  Markus F.X.J. Oberhumer <mfx>
