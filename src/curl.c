@@ -106,7 +106,7 @@ typedef struct {
     char error[CURL_ERROR_SIZE+1];
 } CurlObject;
 
-#if 1 || !defined(__cplusplus)
+#if !defined(__cplusplus)
 staticforward PyTypeObject Curl_Type;
 staticforward PyTypeObject CurlMulti_Type;
 #endif
@@ -133,7 +133,7 @@ staticforward PyTypeObject CurlMulti_Type;
 /* safe XDECREF for object states */
 #define ZAP(v) { \
     PyObject *tmp = (PyObject *)(v); \
-    v = NULL; \
+    (v) = NULL; \
     Py_XDECREF(tmp); \
 }
 
@@ -471,16 +471,17 @@ util_curl_close(CurlObject *self)
 
     /* Free all variables allocated by setopt */
 #undef SFREE
-#define SFREE(v)   if (v != NULL) (curl_formfree(v), v = NULL)
+#define SFREE(v)   if ((v) != NULL) (curl_formfree(v), (v) = NULL)
     SFREE(self->httppost);
 #undef SFREE
-#define SFREE(v)   if (v != NULL) (curl_slist_free_all(v), v = NULL)
+#define SFREE(v)   if ((v) != NULL) (curl_slist_free_all(v), (v) = NULL)
     SFREE(self->httpheader);
     SFREE(self->http200aliases);
     SFREE(self->quote);
     SFREE(self->postquote);
     SFREE(self->prequote);
 #undef SFREE
+
     /* Last, free the options.  This must be done after the curl handle is closed
      * since curl assumes that some options are valid when invoking cleanup */
     for (i = 0; i < OPTIONS_SIZE; i++) {
@@ -569,7 +570,6 @@ do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
     VISIT(self->writeheader);
 
     return 0;
-
 #undef VISIT
 }
 
@@ -1406,12 +1406,13 @@ static int
 do_multi_traverse(CurlMultiObject *self, visitproc visit, void *arg)
 {
     int err;
+#undef VISIT
+#define VISIT(v)    if ((v) != NULL && ((err = visit(v, arg)) != 0)) return err
 
-    if (self->dict != NULL) {
-        if ((err = visit(self->dict, arg)) != 0)
-            return err;
-    }
+    VISIT(self->dict);
+
     return 0;
+#undef VISIT
 }
 
 #endif /* USE_GC */
