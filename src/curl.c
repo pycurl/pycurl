@@ -17,6 +17,10 @@ typedef struct {
     struct curl_slist *quote;
     struct curl_slist *postquote;
     PyObject *w_cb;
+    PyObject *h_cb;
+    PyObject *r_cb;
+    PyObject *pro_cb;
+    PyObject *pwd_cb;
     PyThreadState *state;
     char error[CURL_ERROR_SIZE];
 } CurlObject;
@@ -106,6 +110,66 @@ write_callback(void *ptr,
     return write_size;
 }
 
+
+static int 
+header_callback(void *ptr,
+		size_t size,
+		size_t nmemb,
+		FILE  *stream)
+{
+    PyObject *arglist;
+    PyObject *result;
+    CurlObject *self;
+    int write_size;
+    
+    self = (CurlObject *)stream;
+    arglist = Py_BuildValue("(s#)", (char *)ptr, size*nmemb);
+
+    PyEval_AcquireThread(self->state);
+    result = PyEval_CallObject(self->h_cb, arglist);
+    Py_DECREF(arglist);
+    if (result == NULL) {
+	PyErr_Print();
+	write_size = -1;
+    }
+    else
+	write_size = (int)PyInt_AsLong(result);
+    Py_XDECREF(result);
+    PyEval_ReleaseThread(self->state);
+    return write_size;
+}
+
+
+static int 
+progress_callback(void *clientp,
+		  size_t dltotal,
+		  size_t dlnow,
+		  size_t ultotal,
+		  size_t ulnow)
+{
+    PyObject *arglist;
+    PyObject *result;
+    CurlObject *self;
+    int ret;
+    
+    self = (CurlObject *)clientp;
+    arglist = Py_BuildValue("(ii)", dltotal, dlnow);
+
+    PyEval_AcquireThread(self->state);
+    result = PyEval_CallObject(self->pro_cb, arglist);
+    Py_DECREF(arglist);
+    if (result == NULL) {
+	PyErr_Print();
+	ret = -1;
+    }
+    else
+	ret = (int)PyInt_AsLong(result);
+    Py_XDECREF(result);
+    PyEval_ReleaseThread(self->state);
+    return ret;
+}
+
+/* --------------------------------------------------------------------- */
 
 static PyObject *
 do_setopt(CurlObject *self, PyObject *args)
@@ -338,12 +402,25 @@ do_setopt(CurlObject *self, PyObject *args)
     if (PyArg_ParseTuple(args, "iO!:setopt", &option, &PyFunction_Type, &obj)) {
 	switch(option) {
 	case CURLOPT_WRITEFUNCTION:
-	    /* Must store the function pointer in self */
 	    Py_INCREF(obj);
 	    Py_XDECREF(self->w_cb);
 	    self->w_cb = obj;
 	    curl_easy_setopt(self->handle, CURLOPT_WRITEFUNCTION, write_callback);
 	    curl_easy_setopt(self->handle, CURLOPT_FILE, self);
+	    break;
+	case CURLOPT_HEADERFUNCTION:
+	    Py_INCREF(obj);
+	    Py_XDECREF(self->h_cb);
+	    self->h_cb = obj;
+	    curl_easy_setopt(self->handle, CURLOPT_HEADERFUNCTION, header_callback);
+	    curl_easy_setopt(self->handle, CURLOPT_WRITEHEADER, self);
+	    break;
+	case CURLOPT_PROGRESSFUNCTION:
+	    Py_INCREF(obj);
+	    Py_XDECREF(self->h_cb);
+	    self->pro_cb = obj;
+	    curl_easy_setopt(self->handle, CURLOPT_PROGRESSFUNCTION, progress_callback);
+	    curl_easy_setopt(self->handle, CURLOPT_PROGRESSDATA, self);
 	    break;
 	default:
 	    /* None of the list options were recognized, throw exception */
@@ -548,7 +625,12 @@ do_init(PyObject *arg)
     self->quote = NULL;
     self->postquote = NULL;
     self->httppost = NULL;
+    /* Set callback pointers to NULL */
     self->w_cb = NULL;
+    self->h_cb = NULL;
+    self->r_cb = NULL;
+    self->pro_cb = NULL;
+    self->pwd_cb = NULL;
 
     return self;
 }

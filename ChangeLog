@@ -1,3 +1,7 @@
+2001-06-06  Kjetil Jacobsen  <kjetilja>
+
+	* Added HEADER/PROGRESSFUNCTION callbacks.
+
 2001-06-05  Kjetil Jacobsen  <kjetilja>
 
 	* WRITEFUNCTION callbacks now work (see tests/test_cb.py for details).
