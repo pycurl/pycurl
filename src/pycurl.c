@@ -92,6 +92,8 @@ typedef struct {
     struct curl_slist *quote;
     struct curl_slist *postquote;
     struct curl_slist *prequote;
+    struct curl_slist *source_prequote;
+    struct curl_slist *source_postquote;
     /* callbacks */
     PyObject *w_cb;
     PyObject *h_cb;
@@ -272,6 +274,8 @@ util_curl_new(void)
     self->quote = NULL;
     self->postquote = NULL;
     self->prequote = NULL;
+    self->source_postquote = NULL;
+    self->source_prequote = NULL;
 
     /* Set callback pointers to NULL by default */
     self->w_cb = NULL;
@@ -429,6 +433,8 @@ util_curl_close(CurlObject *self)
     SFREE(self->quote);
     SFREE(self->postquote);
     SFREE(self->prequote);
+    SFREE(self->source_postquote);
+    SFREE(self->source_prequote);
 #undef SFREE
 
     /* Last, free the options.  This must be done after the curl handle
@@ -987,6 +993,9 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_URL:
         case CURLOPT_USERAGENT:
         case CURLOPT_USERPWD:
+        case CURLOPT_SOURCE_HOST:
+        case CURLOPT_SOURCE_USERPWD:
+        case CURLOPT_SOURCE_PATH:
 /* FIXME: check if more of these options allow binary data */
             str = PyString_AsString_NoNUL(obj);
             if (str == NULL)
@@ -1158,6 +1167,12 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             break;
         case CURLOPT_PREQUOTE:
             old_slist = &self->prequote;
+            break;
+        case CURLOPT_SOURCE_PREQUOTE:
+            old_slist = &self->source_prequote;
+            break;
+        case CURLOPT_SOURCE_POSTQUOTE:
+            old_slist = &self->source_postquote;
             break;
         case CURLOPT_HTTPPOST:
             break;
@@ -2491,6 +2506,13 @@ initpycurl(void)
     insint_c(d, "INFILESIZE_LARGE", CURLOPT_INFILESIZE_LARGE);
     insint_c(d, "TCP_NODELAY", CURLOPT_TCP_NODELAY);
     insint_c(d, "POSTFIELDSIZE_LARGE", CURLOPT_POSTFIELDSIZE_LARGE);
+    insint_c(d, "SOURCE_HOST", CURLOPT_SOURCE_HOST);
+    insint_c(d, "SOURCE_USERPWD", CURLOPT_SOURCE_USERPWD);
+    insint_c(d, "SOURCE_PATH", CURLOPT_SOURCE_PATH);
+    insint_c(d, "SOURCE_PORT", CURLOPT_SOURCE_PORT);
+    insint_c(d, "PASV_HOST", CURLOPT_PASV_HOST);
+    insint_c(d, "SOURCE_PREQUOTE", CURLOPT_SOURCE_PREQUOTE);
+    insint_c(d, "SOURCE_POSTQUOTE", CURLOPT_SOURCE_POSTQUOTE);
 
     /* curl_closepolicy: constants for setopt(CLOSEPOLICY, x) */
     insint_c(d, "CLOSEPOLICY_OLDEST", CURLCLOSEPOLICY_OLDEST);
