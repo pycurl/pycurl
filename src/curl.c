@@ -256,7 +256,7 @@ progress_callback(void *client,
     Py_DECREF(arglist);
     if (result == NULL) {
         PyErr_Print();
-        ret = -1;
+        ret = 1;
     }
     else if (result == Py_None) {               /* None means success */
         ret = 0;
@@ -284,7 +284,7 @@ int password_callback(void *client,
 
     self = (CurlObject *)client;
     if (self == NULL || self->state == NULL) {
-        return -1;
+        return 1;
     }
 
     PyEval_AcquireThread(self->state);
@@ -293,20 +293,20 @@ int password_callback(void *client,
     Py_DECREF(arglist);
     if (result == NULL) {
         PyErr_Print();
-        ret = -1;
+        ret = 1;
     }
     else {
         if (!PyString_Check(result)) {
             PyErr_SetString(ErrorObject, "callback for PASSWDFUNCTION must return string");
             PyErr_Print();
-            ret = -1;
+            ret = 1;
         }
         else {
             buf = PyString_AsString(result);
             if ((int)strlen(buf) > buflen) {
                 PyErr_SetString(ErrorObject, "string from PASSWDFUNCTION callback is too long");
                 PyErr_Print();
-                ret = -1;
+                ret = 1;
             }
             else {
                 strcpy(buffer, buf);
