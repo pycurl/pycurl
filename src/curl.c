@@ -201,7 +201,7 @@ do_write_callback(int flags,
     else {
         write_size = (int)PyInt_AsLong(result);
         if (write_size >= 0)
-            ret = write_size;                   /* success */
+            ret = (size_t)write_size;                   /* success */
     }
     Py_XDECREF(result);
     PyEval_ReleaseThread(self->state);
@@ -232,7 +232,7 @@ progress_callback(void *client,
     PyObject *arglist;
     PyObject *result;
     CurlObject *self;
-    int ret = -1;       /* assume error */
+    int ret = 1;       /* assume error */
 
     self = (CurlObject *)client;
     if (self == NULL || self->state == NULL) {
@@ -268,7 +268,7 @@ int password_callback(void *client,
     PyObject *result;
     CurlObject *self;
     char *buf;
-    int ret = -1;       /* assume error */
+    int ret = 1;       /* assume error */
 
     self = (CurlObject *)client;
     if (self == NULL || self->state == NULL) {
@@ -383,7 +383,7 @@ size_t read_callback(char *ptr,
             }
             else {
                 memcpy(ptr, buf, obj_size);
-                ret = obj_size;         /* success */
+                ret = (size_t)obj_size;         /* success */
             }
         }
     }
