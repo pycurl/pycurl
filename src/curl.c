@@ -1698,8 +1698,8 @@ static PyObject *
 do_multi_select(CurlMultiObject *self, PyObject *args)
 {
     int max_fd = -1, n;
-    double timeout = 0.0;
-    struct timeval tv, *tvp = NULL;
+    double timeout = -1.0;
+    struct timeval tv, *tvp;
     CURLMcode res;
 
     /* Sanity checks */
@@ -1712,12 +1712,13 @@ do_multi_select(CurlMultiObject *self, PyObject *args)
         return NULL;
     }
 
-   if (timeout < 0 || timeout >= 365 * 24 * 60 * 60) {
+   if (timeout == -1.0) {
+        /* no timeout given - wait forever */
+        tvp = NULL;
+   } else if (timeout < 0 || timeout >= 365 * 24 * 60 * 60) {
         PyErr_SetString(PyExc_OverflowError, "invalid timeout period");
         return NULL;
-   }
-   /* 1.0 / 1024 == 0.0009765625 and is exactly representable */
-   if (timeout >= 1.0 / 1024) {
+   } else {
         long seconds = (long)timeout;
         timeout = timeout - (double)seconds;
         tv.tv_sec = seconds;
@@ -1741,6 +1742,10 @@ do_multi_select(CurlMultiObject *self, PyObject *args)
         Py_BEGIN_ALLOW_THREADS
         n = select(max_fd + 1, &self->read_fd_set, &self->write_fd_set, &self->exc_fd_set, tvp);
         Py_END_ALLOW_THREADS
+        /* info: like Python's socketmodule.c we do not raise an exception
+         *       if select() fails - we'll leave it to the actual libcurl
+         *       socket code to report any errors.
+         */
     }
 
     return PyInt_FromLong(n);
