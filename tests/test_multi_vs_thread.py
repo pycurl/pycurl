@@ -20,7 +20,7 @@ signal.signal(signal.SIGPIPE, signal.SIG_IGN)
 # FIXME FIXME FIXME - this is a very first version and
 #     needs much cleanup and comments
 #
-# anyway, the conclusion is: threads (test_thread_pool) are much faster!
+# anyway, the conclusion is: the multi interface is fastest!
 #
 #
 # XXX after this program is finished I'd like to add some real-world
