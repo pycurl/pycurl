@@ -1,9 +1,8 @@
-#! /usr/bin/env python2.2
+#! /usr/bin/env python
+# -*- coding: iso-8859-1 -*-
 # vi:ts=4:et
 #
 # sfquery -- Source Forge query script
-#
-# Requires Python 2.2 or better.
 #
 # Retrieves a SourceForge XML export object for a given project.
 # Specify the *numeric* project ID. the user name, and the password,
@@ -21,6 +20,9 @@
 
 import os, sys, urllib, netrc
 import pycurl
+
+assert sys.version[:3] >= "2.2", "requires Python 2.2 or better"
+
 
 class CGIClient:
     "Encapsulate user operations on CGIs through curl."
