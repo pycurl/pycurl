@@ -16,7 +16,7 @@ Options +Indexes
 ##AddDescription "precompiled win32 installer"        .exe
 ##AddDescription "pre-release version"                pycurl-ssl-7.11.3-pre
 ##AddDescription "pre-release version"                pycurl-7.11.3-pre
-AddDescription "precompiled win32 installer (with SSL, zlib, ARES &amp; libidn)" pycurl-ssl-7.12.2.win32
-AddDescription "precompiled win32 installer (basic)" pycurl-7.12.2.win32
+AddDescription "precompiled win32 installer (with SSL, zlib, ARES &amp; libidn)" pycurl-ssl-7.12.3.win32
+AddDescription "precompiled win32 installer (basic)" pycurl-7.12.3.win32
 AddDescription " "                                  .gz
 

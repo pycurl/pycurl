@@ -1,4 +1,17 @@
-Version 7.12.2 [requires libcurl-7.12.2 or better]
+Version 7.12.3 [requires libcurl-7.12.3 or better]
+--------------
+
+2004-12-22  Markus F.X.J. Oberhumer <mfx>
+
+        * Added CURLINFO_NUM_CONNECTS and CURLINFO_SSL_ENGINES.
+
+        * Added some other missing constants.
+
+        * Updated pycurl.version_info() to return a 12-tuple
+          instead of a 9-tuple.
+
+
+Version 7.12.2
 --------------
 
 2004-10-15  Kjetil Jacobsen  <kjetilja>
@@ -6,7 +19,6 @@ Version 7.12.2 [requires libcurl-7.12.2 or better]
         * Added CURLOPT_FTPSSLAUTH (and CURLFTPAUTH_*).
 
         * Added CURLINFO_OS_ERRNO.
-
 
 2004-08-17 Kjetil Jacobsen <kjetilja>
 

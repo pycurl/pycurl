@@ -29,6 +29,9 @@
 #if (defined(_WIN32) || defined(__WIN32__)) && !defined(WIN32)
 #  define WIN32 1
 #endif
+#if defined(WIN32)
+#  define CURL_STATICLIB 1
+#endif
 #include <Python.h>
 #include <sys/types.h>
 #include <stddef.h>
@@ -164,7 +167,7 @@ static char *PyString_AsString_NoNUL(PyObject *obj)
 /* Convert a curl slist (a list of strings) to a Python list.
  * In case of error return NULL with an exception set.
  */
-static PyObject* convert_slist(struct curl_slist *slist, int free_flags)
+static PyObject *convert_slist(struct curl_slist *slist, int free_flags)
 {
     PyObject *ret = NULL;
 
@@ -211,6 +214,7 @@ get_thread_state(const CurlObject *self)
      */
     if (self == NULL)
         return NULL;
+    assert(self->ob_type == p_Curl_Type);
     if (self->state != NULL)
     {
         /* inside perform() */

@@ -45,9 +45,13 @@ windist: distclean
 	rm -rf build
 	python2.3 setup.py bdist_wininst
 	rm -rf build
+	python2.4 setup.py bdist_wininst
+	rm -rf build
 	python2.2 setup_win32_ssl.py bdist_wininst
 	rm -rf build
 	python2.3 setup_win32_ssl.py bdist_wininst
+	rm -rf build
+	python2.4 setup_win32_ssl.py bdist_wininst
 	rm -rf build
 
 

@@ -7,7 +7,8 @@ Version 7.12.3 [requires libcurl-7.12.3 or better]
 
         * Added some other missing constants.
 
-        * pycurl.version_info() now returns a 12-tuple.
+        * Updated pycurl.version_info() to return a 12-tuple
+          instead of a 9-tuple.
 
 
 Version 7.12.2
