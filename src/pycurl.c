@@ -345,16 +345,13 @@ util_curl_new(void)
 
 /* constructor - this is a module-level function returning a new instance */
 static CurlObject *
-do_curl_new(PyObject *dummy, PyObject *args)
+do_curl_new(PyObject *dummy)
 {
     CurlObject *self = NULL;
     int res;
     char *s = NULL;
 
     UNUSED(dummy);
-    if (!PyArg_ParseTuple(args, ":Curl")) {
-        return NULL;
-    }
 
     /* Allocate python curl object */
     self = util_curl_new();
@@ -529,11 +526,8 @@ do_curl_dealloc(CurlObject *self)
 
 
 static PyObject *
-do_curl_close(CurlObject *self, PyObject *args)
+do_curl_close(CurlObject *self)
 {
-    if (!PyArg_ParseTuple(args, ":close")) {
-        return NULL;
-    }
     if (check_curl_state(self, 2, "close") != 0) {
         return NULL;
     }
@@ -544,11 +538,8 @@ do_curl_close(CurlObject *self, PyObject *args)
 
 
 static PyObject *
-do_curl_errstr(CurlObject *self, PyObject *args)
+do_curl_errstr(CurlObject *self)
 {
-    if (!PyArg_ParseTuple(args, ":errstr")) {
-        return NULL;
-    }
     if (check_curl_state(self, 1 | 2, "errstr") != 0) {
         return NULL;
     }
@@ -598,13 +589,10 @@ do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
 /* --------------- perform --------------- */
 
 static PyObject *
-do_curl_perform(CurlObject *self, PyObject *args)
+do_curl_perform(CurlObject *self)
 {
     int res;
 
-    if (!PyArg_ParseTuple(args, ":perform")) {
-        return NULL;
-    }
     if (check_curl_state(self, 1 | 2, "perform") != 0) {
         return NULL;
     }
@@ -1672,14 +1660,11 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
 
 /* constructor - this is a module-level function returning a new instance */
 static CurlMultiObject *
-do_multi_new(PyObject *dummy, PyObject *args)
+do_multi_new(PyObject *dummy)
 {
     CurlMultiObject *self;
 
     UNUSED(dummy);
-    if (!PyArg_ParseTuple(args, ":CurlMulti")) {
-        return NULL;
-    }
 
     /* Allocate python curl-multi object */
     self = (CurlMultiObject *) PyObject_GC_New(CurlMultiObject, p_CurlMulti_Type);
@@ -1733,11 +1718,8 @@ do_multi_dealloc(CurlMultiObject *self)
 
 
 static PyObject *
-do_multi_close(CurlMultiObject *self, PyObject *args)
+do_multi_close(CurlMultiObject *self)
 {
-    if (!PyArg_ParseTuple(args, ":close")) {
-        return NULL;
-    }
     if (check_multi_state(self, 2, "close") != 0) {
         return NULL;
     }
@@ -1774,14 +1756,11 @@ do_multi_traverse(CurlMultiObject *self, visitproc visit, void *arg)
 
 
 static PyObject *
-do_multi_perform(CurlMultiObject *self, PyObject *args)
+do_multi_perform(CurlMultiObject *self)
 {
     CURLMcode res;
     int running = -1;
 
-    if (!PyArg_ParseTuple(args, ":perform")) {
-        return NULL;
-    }
     if (check_multi_state(self, 1 | 2, "perform") != 0) {
         return NULL;
     }
@@ -1902,7 +1881,7 @@ done:
 /* --------------- fdset ---------------------- */
 
 static PyObject *
-do_multi_fdset(CurlMultiObject *self, PyObject *args)
+do_multi_fdset(CurlMultiObject *self)
 {
     CURLMcode res;
     int max_fd = -1, fd;
@@ -1910,9 +1889,6 @@ do_multi_fdset(CurlMultiObject *self, PyObject *args)
     PyObject *read_list = NULL, *write_list = NULL, *except_list = NULL;
     PyObject *py_fd = NULL;
 
-    if (!PyArg_ParseTuple(args, ":fdset")) {
-        return NULL;
-    }
     if (check_multi_state(self, 1 | 2, "fdset") != 0) {
         return NULL;
     }
@@ -2116,10 +2092,10 @@ static char co_multi_info_read_doc [] = "info_read([max_objects]) -> Tuple. Retu
 static char co_multi_select_doc [] = "select([timeout]) -> Int.  Returns result from doing a select() on the curl multi file descriptor with the given timeout.\n";
 
 static PyMethodDef curlobject_methods[] = {
-    {"close", (PyCFunction)do_curl_close, METH_VARARGS, co_close_doc},
-    {"errstr", (PyCFunction)do_curl_errstr, METH_VARARGS, co_errstr_doc},
+    {"close", (PyCFunction)do_curl_close, METH_NOARGS, co_close_doc},
+    {"errstr", (PyCFunction)do_curl_errstr, METH_NOARGS, co_errstr_doc},
     {"getinfo", (PyCFunction)do_curl_getinfo, METH_VARARGS, co_getinfo_doc},
-    {"perform", (PyCFunction)do_curl_perform, METH_VARARGS, co_perform_doc},
+    {"perform", (PyCFunction)do_curl_perform, METH_NOARGS, co_perform_doc},
     {"setopt", (PyCFunction)do_curl_setopt, METH_VARARGS, co_setopt_doc},
     {"unsetopt", (PyCFunction)do_curl_unsetopt, METH_VARARGS, co_unsetopt_doc},
     {NULL, NULL, 0, NULL}
@@ -2127,10 +2103,10 @@ static PyMethodDef curlobject_methods[] = {
 
 static PyMethodDef curlmultiobject_methods[] = {
     {"add_handle", (PyCFunction)do_multi_add_handle, METH_VARARGS, NULL},
-    {"close", (PyCFunction)do_multi_close, METH_VARARGS, NULL},
-    {"fdset", (PyCFunction)do_multi_fdset, METH_VARARGS, co_multi_fdset_doc},
+    {"close", (PyCFunction)do_multi_close, METH_NOARGS, NULL},
+    {"fdset", (PyCFunction)do_multi_fdset, METH_NOARGS, co_multi_fdset_doc},
     {"info_read", (PyCFunction)do_multi_info_read, METH_VARARGS, co_multi_info_read_doc},
-    {"perform", (PyCFunction)do_multi_perform, METH_VARARGS, NULL},
+    {"perform", (PyCFunction)do_multi_perform, METH_NOARGS, NULL},
     {"remove_handle", (PyCFunction)do_multi_remove_handle, METH_VARARGS, NULL},
     {"select", (PyCFunction)do_multi_select, METH_VARARGS, co_multi_select_doc},
     {NULL, NULL, 0, NULL}
@@ -2308,13 +2284,9 @@ do_global_init(PyObject *dummy, PyObject *args)
 
 
 static PyObject *
-do_global_cleanup(PyObject *dummy, PyObject *args)
+do_global_cleanup(PyObject *dummy)
 {
     UNUSED(dummy);
-    if (!PyArg_ParseTuple(args, ":global_cleanup")) {
-        return NULL;
-    }
-
     curl_global_cleanup();
     Py_INCREF(Py_None);
     return Py_None;
@@ -2415,10 +2387,10 @@ static char pycurl_multi_new_doc [] =
 /* List of functions defined in this module */
 static PyMethodDef curl_methods[] = {
     {"global_init", (PyCFunction)do_global_init, METH_VARARGS, pycurl_global_init_doc},
-    {"global_cleanup", (PyCFunction)do_global_cleanup, METH_VARARGS, pycurl_global_cleanup_doc},
+    {"global_cleanup", (PyCFunction)do_global_cleanup, METH_NOARGS, pycurl_global_cleanup_doc},
     {"version_info", (PyCFunction)do_version_info, METH_VARARGS, pycurl_version_info_doc},
-    {"Curl", (PyCFunction)do_curl_new, METH_VARARGS, pycurl_curl_new_doc},
-    {"CurlMulti", (PyCFunction)do_multi_new, METH_VARARGS, pycurl_multi_new_doc},
+    {"Curl", (PyCFunction)do_curl_new, METH_NOARGS, pycurl_curl_new_doc},
+    {"CurlMulti", (PyCFunction)do_multi_new, METH_NOARGS, pycurl_multi_new_doc},
     {NULL, NULL, 0, NULL}
 };
 

@@ -1,6 +1,10 @@
 Version 7.13.1 [requires libcurl-7.13.1 or better]
 --------------
 
+2005-03-04  Kjetil Jacobsen  <kjetilja>
+
+        * Use METH_NOARGS where appropriate.
+
 2005-03-03  Kjetil Jacobsen  <kjetilja>
 
         * Added support for CURLFORM API with HTTPPOST: Supports a
