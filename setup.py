@@ -105,30 +105,28 @@ ext = Extension(
 # prepare data_files
 
 def get_data_files():
-    # a list of tuples with (path to install to, a list of files)
+    # a list of tuples with (path to install to, a list of local files)
     data_files = []
-    #
     datadir = os.path.join("share", "doc", PACKAGE)
     #
     files = ["ChangeLog", "COPYING", "INSTALL", "README", "TODO",]
     if files:
-        data_files.append((datadir, files))
-    #
+        data_files.append((os.path.join(datadir), files))
     files = glob.glob(os.path.join("doc", "*.html"))
     if files:
         data_files.append((os.path.join(datadir, "html"), files))
-    #
     files = glob.glob(os.path.join("examples", "*.py"))
     if files:
         data_files.append((os.path.join(datadir, "examples"), files))
-    #
     files = glob.glob(os.path.join("tests", "*.py"))
     if files:
         data_files.append((os.path.join(datadir, "tests"), files))
     #
-    for dir, files in data_files:
+    assert data_files
+    for install_dir, files in data_files:
+        assert files
         for f in files:
-            assert os.path.isfile(f), (f, dir)
+            assert os.path.isfile(f), (f, install_dir)
     return data_files
 
 ##print get_data_files(); sys.exit(1)
