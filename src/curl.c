@@ -1645,11 +1645,10 @@ do_multi_select(CurlMultiObject *self, PyObject *args)
 
 /* --------------- methods --------------- */
 
-static char co_cleanup_doc [] = "cleanup() -> None.  Same as close().\n";
+static char co_cleanup_doc [] = "cleanup() -> None.  Deprecated, use close().\n";
 static char co_close_doc [] = "close() -> None.  Close handle and end curl session.\n";
 #if 0
 static char co_copy_doc [] = "copy() -> New curl object. FIXME\n";
-
 #endif
 static char co_perform_doc [] = "perform() -> None.  Perform a file transfer.  Throws pycurl.error exception upon failure.\n";
 static char co_setopt_doc [] = "setopt(option, parameter) -> None.  Set curl session options.  Throws pycurl.error exception upon failure.\n";
@@ -1915,60 +1914,60 @@ static char module_doc [] =
 ;
 
 
-/* Helper function for inserting constants into the module namespace */
+/* Helper functions for inserting constants into the module namespace */
+
+static void
+insobj2(PyObject *dict1, PyObject *dict2, char *name, PyObject *value)
+{
+    /* Insert an object into one or two dicts. Eats a reference to value.
+     * See also the implementation of PyDict_SetItemString(). */
+    PyObject *key;
+
+    if (dict1 == NULL && dict2 == NULL)
+        goto error;
+    if (value == NULL)
+        goto error;
+    key = PyString_FromString(name);
+    if (key == NULL)
+        goto error;
+#if 0
+    PyString_InternInPlace(&key);   /* XXX Should we really? */
+#endif
+    if (dict1 != NULL && PyDict_SetItem(dict1, key, value) != 0)
+        goto error;
+    if (dict2 != NULL && PyDict_SetItem(dict2, key, value) != 0)
+        goto error;
+    Py_DECREF(key);
+    Py_DECREF(value);
+    return;
+error:
+    Py_FatalError("pycurl: insobj2");
+    assert(0);
+}
+
 static void
 insstr(PyObject *d, char *name, char *value)
 {
-    PyObject *v = PyString_FromString(value);
-    if (v == NULL || d == NULL || PyDict_SetItemString(d, name, v) != 0)
-        goto error;
-    Py_DECREF(v);
-    return;
-error:
-    Py_FatalError("pycurl: insstr");
+    insobj2(d, NULL, name, PyString_FromString(value));
 }
 
 static void
-insint2(PyObject *d1, PyObject *d2, char *name, int value)
+insint(PyObject *d, char *name, long value)
 {
-    PyObject *k, *v;
-
-    /* see implementation of PyDict_SetItemString() */
-    k = PyString_FromString(name);
-    v = PyInt_FromLong((long) value);
-    if (k == NULL || v == NULL)
-        goto error;
-#if 0
-    PyString_InternInPlace(&k);     /* XXX Should we really? */
-#endif
-    if (d1 != NULL && PyDict_SetItem(d1, k, v) != 0)
-        goto error;
-    if (d2 != NULL && PyDict_SetItem(d2, k, v) != 0)
-        goto error;
-    Py_DECREF(v);
-    Py_DECREF(k);
-    return;
-error:
-    Py_FatalError("pycurl: insint2");
+    insobj2(d, NULL, name, PyInt_FromLong(value));
 }
 
 static void
-insint(PyObject *d, char *name, int value)
+insint_c(PyObject *d, char *name, long value)
 {
-    insint2(d, NULL, name, value);
-}
-
-static void
-insint_c(PyObject *d, char *name, int value)
-{
-    insint2(d, curlobject_constants, name, value);
+    insobj2(d, curlobject_constants, name, PyInt_FromLong(value));
 }
 
 #if 0
 static void
-insint_m(PyObject *d, char *name, int value)
+insint_m(PyObject *d, char *name, long value)
 {
-    insint2(d, curlmultiobject_constants, name, value);
+    insobj2(d, curlmultiobject_constants, name, PyInt_FromLong(value));
 }
 #endif
 
@@ -1992,6 +1991,7 @@ DL_EXPORT(void)
     d = PyModule_GetDict(m);
     assert(d != NULL);
     ErrorObject = PyErr_NewException("pycurl.error", NULL, NULL);
+    assert(ErrorObject != NULL);
     PyDict_SetItemString(d, "error", ErrorObject);
 
     curlobject_constants = PyDict_New();
