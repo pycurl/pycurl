@@ -43,8 +43,8 @@
 #if !defined(PY_VERSION_HEX) || (PY_VERSION_HEX < 0x010502f0)
 #  error "Need Python version 1.5.2 or greater to compile pycurl."
 #endif
-#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x070a04)
-#  error "Need libcurl version 7.10.4 or greater to compile pycurl."
+#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x070a03)
+#  error "Need libcurl version 7.10.3 or greater to compile pycurl."
 #endif
 
 /* Beginning with Python 2.2 we support Cyclic Garbarge Collection */
