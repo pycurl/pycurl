@@ -1,7 +1,7 @@
 2002-02-27  Kjetil Jacobsen  <kjetilja>
 
 	* Check that the installed version of libcurl matches the
-	requirements of PycURL.
+	requirements of pycurl.
 
 2002-02-26  Kjetil Jacobsen  <kjetilja>
 
