@@ -409,19 +409,19 @@ if __name__ == "__main__":
             self.session.set_DHCP_starting_IP(line)
         def help_dhcp_start(self):
             print "Usage: dhcp_start <number>"
-            print "Set the start address of the DHCP pool.")
+            print "Set the start address of the DHCP pool."
 
         def do_dhcp_users(self, line):
             self.session.set_DHCP_users(line)
         def help_dhcp_users(self):
             print "Usage: dhcp_users <number>"
-            print "Set number of address slots to allocate in the DHCP pool.")
+            print "Set number of address slots to allocate in the DHCP pool."
 
         def do_dhcp_lease(self, line):
             self.session.set_DHCP_lease(line)
         def help_dhcp_lease(self):
             print "Usage: dhcp_lease <number>"
-            print "Set number of address slots to allocate in the DHCP pool.")
+            print "Set number of address slots to allocate in the DHCP pool."
 
         def do_dhcp_dns(self, line):
             (index, address) = line.split()
@@ -444,7 +444,7 @@ if __name__ == "__main__":
             self.session.set_Log_address(line)
         def help_log_address(self):
             print "Usage: log_address <number>"
-            print "Set the last quad of the address to which to log.")
+            print "Set the last quad of the address to which to log."
 
         def do_configure(self, line):
             self.session.configure()
