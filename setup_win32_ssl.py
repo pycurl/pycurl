@@ -18,9 +18,9 @@ setup_args["name"] = "pycurl-ssl"
 
 for l in ("libeay32.lib", "ssleay32.lib",):
     ext.extra_objects.append(os.path.join(OPENSSL_DIR, "out32", l))
-ext.extra_objects.append(r"c:\src\pool\zlib-1.2.1.1\pool\win32\vc6\zlib.lib")
-ext.extra_objects.append(r"c:\src\build\pycurl\c-ares-1.2.0\ares.lib")
-ext.extra_objects.append(r"c:\src\pool\libidn-0.5.4\pool\win32\vc6\idn.lib")
+ext.extra_objects.append(r"c:\src\pool\zlib-1.2.2\pool\win32\vc6\zlib.lib")
+ext.extra_objects.append(r"c:\src\pool\c-ares-20041018\pool\win32\vc6\ares.lib")
+ext.extra_objects.append(r"c:\src\pool\libidn-0.5.8\pool\win32\vc6\idn.lib")
 
 
 if __name__ == "__main__":
