@@ -74,20 +74,20 @@ else:
     # Find out the rest the hard way
     CURL_CONFIG = "curl-config"
     CURL_CONFIG = scan_argv("--curl-config=", CURL_CONFIG)
-    d = os.popen("%s --version" % CURL_CONFIG).read()
+    d = os.popen("'%s' --version" % CURL_CONFIG).read()
     if d:
         d = string.strip(d)
     if not d:
         raise Exception, ("`%s' not found -- please install the libcurl development files" % CURL_CONFIG)
     print "Using %s (%s)" % (CURL_CONFIG, d)
-    for e in split_quoted(os.popen("%s --cflags" % CURL_CONFIG).read()):
+    for e in split_quoted(os.popen("'%s' --cflags" % CURL_CONFIG).read()):
         if e[:2] == "-I":
             # do not add /usr/include
             if not re.search(r"^\/+usr\/+include\/*$", e[2:]):
                 include_dirs.append(e[2:])
         else:
             extra_compile_args.append(e)
-    for e in split_quoted(os.popen("%s --libs" % CURL_CONFIG).read()):
+    for e in split_quoted(os.popen("'%s' --libs" % CURL_CONFIG).read()):
         if e[:2] == "-l":
             libraries.append(e[2:])
         elif e[:2] == "-L":
