@@ -831,6 +831,7 @@ do_init(PyObject *arg)
     self->postquote = NULL;
     self->prequote = NULL;
     self->httppost = NULL;
+    self->writeheader_set = 0;
 
     /* Set callback pointers to NULL */
     self->w_cb = NULL;
