@@ -7,7 +7,7 @@
 
 PACKAGE = "pycurl"
 PY_PACKAGE = "curl"
-VERSION = "7.10.8"
+VERSION = "7.11.0"
 
 import glob, os, re, sys, string
 import distutils
@@ -105,6 +105,10 @@ else:
     # Add extra compile flag for MacOS X
     if sys.platform[:-1] == "darwin":
         extra_link_args.append("-flat_namespace")
+
+# Find out whether to support GC or not, default to using the GC
+USE_GC = scan_argv("--use-gc=", 1)
+define_macros.append(("USE_GC", USE_GC))
 
 
 ###############################################################################

@@ -48,10 +48,13 @@
 #  error "Need libcurl version 7.10.3 or greater to compile pycurl."
 #endif
 
-/* Beginning with Python 2.2 we support Cyclic Garbarge Collection */
-#undef USE_GC
-#if 0 && (PY_VERSION_HEX >= 0x02020000)
-#  define USE_GC
+#if USE_GC==0
+#   undef USE_GC
+#   warning "Circular garbage collection is not enabled"
+#endif
+
+#if USE_GC && (PY_VERSION_HEX < 0x02020000)
+#   error "Circular garbage collection is not supported for Python versions < 2.2"
 #endif
 
 
