@@ -28,12 +28,6 @@ ADD NEW LIBCURL FEATURES:
 
       - CURL_HTTP_VERSION_* constants [FIXME - name clash]
 
-    * Add support for missing libcurl 7.11.0 features:
-
-      - Large file support: INFILESIZE_LARGE, RESUME_FROM_LARGE and MAXFILESIZE_LARGE
-      - CURLOPT_FTPSSL
-      - CURLOPT_NETRC_FILE
-
 
 NEW FEATURES:
 
