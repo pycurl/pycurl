@@ -23,35 +23,43 @@ extra_objects = []
 extra_compile_args = []
 extra_link_args = []
 
+
+def scan_argv(s, default):
+    p = default
+    i = 1
+    while i < len(sys.argv):
+        arg = sys.argv[i]
+        if string.find(arg, s) == 0:
+            p = arg[len(s):]
+            assert p, arg
+            del sys.argv[i]
+        else:
+            i = i + 1
+    ##print sys.argv
+    return p
+
+
 if sys.platform == "win32":
     # Windows users have to configure the CURL_DIR path parameter to match
     # their cURL source installation.  The path set here is just an example
     # and thus unlikely to match your installation.
-    CURL_DIR = r"c:\src\curl-7.10"
-    args = sys.argv[:]
-    for arg in args:
-        if string.find(arg, '--curl-dir=') == 0:
-            CURL_DIR = arg[11:]
-            assert CURL_DIR, arg
-            sys.argv.remove(arg)
-    print 'Using curl directory:', CURL_DIR
+    CURL_DIR = r"c:\src\curl-7.10.1"
+    CURL_DIR = scan_argv("--curl-dir=", CURL_DIR)
+    print "Using curl directory:", CURL_DIR
     include_dirs.append(os.path.join(CURL_DIR, "include"))
     extra_objects.append(os.path.join(CURL_DIR, "lib", "libcurl.lib"))
     assert os.path.isdir(CURL_DIR), "please check CURL_DIR in setup.py"
     assert os.path.isfile(extra_objects[-1]), "please check CURL_DIR in setup.py"
 else:
     # Find out the rest the hard way
-    args = sys.argv[:]
-    CURL_CONFIG = 'curl-config'
-    for arg in args:
-        if string.find(arg, '--curl-config=') == 0:
-            CURL_CONFIG = arg[14:]
-            assert CURL_CONFIG, arg
-            sys.argv.remove(arg)
+    CURL_CONFIG = "curl-config"
+    CURL_CONFIG = scan_argv("--curl-config=", CURL_CONFIG)
     d = os.popen("%s --version" % CURL_CONFIG).read()
-    if not string.strip(d):
-        raise Exception, "`curl-config' not found -- please install the libcurl development files"
-    print 'Using %s (%s)' % (CURL_CONFIG, string.strip(d))
+    if d:
+        d = string.strip(d)
+    if not d:
+        raise Exception, ("`%s' not found -- please install the libcurl development files" % CURL_CONFIG)
+    print "Using %s (%s)" % (CURL_CONFIG, d)
     for e in split_quoted(os.popen("%s --cflags" % CURL_CONFIG).read()):
         if e[:2] == "-I":
             include_dirs.append(e[2:])
@@ -104,7 +112,7 @@ setup_args = get_kw(
     data_files = [
         # list of tuples with (path to install to, a list of files)
         (os.path.join("doc", "pycurl"), [
-            "COPYING", "INSTALL", "README", "TODO",
+            "ChangeLog", "COPYING", "INSTALL", "README", "TODO",
         ]),
         (os.path.join("doc", "pycurl", "examples"), [
             os.path.join("examples", "basicfirst.py"),

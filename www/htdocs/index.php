@@ -1,5 +1,5 @@
 <?php // vi:ts=4:et
-$version = "7.10";
+$version = "7.10.1";
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
@@ -30,8 +30,8 @@ from within a Python program.
 </p>
 
 <p>
-<a href="download/pycurl-7.10.tar.gz">Download</a>
-PycURL sources version <?php echo $version ?> (Oct 2 2002)
+<a href="download/pycurl-7.10.1.tar.gz">Download</a>
+PycURL sources version <?php echo $version ?> (Oct 16 2002)
 or try the code from
 <a href="http://sourceforge.net/cvs/?group_id=28236">the CVS repository</a>.
 </p>
