@@ -1,3 +1,7 @@
+2001-08-21  Kjetil Jacobsen  <kjetilja>
+
+	* Cleaned up the script with GNOME/PycURL integration.
+
 2001-08-20  Kjetil Jacobsen  <kjetilja>
 
 	* Added another test script for shipping XML-RPC requests which
