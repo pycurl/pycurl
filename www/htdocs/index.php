@@ -34,7 +34,7 @@ echo "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
 </p>
 
 <p>
-PycURL is an
+PycURL is a
 <a href="http://www.python.org/">Python</a> interface to
 <a href="http://curl.haxx.se/libcurl/">libcurl</a>.
 PycURL can be used to fetch objects identified by a URL

@@ -23,7 +23,6 @@ RSYNC_FILES = \
 	upload
 
 RSYNC_EXCLUDES = \
-	'--exclude=.xvpics/' \
 	'--exclude=CVS/' \
 	'--exclude=htdocs/download/' \
 	'--exclude=htdocs/favicon.ico' \
@@ -48,7 +47,7 @@ rsync-check:
 	$(MAKE) rsync 'RSYNC=rsync --dry-run -c'
 
 
-# note: CVS does not maintain metadata like owners and file permissions,
+# NOTE: CVS does not maintain metadata like owners and file permissions,
 #       so we have to care manually
 __rsync-clean:
 	chgrp -c -R pycurl .
