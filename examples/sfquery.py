@@ -12,7 +12,7 @@
 # Illustrates GET and POST transactions over HTTPS, response callbacks,
 # and enabling basic cookie echoing for stateful sessions.
 #
-# ** mfx NOTE: this program uses "black magic" using COOKIEFILE in
+# ** mfx NOTE: this script uses "black magic" using COOKIEFILE in
 #    combination with a non-existant file name. See the libcurl docs
 #    for more info.
 #
@@ -65,7 +65,7 @@ class CGIClient:
         self.curlobj.perform()
     def answered(self, check):
         "Does a given check string occur in the response?"
-        return self.response.find(check) > -1
+        return self.response.find(check) >= 0
     def close(self):
         "Close a session, freeing resources."
         self.curlobj.close()
@@ -88,38 +88,31 @@ class SourceForgeUserSession(CGIClient):
 if __name__ == "__main__":
     if len(sys.argv) < 4:
         print "Usage: %s <project id> <name> <password>" % sys.argv[0]
-        raise SystemExit
+        sys.exit(1)
     project_id = sys.argv[1]
     # Try to grab authenticators out of your .netrc
     try:
         auth = netrc.netrc().authenticators("sourceforge.net")
-    except IOError:
-        auth = None
-    if auth:
-        (name, account, password) = auth
-    else:
+        name, account, password = auth
+    except:
         name = sys.argv[2]
         password = sys.argv[3]
-    session = SourceForgeUserSession('https://sourceforge.net/')
+    session = SourceForgeUserSession("https://sourceforge.net/")
     session.set_verbosity(0)
     session.login(name, password)
     # Login could fail.
     if session.answered("Invalid Password or User Name"):
         sys.stderr.write("Login/password not accepted (%d bytes)\n" % len(session.response))
-        raise SystemExit, 1
+        sys.exit(1)
     # We'll see this if we get the right thing.
     elif session.answered("Personal Page For: " + name):
         session.fetch_xml(project_id)
         sys.stdout.write(session.response)
         session.logout()
-        raise SystemExit, 0
+        sys.exit(0)
     # Or maybe SourceForge has changed its site design so our check strings
     # are no longer valid.
     else:
         sys.stderr.write("Unexpected page (%d bytes)\n"%len(session.response))
-        raise SystemExit, 1
+        sys.exit(1)
 
-# The following sets edit modes for GNU EMACS
-# Local Variables:
-# mode:python
-# End:
