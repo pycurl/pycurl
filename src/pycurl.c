@@ -1118,7 +1118,11 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
     /* Handle the case of long arguments (used by large varables) */
     if (PyLong_Check(obj)) {
+#if (LIBCURL_VERSION_NUM >= 0x070b01)
+        curl_off_t longdata = PyLong_AsLong(obj);
+#else
         off_t longdata = PyLong_AsLong(obj);
+#endif
         if (option < CURLOPTTYPE_OFF_T) {
             PyErr_SetString(PyExc_TypeError, "longs are not supported for this option");
             return NULL;
