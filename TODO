@@ -1,1 +1,2 @@
 * Maybe use curl_formadd() instead of curl_formparse()
+* Throw in support for duphandle
