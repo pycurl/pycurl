@@ -264,6 +264,13 @@ do_curl_new(PyObject *dummy, PyObject *args)
     if (res != CURLE_OK)
         goto error;
 
+#if 0
+    /* Set backreference */
+    res = curl_easy_setopt(self->handle, CURLOPT_PRIVATE, (char *) self);
+    if (res != CURLE_OK)
+        goto error;
+#endif
+
     /* Success - return new object */
     return self;
 
@@ -1586,6 +1593,47 @@ error:
     CURLERROR_MSG("fdset failed due to internal errors");
 }
 
+/* --------------- info_read --------------- */
+
+#if 0
+static PyObject *
+do_multi_info_read(CurlMultiObject *self, PyObject *args)
+{
+    int in_queue, res;
+    CURLMsg *msg;
+    CurlObject *co;
+
+    /* Sanity checks */
+    if (!PyArg_ParseTuple(args, ":info_read")) {
+        return NULL;
+    }
+
+    if (self->multi_handle == NULL) {
+        PyErr_SetString(ErrorObject, "cannot invoke info_read, no curl-multi handle");
+        return NULL;
+    }
+
+    /* Try reading a message */
+    msg = curl_multi_info_read(self->multi_handle, &in_queue);
+    if (msg == NULL) {
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+
+    /* Fetch the curl object that corresponds to the curl handle in the message */
+    res = curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, &co);
+    if (res != CURLE_OK) {
+        PyErr_SetString(ErrorObject, "failed to get private pointer");
+        return NULL;
+    }
+
+    assert(co != NULL);
+
+    /* Return a tuple (number of queued messages, curl object) */
+    return Py_BuildValue("(iO)", in_queue, co);
+}
+#endif
+
 /* --------------- select --------------- */
 
 static PyObject *
@@ -1683,6 +1731,9 @@ static PyMethodDef curlmultiobject_methods[] = {
     {"remove_handle", (PyCFunction)do_multi_remove_handle, METH_VARARGS, NULL},
     {"fdset", (PyCFunction)do_multi_fdset, METH_VARARGS, co_multi_fdset_doc},
     {"select", (PyCFunction)do_multi_select, METH_VARARGS, co_multi_select_doc},
+#if 0
+    {"info_read", (PyCFunction)do_multi_info_read, METH_VARARGS, NULL},
+#endif
     {NULL, NULL, 0, NULL}
 };
 
