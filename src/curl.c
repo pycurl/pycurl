@@ -102,11 +102,11 @@ typedef struct {
     PyObject *writedata;
     PyObject *writeheader;
     int writeheader_set;
-    char error[CURL_ERROR_SIZE+1];
     void *options[OPTIONS_SIZE];
+    char error[CURL_ERROR_SIZE+1];
 } CurlObject;
 
-#if !defined(__cplusplus)
+#if 1 || !defined(__cplusplus)
 staticforward PyTypeObject Curl_Type;
 staticforward PyTypeObject CurlMulti_Type;
 #endif
@@ -861,7 +861,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     char *buf;
     PyObject *obj;
     FILE *fp;
-    int res = -1;
+    int res;
     int len;
     char *str;
     int i;
@@ -922,7 +922,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             return PyErr_NoMemory();
         }
         /* Call setopt */
-        res = curl_easy_setopt(self->handle, option, buf);
+        res = curl_easy_setopt(self->handle, (CURLoption)option, buf);
         /* Check for errors */
         if (res != CURLE_OK) {
             free(buf);
@@ -942,7 +942,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             PyErr_SetString(PyExc_TypeError, "integers are not supported for this option");
             return NULL;
         }
-        res = curl_easy_setopt(self->handle, option, longdata);
+        res = curl_easy_setopt(self->handle, (CURLoption)option, longdata);
         /* Check for errors */
         if (res != CURLE_OK) {
             CURLERROR_RETVAL();
@@ -976,7 +976,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             PyErr_SetString(PyExc_TypeError, "second argument must be open file");
             return NULL;
         }
-        res = curl_easy_setopt(self->handle, option, fp);
+        res = curl_easy_setopt(self->handle, (CURLoption)option, fp);
         /* Check for errors */
         if (res != CURLE_OK) {
             CURLERROR_RETVAL();
@@ -1102,7 +1102,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             }
             *slist = nlist;
         }
-        res = curl_easy_setopt(self->handle, option, *slist);
+        res = curl_easy_setopt(self->handle, (CURLoption)option, *slist);
         /* Check for errors */
         if (res != CURLE_OK) {
             curl_slist_free_all(*slist);
@@ -1229,7 +1229,7 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
         long l_res = -1;
 
         /* Return long as result */
-        res = curl_easy_getinfo(self->handle, option, &l_res);
+        res = curl_easy_getinfo(self->handle, (CURLINFO)option, &l_res);
         /* Check for errors and return result */
         if (res != CURLE_OK) {
             CURLERROR_RETVAL();
@@ -1243,7 +1243,7 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
         char *s_res = NULL;
 
         /* Return string as result */
-        res = curl_easy_getinfo(self->handle, option, &s_res);
+        res = curl_easy_getinfo(self->handle, (CURLINFO)option, &s_res);
         /* Check for errors and return result */
         if (res != CURLE_OK) {
             CURLERROR_RETVAL();
@@ -1274,7 +1274,7 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
         double d_res = 0.0;
 
         /* Return float as result */
-        res = curl_easy_getinfo(self->handle, option, &d_res);
+        res = curl_easy_getinfo(self->handle, (CURLINFO)option, &d_res);
         /* Check for errors and return result */
         if (res != CURLE_OK) {
             CURLERROR_RETVAL();
@@ -1420,7 +1420,7 @@ do_multi_traverse(CurlMultiObject *self, visitproc visit, void *arg)
 static PyObject *
 do_multi_perform(CurlMultiObject *self, PyObject *args)
 {
-    int res = -1;
+    CURLMcode res;
     int running = -1;
 
     /* Sanity checks */
@@ -1451,7 +1451,7 @@ do_multi_perform(CurlMultiObject *self, PyObject *args)
     }
 
     /* Return a tuple with the result and the number of running handles */
-    return Py_BuildValue("(ii)", res, running);
+    return Py_BuildValue("(ii)", (int)res, running);
 }
 
 
@@ -1484,11 +1484,12 @@ check_multi_handle(const CurlMultiObject *self, const CurlObject *obj)
     return 0;
 }
 
+
 static PyObject *
 do_multi_add_handle(CurlMultiObject *self, PyObject *args)
 {
     CurlObject *obj;
-    int res;
+    CURLMcode res;
 
     if (!PyArg_ParseTuple(args, "O!:add_handle", &Curl_Type, &obj)) {
         return NULL;
@@ -1515,11 +1516,12 @@ do_multi_add_handle(CurlMultiObject *self, PyObject *args)
     return Py_None;
 }
 
+
 static PyObject *
 do_multi_remove_handle(CurlMultiObject *self, PyObject *args)
 {
     CurlObject *obj;
-    int res;
+    CURLMcode res;
 
     if (!PyArg_ParseTuple(args, "O!:remove_handle", &Curl_Type, &obj)) {
         return NULL;
@@ -1553,7 +1555,7 @@ done:
 static PyObject *
 do_multi_fdset(CurlMultiObject *self, PyObject *args)
 {
-    CURLMcode res = CURLM_INTERNAL_ERROR;
+    CURLMcode res;
     int max_fd = -1, fd;
     PyObject *ret = NULL;
     PyObject *read_list = NULL, *write_list = NULL, *except_list = NULL;
@@ -1574,7 +1576,7 @@ do_multi_fdset(CurlMultiObject *self, PyObject *args)
     FD_ZERO(&self->exc_fd_set);
 
     /* Don't bother releasing the gil as this is just a data structure operation */
-    res = curl_multi_fdset(self->multi_handle, &self->read_fd_set, 
+    res = curl_multi_fdset(self->multi_handle, &self->read_fd_set,
                            &self->write_fd_set, &self->exc_fd_set, &max_fd);
     if (res != CURLM_OK || max_fd < 0) {
         CURLERROR_MSG("fdset failed due to internal errors");
@@ -1610,6 +1612,7 @@ do_multi_fdset(CurlMultiObject *self, PyObject *args)
     /* Return a tuple with the 3 lists */
     ret = Py_BuildValue("(OOO)", read_list, write_list, except_list);
 error:
+    Py_XDECREF(py_fd);
     Py_XDECREF(except_list);
     Py_XDECREF(write_list);
     Py_XDECREF(read_list);
@@ -1625,10 +1628,10 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
     PyObject *ret = NULL;
     PyObject *ok_list = NULL, *err_list = NULL;
     CURLMsg *msg;
-    int res, in_queue = 0, num_results = 0;
+    int in_queue = 0, num_results = INT_MAX;
 
     /* Sanity checks */
-    if (!PyArg_ParseTuple(args, "i:info_read", &num_results)) {
+    if (!PyArg_ParseTuple(args, "|i:info_read", &num_results)) {
         return NULL;
     }
 
@@ -1642,14 +1645,18 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
         return NULL;
     }
 
-    ok_list = PyList_New(0);
-    if (ok_list == NULL) goto error;
-    err_list = PyList_New(0);
-    if (err_list == NULL) goto error;
+    if ((ok_list = PyList_New(0)) == NULL) goto error;
+    if ((err_list = PyList_New(0)) == NULL) goto error;
 
     /* Loop through all messages */
     while ((msg = curl_multi_info_read(self->multi_handle, &in_queue)) != NULL) {
+        CURLcode res;
         CurlObject *co = NULL;
+
+        /* Check for termination as specified by the user */
+        if (num_results-- <= 0) {
+            break;
+        }
 
         /* Fetch the curl object that corresponds to the curl handle in the message */
         res = curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, &co);
@@ -1667,18 +1674,13 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
         }
         else {
             /* Create a result tuple that will get added to err_list. */
-            PyObject *v;
-            v = Py_BuildValue("(isO)", msg->data.result, co->error, (PyObject *)co);
+            PyObject *v = Py_BuildValue("(Ois)", (PyObject *)co, (int)msg->data.result, co->error);
             /* Append curl object to list of objects which failed */
             if (v == NULL || PyList_Append(err_list, v) != 0) {
                 Py_XDECREF(v);
                 goto error;
             }
             Py_DECREF(v);
-        }
-        /* Check for termination as specified by the user */
-        if (--num_results == 0) {
-            break;
         }
     }
     /* Return (number of queued messages, [ok_objects], [error_objects]) */
@@ -1714,7 +1716,8 @@ do_multi_select(CurlMultiObject *self, PyObject *args)
         PyErr_SetString(PyExc_OverflowError, "invalid timeout period");
         return NULL;
    }
-   if (timeout >= 0.001) {
+   /* 1.0 / 1024 == 0.0009765625 and is exactly representable */
+   if (timeout >= 1.0 / 1024) {
         long seconds = (long)timeout;
         timeout = timeout - (double)seconds;
         tv.tv_sec = seconds;
@@ -1728,13 +1731,17 @@ do_multi_select(CurlMultiObject *self, PyObject *args)
 
     res = curl_multi_fdset(self->multi_handle, &self->read_fd_set,
                            &self->write_fd_set, &self->exc_fd_set, &max_fd);
-    if (res != CURLM_OK) { // || max_fd < 0) {
+    if (res != CURLM_OK) {
         CURLERROR_MSG("multi_fdset failed");
     }
 
-    Py_BEGIN_ALLOW_THREADS
-    n = select(max_fd + 1, &self->read_fd_set, &self->write_fd_set, &self->exc_fd_set, tvp);
-    Py_END_ALLOW_THREADS
+    if (max_fd < 0) {
+        n = 0;
+    } else {
+        Py_BEGIN_ALLOW_THREADS
+        n = select(max_fd + 1, &self->read_fd_set, &self->write_fd_set, &self->exc_fd_set, tvp);
+        Py_END_ALLOW_THREADS
+    }
 
     return PyInt_FromLong(n);
 }
@@ -1989,7 +1996,7 @@ static PyObject *
 do_version_info(PyObject *dummy, PyObject *args)
 {
     const curl_version_info_data *vi;
-    PyObject *t;
+    PyObject *ret;
     PyObject *protocols;
     int i;
 
@@ -2012,22 +2019,22 @@ do_version_info(PyObject *dummy, PyObject *args)
     for (i = 0; vi->protocols[i] != NULL; i++) {
         PyTuple_SET_ITEM(protocols, i, vi_str(vi->protocols[i]));
     }
-    t = PyTuple_New(9);
-    if (t == NULL) {
+    ret = PyTuple_New(9);
+    if (ret == NULL) {
         Py_DECREF(protocols);
         return NULL;
     }
 
-    PyTuple_SET_ITEM(t, 0, PyInt_FromLong((long) vi->age));
-    PyTuple_SET_ITEM(t, 1, vi_str(vi->version));
-    PyTuple_SET_ITEM(t, 2, PyInt_FromLong((long) vi->version_num));
-    PyTuple_SET_ITEM(t, 3, vi_str(vi->host));
-    PyTuple_SET_ITEM(t, 4, PyInt_FromLong(vi->features));
-    PyTuple_SET_ITEM(t, 5, vi_str(vi->ssl_version));
-    PyTuple_SET_ITEM(t, 6, PyInt_FromLong(vi->ssl_version_num));
-    PyTuple_SET_ITEM(t, 7, vi_str(vi->libz_version));
-    PyTuple_SET_ITEM(t, 8, protocols);
-    return t;
+    PyTuple_SET_ITEM(ret, 0, PyInt_FromLong((long) vi->age));
+    PyTuple_SET_ITEM(ret, 1, vi_str(vi->version));
+    PyTuple_SET_ITEM(ret, 2, PyInt_FromLong((long) vi->version_num));
+    PyTuple_SET_ITEM(ret, 3, vi_str(vi->host));
+    PyTuple_SET_ITEM(ret, 4, PyInt_FromLong(vi->features));
+    PyTuple_SET_ITEM(ret, 5, vi_str(vi->ssl_version));
+    PyTuple_SET_ITEM(ret, 6, PyInt_FromLong(vi->ssl_version_num));
+    PyTuple_SET_ITEM(ret, 7, vi_str(vi->libz_version));
+    PyTuple_SET_ITEM(ret, 8, protocols);
+    return ret;
 }
 
 
