@@ -1,0 +1,2 @@
+cvs -d:ext:kjetilja@cvs.pycurl.sourceforge.net:/cvsroot/pycurl import pycurl vendor start 
+
