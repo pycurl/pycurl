@@ -1440,12 +1440,12 @@ do_multi_fdset(CurlMultiObject *self, PyObject *args)
     }
 
     list = PyList_New(0);
-    read_list=PyList_New(0);
-    write_list=PyList_New(0);
-    except_list=PyList_New(0);
-    PyList_Append(list,read_list);
-    PyList_Append(list,write_list);
-    PyList_Append(list,except_list);
+    read_list = PyList_New(0);
+    write_list = PyList_New(0);
+    except_list = PyList_New(0);
+    PyList_Append(list, read_list);
+    PyList_Append(list, write_list);
+    PyList_Append(list, except_list);
 
     /* Don't bother releasing the gil as this is just a data structure operation */
     res = curl_multi_fdset(self->multi_handle, &read_fd_set, &write_fd_set, 
@@ -1461,29 +1461,28 @@ do_multi_fdset(CurlMultiObject *self, PyObject *args)
     /* Populate read_list */
     for (fd = 0; fd < max_fd; fd++) {
         if (FD_ISSET(fd, &read_fd_set)) {
-            PyList_Append(read_list,PyInt_FromLong((long)fd));
+            PyList_Append(read_list, PyInt_FromLong((long)fd));
 	}
     }
 
     /* Populate write_list */
     for (fd = 0; fd < max_fd; fd++) {
         if (FD_ISSET(fd, &write_fd_set)) {
-            PyList_Append(write_list,PyInt_FromLong((long)fd));
+            PyList_Append(write_list, PyInt_FromLong((long)fd));
 	}
     }
 
     /* Populate write_list */
     for (fd = 0; fd < max_fd; fd++) {
         if (FD_ISSET(fd, &exc_fd_set)) {
-            PyList_Append(except_list,PyInt_FromLong((long)fd));
+            PyList_Append(except_list, PyInt_FromLong((long)fd));
         }
     }
 
     /* FIXME: If any of the PyList_Append operations fail, objects on
        the lists should be decref'ed as well as the lists themselves.
-       Hence, the current implementation will be leaking memory of any
-       of the list operations fail.  */
-
+       Hence, the current implementation will at best be leaking
+       memory should any of the list operations fail.  */
     return list;
 }
 
