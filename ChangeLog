@@ -6,6 +6,9 @@ Version 7.10
 	'curl-config' (non-windows) and the curl installation directory
 	(windows).  See the 'INSTALL' file for details.
 
+	* Added CURLOPT_ENCODING, CURLOPT_NOSIGNAL and CURLOPT_BUFFERSIZE
+	from libcurl-7.10 (by Markus Oberhumer).
+	
 Version 7.9.8.4
 
 2002-08-28  Kjetil Jacobsen  <kjetilja>
