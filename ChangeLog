@@ -2,9 +2,9 @@ Version 7.10.2
 
 2002-11-06  Markus F.X.J. Oberhumer <mfx>
 
-	* Install documentation under /usr/share/doc instead of /usr/doc .
+	* Install documentation under /usr/share/doc instead of /usr/doc.
 	Also, start shipping the (unfinished) HTML docs and some
-	test programs.
+	basic test scripts.
 
 2002-10-30  Markus F.X.J. Oberhumer <mfx>
 
