@@ -1,4 +1,5 @@
 Version 7.10.5 [requires libcurl-7.10.3 or better]
+--------------
 
 2003-05-15  Markus F.X.J. Oberhumer <mfx>
 
@@ -6,8 +7,7 @@ Version 7.10.5 [requires libcurl-7.10.3 or better]
 
 2003-05-07  Eric S. Raymond  <esr@snark.thyrsus.com>
 
-        * Lifted all HTML docs to clean XHTML, verified by tidy.  This
-        removes a TODO item.
+        * Lifted all HTML docs to clean XHTML, verified by tidy.
 
 2003-05-02  Markus F.X.J. Oberhumer <mfx>
 
@@ -19,7 +19,8 @@ Version 7.10.5 [requires libcurl-7.10.3 or better]
         libcurl error buffer string of the handle.
 
 
-Version 7.10.4.2 [requires libcurl-7.10.3 or better]
+Version 7.10.4.2
+----------------
 
 2003-04-15  Markus F.X.J. Oberhumer <mfx>
 
@@ -30,6 +31,7 @@ Version 7.10.4.2 [requires libcurl-7.10.3 or better]
 
 
 Version 7.10.4
+--------------
 
 2003-04-01  Kjetil Jacobsen  <kjetilja>
 
@@ -54,6 +56,7 @@ Version 7.10.4
 
 
 Version 7.10.3
+--------------
 
 2003-01-13  Kjetil Jacobsen  <kjetilja>
 
@@ -85,6 +88,7 @@ Version 7.10.3
 
 
 Version 7.10.2
+--------------
 
 2002-11-14  Kjetil Jacobsen <kjetilja>
 
@@ -106,6 +110,7 @@ Version 7.10.2
 
 
 Version 7.10.1
+--------------
 
 2002-10-03  Markus F.X.J. Oberhumer <mfx>
 
@@ -114,6 +119,7 @@ Version 7.10.1
 
 
 Version 7.10
+------------
 
 2002-09-13  Kjetil Jacobsen  <kjetilja>
 
@@ -126,6 +132,7 @@ Version 7.10
 
 
 Version 7.9.8.4
+---------------
 
 2002-08-28  Kjetil Jacobsen  <kjetilja>
 
@@ -171,6 +178,7 @@ Version 7.9.8.4
 
 
 Version 7.9.8.3
+---------------
 
 2002-07-16  Markus F.X.J. Oberhumer <mfx>
 
@@ -180,6 +188,7 @@ Version 7.9.8.3
 
 
 Version 7.9.8.2
+---------------
 
 2002-07-05  Markus F.X.J. Oberhumer <mfx>
 
@@ -192,6 +201,7 @@ Version 7.9.8.2
 
 
 Version 7.9.8.1
+---------------
 
 2002-06-25  Markus F.X.J. Oberhumer <mfx>
 
@@ -212,6 +222,7 @@ Version 7.9.8.1
 
 
 Version 7.9.8
+-------------
 
 2002-06-24  Kjetil Jacobsen  <kjetilja>
 
@@ -251,6 +262,7 @@ Version 7.9.8
 
 
 Version 7.9.7
+-------------
 
 2002-05-20  Kjetil Jacobsen  <kjetilja>
 
@@ -260,6 +272,7 @@ Version 7.9.7
 
 
 Version 0.4.10 (Not released)
+--------------
 
 2002-05-17  Kjetil Jacobsen  <kjetilja>
 
@@ -272,6 +285,7 @@ Version 0.4.10 (Not released)
 
 
 Version 0.4.9
+-------------
 
 2002-04-15  Kjetil Jacobsen  <kjetilja>
 
@@ -298,6 +312,7 @@ Version 0.4.9
 
 
 Version 0.4.8
+-------------
 
 2002-03-07  Kjetil Jacobsen  <kjetilja>
 
@@ -313,6 +328,7 @@ Version 0.4.8
 
 
 Version 0.4.7
+-------------
 
 2002-02-27  Kjetil Jacobsen  <kjetilja>
 
@@ -491,5 +507,6 @@ Version 0.4.7
         * Moved code to sourceforge.
 
         * Added getinfo support.
+
 
 # vi:ts=8:et
