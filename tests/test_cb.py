@@ -5,7 +5,7 @@ def body(buf):
     return len(buf)
 
 def header(buf):
-    print ':::::::::::', buf
+    print buf
     return len(buf)
 
 c = pycurl.init()

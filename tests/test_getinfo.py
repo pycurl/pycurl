@@ -1,7 +1,7 @@
 import pycurl
 
-def progress(total, download, upload_t, upload_d):
-    print 'total to download %d, have %d so far' % (total, download)
+def progress(download_t, download_d, upload_t, upload_d):
+    print 'total to download %d bytes, have %d bytes so far' % (download_t, download_d)
     return 0 # Anything else indicates an error
 
 f = open('body', 'w')
@@ -17,8 +17,8 @@ c.setopt(pycurl.MAXREDIRS, 5)
 c.setopt(pycurl.WRITEHEADER, h)
 c.perform()
 
-print 'Download speed:', c.getinfo(pycurl.SPEED_DOWNLOAD)
-print 'Document size:', c.getinfo(pycurl.SIZE_DOWNLOAD)
+print 'Download speed: %f bytes/second' % c.getinfo(pycurl.SPEED_DOWNLOAD)
+print 'Document size: %d bytes' % c.getinfo(pycurl.SIZE_DOWNLOAD)
 print 'Effective URL:', c.getinfo(pycurl.EFFECTIVE_URL)
 print
 print "Header is in file 'header', body is in file 'body'"
