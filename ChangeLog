@@ -1,12 +1,18 @@
 Version 7.12.0.1 [requires libcurl-7.11.2 or better]
 ----------------
 
+2004-06-08  Markus F.X.J. Oberhumer <mfx>
+
+        * Setting CURLOPT_POSTFIELDS now allows binary data and automatically
+          sets CURLOPT_POSTFIELDSIZE for you. If you really want a different size
+          you have to manually set POSTFIELDSIZE after setting POSTFIELDS.
+          (Based on a patch by Martin Muenstermann).
+
 2004-06-05  Markus F.X.J. Oberhumer <mfx>
 
         * Added stricter checks within the callback handlers.
 
-        * For 64-bit systems, allow to use both int and long as parameters
-          where appropriate.
+        * Unify the behaviour of int and long parameters where appropriate.
 
 
 Version 7.12

@@ -935,10 +935,10 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
     /* Handle the case of string arguments */
     if (PyString_Check(obj)) {
-        const char *stringdata = PyString_AsString(obj);
+        char *str = NULL;
+        int len = -1;
         char *buf;
         int opt_index;
-        assert(stringdata != NULL);
 
         /* Check that the option specified a string as well as the input */
         switch (option) {
@@ -954,7 +954,6 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_INTERFACE:
         case CURLOPT_KRB4LEVEL:
         case CURLOPT_NETRC_FILE:
-        case CURLOPT_POSTFIELDS:
         case CURLOPT_PROXY:
         case CURLOPT_PROXYUSERPWD:
         case CURLOPT_RANDOM_FILE:
@@ -970,16 +969,34 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_URL:
         case CURLOPT_USERAGENT:
         case CURLOPT_USERPWD:
+/* FIXME: check if more of these options allow binary data */
+            str = PyString_AsString_NoNUL(obj);
+            if (str == NULL)
+                return NULL;
+            break;
+        case CURLOPT_POSTFIELDS:
+            if (PyString_AsStringAndSize(obj, &str, &len) != 0)
+                return NULL;
+            /* automatically set POSTFIELDSIZE */
+            res = curl_easy_setopt(self->handle, CURLOPT_POSTFIELDSIZE, (long)len);
+            if (res != CURLE_OK) {
+                CURLERROR_RETVAL();
+            }
             break;
         default:
             PyErr_SetString(PyExc_TypeError, "strings are not supported for this option");
             return NULL;
         }
         /* Allocate memory to hold the string */
-        buf = strdup(stringdata);
-        if (buf == NULL) {
-            return PyErr_NoMemory();
+        assert(str != NULL);
+        if (len <= 0)
+            buf = strdup(str);
+        else {
+            buf = (char *) malloc(len);
+            if (buf) memcpy(buf, str, len);
         }
+        if (buf == NULL)
+            return PyErr_NoMemory();
         /* Call setopt */
         res = curl_easy_setopt(self->handle, (CURLoption)option, buf);
         /* Check for errors */
@@ -1141,7 +1158,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
         /* Handle HTTPPOST different since we construct a HttpPost form struct */
         if (option == CURLOPT_HTTPPOST) {
-            struct curl_httppost *cur = NULL;
+            struct curl_httppost *post = NULL;
             struct curl_httppost *last = NULL;
 
             for (i = 0; i < len; i++) {
@@ -1150,42 +1167,44 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                 PyObject *listitem = PyList_GetItem(obj, i);
 
                 if (!PyTuple_Check(listitem)) {
-                    curl_formfree(cur);
+                    curl_formfree(post);
                     PyErr_SetString(PyExc_TypeError, "list items must be tuple objects");
                     return NULL;
                 }
                 if (PyTuple_GET_SIZE(listitem) != 2) {
-                    curl_formfree(cur);
+                    curl_formfree(post);
                     PyErr_SetString(PyExc_TypeError, "tuple must contain two items (name and value)");
                     return NULL;
                 }
                 /* FIXME: Only support strings as names and values for now */
                 if (PyString_AsStringAndSize(PyTuple_GET_ITEM(listitem, 0), &nstr, &nlen) != 0 ||
                     PyString_AsStringAndSize(PyTuple_GET_ITEM(listitem, 1), &cstr, &clen) != 0) {
-                    curl_formfree(cur);
+                    curl_formfree(post);
                     PyErr_SetString(PyExc_TypeError, "tuple items must be strings");
                     return NULL;
                 }
-                res = curl_formadd(&cur, &last,
+                /* INFO: curl_formadd() internally does memdup() the data, so
+                 * embedded NUL characters _are_ allowed here. */
+                res = curl_formadd(&post, &last,
                                    CURLFORM_COPYNAME, nstr,
                                    CURLFORM_NAMELENGTH, (long) nlen,
                                    CURLFORM_COPYCONTENTS, cstr,
                                    CURLFORM_CONTENTSLENGTH, (long) clen,
                                    CURLFORM_END);
                 if (res != CURLE_OK) {
-                    curl_formfree(cur);
+                    curl_formfree(post);
                     CURLERROR_RETVAL();
                 }
             }
-            res = curl_easy_setopt(self->handle, CURLOPT_HTTPPOST, cur);
+            res = curl_easy_setopt(self->handle, CURLOPT_HTTPPOST, post);
             /* Check for errors */
             if (res != CURLE_OK) {
-                curl_formfree(cur);
+                curl_formfree(post);
                 CURLERROR_RETVAL();
             }
             /* Finally, free previously allocated httppost and update */
             curl_formfree(self->httppost);
-            self->httppost = cur;
+            self->httppost = post;
 
             Py_INCREF(Py_None);
             return Py_None;
@@ -2360,6 +2379,7 @@ initpycurl(void)
     insint_c(d, "SSL_VERIFYPEER", CURLOPT_SSL_VERIFYPEER);
     insint_c(d, "CAPATH", CURLOPT_CAPATH);
     insint_c(d, "CAINFO", CURLOPT_CAINFO);
+    insint_c(d, "OPT_FILETIME", CURLOPT_FILETIME);
     insint_c(d, "MAXREDIRS", CURLOPT_MAXREDIRS);
     insint_c(d, "MAXCONNECTS", CURLOPT_MAXCONNECTS);
     insint_c(d, "CLOSEPOLICY", CURLOPT_CLOSEPOLICY);

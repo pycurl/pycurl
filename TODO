@@ -6,9 +6,6 @@ If you want to hack on pycurl, here's our list of unresolved issues:
 
 NEW FEATURES/IMPROVEMENTS:
 
-    * Handle Sourceforge patch #949715
-      http://sourceforge.net/tracker/index.php?func=detail&aid=949715&group_id=28236&atid=392779
-
     * Add new 3rdparty ftp transfer options from libcurl.
 
     * HTTPPOST should take a dict instead of a list of tuples, this way it
@@ -21,3 +18,14 @@ NEW FEATURES/IMPROVEMENTS:
     * Add more options to the undocumented and currently mostly useless
       Curl.unsetopt() method. Have to carefully check the libcurl source
       code for each option we want to support.
+
+    * Using certain invalid options, it may be possible to cause a crash (e.g.
+      setting a too large POSTFIELDSIZE).  This is un-Pythonic behaviour, but
+      you somewhere have to draw a line between efficiency (and feature
+      completeness) and safety.  There _are_ quite a number of internal
+      error checks, but tracking and catching all possible (deliberate) misuses
+      is not a goal (and probably impossible anyway, due to the complexity
+      of libcurl).
+      [ In the POSTFIELDS case, the Python way would be to simply not expose
+        the POSTFIELDSIZE option and require string slicing instead. ]
+
