@@ -1599,12 +1599,13 @@ error:
 static PyObject *
 do_multi_info_read(CurlMultiObject *self, PyObject *args)
 {
-    int in_queue, res;
+    int in_queue, res, num_results;
     CURLMsg *msg;
     CurlObject *co;
+    PyObject *list;
 
     /* Sanity checks */
-    if (!PyArg_ParseTuple(args, ":info_read")) {
+    if (!PyArg_ParseTuple(args, "i:info_read", &num_results)) {
         return NULL;
     }
 
@@ -1613,24 +1614,46 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
         return NULL;
     }
 
-    /* Try reading a message */
-    msg = curl_multi_info_read(self->multi_handle, &in_queue);
-    if (msg == NULL) {
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    /* Fetch the curl object that corresponds to the curl handle in the message */
-    res = curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, &co);
-    if (res != CURLE_OK) {
-        PyErr_SetString(ErrorObject, "failed to get private pointer");
+    if (results <= 0) {
+        PyErr_SetString(ErrorObject, "argument to info_read must be greater than zero");
         return NULL;
     }
 
-    assert(co != NULL);
+    list = PyList_New(0);
+    if (list == NULL) {
+        return NULL;
+    }
 
-    /* Return a tuple (number of queued messages, curl object) */
-    return Py_BuildValue("(iO)", in_queue, co);
+    /* Loop through all messages until no more messages or num_results is 0 */
+    while (1) {
+        /* Try to read a message */
+        msg = curl_multi_info_read(self->multi_handle, &in_queue);
+        if (msg == NULL) {
+            break;
+        }
+        /* Fetch the curl object that corresponds to the curl handle in the message */
+        res = curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, &co);
+        if (res != CURLE_OK) {
+            goto error;
+        }
+        assert(co != NULL);
+        /* Append curl object to list of returned objects */
+        if (PyList_Append(list, co) == -1) {
+            goto error;
+        }
+        /* Check for termination */
+        num_results--;
+        if (in_queue == 0 || num_results == 0) {
+            break;
+        }
+    }
+
+    /* Return (number of queued messages, [curl objects]) */
+    return Py_BuildValue("(iO)", in_queue, list);
+
+    error:
+        Py_DECREF(list);
+        return NULL;
 }
 #endif
 
@@ -1711,7 +1734,7 @@ static char co_getinfo_doc [] = "getinfo(info) -> Res.  Extract and return infor
 static char co_multi_fdset_doc [] = "fdset() -> Tuple.  Returns a tuple of three lists that can be passed to the select.select() method .\n";
 static char co_multi_select_doc [] = "select(timeout) -> Int.  Returns result from doing a select() on the curl multi file descriptor with the given timeout.\n";
 #if 0
-static char co_multi_info_read_doc [] = "info_read() -> Tuple. Returns a tuple (number of queued handles, handle).\n";
+static char co_multi_info_read_doc [] = "info_read(max_objects) -> Tuple. Returns a tuple (number of queued handles, [curl objects]).\n";
 #endif
 
 static PyMethodDef curlobject_methods[] = {
