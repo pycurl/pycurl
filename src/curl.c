@@ -21,10 +21,6 @@
     - add interface to the multi_read method, otherwise it's hard to use this
       for anything
     - how do we best interface with the fd_set stuff?
-    - also try to figure out how to solve the problem of having deallocated
-      curl objects in an active curl-multi stack (this causes a segfault when
-      the multi-stack is cleaned up)
-    - check multi_stack usage
 */
 
 #undef NDEBUG
@@ -51,7 +47,7 @@ static PyObject *ErrorObject;
 typedef struct {
     PyObject_HEAD
     CURLM *multi_handle;
-    PyThreadState *state;
+    int performing;
 } CurlMultiObject;
 
 typedef struct {
@@ -190,7 +186,7 @@ do_cleanup(CurlObject *self, PyObject *args)
     }
     if (self->multi_stack != NULL) {
         /* Do not remove object from multi stack if the stack is still running */
-        if (self->multi_stack->state != NULL) {
+        if (self->multi_stack->performing != 0) {
             PyErr_SetString(ErrorObject, "cannot invoke cleanup, multi-perform() is running");
             return NULL;
         }
@@ -927,7 +923,7 @@ static void
 self_multi_cleanup(CurlMultiObject *self)
 {
     assert(self != NULL);
-    self->state = NULL;
+    self->performing = 0;
     if (self->multi_handle != NULL) {
         CURLM *multi_handle = self->multi_handle;
         self->multi_handle = NULL;
@@ -941,7 +937,7 @@ do_multi_cleanup(CurlMultiObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, ":cleanup")) {
         return NULL;
     }
-    if (self->state != NULL) {
+    if (self->performing != 0) {
         PyErr_SetString(ErrorObject, "cannot invoke cleanup, perform() is running");
         return NULL;
     }
@@ -975,21 +971,17 @@ do_multi_perform(CurlMultiObject *self, PyObject *args)
         PyErr_SetString(ErrorObject, "cannot invoke perform, no curl-multi handle");
         return NULL;
     }
-    if (self->state != NULL) {
+    if (self->performing != 0) {
         PyErr_SetString(ErrorObject, "cannot invoke perform - already running");
         return NULL;
     }
 
-    /* Save handle to current thread (used as context for python callbacks) */
-    self->state = PyThreadState_Get();
-
     /* Release global lock and start */
+    self->performing = 1;
     Py_BEGIN_ALLOW_THREADS
     res = curl_multi_perform(self->multi_handle, &running);
     Py_END_ALLOW_THREADS
-
-    /* Zero thread-state to disallow callbacks to be run from now on */
-    self->state = NULL;
+    self->performing = 0;
 
     /* We assume these errors are ok, otherwise throw exception */
     if (res == CURLM_OK || res == CURLM_CALL_MULTI_PERFORM) {
@@ -1003,7 +995,7 @@ do_multi_perform(CurlMultiObject *self, PyObject *args)
 /* static utility function */
 static int check_curl_object(CurlMultiObject *self, CurlObject *obj)
 {
-    if (self->state != NULL) {
+    if (self->performing != 0) {
         PyErr_SetString(ErrorObject, "cannot add/remove - already running");
         return -1;
     }
@@ -1183,7 +1175,7 @@ do_multi_init(PyObject *arg)
         return NULL;
 
     /* Initialize object attributes */
-    self->state = NULL;
+    self->performing = 0;
 
     /* Allocate libcurl multi handle */
     self->multi_handle = curl_multi_init();
