@@ -56,7 +56,7 @@ typedef struct {
     PyObject *dict;                 /* Python attributes dictionary */
     CURL *handle;
     PyThreadState *state;
-    CurlMultiObject *multi_stack;   /* internal pointer, _not_ a Python object */
+    CurlMultiObject *multi_stack;   /* referenced Python object */
     struct HttpPost *httppost;
     struct curl_slist *httpheader;
     struct curl_slist *quote;
@@ -163,6 +163,7 @@ self_cleanup(CurlObject *self)
     }
     /* Zero thread-state to disallow callbacks to be run from now on */
     self->state = NULL;
+    Py_XDECREF(self->multi_stack);
     self->multi_stack = NULL;
     /* Free curl handle */
     if (self->handle != NULL) {
@@ -253,6 +254,7 @@ do_cleanup(CurlObject *self, PyObject *args)
                 CURLERROR2("remove_handle failed");
             }
         }
+        Py_XDECREF(self->multi_stack);
         self->multi_stack = NULL;
     }
     self_cleanup(self);
@@ -1116,6 +1118,7 @@ do_multi_addhandle(CurlMultiObject *self, PyObject *args)
             CURLERROR2("add_handle failed");
         }
         obj->multi_stack = self;
+        Py_INCREF(obj->multi_stack);
         Py_INCREF(obj);
     }
     else {
@@ -1144,6 +1147,7 @@ do_multi_removehandle(CurlMultiObject *self, PyObject *args)
         if (res != CURLM_OK) {
             CURLERROR2("remove_handle failed");
         }
+        Py_DECREF(obj->multi_stack);
         obj->multi_stack = NULL;
         Py_DECREF(obj);
     }
