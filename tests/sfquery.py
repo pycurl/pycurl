@@ -83,6 +83,9 @@ class SourceForgeUserSession(CGIClient):
         self.get("export/xml_export.php?group_id=%s" % numid)
 
 if __name__ == "__main__":
+    if len(sys.argv) < 4:
+        print "Usage: %s <project id> <name> <password>" % sys.argv[0]
+        raise SystemExit
     project_id = sys.argv[1]
     # Try to grab authenticators out of your .netrc
     auth = netrc.netrc().authenticators("sourceforge.net")
