@@ -2,6 +2,10 @@ Version 0.4.9
 
 2002-04-15  Kjetil Jacobsen  <kjetilja>
 
+	* Added CURLOPT_DEBUGFUNCTION to allow debug callbacks to be
+	specified (see the file 'test_debug.py' for details on how to use
+	debug callbacks).
+	
 	* Added CURLOPT_DNS_USE_GLOBAL_CACHE and
 	CURLOPT_DNS_CACHE_TIMEOUT.
 
