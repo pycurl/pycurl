@@ -14,8 +14,6 @@
 import os, sys, netrc
 import curl
 
-assert sys.version[:3] >= "2.2", "requires Python 2.2 or better"
-
 class SourceForgeUserSession(curl.Curl):
     # SourceForge-specific methods.  Sensitive to changes in site design.
     def login(self, name, password):
