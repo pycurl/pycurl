@@ -4,19 +4,19 @@ import threading
 import time
 
 ## PycURL module
-import curl
+import pycurl
 
 
 class Test(threading.Thread):
 
     def __init__(self, url, ofile):
         threading.Thread.__init__(self)
-        self.curl = curl.init()
-        self.curl.setopt(curl.URL, url)
-        self.curl.setopt(curl.FILE, ofile)
-        self.curl.setopt(curl.NOPROGRESS, 1)
-        self.curl.setopt(curl.FOLLOWLOCATION, 1)
-        self.curl.setopt(curl.MAXREDIRS, 5)
+        self.curl = pycurl.init()
+        self.curl.setopt(pycurl.URL, url)
+        self.curl.setopt(pycurl.FILE, ofile)
+        self.curl.setopt(pycurl.NOPROGRESS, 1)
+        self.curl.setopt(pycurl.FOLLOWLOCATION, 1)
+        self.curl.setopt(pycurl.MAXREDIRS, 5)
 
     def run(self):
         self.curl.perform()
