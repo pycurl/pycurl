@@ -13,10 +13,6 @@ import pycurl
 import signal
 signal.signal(signal.SIGPIPE, signal.SIG_IGN)
 
-# URL history
-history = []
-# Links for 'forward'
-forward = []
 # Number of concurrent connections to the web-server
 NUM_THREADS = 4
 
@@ -126,6 +122,7 @@ class HtmlWindow(GtkHTML):
         self.queue = Queue.Queue()
         self.render = []
         self.threads = []
+        self.current_doc = None
         for num_threads in range(NUM_THREADS):
             t = WorkerThread(self.queue, self.render)
             t.start()
@@ -140,8 +137,8 @@ class HtmlWindow(GtkHTML):
     def load_url(self, html, url):
         t1 = time.time()
         self.num_obj = 0
-        if history: url = urllib.basejoin(history[-1], url)
-        history.append(url)
+        if self.current_doc:
+            url = urllib.basejoin(self.current_doc, url)
         html.load_empty()
         handle = html.begin()
         url = url.strip()
@@ -161,17 +158,18 @@ class HtmlWindow(GtkHTML):
         # Finished rendering page
         t2 = time.time()
         self.statusbar.set_text("Done (%.3f seconds)" % (t2-t1))
+        self.current_doc = url
 
     def submit(self, html, method, path, params):
         if method != 'GET':
             print "Submit currently only works for GET requests, not POST"
             return
         if params != None: path += "?" + params
-        url = urllib.basejoin(history[-1], path)
+        url = urllib.basejoin(self.current_doc, path)
         self.load_url(html, url)
 
     def request_url(self, html, url, handle):
-        url = urllib.basejoin(history[-1], url)
+        url = urllib.basejoin(self.current_doc, url)
         self.statusbar.set_text("Requesting URL: %s" % url)
         self.queue.put((url, handle))
         self.num_obj += 1
@@ -179,26 +177,11 @@ class HtmlWindow(GtkHTML):
     def entry_activate(self, entry, html):
         url = entry.get_text()
         self.load_url(html, url)
-        del forward[:]
-
-    def do_back(self, _b):
-        if len(history) > 1:
-            forward.append(history[-1])
-            del history[-1]
-            url = history[-1]
-            del history[-1]
-            self.load_url(html, url)
-
-    def do_forward(self, _b):
-        if len(forward) == 0: return
-        self.load_url(html, forward[-1])
-        del forward[-1]
 
     def do_reload(self, _b):
-        if len(history) == 0: return
-        url = history[-1]
-        del history[-1]
-        self.load_url(html, url)
+        if not self.current_doc:
+            return
+        self.load_url(html, self.current_doc)
 
 
 # Setup windows and menus
@@ -216,8 +199,6 @@ menus = [
 ]
 
 toolbar = [
-    UIINFO_ITEM_STOCK('Back', 'Previous page', html.do_back, STOCK_MENU_BACK),
-    UIINFO_ITEM_STOCK('Forward', 'Next page', html.do_forward, STOCK_MENU_FORWARD),
     UIINFO_ITEM_STOCK('Reload', 'Reload current page', html.do_reload, STOCK_MENU_REFRESH)
 ]
 
