@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 
+# $Id$
+
 """Setup script for the PycURL module distribution."""
 
 import os, sys
@@ -8,14 +10,15 @@ from distutils.extension import Extension
 from string import strip, split
 
 if sys.platform == "win32":
-    # Windows users have to tweak the locations on some of the paths here
-    # to match their libcurl install
+    # Windows users have to configure the next thress path params
+    # to match their libcurl installation
     include_dirs = [r'C:\User\clib\libcurl\include']
     library_dirs = [r'C:\User\clib\libcurl\lib']
+    extra_objects = [r'C:\User\clib\libcurl\lib\libcurl.lib']
+    # These should be fine as they are, please notify if they need updates
     libraries = ['libcurl', 'zlib', 'msvcrt', 'libcmt', 'wsock32', 'advapi32']
     runtime_library_dirs = []
     extra_link_args = ['/NODEFAULTLIB:LIBCMTD.lib']
-    extra_objects = [r'C:\User\clib\libcurl\lib\libcurl.lib']
 else:
     # Otherwise, be brave and try to figure out dynamically through 
     # curl-config
@@ -31,8 +34,8 @@ else:
             library_dirs.append(e[2:])
             libs.remove(e)
     libraries = ["curl"]
-    runtime_library_dirs = []
     extra_link_args = libs 
+    runtime_library_dirs = []
     extra_objects = []
 
 long_description = "PycURL -- cURL library module for Python"
