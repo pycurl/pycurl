@@ -23,6 +23,8 @@ for u in urls:
     queue.append((u, 'data_%d' % fileno))
     fileno += 1
 
+assert len(queue) > 0, "No URLs given"
+
 while len(queue) > 0 or conn > 0:
     while conn < num_conn:
         if len(queue) > 0:
@@ -55,5 +57,7 @@ while len(queue) > 0 or conn > 0:
         if num_q == 0:
             break
 
-assert len(curls) == 0
+del handles
 multi.close()
+
+assert len(curls) == 0
