@@ -1,6 +1,11 @@
 Version 7.12.1 [requires libcurl-7.12.1 or better]
 --------------
 
+2004-07-16  Markus F.X.J. Oberhumer <mfx>
+
+        * WARNING: removed deprecated PROXY_, TIMECOND_ and non-prefixed INFOTYPE
+          constant names. See ChangeLog entry 2003-06-10.
+
 2004-06-21  Kjetil Jacobsen  <kjetilja>
 
         * Added test program for HTTP post using the read callback (see

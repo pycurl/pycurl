@@ -1826,6 +1826,7 @@ do_multi_select(CurlMultiObject *self, PyObject *args)
    } else {
         long seconds = (long)timeout;
         timeout = timeout - (double)seconds;
+        assert(timeout >= 0.0); assert(timeout < 1.0);
         tv.tv_sec = seconds;
         tv.tv_usec = (long)(timeout*1000000.0);
         tvp = &tv;
@@ -2312,12 +2313,14 @@ initpycurl(void)
     insint_c(d, "INFOTYPE_HEADER_OUT", CURLINFO_HEADER_OUT);
     insint_c(d, "INFOTYPE_DATA_IN", CURLINFO_DATA_IN);
     insint_c(d, "INFOTYPE_DATA_OUT", CURLINFO_DATA_OUT);
+#if 0
     /* deprecated names (for compatibility with old pycurl versions) */
     insint_c(d, "TEXT", CURLINFO_TEXT);
     insint_c(d, "HEADER_IN", CURLINFO_HEADER_IN);
     insint_c(d, "HEADER_OUT", CURLINFO_HEADER_OUT);
     insint_c(d, "DATA_IN", CURLINFO_DATA_IN);
     insint_c(d, "DATA_OUT", CURLINFO_DATA_OUT);
+#endif
 
     /* CURLcode: error codes */
 /* FIXME: lots of error codes are missing */
@@ -2328,10 +2331,12 @@ initpycurl(void)
     insint_c(d, "PROXYTYPE_HTTP", CURLPROXY_HTTP);
     insint_c(d, "PROXYTYPE_SOCKS4", CURLPROXY_SOCKS4);
     insint_c(d, "PROXYTYPE_SOCKS5", CURLPROXY_SOCKS5);
+#if 0
     /* deprecated names (for compatibility with old pycurl versions) */
     insint_c(d, "PROXY_HTTP", CURLPROXY_HTTP);
     insint_c(d, "PROXY_SOCKS4", CURLPROXY_SOCKS4);
     insint_c(d, "PROXY_SOCKS5", CURLPROXY_SOCKS5);
+#endif
 
     /* curl_httpauth: constants for setopt(HTTPAUTH, x) */
     insint_c(d, "HTTPAUTH_NONE", CURLAUTH_NONE);
@@ -2461,9 +2466,11 @@ initpycurl(void)
     /* curl_TimeCond: constants for setopt(TIMECONDITION, x) */
     insint_c(d, "TIMECONDITION_IFMODSINCE", CURL_TIMECOND_IFMODSINCE);
     insint_c(d, "TIMECONDITION_IFUNMODSINCE", CURL_TIMECOND_IFUNMODSINCE);
+#if 0
     /* deprecated names (for compatibility with old pycurl versions) */
     insint_c(d, "TIMECOND_IFMODSINCE", CURL_TIMECOND_IFMODSINCE);
     insint_c(d, "TIMECOND_IFUNMODSINCE", CURL_TIMECOND_IFUNMODSINCE);
+#endif
 
     /* CURLINFO: symbolic constants for getinfo(x) */
     insint_c(d, "EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL);
@@ -2564,9 +2571,11 @@ initpycurl(void)
     vi = curl_version_info(CURLVERSION_NOW);
     if (vi == NULL) {
         Py_FatalError("pycurl: FATAL: curl_version_info() failed");
+        assert(0);
     }
     if (vi->version_num < LIBCURL_VERSION_NUM) {
         Py_FatalError("pycurl: FATAL: libcurl link-time version is older than compile-time version");
+        assert(0);
     }
 
     /* Finally initialize global interpreter lock */
