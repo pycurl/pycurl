@@ -24,6 +24,18 @@ def about(button):
                 ('This is a useless application demonstrating the '
                 'GtkHTML widget with Python and PycURL.')).show()
 
+# HTML template for reporting internal errors
+internal_error = """
+<html>
+<head>
+<title>Error</title>
+</head>
+<body>
+<h1>Error</h1>
+<b>%s</b>
+</body>
+</html>
+"""
 
 class WorkerThread(threading.Thread):
 
@@ -46,10 +58,11 @@ class WorkerThread(threading.Thread):
             curl.setopt(pycurl.URL, url)
             try:
                 curl.perform()
+            except pycurl.error, msg:
+                b.write(internal_error % msg[1])
             except:
-                b.close()
-                b = None
-                print 'Error retrieving', url
+                msg = "Error retrieving URL: %s" % url
+                b.write(internal_error % msg)
             self.render.append((b, handle))
 
 
@@ -84,10 +97,9 @@ class HtmlWindow(GtkHTML):
                 continue
             self.num_obj -= 1
             buf, handle = self.render.pop(0)
-            if buf != None:
-                html.write(handle, buf.getvalue())
-                buf.close()
+            html.write(handle, buf.getvalue())
             html.end(handle, HTML_STREAM_OK)
+            buf.close()
 
     def submit(self, html, method, path, params):
         print 'Submit is not supported yet'
