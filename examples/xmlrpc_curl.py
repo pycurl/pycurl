@@ -24,6 +24,7 @@ class CURLTransport(xmlrpclib.Transport):
         self.c = pycurl.Curl()
         self.c.setopt(pycurl.POST, 1)
         self.c.setopt(pycurl.NOSIGNAL, 1)
+        self.c.setopt(pycurl.CONNECTTIMEOUT, 30)
         self.c.setopt(pycurl.HTTPHEADER, self.xmlrpc_h)
         if username != None and password != None:
             self.c.setopt(pycurl.USERPWD, '%s:%s' % (username, password))
