@@ -364,6 +364,7 @@ do_getinfo(CurlObject *self, PyObject *args)
 		Py_BEGIN_ALLOW_THREADS
 		res = curl_easy_getinfo(self->handle, option, &d_res);
 		Py_END_ALLOW_THREADS
+		/* Check for errors and return result */
 		if (res == 0) {
 		    return PyFloat_FromDouble(d_res);
 		} else {
