@@ -28,19 +28,32 @@ if sys.platform == "win32":
     # their cURL source installation.  The path set here is just an example
     # and thus unlikely to match your installation.
     CURL_DIR = r"c:\src\curl-7.9.8"
+    args = sys.argv[:]
+    for arg in args:
+        if string.find(arg, '--curl-dir=') == 0:
+            CURL_DIR = string.split(arg, '=')[1]
+            sys.argv.remove(arg)
+    print 'Using curl directory:', CURL_DIR
     include_dirs.append(os.path.join(CURL_DIR, "include"))
     extra_objects.append(os.path.join(CURL_DIR, "lib", "libcurl.lib"))
 else:
     # Find out the rest the hard way
-    d = os.popen("curl-config --version").read()
+    args = sys.argv[:]
+    CURL_CONFIG = 'curl-config'
+    for arg in args:
+        if string.find(arg, '--curl-config=') == 0:
+            CURL_CONFIG = string.split(arg, '=')[1]
+            sys.argv.remove(arg)
+    d = os.popen("%s --version" % CURL_CONFIG).read()
     if not string.strip(d):
         raise Exception, "`curl-config' not found -- please install the libcurl development files"
-    for e in split_quoted(os.popen("curl-config --cflags").read()):
+    print 'Using %s (%s)' % (CURL_CONFIG, string.strip(d))
+    for e in split_quoted(os.popen("%s --cflags" % CURL_CONFIG).read()):
         if e[:2] == "-I":
             include_dirs.append(e[2:])
         else:
             extra_compile_args.append(e)
-    for e in split_quoted(os.popen("curl-config --libs").read()):
+    for e in split_quoted(os.popen("%s --libs" % CURL_CONFIG).read()):
         if e[:2] == "-l":
             libraries.append(e[2:])
         elif e[:2] == "-L":
