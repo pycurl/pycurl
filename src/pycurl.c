@@ -1358,13 +1358,15 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             curl_easy_setopt(self->handle, CURLOPT_DEBUGDATA, self);
             break;
 #if (LIBCURL_VERSION_NUM >= 0x070a06)
+#if 0
+        /* FIXME - implement this */
         case CURLOPT_SSL_CTX_FUNCTION:
             Py_INCREF(obj);
             ZAP(self->ssl_ctx_cb);
             self->ssl_ctx_cb = obj;
             curl_easy_setopt(self->handle, CURLOPT_SSL_CTX_FUNCTION, ssl_ctx_cb);
-            /* FIXME - implement this */
-            /* FIXME - fall through for now */
+            break;
+#endif
 #endif
         default:
             /* None of the function options were recognized, throw exception */
@@ -2519,8 +2521,11 @@ initpycurl(void)
 #endif
 #if (LIBCURL_VERSION_NUM >= 0x070a06)
     insint_c(d, "HTTPAUTH", CURLOPT_HTTPAUTH);
+#if 0
+    /* FIXME */
     insint_c(d, "SSL_CTX_FUNCTION", CURLOPT_SSL_CTX_FUNCTION);
     insint_c(d, "SSL_CTX_DATA", CURLOPT_SSL_CTX_DATA);
+#endif
 #endif
 
     /* CURL_NETRC_OPTION: constants for setopt(NETRC, x) */
