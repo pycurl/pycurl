@@ -14,7 +14,7 @@ import pycurl
 # FIXME FIXME FIXME - this is a very first version and
 #     needs much cleanup and comments
 #
-# anyway, the conclusion is: threads are much faster!
+# anyway, the conclusion is: threads (test_thread_pool) are much faster!
 #
 #
 # XXX after this program is finished I'd like to add some real-world
@@ -179,12 +179,79 @@ def test_threads(lock=None):
 
 
 
+###
+### 3) thread - threads grab curl objects on demand from a shared pool
+###
+
+class TestPool(Thread):
+    def __init__(self, lock, pool):
+        Thread.__init__(self)
+        self.lock = lock
+        self.pool = pool
+
+    def run(self):
+        while 1:
+            self.lock.acquire()
+            c = None
+            if self.pool:
+                c = self.pool.pop()
+            self.lock.release()
+            if c is None:
+                break
+            c.perform()
+
+
+def test_thread_pool(lock):
+    clock1 = time.time()
+
+    # init
+    handles = []
+    for i in range(NUM_PAGES):
+        c = Curl(URL %i)
+        handles.append(c)
+
+    # create and start threads, but block them
+    lock.acquire()
+    threads = []
+    pool = handles[:]   # shallow copy of the list, shared for pop()
+    for i in range(NUM_THREADS):
+        t = TestPool(lock, pool)
+        t.start()
+        threads.append(t)
+    assert len(pool) == NUM_PAGES
+    assert len(threads) == NUM_THREADS
+
+    clock2 = time.time()
+
+    # release lock to let the blocked threads run
+    lock.release()
+
+    # wait for threads to finish
+    for t in threads:
+        t.join()
+
+    clock3 = time.time()
+
+    # close handles
+    for c in handles:
+        c.close()
+
+    clock4 = time.time()
+    print "thread interface [pool]: %d pages: perform %5.2f secs, total %5.2f secs" % (NUM_PAGES, clock3 - clock2, clock4 - clock1)
+
+    # print result
+    print_result(handles)
+
+
+
 lock = RLock()
 if 1:
     test_multi()
     test_threads()
     test_threads(lock)
+    test_thread_pool(lock)
 else:
+    test_thread_pool(lock)
     test_threads(lock)
     test_threads()
     test_multi()
