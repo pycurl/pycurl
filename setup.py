@@ -30,14 +30,12 @@ if sys.platform == "win32":
     extra_objects.append(os.path.join(CURL_DIR, "lib", "libcurl.lib"))
 else:
     # Find out the rest the hard way
-    cflags = split_quoted(os.popen("curl-config --cflags").read())
-    for e in cflags[:]:
+    for e in split_quoted(os.popen("curl-config --cflags").read())
         if e[:2] == "-I":
             include_dirs.append(e[2:])
         else:
             extra_compile_args.append(e)
-    libs = split_quoted(os.popen("curl-config --libs").read())
-    for e in libs[:]:
+    for e in split_quoted(os.popen("curl-config --libs").read())
         if e[:2] == "-l":
             libraries.append(e[2:])
         elif e[:2] == "-L":
@@ -45,8 +43,7 @@ else:
         else:
             extra_link_args.append(e)
     if not libraries:
-        libraries = ["curl"]
-
+        libraries.append("curl")
     # Add extra compile flag for MacOS X
     if sys.platform[:-1] == "darwin":
         extra_link_args.append("-flat_namespace")
@@ -74,14 +71,14 @@ ext = Extension(
 
 setup_args = get_kw(
     name="pycurl",
-    version="7.9.8.3",
+    version="7.9.8.4",
     description="PycURL -- cURL library module for Python",
     author="Kjetil Jacobsen, Markus F.X.J. Oberhumer",
     author_email="kjetilja@cs.uit.no, markus@oberhumer.com",
     maintainer="Kjetil Jacobsen, Markus F.X.J. Oberhumer",
     maintainer_email="kjetilja@cs.uit.no, markus@oberhumer.com",
     url="http://pycurl.sourceforge.net/",
-    licence="GNU Lesser General Public License (LGPL)",
+    license="GNU Lesser General Public License (LGPL)",
     data_files = [
         # tuple with path to install to and a list of files
         (os.path.join("doc", "pycurl"), ["README", "COPYING", "INSTALL", "TODO"]),
@@ -92,6 +89,7 @@ This module provides Python bindings for the cURL library.""",
 )
 
 ##print distutils.__version__
+setup_args["licence"] = setup_args["license"]
 if LooseVersion(distutils.__version__) > LooseVersion("1.0.1"):
     setup_args["platforms"] = "All"
 
