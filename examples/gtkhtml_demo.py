@@ -1,12 +1,9 @@
 # $Id$
 
-import sys
-import os
-import urllib, urlparse
+import sys, os, urllib, cStringIO, threading, Queue, time
 from gtk import *
 from gnome.ui import *
 from gtkhtml import *
-import cStringIO, threading, Queue, time
 import pycurl
 
 # URL history
