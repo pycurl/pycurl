@@ -5,7 +5,7 @@
 
 """Setup script for the PycURL module distribution."""
 
-VERSION = "7.10.1.1"
+VERSION = "7.10.2"
 
 import os, sys, string
 import distutils
