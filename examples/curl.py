@@ -81,5 +81,7 @@ class Curl:
 if __name__ == "__main__":
     c = Curl('http://curl.haxx.se/')
     file, info = c.retrieve()
-    print info, file.read()
+    print file.read()
+    print '='*74 + '\n'
+    print info
     c.close()
