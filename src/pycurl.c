@@ -908,7 +908,7 @@ debug_callback(CURL *curlobj,
 }
 
 
-#if (LIBCURL_VERSION_NUM >= 0x070a06)
+#if 0 && (LIBCURL_VERSION_NUM >= 0x070a06)
 static CURLcode
 ssl_ctx_callback(CURL *curlobj, void *ssl_ctx, void *userptr)
 {
