@@ -46,14 +46,15 @@
 #if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x070a03)
 #  error "Need libcurl version 7.10.3 or greater to compile pycurl."
 #endif
-
-#if USE_GC==0
-#   undef USE_GC
-#   warning "Circular garbage collection is not enabled"
+#if (LIBCURL_VERSION_NUM < 0x070b01)
+#  define curl_off_t off_t
 #endif
 
-#if USE_GC && (PY_VERSION_HEX < 0x02020000)
-#   error "Circular garbage collection is not supported for Python versions < 2.2"
+#undef USE_GC
+#if defined(WITHOUT_GC)
+#elif (PY_VERSION_HEX < 0x02020000)
+#else
+#  define USE_GC 1
 #endif
 
 
@@ -1048,20 +1049,13 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
     /* Handle the case of long arguments (used by *LARGE options) */
     if (PyLong_Check(obj)) {
-#if (LIBCURL_VERSION_NUM >= 0x070b01)
-  #if (PY_VERSION_HEX >= 0x02020000)
+#if (PY_VERSION_HEX >= 0x02020000)
         curl_off_t longdata = PyLong_AsLongLong(obj);
-  #else
-  #warning "Long longs are not properly supported by this Python version, this may affect largefile support"
-        curl_off_t longdata = PyLong_AsLong(obj);
-  #endif
 #else
-  #if (PY_VERSION_HEX >= 0x02020000)
-        off_t longdata = PyLong_AsLongLong(obj);
-  #else
-  #warning "Longs longs are not properly supported by this Python version, this may affect largefile support"
-        off_t longdata = PyLong_AsLong(obj);
-  #endif
+#  if defined(__GNUC__)
+#    warning "Long longs are not properly supported by this Python version, this may affect largefile support"
+#  endif
+        curl_off_t longdata = PyLong_AsLong(obj);
 #endif
         if (option < CURLOPTTYPE_OFF_T) {
             PyErr_SetString(PyExc_TypeError, "longs are not supported for this option");
@@ -1199,10 +1193,10 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                     PyErr_SetString(PyExc_TypeError, "tuple items must be strings");
                     return NULL;
                 }
-                res = curl_formadd(&self->httppost, &last, 
+                res = curl_formadd(&self->httppost, &last,
                                    CURLFORM_COPYNAME,
                                    pname, CURLFORM_NAMELENGTH, PyString_GET_SIZE(PyTuple_GET_ITEM(listitem, 0)),
-                                   CURLFORM_COPYCONTENTS, 
+                                   CURLFORM_COPYCONTENTS,
                                    pvalue, CURLFORM_CONTENTSLENGTH, PyString_GET_SIZE(PyTuple_GET_ITEM(listitem, 1)),
                                    CURLFORM_END);
                 if (res != CURLE_OK) {
