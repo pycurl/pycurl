@@ -525,8 +525,7 @@ do_setopt(CurlObject *self, PyObject *args)
 		res = curl_formparse(buf, &self->httppost, &last);
 		if (res != 0) {
 		    curl_formfree(self->httppost);
-		    PyErr_SetString(ErrorObject, self->error);
-		    return NULL;
+                    CURLERROR();
 		}
 	    }
 	    res = curl_easy_setopt(self->handle, CURLOPT_HTTPPOST, self->httppost);
