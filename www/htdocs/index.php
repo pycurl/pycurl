@@ -82,7 +82,7 @@ are already familiar with libcurl's C API.
 
 <p>
 For a quick start have a look at the high-performance URL downloader
-<a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/pycurl/pycurl/examples/retriever-multi.py?rev=HEAD&content-type=text/vnd.viewcvs-markup">retriever-multi.py</a>.
+<a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/pycurl/pycurl/examples/retriever-multi.py?rev=HEAD&amp;content-type=text/vnd.viewcvs-markup">retriever-multi.py</a>.
 </p>
 
 
