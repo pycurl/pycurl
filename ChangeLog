@@ -1,7 +1,7 @@
 2002-02-21  Kjetil Jacobsen  <kjetilja>
 
 	* Added the 'xmlrpc_curl.py' file which implements a transport
-	for xmlrpclib (xmlrpclib is part of python2.2).
+	for xmlrpclib (xmlrpclib is part of Python 2.2).
 
 	* Added CURLINFO_CONTENT_TYPE.
 
