@@ -1,0 +1,44 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>Curl Objects</title>
+             
+  <meta http-equiv="content-type"
+ content="text/html; charset=ISO-8859-1">
+</head>
+  <body>
+   
+<h2>Curl Objects<br>
+</h2>
+Curl objects have the following methods:<br>
+ &nbsp;&nbsp;&nbsp; <br>
+ <b>close()</b><b> </b>-&gt; <i>None</i>
+<blockquote> Corresponds to <b>curl_easy_cleanup</b> in libcurl. &nbsp;This
+method is automatically called by pycurl when a Curl object no longer has
+any references to it, but can also be called explicitly.<br>
+</blockquote>
+ <b>perform()</b> -&gt; <i>None</i>
+<blockquote>Corresponds to <b>curl_easy_perform</b> in libcurl.<br>
+</blockquote>
+ <b>setopt(</b><i>option, value</i><b>)</b> -&gt; <i>None</i>
+<blockquote> Corresponds to <b>curl_easy_setopt</b> in libcurl, where <i>option</i>
+is specified with the CURLOPT_* constants in libcurl, except that the CURLOPT_
+prefix has been removed. The type for <i>value</i> depends on the option,
+and can be either a string, integer, file objects, lists, &nbsp;or functions.<br>
+  <br>
+ Example usage: 
+  <pre>&gt;&gt;&gt; import pycurl<br>&gt;&gt;&gt; c = pycurl.Curl() <br>&gt;&gt;&gt; c.setopt(pycurl.URL, 'http://www.python.org/')<br>&gt;&gt;&gt; c.setopt(pycurl.HTTPHEADER, ['User-Agent: PycURL test', 'Accept:'])<br>&gt;&gt;&gt; import StringIO<br>&gt;&gt;&gt; b = StringIO.StringIO()<br>&gt;&gt;&gt; c.setopt(pycurl.WRITEFUNCTION, b.write)<br>&gt;&gt;&gt; c.setopt(pycurl.FOLLOWLOCATION, 1)<br>&gt;&gt;&gt; c.setopt(pycurl.MAXREDIRS, 5)<br>&gt;&gt;&gt; c.perform()<br>&gt;&gt;&gt; print b.getvalue()<br>...<br></pre>
+</blockquote>
+  <b>getinfo(</b><i>option</i><b>) </b>-&gt; <i>Result</i>
+<blockquote> Corresponds to <b>curl_easy_getinfo</b> in libcurl, where <i>option</i>
+is the same as the CURLINFO_* constants in libcurl, except that the CURLINFO_ 
+prefix has been removed. &nbsp; <i>Result </i>contains an integer, string 
+of float depending on which option is given. &nbsp;The <b>getinfo</b> method 
+should not be called unless <b>perform</b> has been called and finished.<br>
+  <br>
+ Example usage: <br>
+  <pre>&gt;&gt;&gt; import pycurl<br>&gt;&gt;&gt; c = pycurl.Curl()<br>&gt;&gt;&gt; c.setopt(pycurl.URL, 'file:///dev/null')<br>&gt;&gt;&gt; c.perform()<br>&gt;&gt;&gt; c.getinfo(pycurl.EFFECTIVE_URL)<br>'file:///dev/null'</pre>
+  <br>
+</blockquote>
+</body>
+</html>
