@@ -1,3 +1,8 @@
+2001-12-06  Kjetil Jacobsen  <kjetilja>
+
+	* Added CURLINFO_STARTTRANSFER_TIME and CURLOPT_FTP_USE_EPSV from
+	libcurl 7.9.2.
+
 2001-12-01  Markus F.X.J. Oberhumer <mfx>
 
 	* Added the 'test_stringio.py' file which demonstrates the use of

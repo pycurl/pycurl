@@ -670,6 +670,7 @@ do_getinfo(CurlObject *self, PyObject *args)
 	    option == CURLINFO_NAMELOOKUP_TIME ||
 	    option == CURLINFO_CONNECT_TIME ||
 	    option == CURLINFO_PRETRANSFER_TIME ||
+	    option == CURLINFO_STARTTRANSFER_TIME ||
 	    option == CURLINFO_SIZE_UPLOAD ||
 	    option == CURLINFO_SIZE_DOWNLOAD ||
 	    option == CURLINFO_SPEED_DOWNLOAD ||
@@ -981,6 +982,7 @@ DL_EXPORT(void)
     insint(d, "HTTP_VERSION", CURLOPT_HTTP_VERSION);
     insint(d, "HTTP_VERSION_1_0", CURL_HTTP_VERSION_1_0);
     insint(d, "HTTP_VERSION_1_1", CURL_HTTP_VERSION_1_1);
+    insint(d, "FTP_USE_EPSV", CURLOPT_FTP_USE_EPSV);
 
     /* Symbolic constants for getinfo */
     insint(d, "EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL);
@@ -999,6 +1001,7 @@ DL_EXPORT(void)
     insint(d, "FILETIME", CURLINFO_FILETIME);
     insint(d, "CONTENT_LENGTH_DOWNLOAD", CURLINFO_CONTENT_LENGTH_DOWNLOAD);
     insint(d, "CONTENT_LENGTH_UPLOAD", CURLINFO_CONTENT_LENGTH_UPLOAD);
+    insint(d, "STARTTRANSFER_TIME", CURLINFO_STARTTRANSFER_TIME);
 
     /* CLOSEPOLICY constants for setopt */
     insint(d, "CLOSEPOLICY_LEAST_RECENTLY_USED", CURLCLOSEPOLICY_LEAST_RECENTLY_USED);
