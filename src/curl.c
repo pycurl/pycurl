@@ -1062,6 +1062,9 @@ DL_EXPORT(void)
     insint(d, "SSLENGINE", CURLOPT_SSLENGINE);
     insint(d, "SSLENGINE_DEFAULT", CURLOPT_SSLENGINE_DEFAULT);
 
+    insint(d, "DNS_CACHE_TIMEOUT", CURLOPT_DNS_CACHE_TIMEOUT);
+    insint(d, "DNS_USE_GLOBAL_CACHE", CURLOPT_DNS_USE_GLOBAL_CACHE);
+
     /* Symbolic constants for getinfo */
     insint(d, "EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL);
     insint(d, "HTTP_CODE", CURLINFO_HTTP_CODE);
