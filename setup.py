@@ -63,7 +63,7 @@ if sys.platform == "win32":
     # Windows users have to configure the CURL_DIR path parameter to match
     # their cURL source installation.  The path set here is just an example
     # and thus unlikely to match your installation.
-    CURL_DIR = r"c:\src\build\curl-7.10.4"
+    CURL_DIR = r"c:\src\build\curl-7.10.5"
     CURL_DIR = scan_argv("--curl-dir=", CURL_DIR)
     print "Using curl directory:", CURL_DIR
     assert os.path.isdir(CURL_DIR), "please check CURL_DIR in setup.py"
@@ -71,9 +71,10 @@ if sys.platform == "win32":
     extra_objects.append(os.path.join(CURL_DIR, "lib", "libcurl.lib"))
     extra_link_args.extend(["gdi32.lib", "winmm.lib", "ws2_32.lib",])
     add_libdirs("LIB", ";")
-    if 1:
+    if string.find(sys.version, "MSC") != 1:
         ##extra_compile_args.append("-GF")
         extra_compile_args.append("-Gy")
+        extra_compile_args.append("-WX")
 else:
     # Find out the rest the hard way
     CURL_CONFIG = "curl-config"

@@ -57,11 +57,16 @@
 #undef UNUSED
 #define UNUSED(var)     ((void)&var)
 
+#undef COMPILE_TIME_ASSERT
+#define COMPILE_TIME_ASSERT(expr) \
+     { typedef int compile_time_assert_fail__[1 - 2 * !(expr)]; }
+
 
 /* Calculate the number of options we need to store */
 #define OPTIONS_SIZE    105
 static int PYCURL_OPT(int o)
 {
+    COMPILE_TIME_ASSERT(OPTIONS_SIZE == CURLOPT_HTTP200ALIASES - CURLOPTTYPE_OBJECTPOINT + 1);
     assert(o >= CURLOPTTYPE_OBJECTPOINT);
     assert(o < CURLOPTTYPE_OBJECTPOINT + OPTIONS_SIZE);
     return o - CURLOPTTYPE_OBJECTPOINT;

@@ -12,6 +12,7 @@ include TODO
 include MANIFEST.in
 include src/Makefile
 include src/pycurl.c
+include python/curl/*.py
 include examples/*.py
 include tests/*.py
 include doc/*.html

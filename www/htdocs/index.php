@@ -1,5 +1,5 @@
 <?php // vi:ts=4:et
-$version = "7.10.4.2";
+$version = "7.10.5";
 echo "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
 ?>
 
@@ -112,8 +112,8 @@ Also have a look at the <a href="ChangeLog">PycURL ChangeLog</a>.
 <h2>Download</h2>
 
 <p>
-<a href="download/pycurl-7.10.4.2.tar.gz">Download</a>
-PycURL sources version <?php echo $version; ?> (April 15 2003)
+<a href="download/pycurl-7.10.5.tar.gz">Download</a>
+PycURL sources version <?php echo $version; ?> (May 21 2003)
 or try the code from
 <a href="http://sourceforge.net/cvs/?group_id=28236">the CVS repository</a>.
 </p>
