@@ -1061,9 +1061,11 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_USERPWD:
             break;
 #if (LIBCURL_VERSION_NUM >= 0x070a06)
+#if 0
         case CURLOPT_SSL_CTX_DATA:
             /* FIXME - implement this */
             /* FIXME - fall through for now */
+#endif
 #endif
         default:
             PyErr_SetString(PyExc_TypeError, "strings are not supported for this option");
@@ -1303,7 +1305,9 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         const curl_passwd_callback pwd_cb = password_callback;
         const curl_debug_callback d_cb = debug_callback;
 #if (LIBCURL_VERSION_NUM >= 0x070a06)
+#if 0
         const curl_ssl_ctx_callback ssl_ctx_cb = ssl_ctx_callback;
+#endif
 #endif
 
         switch(option) {
