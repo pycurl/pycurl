@@ -6,7 +6,7 @@
 """Setup script for the PycURL module distribution."""
 
 PACKAGE = "pycurl"
-VERSION = "7.10.3"
+VERSION = "7.10.3.2"
 
 import glob, os, re, sys, string
 import distutils
@@ -40,6 +40,28 @@ def scan_argv(s, default):
     return p
 
 
+# transform an environment variable (e.g. "LIB") to library_dirs[]
+def add_libdirs(envvar, sep, delete=0, fatal=1):
+    r = 0
+    env = os.environ
+    if 1 and env.get(envvar):
+        for dir in string.split(env.get(envvar), sep):
+            dir = string.strip(dir)
+            if not dir:
+                continue
+            if os.path.isdir(dir):
+                if dir not in library_dirs:
+                    library_dirs.append(dir)
+            else:
+                r = -1
+                if fatal:
+                    print "FATAL: unknown directory %s in environment variable %s" % (dir, envvar)
+                    raise SystemExit
+        if delete:
+            del env[envvar]
+    return r
+
+
 if sys.platform == "win32":
     # Windows users have to configure the CURL_DIR path parameter to match
     # their cURL source installation.  The path set here is just an example
@@ -51,6 +73,7 @@ if sys.platform == "win32":
     include_dirs.append(os.path.join(CURL_DIR, "include"))
     extra_objects.append(os.path.join(CURL_DIR, "lib", "libcurl.lib"))
     extra_link_args.extend(["gdi32.lib", "winmm.lib", "ws2_32.lib",])
+    add_libdirs("LIB", ";")
 else:
     # Find out the rest the hard way
     CURL_CONFIG = "curl-config"
