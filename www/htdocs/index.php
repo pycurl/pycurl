@@ -23,7 +23,7 @@ $version_date = "Feb 14 2004";
 <body text="#000000" bgcolor="#ffffff" link="#0000ee" vlink="#551a8b" alink="#0000ee">
 
 <center>
-  <a href="http://curl.haxx.se/libcurl/"><img src="http://curl.haxx.se/libcurl/big.jpg" width="416" height="115" border="0" alt="libcurl"></img></a>
+  <a href="http://curl.haxx.se/libcurl/"><img src="http://curl.haxx.se/ds-libcurl.jpg" width="466" height="181" border="0" alt="libcurl"></img></a>
 </center>
 
 <center>
