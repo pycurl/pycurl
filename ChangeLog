@@ -1,3 +1,8 @@
+2002-02-27  Kjetil Jacobsen  <kjetilja>
+
+	* Check that the installed version of libcurl matches the
+	requirements of PycURL.
+
 2002-02-26  Kjetil Jacobsen  <kjetilja>
 
 	* Clarence Garnder <clarence@silcom.com> found a bug where string
