@@ -816,14 +816,7 @@ debug_callback(CURL *curlobj, curl_infotype type,
     if (result == NULL)
         goto verbose_error;
 
-    /* ignore result */
-#if 0
-    if (result == Py_None) {
-        ret = 0;        /* None means success */
-    } else {
-        ret = 0;        /* ??? */
-    }
-#endif
+    /* return values from debug callbacks should be ignored */
 
 silent_error:
     Py_XDECREF(result);
