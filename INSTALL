@@ -3,7 +3,7 @@ system to use pycurl.
 
 To build pycurl for Python 1.5.2 you also need the distutils package,
 which you can download from:
-	
+
 	http://www.python.org/sigs/distutils-sig/download.html
 
 Assuming that distutils is installed (which it is by default on Python

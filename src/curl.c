@@ -93,7 +93,7 @@ do_cleanup(CurlObject *self, PyObject *args)
 
 /* --------------------------------------------------------------------- */
 
-static int 
+static int
 write_callback(void *ptr,
 	       size_t size,
 	       size_t nmemb,
@@ -103,7 +103,7 @@ write_callback(void *ptr,
     PyObject *result;
     CurlObject *self;
     int write_size;
-    
+
     self = (CurlObject *)stream;
     arglist = Py_BuildValue("(s#)", (char *)ptr, size*nmemb);
 
@@ -124,7 +124,7 @@ write_callback(void *ptr,
 }
 
 
-static int 
+static int
 header_callback(void *ptr,
 		size_t size,
 		size_t nmemb,
@@ -134,7 +134,7 @@ header_callback(void *ptr,
     PyObject *result;
     CurlObject *self;
     int write_size;
-    
+
     self = (CurlObject *)stream;
     arglist = Py_BuildValue("(s#)", (char *)ptr, size*nmemb);
 
@@ -155,7 +155,7 @@ header_callback(void *ptr,
 }
 
 
-static int 
+static int
 progress_callback(void *client,
 		  size_t dltotal,
 		  size_t dlnow,
@@ -166,7 +166,7 @@ progress_callback(void *client,
     PyObject *result;
     CurlObject *self;
     int ret;
-    
+
     self = (CurlObject *)client;
     arglist = Py_BuildValue("(iiii)", dltotal, dlnow, ultotal, ulnow);
 
@@ -189,8 +189,8 @@ progress_callback(void *client,
 
 static
 int password_callback(void *client,
-		      char *prompt, 
-		      char* buffer, 
+		      char *prompt,
+		      char* buffer,
 		      int buflen)
 {
     PyObject *arglist;
@@ -198,7 +198,7 @@ int password_callback(void *client,
     CurlObject *self;
     char *buf;
     int ret;
-    
+
     self = (CurlObject *)client;
     arglist = Py_BuildValue("(si)", prompt, buflen);
 
@@ -246,11 +246,11 @@ int read_callback(void *ptr,
     char *buf;
     int obj_size, read_size;
     int ret;
-    
+
     self = (CurlObject *)stream;
     read_size = size*nmemb;
     arglist = Py_BuildValue("(i)", read_size);
-    
+
     PyEval_AcquireThread(self->state);
     result = PyEval_CallObject(self->r_cb, arglist);
     Py_DECREF(arglist);
@@ -351,7 +351,7 @@ do_setopt(CurlObject *self, PyObject *args)
 	    strcpy(buf, stringdata);
 	    self->url = buf;
 	    res = curl_easy_setopt(self->handle, CURLOPT_URL, self->url);
-	} 
+	}
 	else {
 	    /* Handle the regular cases of string arguments */
 	    res = curl_easy_setopt(self->handle, option, stringdata);
@@ -360,7 +360,7 @@ do_setopt(CurlObject *self, PyObject *args)
 	if (res == 0) {
 	    Py_INCREF(Py_None);
 	    return Py_None;
-	} 
+	}
 	else {
 	    PyErr_SetString(ErrorObject, self->error);
 	    return NULL;
@@ -370,7 +370,7 @@ do_setopt(CurlObject *self, PyObject *args)
     PyErr_Clear();
 
     /* Handle the case of integer arguments */
-    if (PyArg_ParseTuple(args, "il:setopt", &option, &longdata)) {    
+    if (PyArg_ParseTuple(args, "il:setopt", &option, &longdata)) {
 	/* Check that option is integer as well as the input data */
 	if (option >= CURLOPTTYPE_OBJECTPOINT) {
 	    PyErr_SetString(ErrorObject, "integers are not supported for this option");
@@ -381,7 +381,7 @@ do_setopt(CurlObject *self, PyObject *args)
 	if (res == 0) {
 	    Py_INCREF(Py_None);
 	    return Py_None;
-	} 
+	}
 	else {
 	    PyErr_SetString(ErrorObject, self->error);
 	    return NULL;
@@ -393,9 +393,9 @@ do_setopt(CurlObject *self, PyObject *args)
     /* Handle the case of file objects */
     if (PyArg_ParseTuple(args, "iO!:setopt", &option, &PyFile_Type, &obj)) {
 	/* Ensure the option specified a file as well as the input */
-	if (!(option == CURLOPT_FILE || 
+	if (!(option == CURLOPT_FILE ||
 	      option == CURLOPT_INFILE ||
-	      option == CURLOPT_WRITEHEADER || 
+	      option == CURLOPT_WRITEHEADER ||
 	      option == CURLOPT_PROGRESSDATA ||
 	      option == CURLOPT_PASSWDDATA))
 	    {
@@ -412,11 +412,11 @@ do_setopt(CurlObject *self, PyObject *args)
 	if (res == 0) {
 	    Py_INCREF(Py_None);
 	    return Py_None;
-	} 
+	}
 	else {
 	    PyErr_SetString(ErrorObject, self->error);
 	    return NULL;
-	}      
+	}
     }
 
     PyErr_Clear();
@@ -425,13 +425,13 @@ do_setopt(CurlObject *self, PyObject *args)
     if (PyArg_ParseTuple(args, "iO!:setopt", &option, &PyList_Type, &obj)) {
 	switch (option) {
 	case CURLOPT_HTTPHEADER:
-	    slist = &self->httpheader; 
+	    slist = &self->httpheader;
 	    break;
 	case CURLOPT_QUOTE:
-	    slist = &self->quote; 
+	    slist = &self->quote;
 	    break;
 	case CURLOPT_POSTQUOTE:
-	    slist = &self->postquote; 
+	    slist = &self->postquote;
 	    break;
 	case CURLOPT_HTTPPOST:
 	    slist = NULL;
@@ -441,7 +441,7 @@ do_setopt(CurlObject *self, PyObject *args)
 	    PyErr_SetString(PyExc_TypeError, "lists are not supported for this option");
 	    return NULL;
 	}
-	
+
 	/* Handle HTTPPOST different since we construct a HttpPost form struct */
 	if (option == CURLOPT_HTTPPOST) {
 	    if (self->httppost != NULL) {
@@ -474,7 +474,7 @@ do_setopt(CurlObject *self, PyObject *args)
 	    if (res == 0) {
 		Py_INCREF(Py_None);
 		return Py_None;
-	    } 
+	    }
 	    else {
 		curl_formfree(self->httppost);
 		PyErr_SetString(ErrorObject, self->error);
@@ -484,7 +484,7 @@ do_setopt(CurlObject *self, PyObject *args)
 
 	/* Just to be sure we do not bug off here */
 	assert(slist != NULL);
-	
+
 	/* Handle regular list operations on the other options */
 	if (*slist != NULL) {
 	    /* Free previously allocated list */
@@ -511,7 +511,7 @@ do_setopt(CurlObject *self, PyObject *args)
 	if (res == 0) {
 	    Py_INCREF(Py_None);
 	    return Py_None;
-	} 
+	}
 	else {
 	    curl_slist_free_all(*slist);
 	    PyErr_SetString(ErrorObject, self->error);
@@ -603,11 +603,11 @@ do_perform(CurlObject *self, PyObject *args)
     Py_BEGIN_ALLOW_THREADS
     res = curl_easy_perform(self->handle);
     Py_END_ALLOW_THREADS
-    
+
     if (res == 0) {
 	Py_INCREF(Py_None);
 	return Py_None;
-    } 
+    }
     else {
 	PyErr_SetString(ErrorObject, self->error);
 	return NULL;
@@ -632,18 +632,18 @@ do_getinfo(CurlObject *self, PyObject *args)
 
     /* Parse option */
     if (PyArg_ParseTuple(args, "i:getinfo", &option)) {
-	if (option == CURLINFO_HEADER_SIZE || 
+	if (option == CURLINFO_HEADER_SIZE ||
 	    option == CURLINFO_REQUEST_SIZE ||
 	    option == CURLINFO_SSL_VERIFYRESULT ||
 	    option == CURLINFO_FILETIME ||
-	    option == CURLINFO_HTTP_CODE) 
+	    option == CURLINFO_HTTP_CODE)
 	    {
 		/* Return long as result */
 		res = curl_easy_getinfo(self->handle, option, &l_res);
 		/* Check for errors and return result */
 		if (res == 0) {
 		    return PyLong_FromLong(l_res);
-		} 
+		}
 		else {
 		    PyErr_SetString(ErrorObject, self->error);
 		    return NULL;
@@ -657,7 +657,7 @@ do_getinfo(CurlObject *self, PyObject *args)
 		/* Check for errors and return result */
 		if (res == 0) {
 		    return PyString_FromString(s_res);
-		} 
+		}
 		else {
 		    PyErr_SetString(ErrorObject, self->error);
 		    return NULL;
@@ -680,13 +680,13 @@ do_getinfo(CurlObject *self, PyObject *args)
 		/* Check for errors and return result */
 		if (res == 0) {
 		    return PyFloat_FromDouble(d_res);
-		} 
+		}
 		else {
 		    PyErr_SetString(ErrorObject, self->error);
 		    return NULL;
 		}
 	    }
-    } 
+    }
 
     /* Got wrong signature on the method call */
     PyErr_SetString(PyExc_TypeError, "invalid arguments to getinfo");
@@ -822,7 +822,7 @@ do_global_init(PyObject *self, PyObject *args)
 	      option == CURL_GLOBAL_NOTHING)) {
 	    PyErr_SetString(ErrorObject, "invalid option to global_init");
 	    return NULL;
-	}	    
+	}
 
 	res = curl_global_init(option);
 	if (res != 0) {
@@ -891,15 +891,15 @@ DL_EXPORT(void)
     /* Initialize the type of the new type object here; doing it here
      * is required for portability to Windows without requiring C++. */
     Curl_Type.ob_type = &PyType_Type;
-  
+
     /* Create the module and add the functions */
     m = Py_InitModule3("pycurl", curl_methods, module_doc);
-  
+
     /* Add error object to the module */
     d = PyModule_GetDict(m);
     ErrorObject = PyErr_NewException("pycurl.error", NULL, NULL);
     PyDict_SetItemString(d, "error", ErrorObject);
-    
+
     /* Add version string to the module */
     PyDict_SetItemString(d, "version", PyString_FromString(curl_version()));
 
@@ -972,7 +972,7 @@ DL_EXPORT(void)
     insint(d, "RANDOM_FILE", CURLOPT_RANDOM_FILE);
     insint(d, "EGDSOCKET", CURLOPT_EGDSOCKET);
     insint(d, "CONNECTTIMEOUT", CURLOPT_CONNECTTIMEOUT);
-    
+
     insint(d, "HTTPGET", CURLOPT_HTTPGET);
     insint(d, "SSL_VERIFYHOST", CURLOPT_SSL_VERIFYHOST);
     insint(d, "COOKIEJAR", CURLOPT_COOKIEJAR);
@@ -980,7 +980,7 @@ DL_EXPORT(void)
     insint(d, "HTTP_VERSION", CURLOPT_HTTP_VERSION);
     insint(d, "HTTP_VERSION_1_0", CURL_HTTP_VERSION_1_0);
     insint(d, "HTTP_VERSION_1_1", CURL_HTTP_VERSION_1_1);
-    
+
     /* Symbolic constants for getinfo */
     insint(d, "EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL);
     insint(d, "HTTP_CODE", CURLINFO_HTTP_CODE);
@@ -1014,3 +1014,8 @@ DL_EXPORT(void)
     /* Initialize global interpreter lock */
     PyEval_InitThreads();
 }
+
+/*
+vi:ts=8
+*/
+

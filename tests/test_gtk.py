@@ -67,10 +67,10 @@ class Test(threading.Thread):
 
     def run(self):
         self.curl.perform()
-        self.curl.cleanup()        
+        self.curl.cleanup()
         self.target_file.close()
         self.progress(1.0, 1.0, 0, 0)
-        
+
 
 # Check command line args
 if len(sys.argv) < 3:

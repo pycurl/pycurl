@@ -22,10 +22,10 @@ class Test(threading.Thread):
 
     def run(self):
         self.curl.perform()
-        self.curl.cleanup()        
+        self.curl.cleanup()
         sys.stdout.write('.')
         sys.stdout.flush()
-       
+
 
 # Read list of URIs from file specified on commandline
 try:

@@ -11,7 +11,7 @@ def body_callback(buf):
     contents = contents + buf
     return len(buf)
 
-print 'Testing curl version', pycurl.version 
+print 'Testing curl version', pycurl.version
 
 c = pycurl.init()
 c.setopt(pycurl.URL, url)

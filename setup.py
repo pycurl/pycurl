@@ -37,7 +37,7 @@ else:
             library_dirs.append(e[2:])
             libs.remove(e)
     libraries = ["curl"]
-    extra_link_args = libs 
+    extra_link_args = libs
     runtime_library_dirs = []
     extra_objects = []
 
@@ -49,7 +49,7 @@ setup (	name="pycurl",
       	author="Kjetil Jacobsen",
       	author_email="kjetilja@cs.uit.no",
       	url="http://pycurl.sourceforge.net/",
-      	ext_modules=[Extension(name="pycurl", 
+      	ext_modules=[Extension(name="pycurl",
                                sources=["src/curl.c"],
                                include_dirs=include_dirs,
                                library_dirs=library_dirs,
@@ -57,4 +57,4 @@ setup (	name="pycurl",
                                libraries=libraries,
                                extra_link_args=extra_link_args,
                                extra_objects=extra_objects)]
-        )	
+        )

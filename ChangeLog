@@ -27,7 +27,7 @@
 2001-10-12  Kjetil Jacobsen  <kjetilja>
 
 	* Added module docstrings, terse perhaps, but better than nothing.
-	
+
 	* Added the 'basicfirst.py' file which is a Python version of the
 	corresponding Perl script by Daniel.
 
@@ -43,7 +43,7 @@
 
 	* Added the 'basicfirst2.py' file which demonstrates the use of a
 	class method as callback instead of just a function.
-	
+
 2001-08-21  Kjetil Jacobsen  <kjetilja>
 
 	* Cleaned up the script with GNOME/PycURL integration.
@@ -89,9 +89,9 @@
 	* Added HEADER/PROGRESSFUNCTION callbacks (see files in tests/).
 
 	* Added PASSWDFUNCTION callback (untested).
-	
+
 	* Added READFUNCTION callback (untested).
-	
+
 2001-06-05  Kjetil Jacobsen  <kjetilja>
 
 	* WRITEFUNCTION callbacks now work (see tests/test_cb.py for details).
@@ -99,7 +99,7 @@
 	* Preliminary distutils installation.
 
 	* Added CLOSEPOLICY constants to module namespace.
-	
+
 2001-06-04  Kjetil Jacobsen  <kjetilja>
 
 	* Return -1 on error from Python callback in WRITEFUNCTION callback.
