@@ -8,7 +8,7 @@ Version 7.11.0 [requires libcurl-7.10.3 or better]
           and FTP_SSL.
 
         * Circular garbage collection support can now be enabled or
-          disabled by passing the '--use-gc=[0|1]' parameter to setup.py
+          disabled by passing the '--use-gc=[1|0]' parameter to setup.py
           when building pycurl.
 
         * HTTP_VERSION options are known as CURL_HTTP_VERSION_NONE,
