@@ -1,0 +1,457 @@
+Version 7.10.4.2 [requires libcurl-7.10.3 or better]
+
+2003-04-15  Markus F.X.J. Oberhumer <mfx>
+
+        * Allow compilation against the libcurl-7.10.3 release - some
+        recent distributions (e.g. Mandrake 9.1) ship with 7.10.3, and
+        apart from the new CURLOPT_UNRESTRICTED_AUTH option there is no
+        need that we require libcurl-7.10.4.
+
+Version 7.10.4
+
+2003-04-01  Kjetil Jacobsen  <kjetilja>
+
+        * Markus added CURLOPT_UNRESTRICTED_AUTH.
+
+2003-02-25  Kjetil Jacobsen  <kjetilja>
+
+        * Fixed some broken test code and removed the fileupload test
+        since it didn't work properly.
+
+2003-01-28  Kjetil Jacobsen  <kjetilja>
+
+        * Some documentation updates by Markus and me.
+
+2003-01-22  Kjetil Jacobsen  <kjetilja>
+
+        * API CHANGE: the CurlMulti.info_read() method now returns
+        a separate array with handles that failed.  Each entry in this array
+        is a tuple with (curl object, error number, error message).
+        This addition makes it simpler to do error checking of individual
+        curl objects when using the multi interface.
+
+Version 7.10.3
+
+2003-01-13  Kjetil Jacobsen  <kjetilja>
+
+        * PycURL memory usage has been reduced.
+
+2003-01-10  Kjetil Jacobsen  <kjetilja>
+
+        * Added 'examples/retriever-multi.py' which shows how to retrieve
+        a set of URLs concurrently using the multi interface.
+
+2003-01-09  Kjetil Jacobsen  <kjetilja>
+
+        * Added support for CURLOPT_HTTP200ALIASES.
+
+2002-11-22  Kjetil Jacobsen  <kjetilja>
+
+        * Updated pycurl documentation in the 'doc' directory.
+
+2002-11-21  Kjetil Jacobsen  <kjetilja>
+
+        * Updated and improved 'examples/curl.py'.
+
+        * Added 'tests/test_multi6.py' which shows how to use the
+        info_read method with CurlMulti.
+
+2002-11-19  Kjetil Jacobsen  <kjetilja>
+
+        * Added new method CurlMulti.info_read().
+
+Version 7.10.2
+
+2002-11-14  Kjetil Jacobsen <kjetilja>
+
+        * Free options set with setopt after cleanup is called, as cleanup
+        assumes that options are still valid when invoked.  This fixes the
+        bug with COOKIEJAR reported by Bastiaan Naber
+        <bastiaan@ricardis.tudelft.nl>.
+
+2002-11-06  Markus F.X.J. Oberhumer <mfx>
+
+        * Install documentation under /usr/share/doc instead of /usr/doc.
+        Also, start shipping the (unfinished) HTML docs and some
+        basic test scripts.
+
+2002-10-30  Markus F.X.J. Oberhumer <mfx>
+
+        * API CHANGE: For integral values, Curl.getinfo() now returns a
+        Python-int instead of a Python-long.
+
+Version 7.10.1
+
+2002-10-03  Markus F.X.J. Oberhumer <mfx>
+
+        * Added new module-level function version_info() from
+        libcurl-7.10.
+
+Version 7.10
+
+2002-09-13  Kjetil Jacobsen  <kjetilja>
+
+        * Added commandline options to setup.py for specifying the path to
+        'curl-config' (non-windows) and the curl installation directory
+        (windows).  See the 'INSTALL' file for details.
+
+        * Added CURLOPT_ENCODING, CURLOPT_NOSIGNAL and CURLOPT_BUFFERSIZE
+        from libcurl-7.10 (by Markus Oberhumer).
+
+Version 7.9.8.4
+
+2002-08-28  Kjetil Jacobsen  <kjetilja>
+
+        * Added a simple web-browser example based on gtkhtml and pycurl.
+        See the file 'examples/gtkhtml_demo.py' for details.  The example
+        requires a working installation of gnome-python with gtkhtml
+        bindings enabled (pass --with-gtkhtml to gnome-python configure).
+
+2002-08-14  Kjetil Jacobsen  <kjetilja>
+
+        * Added new method 'select' on CurlMulti objects.  Example usage
+        in 'tests/test_multi5.py'.  This method is just an optimization of
+        the combined use of fdset and select.
+
+2002-08-12  Kjetil Jacobsen  <kjetilja>
+
+        * Added support for curl_multi_fdset.  See the file
+        'tests/test_multi4.py' for example usage.  Contributed by Conrad
+        Steenberg <conrad@hep.caltech.edu>.
+
+        * perform() on multi objects now returns a tuple (result, number
+        of handles) like the libcurl interface does.
+
+2002-08-08  Kjetil Jacobsen  <kjetilja>
+
+        * Added the 'sfquery' script which retrieves a SourceForge XML
+        export object for a given project.  See the file 'examples/sfquery.py'
+        for details and usage.  'sfquery' was contributed by Eric
+        S. Raymond <esr@thyrsus.com>.
+
+2002-07-20  Markus F.X.J. Oberhumer <mfx>
+
+        * API enhancements: added Curl() and CurlMulti() as aliases for
+        init() and multi_init(), and added close() methods as aliases
+        for the cleanup() methods. The new names much better match
+        the actual intended use of the objects, and they also nicely
+        correspond to Python's file object.
+
+        * Also, all constants for Curl.setopt() and Curl.getinfo() are now
+        visible from within Curl objects.
+
+        All changes are fully backward-compatible.
+
+Version 7.9.8.3
+
+2002-07-16  Markus F.X.J. Oberhumer <mfx>
+
+        * Under Python 2.2 or better, Curl and CurlMulti objects now
+        automatically participate in cyclic garbarge collection
+        (using the gc module).
+
+Version 7.9.8.2
+
+2002-07-05  Markus F.X.J. Oberhumer <mfx>
+
+        * Curl and CurlMulti objects now support standard Python attributes.
+        See tests/test_multi2.py for an example.
+
+2002-07-02  Kjetil Jacobsen  <kjetilja>
+
+        * Added support for the multi-interface.
+
+Version 7.9.8.1
+
+2002-06-25  Markus F.X.J. Oberhumer <mfx>
+
+        * Fixed a couple of `int' vs. `size_t' mismatches in callbacks
+        and Py_BuildValue() calls.
+
+2002-06-25  Kjetil Jacobsen  <kjetilja>
+
+        * Use 'double' type instead of 'size_t' for progress callbacks
+        (by Conrad Steenberg <conrad@hep.caltech.edu>).  Also cleaned up
+        some other type mismatches in the callback interfaces.
+
+2002-06-24  Kjetil Jacobsen  <kjetilja>
+
+        * Added example code on how to upload a file using HTTPPOST in
+        pycurl (code by Amit Mongia <amit_mongia@hotmail.com>).  See the
+        file 'test_fileupload.py' for details.
+
+Version 7.9.8
+
+2002-06-24  Kjetil Jacobsen  <kjetilja>
+
+        * Resolved some build problems on Windows (by Markus Oberhumer).
+
+2002-06-19  Kjetil Jacobsen  <kjetilja>
+
+        * Added CURLOPT_CAPATH.
+
+        * Added option constants for CURLOPT_NETRC: CURL_NETRC_OPTIONAL,
+        CURL_NETRC_IGNORED and CURL_NETRC_REQUIRED.
+
+        * Added option constants for CURLOPT_TIMECONDITION:
+        TIMECOND_IFMODSINCE and TIMECOND_IFUNMODSINCE.
+
+        * Added an simple example crawler, which downloads documents
+        listed in a file with a configurable number of worker threads.
+        See the file 'crawler.py' in the 'tests' directory for details.
+
+        * Removed the redundant 'test_xmlrpc2.py' test script.
+
+        * Disallow recursive callback invocations (by Markus Oberhumer).
+
+2002-06-18  Kjetil Jacobsen  <kjetilja>
+
+        * Made some changes to setup.py which should fix the build
+        problems on RedHat 7.3 (suggested by Benji <benji@kioza.net>).
+
+        * Use CURLOPT_READDATA instead of CURLOPT_INFILE, and
+        CURLOPT_WRITEDATA instead of CURLOPT_FILE.  Also fixed some
+        reference counting bugs with file objects.
+
+        * CURLOPT_FILETIME and CURLINFO_FILETIME had a namespace clash
+        which caused them not to work.  Use OPT_FILETIME for setopt() and
+        INFO_FILETIME for getinfo().  See example usage in
+        'test_getinfo.py' for details.
+
+Version 7.9.7
+
+2002-05-20  Kjetil Jacobsen  <kjetilja>
+
+        * New versioning scheme.  Pycurl now has the same version number
+        as the libcurl version it was built with.  The pycurl version
+        number thus indicates which version of libcurl is required to run.
+
+Version 0.4.10 (Not released)
+
+2002-05-17  Kjetil Jacobsen  <kjetilja>
+
+        * Added CURLINFO_REDIRECT_TIME and CURLINFO_REDIRECT_COUNT.
+
+2002-04-27  Kjetil Jacobsen  <kjetilja>
+
+        * Fixed potential memory leak and thread race (by Markus
+        Oberhumer)
+
+Version 0.4.9
+
+2002-04-15  Kjetil Jacobsen  <kjetilja>
+
+        * Added CURLOPT_DEBUGFUNCTION to allow debug callbacks to be
+        specified (see the file 'test_debug.py' for details on how to use
+        debug callbacks).
+
+        * Added CURLOPT_DNS_USE_GLOBAL_CACHE and
+        CURLOPT_DNS_CACHE_TIMEOUT.
+
+        * Fixed a segfault when finalizing curl objects in Python 1.5.2.
+
+        * Now requires libcurl 7.9.6 or greater.
+
+2002-04-12  Kjetil Jacobsen  <kjetilja>
+
+        * Added 'test_post2.py' file which is another example on how to
+        issue POST requests.
+
+2002-04-11  Markus F.X.J. Oberhumer <mfx>
+
+        * Added the 'test_post.py' file which demonstrates the use of
+        POST requests.
+
+Version 0.4.8
+
+2002-03-07  Kjetil Jacobsen  <kjetilja>
+
+        * Added CURLOPT_PREQUOTE.
+
+        * Now requires libcurl 7.9.5 or greater.
+
+        * Other minor code cleanups and bugfixes.
+
+2002-03-05  Kjetil Jacobsen  <kjetilja>
+
+        * Do not allow WRITEFUNCTION and WRITEHEADER on the same handle.
+
+Version 0.4.7
+
+2002-02-27  Kjetil Jacobsen  <kjetilja>
+
+        * Abort callback if the thread state of the calling thread cannot
+        be determined.
+
+        * Check that the installed version of libcurl matches the
+        requirements of pycurl.
+
+2002-02-26  Kjetil Jacobsen  <kjetilja>
+
+        * Clarence Garnder <clarence@silcom.com> found a bug where string
+        arguments to setopt sometimes were prematurely deallocated, this
+        should now be fixed.
+
+2002-02-21  Kjetil Jacobsen  <kjetilja>
+
+        * Added the 'xmlrpc_curl.py' file which implements a transport
+        for xmlrpclib (xmlrpclib is part of Python 2.2).
+
+        * Added CURLINFO_CONTENT_TYPE.
+
+        * Added CURLOPT_SSLCERTTYPE, CURLOPT_SSLKEY, CURLOPT_SSLKEYTYPE,
+        CURLOPT_SSLKEYPASSWD, CURLOPT_SSLENGINE and
+        CURLOPT_SSLENGINE_DEFAULT.
+
+        * When thrown, the pycurl.error exception is now a tuple consisting
+        of the curl error code and the error message.
+
+        * Now requires libcurl 7.9.4 or greater.
+
+2002-02-19  Kjetil Jacobsen  <kjetilja>
+
+        * Fixed docstring for getopt() function.
+
+2001-12-18  Kjetil Jacobsen  <kjetilja>
+
+        * Updated the INSTALL information for Win32.
+
+2001-12-12  Kjetil Jacobsen  <kjetilja>
+
+        * Added missing link flag to make pycurl build on MacOS X (by Matt
+        King <matt@gnik.com>).
+
+2001-12-06  Kjetil Jacobsen  <kjetilja>
+
+        * Added CURLINFO_STARTTRANSFER_TIME and CURLOPT_FTP_USE_EPSV from
+        libcurl 7.9.2.
+
+2001-12-01  Markus F.X.J. Oberhumer <mfx>
+
+        * Added the 'test_stringio.py' file which demonstrates the use of
+        StringIO objects as callback.
+
+2001-12-01  Markus F.X.J. Oberhumer <mfx>
+
+        * setup.py: Do not remove entries from a list while iterating
+        over it.
+
+2001-11-29  Kjetil Jacobsen  <kjetilja>
+
+        * Added code in setup.py to install on Windows.  Requires some
+        manual configuration (by Tino Lange <Tino.Lange@gmx.de>).
+
+2001-11-27  Kjetil Jacobsen  <kjetilja>
+
+        * Improved detection of where libcurl is installed in setup.py.
+        Should make it easier to install pycurl when libcurl is not
+        located in regular lib/include paths.
+
+2001-11-05  Kjetil Jacobsen  <kjetilja>
+
+        * Some of the newer options to setopt were missing, this should
+        now be fixed.
+
+2001-11-04  Kjetil Jacobsen  <kjetilja>
+
+        * Exception handling has been improved and should no longer throw
+        spurious exceptions (by Markus F.X.J. Oberhumer
+        <markus@oberhumer.com>).
+
+2001-10-15  Kjetil Jacobsen  <kjetilja>
+
+        * Refactored the test_gtk.py script to avoid global variables.
+
+2001-10-12  Kjetil Jacobsen  <kjetilja>
+
+        * Added module docstrings, terse perhaps, but better than nothing.
+
+        * Added the 'basicfirst.py' file which is a Python version of the
+        corresponding Perl script by Daniel.
+
+        * PycURL now works properly under Python 1.5 and 1.6 (by Markus
+        F.X.J. Oberhumer <markus@oberhumer.com>).
+
+        * Allow C-functions and Python methods as callbacks (by Markus
+        F.X.J. Oberhumer <markus@oberhumer.com>).
+
+        * Allow None as success result of write, header and progress
+        callback invocations (by Markus F.X.J. Oberhumer
+        <markus@oberhumer.com>).
+
+        * Added the 'basicfirst2.py' file which demonstrates the use of a
+        class method as callback instead of just a function.
+
+2001-08-21  Kjetil Jacobsen  <kjetilja>
+
+        * Cleaned up the script with GNOME/PycURL integration.
+
+2001-08-20  Kjetil Jacobsen  <kjetilja>
+
+        * Added another test script for shipping XML-RPC requests which
+        uses py-xmlrpc to encode the arguments (tests/test_xmlrpc2.py).
+
+2001-08-20  Kjetil Jacobsen  <kjetilja>
+
+        * Added test script for using PycURL and GNOME (tests/test_gtk.py).
+
+2001-08-20  Kjetil Jacobsen  <kjetilja>
+
+        * Added test script for using XML-RPC (tests/test_xmlrpc.py).
+
+        * Added more comments to the test sources.
+
+2001-08-06  Kjetil Jacobsen  <kjetilja>
+
+        * Renamed module namespace to pycurl instead of curl.
+
+2001-08-06  Kjetil Jacobsen  <kjetilja>
+
+        * Set CURLOPT_VERBOSE to 0 by default.
+
+2001-06-29  Kjetil Jacobsen  <kjetilja>
+
+        * Updated INSTALL, curl version 7.8 or greater is now mandatory to
+        use pycurl.
+
+2001-06-13  Kjetil Jacobsen  <kjetilja>
+
+        * Set NOPROGRESS to 1 by default.
+
+2001-06-07  Kjetil Jacobsen  <kjetilja>
+
+        * Added global_init/cleanup.
+
+2001-06-06  Kjetil Jacobsen  <kjetilja>
+
+        * Added HEADER/PROGRESSFUNCTION callbacks (see files in tests/).
+
+        * Added PASSWDFUNCTION callback (untested).
+
+        * Added READFUNCTION callback (untested).
+
+2001-06-05  Kjetil Jacobsen  <kjetilja>
+
+        * WRITEFUNCTION callbacks now work (see tests/test_cb.py for details).
+
+        * Preliminary distutils installation.
+
+        * Added CLOSEPOLICY constants to module namespace.
+
+2001-06-04  Kjetil Jacobsen  <kjetilja>
+
+        * Return -1 on error from Python callback in WRITEFUNCTION callback.
+
+2001-06-01  Kjetil Jacobsen  <kjetilja>
+
+        * Moved source to src and tests to tests directory.
+
+2001-05-31  Kjetil Jacobsen  <kjetilja>
+
+        * Added better type checking for setopt.
+
+2001-05-30  Kjetil Jacobsen  <kjetilja>
+
+        * Moved code to sourceforge.
+
+        * Added getinfo support.
