@@ -100,13 +100,15 @@ requirements.
 <?php } ?>
 
 <p>
-Official packages are available for
+Official PycURL packages are available for
 <a href="http://packages.debian.org/python2.2-pycurl">Debian</a>,
-and PycURL is also in the
+as well as the
 <a href="http://www.freebsd.org/cgi/ports.cgi?query=curl">ports</a>
-collection for FreeBSD and in the
+collection for FreeBSD, the
 <a href="ftp://ftp.netbsd.org/pub/NetBSD/packages/pkgsrc/www/py-curl/README.html">packages</a>
-collection for NetBSD.
+collection for NetBSD and the
+<a href="http://www.openbsd.org/cgi-bin/cvsweb/ports/net/py-curl/">ports</a>
+collection for OpenBSD.
 </p>
 
 
