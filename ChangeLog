@@ -4,8 +4,8 @@ Version 7.9.8.3
 
 2002-07-16  Markus F.X.J. Oberhumer <mfx>
 
-	* Under Python 2.2 or better, Curl and CurlMulti now participate
-	in garbarge collection.
+	* Under Python 2.2 or better, Curl and CurlMulti now automatically
+	participate in circular garbarge collection (using the gc module).
 
 Version 7.9.8.2
 
