@@ -169,7 +169,9 @@ class HtmlWindow(GtkHTML):
         self.load_url(html, url)
 
     def request_url(self, html, url, handle):
-        url = urllib.basejoin(self.current_doc, url)
+        if self.current_doc:
+            url = urllib.basejoin(self.current_doc, url)
+        self.current_doc = url 
         self.statusbar.set_text("Requesting URL: %s" % url)
         self.queue.put((url, handle))
         self.num_obj += 1
