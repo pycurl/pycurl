@@ -1,3 +1,8 @@
+2001-12-01  Markus F.X.J. Oberhumer <mfx>
+
+	* setup.py: Do not remove entries from a list while iterating
+	over it.
+
 2001-11-29  Kjetil Jacobsen  <kjetilja>
 
 	* Added code in setup.py to install on Windows.  Requires some
