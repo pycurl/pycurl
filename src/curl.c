@@ -10,8 +10,8 @@
 #include <assert.h>
 
 /* Ensure we have an updated libcurl */
-#if LIBCURL_VERSION_NUM < 0x070904
-  #error "Need libcurl version 7.9.4 or greater to compile pycurl."
+#if LIBCURL_VERSION_NUM < 0x070905
+  #error "Need libcurl version 7.9.5 or greater to compile pycurl."
 #endif
 
 static PyObject *ErrorObject;
@@ -23,6 +23,7 @@ typedef struct {
     struct curl_slist *httpheader;
     struct curl_slist *quote;
     struct curl_slist *postquote;
+    struct curl_slist *prequote;
     PyObject *w_cb;
     PyObject *h_cb;
     PyObject *r_cb;
@@ -69,6 +70,10 @@ self_cleanup(CurlObject *self)
     if (self->postquote != NULL) {
 	curl_slist_free_all(self->postquote);
 	self->postquote = NULL;
+    }
+    if (self->prequote != NULL) {
+	curl_slist_free_all(self->prequote);
+	self->prequote = NULL;
     }
     if (self->httppost != NULL) {
 	curl_formfree(self->httppost);
@@ -493,6 +498,9 @@ do_setopt(CurlObject *self, PyObject *args)
 	case CURLOPT_POSTQUOTE:
 	    slist = &self->postquote;
 	    break;
+	case CURLOPT_PREQUOTE:
+	    slist = &self->prequote;
+	    break;
 	case CURLOPT_HTTPPOST:
 	    slist = NULL;
 	    break;
@@ -819,6 +827,7 @@ do_init(PyObject *arg)
     self->httpheader = NULL;
     self->quote = NULL;
     self->postquote = NULL;
+    self->prequote = NULL;
     self->httppost = NULL;
 
     /* Set callback pointers to NULL */
@@ -1006,6 +1015,7 @@ DL_EXPORT(void)
     insint(d, "CRLF", CURLOPT_CRLF);
     insint(d, "QUOTE", CURLOPT_QUOTE);
     insint(d, "POSTQUOTE", CURLOPT_POSTQUOTE);
+    insint(d, "PREQUOTE", CURLOPT_PREQUOTE);
     insint(d, "WRITEHEADER", CURLOPT_WRITEHEADER);
     insint(d, "HEADERFUNCTION", CURLOPT_HEADERFUNCTION);
     insint(d, "COOKIEFILE", CURLOPT_COOKIEFILE);

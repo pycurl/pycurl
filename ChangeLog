@@ -1,3 +1,7 @@
+2002-03-07  Kjetil Jacobsen  <kjetilja>
+
+	* Added CURLOPT_PREQUOTE.
+
 2002-03-05  Kjetil Jacobsen  <kjetilja>
 
 	* Do not allow WRITEFUNCTION and WRITEHEADER on the same handle.
