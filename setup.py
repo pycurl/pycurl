@@ -12,14 +12,15 @@ from string import strip, split
 # Windows users have to configure the next thress path params
 # to match their libcurl installation.  The paths set here are
 # just examples and thus unlikely to match your installation.
-W32_INCLUDE = [r'C:\User\clib\libcurl\include']
-W32_LIB = [r'C:\User\clib\libcurl\lib']
-W32_EXTRA_OBJ = [r'C:\User\clib\libcurl\lib\libcurl.lib']
+W32_INCLUDE = r'C:\User\clib\libcurl\include'
+W32_LIB = r'C:\User\clib\libcurl\lib'
+W32_EXTRA_OBJ = r'C:\User\clib\libcurl\lib\libcurl.lib'
 
+# Find out the rest the hard way
 if sys.platform == "win32":
-    include_dirs = W32_INCLUDE
-    library_dirs = W32_LIB
-    extra_objects = W32_EXTRA_OBJ
+    include_dirs = [W32_INCLUDE]
+    library_dirs = [W32_LIB]
+    extra_objects = [W32_EXTRA_OBJ]
     libraries = ['libcurl', 'zlib', 'msvcrt', 'libcmt', 'wsock32', 'advapi32']
     runtime_library_dirs = []
     extra_link_args = ['/NODEFAULTLIB:LIBCMTD.lib']
