@@ -48,8 +48,8 @@
 #if !defined(PY_VERSION_HEX) || (PY_VERSION_HEX < 0x02020000)
 #  error "Need Python version 2.2 or greater to compile pycurl."
 #endif
-#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x070d00)
-#  error "Need libcurl version 7.13.0 or greater to compile pycurl."
+#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x070d01)
+#  error "Need libcurl version 7.13.1 or greater to compile pycurl."
 #endif
 
 #undef UNUSED
@@ -347,9 +347,9 @@ util_curl_new(void)
 static CurlObject *
 do_curl_new(PyObject *dummy, PyObject *args)
 {
-    CurlObject *self;
+    CurlObject *self = NULL;
     int res;
-    char *s;
+    char *s = NULL;
 
     UNUSED(dummy);
     if (!PyArg_ParseTuple(args, ":Curl")) {
@@ -394,15 +394,15 @@ do_curl_new(PyObject *dummy, PyObject *args)
 
     /* Set default USERAGENT */
     s = (char *) malloc(7 + strlen(LIBCURL_VERSION) + 1);
-    if (s != NULL) {
-        strcpy(s, "PycURL/"); strcpy(s+7, LIBCURL_VERSION);
-        res = curl_easy_setopt(self->handle, CURLOPT_USERAGENT, (char *) s);
-        if (res != CURLE_OK) {
-            free(s);
-            goto error;
-        }
-        self->options[ OPT_INDEX(CURLOPT_USERAGENT) ] = s;
+    if (s == NULL)
+        goto error;
+    strcpy(s, "PycURL/"); strcpy(s+7, LIBCURL_VERSION);
+    res = curl_easy_setopt(self->handle, CURLOPT_USERAGENT, (char *) s);
+    if (res != CURLE_OK) {
+        free(s);
+        goto error;
     }
+    self->options[ OPT_INDEX(CURLOPT_USERAGENT) ] = s; s = NULL;
 
     /* Success - return new object */
     return self;
@@ -2622,11 +2622,11 @@ initpycurl(void)
     insint_c(d, "SOURCE_PREQUOTE", CURLOPT_SOURCE_PREQUOTE);
     insint_c(d, "SOURCE_POSTQUOTE", CURLOPT_SOURCE_POSTQUOTE);
     insint_c(d, "FTPSSLAUTH", CURLOPT_FTPSSLAUTH);
-    insint_c(d, "FTP_ACCOUNT", CURLOPT_FTP_ACCOUNT);
-    insint_c(d, "SOURCE_URL", CURLOPT_SOURCE_URL);
-    insint_c(d, "SOURCE_QUOTE", CURLOPT_SOURCE_QUOTE);
     insint_c(d, "IOCTLFUNCTION", CURLOPT_IOCTLFUNCTION);
     insint_c(d, "IOCTLDATA", CURLOPT_IOCTLDATA);
+    insint_c(d, "SOURCE_URL", CURLOPT_SOURCE_URL);
+    insint_c(d, "SOURCE_QUOTE", CURLOPT_SOURCE_QUOTE);
+    insint_c(d, "FTP_ACCOUNT", CURLOPT_FTP_ACCOUNT);
 
     /* constants for setopt(IPRESOLVE, x) */
     insint_c(d, "IPRESOLVE_WHATEVER", CURL_IPRESOLVE_WHATEVER);

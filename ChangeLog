@@ -13,7 +13,7 @@ Version 7.13.1 [requires libcurl-7.13.1 or better]
         * Added missing pycurl.PORT constant.
 
 
-Version 7.13.0 [requires libcurl-7.13.0 or better]
+Version 7.13.0
 --------------
 
 2005-02-10  Kjetil Jacobsen  <kjetilja>
