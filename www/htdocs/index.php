@@ -13,7 +13,7 @@ echo "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
   <title>PycURL Home Page</title>
   <meta name="author" content="Kjetil Jacobsen, Markus F.X.J. Oberhumer" />
   <meta name="description" content="PycURL Homepage" />
-  <meta name="keywords" content="pycurl, curl, libcurl, python, wget, file transfer" />
+  <meta name="keywords" content="pycurl, curl, libcurl, python, wget, file transfer, urllib" />
   <meta name="revisit-after" content="30 days" />
   <meta name="robots" content="index, follow" />
 </head>
@@ -38,7 +38,8 @@ PycURL is an
 <a href="http://www.python.org/">Python</a> interface to
 <a href="http://curl.haxx.se/libcurl/">libcurl</a>.
 PycURL can be used to fetch objects identified by a URL
-from a Python program.
+from a Python program, similar to the
+<a href="http://python.org/doc/current/lib/module-urllib.html">urllib</a> Python module.
 </p>
 
 
