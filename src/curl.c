@@ -136,13 +136,13 @@ write_callback(void *ptr,
     int write_size;
 
     self = (CurlObject *)stream;
-    arglist = Py_BuildValue("(s#)", (char *)ptr, size*nmemb);
 
     /* Check whether we got a file object or a curl object */
     if (self->state == NULL) {
 	return -1;
     }
 
+    arglist = Py_BuildValue("(s#)", (char *)ptr, size*nmemb);
     PyEval_AcquireThread(self->state);
     result = PyEval_CallObject(self->w_cb, arglist);
     Py_DECREF(arglist);
@@ -174,13 +174,13 @@ header_callback(void *ptr,
     int write_size;
 
     self = (CurlObject *)stream;
-    arglist = Py_BuildValue("(s#)", (char *)ptr, size*nmemb);
 
     /* Check whether we got a file object or a curl object */
     if (self->state == NULL) {
 	return -1;
     }
 
+    arglist = Py_BuildValue("(s#)", (char *)ptr, size*nmemb);
     PyEval_AcquireThread(self->state);
     result = PyEval_CallObject(self->h_cb, arglist);
     Py_DECREF(arglist);
@@ -213,13 +213,13 @@ progress_callback(void *client,
     int ret;
 
     self = (CurlObject *)client;
-    arglist = Py_BuildValue("(iiii)", dltotal, dlnow, ultotal, ulnow);
 
     /* Check whether we got a file object or a curl object */
     if (self->state == NULL) {
 	return -1;
     }
 
+    arglist = Py_BuildValue("(iiii)", dltotal, dlnow, ultotal, ulnow);
     PyEval_AcquireThread(self->state);
     result = PyEval_CallObject(self->pro_cb, arglist);
     Py_DECREF(arglist);
@@ -252,13 +252,13 @@ int password_callback(void *client,
     int ret;
 
     self = (CurlObject *)client;
-    arglist = Py_BuildValue("(si)", prompt, buflen);
 
     /* Check whether we got a file object or a curl object */
     if (self->state == NULL) {
 	return -1;
     }
 
+    arglist = Py_BuildValue("(si)", prompt, buflen);
     PyEval_AcquireThread(self->state);
     result = PyEval_CallObject(self->pwd_cb, arglist);
     Py_DECREF(arglist);
@@ -303,13 +303,13 @@ int debug_callback(CURL *curlobj,
     CurlObject *self;
 
     self = (CurlObject *)data;
-    arglist = Py_BuildValue("(is#)", type, buffer, size);
 
     /* Check whether we got a file object or a curl object */
     if (self->state == NULL) {
 	return 0;
     }
 
+    arglist = Py_BuildValue("(is#)", type, buffer, size);
     PyEval_AcquireThread(self->state);
     result = PyEval_CallObject(self->d_cb, arglist);
     Py_DECREF(arglist);
@@ -335,14 +335,14 @@ int read_callback(void *ptr,
     int ret;
 
     self = (CurlObject *)stream;
-    read_size = size*nmemb;
-    arglist = Py_BuildValue("(i)", read_size);
 
     /* Check whether we got a file object or a curl object */
     if (self->state == NULL) {
 	return -1;
     }
 
+    read_size = size*nmemb;
+    arglist = Py_BuildValue("(i)", read_size);
     PyEval_AcquireThread(self->state);
     result = PyEval_CallObject(self->r_cb, arglist);
     Py_DECREF(arglist);
