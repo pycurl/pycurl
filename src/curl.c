@@ -161,11 +161,11 @@ do_cleanup(CurlObject *self, PyObject *args)
 
 /* --------------------------------------------------------------------- */
 
-static int
-write_callback(void *ptr,
+static size_t
+write_callback(char *ptr,
                size_t size,
                size_t nmemb,
-               FILE  *stream)
+               void *stream)
 {
     PyObject *arglist;
     PyObject *result;
@@ -197,11 +197,11 @@ write_callback(void *ptr,
 }
 
 
-static int
-header_callback(void *ptr,
+static size_t
+header_callback(char *ptr,
                 size_t size,
                 size_t nmemb,
-                FILE  *stream)
+                void  *stream)
 {
     PyObject *arglist;
     PyObject *result;
@@ -272,7 +272,7 @@ progress_callback(void *client,
 
 static
 int password_callback(void *client,
-                      char *prompt,
+                      const char *prompt,
                       char* buffer,
                       int buflen)
 {
@@ -324,7 +324,7 @@ static
 int debug_callback(CURL *curlobj,
                    curl_infotype type,
                    char *buffer,
-                   int size,
+                   size_t size,
                    void *data)
 {
     PyObject *arglist;
@@ -349,7 +349,7 @@ int debug_callback(CURL *curlobj,
 
 
 static
-int read_callback(void *ptr,
+size_t read_callback(char *ptr,
                   size_t size,
                   size_t nmemb,
                   void  *stream)
