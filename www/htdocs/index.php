@@ -1,5 +1,5 @@
 <?php // vi:ts=4:et
-$version = "7.9.8.4";
+$version = "7.10";
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
@@ -30,16 +30,10 @@ from within a Python program.
 </p>
 
 <p>
-<a href="download/pycurl-7.9.8.4.tar.gz">Download</a>
-PycURL sources version <?php echo $version ?> (Sep 04 2002) or
+<a href="download/pycurl-7.10.tar.gz">Download</a>
+PycURL sources version <?php echo $version ?> (Oct 2 2002) or
 try the code from
 <a href="http://sourceforge.net/cvs/?group_id=28236">the CVS repository</a>.
-</p>
-
-<p>
-For Win32 users there's also an
-<a href="download/pycurl-7.9.8.4.win32-py2.2.exe">installer with a precompiled module</a>.
-You still should download the sources because of the test and example programs.
 </p>
 
 <p>
@@ -50,8 +44,7 @@ and
 </p>
 
 <p>
-Finally you can get older versions from the
-<a href="download/?M=D">download area</a>.
+You can get older versions as well as prebuilt win32 modules from the <a href="download/?M=D">download area</a>.
 </p>
 
 <p>
