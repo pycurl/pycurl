@@ -1592,7 +1592,7 @@ do_multi_select(CurlMultiObject *self, PyObject *args)
     CURLMcode res = -1;
 
     /* Sanity checks */
-    if (!PyArg_ParseTuple(args, "O:fdset", &tout)) {
+    if (!PyArg_ParseTuple(args, "O:select", &tout)) {
         return NULL;
     }
 
@@ -1921,8 +1921,11 @@ insstr(PyObject *d, char *name, char *value)
 {
     PyObject *v = PyString_FromString(value);
     if (v == NULL || d == NULL || PyDict_SetItemString(d, name, v) != 0)
-        Py_FatalError("pycurl: insstr");
+        goto error;
     Py_DECREF(v);
+    return;
+error:
+    Py_FatalError("pycurl: insstr");
 }
 
 static void
@@ -1952,20 +1955,20 @@ error:
 static void
 insint(PyObject *d, char *name, int value)
 {
-    return insint2(d, NULL, name, value);
+    insint2(d, NULL, name, value);
 }
 
 static void
 insint_c(PyObject *d, char *name, int value)
 {
-    return insint2(d, curlobject_constants, name, value);
+    insint2(d, curlobject_constants, name, value);
 }
 
 #if 0
 static void
 insint_m(PyObject *d, char *name, int value)
 {
-    return insint2(d, curlmultiobject_constants, name, value);
+    insint2(d, curlmultiobject_constants, name, value);
 }
 #endif
 
