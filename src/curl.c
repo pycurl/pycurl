@@ -47,7 +47,7 @@
 #endif
 
 /* Whether to enable curl_multi_info_read or not */
-#define ENABLE_INFO_READ 0
+#define ENABLE_INFO_READ 1
 
 
 static PyObject *ErrorObject;
