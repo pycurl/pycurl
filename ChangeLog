@@ -13,6 +13,8 @@ Version 7.9.8
 	* Added an simple example crawler, which downloads documents
 	listed in a file with a configurable number of worker threads.
 	See the file 'crawler.py' in the 'tests' directory for details.
+
+	* Removed the redundant 'test_xmlrpc2.py' test script.
 	
  	* Disallow recursive callback invocations (by Markus Oberhumer).
 
