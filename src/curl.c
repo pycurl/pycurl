@@ -182,7 +182,7 @@ int password_callback(void *client,
     int ret;
     
     self = (CurlObject *)client;
-    arglist = Py_BuildValue("(s)", prompt);
+    arglist = Py_BuildValue("(si)", prompt, buflen);
 
     PyEval_AcquireThread(self->state);
     result = PyEval_CallObject(self->pwd_cb, arglist);
@@ -192,13 +192,22 @@ int password_callback(void *client,
 	ret = -1;
     }
     else {
-	buf = PyString_AsString(result);
-	if (strlen(buf) > buflen) {
+	if (!PyString_Check(result)) {
+	    PyErr_SetString(ErrorObject, "callback for PASSWDFUNCTION must return string");
+	    PyErr_Print();
 	    ret = -1;
 	}
 	else {
-	    strcpy(buffer, buf);
-	    ret = 0;
+	    buf = PyString_AsString(result);
+	    if (strlen(buf) > buflen) {
+		PyErr_SetString(ErrorObject, "password string is too long");
+		PyErr_Print();
+		ret = -1;
+	    }
+	    else {
+		strcpy(buffer, buf);
+		ret = 0;
+	    }
 	}
     }
     Py_XDECREF(result);
