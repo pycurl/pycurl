@@ -15,7 +15,7 @@ class Test(threading.Thread):
         threading.Thread.__init__(self)
         self.curl = pycurl.init()
         self.curl.setopt(pycurl.URL, url)
-        self.curl.setopt(pycurl.FILE, ofile)
+        self.curl.setopt(pycurl.WRITEDATA, ofile)
         self.curl.setopt(pycurl.FOLLOWLOCATION, 1)
         self.curl.setopt(pycurl.MAXREDIRS, 5)
 
