@@ -3,7 +3,7 @@
 import xmlrpclib, pycurl, cStringIO
 
 class CURLTransport(xmlrpclib.Transport):
-    """Handles an cURL HTTP transaction to an XML-RPC server."""
+    """Handles a cURL HTTP transaction to an XML-RPC server."""
 
     xmlrpc_h = [ "User-Agent: PycURL XML-RPC", "Content-Type: text/xml" ]
 
