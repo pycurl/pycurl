@@ -16,6 +16,17 @@
  *
  */
 
+/* 
+    TODO for the multi interface:
+    - fix the deallocation race, just apply the same stuff as for deallocation
+      of curl objects (handles and state attributes)
+    - add interface to the multi_read method, otherwise it's hard to use this
+      for anything
+    - also try to figure out how to solve the problem of having deallocated
+      curl objects in an active curl-multi stack (this causes a segfault when
+      the multi-stack is cleaned up) 
+*/ 
+
 #undef NDEBUG
 #include <assert.h>
 #include <stddef.h>
@@ -1088,7 +1099,6 @@ statichere PyTypeObject CurlMulti_Type = {
      * You can safely ignore any compiler warnings.
      */
 };
-
 
 /* --------------------------------------------------------------------- */
 
