@@ -3,11 +3,9 @@
 import xmlrpclib, pycurl, cStringIO
 
 class CURLTransport(xmlrpclib.Transport):
-    """Handles an HTTP transaction to an XML-RPC server."""
+    """Handles an cURL HTTP transaction to an XML-RPC server."""
 
-    xmlrpc_headers = [
-        "User-Agent: PycURL XML-RPC", "Content-Type: text/xml"
-        ]
+    xmlrpc_h = [ "User-Agent: PycURL XML-RPC", "Content-Type: text/xml" ]
 
     def __init__(self, username=None, password=None):
         self.c = pycurl.init()
@@ -18,7 +16,7 @@ class CURLTransport(xmlrpclib.Transport):
         b = cStringIO.StringIO()
         self.c.setopt(pycurl.URL, 'http://%s%s' % (host, handler))
         self.c.setopt(pycurl.POST, 1)
-        self.c.setopt(pycurl.HTTPHEADER, self.xmlrpc_headers)
+        self.c.setopt(pycurl.HTTPHEADER, self.xmlrpc_h)
         self.c.setopt(pycurl.POSTFIELDS, request_body)
         self.c.setopt(pycurl.WRITEFUNCTION, b.write)
         self.c.setopt(pycurl.VERBOSE, verbose)
@@ -35,15 +33,12 @@ class CURLTransport(xmlrpclib.Transport):
 
 
 if __name__ == "__main__":
+    ## Test
     server = xmlrpclib.ServerProxy("http://betty.userland.com",
                                    transport=CURLTransport())
-
     print server
 
     try:
-        print server.examples.getStateName(41)
-        print server.examples.getStateName(41)
-        print server.examples.getStateName(41)
         print server.examples.getStateName(41)
     except xmlrpclib.Error, v:
         print "ERROR", v
