@@ -31,6 +31,12 @@ LD_LIBRARY_PATH environment variable accordingly.  This normally
 applies only if there is more than one version of libcurl installed,
 e.g. one in /usr/lib and one in /usr/local/lib.
 
+Also, pycurl is known to trigger a GC related assert failure in the
+Python interpreter.  We have not been able to track down and solve this
+problem.  However, the problem seems to occur less frequently if the GC
+support is disabled in pycurl.  Passing the optional commandline paramter
+'--use-gc=0' to setup.py will build pycurl without the GC support enabled.
+
 
 Makefile
 --------
