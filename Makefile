@@ -11,6 +11,9 @@ PYTHON = python
 all build:
 	$(PYTHON) setup.py build
 
+test: build
+	$(PYTHON) tests/test_internals.py -q
+
 install install_lib:
 	$(PYTHON) setup.py $@
 
@@ -27,7 +30,7 @@ maintainer-clean: distclean
 dist sdist: distclean
 	$(PYTHON) setup.py sdist
 
-.PHONY: all build install install_lib clean distclean maintainer-clean dist sdist
+.PHONY: all build test install install_lib clean distclean maintainer-clean dist sdist
 
 .NOEXPORT:
 

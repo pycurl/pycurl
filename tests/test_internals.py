@@ -1,6 +1,10 @@
 # $Id$
 # vi:ts=4:et
 
+#
+# a simple self-test
+#
+
 try:
     # need Python 2.2 or better
     from gc import get_objects
@@ -9,13 +13,8 @@ try:
     gc.enable()
 except ImportError:
     gc = None
-
-import pycurl, sys
+import os, sys
 from StringIO import StringIO
-
-print "Testing", pycurl.version
-print pycurl.__file__, pycurl.__COMPILE_DATE__
-
 try:
     import cPickle
 except ImportError:
@@ -25,11 +24,26 @@ try:
 except ImportError:
     pickle = None
 
+from util import get_sys_path
+sys.path = get_sys_path()
+import pycurl
 
-#####
-##### self-test assertion section
-#####
 
+class opts:
+    verbose = 1
+
+if "-q" in sys.argv:
+    opts.verbose = opts.verbose - 1
+
+
+print "Python", sys.version
+print "pycURL", pycurl.version
+print "  %s, compiled %s" % (pycurl.__file__, pycurl.__COMPILE_DATE__)
+
+
+# /***********************************************************************
+# // test handles
+# ************************************************************************/
 
 # remove an invalid handle: this should fail
 if 1:
@@ -108,6 +122,10 @@ if 1:
     del m1, m2, c
 
 
+# /***********************************************************************
+# // test pickling
+# ************************************************************************/
+
 # pickling of instances of Curl and CurlMulti is not allowed
 if 1 and pickle:
     c = pycurl.init()
@@ -148,6 +166,10 @@ if 1 and cPickle:
     del c, m, fp, p
 
 
+# /***********************************************************************
+# // test refcounts
+# ************************************************************************/
+
 # basic check of reference counting (use a memory checker like valgrind)
 if 1:
     c = pycurl.init()
@@ -175,17 +197,24 @@ if 1 and gc:
     # delete
     gc.collect()
     flags = gc.DEBUG_COLLECTABLE | gc.DEBUG_UNCOLLECTABLE | gc.DEBUG_OBJECTS
-    flags = flags | gc.DEBUG_STATS
+    if opts.verbose >= 1:
+        flags = flags | gc.DEBUG_STATS
     gc.set_debug(flags)
     gc.collect()
     ##print gc.get_referrers(c)
     ##print gc.get_objects()
-    print "Tracked objects:", len(gc.get_objects())
+    if opts.verbose >= 1:
+        print "Tracked objects:", len(gc.get_objects())
     # The `del' should delete these 4 objects:
     #   CurlObject + internal dict, CurlMuliObject + internal dict
     del c
     gc.collect()
-    print "Tracked objects:", len(gc.get_objects())
+    if opts.verbose >= 1:
+        print "Tracked objects:", len(gc.get_objects())
 
+
+# /***********************************************************************
+# // done
+# ************************************************************************/
 
 print "All tests passed."
