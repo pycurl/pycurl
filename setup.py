@@ -30,12 +30,12 @@ if sys.platform == "win32":
     extra_objects.append(os.path.join(CURL_DIR, "lib", "libcurl.lib"))
 else:
     # Find out the rest the hard way
-    for e in split_quoted(os.popen("curl-config --cflags").read())
+    for e in split_quoted(os.popen("curl-config --cflags").read()):
         if e[:2] == "-I":
             include_dirs.append(e[2:])
         else:
             extra_compile_args.append(e)
-    for e in split_quoted(os.popen("curl-config --libs").read())
+    for e in split_quoted(os.popen("curl-config --libs").read()):
         if e[:2] == "-l":
             libraries.append(e[2:])
         elif e[:2] == "-L":
