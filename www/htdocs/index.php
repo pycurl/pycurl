@@ -39,6 +39,15 @@ or try the code from
 <p>
 You can get older versions as well as prebuilt Win32 modules from the
 <a href="download/?M=D">download area</a>.
+</p>
+
+<p>
+Please note that the prebuilt versions are <b>unsupported</b>
+and provided for your convenience only - use them at your own risk!
+</p>
+
+<?php if (0) { ?>
+<p>
 Please note that the prebuilt versions are provided for your convenience
 and do not contain extras like
 <a href="http://www.openssl.org/">SSL</a> and
@@ -46,6 +55,7 @@ and do not contain extras like
 all relevant sources and compile them by yourself if you have such special
 requirements.
 </p>
+<?php } ?>
 
 <p>
 Official packages are available for
