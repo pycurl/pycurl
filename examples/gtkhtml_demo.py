@@ -220,7 +220,7 @@ entry.connect('activate', html.entry_activate, html)
 vbox.pack_start(entry, expand=FALSE)
 entry.show()
 html.urlentry = entry
-html.set_usize(800, 600)
+html.set_usize(640, 480)
 
 sw = GtkScrolledWindow()
 sw.set_policy(POLICY_AUTOMATIC, POLICY_AUTOMATIC)
