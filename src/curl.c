@@ -54,14 +54,13 @@ typedef struct {
 staticforward PyTypeObject Curl_Type;
 #endif
 
-#define CURLERROR() \
-{\
+#define CURLERROR() do {\
     PyObject *v; \
     v = Py_BuildValue("(is)", res, self->error); \
     PyErr_SetObject(ErrorObject, v); \
     Py_DECREF(v); \
     return NULL; \
-}
+} while (0);
 
 /* --------------------------------------------------------------------- */
 
