@@ -50,6 +50,7 @@ if sys.platform == "win32":
     assert os.path.isdir(CURL_DIR), "please check CURL_DIR in setup.py"
     include_dirs.append(os.path.join(CURL_DIR, "include"))
     extra_objects.append(os.path.join(CURL_DIR, "lib", "libcurl.lib"))
+    extra_link_args.extend(["gdi32.lib", "winmm.lib", "ws2_32.lib",])
 else:
     # Find out the rest the hard way
     CURL_CONFIG = "curl-config"
@@ -107,7 +108,10 @@ ext = Extension(
 def get_data_files():
     # a list of tuples with (path to install to, a list of local files)
     data_files = []
-    datadir = os.path.join("share", "doc", PACKAGE)
+    if sys.platform == "win32":
+        datadir = os.path.join("doc", PACKAGE)
+    else:
+        datadir = os.path.join("share", "doc", PACKAGE)
     #
     files = ["ChangeLog", "COPYING", "INSTALL", "README", "TODO",]
     if files:
