@@ -116,10 +116,13 @@ The real info, though, is located in the
 <a href="http://curl.haxx.se/libcurl/c/">libcurl documentation</a>,
 most important being
 <a href="http://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>.
+The
+<a href="http://curl.haxx.se/libcurl/c/libcurl-tutorial.html">libcurl tutorial</a>
+also provides a lot of useful information.
 </p>
 
 <p>
-Also have a look at the <a href="ChangeLog">PycURL ChangeLog</a>.
+For a list of changes consult the <a href="ChangeLog">PycURL ChangeLog</a>.
 </p>
 
 
