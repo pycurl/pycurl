@@ -21,8 +21,8 @@
 #include <assert.h>
 
 /* Ensure we have an updated libcurl */
-#if LIBCURL_VERSION_NUM < 0x070907
-  #error "Need libcurl version 7.9.7 or greater to compile pycurl."
+#if LIBCURL_VERSION_NUM < 0x070908
+  #error "Need libcurl version 7.9.8 or greater to compile pycurl."
 #endif
 
 static PyObject *ErrorObject;
@@ -452,6 +452,7 @@ do_setopt(CurlObject *self, PyObject *args)
               option == CURLOPT_INTERFACE ||
               option == CURLOPT_KRB4LEVEL ||
               option == CURLOPT_CAINFO ||
+              option == CURLOPT_CAPATH ||
               option == CURLOPT_RANDOM_FILE ||
               option == CURLOPT_COOKIEJAR ||
               option == CURLOPT_SSL_CIPHER_LIST ||
@@ -1147,6 +1148,7 @@ DL_EXPORT(void)
     insint(d, "PROGRESSFUNCTION", CURLOPT_PROGRESSFUNCTION);
     insint(d, "PROGRESSDATA", CURLOPT_PROGRESSDATA);
     insint(d, "SSL_VERIFYPEER", CURLOPT_SSL_VERIFYPEER);
+    insint(d, "CAPATH", CURLOPT_CAINFO);
     insint(d, "CAINFO", CURLOPT_CAINFO);
     insint(d, "PASSWDFUNCTION", CURLOPT_PASSWDFUNCTION);
     insint(d, "PASSWDDATA", CURLOPT_PASSWDDATA);
