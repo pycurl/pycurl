@@ -46,6 +46,9 @@ rsync-dry:
 rsync-check:
 	$(MAKE) rsync 'RSYNC=rsync --dry-run -c'
 
+unison:
+	unison -times -perms 0 htdocs ssh://shell.sourceforge.net/$(RSYNC_TARGET)/htdocs
+
 
 # NOTE: CVS does not maintain metadata like owners and file permissions,
 #       so we have to care manually
@@ -60,5 +63,5 @@ __rsync-clean:
 	-rm -rf `find . -name .xvpics -type d -print`
 
 
-.PHONY: rsync rsync-dry rsync-check __rsync-clean
+.PHONY: rsync rsync-dry rsync-check unison __rsync-clean
 
