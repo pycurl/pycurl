@@ -1212,6 +1212,11 @@ DL_EXPORT(void)
     insint(d, "CLOSEPOLICY_SLOWEST", CURLCLOSEPOLICY_SLOWEST);
     insint(d, "CLOSEPOLICY_CALLBACK", CURLCLOSEPOLICY_CALLBACK);
 
+    /* NETRC constants for setopt */
+    insint(d, "NETRC_OPTIONAL", CURL_NETRC_OPTIONAL);
+    insint(d, "NETRC_IGNORED", CURL_NETRC_IGNORED);
+    insint(d, "NETRC_REQUIRED", CURL_NETRC_REQUIRED);
+
     /* global_init options */
     insint(d, "GLOBAL_ALL", CURL_GLOBAL_ALL);
     insint(d, "GLOBAL_NOTHING", CURL_GLOBAL_NOTHING);

@@ -3,6 +3,9 @@ Version 7.9.8
 2002-06-19  Kjetil Jacobsen  <kjetilja>
 
 	* Added CURLOPT_CAPATH.
+
+	* Added option constants for CURLOPT_NETRC: CURL_NETRC_OPTIONAL,
+	CURL_NETRC_IGNORED and CURL_NETRC_REQUIRED.
 	
  	* Disallow recursive callback invocations (by Markus Oberhumer).
 
