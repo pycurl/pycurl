@@ -14,17 +14,6 @@ DEPRECATED LIBCURL FEATURES:
 
     * Use curl_formadd() instead of the deprecated curl_formparse().
 
-    * PASSWDFUNCTION/PASSWDDAT/curl_passwd_callback are not used
-      since 7.10.8 and will be removed in a future release.
-
-
-ADD NEW LIBCURL FEATURES:
-
-    * Add support for missing libcurl 7.10.6 features:
-
-      - Add support for CURLOPT_SSL_CTX_FUNCTION and CURLOPT_SSL_CTX_DATA
-        (can we do this without having to wrap the ssl-context structure?).
-
 
 NEW FEATURES:
 
