@@ -1,7 +1,7 @@
 2002-02-21  Kjetil Jacobsen  <kjetilja>
 
 	* Added the 'xmlrpc_curl.py' file which implements a transport
-	for xmlrpclib using pycurl.
+	for xmlrpclib (xmlrpclib is part of python2.2).
 
 	* Added CURLINFO_CONTENT_TYPE.
 
@@ -9,10 +9,10 @@
 	CURLOPT_SSLKEYPASSWD, CURLOPT_SSLENGINE and
 	CURLOPT_SSLENGINE_DEFAULT.
 
-	* The pycurl.error exception is now a tuple consisting of the curl
-	error code and the error message.
+	* When thrown, the pycurl.error exception is now a tuple consisting
+	of the curl error code and the error message.
 	
-	* PycURL now requires libcurl 7.9.4 or greater.
+	* Now requires libcurl 7.9.4 or greater.
 	
 2002-02-19  Kjetil Jacobsen  <kjetilja>
 
