@@ -26,7 +26,7 @@ if sys.platform == "win32":
     extra_link_args = ['/NODEFAULTLIB:LIBCMTD.lib']
 else:
     include_dirs = []
-    cflags=split(strip(os.popen('curl-config --cflags').read()), ' ')
+    cflags = split(strip(os.popen('curl-config --cflags').read()), ' ')
     for e in cflags[:]:
         if e[:2] == '-I':
             include_dirs.append(e[2:])
