@@ -346,6 +346,10 @@ do_setopt(CurlObject *self, PyObject *args)
 	    curl_easy_setopt(self->handle, CURLOPT_WRITEFUNCTION, write_callback);
 	    curl_easy_setopt(self->handle, CURLOPT_FILE, self);
 	    break;
+	default:
+	    /* None of the list options were recognized, throw exception */
+	    PyErr_SetString(PyExc_TypeError, "invalid arguments to setopt");
+	    return NULL;
 	}
 	Py_INCREF(Py_None);
 	return Py_None;
