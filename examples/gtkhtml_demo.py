@@ -83,6 +83,10 @@ class HtmlWindow(GtkHTML):
 			html.end(handle, HTML_STREAM_OK)
 			buf.close()
 
+	def submit(self, *args):
+		print 'Submit is not supported yet'
+		print args
+
 	def request_url(self, html, url, handle):
 		url = urllib.basejoin(history[-1], url)
 		print "Requesting URL: ", url
@@ -147,6 +151,7 @@ win.set_contents(vbox)
 entry = GtkEntry()
 html.connect('url_requested', html.request_url)
 html.connect('link_clicked', html.load_url)
+html.connect('submit', html.submit)
 entry.connect('activate', html.entry_activate, html)
 vbox.pack_start(entry, expand=FALSE)
 entry.show()
