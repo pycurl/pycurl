@@ -11,7 +11,7 @@ class test:
     def body_callback(self, buf):
         self.contents = self.contents + buf
 
-print 'Testing curl version', pycurl.version
+print 'Testing', pycurl.version
 
 t = test()
 c = pycurl.init()

@@ -9,7 +9,7 @@ except ImportError:
 
 url = 'http://curl.haxx.se/dev/'
 
-print 'Testing curl version', pycurl.version
+print 'Testing', pycurl.version
 
 body = StringIO()
 c = pycurl.init()
