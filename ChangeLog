@@ -1,3 +1,11 @@
+2003-01-22  Kjetil Jacobsen  <kjetilja>
+
+	* The info_read method now returns a separate array with handles
+	that failed.  Each entry in this array is a tuple with <error
+	number, error message, curl object>.  This addition makes it
+	simpler to do error checking of individual curl objects when using
+	CurlMulti.
+
 Version 7.10.3
 
 2003-01-13  Kjetil Jacobsen  <kjetilja>
