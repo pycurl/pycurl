@@ -5,16 +5,8 @@ If you want to hack on pycurl, here's our list of unresolved issues:
     * The current curl HLI only works on Python 2.2 or better. Either
       fix this, or change the docs and setup.py accordingly.
 
-    * A nicer mechanism to decrease the reference count on container
-      objects and classes passed as options to setopt (this has to be
-      hacked in ugly ways now)
-
     * Add more options to Curl.unsetopt(). Have to carefully check
       the libcurl source code for each option we want to support.
 
     * Are we possibly leaking references with CURLOPT_PROGRESSDATA
       and CURLOPT_PASSWDDATA ??
-
-    * A high-level interface to pycurl, like the standard urllib (see
-      the file 'doc/examples/curl.py' for a simple example)
-
