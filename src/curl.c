@@ -106,7 +106,6 @@ typedef struct {
     char error[CURL_ERROR_SIZE+1];
 } CurlObject;
 
-/* forward declarations */
 static PyTypeObject* p_Curl_Type;
 static PyTypeObject* p_CurlMulti_Type;
 
