@@ -100,6 +100,7 @@ class HtmlWindow(GtkHTML):
         history.append(url)
         html.load_empty()
         handle = html.begin()
+        url = url.strip()
         self.request_url(html, url, handle)
         self.urlentry.set_text(url)
         # Render incoming objects
