@@ -219,11 +219,12 @@ do_write_callback(int flags,
     PyObject *result;
     PyObject *cb;
     CurlObject *self;
+    PyThreadState *tmp_state;
     int write_size;
     size_t ret = 0;     /* assume error */
 
     self = (CurlObject *)stream;
-    if (self == NULL || self->state == NULL) {
+    if (self == NULL || (self->state == NULL && self->multi_stack == NULL)) {
         return ret;
     }
     write_size = (int)(size * nmemb);
@@ -235,13 +236,8 @@ do_write_callback(int flags,
         return ret;
     }
 
-    assert(self->state != NULL || self->multi_stack != NULL);
-    if (self->state != NULL) {
-        PyEval_AcquireThread(self->state);
-    }
-    else {
-        PyEval_AcquireThread(self->multi_stack->state);
-    }
+    tmp_state = self->state == NULL ? self->multi_stack->state : self->state;
+    PyEval_AcquireThread(tmp_state);
 
     arglist = Py_BuildValue("(s#)", ptr, write_size);
     result = PyEval_CallObject(cb, arglist);
@@ -258,7 +254,8 @@ do_write_callback(int flags,
             ret = (size_t)write_size;                   /* success */
     }
     Py_XDECREF(result);
-    PyEval_ReleaseThread(self->state);
+
+    PyEval_ReleaseThread(tmp_state);
     return ret;
 }
 
@@ -286,12 +283,16 @@ progress_callback(void *client,
     PyObject *arglist;
     PyObject *result;
     CurlObject *self;
+    PyThreadState *tmp_state;
     int ret = 1;       /* assume error */
 
     self = (CurlObject *)client;
-    if (self == NULL || self->state == NULL) {
+    if (self == NULL || (self->state == NULL && self->multi_stack == NULL)) {
         return ret;
     }
+
+    tmp_state = self->state == NULL ? self->multi_stack->state : self->state;
+    PyEval_AcquireThread(tmp_state);
 
     assert(self->state != NULL || self->multi_stack != NULL);
     if (self->state != NULL) {
@@ -314,7 +315,7 @@ progress_callback(void *client,
         ret = (int)PyInt_AsLong(result);
     }
     Py_XDECREF(result);
-    PyEval_ReleaseThread(self->state);
+    PyEval_ReleaseThread(tmp_state);
     return ret;
 }
 
@@ -328,21 +329,17 @@ int password_callback(void *client,
     PyObject *arglist;
     PyObject *result;
     CurlObject *self;
+    PyThreadState *tmp_state;
     char *buf;
     int ret = 1;       /* assume error */
 
     self = (CurlObject *)client;
-    if (self == NULL || self->state == NULL) {
+    if (self == NULL || (self->state == NULL && self->multi_stack == NULL)) {
         return ret;
     }
 
-    assert(self->state != NULL || self->multi_stack != NULL);
-    if (self->state != NULL) {
-        PyEval_AcquireThread(self->state);
-    }
-    else {
-        PyEval_AcquireThread(self->multi_stack->state);
-    }
+    tmp_state = self->state == NULL ? self->multi_stack->state : self->state;
+    PyEval_AcquireThread(tmp_state);
 
     arglist = Py_BuildValue("(si)", prompt, buflen);
     result = PyEval_CallObject(self->pwd_cb, arglist);
@@ -368,7 +365,7 @@ int password_callback(void *client,
         }
     }
     Py_XDECREF(result);
-    PyEval_ReleaseThread(self->state);
+    PyEval_ReleaseThread(tmp_state);
     return ret;
 }
 
@@ -383,23 +380,19 @@ int debug_callback(CURL *curlobj,
     PyObject *arglist;
     PyObject *result;
     CurlObject *self;
+    PyThreadState *tmp_state;
 
     UNUSED(curlobj);
     self = (CurlObject *)data;
-    if (self == NULL || self->state == NULL) {
+    if (self == NULL || (self->state == NULL && self->multi_stack == NULL)) {
         return 0;
     }
     if ((int)size < 0) {
         return 0;
     }
 
-    assert(self->state != NULL || self->multi_stack != NULL);
-    if (self->state != NULL) {
-        PyEval_AcquireThread(self->state);
-    }
-    else {
-        PyEval_AcquireThread(self->multi_stack->state);
-    }
+    tmp_state = self->state == NULL ? self->multi_stack->state : self->state;
+    PyEval_AcquireThread(tmp_state);
 
     arglist = Py_BuildValue("(is#)", (int)type, buffer, (int)size);
     result = PyEval_CallObject(self->d_cb, arglist);
@@ -407,7 +400,7 @@ int debug_callback(CURL *curlobj,
     if (result == NULL) {
         PyErr_Print();
     }
-    PyEval_ReleaseThread(self->state);
+    PyEval_ReleaseThread(tmp_state);
     return 0;
 }
 
@@ -421,12 +414,13 @@ size_t read_callback(char *ptr,
     PyObject *arglist;
     PyObject *result;
     CurlObject *self;
+    PyThreadState *tmp_state;
     char *buf;
     int obj_size, read_size;
     size_t ret = 0;     /* assume error */
 
     self = (CurlObject *)stream;
-    if (self == NULL || self->state == NULL) {
+    if (self == NULL || (self->state == NULL && self->multi_stack == NULL)) {
         return ret;
     }
     read_size = (int)(size * nmemb);
@@ -434,13 +428,8 @@ size_t read_callback(char *ptr,
         return ret;
     }
 
-    assert(self->state != NULL || self->multi_stack != NULL);
-    if (self->state != NULL) {
-        PyEval_AcquireThread(self->state);
-    }
-    else {
-        PyEval_AcquireThread(self->multi_stack->state);
-    }
+    tmp_state = self->state == NULL ? self->multi_stack->state : self->state;
+    PyEval_AcquireThread(tmp_state);
 
     arglist = Py_BuildValue("(i)", read_size);
     result = PyEval_CallObject(self->r_cb, arglist);
@@ -471,7 +460,7 @@ size_t read_callback(char *ptr,
         }
     }
     Py_XDECREF(result);
-    PyEval_ReleaseThread(self->state);
+    PyEval_ReleaseThread(tmp_state);
     return ret;
 }
 
