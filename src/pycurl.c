@@ -2316,10 +2316,13 @@ initpycurl(void)
 
     /* curl_httpauth: constants for setopt(HTTPAUTH, x) */
 #if (LIBCURL_VERSION_NUM >= 0x070a06)
+    insint_c(d, "HTTPAUTH_NONE", CURLAUTH_NONE);
     insint_c(d, "HTTPAUTH_BASIC", CURLAUTH_BASIC);
     insint_c(d, "HTTPAUTH_DIGEST", CURLAUTH_DIGEST);
     insint_c(d, "HTTPAUTH_GSSNEGOTIATE", CURLAUTH_GSSNEGOTIATE);
     insint_c(d, "HTTPAUTH_NTLM", CURLAUTH_NTLM);
+    insint_c(d, "HTTPAUTH_ANY", CURLAUTH_ANY);
+    insint_c(d, "HTTPAUTH_ANYSAFE", CURLAUTH_ANYSAFE);
 #endif
 
     /* CURLoption: symbolic constants for setopt() */
@@ -2476,7 +2479,33 @@ initpycurl(void)
     insint(d, "GLOBAL_NOTHING", CURL_GLOBAL_NOTHING);
     insint(d, "GLOBAL_DEFAULT", CURL_GLOBAL_DEFAULT);
 
-    /* curl_locktype: XXX do we need this in pycurl ??? */
+    /* curl_lock_data: XXX do we need this in pycurl ??? */
+    /* curl_lock_access: XXX do we need this in pycurl ??? */
+    /* CURLSHcode: XXX do we need this in pycurl ??? */
+    /* CURLSHoption: XXX do we need this in pycurl ??? */
+
+    /* CURLversion: constants for curl_version_info(x) */
+#if 0
+    /* XXX - do we need these ?? */
+    insint(d, "VERSION_FIRST", CURLVERSION_FIRST);
+    insint(d, "VERSION_LAST", CURLVERSION_LAST);
+    insint(d, "VERSION_NOW", CURLVERSION_NOW);
+#endif
+
+    /* version features - bitmasks for curl_version_info_data.features */
+#if 0
+    /* XXX - do we need these ?? */
+    /* XXX - should we really rename these ?? */
+    insint(d, "VERSION_FEATURE_IPV6", CURL_VERSION_IPV6);
+    insint(d, "VERSION_FEATURE_KERBEROS4", CURL_VERSION_KERBEROS4);
+    insint(d, "VERSION_FEATURE_SSL", CURL_VERSION_SSL);
+    insint(d, "VERSION_FEATURE_LIBZ", CURL_VERSION_LIBZ);
+#if (LIBCURL_VERSION_NUM >= 0x070a06)
+    insint(d, "VERSION_FEATURE_NTLM", CURL_VERSION_NTLM);
+    insint(d, "VERSION_FEATURE_GSSNEGOTIATE", CURL_VERSION_GSSNEGOTIATE);
+    insint(d, "VERSION_FEATURE_DEBUG", CURL_VERSION_DEBUG);
+#endif
+#endif
 
     /**
      ** the order of these constants mostly follows <curl/multi.h>
