@@ -1396,9 +1396,9 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
     case CURLINFO_REQUEST_SIZE:
     case CURLINFO_SSL_VERIFYRESULT:
         {
+            /* Return PyInt as result */
             long l_res = -1;
 
-            /* Return long as result */
             res = curl_easy_getinfo(self->handle, (CURLINFO)option, &l_res);
             /* Check for errors and return result */
             if (res != CURLE_OK) {
@@ -1410,11 +1410,10 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
     case CURLINFO_CONTENT_TYPE:
     case CURLINFO_EFFECTIVE_URL:
         {
+            /* Return PyString as result */
             char *s_res = NULL;
 
-            /* Return string as result */
             res = curl_easy_getinfo(self->handle, (CURLINFO)option, &s_res);
-            /* Check for errors and return result */
             if (res != CURLE_OK) {
                 CURLERROR_RETVAL();
             }
@@ -1439,19 +1438,15 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
     case CURLINFO_STARTTRANSFER_TIME:
     case CURLINFO_TOTAL_TIME:
         {
+            /* Return PyFloat as result */
             double d_res = 0.0;
 
-            /* Return float as result */
             res = curl_easy_getinfo(self->handle, (CURLINFO)option, &d_res);
-            /* Check for errors and return result */
             if (res != CURLE_OK) {
                 CURLERROR_RETVAL();
             }
             return PyFloat_FromDouble(d_res);
-            }
-
-    default:
-        break;
+        }
     }
 
     /* Got wrong option on the method call */
