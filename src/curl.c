@@ -36,8 +36,8 @@
 #if !defined(PY_VERSION_HEX) || (PY_VERSION_HEX < 0x010502f0)
 #  error "Need Python version 1.5.2 or greater to compile pycurl."
 #endif
-#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x070a00)
-#  error "Need libcurl version 7.10 or greater to compile pycurl."
+#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x070a01)
+#  error "Need libcurl version 7.10.1 or greater to compile pycurl."
 #endif
 
 /* Beginning with Python 2.2 we support Cyclic Garbarge Collection */
@@ -2059,9 +2059,11 @@ DL_EXPORT(void)
     curlobject_constants = PyDict_New();
     assert(curlobject_constants != NULL);
 
-    /* Add version string to the module */
+    /* Add version strings to the module */
     insstr(d, "version", curl_version());
-    insstr(d, "__COMPILE_DATE__", __DATE__ " " __TIME__);
+    insstr(d, "COMPILE_DATE", __DATE__ " " __TIME__);
+    insint(d, "COMPILE_PY_VERSION_HEX", PY_VERSION_HEX);
+    insint(d, "COMPILE_LIBCURL_VERSION_NUM", LIBCURL_VERSION_NUM);
 
     /**
      ** the order of these constants mostly follows <curl/curl.h>

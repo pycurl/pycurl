@@ -41,9 +41,9 @@ if "-q" in sys.argv:
 
 
 print "Python", sys.version
-print "pycURL", pycurl.version
+print "pycURL %s (compiled against 0x%x)" % (pycurl.version, pycurl.COMPILE_LIBCURL_VERSION_NUM)
 print "pycURL version info", pycurl.version_info()
-print "  %s, compiled %s" % (pycurl.__file__, pycurl.__COMPILE_DATE__)
+print "  %s, compiled %s" % (pycurl.__file__, pycurl.COMPILE_DATE)
 
 
 # /***********************************************************************
