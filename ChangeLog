@@ -9,6 +9,8 @@ Version 0.4.9
 	* Added CURLOPT_DNS_USE_GLOBAL_CACHE and
 	CURLOPT_DNS_CACHE_TIMEOUT.
 
+	* Fixed a segfault when finalizing curl objects in Python 1.5.2.
+
 	* Now requires libcurl 7.9.6 or greater.
 
 2002-04-12  Kjetil Jacobsen  <kjetilja>
