@@ -25,10 +25,6 @@ ADD NEW LIBCURL FEATURES:
       - Add support for CURLOPT_SSL_CTX_FUNCTION and CURLOPT_SSL_CTX_DATA
         (can we do this without having to wrap the ssl-context structure?).
 
-    * Add support for missing libcurl 7.10.8 features [MOSTLY DONE]:
-
-      - CURL_HTTP_VERSION_* constants [FIXME - name clash]
-
 
 NEW FEATURES:
 
