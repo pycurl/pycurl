@@ -3,8 +3,8 @@
 /* PycURL -- cURL Python module
  *
  * Authors:
- *  Copyright (C) 2001-2003 by Kjetil Jacobsen <kjetilja at cs.uit.no>
- *  Copyright (C) 2001-2003 by Markus F.X.J. Oberhumer <markus at oberhumer.com>
+ *  Copyright (C) 2001-2004 by Kjetil Jacobsen <kjetilja at cs.uit.no>
+ *  Copyright (C) 2001-2004 by Markus F.X.J. Oberhumer <markus at oberhumer.com>
  *
  * Contributions:
  *  Tino Lange <Tino.Lange at gmx.de>
