@@ -90,14 +90,14 @@ def test_multi():
     # stir state machine into action
     while 1:
         ret, num_handles = m.perform()
-        if ret != pycurl.CALL_MULTI_PERFORM: break
+        if ret != pycurl.E_CALL_MULTI_PERFORM: break
 
     # get data
     while num_handles:
         m.select(1)
         while 1:
             ret, num_handles = m.perform()
-            if ret != pycurl.CALL_MULTI_PERFORM: break
+            if ret != pycurl.E_CALL_MULTI_PERFORM: break
 
     clock3 = time.time()
 
