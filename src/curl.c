@@ -172,6 +172,17 @@ self_cleanup(CurlObject *self)
     self->handle = NULL;
     self->state = NULL;
 
+#if 1
+    /* FIXME: WHAT IS GOING ON HERE ???
+     *   Without this check, Python 1.5.2 and Python 1.6.1 crash at
+     *   the end of basicfirst.py (but more complex tests like
+     *   test_multi2.py work fine).
+     *   Python 2.0/2.1/2.2 are not affected at all.
+     */
+    if (handle == NULL)
+        return;
+#endif
+
     /* Disconnect from multi_stack, remove_handle in any case */
     if (self->multi_stack != NULL) {
         if (self->multi_stack->multi_handle != NULL && handle != NULL) {
