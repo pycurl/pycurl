@@ -9,7 +9,7 @@ try:
     urls = open(sys.argv[1]).readlines()
     num_conn = int(sys.argv[2])
 except:
-    print "Usage: %s <file with URLs to fetch> <concurrency>" % sys.argv[0]
+    print "Usage: %s <file with URLs to fetch> <# of concurrent connections>" % sys.argv[0]
     raise SystemExit
 
 fileno = 0
