@@ -2,7 +2,7 @@
 # vi:ts=4:et
 
 try:
-    # Python 2.2 or better
+    # need Python 2.2 or better
     from gc import get_objects
     import gc
     del get_objects
@@ -161,6 +161,7 @@ if 1:
 
 # basic check of cyclic garbage collection
 if 1 and gc:
+    gc.collect()
     c = pycurl.init()
     c.m = pycurl.multi_init()
     c.m.add_handle(c)
@@ -180,7 +181,7 @@ if 1 and gc:
     ##print gc.get_referrers(c)
     ##print gc.get_objects()
     print "Tracked objects:", len(gc.get_objects())
-    # if gc.isenabled() this should delete 4 objects:
+    # The `del' should delete these 4 objects:
     #   CurlObject + internal dict, CurlMuliObject + internal dict
     del c
     gc.collect()
