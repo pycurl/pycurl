@@ -23,7 +23,8 @@ RSYNC_FILES = \
 
 RSYNC_EXCLUDES = \
 	'--exclude=CVS/' \
-	'--exclude=download/'
+	'--exclude=htdocs/download/' \
+	'--exclude=.cvsignore'
 
 RSYNC_USER = kjetilja@shell.sourceforge.net
 ifeq ($(USER),mfx)
