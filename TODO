@@ -9,3 +9,4 @@ If you want to hack on pycurl, here's our list of unresolved issues:
       the file 'tests/curl.py' for a simple example)
     * We currently require Python to be built with thread support, this
       requirement could perhaps be relaxed?
+    * tests/test_post2.py does not work, and this needs to be resolved
