@@ -714,7 +714,7 @@ do_init(PyObject *arg)
     }
 
     /* Allocate python curl object */
-    self = PyObject_New(CurlObject, &Curl_Type);
+    self = PyObject_NEW(CurlObject, &Curl_Type);
     if (self == NULL) {
 	curl_easy_cleanup(curlhandle);
 	return NULL;
