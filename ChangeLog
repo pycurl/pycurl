@@ -1,3 +1,8 @@
+2003-02-25  Kjetil Jacobsen  <kjetilja>
+
+	* Fixed some broken test code and removed the fileupload test
+	since it didn't work properly.
+
 2003-01-28  Kjetil Jacobsen  <kjetilja>
 
 	* Some documentation updates by Markus and me.
