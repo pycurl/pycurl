@@ -1,6 +1,10 @@
 Version 7.13.2 [requires libcurl-7.13.2 or better]
 --------------
 
+2005-03-15  Kjetil Jacobsen  <kjetilja>
+
+        * Cleaned up several of the examples.
+
 2005-03-11  Kjetil Jacobsen  <kjetilja>
 
         * WARNING: multi.select() now requires the previously optional
