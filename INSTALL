@@ -26,12 +26,13 @@ directory of your Python installation (for example
 When installing on Windows, you need to manually configure three path
 settings in setup.py defined by the following variables:
 
-	W32_INCLUDE - Path to the libcurl 'include' directory
-	W32_LIB - Path to the libcurl 'lib' directory
-	W32_EXTRA_OBJ - Path to libcurl library file itself
+	W32_INCLUDE	- Path to the libcurl 'include' directory
+	W32_LIB		- Path to the libcurl 'lib' directory
+	W32_EXTRA_OBJ	- Path to libcurl library file itself
 
 Then run 'python setup.py install' as usual.  Note that you currently
 need Visual C/C++ installed to build pycurl.  If someone can provide
-the necessary modifications to setup.py to build with other compilers
-(e.g. Cygwin or Borland/Inprise) I'd be happy to include that.
+the necessary modifications (if any) to setup.py to build with other
+compilers (e.g. Cygwin or Borland/Inprise) I'd be happy to include
+that.
 
