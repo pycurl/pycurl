@@ -622,9 +622,10 @@ util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *strea
         return ret;
     }
     write_size = (int)(size * nmemb);
-    if (write_size <= 0) {
+    if (write_size <= 0)
         return ret;
-    }
+    if (size <= 0 || (size_t)write_size / size != nmemb)
+        return ret;
 
     PyEval_AcquireThread(tmp_state);
     arglist = Py_BuildValue("(s#)", ptr, write_size);
@@ -677,9 +678,10 @@ read_callback(char *ptr, size_t size, size_t nmemb, void  *stream)
         return ret;
     }
     read_size = (int)(size * nmemb);
-    if (read_size <= 0) {
+    if (read_size <= 0)
         return ret;
-    }
+    if (size <= 0 || (size_t)read_size / size != nmemb)
+        return ret;
 
     PyEval_AcquireThread(tmp_state);
     arglist = Py_BuildValue("(i)", read_size);
@@ -819,9 +821,8 @@ debug_callback(CURL *curlobj,
     if (tmp_state == NULL || self->d_cb == NULL) {
         return ret;
     }
-    if ((int)size < 0) {
+    if ((int)size < 0 || (size_t)((int)size) != size)
         return ret;
-    }
 
     PyEval_AcquireThread(tmp_state);
     arglist = Py_BuildValue("(is#)", (int)type, buffer, (int)size);
@@ -1639,12 +1640,14 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
             break;
         }
         /* Fetch the curl object that corresponds to the curl handle in the message */
+        co = NULL;
         res = curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, &co);
-        if (res != CURLE_OK) {
+        if (res != CURLE_OK || co == NULL) {
             Py_DECREF(list);
             CURLERROR_MSG("Unable to fetch curl handle from curl object");
         }
         assert(co != NULL);
+        assert(co->ob_type == &Curl_Type);
         /* Append curl object to list of returned objects */
         if (PyList_Append(list, (PyObject *)co) == -1) {
             Py_DECREF(list);
