@@ -34,7 +34,7 @@
 #  define WIN32 1
 #endif
 #include <Python.h>
-#define CURL_OLDSTYLE 1     /* needed for curl_formparse - FIXME */
+#define CURL_OLDSTYLE 1     /* needed for curl_formparse() in 7.10.6 - FIXME */
 #include <curl/curl.h>
 #include <curl/multi.h>
 #undef NDEBUG
@@ -64,10 +64,12 @@
 
 
 /* Calculate the number of options we need to store */
-#define OPTIONS_SIZE    105
+#define OPTIONS_SIZE    110
 static int PYCURL_OPT(int o)
 {
-    COMPILE_TIME_ASSERT(OPTIONS_SIZE == CURLOPT_HTTP200ALIASES - CURLOPTTYPE_OBJECTPOINT + 1);
+#if (LIBCURL_VERSION_NUM >= 0x070a06)
+    COMPILE_TIME_ASSERT(OPTIONS_SIZE == CURLOPT_SSL_CTX_DATA - CURLOPTTYPE_OBJECTPOINT + 1)
+#endif
     assert(o >= CURLOPTTYPE_OBJECTPOINT);
     assert(o < CURLOPTTYPE_OBJECTPOINT + OPTIONS_SIZE);
     return o - CURLOPTTYPE_OBJECTPOINT;
@@ -100,16 +102,21 @@ typedef struct {
     struct curl_slist *quote;
     struct curl_slist *postquote;
     struct curl_slist *prequote;
+    /* callbacks */
     PyObject *w_cb;
     PyObject *h_cb;
     PyObject *r_cb;
     PyObject *pro_cb;
     PyObject *pwd_cb;
     PyObject *d_cb;
-    PyObject *readdata;
-    PyObject *writedata;
-    PyObject *writeheader;
-    int writeheader_set;
+    PyObject *ssl_ctx_cb;
+    /* file objects */
+    PyObject *readdata_fp;
+    PyObject *writedata_fp;
+    PyObject *writeheader_fp;
+    PyObject *progressdata_fp;
+    PyObject *passwddata_fp;
+    /* misc */
     void *options[OPTIONS_SIZE];
     char error[CURL_ERROR_SIZE+1];
 } CurlObject;
@@ -123,10 +130,10 @@ typedef struct {
     return NULL; \
 } while (0)
 
-/* Throw exception with custom message */
+/* Throw exception based on return value `res' and custom message */
 #define CURLERROR_MSG(msg) do {\
-    PyObject *v; \
-    v = Py_BuildValue("(is)", (int) (res), (msg)); \
+    PyObject *v; const char *m = (msg); \
+    v = Py_BuildValue("(is)", (int) (res), (m)); \
     if (v != NULL) { PyErr_SetObject(ErrorObject, v); Py_DECREF(v); } \
     return NULL; \
 } while (0)
@@ -272,12 +279,14 @@ util_curl_new(void)
     self->pro_cb = NULL;
     self->pwd_cb = NULL;
     self->d_cb = NULL;
+    self->ssl_ctx_cb = NULL;
 
     /* Set file object pointers to NULL by default */
-    self->readdata = NULL;
-    self->writedata = NULL;
-    self->writeheader = NULL;
-    self->writeheader_set = 0;
+    self->readdata_fp = NULL;
+    self->writedata_fp = NULL;
+    self->writeheader_fp = NULL;
+    self->progressdata_fp = NULL;
+    self->passwddata_fp = NULL;
 
     /* Zero string pointer memory buffer used by setopt */
     memset(self->options, 0, sizeof(self->options));
@@ -377,9 +386,9 @@ do_curl_copy(const CurlObject *self, PyObject *args)
         goto cannot_copy;
     if (self->httppost || self->httpheader || self->http200aliases || self->quote || self->postquote ||  self->prequote)
         goto cannot_copy;
-    if (self->w_cb || self->r_cb || self->pro_cb || self->pwd_cb || self->d_cb)
+    if (self->w_cb || self->r_cb || self->pro_cb || self->pwd_cb || self->d_cb || self->ssl_ctx_cb)
         goto cannot_copy;
-    if (self->readdata || self->writedata || self->writeheader || self->writeheader_set)
+    if (self->readdata_fp || self->writedata_fp || self->writeheader_fp || self->progressdata_fp || self->passwddata_fp)
         goto cannot_copy;
     for (i = 0; i < OPTIONS_SIZE; i++) {
         if (self->options[i] != NULL) {
@@ -449,14 +458,16 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
         ZAP(self->pwd_cb);
         ZAP(self->h_cb);
         ZAP(self->d_cb);
+        ZAP(self->ssl_ctx_cb);
     }
 
     if (flags & 8) {
         /* Decrement refcount for python file objects. */
-        ZAP(self->readdata);
-        ZAP(self->writedata);
-        ZAP(self->writeheader);
-        self->writeheader_set = 0;
+        ZAP(self->readdata_fp);
+        ZAP(self->writedata_fp);
+        ZAP(self->writeheader_fp);
+        ZAP(self->progressdata_fp);
+        ZAP(self->passwddata_fp);
     }
 }
 
@@ -602,10 +613,13 @@ do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
     VISIT(self->pwd_cb);
     VISIT(self->h_cb);
     VISIT(self->d_cb);
+    VISIT(self->ssl_ctx_cb);
 
-    VISIT(self->readdata);
-    VISIT(self->writedata);
-    VISIT(self->writeheader);
+    VISIT(self->readdata_fp);
+    VISIT(self->writedata_fp);
+    VISIT(self->writeheader_fp);
+    VISIT(self->progressdata_fp);
+    VISIT(self->passwddata_fp);
 
     return 0;
 #undef VISIT
@@ -675,9 +689,11 @@ util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *strea
         return ret;
     if (size <= 0 || (size_t)write_size / size != nmemb)
         return ret;
+    arglist = Py_BuildValue("(s#)", ptr, write_size);
+    if (arglist == NULL)
+        return ret;
 
     PyEval_AcquireThread(tmp_state);
-    arglist = Py_BuildValue("(s#)", ptr, write_size);
     result = PyEval_CallObject(cb, arglist);
     Py_DECREF(arglist);
     if (result == NULL) {
@@ -731,9 +747,11 @@ read_callback(char *ptr, size_t size, size_t nmemb, void  *stream)
         return ret;
     if (size <= 0 || (size_t)read_size / size != nmemb)
         return ret;
+    arglist = Py_BuildValue("(i)", read_size);
+    if (arglist == NULL)
+        return ret;
 
     PyEval_AcquireThread(tmp_state);
-    arglist = Py_BuildValue("(i)", read_size);
     result = PyEval_CallObject(self->r_cb, arglist);
     Py_DECREF(arglist);
     if (result == NULL) {
@@ -785,9 +803,11 @@ progress_callback(void *client,
     if (tmp_state == NULL || self->pro_cb == NULL) {
         return ret;
     }
+    arglist = Py_BuildValue("(dddd)", dltotal, dlnow, ultotal, ulnow);
+    if (arglist == NULL)
+        return ret;
 
     PyEval_AcquireThread(tmp_state);
-    arglist = Py_BuildValue("(dddd)", dltotal, dlnow, ultotal, ulnow);
     result = PyEval_CallObject(self->pro_cb, arglist);
     Py_DECREF(arglist);
     if (result == NULL) {
@@ -819,9 +839,11 @@ password_callback(void *client, const char *prompt, char* buffer, int buflen)
     if (tmp_state == NULL || self->pwd_cb == NULL) {
         return ret;
     }
+    arglist = Py_BuildValue("(si)", prompt, buflen);
+    if (arglist == NULL)
+        return ret;
 
     PyEval_AcquireThread(tmp_state);
-    arglist = Py_BuildValue("(si)", prompt, buflen);
     result = PyEval_CallObject(self->pwd_cb, arglist);
     Py_DECREF(arglist);
     if (result == NULL) {
@@ -871,9 +893,11 @@ debug_callback(CURL *curlobj,
     }
     if ((int)size < 0 || (size_t)((int)size) != size)
         return ret;
+    arglist = Py_BuildValue("(is#)", (int)type, buffer, (int)size);
+    if (arglist == NULL)
+        return ret;
 
     PyEval_AcquireThread(tmp_state);
-    arglist = Py_BuildValue("(is#)", (int)type, buffer, (int)size);
     result = PyEval_CallObject(self->d_cb, arglist);
     Py_DECREF(arglist);
     if (result == NULL) {
@@ -882,6 +906,17 @@ debug_callback(CURL *curlobj,
     PyEval_ReleaseThread(tmp_state);
     return ret;
 }
+
+
+#if (LIBCURL_VERSION_NUM >= 0x070a06)
+static CURLcode
+ssl_ctx_callback(CURL *curlobj, void *ssl_ctx, void *userptr)
+{
+    /* FIXME */
+    UNUSED(curlobj); UNUSED(ssl_ctx); UNUSED(userptr);
+    return CURLE_UNSUPPORTED_PROTOCOL;
+}
+#endif
 
 
 /* --------------- unsetopt/setopt/getinfo --------------- */
@@ -912,8 +947,7 @@ util_curl_unsetopt(CurlObject *self, int option)
         break;
     case CURLOPT_WRITEHEADER:
         SETOPT((void *) 0);
-        ZAP(self->writeheader);
-        self->writeheader_set = 0;
+        ZAP(self->writeheader_fp);
         break;
     case CURLOPT_CAINFO:
     case CURLOPT_CAPATH:
@@ -938,6 +972,7 @@ util_curl_unsetopt(CurlObject *self, int option)
     }
 
     if (opt_masked >= 0 && self->options[opt_masked] != NULL) {
+        assert(opt_masked == PYCURL_OPT(opt_masked));
         free(self->options[opt_masked]);
         self->options[opt_masked] = NULL;
     }
@@ -997,37 +1032,43 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         int opt_masked;
 
         /* Check that the option specified a string as well as the input */
-        if (!(option == CURLOPT_URL ||
-              option == CURLOPT_PROXY ||
-              option == CURLOPT_USERPWD ||
-              option == CURLOPT_PROXYUSERPWD ||
-              option == CURLOPT_RANGE ||
-              option == CURLOPT_POSTFIELDS ||
-              option == CURLOPT_REFERER ||
-              option == CURLOPT_USERAGENT ||
-              option == CURLOPT_FTPPORT ||
-              option == CURLOPT_COOKIE ||
-              option == CURLOPT_SSLCERT ||
-              option == CURLOPT_SSLCERTPASSWD ||
-              option == CURLOPT_COOKIEFILE ||
-              option == CURLOPT_CUSTOMREQUEST ||
-              option == CURLOPT_INTERFACE ||
-              option == CURLOPT_KRB4LEVEL ||
-              option == CURLOPT_CAINFO ||
-              option == CURLOPT_CAPATH ||
-              option == CURLOPT_RANDOM_FILE ||
-              option == CURLOPT_COOKIEJAR ||
-              option == CURLOPT_SSL_CIPHER_LIST ||
-              option == CURLOPT_EGDSOCKET ||
-              option == CURLOPT_SSLCERTTYPE ||
-              option == CURLOPT_SSLKEY ||
-              option == CURLOPT_SSLKEYTYPE ||
-              option == CURLOPT_SSLKEYPASSWD ||
-              option == CURLOPT_SSLENGINE))
-            {
-                PyErr_SetString(PyExc_TypeError, "strings are not supported for this option");
-                return NULL;
-            }
+        switch (option) {
+        case CURLOPT_CAINFO:
+        case CURLOPT_CAPATH:
+        case CURLOPT_COOKIE:
+        case CURLOPT_COOKIEFILE:
+        case CURLOPT_COOKIEJAR:
+        case CURLOPT_CUSTOMREQUEST:
+        case CURLOPT_EGDSOCKET:
+        case CURLOPT_FTPPORT:
+        case CURLOPT_INTERFACE:
+        case CURLOPT_KRB4LEVEL:
+        case CURLOPT_POSTFIELDS:
+        case CURLOPT_PROXY:
+        case CURLOPT_PROXYUSERPWD:
+        case CURLOPT_RANDOM_FILE:
+        case CURLOPT_RANGE:
+        case CURLOPT_REFERER:
+        case CURLOPT_SSLCERT:
+        case CURLOPT_SSLCERTTYPE:
+        case CURLOPT_SSLENGINE:
+        case CURLOPT_SSLKEY:
+        case CURLOPT_SSLKEYPASSWD:
+        case CURLOPT_SSLKEYTYPE:
+        case CURLOPT_SSL_CIPHER_LIST:
+        case CURLOPT_URL:
+        case CURLOPT_USERAGENT:
+        case CURLOPT_USERPWD:
+            break;
+#if (LIBCURL_VERSION_NUM >= 0x070a06)
+        case CURLOPT_SSL_CTX_DATA:
+            /* FIXME - implement this */
+            /* FIXME - fall through for now */
+#endif
+        default:
+            PyErr_SetString(PyExc_TypeError, "strings are not supported for this option");
+            return NULL;
+        }
         /* Allocate memory to hold the string */
         buf = strdup(stringdata);
         if (buf == NULL) {
@@ -1061,7 +1102,6 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             return NULL;
         }
         res = curl_easy_setopt(self->handle, (CURLoption)option, longdata);
-        /* Check for errors */
         if (res != CURLE_OK) {
             CURLERROR_RETVAL();
         }
@@ -1074,45 +1114,58 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         FILE *fp;
 
         /* Ensure the option specified a file as well as the input */
-        if (!(option == CURLOPT_WRITEDATA ||
-              option == CURLOPT_READDATA ||
-              option == CURLOPT_WRITEHEADER ||
-              option == CURLOPT_PROGRESSDATA ||
-              option == CURLOPT_PASSWDDATA))
-            {
-                PyErr_SetString(PyExc_TypeError, "files are not supported for this option");
-                return NULL;
-            }
-        if (option == CURLOPT_WRITEHEADER) {
+        switch (option) {
+        case CURLOPT_PASSWDDATA:
+        case CURLOPT_PROGRESSDATA:
+        case CURLOPT_READDATA:
+        case CURLOPT_WRITEDATA:
+            break;
+        case CURLOPT_WRITEHEADER:
             if (self->w_cb != NULL) {
                 PyErr_SetString(ErrorObject, "cannot combine WRITEHEADER with WRITEFUNCTION.");
                 return NULL;
             }
+            break;
+        default:
+                PyErr_SetString(PyExc_TypeError, "files are not supported for this option");
+                return NULL;
         }
+
         fp = PyFile_AsFile(obj);
         if (fp == NULL) {
             PyErr_SetString(PyExc_TypeError, "second argument must be open file");
             return NULL;
         }
         res = curl_easy_setopt(self->handle, (CURLoption)option, fp);
-        /* Check for errors */
         if (res != CURLE_OK) {
             CURLERROR_RETVAL();
         }
-        /* Increment reference to file object and register reference in curl object */
         Py_INCREF(obj);
-        if (option == CURLOPT_WRITEDATA) {
-            ZAP(self->writedata);
-            self->writedata = obj;
-        }
-        if (option == CURLOPT_READDATA) {
-            ZAP(self->readdata);
-            self->readdata = obj;
-        }
-        if (option == CURLOPT_WRITEHEADER) {
-            ZAP(self->writeheader);
-            self->writeheader = obj;
-            self->writeheader_set = 1;
+
+        switch (option) {
+        case CURLOPT_PASSWDDATA:
+            ZAP(self->passwddata_fp);
+            self->passwddata_fp = obj;
+            break;
+        case CURLOPT_PROGRESSDATA:
+            ZAP(self->progressdata_fp);
+            self->progressdata_fp = obj;
+            break;
+        case CURLOPT_READDATA:
+            ZAP(self->readdata_fp);
+            self->readdata_fp = obj;
+            break;
+        case CURLOPT_WRITEDATA:
+            ZAP(self->writedata_fp);
+            self->writedata_fp = obj;
+            break;
+        case CURLOPT_WRITEHEADER:
+            ZAP(self->writeheader_fp);
+            self->writeheader_fp = obj;
+            break;
+        default:
+            assert(0);
+            break;
         }
         /* Return success */
         Py_INCREF(Py_None);
@@ -1243,15 +1296,18 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         const curl_progress_callback pro_cb = progress_callback;
         const curl_passwd_callback pwd_cb = password_callback;
         const curl_debug_callback d_cb = debug_callback;
+#if (LIBCURL_VERSION_NUM >= 0x070a06)
+        const curl_ssl_ctx_callback ssl_ctx_cb = ssl_ctx_callback;
+#endif
 
         switch(option) {
         case CURLOPT_WRITEFUNCTION:
-            if (self->writeheader_set) {
+            if (self->writeheader_fp != NULL) {
                 PyErr_SetString(ErrorObject, "cannot combine WRITEFUNCTION with WRITEHEADER option.");
                 return NULL;
             }
             Py_INCREF(obj);
-            ZAP(self->writedata);
+            ZAP(self->writedata_fp);
             ZAP(self->w_cb);
             self->w_cb = obj;
             curl_easy_setopt(self->handle, CURLOPT_WRITEFUNCTION, w_cb);
@@ -1259,7 +1315,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             break;
         case CURLOPT_READFUNCTION:
             Py_INCREF(obj);
-            ZAP(self->readdata);
+            ZAP(self->readdata_fp);
             ZAP(self->r_cb);
             self->r_cb = obj;
             curl_easy_setopt(self->handle, CURLOPT_READFUNCTION, r_cb);
@@ -1274,6 +1330,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             break;
         case CURLOPT_PROGRESSFUNCTION:
             Py_INCREF(obj);
+            ZAP(self->progressdata_fp);
             ZAP(self->pro_cb);
             self->pro_cb = obj;
             curl_easy_setopt(self->handle, CURLOPT_PROGRESSFUNCTION, pro_cb);
@@ -1281,6 +1338,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             break;
         case CURLOPT_PASSWDFUNCTION:
             Py_INCREF(obj);
+            ZAP(self->passwddata_fp);
             ZAP(self->pwd_cb);
             self->pwd_cb = obj;
             curl_easy_setopt(self->handle, CURLOPT_PASSWDFUNCTION, pwd_cb);
@@ -1293,6 +1351,15 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             curl_easy_setopt(self->handle, CURLOPT_DEBUGFUNCTION, d_cb);
             curl_easy_setopt(self->handle, CURLOPT_DEBUGDATA, self);
             break;
+#if (LIBCURL_VERSION_NUM >= 0x070a06)
+        case CURLOPT_SSL_CTX_FUNCTION:
+            Py_INCREF(obj);
+            ZAP(self->ssl_ctx_cb);
+            self->ssl_ctx_cb = obj;
+            curl_easy_setopt(self->handle, CURLOPT_SSL_CTX_FUNCTION, ssl_ctx_cb);
+            /* FIXME - implement this */
+            /* FIXME - fall through for now */
+#endif
         default:
             /* None of the function options were recognized, throw exception */
             PyErr_SetString(PyExc_TypeError, "functions are not supported for this option");
@@ -1321,67 +1388,70 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
         return NULL;
     }
 
-    if (option == CURLINFO_HEADER_SIZE ||
-        option == CURLINFO_REQUEST_SIZE ||
-        option == CURLINFO_SSL_VERIFYRESULT ||
-        option == CURLINFO_FILETIME ||
-        option == CURLINFO_REDIRECT_COUNT ||
-        option == CURLINFO_HTTP_CODE)
-    {
-        long l_res = -1;
+    switch (option) {
+    case CURLINFO_FILETIME:
+    case CURLINFO_HEADER_SIZE:
+    case CURLINFO_HTTP_CODE:
+    case CURLINFO_REDIRECT_COUNT:
+    case CURLINFO_REQUEST_SIZE:
+    case CURLINFO_SSL_VERIFYRESULT:
+        {
+            long l_res = -1;
 
-        /* Return long as result */
-        res = curl_easy_getinfo(self->handle, (CURLINFO)option, &l_res);
-        /* Check for errors and return result */
-        if (res != CURLE_OK) {
-            CURLERROR_RETVAL();
+            /* Return long as result */
+            res = curl_easy_getinfo(self->handle, (CURLINFO)option, &l_res);
+            /* Check for errors and return result */
+            if (res != CURLE_OK) {
+                CURLERROR_RETVAL();
+            }
+            return PyInt_FromLong(l_res);
         }
-        return PyInt_FromLong(l_res);
-    }
 
-    if (option == CURLINFO_EFFECTIVE_URL ||
-        option == CURLINFO_CONTENT_TYPE)
-    {
-        char *s_res = NULL;
+    case CURLINFO_CONTENT_TYPE:
+    case CURLINFO_EFFECTIVE_URL:
+        {
+            char *s_res = NULL;
 
-        /* Return string as result */
-        res = curl_easy_getinfo(self->handle, (CURLINFO)option, &s_res);
-        /* Check for errors and return result */
-        if (res != CURLE_OK) {
-            CURLERROR_RETVAL();
-        }
-        /* If the resulting string is NULL, return None */
-        if (s_res == NULL) {
-            Py_INCREF(Py_None);
-            return Py_None;
-        }
-        else {
+            /* Return string as result */
+            res = curl_easy_getinfo(self->handle, (CURLINFO)option, &s_res);
+            /* Check for errors and return result */
+            if (res != CURLE_OK) {
+                CURLERROR_RETVAL();
+            }
+            /* If the resulting string is NULL, return None */
+            if (s_res == NULL) {
+                Py_INCREF(Py_None);
+                return Py_None;
+            }
             return PyString_FromString(s_res);
         }
-    }
 
-    if (option == CURLINFO_TOTAL_TIME ||
-        option == CURLINFO_NAMELOOKUP_TIME ||
-        option == CURLINFO_CONNECT_TIME ||
-        option == CURLINFO_PRETRANSFER_TIME ||
-        option == CURLINFO_STARTTRANSFER_TIME ||
-        option == CURLINFO_SIZE_UPLOAD ||
-        option == CURLINFO_SIZE_DOWNLOAD ||
-        option == CURLINFO_SPEED_DOWNLOAD ||
-        option == CURLINFO_SPEED_UPLOAD ||
-        option == CURLINFO_CONTENT_LENGTH_DOWNLOAD ||
-        option == CURLINFO_REDIRECT_TIME ||
-        option == CURLINFO_CONTENT_LENGTH_UPLOAD)
-    {
-        double d_res = 0.0;
+    case CURLINFO_CONNECT_TIME:
+    case CURLINFO_CONTENT_LENGTH_DOWNLOAD:
+    case CURLINFO_CONTENT_LENGTH_UPLOAD:
+    case CURLINFO_NAMELOOKUP_TIME:
+    case CURLINFO_PRETRANSFER_TIME:
+    case CURLINFO_REDIRECT_TIME:
+    case CURLINFO_SIZE_DOWNLOAD:
+    case CURLINFO_SIZE_UPLOAD:
+    case CURLINFO_SPEED_DOWNLOAD:
+    case CURLINFO_SPEED_UPLOAD:
+    case CURLINFO_STARTTRANSFER_TIME:
+    case CURLINFO_TOTAL_TIME:
+        {
+            double d_res = 0.0;
 
-        /* Return float as result */
-        res = curl_easy_getinfo(self->handle, (CURLINFO)option, &d_res);
-        /* Check for errors and return result */
-        if (res != CURLE_OK) {
-            CURLERROR_RETVAL();
-        }
-        return PyFloat_FromDouble(d_res);
+            /* Return float as result */
+            res = curl_easy_getinfo(self->handle, (CURLINFO)option, &d_res);
+            /* Check for errors and return result */
+            if (res != CURLE_OK) {
+                CURLERROR_RETVAL();
+            }
+            return PyFloat_FromDouble(d_res);
+            }
+
+    default:
+        break;
     }
 
     /* Got wrong option on the method call */
@@ -2442,6 +2512,8 @@ initpycurl(void)
 #endif
 #if (LIBCURL_VERSION_NUM >= 0x070a06)
     insint_c(d, "HTTPAUTH", CURLOPT_HTTPAUTH);
+    insint_c(d, "SSL_CTX_FUNCTION", CURLOPT_SSL_CTX_FUNCTION);
+    insint_c(d, "SSL_CTX_DATA", CURLOPT_SSL_CTX_DATA);
 #endif
 
     /* CURL_NETRC_OPTION: constants for setopt(NETRC, x) */
@@ -2546,5 +2618,5 @@ initpycurl(void)
     PyEval_InitThreads();
 }
 
-/* vi:ts=4:et
+/* vi:ts=4:et:nowrap
  */

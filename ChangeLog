@@ -1,6 +1,11 @@
 Version 7.10.6 [requires libcurl-7.10.3 or better]
 --------------
 
+2003-07-29  Markus F.X.J. Oberhumer <mfx>
+
+        * Started working on support for CURLOPT_SSL_CTX_FUNCTION and
+          CURLOPT_SSL_CTX_DATA (libcurl-7.10.6) - not yet finished.
+
 2003-06-10  Markus F.X.J. Oberhumer <mfx>
 
         * Added support for CURLOPT_HTTPAUTH (libcurl-7.10.6), including
