@@ -18,6 +18,8 @@ NEW FEATURES/IMPROVEMENTS:
       careful since curl_easy_reset() e.g. modifies callbacks and other
       pointers which could leave pycurl and libcurl out of sync.
 
+    * Use METH_O and METH_NOARGS where appropriate instead of METH_VARAGS.
+
 
 DEFICIENICES:
 
