@@ -1,5 +1,5 @@
 <?php // vi:ts=4:et
-$version = "7.10.1";
+$version = "7.10.2";
 echo "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
 ?>
 
@@ -34,11 +34,11 @@ echo "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
 </p>
 
 <p>
-PycURL is a
-<a href="http://www.python.org/">Python</a> module interface to the
+PycURL is an
+<a href="http://www.python.org/">Python</a> interface to the
 <a href="http://curl.haxx.se/libcurl/">cURL library</a>.
-PycURL can be used to fetch documents identified by a URI
-from within a Python program.
+PycURL can be used to fetch objects identified by a URL
+from a Python program.
 </p>
 
 
@@ -53,14 +53,12 @@ from within a Python program.
     kerberos, HTTP form based upload, proxies, cookies, user+password
     authentication, file transfer resume, http proxy tunneling and more!
   </li>
-  <li style="list-style: none"><br /></li>
   <li>
     libcurl is highly portable, it builds and works identically on numerous
     platforms, including Solaris, Net/Free/Open BSD, Darwin, HPUX, IRIX,
     AIX, Tru64, Linux, Windows, Amiga, OS/2, BeOs, Mac OS X, Ultrix,
     QNX, OpenVMS, RISC OS and more...
   </li>
-  <li style="list-style: none"><br /></li>
   <li>
     libcurl is thread-safe, IPv6 compatible and fast.
   </li>
@@ -70,8 +68,8 @@ from within a Python program.
 <h2>Download</h2>
 
 <p>
-<a href="download/pycurl-7.10.1.tar.gz">Download</a>
-PycURL sources version <?php echo $version ?> (Oct 16 2002)
+<a href="download/pycurl-7.10.2.tar.gz">Download</a>
+PycURL sources version <?php echo $version ?> (Nov 19 2002)
 or try the code from
 <a href="http://sourceforge.net/cvs/?group_id=28236">the CVS repository</a>.
 </p>
@@ -107,19 +105,13 @@ collection for NetBSD.
 
 
 <h2>License</h2>
-
-<pre>
-LICENSE
--------
-Copyright (c) 2001-2002 by Kjetil Jacobsen
-Copyright (c) 2001-2002 by Markus F.X.J. Oberhumer
-
+Copyright (c) 2001-2002 by Kjetil Jacobsen<br>
+Copyright (c) 2001-2002 by Markus F.X.J. Oberhumer<br>
+<br>
 PycURL is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
 License as published by the Free Software Foundation; either
 version 2.1 of the License, or (at your option) any later version.
-</pre>
-
 
 <hr />
 <div align="right">
