@@ -15,16 +15,12 @@ NEW FEATURES/IMPROVEMENTS:
       code for each option we want to support.
 
 
-DEFICIENICES;
+DEFICIENICES:
 
-    * Using certain invalid options, it may be possible to cause a crash (e.g.
-      setting a too large POSTFIELDSIZE).  This is un-Pythonic behaviour, but
-      you somewhere have to draw a line between efficiency (and feature
-      completeness) and safety.  There _are_ quite a number of internal
-      error checks, but tracking and catching all possible (deliberate) misuses
-      is not a goal (and probably impossible anyway, due to the complexity
-      of libcurl).
-      [ In the simple POSTFIELDS case, the Python way would be to simply not
-        expose the POSTFIELDSIZE option and require string slicing instead.
-        In the next case (we're not going to tell you) it stays up to you. ]
+    * Using certain invalid options, it may be possible to cause a crash.
+      This is un-Pythonic behaviour, but you somewhere have to draw a line
+      between efficiency (and feature completeness) and safety.
+      There _are_ quite a number of internal error checks, but tracking and
+      catching all possible (deliberate) misuses is not a goal (and probably
+      impossible anyway, due to the complexity of libcurl).
 
