@@ -33,9 +33,7 @@ static void
 self_cleanup(CurlObject *self)
 {
     if (self->handle != NULL) {
-	Py_BEGIN_ALLOW_THREADS
 	curl_easy_cleanup(self->handle);
-	Py_END_ALLOW_THREADS
         self->handle = NULL;
     }
     if (self->url != NULL) {
