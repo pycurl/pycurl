@@ -1,5 +1,10 @@
 Version 7.9.9
 
+2002-07-05  Markus F.X.J. Oberhumer <mfx>
+
+	* CurlObject and CurlMultiObject now support standard Python attributes.
+	See tests/test_multi2.py for an example.
+
 2002-07-02  Kjetil Jacobsen  <kjetilja>
 
 	* Added support for the multi-interface.
