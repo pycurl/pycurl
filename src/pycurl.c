@@ -50,7 +50,7 @@
 
 /* Beginning with Python 2.2 we support Cyclic Garbarge Collection */
 #undef USE_GC
-#if 1 && (PY_VERSION_HEX >= 0x02020000)
+#if 0 && (PY_VERSION_HEX >= 0x02020000)
 #  define USE_GC
 #endif
 
