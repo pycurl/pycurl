@@ -4,8 +4,10 @@
 # $Id$
 
 import sys, threading
-from gtk import *
 import pycurl
+import pygtk
+pygtk.require('2.0')
+import gtk
 
 # We should ignore SIGPIPE when using pycurl.NOSIGNAL - see
 # the libcurl tutorial for more info.
@@ -20,43 +22,42 @@ except ImportError:
 class ProgressBar:
     def __init__(self, uri):
         self.round = 0.0
-        win = GtkDialog()
+        win = gtk.Window(gtk.WINDOW_TOPLEVEL)
         win.set_title("PycURL progress")
         win.show()
-        vbox = GtkVBox(spacing=5)
+        vbox = gtk.VBox(spacing=5)
         vbox.set_border_width(10)
-        win.vbox.pack_start(vbox)
+        win.add(vbox)
         win.set_default_size(200, 20)
         vbox.show()
-        label = GtkLabel("Downloading %s" % uri)
+        label = gtk.Label("Downloading %s" % uri)
         label.set_alignment(0, 0.5)
-        vbox.pack_start(label, expand=FALSE)
+        vbox.pack_start(label)
         label.show()
-        pbar = GtkProgressBar()
+        pbar = gtk.ProgressBar()
         pbar.show()
         self.pbar = pbar
         vbox.pack_start(pbar)
         win.connect("destroy", self.close_app)
-        win.connect("delete_event", self.close_app)
 
     def progress(self, download_t, download_d, upload_t, upload_d):
-        threads_enter()
         if download_t == 0:
             self.round = self.round + 0.1
             if self.round >= 1.0:  self.round = 0.0
         else:
             self.round = float(download_d) / float(download_t)
-        self.pbar.update(self.round)
-        threads_leave()
+        gtk.threads_enter()
+        self.pbar.set_fraction(self.round)
+        gtk.threads_leave()
 
     def mainloop(self):
-        threads_enter()
-        mainloop()
-        threads_leave()
+        gtk.threads_enter()
+        gtk.main()
+        gtk.threads_leave()
 
     def close_app(self, *args):
         args[0].destroy()
-        mainquit()
+        gtk.main_quit()
 
 
 class Test(threading.Thread):
@@ -90,4 +91,8 @@ p = ProgressBar(sys.argv[1])
 # Start thread for fetching url
 Test(sys.argv[1], open(sys.argv[2], 'wb'), p.progress).start()
 # Enter the GTK mainloop
-p.mainloop()
+gtk.threads_init()
+try:
+    p.mainloop()
+except KeyboardInterrupt:
+    pass
