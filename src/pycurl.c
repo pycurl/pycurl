@@ -24,6 +24,9 @@
  *   PyXXX_GetItem          returns a borrowed reference
  */
 
+#if (defined(_WIN32) || defined(__WIN32__)) && !defined(WIN32)
+#  define WIN32 1
+#endif
 #include <Python.h>
 #include <sys/types.h>
 #include <stddef.h>
@@ -31,9 +34,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
-#if (defined(_WIN32) || defined(__WIN32__)) && !defined(WIN32)
-#  define WIN32 1
-#endif
 #define CURL_OLDSTYLE 1     /* needed for curl_formparse() in 7.10.6 - FIXME */
 #include <curl/curl.h>
 #include <curl/multi.h>
@@ -2238,7 +2238,7 @@ static char pycurl_multi_new_doc [] =
 "CurlMulti() -> New curl multi-object.\n";
 
 
-/* List of functions defined in the curl module */
+/* List of functions defined in this module */
 static PyMethodDef curl_methods[] = {
     {"global_init", (PyCFunction)do_global_init, METH_VARARGS, pycurl_global_init_doc},
     {"global_cleanup", (PyCFunction)do_global_cleanup, METH_VARARGS, pycurl_global_cleanup_doc},
@@ -2311,25 +2311,29 @@ error:
 static void
 insstr(PyObject *d, char *name, char *value)
 {
-    insobj2(d, NULL, name, PyString_FromString(value));
+    PyObject *v = PyString_FromString(value);
+    insobj2(d, NULL, name, v);
 }
 
 static void
 insint(PyObject *d, char *name, long value)
 {
-    insobj2(d, NULL, name, PyInt_FromLong(value));
+    PyObject *v = PyInt_FromLong(value);
+    insobj2(d, NULL, name, v);
 }
 
 static void
 insint_c(PyObject *d, char *name, long value)
 {
-    insobj2(d, curlobject_constants, name, PyInt_FromLong(value));
+    PyObject *v = PyInt_FromLong(value);
+    insobj2(d, curlobject_constants, name, v);
 }
 
 static void
 insint_m(PyObject *d, char *name, long value)
 {
-    insobj2(d, curlmultiobject_constants, name, PyInt_FromLong(value));
+    PyObject *v = PyInt_FromLong(value);
+    insobj2(d, curlmultiobject_constants, name, v);
 }
 
 
@@ -2347,7 +2351,7 @@ initpycurl(void)
     PyObject *m, *d;
     const curl_version_info_data *vi;
 
-    /* Initialize the type of the new type object here; doing it here
+    /* Initialize the type of the new type objects here; doing it here
      * is required for portability to Windows without requiring C++. */
     p_Curl_Type = &Curl_Type;
     p_CurlMulti_Type = &CurlMulti_Type;
