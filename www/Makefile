@@ -19,7 +19,8 @@ RSYNC_FLAGS = -av --relative --delete --delete-after -e ssh
 
 RSYNC_FILES = \
 	htdocs \
-	htdocs/download/.htaccess
+	htdocs/download/.htaccess \
+	upload
 
 RSYNC_EXCLUDES = \
 	'--exclude=.xvpics/' \
@@ -53,6 +54,7 @@ __rsync-clean:
 	chmod -c g+s `find . -type d -print`
 ##	chmod -c g+rws `find . -type d -perm -770 -print`
 	chmod -c g+rws `find . -type d -print`
+	chmod -c o-rwx upload
 	-rm -rf `find . -name .xvpics -type d -print`
 
 
