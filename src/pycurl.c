@@ -2025,20 +2025,17 @@ do_multi_select(CurlMultiObject *self, PyObject *args)
     struct timeval tv, *tvp;
     CURLMcode res;
 
-    if (!PyArg_ParseTuple(args, "|d:select", &timeout)) {
+    if (!PyArg_ParseTuple(args, "d:select", &timeout)) {
         return NULL;
     }
     if (check_multi_state(self, 1 | 2, "select") != 0) {
         return NULL;
     }
 
-   if (timeout == -1.0) {
-        /* no timeout given - wait forever */
-        tvp = NULL;
-   } else if (timeout < 0 || timeout >= 365 * 24 * 60 * 60) {
+    if (timeout < 0 || timeout >= 365 * 24 * 60 * 60) {
         PyErr_SetString(PyExc_OverflowError, "invalid timeout period");
         return NULL;
-   } else {
+    } else {
         long seconds = (long)timeout;
         timeout = timeout - (double)seconds;
         assert(timeout >= 0.0); assert(timeout < 1.0);

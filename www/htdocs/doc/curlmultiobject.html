@@ -83,7 +83,7 @@ while num_handles:
 </pre>
 </dd>
 
-<dt><code>select(</code><em>[timeout]</em><code>)</code> -&gt;
+<dt><code>select(</code><em>timeout</em><code>)</code> -&gt;
 <em>number of ready file descriptors or -1 on timeout</em></dt>
 <dd>
 <p>This is a convenience function which simplifies the combined
@@ -100,7 +100,7 @@ while 1:
     ret, num_handles = m.perform()
     if ret != pycurl.E_CALL_MULTI_PERFORM: break
 while num_handles:
-    ret = m.select()
+    ret = m.select(1.0)
     if ret == -1:  continue
     while 1:
         ret, num_handles = m.perform()
