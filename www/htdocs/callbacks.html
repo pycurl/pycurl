@@ -12,6 +12,7 @@ PROGRESSFUNCTION, PASSWDFUNCTION or DEBUGFUNCTION. These options
 correspond to the libcurl options with CURLOPT_* prefix removed.  A
 callback in pycurl must be either a regular Python function, a class
 method or an extension type function.<br>
+
 <br>
 The signature of each callback used in pycurl is as follows:<br>
 <br>
@@ -43,16 +44,16 @@ None implies that all bytes where written.
     ## Callback function invoked when body data is ready
     def body(buf):
         # Print body data to stdout
-	import sys
+        import sys
         sys.stdout.write(buf)
-	# Returning None implies that all bytes were written
+        # Returning None implies that all bytes were written
 
     ## Callback function invoked when header data is ready
     def header(buf):
         # Print header data to stderr
-	import sys
+        import sys
         sys.stderr.write(buf)
-	# Returning None implies that all bytes were written
+        # Returning None implies that all bytes were written
 
     c = pycurl.Curl()
     c.setopt(pycurl.URL, 'http://www.python.org/')
