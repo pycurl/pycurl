@@ -2207,7 +2207,7 @@ DL_EXPORT(void)
     insint_c(d, "HEADER", CURLOPT_HEADER);
     insint_c(d, "NOPROGRESS", CURLOPT_NOPROGRESS);
     insint_c(d, "NOBODY", CURLOPT_NOBODY);
-    insint_c(d, "FAILNOERROR", CURLOPT_FAILONERROR);
+    insint_c(d, "FAILONERROR", CURLOPT_FAILONERROR);
     insint_c(d, "UPLOAD", CURLOPT_UPLOAD);
     insint_c(d, "POST", CURLOPT_POST);
     insint_c(d, "FTPLISTONLY", CURLOPT_FTPLISTONLY);
