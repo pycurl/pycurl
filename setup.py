@@ -41,6 +41,10 @@ else:
     runtime_library_dirs = []
     extra_objects = []
 
+    # Add extra compile flag for MacOS X
+    if sys.platform[:-1] == "darwin":
+        extra_link_args.append('-flat_namespace')
+
 ###############################################################################
 
 setup (	name="pycurl",
