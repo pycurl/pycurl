@@ -43,6 +43,7 @@ class Curl:
             self.c.setopt(pycurl.HTTPHEADER, self.h)
         self.c.perform()
         self.status = self.c.getinfo(pycurl.HTTP_CODE)
+        return self.status
 
     def close(self):
         self.c.cleanup()
