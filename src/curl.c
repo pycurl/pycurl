@@ -11,7 +11,7 @@
 
 /* Ensure we have an updated libcurl */
 #if LIBCURL_VERSION_NUM < 0x070904
-  #error "Need curl version 7.9.4 or greater to compile pycurl."
+  #error "Need libcurl version 7.9.4 or greater to compile pycurl."
 #endif
 
 static PyObject *ErrorObject;
@@ -127,6 +127,11 @@ write_callback(void *ptr,
     self = (CurlObject *)stream;
     arglist = Py_BuildValue("(s#)", (char *)ptr, size*nmemb);
 
+    /* Check whether we got a file object or a curl object */
+    if (self->state == NULL) {
+	return -1;
+    }
+
     PyEval_AcquireThread(self->state);
     result = PyEval_CallObject(self->w_cb, arglist);
     Py_DECREF(arglist);
@@ -159,6 +164,11 @@ header_callback(void *ptr,
 
     self = (CurlObject *)stream;
     arglist = Py_BuildValue("(s#)", (char *)ptr, size*nmemb);
+
+    /* Check whether we got a file object or a curl object */
+    if (self->state == NULL) {
+	return -1;
+    }
 
     PyEval_AcquireThread(self->state);
     result = PyEval_CallObject(self->h_cb, arglist);
@@ -194,6 +204,11 @@ progress_callback(void *client,
     self = (CurlObject *)client;
     arglist = Py_BuildValue("(iiii)", dltotal, dlnow, ultotal, ulnow);
 
+    /* Check whether we got a file object or a curl object */
+    if (self->state == NULL) {
+	return -1;
+    }
+
     PyEval_AcquireThread(self->state);
     result = PyEval_CallObject(self->pro_cb, arglist);
     Py_DECREF(arglist);
@@ -227,6 +242,11 @@ int password_callback(void *client,
 
     self = (CurlObject *)client;
     arglist = Py_BuildValue("(si)", prompt, buflen);
+
+    /* Check whether we got a file object or a curl object */
+    if (self->state == NULL) {
+	return -1;
+    }
 
     PyEval_AcquireThread(self->state);
     result = PyEval_CallObject(self->pwd_cb, arglist);
@@ -276,6 +296,11 @@ int read_callback(void *ptr,
     self = (CurlObject *)stream;
     read_size = size*nmemb;
     arglist = Py_BuildValue("(i)", read_size);
+
+    /* Check whether we got a file object or a curl object */
+    if (self->state == NULL) {
+	return -1;
+    }
 
     PyEval_AcquireThread(self->state);
     result = PyEval_CallObject(self->r_cb, arglist);
