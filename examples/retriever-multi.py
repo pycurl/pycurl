@@ -54,6 +54,7 @@ for i in range(num_conn):
     c.setopt(pycurl.FOLLOWLOCATION, 1)
     c.setopt(pycurl.MAXREDIRS, 5)
     c.setopt(pycurl.CONNECTTIMEOUT, 30)
+    c.setopt(pycurl.TIMEOUT, 300)
     c.setopt(pycurl.NOSIGNAL, 1)
     m.handles.append(c)
 
