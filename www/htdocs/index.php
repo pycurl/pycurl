@@ -43,16 +43,14 @@ Please note that the prebuilt versions are provided for your convenience
 and do not contain extras like
 <a href="http://www.openssl.org/">SSL</a> and
 <a href="http://www.gzip.org/zlib/">zlib</a> support - you have to grab
-all relevant sources and compile them by yourself if you need that.
+all relevant sources and compile them by yourself if you have such special
+requirements.
 </p>
 
 <p>
-Official Debian packages are available for
-<a href="http://packages.debian.org/python2.1-pycurl">Python 2.1</a>
-and
-<a href="http://packages.debian.org/python2.2-pycurl">Python 2.2</a>.
-<br />
-PycURL is also in the
+Official packages are available for
+<a href="http://packages.debian.org/python2.2-pycurl">Debian</a>,
+and PycURL is also in the
 <a href="http://www.freebsd.org/ports/">ports</a>
 collection for FreeBSD and in the
 <a href="http://www.netbsd.org/Documentation/software/packages.html">packages</a>
