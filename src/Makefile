@@ -1,6 +1,6 @@
 CC=gcc
 RM=rm
-PYINCLUDE=/usr/local/include/python2.1
+PYINCLUDE=/usr/include/python1.5
 CURLINCLUDE=/usr/local/include/curl
 INCLUDE=-I$(PYINCLUDE) -I$(CURLINCLUDE)
 LIBS=-L/usr/local/lib -lcurl
