@@ -9,9 +9,9 @@ except ImportError:
     from StringIO import StringIO
 import pycurl
 
-url = 'http://curl.haxx.se/dev/'
+url = "http://curl.haxx.se/dev/"
 
-print 'Testing', pycurl.version
+print "Testing", pycurl.version
 
 body = StringIO()
 c = pycurl.Curl()

@@ -28,7 +28,7 @@ class Test(threading.Thread):
     def run(self):
         self.curl.perform()
         self.curl.close()
-        sys.stdout.write('.')
+        sys.stdout.write(".")
         sys.stdout.flush()
 
 
@@ -47,7 +47,7 @@ fileno = 0
 # Start one thread per URI in parallel
 t1 = time.time()
 for url in urls:
-    f = open(str(fileno), 'wb')
+    f = open(str(fileno), "wb")
     t = Test(url, f)
     t.start()
     threads.append((t, f))
@@ -57,17 +57,17 @@ for thread, file in threads:
     thread.join()
     file.close()
 t2 = time.time()
-print '\n** Multithreading, %d seconds elapsed for %d uris' % (int(t2-t1), len(urls))
+print "\n** Multithreading, %d seconds elapsed for %d uris" % (int(t2-t1), len(urls))
 
 # Start one thread per URI in sequence
 fileno = 0
 t1 = time.time()
 for url in urls:
-    f = open(str(fileno), 'wb')
+    f = open(str(fileno), "wb")
     t = Test(url, f)
     t.start()
     fileno = fileno + 1
     t.join()
     f.close()
 t2 = time.time()
-print '\n** Singlethreading, %d seconds elapsed for %d uris' % (int(t2-t1), len(urls))
+print "\n** Singlethreading, %d seconds elapsed for %d uris" % (int(t2-t1), len(urls))

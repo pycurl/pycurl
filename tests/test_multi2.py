@@ -43,7 +43,7 @@ for url in urls:
 # get data
 while 1:
     ret, num_handles = m.perform()
-    if num_handles == 0:
+    if ret != pycurl.E_CALL_MULTI_PERFORM:
         break
     # currently no more I/O is pending, could do something in the meantime
     # (display a progress bar, etc.)

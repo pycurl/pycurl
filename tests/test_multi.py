@@ -14,7 +14,7 @@ m.add_handle(c1)
 m.add_handle(c2)
 while 1:
     ret, num_handles = m.perform()
-    if num_handles == 0:
+    if ret != pycurl.E_CALL_MULTI_PERFORM:
         break
 m.remove_handle(c2)
 m.remove_handle(c1)
