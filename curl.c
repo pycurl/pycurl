@@ -1,10 +1,10 @@
-/* libcurl Python module  by Kjetil Jacobsen <kjetilja @ cs.uit.no> */
+/* cURL Python module  by Kjetil Jacobsen <kjetilja @ cs.uit.no> */
 
 /* 
  * TODO: 
  * - handle function objects as callbacks (READ/WRITEFUNCTION)
  * - handle getinfo function
- * - ensure that input matches the option for setopt (avoid segfaults on wrong types)
+ * - ensure that input matches the option for setopt (avoid segfaults)
  */
 
 #include "Python.h"
