@@ -30,7 +30,7 @@
 
 
 /* Ensure we have an updated libcurl */
-#if LIBCURL_VERSION_NUM < 0x070908
+#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x070908)
 #  error "Need libcurl version 7.9.8 or greater to compile pycurl."
 #endif
 
