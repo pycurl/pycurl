@@ -15,6 +15,7 @@ try:
 except ImportError:
     from StringIO import StringIO
 
+
 class Curl:
     "High-level interface to cURL functions."
     def __init__(self, base_url="", fakeheaders=[]):
@@ -127,9 +128,14 @@ class Curl:
     def __del__(self):
         self.close()
 
+
 if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        url = 'http://curl.haxx.se'
+    else:
+        url = sys.argv[1]
     c = Curl()
-    c.get('http://curl.haxx.se/')
+    c.get(url)
     print c.body()
     print '='*74 + '\n'
     print c.info()
