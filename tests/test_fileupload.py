@@ -2,8 +2,8 @@
 # Python code to http post a file using the following form
 # Written by Amit Mongia
 """
-<form name="form1" method="post" 
-action="http://mywebsite.com/uploadfile/using/codeword/" 
+<form name="form1" method="post"
+action="http://mywebsite.com/uploadfile/using/codeword/"
 enctype="multipart/form-data">
   <p>Codeword:
     <input type="text" name="codeword" value="uploadfile">

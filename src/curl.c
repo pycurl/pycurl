@@ -327,7 +327,7 @@ int debug_callback(CURL *curlobj,
     }
 
     PyEval_AcquireThread(self->state);
-    arglist = Py_BuildValue("(is#)", type, buffer, (int)size);
+    arglist = Py_BuildValue("(is#)", (int)type, buffer, (int)size);
     result = PyEval_CallObject(self->d_cb, arglist);
     Py_DECREF(arglist);
     if (result == NULL) {
@@ -668,7 +668,9 @@ do_setopt(CurlObject *self, PyObject *args)
         PyArg_ParseTuple(args, "iO!:setopt", &option, &PyCFunction_Type, &obj) ||
         PyArg_ParseTuple(args, "iO!:setopt", &option, &PyMethod_Type, &obj))
       {
-        /* use function types to exactly match the <curl.h> interface */
+        /* We use function types here to make sure that our callback
+         * definitions exactly match the <curl/curl.h> interface.
+         */
         const curl_write_callback w_cb = write_callback;
         const curl_read_callback r_cb = read_callback;
         const curl_write_callback h_cb = header_callback;
