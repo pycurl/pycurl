@@ -650,6 +650,7 @@ do_setopt(CurlObject *self, PyObject *args)
 	    Py_XDECREF(self->d_cb);
 	    self->d_cb = obj;
 	    curl_easy_setopt(self->handle, CURLOPT_DEBUGFUNCTION, self);
+	    break;
 	default:
 	    /* None of the list options were recognized, throw exception */
 	    PyErr_SetString(PyExc_TypeError, "functions are not supported for this option");
