@@ -19,7 +19,7 @@ $VER should be substituted with the version number, e.g. 0.3.0.
 
 You can also install by hand which does not require distutils.  Edit
 the 'src/Makefile' in the distribution directory to suit your setup.
-Type 'make' and copy the file 'src/curlmodule.so' to the site-package
+Type 'make' and copy the file 'src/pycurlmodule.so' to the site-package
 directory of your Python installation (for example
 /usr/lib/python2.0/site-packages).
 

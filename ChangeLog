@@ -1,7 +1,9 @@
 2001-10-12  Kjetil Jacobsen  <kjetilja>
 
+	* Added module docstrings, terse perhaps, but better than nothing.
+	
 	* Added the 'basicfirst.py' file which is a Python version of the
-	corresponding Perl script.
+	corresponding Perl script by Daniel.
 
 2001-08-21  Kjetil Jacobsen  <kjetilja>
 
