@@ -11,7 +11,8 @@ Version 7.11.2 [requires libcurl-7.10.3 or better]
         * Store Python longs in off_t with PyLong_AsLongLong instead
           of PyLong_AsLong.  Should make the options which deal
           with large files behave a little better.  Note that this
-          requires the long long support in Python 2.2 or newer.
+          requires the long long support in Python 2.2 or newer to
+          work properly.
 
 
 Version 7.11.1
