@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+# vi:ts=4:et
 # $Id$
 # Python code to http post a file using the following form
 # Written by Amit Mongia

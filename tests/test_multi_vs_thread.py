@@ -1,5 +1,6 @@
-# $Id$
+#! /usr/bin/env python
 # vi:ts=4:et
+# $Id$
 
 import os, sys, time
 from threading import Thread, RLock

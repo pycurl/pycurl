@@ -1,5 +1,5 @@
-# $Id$
 # vi:ts=4:et
+# $Id$
 
 import os, sys
 

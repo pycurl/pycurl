@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+# vi:ts=4:et
 # $Id$
 
 ## XML-RPC lib included in python2.2

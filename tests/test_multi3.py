@@ -1,5 +1,6 @@
-# $Id$
+#! /usr/bin/env python
 # vi:ts=4:et
+# $Id$
 
 # same as test_multi2.py, but enforce some debugging and strange API-calls
 

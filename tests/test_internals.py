@@ -1,5 +1,6 @@
-# $Id$
+#! /usr/bin/env python
 # vi:ts=4:et
+# $Id$
 
 #
 # a simple self-test
