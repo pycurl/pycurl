@@ -5,7 +5,7 @@
 
 """Setup script for the PycURL module distribution."""
 
-VERSION = "7.10-pre4"
+VERSION = "7.10"
 
 import os, sys, string
 import distutils
@@ -27,7 +27,7 @@ if sys.platform == "win32":
     # Windows users have to configure the CURL_DIR path parameter to match
     # their cURL source installation.  The path set here is just an example
     # and thus unlikely to match your installation.
-    CURL_DIR = r"c:\src\curl-7.9.8"
+    CURL_DIR = r"c:\src\curl-7.10"
     args = sys.argv[:]
     for arg in args:
         if string.find(arg, '--curl-dir=') == 0:
