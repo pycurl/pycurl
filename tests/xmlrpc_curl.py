@@ -9,14 +9,14 @@ class CURLTransport(xmlrpclib.Transport):
 
     def __init__(self, username=None, password=None):
         self.c = pycurl.init()
+        self.c.setopt(pycurl.POST, 1)
+        self.c.setopt(pycurl.HTTPHEADER, self.xmlrpc_h)
         if username != None and password != None:
             self.c.setopt(pycurl.USERPWD, '%s:%s' % (username, password))
 
     def request(self, host, handler, request_body, verbose=0):
         b = cStringIO.StringIO()
         self.c.setopt(pycurl.URL, 'http://%s%s' % (host, handler))
-        self.c.setopt(pycurl.POST, 1)
-        self.c.setopt(pycurl.HTTPHEADER, self.xmlrpc_h)
         self.c.setopt(pycurl.POSTFIELDS, request_body)
         self.c.setopt(pycurl.WRITEFUNCTION, b.write)
         self.c.setopt(pycurl.VERBOSE, verbose)
