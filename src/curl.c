@@ -939,7 +939,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     /* Handle the case of integer arguments */
     if (PyArg_ParseTuple(args, "il:setopt", &option, &longdata)) {
         /* Check that option is integer as well as the input data */
-        if (option >= CURLOPTTYPE_OBJECTPOINT && option != CURLOPT_FILETIME) {
+        if (option <= 0 || (option >= CURLOPTTYPE_OBJECTPOINT && option != CURLOPT_FILETIME)) {
             PyErr_SetString(PyExc_TypeError, "integers are not supported for this option");
             return NULL;
         }
@@ -1183,7 +1183,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             curl_easy_setopt(self->handle, CURLOPT_DEBUGDATA, self);
             break;
         default:
-            /* None of the list options were recognized, throw exception */
+            /* None of the function options were recognized, throw exception */
             PyErr_SetString(PyExc_TypeError, "functions are not supported for this option");
             return NULL;
         }
@@ -2325,6 +2325,9 @@ initpycurl(void)
     insint_c(d, "PROXYTYPE", CURLOPT_PROXYTYPE);
     insint_c(d, "ENCODING", CURLOPT_ENCODING);
     insint_c(d, "HTTP200ALIASES", CURLOPT_HTTP200ALIASES);
+#if (LIBCURL_VERSION_NUM >= 0x070a04)
+    insint_c(d, "UNRESTRICTED_AUTH", CURLOPT_UNRESTRICTED_AUTH);
+#endif
 
     /* CURL_NETRC_OPTION: constants for setopt(NETRC, x) */
     insint_c(d, "NETRC_OPTIONAL", CURL_NETRC_OPTIONAL);
