@@ -1,3 +1,8 @@
+2001-11-29  Kjetil Jacobsen  <kjetilja>
+
+	* Added code in setup.py to install on Windows.  Requires some
+	manual configuration (by Tino Lange <Tino.Lange@gmx.de>).
+
 2001-11-27  Kjetil Jacobsen  <kjetilja>
 
 	* Improved detection of where libcurl is installed in setup.py.
