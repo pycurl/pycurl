@@ -1,5 +1,12 @@
 Version 7.10.3
 
+2002-11-21  Kjetil Jacobsen  <kjetilja>
+
+	* Updated and improved 'examples/curl.py'.
+
+	* Added 'tests/test_multi6.py' which shows how to use the
+	info_read method with CurlMulti.
+	
 2002-11-19  Kjetil Jacobsen  <kjetilja>
 
 	* Added support for curl_multi_info_read.
