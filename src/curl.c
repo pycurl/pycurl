@@ -423,15 +423,20 @@ util_curl_close(CurlObject *self)
     }
     self->state = NULL;
 
+    /* Decref multi stuff which uses this handle */
+    util_curl_xdecref(self, 2, handle);
+
     /* Cleanup curl handle */
     if (handle != NULL) {
         /* Must be done without the gil */
         Py_BEGIN_ALLOW_THREADS
         curl_easy_cleanup(handle);
         Py_END_ALLOW_THREADS
+        handle = NULL;
     }
 
-    util_curl_xdecref(self, 2 | 4 | 8, handle);
+    /* Decref callbacks and file handles */
+    util_curl_xdecref(self, 4 | 8, handle);
 
     /* Free all variables allocated by setopt */
 #undef SFREE
