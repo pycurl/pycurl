@@ -41,6 +41,9 @@ class CGIClient:
         # Setting this option with even a nonexistent file makes libcurl
         # handle cookie capture and playback automatically.
         self.curlobj.setopt(pycurl.COOKIEFILE, "/dev/null")
+        # Set timeouts to avoid hanging too long
+        self.curlobj.setopt(pycurl.CONNECTTIMEOUT, 30)
+        self.curlobj.setopt(pycurl.TIMEOUT, 300)
         # Set up a callback to capture
         def response_callback(x):
             self.response += x
