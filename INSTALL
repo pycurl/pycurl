@@ -1,8 +1,8 @@
-You need Python and libcurl installed on your system to use or build pycurl.
-Note that some RPM distributions of curl does not include everything
-necessary to build pycurl, as some RPMs have separated the developer specific
-files into another RPM which is usually called curl-dev or something
-similar.
+NOTE: You need Python and libcurl installed on your system to use or
+build pycurl.  Some RPM distributions of curl do not include
+everything necessary to build pycurl, in which case you need to
+install the developer specific RPM which is usually called curl-dev.
+
 
 Distutils
 ---------
@@ -11,29 +11,29 @@ Assuming that distutils is installed (which it is by default on Python
 versions greater than 1.5.2) build and install pycurl with the
 following commands:
 
-        (if necessary, become root)
-        tar -zxvf pycurl-$VER.tar.gz
-        cd pycurl-$VER
-        python setup.py install
+    (if necessary, become root)
+    tar -zxvf pycurl-$VER.tar.gz
+    cd pycurl-$VER
+    python setup.py install
 
 $VER should be substituted with the version number, e.g. 7.9.7.
 
 Note that the installation script assumes that 'curl-config' can be
-located in your path setting.  If curl-config is installed outside your path
-or you want to force installation to use a particular version of
-curl-config, use the '--curl-config' commandline option to specify
-the location of curl-config.  Example:
+located in your path setting.  If curl-config is installed outside
+your path or you want to force installation to use a particular
+version of curl-config, use the '--curl-config' commandline option to
+specify the location of curl-config.  Example:
 
-        python setup.py install --curl-config=/usr/local/bin/curl-config
+    python setup.py install --curl-config=/usr/local/bin/curl-config
 
-To build pycurl for Python 1.5.2 you also need the distutils package,
-which you can download from:
 
-        http://www.python.org/sigs/distutils-sig/download.html
+Makefile
+--------
 
-... or be brave and manually tweak the Makefile in the 'src'
-directory to match your installation (the Makefile should work
-fine for RedHat distros with Python 1.5.2).
+To build pycurl for Python 1.5.2 without the distutils package, be
+brave and manually tweak the Makefile in the 'src' directory to match
+your installation (the default Makefile should work fine for older
+RedHat distributions with Python 1.5.2).
 
 
 Windows
@@ -41,8 +41,7 @@ Windows
 
 When installing on Windows, you need to manually configure the path to
 the curl source tree, specified with the CURL_DIR variable in the file
-'setup.py'.  The CURL_DIR variable can also be set using the commandline
-option '--curl-dir':
+'setup.py'.  The CURL_DIR variable can also be set using the
+commandline option '--curl-dir' when invoking setup.py:
 
-        python setup.py install --curl-dir=c:\curl-7.9.8
-
+    python setup.py install --curl-dir=c:\curl-7.10.2
