@@ -399,9 +399,11 @@ do_curl_clear(CurlObject *self)
 static int
 do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
 {
-    int rv;
-    if (self->dict && (rv = visit(self->dict, arg)) != 0)
-        return rv;
+    int err;
+    if (self->dict != NULL && (err = visit(self->dict, arg)) != 0)
+        return err;
+    if (self->multi_stack != NULL && (err = visit(self->multi_stack, arg)) != 0)
+        return err;
     return 0;
 }
 
@@ -1235,9 +1237,9 @@ do_multi_clear(CurlMultiObject *self)
 static int
 do_multi_traverse(CurlMultiObject *self, visitproc visit, void *arg)
 {
-    int rv;
-    if (self->dict && (rv = visit(self->dict, arg)) != 0)
-        return rv;
+    int err;
+    if (self->dict != NULL && (err = visit(self->dict, arg)) != 0)
+        return err;
     return 0;
 }
 
