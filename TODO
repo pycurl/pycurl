@@ -4,7 +4,7 @@
 If you want to hack on pycurl, here's our list of unresolved issues:
 
 
-NEW FEATURES:
+NEW FEATURES/IMPROVEMENTS:
 
     * HTTPPOST should take a dict instead of a list of tuples, this way it
       would have the same interface as POSTFIELDS.

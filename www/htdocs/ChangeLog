@@ -1,4 +1,15 @@
-Version 7.11.3 [requires libcurl-7.10.3 or better]
+Version 7.12 [requires libcurl-7.11.2 or better]
+------------
+
+2004-05-18  Kjetil Jacobsen  <kjetilja>
+
+	* WARNING: To simplify code maintenance pycurl now requires
+	  libcurl 7.11.2 and python 2.2 or newer to work.
+
+	* GC support is now always enabled.
+
+
+Version 7.11.3
 --------------
 
 2004-04-30  Kjetil Jacobsen  <kjetilja>
