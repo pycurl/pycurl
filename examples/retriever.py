@@ -36,6 +36,7 @@ class WorkerThread(threading.Thread):
             curl.setopt(pycurl.WRITEDATA, f)
             curl.setopt(pycurl.NOSIGNAL, 1)
             curl.setopt(pycurl.CONNECTTIMEOUT, 30)
+            curl.setopt(pycurl.TIMEOUT, 300)
             try:
                 curl.perform()
             except:
