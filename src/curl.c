@@ -9,6 +9,11 @@
 #include <stdio.h>
 #include <assert.h>
 
+/* Ensure we have an updated libcurl */
+#if LIBCURL_VERSION_NUM < 0x070904
+  #error "Need curl version 7.9.4 or greater to compile pycurl."
+#endif
+
 static PyObject *ErrorObject;
 
 typedef struct {
