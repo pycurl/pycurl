@@ -21,8 +21,7 @@ c = pycurl.init()
 c.setopt(pycurl.URL, 'http://betty.userland.com/RPC2')
 c.setopt(pycurl.POST, 1)
 c.setopt(pycurl.HTTPHEADER, xmlrpc_header)
-req = xmlrpc_template % ("examples.getStateName", xmlrpclib.dumps((5,)))
-c.setopt(pycurl.POSTFIELDS, req)
+c.setopt(pycurl.POSTFIELDS, xmlrpc_template % ("examples.getStateName", xmlrpclib.dumps((5,))))
 
 print 'Response from http://betty.userland.com/'
 c.perform()
