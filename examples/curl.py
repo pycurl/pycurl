@@ -78,7 +78,7 @@ class Curl:
         m['request-size'] = str(self.c.getinfo(pycurl.REQUEST_SIZE))
         m['content-length-download'] = str(self.c.getinfo(pycurl.CONTENT_LENGTH_DOWNLOAD))
         m['content-length-upload'] = str(self.c.getinfo(pycurl.CONTENT_LENGTH_UPLOAD))
-        m['content-type'] = self.c.getinfo(pycurl.CONTENT_TYPE) or ''
+        m['content-type'] = (self.c.getinfo(pycurl.CONTENT_TYPE) or '').strip(';')
         return m
 
     def get_server_reply(self):
