@@ -167,11 +167,21 @@ self_cleanup(CurlObject *self)
     CURL *handle;
     int i;
 
-    /* Zero handle and thread-state to disallow any operations to be run from now on */
+    /* Zero handle and thread-state to disallow any operations to be run
+     * from now on */
     assert(self != NULL);
     assert(self->ob_type == &Curl_Type);
     handle = self->handle;
     self->handle = NULL;
+    if (handle == NULL) {
+#if 1
+        /* Some paranoia assertions just to make sure the object deallocation
+         * problem is finally really fixed... */
+        assert(self->state == NULL);
+        assert(self->multi_stack == NULL);
+#endif
+        return;             /* already closed */
+    }
     self->state = NULL;
 
     /* Disconnect from multi_stack, remove_handle in any case */
@@ -184,18 +194,17 @@ self_cleanup(CurlObject *self)
         Py_DECREF(multi_stack);
     }
 
-    /* Free all slists allocated by setopt */
-#define SLFREE(v)   if (v != NULL) (curl_formfree(v), v = NULL)
-    SLFREE(self->httppost);
-#undef SLFREE
-#define SLFREE(v)   if (v != NULL) (curl_slist_free_all(v), v = NULL)
-    SLFREE(self->httpheader);
-    SLFREE(self->quote);
-    SLFREE(self->postquote);
-    SLFREE(self->prequote);
-#undef SLFREE
-
-    /* Free all the strings allocated for setopt */
+    /* Free all variables allocated by setopt */
+#undef SFREE
+#define SFREE(v)   if (v != NULL) (curl_formfree(v), v = NULL)
+    SFREE(self->httppost);
+#undef SFREE
+#define SFREE(v)   if (v != NULL) (curl_slist_free_all(v), v = NULL)
+    SFREE(self->httpheader);
+    SFREE(self->quote);
+    SFREE(self->postquote);
+    SFREE(self->prequote);
+#undef SFREE
     for (i = 0; i < CURLOPT_LASTENTRY; i++) {
         if (self->options[i] != NULL) {
             free(self->options[i]);
@@ -203,6 +212,7 @@ self_cleanup(CurlObject *self)
         }
     }
 
+#undef XDECREF
 #define XDECREF(v)  Py_XDECREF(v); v = NULL
     /* Decrement refcount for python callbacks */
     XDECREF(self->w_cb);
@@ -244,32 +254,14 @@ curl_dealloc(CurlObject *self)
 static PyObject *
 do_cleanup(CurlObject *self, PyObject *args)
 {
-    int res = CURLM_OK;
-
     if (!PyArg_ParseTuple(args, ":cleanup")) {
         return NULL;
     }
-    if (self->state != NULL) {
+    if (get_thread_state(self) != NULL) {
         PyErr_SetString(ErrorObject, "cannot invoke cleanup, perform() is running");
         return NULL;
     }
-    if (self->multi_stack != NULL) {
-        /* Do not remove object from multi stack if the stack is still running */
-        if (self->multi_stack->state != NULL) {
-            PyErr_SetString(ErrorObject, "cannot invoke cleanup, multi-perform() is running");
-            return NULL;
-        }
-        /* Remove object from the multi stack if the multi stack is still valid */
-        if (self->multi_stack->multi_handle != NULL && self->handle != NULL) {
-            res = curl_multi_remove_handle(self->multi_stack->multi_handle, self->handle);
-        }
-        Py_DECREF(self->multi_stack);
-        self->multi_stack = NULL;
-    }
     self_cleanup(self);
-    if (res != CURLM_OK) {
-        CURLERROR2("remove_handle failed");
-    }
     Py_INCREF(Py_None);
     return Py_None;
 }
@@ -544,7 +536,7 @@ do_setopt(CurlObject *self, PyObject *args)
         PyErr_SetString(ErrorObject, "cannot invoke setopt, no curl handle");
         return NULL;
     }
-    if (self->state != NULL) {
+    if (get_thread_state(self) != NULL) {
         PyErr_SetString(ErrorObject, "cannot invoke setopt, perform() is running");
         return NULL;
     }
@@ -885,12 +877,8 @@ do_perform(CurlObject *self, PyObject *args)
         PyErr_SetString(ErrorObject, "cannot invoke perform, no curl handle");
         return NULL;
     }
-    if (self->state != NULL) {
+    if (get_thread_state(self) != NULL) {
         PyErr_SetString(ErrorObject, "cannot invoke perform - already running");
-        return NULL;
-    }
-    if (self->multi_stack != NULL && self->multi_stack->state != NULL) {
-        PyErr_SetString(ErrorObject, "cannot invoke perform - multi_perfrom() already running");
         return NULL;
     }
 
@@ -930,7 +918,7 @@ do_getinfo(CurlObject *self, PyObject *args)
         PyErr_SetString(ErrorObject, "cannot invoke getinfo, no curl handle");
         return NULL;
     }
-    if (self->state != NULL) {
+    if (get_thread_state(self) != NULL) {
         PyErr_SetString(ErrorObject, "cannot invoke getinfo, perform() is running");
         return NULL;
     }
@@ -1196,7 +1184,6 @@ static PyMethodDef curlmultiobject_methods[] = {
 static int
 my_setattr(PyObject **dict, char *name, PyObject *v)
 {
-    assert(dict != NULL);
     if (*dict == NULL) {
         *dict = PyDict_New();
         if (*dict == NULL)
