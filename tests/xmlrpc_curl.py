@@ -24,9 +24,9 @@ class CURLTransport(xmlrpclib.Transport):
         try:
             self.c.perform()
         except pycurl.error, v:
-            raise ProtocolError(
+            raise xmlrpclib.ProtocolError(
                 host + handler,
-                -1, v, None
+                v[0], v[1], None
                 )
         b.seek(0)
         return self.parse_response(b)
