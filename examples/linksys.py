@@ -15,9 +15,9 @@
 #
 # This code has been tested against the following hardware:
 #
-#	Hardware  	Firmware
-#	----------	---------------------
-#	BEFW11S4v2	1.44.2.1, Dec 20 2002
+#   Hardware    Firmware
+#   ----------  ---------------------
+#   BEFW11S4v2  1.44.2.1, Dec 20 2002
 #
 # The code is, of course, sensitive to changes in the names of CGI pages
 # and field names.
@@ -27,8 +27,8 @@
 # name/password, modify accordingly.
 #
 # machine 192.168.1.1
-#	login ""
-#	password admin
+#   login ""
+#   password admin
 #
 # By Eric S. Raymond, August April 2003.  All rites reversed.
 
@@ -116,7 +116,7 @@ class LinksysSession:
     def get_WAN_MAC(self):
         return self.get_MAC_address("", r"WAN Connection Type")
 
-    # Set configuration data on the main page 
+    # Set configuration data on the main page
     def set_host_name(self, name):
         self.actions.append(("", "Gozila.cgi", "hostName", name))
     def set_domain_name(self, name):
@@ -419,8 +419,8 @@ default LAN address.  You can connect to a different address or IP with the
 credentials for the router.  The entry corresponding to the defaults is:
 
 machine 192.168.1.1
-	login ""
-	password admin
+    login ""
+    password admin
 
 Most commands queue up changes but don't actually send them to the Linksys.
 You can force pending changes to be written with 'configure'.  Otherwise, they
@@ -440,7 +440,7 @@ untouched."""
             print """\
 The WAN commands become significant if you are using the BEFSR41 or any of
 the other Linksys boxes designed as DSL or cable-modem gateways.  You will
-need to use `wan_type' to declare how you expect to get your address. 
+need to use `wan_type' to declare how you expect to get your address.
 
 If your ISP has issued you a static address, you'll need to use the
 `wan_address', `wan_netmask', and `wan_gateway' commands to set the address

@@ -14,7 +14,7 @@
 
 <dl>
 <dt><code>close()</code> -&gt; <em>None</em></dt>
-<dd> 
+<dd>
 <p>Corresponds to <code>curl_multi_cleanup()</code> in libcurl. &nbsp;This
 method is automatically called by pycurl when a CurlMulti object no
 longer has any references to it, but can also be called
@@ -38,7 +38,7 @@ object).</p>
 </dd>
 
 <dt><code>remove_handle(</code><em>Curl object</em><code>)</code> -&gt; <em>None</em></dt>
-<dd>  
+<dd>
 <p>Corresponds to <code>curl_multi_remove_handle()</code> in libcurl.
 &nbsp;This method removes an existing and valud Curl object from the CurlMulti
 object.</p>
@@ -47,11 +47,11 @@ object.</p>
 object (and thus does not decrease the reference count on the Curl
 object).</p>
 </dd>
- 
-<dt><code>fdset()</code> -&gt; 
+
+<dt><code>fdset()</code> -&gt;
 <em>triple of lists with active file descriptors,
 readable,  writeable, exceptions.</em></dt>
-<dd>  
+<dd>
 <p>Corresponds to <code>curl_multi_fdset()</code> in libcurl. &nbsp;This
 method extracts  the file descriptor information from a CurlMulti object.
 &nbsp;The returned  lists can be used with the <code>select</code> module to
@@ -101,7 +101,7 @@ while num_handles:
 </pre>
 </dd>
 
-<dt><code>info_read(</code><em>[max]</em><code>)</code> -&gt; 
+<dt><code>info_read(</code><em>[max]</em><code>)</code> -&gt;
 <em>numberof queued messages, a list of successful objects, a list of
 failed objects</em></dt>
 <dd>

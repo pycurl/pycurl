@@ -6,8 +6,8 @@ Version 7.10.5 [requires libcurl-7.10.3 or better]
 
 2003-05-07  Eric S. Raymond  <esr@snark.thyrsus.com>
 
-	* Lifted all HTML docs to clean XHTML, verified by tidy.  This
-	removes a TODO item.
+        * Lifted all HTML docs to clean XHTML, verified by tidy.  This
+        removes a TODO item.
 
 2003-05-02  Markus F.X.J. Oberhumer <mfx>
 

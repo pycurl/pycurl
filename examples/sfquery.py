@@ -33,7 +33,7 @@ class SourceForgeUserSession(curl.Curl):
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        project_id = '28236'	# PyCurl project ID
+        project_id = '28236'    # PyCurl project ID
     else:
         project_id = sys.argv[1]
     # Try to grab authenticators out of your .netrc
