@@ -2,8 +2,8 @@
 
 import pycurl
 
-def test(**args):
-    print args
+def test(t, b):
+    print "debug(%d): %s" % (t, b)
 
 c = pycurl.init()
 c.setopt(pycurl.URL, 'http://curl.haxx.se/')
