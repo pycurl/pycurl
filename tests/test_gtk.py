@@ -2,8 +2,6 @@
 
 ## System modules
 import sys, threading
-
-## Gtk modules
 from gtk import *
 
 ## PycURL module
@@ -76,9 +74,8 @@ win.connect("destroy", close_app)
 win.connect("delete_event", close_app)
 
 # Start thread for fetching url
-f = open(sys.argv[2], 'w')
 round = 0.0
-t = Test(sys.argv[1], f)
+t = Test(sys.argv[1], open(sys.argv[2], 'w'))
 t.start()
 
 # Start GTK mainloop
