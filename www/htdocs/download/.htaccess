@@ -11,7 +11,7 @@ Options +Indexes
 # // permissions needed: AllowOverride Indexes
 # ************************************************************************/
 
-IndexOrderDefault Descending Date
+##IndexOrderDefault Descending Date
 
 ##AddDescription "precompiled win32 installer"        .exe
 ##AddDescription "pre-release version"                pycurl-ssl-7.10.2-pre

@@ -113,7 +113,7 @@ or try the code from
 
 <p>
 You can get prebuilt Win32 modules as well as older versions from the
-<a href="download/?M=D">download area</a>.
+<a href="download/">download area</a>.
 Please note that the prebuilt versions are provided for your
 convenience only and are completely <b>unsupported</b> - use them
 at your own risk!
