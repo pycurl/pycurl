@@ -13,6 +13,7 @@ Options +Indexes
 
 IndexOrderDefault Descending Date
 
-AddDescription "precompiled win32 installer"        .exe
+##AddDescription "precompiled win32 installer"        .exe
+AddDescription "precompiled win32 installer"        pycurl-7.10.win32
 AddDescription " "                                  .gz
 
