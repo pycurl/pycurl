@@ -140,6 +140,10 @@ typedef struct {
 // python utility functions
 **************************************************************************/
 
+#if (PY_VERSION_HEX < 0x02030000) && !defined(PY_LONG_LONG)
+#  define PY_LONG_LONG LONG_LONG
+#endif
+
 /* Like PyString_AsString(), but set an exception if the string contains
  * embedded NULs. Actually PyString_AsStringAndSize() already does that for
  * us if the `len' parameter is NULL - see Objects/stringobject.c.
@@ -1063,11 +1067,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
     /* Handle the case of long arguments (used by *LARGE options) */
     if (PyLong_Check(obj)) {
-#ifndef PY_LONG_LONG
-        LONG_LONG d = PyLong_AsLongLong(obj);
-#else
         PY_LONG_LONG d = PyLong_AsLongLong(obj);
-#endif
         if (d == -1 && PyErr_Occurred())
             return NULL;
 
