@@ -4,6 +4,11 @@
 If you want to hack on pycurl, here's our list of unresolved issues:
 
 
+BUGS:
+
+    * Find the GC tracking bug which cause Python to fail an assertion.
+
+
 DEPRECATED LIBCURL FEATURES:
 
     * Use curl_formadd() instead of the deprecated curl_formparse().
