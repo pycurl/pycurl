@@ -517,12 +517,16 @@ do_setopt(CurlObject *self, PyObject *args)
 	}
     }
 
+    PyErr_Clear();
+
     /* Handle the case of function objects for callbacks */
 
     if (PyArg_ParseTuple(args, "iO!:setopt", &option, &PyFunction_Type, &obj) ||
 	PyArg_ParseTuple(args, "iO!:setopt", &option, &PyCFunction_Type, &obj) ||
 	PyArg_ParseTuple(args, "iO!:setopt", &option, &PyMethod_Type, &obj))
       {
+	PyErr_Clear();
+
 	switch(option) {
 	case CURLOPT_WRITEFUNCTION:
 	    Py_INCREF(obj);
@@ -567,6 +571,8 @@ do_setopt(CurlObject *self, PyObject *args)
 	Py_INCREF(Py_None);
 	return Py_None;
     }
+
+    PyErr_Clear();
 
     /* Failed to match any of the function signatures -- return error */
     PyErr_SetString(PyExc_TypeError, "invalid arguments to setopt");
