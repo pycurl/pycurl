@@ -28,7 +28,20 @@ prefix has been removed. The type for <i>value</i> depends on the option,
 and can be either a string, integer, file objects, lists, &nbsp;or functions.<br>
   <br>
  Example usage:
-  <pre>&gt;&gt;&gt; import pycurl<br>&gt;&gt;&gt; c = pycurl.Curl() <br>&gt;&gt;&gt; c.setopt(pycurl.URL, 'http://www.python.org/')<br>&gt;&gt;&gt; c.setopt(pycurl.HTTPHEADER, ['User-Agent: PycURL test', 'Accept:'])<br>&gt;&gt;&gt; import StringIO<br>&gt;&gt;&gt; b = StringIO.StringIO()<br>&gt;&gt;&gt; c.setopt(pycurl.WRITEFUNCTION, b.write)<br>&gt;&gt;&gt; c.setopt(pycurl.FOLLOWLOCATION, 1)<br>&gt;&gt;&gt; c.setopt(pycurl.MAXREDIRS, 5)<br>&gt;&gt;&gt; c.perform()<br>&gt;&gt;&gt; print b.getvalue()<br>...<br></pre>
+<pre>
+import pycurl
+c = pycurl.Curl()
+c.setopt(pycurl.URL, 'http://www.python.org/')
+c.setopt(pycurl.HTTPHEADER, ['User-Agent: PycURL test', 'Accept:'])
+import StringIO
+b = StringIO.StringIO()
+c.setopt(pycurl.WRITEFUNCTION, b.write)
+c.setopt(pycurl.FOLLOWLOCATION, 1)
+c.setopt(pycurl.MAXREDIRS, 5)
+c.perform()
+print b.getvalue()
+...
+</pre>
 </blockquote>
   <b>getinfo(</b><i>option</i><b>) </b>-&gt; <i>Result</i>
 <blockquote> Corresponds to <b>curl_easy_getinfo</b> in libcurl, where <i>option</i>
@@ -38,8 +51,15 @@ of float depending on which option is given. &nbsp;The <b>getinfo</b> method
 should not be called unless <b>perform</b> has been called and finished.<br>
   <br>
  Example usage: <br>
-  <pre>&gt;&gt;&gt; import pycurl<br>&gt;&gt;&gt; c = pycurl.Curl()<br>&gt;&gt;&gt; c.setopt(pycurl.URL, 'file:///dev/null')<br>&gt;&gt;&gt; c.perform()<br>&gt;&gt;&gt; c.getinfo(pycurl.EFFECTIVE_URL)<br>'file:///dev/null'</pre>
-  <br>
+  <pre>
+import pycurl
+c = pycurl.Curl()
+c.setopt(pycurl.URL, 'file:///dev/null')
+c.perform()
+print c.getinfo(pycurl.EFFECTIVE_URL)
+...
+</pre>
 </blockquote>
 </body>
 </html>
+

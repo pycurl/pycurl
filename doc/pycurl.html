@@ -38,6 +38,33 @@ Corresponds to <b>curl_global_init</b>() in libcurl.<br>
 <blockquote> Corresponds to <b>curl_global</b>_<b>cleanup</b>()<b> </b>in
 libcurl. <br>
 </blockquote>
+
+<b>pycurl.version_info()</b> -&gt; <i>Result</i>
+<blockquote>
+Corresponds to <b>curl_version_info()</b> in libcurl.  <i>Result</i> is a
+list of information which is similar to the
+<b>curl_version_info_data</b> struct returned by
+<b>curl_version_info()</b> in libcurl.<br>
+<br>
+Example usage:
+<pre>
+>>> import pycurl 
+>>> pycurl.version_info()
+(0, '7.10.2', 461314, 'i686-pc-linux-gnu', 12, 'OpenSSL/0.9.6', 9461775, '1.1.3', 
+('ftp', 'gopher', 'telnet', 'dict', 'ldap', 'http', 'file', 'https', 'ftps'))
+</pre>
+</blockquote>
+
+
+<b>pycurl.version</b>
+<blockquote> This is a string with version information on the curl library
+which is linked and used by pycurl, corresponding to <b>curl_version()</b>
+in libcurl.<br>
+  <br>
+   Example usage:
+  <pre>&gt;&gt;&gt; pycurl.version<br>'libcurl 7.9.8 (OpenSSL 0.9.6)'</pre>
+</blockquote>
+
  <b>pycurl.Curl()</b> -&gt; <i>Curl object</i>
 <blockquote> This function returns a Curl object which corresponds to a <b>CURL</b>
 handle in libcurl. &nbsp;Curl objects automatically set CURLOPT_VERBOSE to
@@ -47,14 +74,6 @@ buffer. <br>
 <b>pycurl.CurlMulti()</b> -&gt; <i>CurlMulti object</i>
 <blockquote>This function returns a CurlMulti object which corresponds to
 a <b>CURLM</b> handle in libcurl.<br>
-</blockquote>
-<b>pycurl.version</b>
-<blockquote> This is a string with version information on the curl library
-which is linked and used by pycurl, corresponding to <b>curl_version</b>
-in libcurl.<br>
-  <br>
-   Example usage:
-  <pre>&gt;&gt;&gt; pycurl.version<br>'libcurl 7.9.8 (OpenSSL 0.9.6)'</pre>
 </blockquote>
 
 <hr width="100%" size="2">
