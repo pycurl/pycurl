@@ -19,8 +19,8 @@ extra_link_args = []
 
 if sys.platform == "win32":
     # Windows users have to configure the CURL_DIR path parameter to match
-    # their curl source installation.  The path set here is
-    # just an example and thus unlikely to match your installation.
+    # their cURL source installation.  The path set here is just an example
+    # and thus unlikely to match your installation.
     CURL_DIR = r"c:\src\curl-7.9.8"
     include_dirs.append(os.path.join(CURL_DIR, "include"))
     extra_objects.append(os.path.join(CURL_DIR, "lib", "libcurl.lib"))
@@ -36,9 +36,9 @@ else:
             library_dirs.append(e[2:])
     libraries = ["curl"]
 
-# Add extra compile flag for MacOS X
-if sys.platform[:-1] == "darwin":
-    extra_link_args.append("-flat_namespace")
+    # Add extra compile flag for MacOS X
+    if sys.platform[:-1] == "darwin":
+        extra_link_args.append("-flat_namespace")
 
 
 ###############################################################################
@@ -49,6 +49,8 @@ setup (name="pycurl",
        author="Kjetil Jacobsen",
        author_email="kjetilja@cs.uit.no",
        url="http://pycurl.sourceforge.net/",
+       data_files = [(os.path.join('doc', 'pycurl'),
+                    ['README', 'COPYING', 'INSTALL'])],
        ext_modules=[Extension(name="pycurl",
                               sources=[os.path.join("src", "curl.c")],
                               include_dirs=include_dirs,
