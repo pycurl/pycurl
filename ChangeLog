@@ -5,8 +5,8 @@
 2003-01-22  Kjetil Jacobsen  <kjetilja>
 
 	* The info_read method now returns a separate array with handles
-	that failed.  Each entry in this array is a tuple with <error
-	number, error message, curl object>.  This addition makes it
+	that failed.  Each entry in this array is a tuple with (curl
+	object, error number, error message).  This addition makes it
 	simpler to do error checking of individual curl objects when using
 	the multi interface.
 
@@ -35,7 +35,7 @@ Version 7.10.3
 
 	* Added 'tests/test_multi6.py' which shows how to use the
 	info_read method with CurlMulti.
-	
+
 2002-11-19  Kjetil Jacobsen  <kjetilja>
 
 	* Added support for curl_multi_info_read.
