@@ -26,6 +26,7 @@ RSYNC_EXCLUDES = \
 	'--exclude=.xvpics/' \
 	'--exclude=CVS/' \
 	'--exclude=htdocs/download/' \
+	'--exclude=htdocs/favicon.ico' \
 	'--exclude=.cvsignore'
 
 RSYNC_USER = kjetilja@shell.sourceforge.net
