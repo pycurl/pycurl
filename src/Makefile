@@ -1,9 +1,9 @@
 CC=gcc
 RM=rm
 PYINCLUDE=/usr/include/python1.5
-CURLINCLUDE=/usr/local/include/curl
+CURLINCLUDE=/usr/include/curl
 INCLUDE=-I$(PYINCLUDE) -I$(CURLINCLUDE)
-LIBS=-L/usr/local/lib -lcurl
+LIBS=-L/usr/lib -lcurl
 LDOPTS=-shared
 CCOPTS=-g -O2 -Wall -Wstrict-prototypes -fPIC
 
