@@ -36,8 +36,7 @@ class Curl:
         # handle cookie capture and playback automatically.
         self.set_option(pycurl.COOKIEFILE, "/dev/null")
         # Set timeouts to avoid hanging too long
-        self.set_option(pycurl.CONNECTTIMEOUT, 30)
-        self.set_option(pycurl.TIMEOUT, 300)
+        self.set_timeout(30)
         # Use password identification from .netrc automatically
         self.set_option(pycurl.NETRC, 1)
         # Set up a callback to capture the payload
@@ -47,6 +46,11 @@ class Curl:
         def header_callback(x):
             self.header.write(x)
         self.set_option(pycurl.HEADERFUNCTION, header_callback)
+
+    def set_timeout(self, timeout):
+        "Set timeout for connect and object retrieval (applies for both)"
+        self.set_option(pycurl.CONNECTTIMEOUT, timeout)
+        self.set_option(pycurl.TIMEOUT, timeout)
 
     def set_url(self, url):
         "Set the base URL to be retrieved."
