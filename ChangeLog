@@ -1,7 +1,8 @@
 2002-02-26  Kjetil Jacobsen  <kjetilja>
 
-	* Fixed a bug where string arguments to setopt sometimes were
-	prematurely deallocated.
+	* Clarence Garnder <clarence@silcom.com> found a bug where string
+	arguments to setopt sometimes were prematurely deallocated, this
+	should now be fixed.
 
 2002-02-21  Kjetil Jacobsen  <kjetilja>
 
