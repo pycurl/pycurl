@@ -33,6 +33,13 @@ In practice, these limitations can be overcome by having a callback
 function be a class instance method and rather use the class instance
 attributes to store per object data such as files used in the callbacks.</p>
 
+<p><b>Note:</b> On Win32 libcurl READDATA must be used in combination with
+READFUNCTION if libcurl is used as a DLL.  Thus, in pycurl you have to
+use READFUNCTION in combination with a class instance to mimic this
+behaviour since READFUNCTION cannot be used with READDATA. The file
+'examples/file_upload.py' in the distribution contains example code
+which may be useful here.</p>
+
 The signature of each callback used in pycurl is as follows:<br/>
 <br/>
 <code>WRITEFUNCTION(</code><em>string</em><code>) </code><em>-&gt; number of characters written<br/>
