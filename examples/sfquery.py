@@ -12,11 +12,11 @@
 # By Eric S. Raymond, August 2002.  All rites reversed.
 
 import os, sys, netrc
-import pycurl
+import curl
 
 assert sys.version[:3] >= "2.2", "requires Python 2.2 or better"
 
-class SourceForgeUserSession(pycurl.CurlCGI):
+class SourceForgeUserSession(curl.CurlCGI):
     # SourceForge-specific methods.  Sensitive to changes in site design.
     def login(self, name, password):
         "Establish a login session."
