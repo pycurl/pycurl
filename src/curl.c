@@ -547,9 +547,6 @@ do_init(PyObject *arg)
     self->httppost = NULL;
     self->w_cb = NULL;
 
-    /* Initialize global interpreter lock */
-    PyEval_InitThreads();
-
     return self;
 }
 
@@ -679,4 +676,7 @@ DL_EXPORT(void)
     insint(d, "FILETIME", CURLINFO_FILETIME);
     insint(d, "CONTENT_LENGTH_DOWNLOAD", CURLINFO_CONTENT_LENGTH_DOWNLOAD);
     insint(d, "CONTENT_LENGTH_UPLOAD", CURLINFO_CONTENT_LENGTH_UPLOAD);
+
+    /* Initialize global interpreter lock */
+    PyEval_InitThreads();
 }
