@@ -129,8 +129,11 @@ self_cleanup(CurlObject *self)
 static void
 curl_dealloc(CurlObject *self)
 {
-    self_cleanup(self);
+    /* If this happens, there's a reference bug and we cannot recover */
+    assert(self->state != NULL);
+    assert(self != NULL);
 
+    self_cleanup(self);
 #if (PY_VERSION_HEX < 0x01060000)
     PyMem_DEL(self);
 #else
@@ -143,6 +146,10 @@ static PyObject *
 do_cleanup(CurlObject *self, PyObject *args)
 {
     if (!PyArg_ParseTuple(args, ":cleanup")) {
+        return NULL;
+    }
+    if (self->state != NULL) {
+        PyErr_SetString(ErrorObject, "cannot invoke cleanup, perform() is running");
         return NULL;
     }
     self_cleanup(self);
@@ -164,14 +171,12 @@ write_callback(void *ptr,
     int write_size;
 
     self = (CurlObject *)stream;
-
-    /* Check whether we got a file object or a curl object */
-    if (self->state == NULL) {
+    if (self == NULL || self->state == NULL) {
         return -1;
     }
 
-    arglist = Py_BuildValue("(s#)", (char *)ptr, size*nmemb);
     PyEval_AcquireThread(self->state);
+    arglist = Py_BuildValue("(s#)", (char *)ptr, size*nmemb);
     result = PyEval_CallObject(self->w_cb, arglist);
     Py_DECREF(arglist);
     if (result == NULL) {
@@ -202,14 +207,12 @@ header_callback(void *ptr,
     int write_size;
 
     self = (CurlObject *)stream;
-
-    /* Check whether we got a file object or a curl object */
-    if (self->state == NULL) {
+    if (self == NULL || self->state == NULL) {
         return -1;
     }
 
-    arglist = Py_BuildValue("(s#)", (char *)ptr, size*nmemb);
     PyEval_AcquireThread(self->state);
+    arglist = Py_BuildValue("(s#)", (char *)ptr, size*nmemb);
     result = PyEval_CallObject(self->h_cb, arglist);
     Py_DECREF(arglist);
     if (result == NULL) {
@@ -241,14 +244,12 @@ progress_callback(void *client,
     int ret;
 
     self = (CurlObject *)client;
-
-    /* Check whether we got a file object or a curl object */
-    if (self->state == NULL) {
+    if (self == NULL || self->state == NULL) {
         return -1;
     }
 
-    arglist = Py_BuildValue("(iiii)", dltotal, dlnow, ultotal, ulnow);
     PyEval_AcquireThread(self->state);
+    arglist = Py_BuildValue("(iiii)", dltotal, dlnow, ultotal, ulnow);
     result = PyEval_CallObject(self->pro_cb, arglist);
     Py_DECREF(arglist);
     if (result == NULL) {
@@ -280,14 +281,12 @@ int password_callback(void *client,
     int ret;
 
     self = (CurlObject *)client;
-
-    /* Check whether we got a file object or a curl object */
-    if (self->state == NULL) {
+    if (self == NULL || self->state == NULL) {
         return -1;
     }
 
-    arglist = Py_BuildValue("(si)", prompt, buflen);
     PyEval_AcquireThread(self->state);
+    arglist = Py_BuildValue("(si)", prompt, buflen);
     result = PyEval_CallObject(self->pwd_cb, arglist);
     Py_DECREF(arglist);
     if (result == NULL) {
@@ -331,14 +330,12 @@ int debug_callback(CURL *curlobj,
     CurlObject *self;
 
     self = (CurlObject *)data;
-
-    /* Check whether we got a file object or a curl object */
-    if (self->state == NULL) {
+    if (self == NULL || self->state == NULL) {
         return 0;
     }
 
-    arglist = Py_BuildValue("(is#)", type, buffer, size);
     PyEval_AcquireThread(self->state);
+    arglist = Py_BuildValue("(is#)", type, buffer, size);
     result = PyEval_CallObject(self->d_cb, arglist);
     Py_DECREF(arglist);
     if (result == NULL) {
@@ -363,15 +360,13 @@ int read_callback(void *ptr,
     int ret;
 
     self = (CurlObject *)stream;
-
-    /* Check whether we got a file object or a curl object */
-    if (self->state == NULL) {
+    if (self == NULL || self->state == NULL) {
         return -1;
     }
 
+    PyEval_AcquireThread(self->state);
     read_size = size*nmemb;
     arglist = Py_BuildValue("(i)", read_size);
-    PyEval_AcquireThread(self->state);
     result = PyEval_CallObject(self->r_cb, arglist);
     Py_DECREF(arglist);
     if (result == NULL) {
@@ -430,6 +425,10 @@ do_setopt(CurlObject *self, PyObject *args)
     /* Check that we have a valid curl handle for the object */
     if (self->handle == NULL) {
         PyErr_SetString(ErrorObject, "cannot invoke setopt, no curl handle");
+        return NULL;
+    }
+    if (self->state != NULL) {
+        PyErr_SetString(ErrorObject, "cannot invoke setopt, perform() is running");
         return NULL;
     }
 
@@ -758,6 +757,10 @@ do_perform(CurlObject *self, PyObject *args)
         PyErr_SetString(ErrorObject, "cannot invoke perform, no curl handle");
         return NULL;
     }
+    if (self->state != NULL) {
+        PyErr_SetString(ErrorObject, "cannot invoke perform - already running");
+        return NULL;
+    }
 
     /* Save handle to current thread (used as context for python callbacks) */
     self->state = PyThreadState_Get();
@@ -766,6 +769,9 @@ do_perform(CurlObject *self, PyObject *args)
     Py_BEGIN_ALLOW_THREADS
     res = curl_easy_perform(self->handle);
     Py_END_ALLOW_THREADS
+
+    /* Zero thread-state to disallow callbacks to be run from now on */
+    self->state = NULL;
 
     if (res == CURLE_OK) {
         Py_INCREF(Py_None);
@@ -789,6 +795,10 @@ do_getinfo(CurlObject *self, PyObject *args)
     /* Check that we have a valid curl handle for the object */
     if (self->handle == NULL) {
         PyErr_SetString(ErrorObject, "cannot invoke getinfo, no curl handle");
+        return NULL;
+    }
+    if (self->state != NULL) {
+        PyErr_SetString(ErrorObject, "cannot invoke getinfo, perform() is running");
         return NULL;
     }
 
