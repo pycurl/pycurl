@@ -6,8 +6,6 @@ If you want to hack on pycurl, here's our list of unresolved issues:
 
 NEW FEATURES/IMPROVEMENTS:
 
-    * Add CURLOPT_IOCTLFUNCTION and CURLOPT_IOCTLDATA.
-
     * Support more of the CURLFORM_* API in HTTPPOST?
 
     * Add docs to the high-level interface.

@@ -104,6 +104,7 @@ typedef struct {
     PyObject *r_cb;
     PyObject *pro_cb;
     PyObject *debug_cb;
+    PyObject *ioctl_cb;
     /* file objects */
     PyObject *readdata_fp;
     PyObject *writedata_fp;
@@ -327,6 +328,7 @@ util_curl_new(void)
     self->r_cb = NULL;
     self->pro_cb = NULL;
     self->debug_cb = NULL;
+    self->ioctl_cb = NULL;
 
     /* Set file object pointers to NULL by default */
     self->readdata_fp = NULL;
@@ -427,6 +429,7 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
         ZAP(self->r_cb);
         ZAP(self->pro_cb);
         ZAP(self->debug_cb);
+        ZAP(self->ioctl_cb);
     }
 
     if (flags & 8) {
@@ -568,6 +571,7 @@ do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
     VISIT(self->r_cb);
     VISIT(self->pro_cb);
     VISIT(self->debug_cb);
+    VISIT(self->ioctl_cb);
 
     VISIT(self->readdata_fp);
     VISIT(self->writedata_fp);
@@ -861,6 +865,59 @@ debug_callback(CURL *curlobj, curl_infotype type,
         goto verbose_error;
 
     /* return values from debug callbacks should be ignored */
+
+silent_error:
+    Py_XDECREF(result);
+    PyEval_ReleaseThread(tmp_state);
+    return ret;
+verbose_error:
+    PyErr_Print();
+    goto silent_error;
+}
+
+
+static curlioerr
+ioctl_callback(CURL *curlobj, int cmd, void *stream)
+{
+    CurlObject *self;
+    PyThreadState *tmp_state;
+    PyObject *arglist;
+    PyObject *result = NULL;
+    int ret = 0;       /* always success */
+
+    UNUSED(curlobj);
+
+    /* acquire thread */
+    self = (CurlObject *)stream;
+    tmp_state = get_thread_state(self);
+    if (tmp_state == NULL)
+        return ret;
+    PyEval_AcquireThread(tmp_state);
+
+    /* check args */
+    if (self->ioctl_cb == NULL)
+        goto silent_error;
+
+    /* run callback */
+    arglist = Py_BuildValue("(i)", (int)cmd);
+    if (arglist == NULL)
+        goto verbose_error;
+    result = PyEval_CallObject(self->ioctl_cb, arglist);
+    Py_DECREF(arglist);
+    if (result == NULL)
+        goto verbose_error;
+
+    /* handle result */
+    if (result == Py_None) {
+        ret = CURLIOE_OK;        /* None means success */
+    }
+    else if (PyInt_Check(result)) {
+        ret = (int) PyInt_AsLong(result);
+        if (ret >= CURLIOE_LAST || ret < 0) {
+            PyErr_SetString(ErrorObject, "ioctl callback returned invalid value");
+            goto verbose_error;
+        }
+    }
 
 silent_error:
     Py_XDECREF(result);
@@ -1328,6 +1385,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         const curl_read_callback r_cb = read_callback;
         const curl_progress_callback pro_cb = progress_callback;
         const curl_debug_callback debug_cb = debug_callback;
+        const curl_ioctl_callback ioctl_cb = ioctl_callback;
 
         switch(option) {
         case CURLOPT_WRITEFUNCTION:
@@ -1371,6 +1429,14 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             curl_easy_setopt(self->handle, CURLOPT_DEBUGFUNCTION, debug_cb);
             curl_easy_setopt(self->handle, CURLOPT_DEBUGDATA, self);
             break;
+        case CURLOPT_IOCTLFUNCTION:
+            Py_INCREF(obj);
+            ZAP(self->ioctl_cb);
+            self->ioctl_cb = obj;
+            curl_easy_setopt(self->handle, CURLOPT_IOCTLFUNCTION, ioctl_cb);
+            curl_easy_setopt(self->handle, CURLOPT_IOCTLDATA, self);
+            break;
+
         default:
             /* None of the function options were recognized, throw exception */
             PyErr_SetString(PyExc_TypeError, "functions are not supported for this option");
@@ -2524,11 +2590,13 @@ initpycurl(void)
     insint_c(d, "FTP_ACCOUNT", CURLOPT_FTP_ACCOUNT);
     insint_c(d, "SOURCE_URL", CURLOPT_SOURCE_URL);
     insint_c(d, "SOURCE_QUOTE", CURLOPT_SOURCE_QUOTE);
-#if 0
-    /* TODO - FIXME */
     insint_c(d, "IOCTLFUNCTION", CURLOPT_IOCTLFUNCTION);
     insint_c(d, "IOCTLDATA", CURLOPT_IOCTLDATA);
-#endif
+
+    /* constants for ioctl callback return values */
+    insint_c(d, "IOE_OK", CURLIOE_OK);
+    insint_c(d, "IOE_UNKNOWNCMD", CURLIOE_UNKNOWNCMD);
+    insint_c(d, "IOE_FAILRESTART", CURLIOE_FAILRESTART);
 
     /* constants for setopt(IPRESOLVE, x) */
     insint_c(d, "IPRESOLVE_WHATEVER", CURL_IPRESOLVE_WHATEVER);
