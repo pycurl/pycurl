@@ -1,4 +1,4 @@
-/* cURL Python module  by Kjetil Jacobsen <kjetilja @ cs.uit.no> */
+/* cURL Python module by Kjetil Jacobsen <kjetilja @ cs.uit.no> */
 
 #include "Python.h"
 #include <curl/curl.h>
@@ -16,6 +16,7 @@ typedef struct {
     struct curl_slist *httpheader;
     struct curl_slist *quote;
     struct curl_slist *postquote;
+    PyObject *w_cb;
     char error[CURL_ERROR_SIZE];
 } CurlObject;
 
@@ -75,6 +76,35 @@ do_cleanup(CurlObject *self, PyObject *args)
 }
 
 /* --------------------------------------------------------------------- */
+
+static int write_callback(void *ptr,
+			  size_t size,
+			  size_t nmemb,
+			  FILE  *stream)
+{
+    PyObject *arglist;
+    PyObject *result;
+    CurlObject *self;
+    int write_size;
+    
+    //printf("callback started - ptr %x, size %d, nmemb %d, stream %x\n",
+    //ptr, size, nmemb, stream);
+
+    self = (CurlObject *)stream;
+    arglist = Py_BuildValue("(s#)", (char *)ptr, size*nmemb);
+    result = PyEval_CallObject(self->w_cb, arglist);
+    Py_DECREF(arglist);
+    if (result == NULL) {
+	return 0;
+    }
+
+    write_size = (int)PyInt_AsLong(result);
+    Py_DECREF(result);
+
+    //printf("callback finished\n");
+    return write_size;
+}
+
 
 static PyObject *
 do_setopt(CurlObject *self, PyObject *args)
@@ -303,6 +333,22 @@ do_setopt(CurlObject *self, PyObject *args)
 	}
     }
 
+    /* Handle the case of function objects for callbacks */
+    if (PyArg_ParseTuple(args, "iO!:setopt", &option, &PyFunction_Type, &obj)) {
+	switch(option) {
+	case CURLOPT_WRITEFUNCTION:
+	    /* Must store the function pointer in self */
+	    Py_INCREF(obj);
+	    Py_XDECREF(self->w_cb);
+	    self->w_cb = obj;
+	    curl_easy_setopt(self->handle, CURLOPT_WRITEFUNCTION, write_callback);
+	    curl_easy_setopt(self->handle, CURLOPT_FILE, self);
+	    break;
+	}
+	Py_INCREF(Py_None);
+	return Py_None;
+    }
+
     /* Failed to match any of the function signatures -- return error */
     PyErr_SetString(PyExc_TypeError, "invalid arguments to setopt");
     return NULL;
@@ -493,6 +539,7 @@ do_init(PyObject *arg)
     self->quote = NULL;
     self->postquote = NULL;
     self->httppost = NULL;
+    self->w_cb = NULL;
     return self;
 }
 
