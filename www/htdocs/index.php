@@ -15,11 +15,11 @@ echo "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
   <meta name="description" content="PycURL Homepage" />
   <meta name="keywords" content="pycurl, curl, libcurl, python, wget, file transfer, urllib" />
   <meta name="revisit-after" content="30 days" />
-  <meta name="robots" content="index, follow" />
+  <meta name="robots" content="archive, index, follow" />
 </head>
 
 
-<body bgcolor="#ffffff" link="#0000ee" vlink="#551a8b" alink="#0000ee">
+<body text="#000000" bgcolor="#ffffff" link="#0000ee" vlink="#551a8b" alink="#0000ee">
 
 <center>
   <a href="http://curl.haxx.se/libcurl/"><img src="http://curl.haxx.se/libcurl/big.jpg" width="416" height="115" border="0" alt="libcurl"></img></a>
