@@ -819,7 +819,7 @@ insint(PyObject *d, char *name, int value)
 
 /* Initialization function for the module */
 DL_EXPORT(void)
-    initcurl(void)
+    initpycurl(void)
 {
     PyObject *m, *d;
 
@@ -828,11 +828,11 @@ DL_EXPORT(void)
     Curl_Type.ob_type = &PyType_Type;
   
     /* Create the module and add the functions */
-    m = Py_InitModule("curl", curl_methods);
+    m = Py_InitModule("pycurl", curl_methods);
   
     /* Add error object to the module */
     d = PyModule_GetDict(m);
-    ErrorObject = PyErr_NewException("curl.error", NULL, NULL);
+    ErrorObject = PyErr_NewException("pycurl.error", NULL, NULL);
     PyDict_SetItemString(d, "error", ErrorObject);
     
     /* Add version string to the module */
