@@ -167,9 +167,9 @@ menus = [
 ]
 
 toolbar = [
-    UIINFO_ITEM_STOCK('Back', 'Previous page', html.do_back, STOCK_PIXMAP_BACK),
-    UIINFO_ITEM_STOCK('Forward', 'Next page', html.do_forward, STOCK_PIXMAP_FORWARD),
-    UIINFO_ITEM_STOCK('Reload', 'Reload current page', html.do_reload, STOCK_PIXMAP_REFRESH)
+    UIINFO_ITEM_STOCK('Back', 'Previous page', html.do_back, STOCK_MENU_BACK),
+    UIINFO_ITEM_STOCK('Forward', 'Next page', html.do_forward, STOCK_MENU_FORWARD),
+    UIINFO_ITEM_STOCK('Reload', 'Reload current page', html.do_reload, STOCK_MENU_REFRESH)
 ]
 
 win = GnomeApp("html_demo", "Python GtkHTML Test")
