@@ -5,7 +5,7 @@
 
 SHELL = /bin/sh
 
-PYTHON = python2.2
+PYTHON = python2.3
 PYTHON = python
 
 all build:
@@ -42,13 +42,13 @@ windist: distclean
 	rm -rf build
 	python2.2 setup.py bdist_wininst
 	rm -rf build
-	python2.3b1 setup.py bdist_wininst
+	python2.3 setup.py bdist_wininst
 	rm -rf build
 	python2.1 setup_win32_ssl.py bdist_wininst
 	rm -rf build
 	python2.2 setup_win32_ssl.py bdist_wininst
 	rm -rf build
-	python2.3b1 setup_win32_ssl.py bdist_wininst
+	python2.3 setup_win32_ssl.py bdist_wininst
 	rm -rf build
 
 
