@@ -172,11 +172,15 @@ setup_args = get_kw(
     license="GNU Lesser General Public License (LGPL)",
     data_files=get_data_files(),
     ext_modules=[ext],
-    packages = [PY_PACKAGE],
-    package_dir = { PY_PACKAGE: os.path.join('python', 'curl') },
     long_description="""
 This module provides Python bindings for the cURL library.""",
 )
+
+# FIXME - which Python version do we want to support ???
+if sys.version >= "2.2":
+    setup_args["packages"] = [PY_PACKAGE]
+    setup_args["package_dir"] = { PY_PACKAGE: os.path.join('python', 'curl') }
+
 
 ##print distutils.__version__
 if LooseVersion(distutils.__version__) > LooseVersion("1.0.1"):
