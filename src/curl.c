@@ -696,7 +696,7 @@ do_setopt(CurlObject *self, PyObject *args)
               option == CURLOPT_SSLKEYPASSWD ||
               option == CURLOPT_SSLENGINE))
             {
-                PyErr_SetString(ErrorObject, "strings are not supported for this option");
+                PyErr_SetString(PyExc_TypeError, "strings are not supported for this option");
                 return NULL;
             }
         /* Free previously allocated memory to option */
@@ -728,7 +728,7 @@ do_setopt(CurlObject *self, PyObject *args)
     if (PyArg_ParseTuple(args, "il:setopt", &option, &longdata)) {
         /* Check that option is integer as well as the input data */
         if (option >= CURLOPTTYPE_OBJECTPOINT && option != CURLOPT_FILETIME) {
-            PyErr_SetString(ErrorObject, "integers are not supported for this option");
+            PyErr_SetString(PyExc_TypeError, "integers are not supported for this option");
             return NULL;
         }
         res = curl_easy_setopt(self->handle, option, longdata);
@@ -1056,8 +1056,8 @@ do_getinfo(CurlObject *self, PyObject *args)
         return PyFloat_FromDouble(d_res);
     }
 
-    /* Got wrong signature on the method call */
-    PyErr_SetString(PyExc_TypeError, "invalid argument to getinfo");
+    /* Got wrong option on the method call */
+    PyErr_SetString(PyExc_ValueError, "invalid argument to getinfo");
     return NULL;
 }
 
@@ -1362,7 +1362,7 @@ curl_multi_getattr(CurlMultiObject *co, char *name)
 }
 
 
-/* --------------- final type definitions --------------- */
+/* --------------- actual type definitions --------------- */
 
 statichere PyTypeObject Curl_Type = {
     PyObject_HEAD_INIT(NULL)
@@ -1427,7 +1427,7 @@ do_global_init(PyObject *dummy, PyObject *args)
     if (!(option == CURL_GLOBAL_ALL ||
           option == CURL_GLOBAL_SSL ||
           option == CURL_GLOBAL_NOTHING)) {
-        PyErr_SetString(ErrorObject, "invalid option to global_init");
+        PyErr_SetString(PyExc_ValueError, "invalid option to global_init");
         return NULL;
     }
 
