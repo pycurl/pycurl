@@ -489,7 +489,7 @@ do_setopt(CurlObject *self, PyObject *args)
     /* Handle the case of integer arguments */
     if (PyArg_ParseTuple(args, "il:setopt", &option, &longdata)) {
         /* Check that option is integer as well as the input data */
-        if (option >= CURLOPTTYPE_OBJECTPOINT) {
+        if (option >= CURLOPTTYPE_OBJECTPOINT && option != CURLOPT_FILETIME) {
             PyErr_SetString(ErrorObject, "integers are not supported for this option");
             return NULL;
         }
@@ -1111,7 +1111,7 @@ DL_EXPORT(void)
     insint(d, "CAINFO", CURLOPT_CAINFO);
     insint(d, "PASSWDFUNCTION", CURLOPT_PASSWDFUNCTION);
     insint(d, "PASSWDDATA", CURLOPT_PASSWDDATA);
-    insint(d, "FILETIME", CURLOPT_FILETIME);
+    insint(d, "OPT_FILETIME", CURLOPT_FILETIME);
     insint(d, "MAXREDIRS", CURLOPT_MAXREDIRS);
     insint(d, "MAXCONNECTS", CURLOPT_MAXCONNECTS);
     insint(d, "CLOSEPOLICY", CURLOPT_CLOSEPOLICY);
@@ -1156,7 +1156,7 @@ DL_EXPORT(void)
     insint(d, "REQUEST_SIZE", CURLINFO_REQUEST_SIZE);
     insint(d, "HEADER_SIZE", CURLINFO_HEADER_SIZE);
     insint(d, "SSL_VERIFYRESULT", CURLINFO_SSL_VERIFYRESULT);
-    insint(d, "FILETIME", CURLINFO_FILETIME);
+    insint(d, "INFO_FILETIME", CURLINFO_FILETIME);
     insint(d, "CONTENT_LENGTH_DOWNLOAD", CURLINFO_CONTENT_LENGTH_DOWNLOAD);
     insint(d, "CONTENT_LENGTH_UPLOAD", CURLINFO_CONTENT_LENGTH_UPLOAD);
     insint(d, "STARTTRANSFER_TIME", CURLINFO_STARTTRANSFER_TIME);
