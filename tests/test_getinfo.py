@@ -22,6 +22,7 @@ c.setopt(pycurl.PROGRESSFUNCTION, progress)
 c.setopt(pycurl.FOLLOWLOCATION, 1)
 c.setopt(pycurl.MAXREDIRS, 5)
 c.setopt(pycurl.WRITEHEADER, h)
+c.setopt(pycurl.OPT_FILETIME, 1)
 c.perform()
 
 print
@@ -31,6 +32,7 @@ print 'Effective URL:', c.getinfo(pycurl.EFFECTIVE_URL)
 print 'Content-type:', c.getinfo(pycurl.CONTENT_TYPE)
 print 'Redirect-time:', c.getinfo(pycurl.REDIRECT_TIME)
 print 'Redirect-count:', c.getinfo(pycurl.REDIRECT_COUNT)
+print 'Filetime:', c.getinfo(pycurl.INFO_FILETIME)
 print
 print "Header is in file 'header', body is in file 'body'"
 
