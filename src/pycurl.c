@@ -45,8 +45,8 @@
 #if !defined(PY_VERSION_HEX) || (PY_VERSION_HEX < 0x02020000)
 #  error "Need Python version 2.2 or greater to compile pycurl."
 #endif
-#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x070c01)
-#  error "Need libcurl version 7.12.1 or greater to compile pycurl."
+#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x070c02)
+#  error "Need libcurl version 7.12.2 or greater to compile pycurl."
 #endif
 
 #undef UNUSED
@@ -1366,6 +1366,7 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
     case CURLINFO_HTTP_CONNECTCODE:
     case CURLINFO_HTTPAUTH_AVAIL:
     case CURLINFO_PROXYAUTH_AVAIL:
+    case CURLINFO_OS_ERRNO:
         {
             /* Return PyInt as result */
             long l_res = -1;
@@ -2313,14 +2314,6 @@ initpycurl(void)
     insint_c(d, "INFOTYPE_DATA_OUT", CURLINFO_DATA_OUT);
     insint_c(d, "INFOTYPE_SSL_DATA_IN", CURLINFO_SSL_DATA_IN);
     insint_c(d, "INFOTYPE_SSL_DATA_OUT", CURLINFO_SSL_DATA_OUT);
-#if 0
-    /* deprecated names (for compatibility with old pycurl versions) */
-    insint_c(d, "TEXT", CURLINFO_TEXT);
-    insint_c(d, "HEADER_IN", CURLINFO_HEADER_IN);
-    insint_c(d, "HEADER_OUT", CURLINFO_HEADER_OUT);
-    insint_c(d, "DATA_IN", CURLINFO_DATA_IN);
-    insint_c(d, "DATA_OUT", CURLINFO_DATA_OUT);
-#endif
 
     /* CURLcode: error codes */
 /* FIXME: lots of error codes are missing */
@@ -2331,12 +2324,6 @@ initpycurl(void)
     insint_c(d, "PROXYTYPE_HTTP", CURLPROXY_HTTP);
     insint_c(d, "PROXYTYPE_SOCKS4", CURLPROXY_SOCKS4);
     insint_c(d, "PROXYTYPE_SOCKS5", CURLPROXY_SOCKS5);
-#if 0
-    /* deprecated names (for compatibility with old pycurl versions) */
-    insint_c(d, "PROXY_HTTP", CURLPROXY_HTTP);
-    insint_c(d, "PROXY_SOCKS4", CURLPROXY_SOCKS4);
-    insint_c(d, "PROXY_SOCKS5", CURLPROXY_SOCKS5);
-#endif
 
     /* curl_httpauth: constants for setopt(HTTPAUTH, x) */
     insint_c(d, "HTTPAUTH_NONE", CURLAUTH_NONE);
@@ -2445,6 +2432,12 @@ initpycurl(void)
     insint_c(d, "FTP_RESPONSE_TIMEOUT", CURLOPT_FTP_RESPONSE_TIMEOUT);
     insint_c(d, "IPRESOLVE", CURLOPT_IPRESOLVE);
     insint_c(d, "MAXFILESIZE", CURLOPT_MAXFILESIZE);
+    insint_c(d, "FTPSSLAUTH", CURLOPT_FTPSSLAUTH);
+
+    /* constants for setopt(FTPSSLAUTH, x) */
+    insint_c(d, "FTPAUTH_DEFAULT", CURLFTPAUTH_DEFAULT);
+    insint_c(d, "FTPAUTH_SSL", CURLFTPAUTH_SSL);
+    insint_c(d, "FTPAUTH_TLS", CURLFTPAUTH_TLS);
 
     /* constants for setopt(IPRESOLVE, x) */
     insint_c(d, "IPRESOLVE_WHATEVER", CURL_IPRESOLVE_WHATEVER);
@@ -2466,11 +2459,6 @@ initpycurl(void)
     /* curl_TimeCond: constants for setopt(TIMECONDITION, x) */
     insint_c(d, "TIMECONDITION_IFMODSINCE", CURL_TIMECOND_IFMODSINCE);
     insint_c(d, "TIMECONDITION_IFUNMODSINCE", CURL_TIMECOND_IFUNMODSINCE);
-#if 0
-    /* deprecated names (for compatibility with old pycurl versions) */
-    insint_c(d, "TIMECOND_IFMODSINCE", CURL_TIMECOND_IFMODSINCE);
-    insint_c(d, "TIMECOND_IFUNMODSINCE", CURL_TIMECOND_IFUNMODSINCE);
-#endif
 
     /* CURLINFO: symbolic constants for getinfo(x) */
     insint_c(d, "EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL);
@@ -2497,6 +2485,7 @@ initpycurl(void)
     insint_c(d, "HTTP_CONNECTCODE", CURLINFO_HTTP_CONNECTCODE);
     insint_c(d, "HTTPAUTH_AVAIL", CURLINFO_HTTPAUTH_AVAIL);
     insint_c(d, "PROXYAUTH_AVAIL", CURLINFO_PROXYAUTH_AVAIL);
+    insint_c(d, "OS_ERRNO", CURLINFO_OS_ERRNO);
 
     insint_c(d, "FTP_SSL", CURLOPT_FTP_SSL);
     insint_c(d, "NETRC_FILE", CURLOPT_NETRC_FILE);
