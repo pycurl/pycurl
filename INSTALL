@@ -1,14 +1,7 @@
-You need Python and libcurl (version 7.9.6 or greater) installed on your
-system to use or build pycurl.
-
+You need Python and libcurl installed on your system to use or build pycurl.
 
 Disutils
 --------
-
-To build pycurl for Python 1.5.X you also need the distutils package,
-which you can download from:
-
-	http://www.python.org/sigs/distutils-sig/download.html
 
 Assuming that distutils is installed (which it is by default on Python
 versions above 1.5.2) build and install pycurl with the following
@@ -21,12 +14,21 @@ commands:
 
 $VER should be substituted with the version number, e.g. 0.3.0.
 
+To build pycurl for Python 1.5.2 you also need the distutils package,
+which you can download from:
+
+	http://www.python.org/sigs/distutils-sig/download.html
+
+... or be brave and manually tweak the Makefile in the 'src'
+directory to match your installation (the Makefile should work
+fine for RedHat distros).
+
 
 Windows
 -------
 
 When installing on Windows, you need to manually configure three path
-settings in setup.py defined by the following variables:
+setting variables in the file 'setup.py':
 
 	W32_INCLUDE	- Path to the libcurl 'include' directory
 	W32_LIB		- Path to the libcurl 'lib' directory
