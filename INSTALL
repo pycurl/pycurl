@@ -34,11 +34,12 @@ e.g. one in /usr/lib and one in /usr/local/lib.
 Also, pycurl is known to trigger a GC related assert failure in the
 Python interpreter.  We have not been able to track down and solve this
 problem.  However, the problem seems to occur less frequently if the GC
-support is disabled in pycurl.  Passing the optional commandline paramter
+support is disabled in pycurl.  Passing the optional commandline parameter
 '--use-gc=0' to setup.py will build pycurl without the GC support enabled.
 Example:
 
-    python setup.py install --use-gc=0
+    python setup.py build --use-gc=0
+    python setup.py install
 
 
 Makefile
