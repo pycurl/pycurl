@@ -7,7 +7,7 @@ import os, sys, string
 assert sys.platform == "win32"
 
 
-CURL_DIR = r"c:\src\build\curl-7.10.2-pre4-ssl"
+CURL_DIR = r"c:\src\build\curl-7.10.2"
 OPENSSL_DIR = r"c:\src\build\openssl-0.9.6g"
 ZLIB_DIR = r"c:\src\build\zlib-1.1.4"
 sys.argv.insert(1, "--curl-dir=" + CURL_DIR)
