@@ -39,8 +39,9 @@ Version 7.9.8.3
 
 2002-07-16  Markus F.X.J. Oberhumer <mfx>
 
-	* Under Python 2.2 or better, Curl and CurlMulti objects now automatically
-	participate in cyclic garbarge collection (using the gc module).
+	* Under Python 2.2 or better, Curl and CurlMulti objects now
+	automatically participate in cyclic garbarge collection
+	(using the gc module).
 
 Version 7.9.8.2
 
