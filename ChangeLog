@@ -4,15 +4,15 @@ Version 7.10.8 [requires libcurl-7.10.3 or better]
 
 2003-11-04  Markus F.X.J. Oberhumer <mfx>
 
-        * Add support for these new libcurl 7.10.8 features:
+        * Added support for these new libcurl 7.10.8 features:
           CURLOPT_FTP_RESPONSE_TIMEOUT, CURLOPT_IPRESOLVE,
           CURLOPT_MAXFILESIZE,
           CURLINFO_HTTPAUTH_AVAIL, CURLINFO_PROXYAUTH_AVAIL,
-          CURL_IPRESOLVE_* constants
+          CURL_IPRESOLVE_* constants.
 
-        * Add support for these new libcurl 7.10.7 features:
+        * Added support for these new libcurl 7.10.7 features:
           CURLOPT_FTP_CREATE_MISSING_DIRS, CURLOPT_PROXYAUTH,
-          CURLINFO_HTTP_CONNECTCODE
+          CURLINFO_HTTP_CONNECTCODE.
 
 
 2003-10-28  Kjetil Jacobsen  <kjetilja>
