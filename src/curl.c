@@ -423,6 +423,14 @@ util_curl_close(CurlObject *self)
     }
     self->state = NULL;
 
+    /* Cleanup curl handle */
+    if (handle != NULL) {
+        /* Must be done without the gil */
+        Py_BEGIN_ALLOW_THREADS
+        curl_easy_cleanup(handle);
+        Py_END_ALLOW_THREADS
+    }
+
     util_curl_xdecref(self, 2 | 4 | 8, handle);
 
     /* Free all variables allocated by setopt */
@@ -436,13 +444,6 @@ util_curl_close(CurlObject *self)
     SFREE(self->postquote);
     SFREE(self->prequote);
 #undef SFREE
-    /* Free the curl handle */
-    if (handle != NULL) {
-        /* Must be done without the gil */
-        Py_BEGIN_ALLOW_THREADS
-        curl_easy_cleanup(handle);
-        Py_END_ALLOW_THREADS
-    }
     /* Last, free the options.  This must be done after the curl handle is closed
      * since curl assumes that some options are valid when invoking cleanup */
     for (i = 0; i < CURLOPT_LASTENTRY; i++) {
