@@ -3,7 +3,7 @@ Version 7.9.8
 2002-06-18  Kjetil Jacobsen  <kjetilja>
 
 	* Made some changes to setup.py which should fix the build
-	problems on RedHat 7.3.
+	problems on RedHat 7.3 (suggested by Benji <benji@kioza.net>).
 	
 	* Use CURLOPT_READDATA instead of CURLOPT_INFILE, and
 	CURLOPT_WRITEDATA instead of CURLOPT_FILE.  Also fixed some
