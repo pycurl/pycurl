@@ -1,5 +1,9 @@
 Version 0.4.9
 
+2002-04-11  Markus F.X.J. Oberhumer <mfx>
+
+	* Added the 'test_post.py' file which demonstrates the use of
+	POST requests.
 
 Version 0.4.8
 
@@ -10,7 +14,7 @@ Version 0.4.8
 	* Now requires libcurl 7.9.5 or greater.
 
 	* Other minor code cleanups and bugfixes.
-	
+
 2002-03-05  Kjetil Jacobsen  <kjetilja>
 
 	* Do not allow WRITEFUNCTION and WRITEHEADER on the same handle.
@@ -44,9 +48,9 @@ Version 0.4.7
 
 	* When thrown, the pycurl.error exception is now a tuple consisting
 	of the curl error code and the error message.
-	
+
 	* Now requires libcurl 7.9.4 or greater.
-	
+
 2002-02-19  Kjetil Jacobsen  <kjetilja>
 
 	* Fixed docstring for getopt() function.
