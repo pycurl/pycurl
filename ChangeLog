@@ -14,7 +14,7 @@ Version 7.9.8.4
 
 	* perform() on multi objects now returns a tuple (result, number
 	of handles) like the libcurl interface does.
-	
+
 2002-08-08  Kjetil Jacobsen  <kjetilja>
 
 	* Added the 'sfquery' script which retrieves a SourceForge XML
