@@ -13,15 +13,19 @@
  * See file COPYING for license information.
  *
  */
-#include <string.h>
+
+#undef NDEBUG
+#include <assert.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <assert.h>
+#include <string.h>
 #if (defined(_WIN32) || defined(__WIN32__)) && !defined(WIN32)
 #  define WIN32 1
 #endif
 #include <Python.h>
 #include <curl/curl.h>
+
 
 /* Ensure we have an updated libcurl */
 #if LIBCURL_VERSION_NUM < 0x070908
