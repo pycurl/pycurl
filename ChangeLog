@@ -1,3 +1,11 @@
+Version 7.10
+
+2002-09-13  Kjetil Jacobsen  <kjetilja>
+
+	* Added commandline options to setup.py for specifying the path to
+	'curl-config' (non-windows) and the curl installation directory
+	(windows).  See the 'INSTALL' file for details.
+
 Version 7.9.8.4
 
 2002-08-28  Kjetil Jacobsen  <kjetilja>
