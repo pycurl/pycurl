@@ -1,8 +1,8 @@
 # $Id$
 # vi:ts=4:et
 
-import pycurl, sys
 try:
+    # Python 2.2 or better
     from gc import get_objects
     import gc
     del get_objects
@@ -10,8 +10,20 @@ try:
 except ImportError:
     gc = None
 
+import pycurl, sys
+from StringIO import StringIO
+
 print "Testing", pycurl.version
 print pycurl.__file__, pycurl.__COMPILE_DATE__
+
+try:
+    import cPickle
+except ImportError:
+    cPickle = None
+try:
+    import pickle
+except ImportError:
+    pickle = None
 
 
 #####
@@ -94,6 +106,46 @@ if 1:
     m1.remove_handle(c)
     m2.add_handle(c)
     del m1, m2, c
+
+
+# pickling of instances of Curl and CurlMulti is not allowed
+if 1 and pickle:
+    c = pycurl.init()
+    m = pycurl.multi_init()
+    fp = StringIO()
+    p = pickle.Pickler(fp, 1)
+    try:
+        p.dump(c)
+    except pickle.PicklingError:
+        pass
+    else:
+        assert 0, "internal error - pickling should fail"
+    try:
+        p.dump(m)
+    except pickle.PicklingError:
+        pass
+    else:
+        assert 0, "internal error - pickling should fail"
+    del c, m, fp, p
+
+if 1 and cPickle:
+    c = pycurl.init()
+    m = pycurl.multi_init()
+    fp = StringIO()
+    p = cPickle.Pickler(fp, 1)
+    try:
+        p.dump(c)
+    except cPickle.PicklingError:
+        pass
+    else:
+        assert 0, "internal error - pickling should fail"
+    try:
+        p.dump(m)
+    except cPickle.PicklingError:
+        pass
+    else:
+        assert 0, "internal error - pickling should fail"
+    del c, m, fp, p
 
 
 # basic check of reference counting (use a memory checker like valgrind)
