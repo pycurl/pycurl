@@ -367,7 +367,7 @@ do_setopt(CurlObject *self, PyObject *args)
 		return NULL;
 	    }
 	/* Free previously allocated memory to option */
-	opt_masked = option & 0xff;
+	opt_masked = option % CURLOPTTYPE_OBJECTPOINT;
 	if (self->options[opt_masked] != NULL) {
 	    free(self->options[opt_masked]);
 	}
