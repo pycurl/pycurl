@@ -6,6 +6,9 @@ Version 7.12.0.1 [requires libcurl-7.11.2 or better]
         * Added test program for HTTP post using the read callback (see
           tests/test_post3.py for details).
 
+        * Use the new CURL_READFUNC_ABORT return code where appropriate
+          to avoid hanging in perform() when read callbacks are used.
+
 2004-06-08  Markus F.X.J. Oberhumer <mfx>
 
         * Setting CURLOPT_POSTFIELDS now allows binary data and
