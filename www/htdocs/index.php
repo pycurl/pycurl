@@ -40,7 +40,10 @@ try the code from
 Official Debian packages are available for
 <a href="http://packages.debian.org/python2.1-pycurl">Python 2.1</a>
 and
-<a href="http://packages.debian.org/python2.2-pycurl">Python 2.2</a>.
+<a href="http://packages.debian.org/python2.2-pycurl">Python 2.2</a>.  PycURL is also
+in the <a href="http://www.freebsd.org/ports/">ports</a> collection for FreeBSD and
+and in the <a href="http://www.netbsd.org/Documentation/software/packages.html">packages</a>
+collection for NetBSD.
 </p>
 
 <p>
