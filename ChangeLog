@@ -1,17 +1,30 @@
 Version 7.9.8.4
 
+2002-07-20  Markus F.X.J. Oberhumer <mfx>
+
+	* API enhancements: added Curl() and CurlMulti() as aliases for
+	init() and multi_init(), and added close() methods as aliases
+	for the cleanup() methods. The new names much better match
+	the actual intended use of the objects, and they also nicely
+	correspond to Python's file object.
+
+	* Also, all constants for Curl.setopt() and Curl.getinfo() are now
+	visible from within Curl objects.
+
+	All changes are fully backward-compatible.
+
 Version 7.9.8.3
 
 2002-07-16  Markus F.X.J. Oberhumer <mfx>
 
-	* Under Python 2.2 or better, Curl and CurlMulti now automatically
+	* Under Python 2.2 or better, Curl and CurlMulti objects now automatically
 	participate in cyclic garbarge collection (using the gc module).
 
 Version 7.9.8.2
 
 2002-07-05  Markus F.X.J. Oberhumer <mfx>
 
-	* Curl and CurlMulti now support standard Python attributes.
+	* Curl and CurlMulti objects now support standard Python attributes.
 	See tests/test_multi2.py for an example.
 
 2002-07-02  Kjetil Jacobsen  <kjetilja>

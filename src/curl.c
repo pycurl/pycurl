@@ -1410,7 +1410,8 @@ done:
 
 /* --------------- methods --------------- */
 
-static char co_cleanup_doc [] = "cleanup() -> None.  End curl session.\n";
+static char co_cleanup_doc [] = "cleanup() -> None.  Close handle and end curl session.\n";
+static char co_close_doc [] = "close() -> None.  Close handle and end curl session.\n";
 static char co_perform_doc [] = "perform() -> None.  Perform a file transfer.  Throws pycurl.error exception upon failure.\n";
 static char co_setopt_doc [] = "setopt(option, parameter) -> None.  Set curl session options.  Throws pycurl.error exception upon failure.\n";
 static char co_getinfo_doc [] = "getinfo(info) -> res.  Extract and return information from a curl session.  Throws pycurl.error exception upon failure.\n";
@@ -1418,6 +1419,7 @@ static char co_getinfo_doc [] = "getinfo(info) -> res.  Extract and return infor
 
 static PyMethodDef curlobject_methods[] = {
     {"cleanup", (PyCFunction)do_curl_cleanup, METH_VARARGS, co_cleanup_doc},
+    {"close", (PyCFunction)do_curl_cleanup, METH_VARARGS, co_close_doc},
     {"perform", (PyCFunction)do_curl_perform, METH_VARARGS, co_perform_doc},
     {"setopt", (PyCFunction)do_curl_setopt, METH_VARARGS, co_setopt_doc},
     {"getinfo", (PyCFunction)do_curl_getinfo, METH_VARARGS, co_getinfo_doc},
@@ -1426,6 +1428,7 @@ static PyMethodDef curlobject_methods[] = {
 
 static PyMethodDef curlmultiobject_methods[] = {
     {"cleanup", (PyCFunction)do_multi_cleanup, METH_VARARGS, NULL},
+    {"close", (PyCFunction)do_multi_cleanup, METH_VARARGS, NULL},
     {"perform", (PyCFunction)do_multi_perform, METH_VARARGS, NULL},
     {"add_handle", (PyCFunction)do_multi_add_handle, METH_VARARGS, NULL},
     {"remove_handle", (PyCFunction)do_multi_remove_handle, METH_VARARGS, NULL},
@@ -1434,6 +1437,9 @@ static PyMethodDef curlmultiobject_methods[] = {
 
 
 /* --------------- setattr/getattr --------------- */
+
+static PyObject *curlobject_constants = NULL;
+static PyObject *curlmultiobject_constants = NULL;
 
 static int
 my_setattr(PyObject **dict, char *name, PyObject *v)
@@ -1455,14 +1461,16 @@ my_setattr(PyObject **dict, char *name, PyObject *v)
 }
 
 static PyObject *
-my_getattr(PyObject *co, char *name, PyObject *dict, PyMethodDef *m)
+my_getattr(PyObject *co, char *name, PyObject *dict1, PyObject *dict2, PyMethodDef *m)
 {
-    if (dict != NULL) {
-        PyObject *v = PyDict_GetItemString(dict, name);
-        if (v != NULL) {
-            Py_INCREF(v);
-            return v;
-        }
+    PyObject *v = NULL;
+    if (v == NULL && dict1 != NULL)
+        v = PyDict_GetItemString(dict1, name);
+    if (v == NULL && dict2 != NULL)
+        v = PyDict_GetItemString(dict2, name);
+    if (v != NULL) {
+        Py_INCREF(v);
+        return v;
     }
     return Py_FindMethod(m, co, name);
 }
@@ -1485,14 +1493,16 @@ static PyObject *
 do_curl_getattr(CurlObject *co, char *name)
 {
     assert_curl_object(co);
-    return my_getattr((PyObject *)co, name, co->dict, curlobject_methods);
+    return my_getattr((PyObject *)co, name, co->dict,
+                      curlobject_constants, curlobject_methods);
 }
 
 static PyObject *
 do_multi_getattr(CurlMultiObject *co, char *name)
 {
     assert_curl_multi_object(co);
-    return my_getattr((PyObject *)co, name, co->dict, curlmultiobject_methods);
+    return my_getattr((PyObject *)co, name, co->dict,
+                      curlmultiobject_constants, curlmultiobject_methods);
 }
 
 
@@ -1624,9 +1634,13 @@ static char pycurl_global_init_doc [] =
 static char pycurl_global_cleanup_doc [] =
 "global_cleanup() -> None.  Cleanup curl environment.\n";
 
+static char pycurl_curl_doc [] =
+"Curl() -> New curl object.  Implicitly calls global_init() if not called.\n";
 static char pycurl_init_doc [] =
 "init() -> New curl object.  Implicitly calls global_init() if not called.\n";
 
+static char pycurl_curlmulti_doc [] =
+"CurlMulti() -> New curl multi-object.\n";
 static char pycurl_multi_init_doc [] =
 "multi_init() -> New curl multi-object.\n";
 
@@ -1635,7 +1649,9 @@ static char pycurl_multi_init_doc [] =
 static PyMethodDef curl_methods[] = {
     {"global_init", (PyCFunction)do_global_init, METH_VARARGS, pycurl_global_init_doc},
     {"global_cleanup", (PyCFunction)do_global_cleanup, METH_VARARGS, pycurl_global_cleanup_doc},
+    {"Curl", (PyCFunction)do_init, METH_VARARGS, pycurl_curl_doc},
     {"init", (PyCFunction)do_init, METH_VARARGS, pycurl_init_doc},
+    {"CurlMulti", (PyCFunction)do_multi_init, METH_VARARGS, pycurl_curlmulti_doc},
     {"multi_init", (PyCFunction)do_multi_init, METH_VARARGS, pycurl_multi_init_doc},
     {NULL, NULL, 0, NULL}
 };
@@ -1659,19 +1675,41 @@ static void
 insstr(PyObject *d, char *name, char *value)
 {
     PyObject *v = PyString_FromString(value);
-    if (!v || PyDict_SetItemString(d, name, v))
-        PyErr_Clear();
-    Py_XDECREF(v);
+    if (v == NULL || d == NULL || PyDict_SetItemString(d, name, v) != 0)
+        Py_FatalError("pycurl: insstr");
+    Py_DECREF(v);
+}
+
+static void
+insint2(PyObject *d1, PyObject *d2, char *name, int value)
+{
+    PyObject *v = PyInt_FromLong((long) value);
+    if (v == NULL || (d1 != NULL && PyDict_SetItemString(d1, name, v) != 0))
+        Py_FatalError("pycurl: insint");
+    if (v == NULL || (d2 != NULL && PyDict_SetItemString(d2, name, v) != 0))
+        Py_FatalError("pycurl: insint");
+    Py_DECREF(v);
 }
 
 static void
 insint(PyObject *d, char *name, int value)
 {
-    PyObject *v = PyInt_FromLong((long) value);
-    if (!v || PyDict_SetItemString(d, name, v))
-        PyErr_Clear();
-    Py_XDECREF(v);
+    return insint2(d, NULL, name, value);
 }
+
+static void
+insint_c(PyObject *d, char *name, int value)
+{
+    return insint2(d, curlobject_constants, name, value);
+}
+
+#if 0
+static void
+insint_m(PyObject *d, char *name, int value)
+{
+    return insint2(d, curlmultiobject_constants, name, value);
+}
+#endif
 
 
 /* Initialization function for the module */
@@ -1695,154 +1733,157 @@ DL_EXPORT(void)
     ErrorObject = PyErr_NewException("pycurl.error", NULL, NULL);
     PyDict_SetItemString(d, "error", ErrorObject);
 
+    curlobject_constants = PyDict_New();
+    assert(curlobject_constants != NULL);
+
     /* Add version string to the module */
     insstr(d, "version", curl_version());
     insstr(d, "__COMPILE_DATE__", __DATE__ " " __TIME__);
-
-    /* Symbolic constants for setopt */
-    insint(d, "FILE", CURLOPT_WRITEDATA);
-    insint(d, "INFILE", CURLOPT_READDATA);
-    insint(d, "WRITEDATA", CURLOPT_WRITEDATA);
-    insint(d, "WRITEFUNCTION", CURLOPT_WRITEFUNCTION);
-    insint(d, "READDATA", CURLOPT_READDATA);
-    insint(d, "READFUNCTION", CURLOPT_READFUNCTION);
-    insint(d, "INFILESIZE", CURLOPT_INFILESIZE);
-    insint(d, "URL", CURLOPT_URL);
-    insint(d, "PROXY", CURLOPT_PROXY);
-    insint(d, "PROXYPORT", CURLOPT_PROXYPORT);
-    insint(d, "HTTPPROXYTUNNEL", CURLOPT_HTTPPROXYTUNNEL);
-    insint(d, "VERBOSE", CURLOPT_VERBOSE);
-    insint(d, "HEADER", CURLOPT_HEADER);
-    insint(d, "NOPROGRESS", CURLOPT_NOPROGRESS);
-    insint(d, "NOBODY", CURLOPT_NOBODY);
-    insint(d, "FAILNOERROR", CURLOPT_FAILONERROR);
-    insint(d, "UPLOAD", CURLOPT_UPLOAD);
-    insint(d, "POST", CURLOPT_POST);
-    insint(d, "FTPLISTONLY", CURLOPT_FTPLISTONLY);
-    insint(d, "FTPAPPEND", CURLOPT_FTPAPPEND);
-    insint(d, "NETRC", CURLOPT_NETRC);
-    insint(d, "FOLLOWLOCATION", CURLOPT_FOLLOWLOCATION);
-    insint(d, "TRANSFERTEXT", CURLOPT_TRANSFERTEXT);
-    insint(d, "PUT", CURLOPT_PUT);
-    insint(d, "MUTE", CURLOPT_MUTE);
-    insint(d, "USERPWD", CURLOPT_USERPWD);
-    insint(d, "PROXYUSERPWD", CURLOPT_PROXYUSERPWD);
-    insint(d, "RANGE", CURLOPT_RANGE);
-    insint(d, "TIMEOUT", CURLOPT_TIMEOUT);
-    insint(d, "POSTFIELDS", CURLOPT_POSTFIELDS);
-    insint(d, "POSTFIELDSIZE", CURLOPT_POSTFIELDSIZE);
-    insint(d, "REFERER", CURLOPT_REFERER);
-    insint(d, "USERAGENT", CURLOPT_USERAGENT);
-    insint(d, "FTPPORT", CURLOPT_FTPPORT);
-    insint(d, "LOW_SPEED_LIMIT", CURLOPT_LOW_SPEED_LIMIT);
-    insint(d, "LOW_SPEED_TIME", CURLOPT_LOW_SPEED_TIME);
-    insint(d, "CURLOPT_RESUME_FROM", CURLOPT_RESUME_FROM);
-    insint(d, "COOKIE", CURLOPT_COOKIE);
-    insint(d, "HTTPHEADER", CURLOPT_HTTPHEADER);
-    insint(d, "HTTPPOST", CURLOPT_HTTPPOST);
-    insint(d, "SSLCERT", CURLOPT_SSLCERT);
-    insint(d, "SSLCERTPASSWD", CURLOPT_SSLCERTPASSWD);
-    insint(d, "CRLF", CURLOPT_CRLF);
-    insint(d, "QUOTE", CURLOPT_QUOTE);
-    insint(d, "POSTQUOTE", CURLOPT_POSTQUOTE);
-    insint(d, "PREQUOTE", CURLOPT_PREQUOTE);
-    insint(d, "WRITEHEADER", CURLOPT_WRITEHEADER);
-    insint(d, "HEADERFUNCTION", CURLOPT_HEADERFUNCTION);
-    insint(d, "COOKIEFILE", CURLOPT_COOKIEFILE);
-    insint(d, "SSLVERSION", CURLOPT_SSLVERSION);
-    insint(d, "TIMECONDITION", CURLOPT_TIMECONDITION);
-    insint(d, "TIMEVALUE", CURLOPT_TIMEVALUE);
-    insint(d, "CUSTOMREQUEST", CURLOPT_CUSTOMREQUEST);
-    insint(d, "STDERR", CURLOPT_STDERR);
-    insint(d, "INTERFACE", CURLOPT_INTERFACE);
-    insint(d, "KRB4LEVEL", CURLOPT_KRB4LEVEL);
-    insint(d, "PROGRESSFUNCTION", CURLOPT_PROGRESSFUNCTION);
-    insint(d, "PROGRESSDATA", CURLOPT_PROGRESSDATA);
-    insint(d, "SSL_VERIFYPEER", CURLOPT_SSL_VERIFYPEER);
-    insint(d, "CAPATH", CURLOPT_CAINFO);
-    insint(d, "CAINFO", CURLOPT_CAINFO);
-    insint(d, "PASSWDFUNCTION", CURLOPT_PASSWDFUNCTION);
-    insint(d, "PASSWDDATA", CURLOPT_PASSWDDATA);
-    insint(d, "OPT_FILETIME", CURLOPT_FILETIME);
-    insint(d, "MAXREDIRS", CURLOPT_MAXREDIRS);
-    insint(d, "MAXCONNECTS", CURLOPT_MAXCONNECTS);
-    insint(d, "CLOSEPOLICY", CURLOPT_CLOSEPOLICY);
-    insint(d, "FRESH_CONNECT", CURLOPT_FRESH_CONNECT);
-    insint(d, "FORBID_REUSE", CURLOPT_FORBID_REUSE);
-    insint(d, "RANDOM_FILE", CURLOPT_RANDOM_FILE);
-    insint(d, "EGDSOCKET", CURLOPT_EGDSOCKET);
-    insint(d, "CONNECTTIMEOUT", CURLOPT_CONNECTTIMEOUT);
-
-    insint(d, "HTTPGET", CURLOPT_HTTPGET);
-    insint(d, "SSL_VERIFYHOST", CURLOPT_SSL_VERIFYHOST);
-    insint(d, "COOKIEJAR", CURLOPT_COOKIEJAR);
-    insint(d, "SSL_CIPHER_LIST", CURLOPT_SSL_CIPHER_LIST);
-    insint(d, "HTTP_VERSION", CURLOPT_HTTP_VERSION);
-    insint(d, "HTTP_VERSION_1_0", CURL_HTTP_VERSION_1_0);
-    insint(d, "HTTP_VERSION_1_1", CURL_HTTP_VERSION_1_1);
-    insint(d, "FTP_USE_EPSV", CURLOPT_FTP_USE_EPSV);
-
-    insint(d, "SSLCERTTYPE", CURLOPT_SSLCERTTYPE);
-    insint(d, "SSLKEY", CURLOPT_SSLKEY);
-    insint(d, "SSLKEYTYPE", CURLOPT_SSLKEYTYPE);
-    insint(d, "SSLKEYPASSWD", CURLOPT_SSLKEYPASSWD);
-    insint(d, "SSLENGINE", CURLOPT_SSLENGINE);
-    insint(d, "SSLENGINE_DEFAULT", CURLOPT_SSLENGINE_DEFAULT);
-
-    insint(d, "DNS_CACHE_TIMEOUT", CURLOPT_DNS_CACHE_TIMEOUT);
-    insint(d, "DNS_USE_GLOBAL_CACHE", CURLOPT_DNS_USE_GLOBAL_CACHE);
-
-    insint(d, "DEBUGFUNCTION", CURLOPT_DEBUGFUNCTION);
-
-    /* Symbolic constants for getinfo */
-    insint(d, "EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL);
-    insint(d, "HTTP_CODE", CURLINFO_HTTP_CODE);
-    insint(d, "TOTAL_TIME", CURLINFO_TOTAL_TIME);
-    insint(d, "NAMELOOKUP_TIME", CURLINFO_NAMELOOKUP_TIME);
-    insint(d, "CONNECT_TIME", CURLINFO_CONNECT_TIME);
-    insint(d, "PRETRANSFER_TIME", CURLINFO_PRETRANSFER_TIME);
-    insint(d, "SIZE_UPLOAD", CURLINFO_SIZE_UPLOAD);
-    insint(d, "SIZE_DOWNLOAD", CURLINFO_SIZE_DOWNLOAD);
-    insint(d, "SPEED_DOWNLOAD", CURLINFO_SPEED_DOWNLOAD);
-    insint(d, "SPEED_UPLOAD", CURLINFO_SPEED_UPLOAD);
-    insint(d, "REQUEST_SIZE", CURLINFO_REQUEST_SIZE);
-    insint(d, "HEADER_SIZE", CURLINFO_HEADER_SIZE);
-    insint(d, "SSL_VERIFYRESULT", CURLINFO_SSL_VERIFYRESULT);
-    insint(d, "INFO_FILETIME", CURLINFO_FILETIME);
-    insint(d, "CONTENT_LENGTH_DOWNLOAD", CURLINFO_CONTENT_LENGTH_DOWNLOAD);
-    insint(d, "CONTENT_LENGTH_UPLOAD", CURLINFO_CONTENT_LENGTH_UPLOAD);
-    insint(d, "STARTTRANSFER_TIME", CURLINFO_STARTTRANSFER_TIME);
-    insint(d, "CONTENT_TYPE", CURLINFO_CONTENT_TYPE);
-    insint(d, "REDIRECT_TIME", CURLINFO_REDIRECT_TIME);
-    insint(d, "REDIRECT_COUNT", CURLINFO_REDIRECT_COUNT);
-
-    /* CLOSEPOLICY constants for setopt */
-    insint(d, "CLOSEPOLICY_LEAST_RECENTLY_USED", CURLCLOSEPOLICY_LEAST_RECENTLY_USED);
-    insint(d, "CLOSEPOLICY_OLDEST", CURLCLOSEPOLICY_OLDEST);
-    insint(d, "CLOSEPOLICY_LEAST_TRAFFIC", CURLCLOSEPOLICY_LEAST_TRAFFIC);
-    insint(d, "CLOSEPOLICY_SLOWEST", CURLCLOSEPOLICY_SLOWEST);
-    insint(d, "CLOSEPOLICY_CALLBACK", CURLCLOSEPOLICY_CALLBACK);
-
-    /* NETRC constants for setopt */
-    insint(d, "NETRC_OPTIONAL", CURL_NETRC_OPTIONAL);
-    insint(d, "NETRC_IGNORED", CURL_NETRC_IGNORED);
-    insint(d, "NETRC_REQUIRED", CURL_NETRC_REQUIRED);
-
-    /* TIMECONDITION constants for setopt */
-    insint(d, "TIMECOND_IFMODSINCE", TIMECOND_IFMODSINCE);
-    insint(d, "TIMECOND_IFUNMODSINCE", TIMECOND_IFUNMODSINCE);
 
     /* global_init options */
     insint(d, "GLOBAL_ALL", CURL_GLOBAL_ALL);
     insint(d, "GLOBAL_NOTHING", CURL_GLOBAL_NOTHING);
     insint(d, "GLOBAL_SSL", CURL_GLOBAL_SSL);
 
+    /* Symbolic constants for setopt */
+    insint_c(d, "FILE", CURLOPT_WRITEDATA);
+    insint_c(d, "INFILE", CURLOPT_READDATA);
+    insint_c(d, "WRITEDATA", CURLOPT_WRITEDATA);
+    insint_c(d, "WRITEFUNCTION", CURLOPT_WRITEFUNCTION);
+    insint_c(d, "READDATA", CURLOPT_READDATA);
+    insint_c(d, "READFUNCTION", CURLOPT_READFUNCTION);
+    insint_c(d, "INFILESIZE", CURLOPT_INFILESIZE);
+    insint_c(d, "URL", CURLOPT_URL);
+    insint_c(d, "PROXY", CURLOPT_PROXY);
+    insint_c(d, "PROXYPORT", CURLOPT_PROXYPORT);
+    insint_c(d, "HTTPPROXYTUNNEL", CURLOPT_HTTPPROXYTUNNEL);
+    insint_c(d, "VERBOSE", CURLOPT_VERBOSE);
+    insint_c(d, "HEADER", CURLOPT_HEADER);
+    insint_c(d, "NOPROGRESS", CURLOPT_NOPROGRESS);
+    insint_c(d, "NOBODY", CURLOPT_NOBODY);
+    insint_c(d, "FAILNOERROR", CURLOPT_FAILONERROR);
+    insint_c(d, "UPLOAD", CURLOPT_UPLOAD);
+    insint_c(d, "POST", CURLOPT_POST);
+    insint_c(d, "FTPLISTONLY", CURLOPT_FTPLISTONLY);
+    insint_c(d, "FTPAPPEND", CURLOPT_FTPAPPEND);
+    insint_c(d, "NETRC", CURLOPT_NETRC);
+    insint_c(d, "FOLLOWLOCATION", CURLOPT_FOLLOWLOCATION);
+    insint_c(d, "TRANSFERTEXT", CURLOPT_TRANSFERTEXT);
+    insint_c(d, "PUT", CURLOPT_PUT);
+    insint_c(d, "MUTE", CURLOPT_MUTE);
+    insint_c(d, "USERPWD", CURLOPT_USERPWD);
+    insint_c(d, "PROXYUSERPWD", CURLOPT_PROXYUSERPWD);
+    insint_c(d, "RANGE", CURLOPT_RANGE);
+    insint_c(d, "TIMEOUT", CURLOPT_TIMEOUT);
+    insint_c(d, "POSTFIELDS", CURLOPT_POSTFIELDS);
+    insint_c(d, "POSTFIELDSIZE", CURLOPT_POSTFIELDSIZE);
+    insint_c(d, "REFERER", CURLOPT_REFERER);
+    insint_c(d, "USERAGENT", CURLOPT_USERAGENT);
+    insint_c(d, "FTPPORT", CURLOPT_FTPPORT);
+    insint_c(d, "LOW_SPEED_LIMIT", CURLOPT_LOW_SPEED_LIMIT);
+    insint_c(d, "LOW_SPEED_TIME", CURLOPT_LOW_SPEED_TIME);
+    insint_c(d, "CURLOPT_RESUME_FROM", CURLOPT_RESUME_FROM);
+    insint_c(d, "COOKIE", CURLOPT_COOKIE);
+    insint_c(d, "HTTPHEADER", CURLOPT_HTTPHEADER);
+    insint_c(d, "HTTPPOST", CURLOPT_HTTPPOST);
+    insint_c(d, "SSLCERT", CURLOPT_SSLCERT);
+    insint_c(d, "SSLCERTPASSWD", CURLOPT_SSLCERTPASSWD);
+    insint_c(d, "CRLF", CURLOPT_CRLF);
+    insint_c(d, "QUOTE", CURLOPT_QUOTE);
+    insint_c(d, "POSTQUOTE", CURLOPT_POSTQUOTE);
+    insint_c(d, "PREQUOTE", CURLOPT_PREQUOTE);
+    insint_c(d, "WRITEHEADER", CURLOPT_WRITEHEADER);
+    insint_c(d, "HEADERFUNCTION", CURLOPT_HEADERFUNCTION);
+    insint_c(d, "COOKIEFILE", CURLOPT_COOKIEFILE);
+    insint_c(d, "SSLVERSION", CURLOPT_SSLVERSION);
+    insint_c(d, "TIMECONDITION", CURLOPT_TIMECONDITION);
+    insint_c(d, "TIMEVALUE", CURLOPT_TIMEVALUE);
+    insint_c(d, "CUSTOMREQUEST", CURLOPT_CUSTOMREQUEST);
+    insint_c(d, "STDERR", CURLOPT_STDERR);
+    insint_c(d, "INTERFACE", CURLOPT_INTERFACE);
+    insint_c(d, "KRB4LEVEL", CURLOPT_KRB4LEVEL);
+    insint_c(d, "PROGRESSFUNCTION", CURLOPT_PROGRESSFUNCTION);
+    insint_c(d, "PROGRESSDATA", CURLOPT_PROGRESSDATA);
+    insint_c(d, "SSL_VERIFYPEER", CURLOPT_SSL_VERIFYPEER);
+    insint_c(d, "CAPATH", CURLOPT_CAINFO);
+    insint_c(d, "CAINFO", CURLOPT_CAINFO);
+    insint_c(d, "PASSWDFUNCTION", CURLOPT_PASSWDFUNCTION);
+    insint_c(d, "PASSWDDATA", CURLOPT_PASSWDDATA);
+    insint_c(d, "OPT_FILETIME", CURLOPT_FILETIME);
+    insint_c(d, "MAXREDIRS", CURLOPT_MAXREDIRS);
+    insint_c(d, "MAXCONNECTS", CURLOPT_MAXCONNECTS);
+    insint_c(d, "CLOSEPOLICY", CURLOPT_CLOSEPOLICY);
+    insint_c(d, "FRESH_CONNECT", CURLOPT_FRESH_CONNECT);
+    insint_c(d, "FORBID_REUSE", CURLOPT_FORBID_REUSE);
+    insint_c(d, "RANDOM_FILE", CURLOPT_RANDOM_FILE);
+    insint_c(d, "EGDSOCKET", CURLOPT_EGDSOCKET);
+    insint_c(d, "CONNECTTIMEOUT", CURLOPT_CONNECTTIMEOUT);
+
+    insint_c(d, "HTTPGET", CURLOPT_HTTPGET);
+    insint_c(d, "SSL_VERIFYHOST", CURLOPT_SSL_VERIFYHOST);
+    insint_c(d, "COOKIEJAR", CURLOPT_COOKIEJAR);
+    insint_c(d, "SSL_CIPHER_LIST", CURLOPT_SSL_CIPHER_LIST);
+    insint_c(d, "HTTP_VERSION", CURLOPT_HTTP_VERSION);
+    insint_c(d, "HTTP_VERSION_1_0", CURL_HTTP_VERSION_1_0);
+    insint_c(d, "HTTP_VERSION_1_1", CURL_HTTP_VERSION_1_1);
+    insint_c(d, "FTP_USE_EPSV", CURLOPT_FTP_USE_EPSV);
+
+    insint_c(d, "SSLCERTTYPE", CURLOPT_SSLCERTTYPE);
+    insint_c(d, "SSLKEY", CURLOPT_SSLKEY);
+    insint_c(d, "SSLKEYTYPE", CURLOPT_SSLKEYTYPE);
+    insint_c(d, "SSLKEYPASSWD", CURLOPT_SSLKEYPASSWD);
+    insint_c(d, "SSLENGINE", CURLOPT_SSLENGINE);
+    insint_c(d, "SSLENGINE_DEFAULT", CURLOPT_SSLENGINE_DEFAULT);
+
+    insint_c(d, "DNS_CACHE_TIMEOUT", CURLOPT_DNS_CACHE_TIMEOUT);
+    insint_c(d, "DNS_USE_GLOBAL_CACHE", CURLOPT_DNS_USE_GLOBAL_CACHE);
+
+    insint_c(d, "DEBUGFUNCTION", CURLOPT_DEBUGFUNCTION);
+
+    /* Symbolic constants for getinfo */
+    insint_c(d, "EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL);
+    insint_c(d, "HTTP_CODE", CURLINFO_HTTP_CODE);
+    insint_c(d, "TOTAL_TIME", CURLINFO_TOTAL_TIME);
+    insint_c(d, "NAMELOOKUP_TIME", CURLINFO_NAMELOOKUP_TIME);
+    insint_c(d, "CONNECT_TIME", CURLINFO_CONNECT_TIME);
+    insint_c(d, "PRETRANSFER_TIME", CURLINFO_PRETRANSFER_TIME);
+    insint_c(d, "SIZE_UPLOAD", CURLINFO_SIZE_UPLOAD);
+    insint_c(d, "SIZE_DOWNLOAD", CURLINFO_SIZE_DOWNLOAD);
+    insint_c(d, "SPEED_DOWNLOAD", CURLINFO_SPEED_DOWNLOAD);
+    insint_c(d, "SPEED_UPLOAD", CURLINFO_SPEED_UPLOAD);
+    insint_c(d, "REQUEST_SIZE", CURLINFO_REQUEST_SIZE);
+    insint_c(d, "HEADER_SIZE", CURLINFO_HEADER_SIZE);
+    insint_c(d, "SSL_VERIFYRESULT", CURLINFO_SSL_VERIFYRESULT);
+    insint_c(d, "INFO_FILETIME", CURLINFO_FILETIME);
+    insint_c(d, "CONTENT_LENGTH_DOWNLOAD", CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+    insint_c(d, "CONTENT_LENGTH_UPLOAD", CURLINFO_CONTENT_LENGTH_UPLOAD);
+    insint_c(d, "STARTTRANSFER_TIME", CURLINFO_STARTTRANSFER_TIME);
+    insint_c(d, "CONTENT_TYPE", CURLINFO_CONTENT_TYPE);
+    insint_c(d, "REDIRECT_TIME", CURLINFO_REDIRECT_TIME);
+    insint_c(d, "REDIRECT_COUNT", CURLINFO_REDIRECT_COUNT);
+
+    /* CLOSEPOLICY constants for setopt */
+    insint_c(d, "CLOSEPOLICY_LEAST_RECENTLY_USED", CURLCLOSEPOLICY_LEAST_RECENTLY_USED);
+    insint_c(d, "CLOSEPOLICY_OLDEST", CURLCLOSEPOLICY_OLDEST);
+    insint_c(d, "CLOSEPOLICY_LEAST_TRAFFIC", CURLCLOSEPOLICY_LEAST_TRAFFIC);
+    insint_c(d, "CLOSEPOLICY_SLOWEST", CURLCLOSEPOLICY_SLOWEST);
+    insint_c(d, "CLOSEPOLICY_CALLBACK", CURLCLOSEPOLICY_CALLBACK);
+
+    /* NETRC constants for setopt */
+    insint_c(d, "NETRC_OPTIONAL", CURL_NETRC_OPTIONAL);
+    insint_c(d, "NETRC_IGNORED", CURL_NETRC_IGNORED);
+    insint_c(d, "NETRC_REQUIRED", CURL_NETRC_REQUIRED);
+
+    /* TIMECONDITION constants for setopt */
+    insint_c(d, "TIMECOND_IFMODSINCE", TIMECOND_IFMODSINCE);
+    insint_c(d, "TIMECOND_IFUNMODSINCE", TIMECOND_IFUNMODSINCE);
+
     /* Debug callback types */
-    insint(d, "TEXT", CURLINFO_TEXT);
-    insint(d, "HEADER_IN", CURLINFO_HEADER_IN);
-    insint(d, "HEADER_OUT", CURLINFO_HEADER_OUT);
-    insint(d, "DATA_IN", CURLINFO_DATA_IN);
-    insint(d, "DATA_OUT", CURLINFO_DATA_OUT);
+    insint_c(d, "TEXT", CURLINFO_TEXT);
+    insint_c(d, "HEADER_IN", CURLINFO_HEADER_IN);
+    insint_c(d, "HEADER_OUT", CURLINFO_HEADER_OUT);
+    insint_c(d, "DATA_IN", CURLINFO_DATA_IN);
+    insint_c(d, "DATA_OUT", CURLINFO_DATA_OUT);
 
     /* Initialize global interpreter lock */
     PyEval_InitThreads();
