@@ -205,7 +205,7 @@ int password_callback(void *client,
 	else {
 	    buf = PyString_AsString(result);
 	    if (strlen(buf) > buflen) {
-		PyErr_SetString(ErrorObject, "password string is too long");
+		PyErr_SetString(ErrorObject, "string from PASSWDFUNCTION callback is too long");
 		PyErr_Print();
 		ret = -1;
 	    }
