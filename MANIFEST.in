@@ -15,6 +15,7 @@ include src/curl.c
 include examples/*.py
 include tests/*.py
 include doc/*.html
+include setup_win32_ssl.py
 
 # exclude unfinished test scripts
 exclude tests/test_multi_vs_thread.py
