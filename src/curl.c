@@ -103,7 +103,6 @@ write_callback(void *ptr,
 	write_size = (int)PyInt_AsLong(result);
     Py_XDECREF(result);
     PyEval_ReleaseThread(self->state);
-
     return write_size;
 }
 
@@ -680,6 +679,13 @@ DL_EXPORT(void)
     insint(d, "FILETIME", CURLINFO_FILETIME);
     insint(d, "CONTENT_LENGTH_DOWNLOAD", CURLINFO_CONTENT_LENGTH_DOWNLOAD);
     insint(d, "CONTENT_LENGTH_UPLOAD", CURLINFO_CONTENT_LENGTH_UPLOAD);
+
+    /* CLOSEPOLICY constants for setopt */
+    insint(d, "CLOSEPOLICY_LEAST_RECENTLY_USED", CURLCLOSEPOLICY_LEAST_RECENTLY_USED);
+    insint(d, "CLOSEPOLICY_OLDEST", CURLCLOSEPOLICY_OLDEST);
+    insint(d, "CLOSEPOLICY_LEAST_TRAFFIC", CURLCLOSEPOLICY_LEAST_TRAFFIC);
+    insint(d, "CLOSEPOLICY_SLOWEST", CURLCLOSEPOLICY_SLOWEST);
+    insint(d, "CLOSEPOLICY_CALLBACK", CURLCLOSEPOLICY_CALLBACK);
 
     /* Initialize global interpreter lock */
     PyEval_InitThreads();
