@@ -1142,6 +1142,13 @@ DL_EXPORT(void)
     insint(d, "GLOBAL_NOTHING", CURL_GLOBAL_NOTHING);
     insint(d, "GLOBAL_SSL", CURL_GLOBAL_SSL);
 
+    /* Debug callback types */
+    insint(d, "TEXT", CURLINFO_TEXT);
+    insint(d, "HEADER_IN", CURLINFO_HEADER_IN);
+    insint(d, "HEADER_OUT", CURLINFO_HEADER_OUT);
+    insint(d, "DATA_IN", CURLINFO_DATA_IN);
+    insint(d, "DATA_OUT", CURLINFO_DATA_OUT);
+
     /* Initialize global interpreter lock */
     PyEval_InitThreads();
 }
