@@ -1,3 +1,12 @@
+Version 7.9.8
+
+2002-06-18  Kjetil Jacobsen  <kjetilja>
+
+	* CURLOPT_FILETIME and CURLINFO_FILETIME had a namespace clash
+	which caused them not to work.  Use OPT_FILETIME for setopt() and
+	INFO_FILETIME for getinfo().  See example usage in
+	'test_getinfo.py' for details.
+
 Version 7.9.7
 	
 2002-05-20  Kjetil Jacobsen  <kjetilja>
