@@ -1,6 +1,9 @@
 # $Id$
 
-import xmlrpclib, pycurl, cStringIO
+import xmlrpclib, pycurl
+try:  import cStringIO as StringIO
+except:  import StringIO
+
 
 class CURLTransport(xmlrpclib.Transport):
     """Handles a cURL HTTP transaction to an XML-RPC server."""
@@ -15,14 +18,14 @@ class CURLTransport(xmlrpclib.Transport):
             self.c.setopt(pycurl.USERPWD, '%s:%s' % (username, password))
 
     def request(self, host, handler, request_body, verbose=0):
-        b = cStringIO.StringIO()
+        b = StringIO.StringIO()
         self.c.setopt(pycurl.URL, 'http://%s%s' % (host, handler))
         self.c.setopt(pycurl.POSTFIELDS, request_body)
         self.c.setopt(pycurl.WRITEFUNCTION, b.write)
         self.c.setopt(pycurl.VERBOSE, verbose)
         self.verbose = verbose
         try:
-            self.c.perform()
+           self.c.perform()
         except pycurl.error, v:
             raise xmlrpclib.ProtocolError(
                 host + handler,
