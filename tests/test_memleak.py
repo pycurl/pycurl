@@ -13,8 +13,8 @@ gc.enable()
 
 
 print "Python", sys.version
-print "pycURL %s (compiled against 0x%x)" % (pycurl.version, pycurl.COMPILE_LIBCURL_VERSION_NUM)
-##print "pycURL version info", pycurl.version_info()
+print "PycURL %s (compiled against 0x%x)" % (pycurl.version, pycurl.COMPILE_LIBCURL_VERSION_NUM)
+##print "PycURL version info", pycurl.version_info()
 print "  %s, compiled %s" % (pycurl.__file__, pycurl.COMPILE_DATE)
 
 
