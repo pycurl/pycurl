@@ -35,6 +35,7 @@ Options -Indexes -MultiViews
   IndexOptions DescriptionWidth=*
 
   IndexIgnore .??* favicon.ico
+  IndexIgnore Attic
 </IfModule>
 
 
