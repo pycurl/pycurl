@@ -1,3 +1,5 @@
+# $Id$
+
 import xmlrpclib, pycurl, cStringIO
 
 class CURLTransport(xmlrpclib.Transport):
