@@ -593,7 +593,15 @@ util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *strea
             PyErr_Format(ErrorObject, "invalid return value for write callback %ld %ld", (long)obj_size, (long)total_size);
             goto verbose_error;
         }
-        ret = total_size;           /* success */
+        ret = (size_t) obj_size;    /* success */
+    }
+    else if (PyLong_Check(result)) {
+        long obj_size = PyLong_AsLong(result);
+        if (obj_size < 0 || obj_size > total_size) {
+            PyErr_Format(ErrorObject, "invalid return value for write callback %ld %ld", (long)obj_size, (long)total_size);
+            goto verbose_error;
+        }
+        ret = (size_t) obj_size;    /* success */
     }
     else {
         PyErr_SetString(ErrorObject, "write callback must return int or None");
