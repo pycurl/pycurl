@@ -70,8 +70,6 @@ version 2.1 of the License, or (at your option) any later version.
 A full copy of the LGPL license is included in the file COPYING.
 </pre>
 </p>
-
-    <br />
     <hr />
     <div align="right">
       <table align="right">
