@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-"""Setup script for the pyCURL module distribution."""
+"""Setup script for the PycURL module distribution."""
 
 import os, sys
 from distutils.core import setup
@@ -17,7 +17,8 @@ if sys.platform == "win32":
     extra_link_args = ['/NODEFAULTLIB:LIBCMTD.lib']
     extra_objects = [r'C:\User\clib\libcurl\lib\libcurl.lib']
 else:
-    # Otherwise, be brave and try to figure out dynamically through curl-config
+    # Otherwise, be brave and try to figure out dynamically through 
+    # curl-config
     include_dirs = []
     cflags=split(strip(os.popen('curl-config --cflags').read()), ' ')
     for e in cflags:
@@ -35,6 +36,8 @@ else:
     extra_objects = []
 
 long_description = "PycURL -- cURL library module for Python"
+
+###############################################################################
 
 setup (	name="pycurl",
       	version="0.4.3",
