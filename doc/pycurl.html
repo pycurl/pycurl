@@ -15,7 +15,7 @@
 <p>The pycurl package is a Python interface to libcurl (<a
 href="http://curl.haxx.se/libcurl/">http://curl.haxx.se/libcurl/</a>). pycurl
 has been successfully built and tested with Python versions from
-2.2 to the current 2.3.x releases.</p>
+2.2 to the current 2.4.x releases.</p>
 
 <p>libcurl is a client-side URL transfer library supporting FTP, FTPS,
 HTTP, HTTPS, GOPHER, TELNET, DICT, FILE and LDAP.  libcurl
@@ -58,7 +58,7 @@ corresponding to
 <pre>
 >>> import pycurl
 >>> pycurl.version
-'libcurl/7.10.4 OpenSSL/0.9.7b ipv6 zlib/1.1.4'
+'libcurl/7.12.3 OpenSSL/0.9.7e zlib/1.2.2.1 libidn/0.5.12'
 </pre>
 </dd>
 
@@ -74,8 +74,9 @@ Returns a tuple of information which is similar to the
 <pre>
 >>> import pycurl
 >>> pycurl.version_info()
-(0, '7.10.4', 461316, 'i386-pc-linux-gnu', 13, 'OpenSSL/0.9.7b', 9465903, '1.1.4',
-('ftp', 'gopher', 'telnet', 'dict', 'ldap', 'http', 'file', 'https', 'ftps'))
+(2, '7.12.3', 461827, 'i586-pc-linux-gnu', 1565, 'OpenSSL/0.9.7e', 9465951,
+'1.2.2.1', ('ftp', 'gopher', 'telnet', 'dict', 'ldap', 'http', 'file',
+'https', 'ftps'), None, 0, '0.5.12')
 </pre>
 </dd>
 
