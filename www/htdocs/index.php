@@ -64,6 +64,11 @@ from a Python program.
   </li>
 </ul>
 
+<h2>Documentation</h2>
+
+PycURL now includes API documentation in the <i>doc</i> (online version) directory of the distribution,
+as well as a number of test and example scripts in the <i>tests</i> and <i>examples</i>
+directories of the distribution.
 
 <h2>Download</h2>
 
