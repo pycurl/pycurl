@@ -47,7 +47,7 @@ from a Python program, similar to the
 
 <ul>
   <li>
-    <a href="http://curl.haxx.se/libcurl/">libcurl</a>
+    libcurl
     is a free and easy-to-use client-side URL transfer library,
     supporting FTP, FTPS, HTTP, HTTPS, GOPHER, TELNET, DICT, FILE and LDAP.
     libcurl supports HTTPS certificates, HTTP POST, HTTP PUT, FTP uploading,
