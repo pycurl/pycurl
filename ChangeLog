@@ -12,6 +12,8 @@
 	* The pycurl.error exception is now a tuple consisting of the curl
 	error code and the error message.
 	
+	* PycURL now requires libcurl 7.9.4 or greater.
+	
 2002-02-19  Kjetil Jacobsen  <kjetilja>
 
 	* Fixed docstring for getopt() function.
