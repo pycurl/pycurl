@@ -10,9 +10,11 @@ versions above 1.5.2) build and install pycurl with the following
 commands:
 
 	(become root)
-	tar -zxvf pycurl-0.1.tar.gz
-	cd pycurl-0.1
+	tar -zxvf pycurl-$VER.tar.gz
+	cd pycurl-$VER
 	python setup.py install
+
+$VER should be substituted with the version number, e.g. 0.3.0.
 
 You can also install by hand which does not require distutils.  Edit
 the 'src/Makefile' in the distribution directory to suit your setup.
