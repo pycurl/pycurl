@@ -666,7 +666,7 @@ do_perform(CurlObject *self, PyObject *args)
     }
 
     /* Save handle to current thread (used to run the callbacks in) */
-    self->state = PyThreadState_New(PyThreadState_Get()->interp);
+    self->state = PyThreadState_Get();
 
     /* Release global lock and start */
     Py_BEGIN_ALLOW_THREADS
