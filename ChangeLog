@@ -8,10 +8,11 @@ Version 7.13.1 [requires libcurl-7.13.1 or better]
 2005-03-03  Kjetil Jacobsen  <kjetilja>
 
         * Added support for CURLFORM API with HTTPPOST: Supports a
-          a tuple with pairs of tuples on the form (option, value)
-          instead of just supporting string contents.  See tests/test_post2.py
+          a tuple with pairs of options and values instead of just
+          supporting string contents.  See tests/test_post2.py
           for example usage.  Options are FORM_CONTENTS, FORM_FILE and
-          FORM_CONTENTTYPE, corresponding to the CURLFORM_* options.
+          FORM_CONTENTTYPE, corresponding to the CURLFORM_* options,
+          and values are strings.
 
 2005-02-13  Markus F.X.J. Oberhumer <mfx>
 
