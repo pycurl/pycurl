@@ -1,5 +1,9 @@
 Version 7.10.3
 
+2002-11-22  Kjetil Jacobsen  <kjetilja>
+
+	* Updated pycurl documentation in the 'doc' directory.
+
 2002-11-21  Kjetil Jacobsen  <kjetilja>
 
 	* Updated and improved 'examples/curl.py'.
