@@ -100,6 +100,30 @@ do_setopt(CurlObject *self, PyObject *args)
 
     /* Handle the case of string arguments */
     if (PyArg_ParseTuple(args, "is:setopt", &option, &stringdata)) {
+	/* Check that the option specified a string as well as the input */
+	if (!(option == CURLOPT_URL ||
+	      option == CURLOPT_PROXY ||
+	      option == CURLOPT_USERPWD ||
+	      option == CURLOPT_PROXYUSERPWD ||
+	      option == CURLOPT_RANGE ||
+	      option == CURLOPT_POSTFIELDS ||
+	      option == CURLOPT_REFERER ||
+	      option == CURLOPT_USERAGENT ||
+	      option == CURLOPT_FTPPORT ||
+	      option == CURLOPT_COOKIE ||
+	      option == CURLOPT_SSLCERT ||
+	      option == CURLOPT_SSLCERTPASSWD ||
+	      option == CURLOPT_COOKIEFILE ||
+	      option == CURLOPT_CUSTOMREQUEST ||
+	      option == CURLOPT_INTERFACE ||
+	      option == CURLOPT_KRB4LEVEL ||
+	      option == CURLOPT_CAINFO ||
+	      option == CURLOPT_RANDOM_FILE ||
+	      option == CURLOPT_EGDSOCKET))
+	    {
+		PyErr_SetString(ErrorObject, "invalid options to setopt");
+		return NULL;
+	    }
 	if (option == CURLOPT_URL) {
 	    /* Need to store uri for later use if the option is OPTCURL_URL */
 	    buf = (char *)malloc((strlen(stringdata)*sizeof(char))+sizeof(char));
@@ -131,6 +155,11 @@ do_setopt(CurlObject *self, PyObject *args)
 
     /* Handle the case of integer arguments */
     if (PyArg_ParseTuple(args, "il:setopt", &option, &longdata)) {    
+	/* Check that option is integer as well as the input data */
+	if (option >= CURLOPTTYPE_OBJECTPOINT) {
+	    PyErr_SetString(ErrorObject, "invalid options to setopt");
+	    return NULL;
+	}
 	res = curl_easy_setopt(self->handle, option, longdata);
 	/* Check for errors */
 	if (res == 0) {
@@ -139,13 +168,23 @@ do_setopt(CurlObject *self, PyObject *args)
 	} else {
 	    PyErr_SetString(ErrorObject, self->error);
 	    return NULL;
-	}      
+	}
     }
 
     PyErr_Clear();
 
     /* Handle the case of file objects */
     if (PyArg_ParseTuple(args, "iO!:setopt", &option, &PyFile_Type, &obj)) {
+	/* Ensure the option specified a file as well as the input */
+	if (!(option == CURLOPT_FILE || 
+	      option == CURLOPT_INFILE ||
+	      option == CURLOPT_WRITEHEADER || 
+	      option == CURLOPT_PROGRESSDATA ||
+	      option == CURLOPT_PASSWDDATA))
+	    {
+		PyErr_SetString(PyExc_TypeError, "invalid options to setopt");
+		return NULL;
+	    }
 	fp = PyFile_AsFile(obj);
 	if (fp == NULL) {
 	    PyErr_SetString(PyExc_TypeError, "second argument must be open file");
