@@ -253,7 +253,7 @@ do_setopt(CurlObject *self, PyObject *args)
 	      option == CURLOPT_RANDOM_FILE ||
 	      option == CURLOPT_EGDSOCKET))
 	    {
-		PyErr_SetString(ErrorObject, "invalid options to setopt");
+		PyErr_SetString(ErrorObject, "strings are not supported for this option");
 		return NULL;
 	    }
 	if (option == CURLOPT_URL) {
@@ -289,7 +289,7 @@ do_setopt(CurlObject *self, PyObject *args)
     if (PyArg_ParseTuple(args, "il:setopt", &option, &longdata)) {    
 	/* Check that option is integer as well as the input data */
 	if (option >= CURLOPTTYPE_OBJECTPOINT) {
-	    PyErr_SetString(ErrorObject, "invalid options to setopt");
+	    PyErr_SetString(ErrorObject, "integers are not supported for this option");
 	    return NULL;
 	}
 	res = curl_easy_setopt(self->handle, option, longdata);
@@ -314,7 +314,7 @@ do_setopt(CurlObject *self, PyObject *args)
 	      option == CURLOPT_PROGRESSDATA ||
 	      option == CURLOPT_PASSWDDATA))
 	    {
-		PyErr_SetString(PyExc_TypeError, "invalid options to setopt");
+		PyErr_SetString(PyExc_TypeError, "files are not supported for this option");
 		return NULL;
 	    }
 	fp = PyFile_AsFile(obj);
@@ -352,7 +352,7 @@ do_setopt(CurlObject *self, PyObject *args)
 	    break;
 	default:
 	    /* None of the list options were recognized, throw exception */
-	    PyErr_SetString(PyExc_TypeError, "invalid arguments to setopt");
+	    PyErr_SetString(PyExc_TypeError, "lists are not supported for this option");
 	    return NULL;
 	}
 	
@@ -468,7 +468,7 @@ do_setopt(CurlObject *self, PyObject *args)
 	    break;
 	default:
 	    /* None of the list options were recognized, throw exception */
-	    PyErr_SetString(PyExc_TypeError, "invalid arguments to setopt");
+	    PyErr_SetString(PyExc_TypeError, "functions are not supported for this option");
 	    return NULL;
 	}
 	Py_INCREF(Py_None);
