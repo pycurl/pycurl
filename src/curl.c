@@ -60,10 +60,11 @@ self_cleanup(CurlObject *self)
         return;
     }
     if (self->handle != NULL) {
-        Py_BEGIN_ALLOW_THREADS
-	curl_easy_cleanup(self->handle);
-        Py_END_ALLOW_THREADS
+        CURL *handle = self->handle;
         self->handle = NULL;
+        Py_BEGIN_ALLOW_THREADS
+	curl_easy_cleanup(handle);
+        Py_END_ALLOW_THREADS
     }
     if (self->httpheader != NULL) {
 	curl_slist_free_all(self->httpheader);
