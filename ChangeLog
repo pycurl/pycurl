@@ -1,5 +1,9 @@
 Version 7.10.4.3 [requires libcurl-7.10.3 or better]
 
+2003-05-02  Markus F.X.J. Oberhumer <mfx>
+
+	* Fixed wrong pycurl.CAPATH constant.
+
 2003-05-01  Markus F.X.J. Oberhumer <mfx>
 
 	* Added new method Curl.errstr() which returns the internal
