@@ -1,9 +1,12 @@
 <?php // vi:ts=4:et
 $version = "7.10.1";
+echo "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
 ?>
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
@@ -16,7 +19,7 @@ $version = "7.10.1";
 <body bgcolor="#ffffff" link="#0000ee" vlink="#551a8b" alink="#0000ee">
 
 <center>
-    <a href="http://curl.haxx.se/libcurl/"><img src="http://curl.haxx.se/libcurl/big.jpg" border="0" alt="libcurl"></a>
+  <a href="http://curl.haxx.se/libcurl/"><img src="http://curl.haxx.se/libcurl/big.jpg" width="416" height="115" border="0" alt="libcurl"></img></a>
 </center>
 
 <h1><font face="Courier New, Courier, mono">PYCURL <?php echo $version ?></font></h1>
@@ -27,7 +30,8 @@ $version = "7.10.1";
 </p>
 
 <p>
-PycURL is a Python module interface to the
+PycURL is a
+<a href="http://www.python.org/">Python</a> module interface to the
 <a href="http://curl.haxx.se/libcurl/">cURL library</a>.
 PycURL can be used to fetch documents identified by a URI
 from within a Python program.
@@ -96,7 +100,6 @@ collection for NetBSD.
 
 
 <h2>License</h2>
-<p>
 <pre>
 LICENSE
 -------
@@ -108,7 +111,6 @@ modify it under the terms of the GNU Lesser General Public
 License as published by the Free Software Foundation; either
 version 2.1 of the License, or (at your option) any later version.
 </pre>
-</p>
 
 
 <hr />
@@ -123,6 +125,11 @@ version 2.1 of the License, or (at your option) any later version.
       <td><a href="http://sourceforge.net/"><img
       src="http://sourceforge.net/sflogo.php?group_id=28236&amp;type=1"
       width="88" height="31" border="0" alt="" /></a>
+      </td>
+
+      <td><a href="http://validator.w3.org/check/referer"><img
+      src="http://www.w3.org/Icons/valid-xhtml10" alt="Valid XHTML 1.0!"
+      width="88" height="31" border="0" /></a>
       </td>
     </tr>
   </table>
