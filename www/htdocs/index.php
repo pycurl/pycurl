@@ -57,12 +57,16 @@ from a Python program, similar to the
     libcurl supports HTTPS certificates, HTTP POST, HTTP PUT, FTP uploading,
     kerberos, HTTP form based upload, proxies, cookies, user+password
     authentication, file transfer resume, http proxy tunneling and more!
+    <br />
+    <br />
   </li>
   <li>
     libcurl is highly portable, it builds and works identically on numerous
     platforms, including Solaris, Net/Free/Open BSD, Darwin, HPUX, IRIX,
     AIX, Tru64, Linux, Windows, Amiga, OS/2, BeOs, Mac OS X, Ultrix,
     QNX, OpenVMS, RISC OS and more...
+    <br />
+    <br />
   </li>
   <li>
     libcurl is
@@ -118,8 +122,8 @@ Also have a look at the <a href="ChangeLog">PycURL ChangeLog</a>.
 
 <p>
 <a href="download/pycurl-7.10.5.tar.gz">Download</a>
-PycURL sources version <?php echo "$version ($version_date)"; ?>
-or try the code from
+PycURL sources version <?php echo "$version ($version_date)"; ?> or try
+the code from
 <a href="http://sourceforge.net/cvs/?group_id=28236">the CVS repository</a>.
 </p>
 
