@@ -1,3 +1,7 @@
+2001-12-18  Kjetil Jacobsen  <kjetilja>
+
+	* Updated the INSTALL information.
+
 2001-12-12  Kjetil Jacobsen  <kjetilja>
 
 	* Added missing link flag to make pycurl build on MacOS X (by Matt
