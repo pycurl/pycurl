@@ -43,18 +43,16 @@ for c in range(num_conn):
     freelist.append(curl)
 
 processed = 0
-curls = {}
 multi = pycurl.CurlMulti()
 
 while processed < len(urls):
     # If there is an url to process and a free curl object, add to multi stack
     while queue and freelist:
         u, n = queue.pop(0)
-        f = open(n, "wb")
         c = freelist.pop(0)
+        c.f = open(n, "wb")
         c.setopt(pycurl.URL, u)
-        c.setopt(pycurl.WRITEDATA, f)
-        curls[c] = f
+        c.setopt(pycurl.WRITEDATA, c.f)
         multi.add_handle(c)
     # Run the internal curl state machine for the multi stack
     while 1:
@@ -65,7 +63,7 @@ while processed < len(urls):
     while 1:
         num_q, handles = multi.info_read(num_conn)
         for h in handles:
-            curls[h].close()
+            h.f.close()
             multi.remove_handle(h)
             freelist.append(h)
         processed += len(handles)
@@ -73,13 +71,9 @@ while processed < len(urls):
             break
 
 # Cleanup
-for c in curls:
+for c in freelist:
     c.close()
     multi.remove_handle(c)
-    freelist.remove(c)
 del c
 multi.close()
-
-del curls
-del freelist
-del queue
+del freelist, queue, multi
