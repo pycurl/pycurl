@@ -1,3 +1,10 @@
+Version 7.10.3
+
+2002-11-19  Kjetil Jacobsen  <kjetilja>
+
+	* Added preliminary support for curl_multi_info_read (requires
+	a patched version of libcurl).
+
 Version 7.10.2
 
 2002-11-14  Kjetil Jacobsen <kjetilja>
