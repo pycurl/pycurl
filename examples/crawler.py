@@ -13,7 +13,7 @@ class WorkerThread(threading.Thread):
         while 1:
             try:
                 url, no = self.iq.get_nowait()
-            except:
+            except Queue.Empty:
                 break
             f = open(str(no), 'w')
             self.curl = pycurl.Curl()
