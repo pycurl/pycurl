@@ -114,8 +114,8 @@ collection for OpenBSD.
 
 
 <h2>License</h2>
-Copyright (C) 2001-2002 by Kjetil Jacobsen<br />
-Copyright (C) 2001-2002 by Markus F.X.J. Oberhumer<br />
+Copyright (C) 2001-2003 by Kjetil Jacobsen<br />
+Copyright (C) 2001-2003 by Markus F.X.J. Oberhumer<br />
 <br />
 PycURL is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
