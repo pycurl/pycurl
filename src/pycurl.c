@@ -883,7 +883,7 @@ ioctl_callback(CURL *curlobj, int cmd, void *stream)
     PyThreadState *tmp_state;
     PyObject *arglist;
     PyObject *result = NULL;
-    int ret = 0;       /* always success */
+    int ret = CURLIOE_FAILRESTART;       /* assume error */
 
     UNUSED(curlobj);
 
