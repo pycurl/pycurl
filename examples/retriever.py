@@ -1,4 +1,5 @@
 # $Id$
+# vi:ts=4:et
 
 import sys, threading, Queue
 import pycurl
@@ -12,22 +13,22 @@ class WorkerThread(threading.Thread):
     def run(self):
         while 1:
             try:
-                url, no = self.queue.get_nowait()
+                url, filename = self.queue.get_nowait()
             except Queue.Empty:
                 break
-            f = open(str(no), 'w')
-            self.curl = pycurl.Curl()
-            self.curl.setopt(pycurl.FOLLOWLOCATION, 1)
-            self.curl.setopt(pycurl.MAXREDIRS, 5)
-            self.curl.setopt(pycurl.URL, url)
-            self.curl.setopt(pycurl.WRITEDATA, f)
+            f = open(filename, "wb")
+            curl = pycurl.Curl()
+            curl.setopt(pycurl.FOLLOWLOCATION, 1)
+            curl.setopt(pycurl.MAXREDIRS, 5)
+            curl.setopt(pycurl.URL, url)
+            curl.setopt(pycurl.WRITEDATA, f)
             try:
-                self.curl.perform()
+                curl.perform()
             except:
                 pass
+            curl.close()
             f.close()
-            self.curl.close()
-            sys.stdout.write('.')
+            sys.stdout.write(".")
             sys.stdout.flush()
 
 # Read list of URLs from file specified on commandline
@@ -47,7 +48,8 @@ queue = Queue.Queue()
 # Fill the work input queue with URLs
 for url in urls:
     fileno = fileno + 1
-    queue.put((url, fileno))
+    filename = "data_%d" % (fileno,)
+    queue.put((url, filename))
 
 # Start a bunch of threads
 for num_threads in range(num_workers):

@@ -228,13 +228,13 @@ util_curl_new(void)
 
 /* constructor - this is a module-level function returning a new instance */
 static CurlObject *
-do_init(PyObject *dummy, PyObject *args)
+do_curl_new(PyObject *dummy, PyObject *args)
 {
     CurlObject *self;
     int res;
 
     UNUSED(dummy);
-    if (!PyArg_ParseTuple(args, ":init")) {
+    if (!PyArg_ParseTuple(args, ":Curl")) {
         return NULL;
     }
 
@@ -274,11 +274,11 @@ error:
 }
 
 
-#if 0
+#if 0 /* Curl.copy() needs some more work */
 static CurlObject *
 do_curl_copy(const CurlObject *self, PyObject *args)
 {
-    CurlObject *copy;
+    CurlObject *copy = NULL;
     int res;
     int i;
 
@@ -295,36 +295,19 @@ do_curl_copy(const CurlObject *self, PyObject *args)
         return NULL;
     }
 
-    /* Allocate python curl object */
-    copy = util_curl_new();
-    if (copy == NULL)
-        return NULL;
-
-    /* Copy curl handle */
-    copy->handle = curl_easy_duphandle(self->handle);
-    if (copy->handle == NULL)
-        goto error;
-
-    /* Set curl error buffer and copy it */
-    res = curl_easy_setopt(copy->handle, CURLOPT_ERRORBUFFER, copy->error);
-    if (res != CURLE_OK)
-        goto error;
-    memcpy(copy->error, self->error, sizeof(self->error));
-
-#if 0
-    // FIXME FIXME FIXME
-    //    - we really need some sane semantics
-    //    - have to carefully check what curl_easy_duphandle() actually does
-    //
-    // refuse to copy ?
-    //   when we have open file objects
-    // deep copy ?
-    //   dict
-    // shallow copy ?
-    //   callbacks
-    // NOT copy ?
-    //   multi-stack
-#endif
+    /* FIXME FIXME FIXME
+    **   - we really need some sane semantics
+    **   - have to carefully check what curl_easy_duphandle() actually does
+    **
+    ** refuse to copy ?
+    **   - when we have open file objects
+    ** deep copy ?
+    **   - dict
+    ** shallow copy ?
+    **   - callbacks
+    ** NOT copy ?
+    **   - multi_stack
+    **/
 
 #if 1
     /* for now we refuse to copy if *ANY* value except multi_stack is set */
@@ -344,23 +327,39 @@ do_curl_copy(const CurlObject *self, PyObject *args)
     }
 #endif
 
+    /* Allocate python curl object */
+    copy = util_curl_new();
+    if (copy == NULL)
+        return NULL;
+
+    /* Copy curl handle */
+    copy->handle = curl_easy_duphandle(self->handle);
+    if (copy->handle == NULL)
+        goto error;
+
+    /* Set curl error buffer and copy it */
+    res = curl_easy_setopt(copy->handle, CURLOPT_ERRORBUFFER, copy->error);
+    if (res != CURLE_OK)
+        goto error;
+    memcpy(copy->error, self->error, sizeof(self->error));
+
     /* Success - return new object */
     return copy;
 
 error:
-    Py_DECREF(copy);    /* this also closes copy->handle */
+    Py_XDECREF(copy);    /* this also closes copy->handle */
     PyErr_SetString(ErrorObject, "initializing curl failed");
     return NULL;
 
 cannot_copy:
-    Py_DECREF(copy);    /* this also closes copy->handle */
+    Py_XDECREF(copy);    /* this also closes copy->handle */
     PyErr_SetString(ErrorObject, "Curl object is in a state that cannot get copied");
     return NULL;
 }
 #endif /* #if 0 */
 
 
-/* util function shared by cleanup and clear */
+/* util function shared by close() and clear() */
 static void
 util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
 {
@@ -406,7 +405,7 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
 
 
 static void
-util_curl_cleanup(CurlObject *self)
+util_curl_close(CurlObject *self)
 {
     CURL *handle;
     int i;
@@ -466,7 +465,7 @@ do_curl_dealloc(CurlObject *self)
 
     Py_XDECREF(self->dict);
     self->dict = NULL;
-    util_curl_cleanup(self);
+    util_curl_close(self);
 
 #if defined(USE_GC)
     PyObject_GC_Del(self);
@@ -483,16 +482,16 @@ do_curl_dealloc(CurlObject *self)
 
 
 static PyObject *
-do_curl_cleanup(CurlObject *self, PyObject *args)
+do_curl_close(CurlObject *self, PyObject *args)
 {
-    if (!PyArg_ParseTuple(args, ":cleanup")) {
+    if (!PyArg_ParseTuple(args, ":close")) {
         return NULL;
     }
     if (get_thread_state(self) != NULL) {
-        PyErr_SetString(ErrorObject, "cannot invoke cleanup, perform() is running");
+        PyErr_SetString(ErrorObject, "cannot invoke close, perform() is running");
         return NULL;
     }
-    util_curl_cleanup(self);
+    util_curl_close(self);
     Py_INCREF(Py_None);
     return Py_None;
 }
@@ -1261,12 +1260,12 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
 
 /* constructor - this is a module-level function returning a new instance */
 static CurlMultiObject *
-do_multi_init(PyObject *dummy, PyObject *args)
+do_multi_new(PyObject *dummy, PyObject *args)
 {
     CurlMultiObject *self;
 
     UNUSED(dummy);
-    if (!PyArg_ParseTuple(args, ":multi_init")) {
+    if (!PyArg_ParseTuple(args, ":CurlMulti")) {
         return NULL;
     }
 
@@ -1297,7 +1296,7 @@ do_multi_init(PyObject *dummy, PyObject *args)
 }
 
 static void
-util_multi_cleanup(CurlMultiObject *self)
+util_multi_close(CurlMultiObject *self)
 {
     assert(self != NULL);
     self->state = NULL;
@@ -1318,7 +1317,7 @@ do_multi_dealloc(CurlMultiObject *self)
 
     Py_XDECREF(self->dict);
     self->dict = NULL;
-    util_multi_cleanup(self);
+    util_multi_close(self);
 
 #if defined(USE_GC)
     PyObject_GC_Del(self);
@@ -1334,16 +1333,16 @@ do_multi_dealloc(CurlMultiObject *self)
 }
 
 static PyObject *
-do_multi_cleanup(CurlMultiObject *self, PyObject *args)
+do_multi_close(CurlMultiObject *self, PyObject *args)
 {
-    if (!PyArg_ParseTuple(args, ":cleanup")) {
+    if (!PyArg_ParseTuple(args, ":close")) {
         return NULL;
     }
     if (self->state != NULL) {
-        PyErr_SetString(ErrorObject, "cannot invoke cleanup, perform() is running");
+        PyErr_SetString(ErrorObject, "cannot invoke close, perform() is running");
         return NULL;
     }
-    util_multi_cleanup(self);
+    util_multi_close(self);
     Py_INCREF(Py_None);
     return Py_None;
 }
@@ -1659,8 +1658,8 @@ static char co_multi_fdset_doc [] = "fdset() -> Tuple.  Returns a tuple of three
 static char co_multi_select_doc [] = "select(timeout) -> Int.  Returns result from doing a select() on the curl multi file descriptor with the given timeout.\n";
 
 static PyMethodDef curlobject_methods[] = {
-    {"cleanup", (PyCFunction)do_curl_cleanup, METH_VARARGS, co_cleanup_doc},
-    {"close", (PyCFunction)do_curl_cleanup, METH_VARARGS, co_close_doc},
+    {"cleanup", (PyCFunction)do_curl_close, METH_VARARGS, co_cleanup_doc},
+    {"close", (PyCFunction)do_curl_close, METH_VARARGS, co_close_doc},
 #if 0
     {"copy", (PyCFunction)do_curl_copy, METH_VARARGS, co_copy_doc},
 #endif
@@ -1671,8 +1670,8 @@ static PyMethodDef curlobject_methods[] = {
 };
 
 static PyMethodDef curlmultiobject_methods[] = {
-    {"cleanup", (PyCFunction)do_multi_cleanup, METH_VARARGS, NULL},
-    {"close", (PyCFunction)do_multi_cleanup, METH_VARARGS, NULL},
+    {"cleanup", (PyCFunction)do_multi_close, METH_VARARGS, NULL},
+    {"close", (PyCFunction)do_multi_close, METH_VARARGS, NULL},
     {"perform", (PyCFunction)do_multi_perform, METH_VARARGS, NULL},
     {"add_handle", (PyCFunction)do_multi_add_handle, METH_VARARGS, NULL},
     {"remove_handle", (PyCFunction)do_multi_remove_handle, METH_VARARGS, NULL},
@@ -1784,8 +1783,8 @@ statichere PyTypeObject Curl_Type = {
 #else
     0                           /* tp_flags */
 #endif
-    /* More fields follow here, depending on your Python version.
-     * You can safely ignore any compiler warnings.
+    /* More fields follow here, depending on your Python version. You can
+     * safely ignore any compiler warnings about missing initializers.
      */
 };
 
@@ -1819,15 +1818,15 @@ statichere PyTypeObject CurlMulti_Type = {
 #else
     0                           /* tp_flags */
 #endif
-    /* More fields follow here, depending on your Python version.
-     * You can safely ignore any compiler warnings.
+    /* More fields follow here, depending on your Python version. You can
+     * safely ignore any compiler warnings about missing initializers.
      */
 };
 
 
 /*************************************************************************
 // module level
-// Note that the object constructors (do_curl_init, do_curl_multi_init)
+// Note that the object constructors (do_curl_new, do_curl_multi_new)
 // are module-level functions as well.
 **************************************************************************/
 
@@ -1880,12 +1879,12 @@ static char pycurl_global_init_doc [] =
 static char pycurl_global_cleanup_doc [] =
 "global_cleanup() -> None.  Cleanup curl environment.\n";
 
-static char pycurl_curl_doc [] =
+static char pycurl_curl_new_doc [] =
 "Curl() -> New curl object.  Implicitly calls global_init() if not called.\n";
-static char pycurl_init_doc [] =
+static char pycurl_curl_init_doc [] =
 "init() -> New curl object.   Deprecated, use Curl() instead.\n";
 
-static char pycurl_curlmulti_doc [] =
+static char pycurl_multi_new_doc [] =
 "CurlMulti() -> New curl multi-object.\n";
 static char pycurl_multi_init_doc [] =
 "multi_init() -> New curl multi-object. Deprecated, use CurlMulti() instead.\n";
@@ -1895,10 +1894,10 @@ static char pycurl_multi_init_doc [] =
 static PyMethodDef curl_methods[] = {
     {"global_init", (PyCFunction)do_global_init, METH_VARARGS, pycurl_global_init_doc},
     {"global_cleanup", (PyCFunction)do_global_cleanup, METH_VARARGS, pycurl_global_cleanup_doc},
-    {"Curl", (PyCFunction)do_init, METH_VARARGS, pycurl_curl_doc},
-    {"init", (PyCFunction)do_init, METH_VARARGS, pycurl_init_doc},
-    {"CurlMulti", (PyCFunction)do_multi_init, METH_VARARGS, pycurl_curlmulti_doc},
-    {"multi_init", (PyCFunction)do_multi_init, METH_VARARGS, pycurl_multi_init_doc},
+    {"Curl", (PyCFunction)do_curl_new, METH_VARARGS, pycurl_curl_new_doc},
+    {"init", (PyCFunction)do_curl_new, METH_VARARGS, pycurl_curl_init_doc},
+    {"CurlMulti", (PyCFunction)do_multi_new, METH_VARARGS, pycurl_multi_new_doc},
+    {"multi_init", (PyCFunction)do_multi_new, METH_VARARGS, pycurl_multi_init_doc},
     {NULL, NULL, 0, NULL}
 };
 
