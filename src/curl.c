@@ -1996,7 +1996,8 @@ do_version_info(PyObject *dummy, PyObject *args)
         return NULL;
     }
 
-    for (i = 0; vi->protocols[i] != NULL; i++);
+    for (i = 0; vi->protocols[i] != NULL; )
+        i++;
     protocols = PyTuple_New(i);
     if (protocols == NULL) {
         return NULL;
@@ -2006,6 +2007,7 @@ do_version_info(PyObject *dummy, PyObject *args)
     }
     t = PyTuple_New(9);
     if (t == NULL) {
+        Py_DECREF(protocols);
         return NULL;
     }
 
