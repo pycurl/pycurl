@@ -17,7 +17,7 @@ typedef struct {
     struct curl_slist *quote;
     struct curl_slist *postquote;
     PyObject *w_cb;
-  PyThreadState *state;
+    PyThreadState *state;
     char error[CURL_ERROR_SIZE];
 } CurlObject;
 
@@ -381,7 +381,7 @@ do_perform(CurlObject *self, PyObject *args)
     Py_BEGIN_ALLOW_THREADS
     res = curl_easy_perform(self->handle);
     Py_END_ALLOW_THREADS
-
+    
     if (res == 0) {
 	Py_INCREF(Py_None);
 	return Py_None;
