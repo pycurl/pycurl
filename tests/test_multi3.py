@@ -47,7 +47,7 @@ while 1:
         break
     # currently no more I/O is pending, could do something in the meantime
     # (display a progress bar, etc.)
-    time.sleep(0.1)
+    time.sleep(0.01)
 
 # close handles
 for c in m.handles:
