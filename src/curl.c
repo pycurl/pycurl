@@ -92,6 +92,7 @@ self_cleanup(CurlObject *self)
     Py_XDECREF(self->pro_cb);
     Py_XDECREF(self->pwd_cb);
     Py_XDECREF(self->h_cb);
+    Py_XDECREF(self->d_cb);
 }
 
 
