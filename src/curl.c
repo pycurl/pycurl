@@ -97,6 +97,7 @@ staticforward PyTypeObject CurlMulti_Type;
     return NULL; \
 } while (0)
 
+
 #undef UNUSED
 #define UNUSED(var)     ((void)&var)
 
@@ -168,59 +169,32 @@ self_cleanup(CurlObject *self)
 
     /* Zero handle and thread-state to disallow any operations to be run from now on */
     assert(self != NULL);
+    assert(self->ob_type == &Curl_Type);
     handle = self->handle;
     self->handle = NULL;
     self->state = NULL;
 
-#if 1
-    /* FIXME: WHAT IS GOING ON HERE ???
-     *   Without this check, Python 1.5.2 and Python 1.6.1 crash at
-     *   the end of basicfirst.py (but more complex tests like
-     *   test_multi2.py work fine).
-     *   Python 2.0/2.1/2.2 are not affected at all.
-     */
-    if (handle == NULL)
-        return;
-#endif
-
     /* Disconnect from multi_stack, remove_handle in any case */
     if (self->multi_stack != NULL) {
-        if (self->multi_stack->multi_handle != NULL && handle != NULL) {
-            (void) curl_multi_remove_handle(self->multi_stack->multi_handle, handle);
-        }
-        Py_DECREF(self->multi_stack);
+        CurlMultiObject *multi_stack = self->multi_stack;
         self->multi_stack = NULL;
-    }
-
-    /* Free curl handle */
-    if (handle != NULL) {
-        /* Must be done without the gil */
-        Py_BEGIN_ALLOW_THREADS
-        curl_easy_cleanup(handle);
-        Py_END_ALLOW_THREADS
+        if (multi_stack->multi_handle != NULL && handle != NULL) {
+            (void) curl_multi_remove_handle(multi_stack->multi_handle, handle);
+        }
+        Py_DECREF(multi_stack);
     }
 
     /* Free all slists allocated by setopt */
-    if (self->httpheader != NULL) {
-        curl_slist_free_all(self->httpheader);
-        self->httpheader = NULL;
-    }
-    if (self->quote != NULL) {
-        curl_slist_free_all(self->quote);
-        self->quote = NULL;
-    }
-    if (self->postquote != NULL) {
-        curl_slist_free_all(self->postquote);
-        self->postquote = NULL;
-    }
-    if (self->prequote != NULL) {
-        curl_slist_free_all(self->prequote);
-        self->prequote = NULL;
-    }
-    if (self->httppost != NULL) {
-        curl_formfree(self->httppost);
-        self->httppost = NULL;
-    }
+#define SLFREE(v)   if (v != NULL) (curl_formfree(v), v = NULL)
+    SLFREE(self->httppost);
+#undef SLFREE
+#define SLFREE(v)   if (v != NULL) (curl_slist_free_all(v), v = NULL)
+    SLFREE(self->httpheader);
+    SLFREE(self->quote);
+    SLFREE(self->postquote);
+    SLFREE(self->prequote);
+#undef SLFREE
+
     /* Free all the strings allocated for setopt */
     for (i = 0; i < CURLOPT_LASTENTRY; i++) {
         if (self->options[i] != NULL) {
@@ -228,17 +202,29 @@ self_cleanup(CurlObject *self)
             self->options[i] = NULL;
         }
     }
+
+#define XDECREF(v)  Py_XDECREF(v); v = NULL
     /* Decrement refcount for python callbacks */
-    Py_XDECREF(self->w_cb);
-    Py_XDECREF(self->r_cb);
-    Py_XDECREF(self->pro_cb);
-    Py_XDECREF(self->pwd_cb);
-    Py_XDECREF(self->h_cb);
-    Py_XDECREF(self->d_cb);
+    XDECREF(self->w_cb);
+    XDECREF(self->r_cb);
+    XDECREF(self->pro_cb);
+    XDECREF(self->pwd_cb);
+    XDECREF(self->h_cb);
+    XDECREF(self->d_cb);
     /* Decrement refcount for python file objects */
-    Py_XDECREF(self->readdata);
-    Py_XDECREF(self->writedata);
-    Py_XDECREF(self->writeheader);
+    XDECREF(self->readdata);
+    XDECREF(self->writedata);
+    XDECREF(self->writeheader);
+    self->writeheader_set = 0;
+#undef XDECREF
+
+    /* Finally free curl handle */
+    if (handle != NULL) {
+        /* Must be done without the gil */
+        Py_BEGIN_ALLOW_THREADS
+        curl_easy_cleanup(handle);
+        Py_END_ALLOW_THREADS
+    }
 }
 
 
@@ -277,7 +263,7 @@ do_cleanup(CurlObject *self, PyObject *args)
         if (self->multi_stack->multi_handle != NULL && self->handle != NULL) {
             res = curl_multi_remove_handle(self->multi_stack->multi_handle, self->handle);
         }
-        Py_XDECREF(self->multi_stack);
+        Py_DECREF(self->multi_stack);
         self->multi_stack = NULL;
     }
     self_cleanup(self);
@@ -368,7 +354,7 @@ progress_callback(void *client,
 
     self = (CurlObject *)client;
     tmp_state = get_thread_state(self);
-    if (tmp_state == NULL) {
+    if (tmp_state == NULL || self->pro_cb == NULL) {
         return ret;
     }
 
@@ -406,7 +392,7 @@ int password_callback(void *client,
 
     self = (CurlObject *)client;
     tmp_state = get_thread_state(self);
-    if (tmp_state == NULL) {
+    if (tmp_state == NULL || self->pwd_cb == NULL) {
         return ret;
     }
 
@@ -456,7 +442,7 @@ int debug_callback(CURL *curlobj,
     UNUSED(curlobj);
     self = (CurlObject *)data;
     tmp_state = get_thread_state(self);
-    if (tmp_state == NULL) {
+    if (tmp_state == NULL || self->d_cb == NULL) {
         return ret;
     }
     if ((int)size < 0) {
@@ -910,6 +896,7 @@ do_perform(CurlObject *self, PyObject *args)
 
     /* Save handle to current thread (used as context for python callbacks) */
     self->state = PyThreadState_Get();
+    assert(self->state != NULL);
 
     /* Release global lock and start */
     Py_BEGIN_ALLOW_THREADS
@@ -1058,7 +1045,7 @@ curl_multi_dealloc(CurlMultiObject *self)
 static PyObject *
 do_multi_perform(CurlMultiObject *self, PyObject *args)
 {
-    int res, running;
+    int res, running = -1;
 
     /* Sanity checks */
     if (!PyArg_ParseTuple(args, ":perform")) {
@@ -1076,6 +1063,7 @@ do_multi_perform(CurlMultiObject *self, PyObject *args)
 
     /* Release global lock and start */
     self->state = PyThreadState_Get();
+    assert(self->state != NULL);
     Py_BEGIN_ALLOW_THREADS
     res = curl_multi_perform(self->multi_handle, &running);
     Py_END_ALLOW_THREADS
@@ -1141,6 +1129,7 @@ do_multi_addhandle(CurlMultiObject *self, PyObject *args)
     if (res != CURLM_CALL_MULTI_PERFORM) {
         CURLERROR2("add_handle failed");
     }
+    assert(obj->multi_stack == NULL);
     obj->multi_stack = self;
     Py_INCREF(obj->multi_stack);
     Py_INCREF(Py_None);
@@ -1171,6 +1160,7 @@ do_multi_removehandle(CurlMultiObject *self, PyObject *args)
     if (res != CURLM_OK) {
         CURLERROR2("remove_handle failed");
     }
+    assert(obj->multi_stack == self);
     Py_DECREF(obj->multi_stack);
     obj->multi_stack = NULL;
 done:
@@ -1310,11 +1300,14 @@ statichere PyTypeObject CurlMulti_Type = {
 /* --------------------------------------------------------------------- */
 
 static CurlMultiObject *
-do_multi_init(PyObject *arg)
+do_multi_init(PyObject *dummy, PyObject *args)
 {
     CurlMultiObject *self;
 
-    UNUSED(arg);
+    UNUSED(dummy);
+    if (!PyArg_ParseTuple(args, ":do_multi_init")) {
+        return NULL;
+    }
 
     /* Allocate python curl-multi object */
 #if (PY_VERSION_HEX < 0x01060000)
@@ -1341,12 +1334,15 @@ do_multi_init(PyObject *arg)
 
 
 static CurlObject *
-do_init(PyObject *arg)
+do_init(PyObject *dummy, PyObject *args)
 {
     CurlObject *self;
     int res;
 
-    UNUSED(arg);
+    UNUSED(dummy);
+    if (!PyArg_ParseTuple(args, ":do_init")) {
+        return NULL;
+    }
 
     /* Allocate python curl object */
 #if (PY_VERSION_HEX < 0x01060000)
@@ -1362,17 +1358,17 @@ do_init(PyObject *arg)
     self->handle = NULL;
     self->state = NULL;
     self->multi_stack = NULL;
+    self->httppost = NULL;
     self->httpheader = NULL;
     self->quote = NULL;
     self->postquote = NULL;
     self->prequote = NULL;
-    self->httppost = NULL;
-    self->writeheader_set = 0;
 
     /* Set file object pointers to NULL by default */
-    self->writeheader = NULL;
-    self->writedata = NULL;
     self->readdata = NULL;
+    self->writedata = NULL;
+    self->writeheader = NULL;
+    self->writeheader_set = 0;
 
     /* Set callback pointers to NULL by default */
     self->w_cb = NULL;
@@ -1417,9 +1413,13 @@ error:
 
 
 static PyObject *
-do_global_cleanup(PyObject *arg)
+do_global_cleanup(PyObject *dummy, PyObject *args)
 {
-    UNUSED(arg);
+    UNUSED(dummy);
+    if (!PyArg_ParseTuple(args, ":do_global_cleanup")) {
+        return NULL;
+    }
+
     curl_global_cleanup();
     Py_INCREF(Py_None);
     return Py_None;
@@ -1427,32 +1427,30 @@ do_global_cleanup(PyObject *arg)
 
 
 static PyObject *
-do_global_init(PyObject *self, PyObject *args)
+do_global_init(PyObject *dummy, PyObject *args)
 {
     int res, option;
 
-    UNUSED(self);
-
-    if (PyArg_ParseTuple(args, "i:global_init", &option)) {
-        if (!(option == CURL_GLOBAL_ALL ||
-              option == CURL_GLOBAL_SSL ||
-              option == CURL_GLOBAL_NOTHING)) {
-            PyErr_SetString(ErrorObject, "invalid option to global_init");
-            return NULL;
-        }
-
-        res = curl_global_init(option);
-        if (res != CURLE_OK) {
-            PyErr_SetString(ErrorObject, "unable to set global option");
-            return NULL;
-        }
-        else {
-            Py_INCREF(Py_None);
-            return Py_None;
-        }
+    UNUSED(dummy);
+    if (!PyArg_ParseTuple(args, "i:global_init", &option)) {
+        return NULL;
     }
-    PyErr_SetString(ErrorObject, "invalid option to global_init");
-    return NULL;
+
+    if (!(option == CURL_GLOBAL_ALL ||
+          option == CURL_GLOBAL_SSL ||
+          option == CURL_GLOBAL_NOTHING)) {
+        PyErr_SetString(ErrorObject, "invalid option to global_init");
+        return NULL;
+    }
+
+    res = curl_global_init(option);
+    if (res != CURLE_OK) {
+        PyErr_SetString(ErrorObject, "unable to set global option");
+        return NULL;
+    }
+
+    Py_INCREF(Py_None);
+    return Py_None;
 }
 
 
@@ -1521,6 +1519,7 @@ DL_EXPORT(void)
 
     /* Add version string to the module */
     PyDict_SetItemString(d, "version", PyString_FromString(curl_version()));
+    PyDict_SetItemString(d, "__COMPILE_DATE__", PyString_FromString(__DATE__ " " __TIME__));
 
     /* Symbolic constants for setopt */
     insint(d, "FILE", CURLOPT_WRITEDATA);
