@@ -44,8 +44,8 @@
 #if !defined(PY_VERSION_HEX) || (PY_VERSION_HEX < 0x02020000)
 #  error "Need Python version 2.2 or greater to compile pycurl."
 #endif
-#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x070b02)
-#  error "Need libcurl version 7.11.2 or greater to compile pycurl."
+#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x070c01)
+#  error "Need libcurl version 7.12.1 or greater to compile pycurl."
 #endif
 
 #undef UNUSED
