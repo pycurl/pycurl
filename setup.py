@@ -9,39 +9,38 @@ from distutils.core import setup
 from distutils.extension import Extension
 from string import strip, split
 
-# Windows users have to configure the next three path params
-# to match their libcurl installation.  The paths set here are
-# just examples and thus unlikely to match your installation.
-W32_INCLUDE = r'C:\User\clib\libcurl\include'
-W32_LIB = r'C:\User\clib\libcurl\lib'
-W32_EXTRA_OBJ = r'C:\User\clib\libcurl\lib\libcurl.lib'
+include_dirs = []
+define_macros = []
+library_dirs = []
+libraries = []
+runtime_library_dirs = []
+extra_objects = []
+extra_link_args = []
 
-# Find out the rest the hard way
 if sys.platform == "win32":
-    include_dirs = [W32_INCLUDE]
-    library_dirs = [W32_LIB]
-    extra_objects = [W32_EXTRA_OBJ]
-    libraries = ['libcurl', 'zlib', 'msvcrt', 'libcmt', 'wsock32', 'advapi32']
-    runtime_library_dirs = []
-    extra_link_args = ['/NODEFAULTLIB:LIBCMTD.lib']
+    # Windows users have to configure the next path params to match
+    # their curl source installation.  The paths set here are
+    # just examples and thus unlikely to match your installation.
+    CURL_DIR = r"c:\src\curl-7.9.8"
+    include_dirs.append(os.path.join(CURL_DIR, "include"))
+    define_macros.append(("WIN32", 1))
+    extra_objects.append(os.path.join(CURL_DIR, "lib", "libcurl.lib"))
 else:
-    include_dirs = []
-    cflags = split(strip(os.popen('curl-config --cflags').read()), ' ')
+    # Find out the rest the hard way
+    cflags = split(strip(os.popen("curl-config --cflags").read()), " ")
     for e in cflags[:]:
-        if e[:2] == '-I':
+        if e[:2] == "-I":
             include_dirs.append(e[2:])
-    library_dirs = []
-    libs = split(strip(os.popen('curl-config --libs').read()), ' ')
+    libs = split(strip(os.popen("curl-config --libs").read()), " ")
     for e in libs[:]:
-        if e[:2] == '-L':
+        if e[:2] == "-L":
             library_dirs.append(e[2:])
     libraries = ["curl"]
-    runtime_library_dirs = []
-    extra_objects = []
 
-    # Add extra compile flag for MacOS X
-    if sys.platform[:-1] == "darwin":
-        extra_link_args.append('-flat_namespace')
+# Add extra compile flag for MacOS X
+if sys.platform[:-1] == "darwin":
+    extra_link_args.append("-flat_namespace")
+
 
 ###############################################################################
 
@@ -52,10 +51,12 @@ setup (name="pycurl",
        author_email="kjetilja@cs.uit.no",
        url="http://pycurl.sourceforge.net/",
        ext_modules=[Extension(name="pycurl",
-                               sources=["src/curl.c"],
-                               include_dirs=include_dirs,
-                               library_dirs=library_dirs,
-                               runtime_library_dirs=runtime_library_dirs,
-                               libraries=libraries,
-                               extra_objects=extra_objects)]
+                              sources=[os.path.join("src", "curl.c")],
+                              include_dirs=include_dirs,
+                              define_macros=define_macros,
+                              library_dirs=library_dirs,
+                              libraries=libraries,
+                              runtime_library_dirs=runtime_library_dirs,
+                              extra_objects=extra_objects,
+                              extra_link_args=extra_link_args)]
         )
