@@ -41,6 +41,9 @@ typedef struct {
     PyObject *pro_cb;
     PyObject *pwd_cb;
     PyObject *d_cb;
+    PyObject *readdata;
+    PyObject *writedata;
+    PyObject *writeheader;
     PyThreadState *state;
     int writeheader_set;
     char error[CURL_ERROR_SIZE];
@@ -116,6 +119,10 @@ self_cleanup(CurlObject *self)
     Py_XDECREF(self->pwd_cb);
     Py_XDECREF(self->h_cb);
     Py_XDECREF(self->d_cb);
+    /* Decrement refcount for python file objects */
+    Py_XDECREF(self->readdata);
+    Py_XDECREF(self->writedata);
+    Py_XDECREF(self->writeheader);
 }
 
 
@@ -509,8 +516,8 @@ do_setopt(CurlObject *self, PyObject *args)
     /* Handle the case of file objects */
     if (PyArg_ParseTuple(args, "iO!:setopt", &option, &PyFile_Type, &obj)) {
         /* Ensure the option specified a file as well as the input */
-        if (!(option == CURLOPT_FILE ||
-              option == CURLOPT_INFILE ||
+        if (!(option == CURLOPT_WRITEDATA ||
+              option == CURLOPT_READDATA ||
               option == CURLOPT_WRITEHEADER ||
               option == CURLOPT_PROGRESSDATA ||
               option == CURLOPT_PASSWDDATA))
@@ -519,7 +526,6 @@ do_setopt(CurlObject *self, PyObject *args)
                 return NULL;
             }
         if (option == CURLOPT_WRITEHEADER) {
-            self->writeheader_set = 1;
             if (self->w_cb != NULL) {
                 PyErr_SetString(ErrorObject, "cannot combine WRITEHEADER with WRITEFUNCTION.");
                 return NULL;
@@ -530,16 +536,29 @@ do_setopt(CurlObject *self, PyObject *args)
             PyErr_SetString(PyExc_TypeError, "second argument must be open file");
             return NULL;
         }
-        Py_INCREF(obj);
         res = curl_easy_setopt(self->handle, option, fp);
         /* Check for errors */
-        if (res == CURLE_OK) {
-            Py_INCREF(Py_None);
-            return Py_None;
-        }
-        else {
+        if (res != CURLE_OK) {
             CURLERROR();
         }
+        /* Increment reference to file object and register reference in curl object */
+        Py_INCREF(obj);
+        if (option == CURLOPT_WRITEDATA) {
+            Py_XDECREF(self->writedata);
+            self->writedata = obj;
+        }
+        if (option == CURLOPT_READDATA) {
+            Py_XDECREF(self->readdata);
+            self->readdata = obj;
+        }
+        if (option == CURLOPT_WRITEHEADER) {
+            Py_XDECREF(self->writeheader);
+            self->writeheader = obj;
+            self->writeheader_set = 1;
+        }
+        /* Return success */
+        Py_INCREF(Py_None);
+        return Py_None;
     }
 
     PyErr_Clear();
@@ -666,17 +685,19 @@ do_setopt(CurlObject *self, PyObject *args)
                 return NULL;
             }
             Py_INCREF(obj);
+            Py_XDECREF(self->writedata);
             Py_XDECREF(self->w_cb);
             self->w_cb = obj;
             curl_easy_setopt(self->handle, CURLOPT_WRITEFUNCTION, write_callback);
-            curl_easy_setopt(self->handle, CURLOPT_FILE, self);
+            curl_easy_setopt(self->handle, CURLOPT_WRITEDATA, self);
             break;
         case CURLOPT_READFUNCTION:
             Py_INCREF(obj);
+            Py_XDECREF(self->readdata);
             Py_XDECREF(self->r_cb);
             self->r_cb = obj;
             curl_easy_setopt(self->handle, CURLOPT_READFUNCTION, read_callback);
-            curl_easy_setopt(self->handle, CURLOPT_INFILE, self);
+            curl_easy_setopt(self->handle, CURLOPT_READDATA, self);
             break;
         case CURLOPT_HEADERFUNCTION:
             Py_INCREF(obj);
@@ -908,6 +929,11 @@ do_init(PyObject *arg)
     self->state = NULL;
     self->writeheader_set = 0;
 
+    /* Set file object pointers to NULL by default */
+    self->writeheader = NULL;
+    self->writedata = NULL;
+    self->readdata = NULL;
+
     /* Set callback pointers to NULL by default */
     self->w_cb = NULL;
     self->h_cb = NULL;
@@ -1052,9 +1078,9 @@ DL_EXPORT(void)
     PyDict_SetItemString(d, "version", PyString_FromString(curl_version()));
 
     /* Symbolic constants for setopt */
-    insint(d, "FILE", CURLOPT_FILE);
+    insint(d, "WRITEDATA", CURLOPT_WRITEDATA);
     insint(d, "WRITEFUNCTION", CURLOPT_WRITEFUNCTION);
-    insint(d, "INFILE", CURLOPT_INFILE);
+    insint(d, "READDATA", CURLOPT_READDATA);
     insint(d, "READFUNCTION", CURLOPT_READFUNCTION);
     insint(d, "INFILESIZE", CURLOPT_INFILESIZE);
     insint(d, "URL", CURLOPT_URL);
