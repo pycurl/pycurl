@@ -64,7 +64,7 @@ typedef struct {
     PyObject *dict;                 /* Python attributes dictionary */
     CURL *handle;
     PyThreadState *state;
-    CurlMultiObject *multi_stack;   /* refcounted Python object */
+    CurlMultiObject *multi_stack;
     struct curl_httppost *httppost;
     struct curl_slist *httpheader;
     struct curl_slist *quote;
@@ -89,7 +89,8 @@ staticforward PyTypeObject Curl_Type;
 staticforward PyTypeObject CurlMulti_Type;
 #endif
 
-#define CURLERROR() do {\
+/* Throw exception based on return value 'res' */
+#define CURLERROR_RETVAL() do {\
     PyObject *v; \
     v = Py_BuildValue("(is)", (int) (res), self->error); \
     PyErr_SetObject(ErrorObject, v); \
@@ -97,7 +98,8 @@ staticforward PyTypeObject CurlMulti_Type;
     return NULL; \
 } while (0)
 
-#define CURLERROR2(msg) do {\
+/* Throw exception with custom message */
+#define CURLERROR_MSG(msg) do {\
     PyObject *v; \
     v = Py_BuildValue("(is)", (int) (res), msg); \
     PyErr_SetObject(ErrorObject, v); \
@@ -579,7 +581,7 @@ do_curl_perform(CurlObject *self, PyObject *args)
     self->state = NULL;
 
     if (res != CURLE_OK) {
-        CURLERROR();
+        CURLERROR_RETVAL();
     }
     Py_INCREF(Py_None);
     return Py_None;
@@ -898,7 +900,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         /* Check for errors */
         if (res != CURLE_OK) {
             free(buf);
-            CURLERROR();
+            CURLERROR_RETVAL();
         }
         self->options[opt_masked] = buf;
         Py_INCREF(Py_None);
@@ -917,7 +919,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         res = curl_easy_setopt(self->handle, option, longdata);
         /* Check for errors */
         if (res != CURLE_OK) {
-            CURLERROR();
+            CURLERROR_RETVAL();
         }
         Py_INCREF(Py_None);
         return Py_None;
@@ -951,7 +953,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         res = curl_easy_setopt(self->handle, option, fp);
         /* Check for errors */
         if (res != CURLE_OK) {
-            CURLERROR();
+            CURLERROR_RETVAL();
         }
         /* Increment reference to file object and register reference in curl object */
         Py_INCREF(obj);
@@ -1029,7 +1031,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                 if (res != CURLE_OK) {
                     curl_formfree(self->httppost);
                     self->httppost = NULL;
-                    CURLERROR();
+                    CURLERROR_RETVAL();
                 }
             }
             res = curl_easy_setopt(self->handle, CURLOPT_HTTPPOST, self->httppost);
@@ -1037,7 +1039,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             if (res != CURLE_OK) {
                 curl_formfree(self->httppost);
                 self->httppost = NULL;
-                CURLERROR();
+                CURLERROR_RETVAL();
             }
             Py_INCREF(Py_None);
             return Py_None;
@@ -1076,7 +1078,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         if (res != CURLE_OK) {
             curl_slist_free_all(*slist);
             *slist = NULL;
-            CURLERROR();
+            CURLERROR_RETVAL();
         }
         Py_INCREF(Py_None);
         return Py_None;
@@ -1201,7 +1203,7 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
         res = curl_easy_getinfo(self->handle, option, &l_res);
         /* Check for errors and return result */
         if (res != CURLE_OK) {
-            CURLERROR();
+            CURLERROR_RETVAL();
         }
         return PyInt_FromLong(l_res);
     }
@@ -1215,7 +1217,7 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
         res = curl_easy_getinfo(self->handle, option, &s_res);
         /* Check for errors and return result */
         if (res != CURLE_OK) {
-            CURLERROR();
+            CURLERROR_RETVAL();
         }
         /* If the resulting string is NULL, return None */
         if (s_res == NULL) {
@@ -1246,7 +1248,7 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
         res = curl_easy_getinfo(self->handle, option, &d_res);
         /* Check for errors and return result */
         if (res != CURLE_OK) {
-            CURLERROR();
+            CURLERROR_RETVAL();
         }
         return PyFloat_FromDouble(d_res);
     }
@@ -1413,7 +1415,7 @@ do_multi_perform(CurlMultiObject *self, PyObject *args)
 
     /* We assume these errors are ok, otherwise throw exception */
     if (res != CURLM_OK && res != CURLM_CALL_MULTI_PERFORM) {
-        CURLERROR2("perform failed");
+        CURLERROR_MSG("perform failed");
     }
 
     /* Return a tuple with the result and the number of running handles */
@@ -1473,7 +1475,7 @@ do_multi_add_handle(CurlMultiObject *self, PyObject *args)
     assert(obj->multi_stack == NULL);
     res = curl_multi_add_handle(self->multi_handle, obj->handle);
     if (res != CURLM_CALL_MULTI_PERFORM) {
-        CURLERROR2("add_handle failed");
+        CURLERROR_MSG("add_handle failed");
     }
     obj->multi_stack = self;
     Py_INCREF(self);
@@ -1503,7 +1505,7 @@ do_multi_remove_handle(CurlMultiObject *self, PyObject *args)
     }
     res = curl_multi_remove_handle(self->multi_handle, obj->handle);
     if (res != CURLM_OK) {
-        CURLERROR2("remove_handle failed");
+        CURLERROR_MSG("remove_handle failed");
     }
     assert(obj->multi_stack == self);
     obj->multi_stack = NULL;
@@ -1581,7 +1583,7 @@ error:
     Py_XDECREF(except_list);
     Py_XDECREF(fdset_list);
 
-    CURLERROR2("fdset failed due to internal errors");
+    CURLERROR_MSG("fdset failed due to internal errors");
 }
 
 /* --------------- select --------------- */
@@ -1633,7 +1635,7 @@ do_multi_select(CurlMultiObject *self, PyObject *args)
     res = curl_multi_fdset(self->multi_handle, &self->read_fd_set,
                            &self->write_fd_set, &self->exc_fd_set, &max_fd);
     if (res != CURLM_OK) {
-        CURLERROR2("multi_fdset failed");
+        CURLERROR_MSG("multi_fdset failed");
     }
 
     Py_BEGIN_ALLOW_THREADS
