@@ -8,6 +8,7 @@ from gnome.ui import *
 from gtkhtml import *
 import pycurl
 
+
 # We should ignore SIGPIPE when using pycurl.NOSIGNAL - see the libcurl
 # documentation `libcurl-the-guide' for more info.
 import signal
@@ -54,8 +55,8 @@ directory_listing = """
 """
 
 # Images used for directory listings (stolen from mc)
-I_DIRECTORY = '<img src="file:///tmp/i-directory.png" align=middle>'
-I_REGULAR = '<img src="file:///tmp/i-regular.png" align=middle>'
+I_DIRECTORY = '<img src="file:///usr/share/pixmaps/mc/i-directory.png" align=middle>'
+I_REGULAR = '<img src="file:///usr/share/pixmaps/mc/i-regular.png" align=middle>'
 
 
 # Worker threads downloads objects and passes them to the renderer
@@ -70,7 +71,7 @@ class WorkerThread(threading.Thread):
         curl = pycurl.Curl()
         curl.setopt(pycurl.FOLLOWLOCATION, 1)
         curl.setopt(pycurl.MAXREDIRS, 5)
-#        curl.setopt(pycurl.NOSIGNAL, 1)
+        curl.setopt(pycurl.NOSIGNAL, 1)
         curl.setopt(pycurl.HTTPHEADER, ["User-Agent: GtkHTML/PycURL demo"])
         while 1:
             url, handle = self.queue.get()
