@@ -8,6 +8,12 @@ from gnome.ui import *
 from gtkhtml import *
 import pycurl
 
+# We should ignore SIGPIPE when using pycurl.NOSIGNAL - see the libcurl
+# documentation `libcurl-the-guide' for more info.
+import signal
+signal.signal(signal.SIGPIPE, signal.SIG_IGN)
+
+
 # URL history
 history = []
 # Links for 'forward'
@@ -49,6 +55,7 @@ class WorkerThread(threading.Thread):
         curl = pycurl.Curl()
         curl.setopt(pycurl.FOLLOWLOCATION, 1)
         curl.setopt(pycurl.MAXREDIRS, 5)
+        curl.setopt(pycurl.NOSIGNAL, 1)
         curl.setopt(pycurl.HTTPHEADER, ["User-Agent: GtkHTML/PycURL demo browser"])
         while 1:
             url, handle = self.queue.get()

@@ -5,6 +5,11 @@
 import sys, threading, Queue
 import pycurl
 
+# We should ignore SIGPIPE when using pycurl.NOSIGNAL - see the libcurl
+# documentation `libcurl-the-guide' for more info.
+import signal
+signal.signal(signal.SIGPIPE, signal.SIG_IGN)
+
 
 class WorkerThread(threading.Thread):
     def __init__(self, queue):
@@ -24,6 +29,7 @@ class WorkerThread(threading.Thread):
             curl.setopt(pycurl.MAXREDIRS, 5)
             curl.setopt(pycurl.URL, url)
             curl.setopt(pycurl.WRITEDATA, f)
+            curl.setopt(pycurl.NOSIGNAL, 1)
             try:
                 curl.perform()
             except:

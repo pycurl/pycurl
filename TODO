@@ -6,5 +6,4 @@ If you want to hack on pycurl, here's our list of unresolved issues:
     * Documentation
     * A high-level interface to pycurl, like the standard urllib (see
       the file 'doc/examples/curl.py' for a simple example)
-    * Once libcurl 7.9.9 is out, add SIGPIPE and NOSIGNAL to the tests.
     * Make the threading code in gtkhtml_demo.py more robust.
