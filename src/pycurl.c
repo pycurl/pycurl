@@ -55,13 +55,10 @@
      { typedef int compile_time_assert_fail__[1 - 2 * !(expr)]; }
 
 
-/* Calculate the number of options we need to store */
-#define OPTIONS_SIZE    122
-static int PYCURL_OPT(int o)
+/* Calculate the number of OBJECTPOINT options we need to store */
+#define OPTIONS_SIZE    ((int)CURLOPT_LASTENTRY % 10000)
+static int OPT_INDEX(int o)
 {
-#if (LIBCURL_VERSION_NUM >= 0x070b02)
-    COMPILE_TIME_ASSERT(OPTIONS_SIZE == CURLOPT_TCP_NODELAY + 1)
-#endif
     assert(o >= CURLOPTTYPE_OBJECTPOINT);
     assert(o < CURLOPTTYPE_OBJECTPOINT + OPTIONS_SIZE);
     return o - CURLOPTTYPE_OBJECTPOINT;
@@ -105,7 +102,7 @@ typedef struct {
     PyObject *writedata_fp;
     PyObject *writeheader_fp;
     /* misc */
-    void *options[OPTIONS_SIZE];
+    void *options[OPTIONS_SIZE];    /* for OBJECTPOINT options */
     char error[CURL_ERROR_SIZE+1];
 } CurlObject;
 
@@ -809,7 +806,7 @@ static PyObject *
 util_curl_unsetopt(CurlObject *self, int option)
 {
     int res;
-    int opt_masked = -1;
+    int opt_index = -1;
 
 #define SETOPT2(o,x) \
     if ((res = curl_easy_setopt(self->handle, (o), (x))) != CURLE_OK) goto error
@@ -845,7 +842,7 @@ util_curl_unsetopt(CurlObject *self, int option)
     case CURLOPT_SSL_CIPHER_LIST:
     case CURLOPT_USERPWD:
         SETOPT((char *) 0);
-        opt_masked = PYCURL_OPT(option);
+        opt_index = OPT_INDEX(option);
         break;
 
     /* info: we explicitly list unsupported options here */
@@ -855,9 +852,9 @@ util_curl_unsetopt(CurlObject *self, int option)
         return NULL;
     }
 
-    if (opt_masked >= 0 && self->options[opt_masked] != NULL) {
-        free(self->options[opt_masked]);
-        self->options[opt_masked] = NULL;
+    if (opt_index >= 0 && self->options[opt_index] != NULL) {
+        free(self->options[opt_index]);
+        self->options[opt_index] = NULL;
     }
 
     Py_INCREF(Py_None);
@@ -898,7 +895,13 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         return NULL;
     if (check_curl_state(self, 1 | 2, "setopt") != 0)
         return NULL;
+
+    /* early checks of option value */
     if (option <= 0)
+        goto error;
+    if (option >= (int)CURLOPTTYPE_OFF_T + OPTIONS_SIZE)
+        goto error;
+    if (option % 10000 >= OPTIONS_SIZE)
         goto error;
 
 #if 0 /* XXX - should we ??? */
@@ -912,7 +915,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     if (PyString_Check(obj)) {
         const char *stringdata = PyString_AsString(obj);
         char *buf;
-        int opt_masked;
+        int opt_index;
         assert(stringdata != NULL);
 
         /* Check that the option specified a string as well as the input */
@@ -963,17 +966,22 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             CURLERROR_RETVAL();
         }
         /* Save allocated option buffer */
-        opt_masked = PYCURL_OPT(option);
-        if (self->options[opt_masked] != NULL) {
-            free(self->options[opt_masked]);
-            self->options[opt_masked] = NULL;
+        opt_index = OPT_INDEX(option);
+        if (self->options[opt_index] != NULL) {
+            free(self->options[opt_index]);
+            self->options[opt_index] = NULL;
         }
-        self->options[opt_masked] = buf;
+        self->options[opt_index] = buf;
         Py_INCREF(Py_None);
         return Py_None;
     }
 
+/* Up to libcurl 7.12.1 CURLOPT_FILETIME was incorrectly assigned a OBJECTPOINT */
+#if (LIBCURL_VERSION_NUM < 0x070c01)
 #define IS_LONG_OPTION(o)   (o < CURLOPTTYPE_OBJECTPOINT || o == CURLOPT_FILETIME)
+#else
+#define IS_LONG_OPTION(o)   (o < CURLOPTTYPE_OBJECTPOINT)
+#endif
 #define IS_OFF_T_OPTION(o)  (o >= CURLOPTTYPE_OFF_T)
 
     /* Handle the case of integer arguments */
