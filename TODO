@@ -2,7 +2,6 @@
 
 If you want to hack on pycurl, here's our list of unresolved issues:
 
-    * tests/test_post2.py does not work, and this needs to be resolved!
     * Documentation (this is actually starting to get critical)
     * A high-level interface to pycurl, like the standard urllib (see
       the file 'doc/examples/curl.py' for a simple example)
