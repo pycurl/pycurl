@@ -2,78 +2,21 @@
 # -*- coding: iso-8859-1 -*-
 # vi:ts=4:et
 #
-# sfquery -- Source Forge query script
+# sfquery -- Source Forge query script using the ClientCGI high-level interface
 #
 # Retrieves a SourceForge XML export object for a given project.
 # Specify the *numeric* project ID. the user name, and the password,
 # as arguments. If you have a valid ~/.netrc entry for sourceforge.net,
 # you can just give the project ID.
 #
-# Illustrates GET and POST transactions over HTTPS, response callbacks,
-# and enabling basic cookie echoing for stateful sessions.
-#
-# ** mfx NOTE: this script uses "black magic" using COOKIEFILE in
-#    combination with a non-existant file name. See the libcurl docs
-#    for more info.
-#
 # By Eric S. Raymond, August 2002.  All rites reversed.
 
-import os, sys, urllib, netrc
+import os, sys, netrc
 import pycurl
 
 assert sys.version[:3] >= "2.2", "requires Python 2.2 or better"
 
-
-class CGIClient:
-    "Encapsulate user operations on CGIs through curl."
-    def __init__(self, base_url=""):
-        # These members might be set.
-        self.base_url = base_url
-        self.verbosity = 0
-        # Nothing past here should be modified by the caller.
-        self.response = ""
-        self.curlobj = pycurl.Curl()
-        # Verify that we've got the right site...
-        self.curlobj.setopt(pycurl.SSL_VERIFYHOST, 2)
-        # Follow redirects in case it wants to take us to a CGI...
-        self.curlobj.setopt(pycurl.FOLLOWLOCATION, 1)
-        self.curlobj.setopt(pycurl.MAXREDIRS, 5)
-        # Setting this option with even a nonexistent file makes libcurl
-        # handle cookie capture and playback automatically.
-        self.curlobj.setopt(pycurl.COOKIEFILE, "/dev/null")
-        # Set timeouts to avoid hanging too long
-        self.curlobj.setopt(pycurl.CONNECTTIMEOUT, 30)
-        self.curlobj.setopt(pycurl.TIMEOUT, 300)
-        # Set up a callback to capture
-        def response_callback(x):
-            self.response += x
-        self.curlobj.setopt(pycurl.WRITEFUNCTION, response_callback)
-    def set_verbosity(self, level):
-        "Set verbosity to 1 to see transactions."
-        self.curlobj.setopt(pycurl.VERBOSE, level)
-    def get(self, cgi, params=""):
-        "Ship a GET request to a specified CGI, capture the response body."
-        if params:
-            cgi += "?" + urllib.urlencode(params)
-        self.curlobj.setopt(pycurl.URL, os.path.join(self.base_url, cgi))
-        self.curlobj.setopt(pycurl.HTTPGET, 1)
-        self.response = ""
-        self.curlobj.perform()
-    def post(self, cgi, params):
-        "Ship a POST request to a specified CGI, capture the response body.."
-        self.curlobj.setopt(pycurl.URL, os.path.join(self.base_url, cgi))
-        self.curlobj.setopt(pycurl.POST, 1)
-        self.curlobj.setopt(pycurl.POSTFIELDS, urllib.urlencode(params))
-        self.response = ""
-        self.curlobj.perform()
-    def answered(self, check):
-        "Does a given check string occur in the response?"
-        return self.response.find(check) >= 0
-    def close(self):
-        "Close a session, freeing resources."
-        self.curlobj.close()
-
-class SourceForgeUserSession(CGIClient):
+class SourceForgeUserSession(pycurl.CGIClient):
     # SourceForge-specific methods.  Sensitive to changes in site design.
     def login(self, name, password):
         "Establish a login session."
@@ -89,7 +32,7 @@ class SourceForgeUserSession(CGIClient):
         self.get("export/xml_export.php?group_id=%s" % numid)
 
 if __name__ == "__main__":
-    if len(sys.argv) < 4:
+    if len(sys.argv) == 1:
         print "Usage: %s <project id> <name> <password>" % sys.argv[0]
         sys.exit(1)
     project_id = sys.argv[1]
