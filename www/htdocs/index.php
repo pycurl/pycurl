@@ -67,7 +67,8 @@ from a Python program.
 <h2>Documentation</h2>
 
 PycURL now includes API documentation in the <i>doc</i> (<a href="pycurl.html">online version</a>) directory of the distribution,
-as well as a number of test and example scripts in the <i>tests</i> and <i>examples</i>
+as well as a number of test and example scripts in the <i><a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/pycurl/pycurl/tests/">testsi</a></i> 
+and <i><a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/pycurl/pycurl/examples/">examples</a></i>
 directories of the distribution.
 
 <h2>Download</h2>
