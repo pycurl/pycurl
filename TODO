@@ -10,5 +10,3 @@ If you want to hack on pycurl, here's our list of unresolved issues:
     * Add more options to Curl.unsetopt(). Have to carefully check
       the libcurl source code for each option we want to support.
 
-    * Are we possibly leaking references with CURLOPT_PROGRESSDATA
-      and CURLOPT_PASSWDDATA ??

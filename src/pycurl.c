@@ -1115,8 +1115,11 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
         /* Ensure the option specified a file as well as the input */
         switch (option) {
+#if 0
+        /* REMOVED */
         case CURLOPT_PASSWDDATA:
         case CURLOPT_PROGRESSDATA:
+#endif
         case CURLOPT_READDATA:
         case CURLOPT_WRITEDATA:
             break;
@@ -1143,6 +1146,8 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         Py_INCREF(obj);
 
         switch (option) {
+#if 0
+        /* REMOVED */
         case CURLOPT_PASSWDDATA:
             ZAP(self->passwddata_fp);
             self->passwddata_fp = obj;
@@ -1151,6 +1156,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             ZAP(self->progressdata_fp);
             self->progressdata_fp = obj;
             break;
+#endif
         case CURLOPT_READDATA:
             ZAP(self->readdata_fp);
             self->readdata_fp = obj;
@@ -2461,12 +2467,18 @@ initpycurl(void)
     insint_c(d, "INTERFACE", CURLOPT_INTERFACE);
     insint_c(d, "KRB4LEVEL", CURLOPT_KRB4LEVEL);
     insint_c(d, "PROGRESSFUNCTION", CURLOPT_PROGRESSFUNCTION);
+#if 0
+     /* REMOVED */
     insint_c(d, "PROGRESSDATA", CURLOPT_PROGRESSDATA);
+#endif
     insint_c(d, "SSL_VERIFYPEER", CURLOPT_SSL_VERIFYPEER);
     insint_c(d, "CAPATH", CURLOPT_CAPATH);
     insint_c(d, "CAINFO", CURLOPT_CAINFO);
     insint_c(d, "PASSWDFUNCTION", CURLOPT_PASSWDFUNCTION);
+#if 0
+     /* REMOVED */
     insint_c(d, "PASSWDDATA", CURLOPT_PASSWDDATA);
+#endif
     insint_c(d, "OPT_FILETIME", CURLOPT_FILETIME);
     insint_c(d, "MAXREDIRS", CURLOPT_MAXREDIRS);
     insint_c(d, "MAXCONNECTS", CURLOPT_MAXCONNECTS);
