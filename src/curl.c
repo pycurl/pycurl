@@ -85,6 +85,7 @@ self_cleanup(CurlObject *self)
 	    self->options[i] = NULL;
 	}		
     }	
+    self->state = NULL;
     Py_XDECREF(self->w_cb);
     Py_XDECREF(self->r_cb);
     Py_XDECREF(self->pro_cb);
