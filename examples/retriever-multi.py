@@ -31,7 +31,7 @@ for u in urls:
     queue.append((u, "data_%d" % fileno))
     fileno += 1
 
-# Preallocate a list of curl objects 
+# Preallocate a list of curl objects
 freelist = []
 for c in range(num_conn):
     curl = pycurl.Curl()
