@@ -57,6 +57,9 @@ typedef struct {
     PyObject *dict;                 /* Python attributes dictionary */
     CURLM *multi_handle;
     PyThreadState *state;
+    fd_set read_fd_set;
+    fd_set write_fd_set;
+    fd_set exc_fd_set;
 } CurlMultiObject;
 
 typedef struct {
@@ -1510,9 +1513,6 @@ static PyObject *
 do_multi_fdset(CurlMultiObject *self, PyObject *args)
 {
     CURLMcode res = -1;
-    fd_set read_fd_set;
-    fd_set write_fd_set;
-    fd_set exc_fd_set;
     int max_fd, fd;
     PyObject *fdset_list = NULL, *read_list = NULL, *write_list = NULL,
              *except_list = NULL, *py_fd = NULL;
@@ -1528,38 +1528,38 @@ do_multi_fdset(CurlMultiObject *self, PyObject *args)
     }
 
     /* Allocate lists */
-    if ((fdset_list = PyList_New(0)) == NULL) goto error;
+    if ((fdset_list = PyTuple_New(3)) == NULL) goto error;
     if ((read_list = PyList_New(0)) == NULL) goto error;
     if ((write_list = PyList_New(0)) == NULL) goto error;
     if ((except_list = PyList_New(0)) == NULL) goto error;
 
-    if (PyList_Append(fdset_list, read_list) == -1) goto error;
-    if (PyList_Append(fdset_list, write_list) == -1) goto error;
-    if (PyList_Append(fdset_list, except_list) == -1) goto error;
+    if (PyTuple_SetItem(fdset_list, 0, read_list) == -1) goto error;
+    if (PyTuple_SetItem(fdset_list, 1, write_list) == -1) goto error;
+    if (PyTuple_SetItem(fdset_list, 2, except_list) == -1) goto error;
 
     /* Clear file descriptor sets */
-    FD_ZERO(&read_fd_set);
-    FD_ZERO(&write_fd_set);
-    FD_ZERO(&exc_fd_set);
+    FD_ZERO(&self->read_fd_set);
+    FD_ZERO(&self->write_fd_set);
+    FD_ZERO(&self->exc_fd_set);
 
     /* Don't bother releasing the gil as this is just a data structure operation */
-    res = curl_multi_fdset(self->multi_handle, &read_fd_set, &write_fd_set,
-                           &exc_fd_set, &max_fd);
+    res = curl_multi_fdset(self->multi_handle, &self->read_fd_set, &self->write_fd_set,
+                           &self->exc_fd_set, &max_fd);
 
     /* We assume these errors are ok, otherwise throw exception */
     if (res != CURLM_OK) goto error;
 
     /* Populate lists */
     for (fd = 0; fd < max_fd + 1; fd++) {
-        if (FD_ISSET(fd, &read_fd_set)) {
+        if (FD_ISSET(fd, &self->read_fd_set)) {
             if ((py_fd = PyInt_FromLong((long)fd)) == NULL) goto error;
             if (PyList_Append(read_list, py_fd) == -1) goto error;
         }
-        if (FD_ISSET(fd, &write_fd_set)) {
+        if (FD_ISSET(fd, &self->write_fd_set)) {
             if ((py_fd = PyInt_FromLong((long)fd)) == NULL) goto error;
             if (PyList_Append(write_list, py_fd) == -1) goto error;
         }
-        if (FD_ISSET(fd, &exc_fd_set)) {
+        if (FD_ISSET(fd, &self->exc_fd_set)) {
             if ((py_fd = PyInt_FromLong((long)fd)) == NULL) goto error;
             if (PyList_Append(except_list, py_fd) == -1) goto error;
         }
