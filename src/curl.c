@@ -275,6 +275,7 @@ error:
 }
 
 
+#if 0
 static CurlObject *
 do_curl_copy(const CurlObject *self, PyObject *args)
 {
@@ -312,7 +313,7 @@ do_curl_copy(const CurlObject *self, PyObject *args)
     memcpy(copy->error, self->error, sizeof(self->error));
 
 #if 0
-    // FIXME FIXME FIXME 
+    // FIXME FIXME FIXME
     //    - we really need some sane semantics
     //    - have to carefully check what curl_easy_duphandle() actually does
     //
@@ -357,6 +358,7 @@ cannot_copy:
     PyErr_SetString(ErrorObject, "Curl object is in a state that cannot get copied");
     return NULL;
 }
+#endif /* #if 0 */
 
 
 /* util function shared by cleanup and clear */
@@ -1646,9 +1648,12 @@ do_multi_select(CurlMultiObject *self, PyObject *args)
 
 /* --------------- methods --------------- */
 
-static char co_cleanup_doc [] = "cleanup() -> None.  Close handle and end curl session.\n";
+static char co_cleanup_doc [] = "cleanup() -> None.  Same as close().\n";
 static char co_close_doc [] = "close() -> None.  Close handle and end curl session.\n";
+#if 0
 static char co_copy_doc [] = "copy() -> New curl object. FIXME\n";
+
+#endif
 static char co_perform_doc [] = "perform() -> None.  Perform a file transfer.  Throws pycurl.error exception upon failure.\n";
 static char co_setopt_doc [] = "setopt(option, parameter) -> None.  Set curl session options.  Throws pycurl.error exception upon failure.\n";
 static char co_getinfo_doc [] = "getinfo(info) -> res.  Extract and return information from a curl session.  Throws pycurl.error exception upon failure.\n";
@@ -1657,7 +1662,9 @@ static char co_multi_fdset_doc [] = "fdset() -> List.  Returns a list of three l
 static PyMethodDef curlobject_methods[] = {
     {"cleanup", (PyCFunction)do_curl_cleanup, METH_VARARGS, co_cleanup_doc},
     {"close", (PyCFunction)do_curl_cleanup, METH_VARARGS, co_close_doc},
+#if 0
     {"copy", (PyCFunction)do_curl_copy, METH_VARARGS, co_copy_doc},
+#endif
     {"perform", (PyCFunction)do_curl_perform, METH_VARARGS, co_perform_doc},
     {"setopt", (PyCFunction)do_curl_setopt, METH_VARARGS, co_setopt_doc},
     {"getinfo", (PyCFunction)do_curl_getinfo, METH_VARARGS, co_getinfo_doc},
@@ -1822,7 +1829,7 @@ statichere PyTypeObject CurlMulti_Type = {
 /*************************************************************************
 // module level
 // Note that the object constructors (do_curl_init, do_curl_multi_init)
-// are also implemented as module-level functions.
+// are implemented as module-level functions as well.
 **************************************************************************/
 
 static PyObject *
@@ -1877,12 +1884,12 @@ static char pycurl_global_cleanup_doc [] =
 static char pycurl_curl_doc [] =
 "Curl() -> New curl object.  Implicitly calls global_init() if not called.\n";
 static char pycurl_init_doc [] =
-"init() -> New curl object.  Implicitly calls global_init() if not called.\n";
+"init() -> New curl object.   Deprecated, use Curl() instead.\n";
 
 static char pycurl_curlmulti_doc [] =
 "CurlMulti() -> New curl multi-object.\n";
 static char pycurl_multi_init_doc [] =
-"multi_init() -> New curl multi-object.\n";
+"multi_init() -> New curl multi-object. Deprecated, use CurlMulti() instead.\n";
 
 
 /* List of functions defined in the curl module */
