@@ -968,6 +968,7 @@ do_multi_addhandle(CurlMultiObject *self, PyObject *args)
             PyErr_SetString(ErrorObject, "add_handle failed");
             return NULL;
         }
+        Py_INCREF(obj);
     }
     else {
         PyErr_SetString(ErrorObject, "invalid options to add_handle");
@@ -977,6 +978,31 @@ do_multi_addhandle(CurlMultiObject *self, PyObject *args)
     return Py_None;
 }
 
+static PyObject *
+do_multi_removehandle(CurlMultiObject *self, PyObject *args)
+{
+    CurlObject *obj;
+    int res;
+
+    if (PyArg_ParseTuple(args, "O!:remove_handle", &Curl_Type, (PyObject *)&obj)) {
+        if (obj->handle == NULL) {
+            PyErr_SetString(ErrorObject, "cannot remove closed curl object from multi stack");
+            return NULL;
+        }
+        res = curl_multi_remove_handle(self->multi_handle, obj->handle);
+        if (res != CURLM_OK) {
+            PyErr_SetString(ErrorObject, "remove_handle failed");
+            return NULL;
+        }
+        Py_DECREF(obj);
+    }
+    else {
+        PyErr_SetString(ErrorObject, "invalid options to remove_handle");
+        return NULL;
+    }
+    Py_INCREF(Py_None);
+    return Py_None;
+}
 
 /* --------------------------------------------------------------------- */
 
@@ -997,6 +1023,7 @@ static PyMethodDef curlobject_methods[] = {
 static PyMethodDef curlmultiobject_methods[] = {
     {"cleanup", (PyCFunction)do_multi_cleanup, METH_VARARGS, NULL},
     {"add_handle", (PyCFunction)do_multi_addhandle, METH_VARARGS, NULL},
+    {"remove_handle", (PyCFunction)do_multi_removehandle, METH_VARARGS, NULL},
     {"perform", (PyCFunction)do_multi_perform, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}
 };
