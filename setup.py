@@ -176,9 +176,10 @@ This module provides Python bindings for the cURL library.""",
 )
 
 ##print distutils.__version__
-setup_args["licence"] = setup_args["license"]
 if LooseVersion(distutils.__version__) > LooseVersion("1.0.1"):
     setup_args["platforms"] = "All"
+if LooseVersion(distutils.__version__) < LooseVersion("1.0.3"):
+    setup_args["licence"] = setup_args["license"]
 
 if __name__ == "__main__":
     for o in ext.extra_objects:
