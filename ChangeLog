@@ -2,14 +2,14 @@ Version 7.9.8.3
 
 2002-07-16  Markus F.X.J. Oberhumer <mfx>
 
-	* Under Python 2.2 or better, CurlObject and CurlMultiObject
-	now participiate in the Cyclic Garbarge Collector.
+	* Under Python 2.2 or better, Curl and CurlMulti now participate
+	in garbarge collection.
 
 Version 7.9.8.2
 
 2002-07-05  Markus F.X.J. Oberhumer <mfx>
 
-	* CurlObject and CurlMultiObject now support standard Python attributes.
+	* Curl and CurlMulti now support standard Python attributes.
 	See tests/test_multi2.py for an example.
 
 2002-07-02  Kjetil Jacobsen  <kjetilja>
