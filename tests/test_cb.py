@@ -1,7 +1,8 @@
 import curl
 
-def test(size, buf):
-    print size, buf
+def test(buf):
+    print buf
+    return len(buf)
 
 c = curl.init()
 c.setopt(curl.URL, 'http://www.python.org')

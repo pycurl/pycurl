@@ -77,31 +77,28 @@ do_cleanup(CurlObject *self, PyObject *args)
 
 /* --------------------------------------------------------------------- */
 
-static int write_callback(void *ptr,
-			  size_t size,
-			  size_t nmemb,
-			  FILE  *stream)
+static int 
+write_callback(void *ptr,
+	       size_t size,
+	       size_t nmemb,
+	       FILE  *stream)
 {
     PyObject *arglist;
     PyObject *result;
     CurlObject *self;
     int write_size;
     
-    //printf("callback started - ptr %x, size %d, nmemb %d, stream %x\n",
-    //ptr, size, nmemb, stream);
-
     self = (CurlObject *)stream;
     arglist = Py_BuildValue("(s#)", (char *)ptr, size*nmemb);
     result = PyEval_CallObject(self->w_cb, arglist);
     Py_DECREF(arglist);
     if (result == NULL) {
-	return 0;
+	PyErr_Print();
+	write_size = 0;
     }
-
-    write_size = (int)PyInt_AsLong(result);
-    Py_DECREF(result);
-
-    //printf("callback finished\n");
+    else
+	write_size = (int)PyInt_AsLong(result);
+    Py_XDECREF(result);
     return write_size;
 }
 
