@@ -2313,6 +2313,8 @@ initpycurl(void)
     insint_c(d, "INFOTYPE_HEADER_OUT", CURLINFO_HEADER_OUT);
     insint_c(d, "INFOTYPE_DATA_IN", CURLINFO_DATA_IN);
     insint_c(d, "INFOTYPE_DATA_OUT", CURLINFO_DATA_OUT);
+    insint_c(d, "INFOTYPE_SSL_DATA_IN", CURLINFO_SSL_DATA_IN);
+    insint_c(d, "INFOTYPE_SSL_DATA_OUT", CURLINFO_SSL_DATA_OUT);
 #if 0
     /* deprecated names (for compatibility with old pycurl versions) */
     insint_c(d, "TEXT", CURLINFO_TEXT);
@@ -2497,6 +2499,7 @@ initpycurl(void)
     insint_c(d, "HTTP_CONNECTCODE", CURLINFO_HTTP_CONNECTCODE);
     insint_c(d, "HTTPAUTH_AVAIL", CURLINFO_HTTPAUTH_AVAIL);
     insint_c(d, "PROXYAUTH_AVAIL", CURLINFO_PROXYAUTH_AVAIL);
+
     insint_c(d, "FTP_SSL", CURLOPT_FTP_SSL);
     insint_c(d, "NETRC_FILE", CURLOPT_NETRC_FILE);
     insint_c(d, "MAXFILESIZE_LARGE", CURLOPT_MAXFILESIZE_LARGE);
