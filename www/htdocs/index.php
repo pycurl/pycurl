@@ -145,7 +145,7 @@ at your own risk.
 
 Also, official PycURL packages are available for
 <ul>
-  <li><a href="http://packages.debian.org/python2.3-pycurl">Debian GNU/Linux</a></li>
+  <li><a href="http://packages.debian.org/python2.4-pycurl">Debian GNU/Linux</a></li>
   <li><a href="http://www.freebsd.org/cgi/ports.cgi?query=curl">FreeBSD</a></li>
   <li><a href="http://packages.gentoo.org/packages/?category=dev-python;name=pycurl">Gentoo Linux</a></li>
   <li><a href="ftp://ftp.netbsd.org/pub/NetBSD/packages/pkgsrc/www/py-curl/README.html">NetBSD</a></li>
