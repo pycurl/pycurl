@@ -36,6 +36,9 @@ class CurlCGI:
         def response_callback(x):
             self.response += x
         self.curlobj.setopt(WRITEFUNCTION, response_callback)
+    def set_url(self, url):
+        "Set the CGI URL to be used,"
+        self.base_url = url
     def set_verbosity(self, level):
         "Set verbosity to 1 to see transactions."
         self.curlobj.setopt(VERBOSE, level)
@@ -60,6 +63,8 @@ class CurlCGI:
     def close(self):
         "Close a session, freeing resources."
         self.curlobj.close()
+    def __del__(self):
+        self.close()
 
 # We should ignore SIGPIPE when using pycurl.NOSIGNAL - see the libcurl
 # documentation `libcurl-the-guide' for more info.
