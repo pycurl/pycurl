@@ -3,8 +3,8 @@
 /* PycURL -- cURL Python module
  *
  * Authors:
- *  Kjetil Jacobsen <kjetilja at cs.uit.no>
- *  Markus F.X.J. Oberhumer <markus at oberhumer.com>
+ *  Copyright (C) 2001-2003 by Kjetil Jacobsen <kjetilja at cs.uit.no>
+ *  Copyright (C) 2001-2003 by Markus F.X.J. Oberhumer <markus at oberhumer.com>
  *
  * Contributions:
  *  Tino Lange <Tino.Lange at gmx.de>
@@ -279,7 +279,7 @@ error:
 }
 
 
-#if 0 /* Curl.copy() needs some more work */
+#if 0 /* FIXME: Curl.copy() needs some more work */
 static CurlObject *
 do_curl_copy(const CurlObject *self, PyObject *args)
 {
@@ -2122,6 +2122,7 @@ DL_EXPORT(void)
     initpycurl(void)
 {
     PyObject *m, *d;
+    const curl_version_info_data *vi;
 
     /* Initialize the type of the new type object here; doing it here
      * is required for portability to Windows without requiring C++. */
@@ -2324,7 +2325,17 @@ DL_EXPORT(void)
     insint(d, "E_MULTI_OUT_OF_MEMORY", CURLM_OUT_OF_MEMORY);
     insint(d, "E_MULTI_INTERNAL_ERROR", CURLM_INTERNAL_ERROR);
 
-    /* Initialize global interpreter lock */
+    /* Check the version, as this has caused nasty problems in
+     * some cases. */
+    vi = curl_version_info(CURLVERSION_NOW);
+    if (vi == NULL) {
+        Py_FatalError("pycurl: curl_version_info()");
+    }
+    if (vi->version_num < LIBCURL_VERSION_NUM) {
+        Py_FatalError("pycurl: libcurl link-time version is older than compile-time version!");
+    }
+
+    /* Finally initialize global interpreter lock */
     PyEval_InitThreads();
 }
 
