@@ -1029,7 +1029,7 @@ do_getinfo(CurlObject *self, PyObject *args)
         if (res != CURLE_OK) {
             CURLERROR();
         }
-        /* If the resultng string is NULL, return None */
+        /* If the resulting string is NULL, return None */
         if (s_res == NULL) {
             Py_INCREF(Py_None);
             return Py_None;
