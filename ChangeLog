@@ -1,4 +1,13 @@
-Version 7.11.0 [requires libcurl-7.10.3 or better]
+Version 7.11.1 [requires libcurl-7.10.3 or better]
+--------------
+
+2004-03-15  Kjetil Jacobsen  <kjetilja>
+
+        * Added support for libcurl 7.11.1 CURLOPT features:
+          CURLOPT_POSTFIELDSIZE_LARGE.
+
+
+Version 7.11.0
 --------------
 
 2004-02-11  Kjetil Jacobsen  <kjetilja>
