@@ -706,7 +706,7 @@ static PyMethodDef curlobject_methods[] = {
     {"setopt", (PyCFunction)do_setopt, METH_VARARGS, co_setopt_doc},
     {"perform", (PyCFunction)do_perform, METH_VARARGS, co_perform_doc},
     {"getinfo", (PyCFunction)do_getinfo, METH_VARARGS, co_getinfo_doc},
-    {NULL, NULL}
+    {NULL, NULL, 0, NULL}
 };
 
 
