@@ -678,6 +678,14 @@ do_setopt(CurlObject *self, PyObject *args)
         PyArg_ParseTuple(args, "iO!:setopt", &option, &PyCFunction_Type, &obj) ||
         PyArg_ParseTuple(args, "iO!:setopt", &option, &PyMethod_Type, &obj))
       {
+        /* use function types to exactly match the <curl.h> interface */
+        const curl_write_callback w_cb = write_callback;
+        const curl_read_callback r_cb = read_callback;
+        const curl_write_callback h_cb = header_callback;
+        const curl_progress_callback pro_cb = progress_callback;
+        const curl_passwd_callback pwd_cb = password_callback;
+        const curl_debug_callback d_cb = debug_callback;
+
         PyErr_Clear();
 
         switch(option) {
@@ -690,7 +698,7 @@ do_setopt(CurlObject *self, PyObject *args)
             Py_XDECREF(self->writedata);
             Py_XDECREF(self->w_cb);
             self->w_cb = obj;
-            curl_easy_setopt(self->handle, CURLOPT_WRITEFUNCTION, write_callback);
+            curl_easy_setopt(self->handle, CURLOPT_WRITEFUNCTION, w_cb);
             curl_easy_setopt(self->handle, CURLOPT_WRITEDATA, self);
             break;
         case CURLOPT_READFUNCTION:
@@ -698,35 +706,35 @@ do_setopt(CurlObject *self, PyObject *args)
             Py_XDECREF(self->readdata);
             Py_XDECREF(self->r_cb);
             self->r_cb = obj;
-            curl_easy_setopt(self->handle, CURLOPT_READFUNCTION, read_callback);
+            curl_easy_setopt(self->handle, CURLOPT_READFUNCTION, r_cb);
             curl_easy_setopt(self->handle, CURLOPT_READDATA, self);
             break;
         case CURLOPT_HEADERFUNCTION:
             Py_INCREF(obj);
             Py_XDECREF(self->h_cb);
             self->h_cb = obj;
-            curl_easy_setopt(self->handle, CURLOPT_HEADERFUNCTION, header_callback);
+            curl_easy_setopt(self->handle, CURLOPT_HEADERFUNCTION, h_cb);
             curl_easy_setopt(self->handle, CURLOPT_WRITEHEADER, self);
             break;
         case CURLOPT_PROGRESSFUNCTION:
             Py_INCREF(obj);
             Py_XDECREF(self->pro_cb);
             self->pro_cb = obj;
-            curl_easy_setopt(self->handle, CURLOPT_PROGRESSFUNCTION, progress_callback);
+            curl_easy_setopt(self->handle, CURLOPT_PROGRESSFUNCTION, pro_cb);
             curl_easy_setopt(self->handle, CURLOPT_PROGRESSDATA, self);
             break;
         case CURLOPT_PASSWDFUNCTION:
             Py_INCREF(obj);
             Py_XDECREF(self->pwd_cb);
             self->pwd_cb = obj;
-            curl_easy_setopt(self->handle, CURLOPT_PASSWDFUNCTION, password_callback);
+            curl_easy_setopt(self->handle, CURLOPT_PASSWDFUNCTION, pwd_cb);
             curl_easy_setopt(self->handle, CURLOPT_PASSWDDATA, self);
             break;
         case CURLOPT_DEBUGFUNCTION:
             Py_INCREF(obj);
             Py_XDECREF(self->d_cb);
             self->d_cb = obj;
-            curl_easy_setopt(self->handle, CURLOPT_DEBUGFUNCTION, debug_callback);
+            curl_easy_setopt(self->handle, CURLOPT_DEBUGFUNCTION, d_cb);
             curl_easy_setopt(self->handle, CURLOPT_DEBUGDATA, self);
             break;
         default:
