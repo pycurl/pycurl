@@ -1,3 +1,7 @@
+2001-06-07  Kjetil Jacobsen  <kjetilja>
+
+	* Added global_init/cleanup
+
 2001-06-06  Kjetil Jacobsen  <kjetilja>
 
 	* Added HEADER/PROGRESSFUNCTION callbacks (see files in tests/).

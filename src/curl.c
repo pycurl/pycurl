@@ -156,7 +156,7 @@ progress_callback(void *client,
     int ret;
     
     self = (CurlObject *)client;
-    arglist = Py_BuildValue("(ii)", dltotal, dlnow);
+    arglist = Py_BuildValue("(iiii)", dltotal, dlnow, ultotal, ulnow);
 
     PyEval_AcquireThread(self->state);
     result = PyEval_CallObject(self->pro_cb, arglist);
@@ -747,6 +747,7 @@ do_init(PyObject *arg)
     self->quote = NULL;
     self->postquote = NULL;
     self->httppost = NULL;
+
     /* Set callback pointers to NULL */
     self->w_cb = NULL;
     self->h_cb = NULL;
@@ -758,9 +759,48 @@ do_init(PyObject *arg)
 }
 
 
+static PyObject *
+do_global_cleanup(PyObject *arg)
+{
+    curl_global_cleanup();
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+
+static PyObject *
+do_global_init(PyObject *self, PyObject *args)
+{
+    int res, option;
+
+    if (PyArg_ParseTuple(args, "i:global_init", &option)) {
+	if (!(option == CURL_GLOBAL_ALL ||
+	      option == CURL_GLOBAL_SSL ||
+	      option == CURL_GLOBAL_NOTHING)) {
+	    PyErr_SetString(ErrorObject, "invalid option to global_init");
+	    return NULL;
+	}	    
+
+	res = curl_global_init(option);
+	if (res != 0) {
+	    PyErr_SetString(ErrorObject, "unable to set global option");
+	    return NULL;
+	}
+	else {
+	    Py_INCREF(Py_None);
+	    return Py_None;
+	}
+    }
+    PyErr_SetString(ErrorObject, "invalid option to global_init");
+    return NULL;
+}
+
+
 /* List of functions defined in the curl module */
 static PyMethodDef curl_methods[] = {
     {"init", (PyCFunction)do_init, METH_VARARGS},
+    {"global_cleanup", (PyCFunction)do_global_cleanup, METH_VARARGS},
+    {"global_init", (PyCFunction)do_global_init, METH_VARARGS},
     {NULL, NULL}
 };
 
@@ -890,6 +930,11 @@ DL_EXPORT(void)
     insint(d, "CLOSEPOLICY_LEAST_TRAFFIC", CURLCLOSEPOLICY_LEAST_TRAFFIC);
     insint(d, "CLOSEPOLICY_SLOWEST", CURLCLOSEPOLICY_SLOWEST);
     insint(d, "CLOSEPOLICY_CALLBACK", CURLCLOSEPOLICY_CALLBACK);
+
+    /* global_init options */
+    insint(d, "GLOBAL_ALL", CURL_GLOBAL_ALL);
+    insint(d, "GLOBAL_NOTHING", CURL_GLOBAL_NOTHING);
+    insint(d, "GLOBAL_SSL", CURL_GLOBAL_SSL);
 
     /* Initialize global interpreter lock */
     PyEval_InitThreads();
