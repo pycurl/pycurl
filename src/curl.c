@@ -2281,7 +2281,7 @@ extern "C"
 #endif
 DL_EXPORT(void)
 #endif
-initpycurl(void)
+init_pycurl(void)
 {
     PyObject *m, *d;
     const curl_version_info_data *vi;
@@ -2294,7 +2294,7 @@ initpycurl(void)
     CurlMulti_Type.ob_type = &PyType_Type;
 
     /* Create the module and add the functions */
-    m = Py_InitModule3("pycurl", curl_methods, module_doc);
+    m = Py_InitModule3("_pycurl", curl_methods, module_doc);
     assert(m != NULL && PyModule_Check(m));
 
     /* Add error object to the module */

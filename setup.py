@@ -6,6 +6,7 @@
 """Setup script for the PycURL module distribution."""
 
 PACKAGE = "pycurl"
+EXT_NAME = "_pycurl"
 VERSION = "7.10.4.2"
 
 import glob, os, re, sys, string
@@ -106,7 +107,7 @@ else:
 def get_kw(**kw): return kw
 
 ext = Extension(
-    name=PACKAGE,
+    name=EXT_NAME,
     sources=[
         os.path.join("src", "curl.c"),
     ],
@@ -171,6 +172,8 @@ setup_args = get_kw(
     license="GNU Lesser General Public License (LGPL)",
     data_files=get_data_files(),
     ext_modules=[ext],
+    packages = [PACKAGE],
+    package_dir = { PACKAGE: os.path.join('python', 'pycurl') },
     long_description="""
 This module provides Python bindings for the cURL library.""",
 )
