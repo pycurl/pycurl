@@ -1,12 +1,16 @@
-2001-06-01  Kjetil Jacobsen  <kjetilja@cs.UiT.No>
+2001-06-04  Kjetil Jacobsen  <kjetilja>
+
+	* Return -1 on error from Python callback in write function.
+
+2001-06-01  Kjetil Jacobsen  <kjetilja>
 
 	* Moved source to src and tests to tests directory.
 
-2001-05-31  Kjetil Jacobsen  <kjetilja@cs.UiT.No>
+2001-05-31  Kjetil Jacobsen  <kjetilja>
 
 	* Added better type checking for setopt.
 
-2001-05-30  Kjetil Jacobsen  <kjetilja@cs.UiT.No>
+2001-05-30  Kjetil Jacobsen  <kjetilja>
 
 	* Moved code to sourceforge.
 

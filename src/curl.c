@@ -94,7 +94,7 @@ write_callback(void *ptr,
     Py_DECREF(arglist);
     if (result == NULL) {
 	PyErr_Print();
-	write_size = 0;
+	write_size = -1;
     }
     else
 	write_size = (int)PyInt_AsLong(result);
