@@ -129,11 +129,11 @@ typedef struct {
 
 
 /* Safe XDECREF for object states that handles nested deallocations */
-#define ZAP(v) { \
+#define ZAP(v) do {\
     PyObject *tmp = (PyObject *)(v); \
     (v) = NULL; \
     Py_XDECREF(tmp); \
-}
+} while (0)
 
 
 /*************************************************************************
