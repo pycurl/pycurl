@@ -1,3 +1,9 @@
+2001-11-27  Kjetil Jacobsen  <kjetilja>
+
+	* Improved detection of where libcurl is installed in setup.py.
+	Should make it easier to install pycurl when libcurl is not
+	located in regular lib/include paths.
+
 2001-11-05  Kjetil Jacobsen  <kjetilja>
 
 	* Some of the newer options to setopt were missing, this should
