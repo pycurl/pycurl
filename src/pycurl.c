@@ -1409,6 +1409,13 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
     case CURLINFO_REDIRECT_COUNT:
     case CURLINFO_REQUEST_SIZE:
     case CURLINFO_SSL_VERIFYRESULT:
+#if (LIBCURL_VERSION_NUM >= 0x070a07)
+    case CURLINFO_HTTP_CONNECTCODE:
+#endif
+#if (LIBCURL_VERSION_NUM >= 0x070a08)
+    case CURLINFO_HTTPAUTH_AVAIL:
+    case CURLINFO_PROXYAUTH_AVAIL:
+#endif
         {
             /* Return PyInt as result */
             long l_res = -1;
@@ -2536,6 +2543,33 @@ initpycurl(void)
     insint_c(d, "SSL_CTX_FUNCTION", CURLOPT_SSL_CTX_FUNCTION);
 #endif
 #endif
+#if (LIBCURL_VERSION_NUM >= 0x070a07)
+    insint_c(d, "FTP_CREATE_MISSING_DIRS", CURLOPT_FTP_CREATE_MISSING_DIRS);
+    insint_c(d, "PROXYAUTH", CURLOPT_PROXYAUTH);
+#endif
+#if (LIBCURL_VERSION_NUM >= 0x070a08)
+    insint_c(d, "FTP_RESPONSE_TIMEOUT", CURLOPT_FTP_RESPONSE_TIMEOUT);
+    insint_c(d, "IPRESOLVE", CURLOPT_IPRESOLVE);
+    insint_c(d, "MAXFILESIZE", CURLOPT_MAXFILESIZE);
+#endif
+
+#if (LIBCURL_VERSION_NUM >= 0x070a08)
+    /* constants for setopt(IPRESOLVE, x) */
+    insint_c(d, "IPRESOLVE_WHATEVER", CURL_IPRESOLVE_WHATEVER);
+    insint_c(d, "IPRESOLVE_V4", CURL_IPRESOLVE_V4);
+    insint_c(d, "IPRESOLVE_V6", CURL_IPRESOLVE_V6);
+#endif
+
+#if (LIBCURL_VERSION_NUM >= 0x070a07)
+    /* constants for setopt(HTTP_VERSION, x) */
+#if 0
+/* FIXME: name-clash with CURLOPT_HTTP_VERSION_1_0 above !!! */
+    insint_c(d, "HTTP_VERSION_NONE", CURL_HTTP_VERSION_NONE);
+    insint_c(d, "HTTP_VERSION_1_0", CURL_HTTP_VERSION_1_0);
+    insint_c(d, "HTTP_VERSION_1_1", CURL_HTTP_VERSION_1_1);
+    insint_c(d, "HTTP_VERSION_LAST", CURL_HTTP_VERSION_LAST);
+#endif
+#endif
 
     /* CURL_NETRC_OPTION: constants for setopt(NETRC, x) */
     insint_c(d, "NETRC_OPTIONAL", CURL_NETRC_OPTIONAL);
@@ -2552,6 +2586,8 @@ initpycurl(void)
     /* CURLINFO: symbolic constants for getinfo(x) */
     insint_c(d, "EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL);
     insint_c(d, "HTTP_CODE", CURLINFO_HTTP_CODE);
+      /* new name since 7.10.8 */
+      insint_c(d, "RESPONSE_CODE", CURLINFO_HTTP_CODE);
     insint_c(d, "TOTAL_TIME", CURLINFO_TOTAL_TIME);
     insint_c(d, "NAMELOOKUP_TIME", CURLINFO_NAMELOOKUP_TIME);
     insint_c(d, "CONNECT_TIME", CURLINFO_CONNECT_TIME);
@@ -2570,6 +2606,13 @@ initpycurl(void)
     insint_c(d, "CONTENT_TYPE", CURLINFO_CONTENT_TYPE);
     insint_c(d, "REDIRECT_TIME", CURLINFO_REDIRECT_TIME);
     insint_c(d, "REDIRECT_COUNT", CURLINFO_REDIRECT_COUNT);
+#if (LIBCURL_VERSION_NUM >= 0x070a07)
+    insint_c(d, "HTTP_CONNECTCODE", CURLINFO_HTTP_CONNECTCODE);
+#endif
+#if (LIBCURL_VERSION_NUM >= 0x070a08)
+    insint_c(d, "HTTPAUTH_AVAIL", CURLINFO_HTTPAUTH_AVAIL);
+    insint_c(d, "PROXYAUTH_AVAIL", CURLINFO_PROXYAUTH_AVAIL);
+#endif
 
     /* curl_closepolicy: constants for setopt(CLOSEPOLICY, x) */
     insint_c(d, "CLOSEPOLICY_OLDEST", CURLCLOSEPOLICY_OLDEST);
@@ -2610,6 +2653,12 @@ initpycurl(void)
     insint(d, "VERSION_FEATURE_NTLM", CURL_VERSION_NTLM);
     insint(d, "VERSION_FEATURE_GSSNEGOTIATE", CURL_VERSION_GSSNEGOTIATE);
     insint(d, "VERSION_FEATURE_DEBUG", CURL_VERSION_DEBUG);
+#endif
+#if (LIBCURL_VERSION_NUM >= 0x070a07)
+    insint(d, "VERSION_FEATURE_ASYNCHDNS", CURL_VERSION_ASYNCHDNS);
+#endif
+#if (LIBCURL_VERSION_NUM >= 0x070a08)
+    insint(d, "VERSION_FEATURE_SPNEGO", CURL_VERSION_SPNEGO);
 #endif
 #endif
 

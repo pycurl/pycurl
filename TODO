@@ -1,15 +1,45 @@
 # $Id$
+# vi:ts=4:et
 
 If you want to hack on pycurl, here's our list of unresolved issues:
 
+
+DEPRECATED LIBCURL FEATURES:
+
     * Use curl_formadd() instead of the deprecated curl_formparse().
 
-    * Add support for new libcurl 7.10.7 features.
+    * PASSWDFUNCTION/PASSWDDAT/curl_passwd_callback are not used
+      since 7.10.8 and will be removed in a future release.
 
-    * Add support for new libcurl 7.10.8 features.
 
-    * Add support for CURLOPT_SSL_CTX_FUNCTION and CURLOPT_SSL_CTX_DATA
-      (can we do this without having to wrap the ssl-context structure?).
+ADD NEW LIBCURL FEATURES:
+
+    * Add support for missing libcurl 7.10.6 features:
+
+      - Add support for CURLOPT_SSL_CTX_FUNCTION and CURLOPT_SSL_CTX_DATA
+        (can we do this without having to wrap the ssl-context structure?).
+
+    * Add support for missing libcurl 7.10.7 features [MOSTLY DONE]:
+
+      - CURLOPT_FTP_CREATE_MISSING_DIRS
+      - CURLOPT_PROXYAUTH
+
+      - CURLINFO_HTTP_CONNECTCODE
+
+    * Add support for missing libcurl 7.10.8 features [MOSTLY DONE]:
+
+      - CURLOPT_FTP_RESPONSE_TIMEOUT
+      - CURLOPT_IPRESOLVE
+      - CURLOPT_MAXFILESIZE
+
+      - CURLINFO_HTTPAUTH_AVAIL
+      - CURLINFO_PROXYAUTH_AVAIL
+
+      - CURL_IPRESOLVE_* constants
+      - CURL_HTTP_VERSION_* constants [FIXME - name clash]
+
+
+NEW FEATURES:
 
     * The current curl HLI only works on Python 2.2 or better. Either
       fix this, or change the docs and setup.py accordingly.
@@ -19,3 +49,4 @@ If you want to hack on pycurl, here's our list of unresolved issues:
     * Add more options to the undocumented and currently mostly useless
       Curl.unsetopt() method. Have to carefully check the libcurl source
       code for each option we want to support.
+

@@ -11,6 +11,9 @@ PYTHON = python
 all build:
 	$(PYTHON) setup.py build
 
+build-7.10.8:
+	$(PYTHON) setup.py build --curl-config=/home/hosts/localhost/packages/curl-7.10.8/bin/curl-config
+
 test: build
 	$(PYTHON) tests/test_internals.py -q
 
