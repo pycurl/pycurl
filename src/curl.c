@@ -1408,7 +1408,7 @@ done:
 
 static PyObject *
 do_multi_fdset(CurlMultiObject *self, PyObject *args)
-{   
+{
     CURLMcode res;
     fd_set read_fd_set, write_fd_set, exc_fd_set;
     int max_fd, fd;
@@ -1420,14 +1420,14 @@ do_multi_fdset(CurlMultiObject *self, PyObject *args)
     }
 
     if (self->multi_handle == NULL) {
-        PyErr_SetString(ErrorObject, 
-			"cannot invoke perform, no curl-multi handle");
+        PyErr_SetString(ErrorObject,
+                        "cannot invoke perform, no curl-multi handle");
         return NULL;
     }
 
     if (self->state != NULL) {
-        PyErr_SetString(ErrorObject, 
-			"cannot obtain fdset - multi_perform() is running");
+        PyErr_SetString(ErrorObject,
+                        "cannot obtain fdset - multi_perform() is running");
         return NULL;
     }
 
@@ -1437,8 +1437,8 @@ do_multi_fdset(CurlMultiObject *self, PyObject *args)
     FD_ZERO(&exc_fd_set);
 
     /* Don't bother releasing the gil as this is just a data structure operation */
-    res = curl_multi_fdset(self->multi_handle, &read_fd_set, &write_fd_set, 
-			   &exc_fd_set, &max_fd);
+    res = curl_multi_fdset(self->multi_handle, &read_fd_set, &write_fd_set,
+                           &exc_fd_set, &max_fd);
     if (res != CURLM_OK) {
         CURLERROR2("fdset failed");
     }
@@ -1456,10 +1456,10 @@ do_multi_fdset(CurlMultiObject *self, PyObject *args)
     for (fd = 0; fd < max_fd+1; fd++) {
         if (FD_ISSET(fd, &read_fd_set)) {
             PyList_Append(read_list, PyInt_FromLong((long)fd));
-	}
+        }
         if (FD_ISSET(fd, &write_fd_set)) {
             PyList_Append(write_list, PyInt_FromLong((long)fd));
-	}
+        }
         if (FD_ISSET(fd, &exc_fd_set)) {
             PyList_Append(except_list, PyInt_FromLong((long)fd));
         }
