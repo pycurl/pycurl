@@ -1,5 +1,5 @@
 <?php // vi:ts=4:et
-$version = "7.10.3";
+$version = "7.10.4";
 echo "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
 ?>
 
@@ -74,8 +74,8 @@ directories of the distribution.
 <h2>Download</h2>
 
 <p>
-<a href="download/pycurl-7.10.3.tar.gz">Download</a>
-PycURL sources version <?php echo $version; ?> (Jan 14 2003)
+<a href="download/pycurl-7.10.4.tar.gz">Download</a>
+PycURL sources version <?php echo $version; ?> (April 2 2003)
 or try the code from
 <a href="http://sourceforge.net/cvs/?group_id=28236">the CVS repository</a>.
 </p>
