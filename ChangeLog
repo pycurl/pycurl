@@ -3,9 +3,9 @@ Version 7.10.4.2 [requires libcurl-7.10.3 or better]
 2003-04-15  Markus F.X.J. Oberhumer <mfx>
 
         * Allow compilation against the libcurl-7.10.3 release - some
-        recent distributions (e.g. Mandrake 9.1) ship with 7.10.3, and
-        apart from the new CURLOPT_UNRESTRICTED_AUTH option there is no
-        need that we require libcurl-7.10.4.
+        recent Linux distributions (e.g. Mandrake 9.1) ship with 7.10.3,
+        and apart from the new CURLOPT_UNRESTRICTED_AUTH option there is
+        no need that we require libcurl-7.10.4.
 
 Version 7.10.4
 

@@ -80,6 +80,11 @@ This means it has a somewhat steep learning curve unless you
 are already familiar with libcurl's C API.
 </p>
 
+<p>
+For a quick start have a look at the high-performance URL downloader
+<a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/pycurl/pycurl/examples/retriever-multi.py?rev=HEAD&content-type=text/vnd.viewcvs-markup">retriever-multi.py</a>.
+</p>
+
 
 <h2>Documentation</h2>
 
@@ -100,7 +105,6 @@ most important being
 <p>
 Also have a look at the <a href="ChangeLog">PycURL ChangeLog</a>.
 </p>
-
 
 <h2>Download</h2>
 
