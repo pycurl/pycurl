@@ -2,8 +2,7 @@
 
 If you want to hack on pycurl, here's our list of unresolved issues:
 
-    * Support curl_multi_info_read
-    * Documentation
+    * Support curl_multi_info_read (need to hack libcurl here too)
+    * Documentation (finish the stuff in the doc/ directory)
     * A high-level interface to pycurl, like the standard urllib (see
       the file 'doc/examples/curl.py' for a simple example)
-    * Make the threading code in gtkhtml_demo.py more robust.
