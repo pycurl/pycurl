@@ -4,6 +4,7 @@ If you want to hack on pycurl, here's our list of unresolved issues:
 
     * Documentation (this is actually starting to get critical)
     * Once set, callbacks cannot be subsequently disabled for a given handle
+      (but you can set a new dummy-callback which does nothing)
     * A high-level interface to pycurl, like the standard urllib (see
       the file 'tests/curl.py' for a simple example)
     * We currently require Python to be built with thread support, this
