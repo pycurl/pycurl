@@ -13,7 +13,7 @@ class Test:
 print 'Testing', pycurl.version
 
 t = Test()
-c = Curl()
+c = pycurl.Curl()
 c.setopt(c.URL, 'http://curl.haxx.se/dev/')
 c.setopt(c.WRITEFUNCTION, t.body_callback)
 c.setopt(c.HTTPHEADER, ["I-am-a-silly-programmer: yes indeed you are",

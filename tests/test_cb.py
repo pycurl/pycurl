@@ -13,7 +13,7 @@ def header(buf):
     # Print header data to stderr
     sys.stderr.write(buf)
 
-c = Curl()
+c = pycurl.Curl()
 c.setopt(pycurl.URL, 'http://www.python.org/')
 c.setopt(pycurl.WRITEFUNCTION, body)
 c.setopt(pycurl.HEADERFUNCTION, header)

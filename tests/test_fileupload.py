@@ -40,8 +40,8 @@ file = "file=@C:\upload.gif"
 # Enter the url to upload the file to
 put_url = 'http://mywebsite.com/uploadfile/using/codeword/'
 
-t = test()
-c = Curl()
+t = Test()
+c = pycurl.Curl()
 c.setopt(pycurl.URL, put_url)
 c.setopt(pycurl.WRITEFUNCTION, t.body_callback)
 c.setopt(pycurl.HTTPPOST, [token, file])
