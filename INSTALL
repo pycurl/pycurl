@@ -26,6 +26,11 @@ specify the location of curl-config.  Example:
 
     python setup.py install --curl-config=/usr/local/bin/curl-config
 
+If libcurl is linked dynamically with pycurl, may have to alter the
+LD_LIBRARY_PATH environment variable accordingly.  This normally
+applies just if there is more than one version of libcurl installed,
+e.g. one in /usr/lib and one in /usr/local/lib.
+
 
 Makefile
 --------
