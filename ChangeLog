@@ -1,3 +1,14 @@
+2002-02-21  Kjetil Jacobsen  <kjetilja>
+
+	* Added the 'xmlrpc_curl.py' file which implements a transport
+	for xmlrpclib using pycurl.
+
+	* Added CURLINFO_CONTENT_TYPE.
+
+	* Added CURLOPT_SSLCERTTYPE, CURLOPT_SSLKEY, CURLOPT_SSLKEYTYPE,
+	CURLOPT_SSLKEYPASSWD, CURLOPT_SSLENGINE and
+	CURLOPT_SSLENGINE_DEFAULT.
+	
 2002-02-19  Kjetil Jacobsen  <kjetilja>
 
 	* Fixed docstring for getopt() function.
