@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# Project name
+NAME=pycurl
+
+# Store the current directory
+CURDIR=`pwd`
+
+# Generate tar archive of the source first
+export VERSION=$*
+cp -r . ../$NAME-$VERSION
+cd ../$NAME-$VERSION
+rm -rf CVS tests/CVS src/CVS .cvsignore .#* mkdist
+make clean
+cd ..
+tar zcf $NAME-${VERSION}.tar.gz $NAME-$VERSION
+rm -r $NAME-$VERSION
