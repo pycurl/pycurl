@@ -1,4 +1,43 @@
-Version 7.12 [requires libcurl-7.11.2 or better]
+Version 7.12.1 [requires libcurl-7.12.1 or better]
+--------------
+
+2004-08-02  Kjetil Jacobsen  <kjetilja>
+
+        * Added INFOTYPE_SSL_DATA_IN/OUT.
+
+2004-07-16  Markus F.X.J. Oberhumer <mfx>
+
+        * WARNING: removed deprecated PROXY_, TIMECOND_ and non-prefixed INFOTYPE
+          constant names. See ChangeLog entry 2003-06-10.
+
+2004-06-21  Kjetil Jacobsen  <kjetilja>
+
+        * Added test program for HTTP post using the read callback (see
+          tests/test_post3.py for details).
+
+        * Use the new CURL_READFUNC_ABORT return code where appropriate
+          to avoid hanging in perform() when read callbacks are used.
+
+        * Added support for libcurl 7.12.1 CURLOPT features:
+          SOURCE_HOST, SOURCE_USERPWD, SOURCE_PATH, SOURCE_PORT,
+          PASV_HOST, SOURCE_PREQUOTE, SOURCE_POSTQUOTE.
+
+2004-06-08  Markus F.X.J. Oberhumer <mfx>
+
+        * Setting CURLOPT_POSTFIELDS now allows binary data and
+          automatically sets CURLOPT_POSTFIELDSIZE for you. If you really
+          want a different size you have to manually set POSTFIELDSIZE
+          after setting POSTFIELDS.
+          (Based on a patch by Martin Muenstermann).
+
+2004-06-05  Markus F.X.J. Oberhumer <mfx>
+
+        * Added stricter checks within the callback handlers.
+
+        * Unify the behaviour of int and long parameters where appropriate.
+
+
+Version 7.12
 ------------
 
 2004-05-18  Kjetil Jacobsen  <kjetilja>
