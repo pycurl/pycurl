@@ -63,7 +63,7 @@ staticforward PyTypeObject Curl_Type;
 
 #define CURLERROR() do {\
     PyObject *v; \
-    v = Py_BuildValue("(is)", res, self->error); \
+    v = Py_BuildValue("(is)", (int) (res), self->error); \
     PyErr_SetObject(ErrorObject, v); \
     Py_DECREF(v); \
     return NULL; \
@@ -162,76 +162,63 @@ do_cleanup(CurlObject *self, PyObject *args)
 /* --------------------------------------------------------------------- */
 
 static size_t
-write_callback(char *ptr,
-               size_t size,
-               size_t nmemb,
-               void *stream)
+do_write_callback(int flags,
+                  char *ptr,
+                  size_t size,
+                  size_t nmemb,
+                  void *stream)
 {
     PyObject *arglist;
     PyObject *result;
+    PyObject *cb;
     CurlObject *self;
-    size_t write_size;
-
-    write_size = (size * nmemb) == 0 ? 1 : (size * nmemb) - 1;
+    int write_size;
+    size_t ret = 0;     /* assume error */
 
     self = (CurlObject *)stream;
     if (self == NULL || self->state == NULL) {
-        return write_size;
+        return ret;
+    }
+    write_size = (int)(size * nmemb);
+    if (write_size <= 0) {
+        return ret;
+    }
+    cb = flags ? self->h_cb : self->w_cb;
+    if (cb == NULL) {
+        return ret;
     }
 
     PyEval_AcquireThread(self->state);
-    arglist = Py_BuildValue("(s#)", (char *)ptr, size*nmemb);
-    result = PyEval_CallObject(self->w_cb, arglist);
+    arglist = Py_BuildValue("(s#)", ptr, write_size);
+    result = PyEval_CallObject(cb, arglist);
     Py_DECREF(arglist);
     if (result == NULL) {
         PyErr_Print();
     }
     else if (result == Py_None) {               /* None means success */
-        write_size = (size_t)(size * nmemb);
+        ret = write_size;
     }
     else {
-        write_size = (size_t)PyInt_AsLong(result);
+        write_size = (int)PyInt_AsLong(result);
+        if (write_size >= 0)
+            ret = write_size;                   /* success */
     }
     Py_XDECREF(result);
     PyEval_ReleaseThread(self->state);
-    return write_size;
+    return ret;
 }
 
 
 static size_t
-header_callback(char *ptr,
-                size_t size,
-                size_t nmemb,
-                void  *stream)
+write_callback(char *ptr, size_t size, size_t nmemb, void *stream)
 {
-    PyObject *arglist;
-    PyObject *result;
-    CurlObject *self;
-    size_t write_size;
+    return do_write_callback(0, ptr, size, nmemb, stream);
+}
 
-    write_size = (size * nmemb) == 0 ? 1 : (size * nmemb) - 1;
-
-    self = (CurlObject *)stream;
-    if (self == NULL || self->state == NULL) {
-        return write_size;
-    }
-
-    PyEval_AcquireThread(self->state);
-    arglist = Py_BuildValue("(s#)", (char *)ptr, size*nmemb);
-    result = PyEval_CallObject(self->h_cb, arglist);
-    Py_DECREF(arglist);
-    if (result == NULL) {
-        PyErr_Print();
-    }
-    else if (result == Py_None) {               /* None means success */
-        write_size = (size_t)(size * nmemb);
-    }
-    else {
-        write_size = (size_t)PyInt_AsLong(result);
-    }
-    Py_XDECREF(result);
-    PyEval_ReleaseThread(self->state);
-    return write_size;
+static size_t
+header_callback(char *ptr, size_t size, size_t nmemb, void *stream)
+{
+    return do_write_callback(1, ptr, size, nmemb, stream);
 }
 
 
@@ -245,11 +232,11 @@ progress_callback(void *client,
     PyObject *arglist;
     PyObject *result;
     CurlObject *self;
-    int ret;
+    int ret = -1;       /* assume error */
 
     self = (CurlObject *)client;
     if (self == NULL || self->state == NULL) {
-        return -1;
+        return ret;
     }
 
     PyEval_AcquireThread(self->state);
@@ -258,7 +245,6 @@ progress_callback(void *client,
     Py_DECREF(arglist);
     if (result == NULL) {
         PyErr_Print();
-        ret = 1;
     }
     else if (result == Py_None) {               /* None means success */
         ret = 0;
@@ -282,11 +268,11 @@ int password_callback(void *client,
     PyObject *result;
     CurlObject *self;
     char *buf;
-    int ret;
+    int ret = -1;       /* assume error */
 
     self = (CurlObject *)client;
     if (self == NULL || self->state == NULL) {
-        return 1;
+        return ret;
     }
 
     PyEval_AcquireThread(self->state);
@@ -295,24 +281,21 @@ int password_callback(void *client,
     Py_DECREF(arglist);
     if (result == NULL) {
         PyErr_Print();
-        ret = 1;
     }
     else {
         if (!PyString_Check(result)) {
             PyErr_SetString(ErrorObject, "callback for PASSWDFUNCTION must return string");
             PyErr_Print();
-            ret = 1;
         }
         else {
             buf = PyString_AsString(result);
             if ((int)strlen(buf) > buflen) {
                 PyErr_SetString(ErrorObject, "string from PASSWDFUNCTION callback is too long");
                 PyErr_Print();
-                ret = 1;
             }
             else {
                 strcpy(buffer, buf);
-                ret = 0;
+                ret = 0;        /* success */
             }
         }
     }
@@ -337,9 +320,12 @@ int debug_callback(CURL *curlobj,
     if (self == NULL || self->state == NULL) {
         return 0;
     }
+    if ((int)size < 0) {
+        return 0;
+    }
 
     PyEval_AcquireThread(self->state);
-    arglist = Py_BuildValue("(is#)", type, buffer, size);
+    arglist = Py_BuildValue("(is#)", type, buffer, (int)size);
     result = PyEval_CallObject(self->d_cb, arglist);
     Py_DECREF(arglist);
     if (result == NULL) {
@@ -361,27 +347,28 @@ size_t read_callback(char *ptr,
     CurlObject *self;
     char *buf;
     int obj_size, read_size;
-    size_t ret;
+    size_t ret = 0;     /* assume error */
 
     self = (CurlObject *)stream;
     if (self == NULL || self->state == NULL) {
-        return 0;
+        return ret;
+    }
+    read_size = (int)(size * nmemb);
+    if (read_size <= 0) {
+        return ret;
     }
 
     PyEval_AcquireThread(self->state);
-    read_size = size*nmemb;
     arglist = Py_BuildValue("(i)", read_size);
     result = PyEval_CallObject(self->r_cb, arglist);
     Py_DECREF(arglist);
     if (result == NULL) {
         PyErr_Print();
-        ret = 0;
     }
     else {
         if (!PyString_Check(result)) {
             PyErr_SetString(ErrorObject, "callback for READFUNCTION must return string");
             PyErr_Print();
-            ret = 0;
         }
         else {
 #if (PY_VERSION_HEX < 0x02000000)
@@ -393,11 +380,10 @@ size_t read_callback(char *ptr,
             if (obj_size > read_size) {
                 PyErr_SetString(ErrorObject, "string from READFUNCTION callback is too long");
                 PyErr_Print();
-                ret = 0;
             }
             else {
                 memcpy(ptr, buf, obj_size);
-                ret = (size_t)obj_size;
+                ret = obj_size;         /* success */
             }
         }
     }

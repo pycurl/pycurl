@@ -1,5 +1,10 @@
 Version 7.9.9
 
+2002-06-25  Markus F.X.J. Oberhumer <mfx>
+
+	* Fixed a couple of `int' vs. `size_t' mismatches in callbacks
+	and Py_BuildValue() calls.
+
 2002-06-25  Kjetil Jacobsen  <kjetilja>
 
 	* Use 'double' type instead of 'size_t' for progress callbacks
@@ -11,7 +16,7 @@ Version 7.9.9
 	* Added example code on how to upload a file using HTTPPOST in
 	pycurl (code by Amit Mongia <amit_mongia@hotmail.com>).  See the
 	file 'test_fileupload.py' for details.
-	
+
 Version 7.9.8
 
 2002-06-24  Kjetil Jacobsen  <kjetilja>
@@ -33,25 +38,25 @@ Version 7.9.8
 	See the file 'crawler.py' in the 'tests' directory for details.
 
 	* Removed the redundant 'test_xmlrpc2.py' test script.
-	
+
  	* Disallow recursive callback invocations (by Markus Oberhumer).
 
 2002-06-18  Kjetil Jacobsen  <kjetilja>
 
 	* Made some changes to setup.py which should fix the build
 	problems on RedHat 7.3 (suggested by Benji <benji@kioza.net>).
-	
+
 	* Use CURLOPT_READDATA instead of CURLOPT_INFILE, and
 	CURLOPT_WRITEDATA instead of CURLOPT_FILE.  Also fixed some
 	reference counting bugs with file objects.
-	
+
 	* CURLOPT_FILETIME and CURLINFO_FILETIME had a namespace clash
 	which caused them not to work.  Use OPT_FILETIME for setopt() and
 	INFO_FILETIME for getinfo().  See example usage in
 	'test_getinfo.py' for details.
 
 Version 7.9.7
-	
+
 2002-05-20  Kjetil Jacobsen  <kjetilja>
 
 	* New versioning scheme.  Pycurl now has the same version number
