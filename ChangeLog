@@ -1,5 +1,9 @@
 Version 0.4.10
 
+2002-05-17  Kjetil Jacobsen  <kjetilja>
+
+	* Added CURLINFO_REDIRECT_TIME and CURLINFO_REDIRECT_COUNT.
+
 2002-04-27  Kjetil Jacobsen  <kjetilja>
 
 	* Fixed potential memory leak and thread race (by Markus

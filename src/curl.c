@@ -3,12 +3,12 @@
 /* PycURL -- cURL Python module
  *
  * Author:
- *  Kjetil Jacobsen <kjetilja @ cs.uit.no>
+ *  Kjetil Jacobsen <kjetilja at cs.uit.no>
  *
  * Contributions:
- *  Markus F.X.J. Oberhumer <markus @ oberhumer.com>
- *  Tino Lange <Tino.Lange @ gmx.de>
- *  Matt King <matt @ gnik.com>
+ *  Markus F.X.J. Oberhumer <markus at oberhumer.com>
+ *  Tino Lange <Tino.Lange at gmx.de>
+ *  Matt King <matt at gnik.com>
  *
  * See file COPYING for license information.
  *
@@ -21,8 +21,8 @@
 #include <assert.h>
 
 /* Ensure we have an updated libcurl */
-#if LIBCURL_VERSION_NUM < 0x070906
-  #error "Need libcurl version 7.9.6 or greater to compile pycurl."
+#if LIBCURL_VERSION_NUM < 0x070907
+  #error "Need libcurl version 7.9.7 or greater to compile pycurl."
 #endif
 
 static PyObject *ErrorObject;
@@ -762,6 +762,7 @@ do_getinfo(CurlObject *self, PyObject *args)
             option == CURLINFO_REQUEST_SIZE ||
             option == CURLINFO_SSL_VERIFYRESULT ||
             option == CURLINFO_FILETIME ||
+            option == CURLINFO_REDIRECT_COUNT ||
             option == CURLINFO_HTTP_CODE)
             {
                 /* Return long as result */
@@ -799,6 +800,7 @@ do_getinfo(CurlObject *self, PyObject *args)
             option == CURLINFO_SPEED_DOWNLOAD ||
             option == CURLINFO_SPEED_UPLOAD ||
             option == CURLINFO_CONTENT_LENGTH_DOWNLOAD ||
+            option == CURLINFO_REDIRECT_TIME ||
             option == CURLINFO_CONTENT_LENGTH_UPLOAD)
             {
                 /* Return float as result */
@@ -1145,6 +1147,8 @@ DL_EXPORT(void)
     insint(d, "CONTENT_LENGTH_UPLOAD", CURLINFO_CONTENT_LENGTH_UPLOAD);
     insint(d, "STARTTRANSFER_TIME", CURLINFO_STARTTRANSFER_TIME);
     insint(d, "CONTENT_TYPE", CURLINFO_CONTENT_TYPE);
+    insint(d, "REDIRECT_TIME", CURLINFO_REDIRECT_TIME);
+    insint(d, "REDIRECT_COUNT", CURLINFO_REDIRECT_COUNT);
 
     /* CLOSEPOLICY constants for setopt */
     insint(d, "CLOSEPOLICY_LEAST_RECENTLY_USED", CURLCLOSEPOLICY_LEAST_RECENTLY_USED);

@@ -8,12 +8,14 @@ def progress(download_t, download_d, upload_t, upload_d):
     print 'Total to download %d bytes, have %d bytes so far' % \
           (download_t, download_d)
 
-print 'Starting downloading http://curl.haxx.se/'
+url = 'http://www.cnn.com'
+
+print 'Starting downloading', url
 print
 f = open('body', 'w')
 h = open('header', 'w')
 c = pycurl.init()
-c.setopt(pycurl.URL, 'http://curl.haxx.se')
+c.setopt(pycurl.URL, url)
 c.setopt(pycurl.FILE, f)
 c.setopt(pycurl.NOPROGRESS, 0)
 c.setopt(pycurl.PROGRESSFUNCTION, progress)
@@ -27,6 +29,8 @@ print 'Download speed: %f bytes/second' % c.getinfo(pycurl.SPEED_DOWNLOAD)
 print 'Document size: %d bytes' % c.getinfo(pycurl.SIZE_DOWNLOAD)
 print 'Effective URL:', c.getinfo(pycurl.EFFECTIVE_URL)
 print 'Content-type:', c.getinfo(pycurl.CONTENT_TYPE)
+print 'Redirect-time:', c.getinfo(pycurl.REDIRECT_TIME)
+print 'Redirect-count:', c.getinfo(pycurl.REDIRECT_COUNT)
 print
 print "Header is in file 'header', body is in file 'body'"
 
