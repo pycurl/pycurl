@@ -16,7 +16,7 @@ following commands:
     cd pycurl-$VER
     python setup.py install
 
-$VER should be substituted with the version number, e.g. 7.10.3.
+$VER should be substituted with the version number, e.g. 7.10.4.
 
 Note that the installation script assumes that 'curl-config' can be
 located in your path setting.  If curl-config is installed outside
@@ -44,4 +44,4 @@ the curl source tree, specified with the CURL_DIR variable in the file
 'setup.py'.  The CURL_DIR variable can also be set using the
 commandline option '--curl-dir' when invoking setup.py:
 
-    python setup.py install --curl-dir=c:\curl-7.10.3
+    python setup.py install --curl-dir=c:\curl-7.10.4
