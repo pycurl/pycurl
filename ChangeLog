@@ -1,5 +1,9 @@
 Version 7.10.4
 
+2003-04-01  Kjetil Jacobsen  <kjetilja>
+
+	* Markus added CURLOPT_UNRESTRICTED_AUTH.
+
 2003-02-25  Kjetil Jacobsen  <kjetilja>
 
 	* Fixed some broken test code and removed the fileupload test
