@@ -51,7 +51,11 @@ class LinksysSession:
     # Substrings to check for on each page load.
     # This may enable us to detect when a firmware change has hosed us.
     check_strings = {
-        "" : "basic setup functions"
+        "":           "basic setup functions",
+        "Passwd.htm": "For security reasons,",
+        "DHCP.html":  "You can configure the router to act as a DHCP",
+        "Log.html":   "There are some log settings and lists in this page.",
+        "Forward.htm":"Port forwarding can be used to set up public services",
         }
 
     def __init__(self):
@@ -91,11 +95,11 @@ class LinksysSession:
         return result
     def get_MAC_address(self, page, prefix):
         return self.screen_scrape("", prefix+r":[^M]*\(MAC Address: *([^)]*)")
-    def set_flag(page, form, flag, value):
+    def set_flag(page, flag, value):
         if value:
-            self.actions.append(page, form, flag, "1")
+            self.actions.append(page, flag, "1")
         else:
-            self.actions.append(page, form, flag, "0")
+            self.actions.append(page, flag, "0")
     def set_IP_address(self, page, cgi, role, ip):
         ind = 0
         for octet in ip.split("."):
@@ -118,71 +122,97 @@ class LinksysSession:
 
     # Set configuration data on the main page
     def set_host_name(self, name):
-        self.actions.append(("", "Gozila.cgi", "hostName", name))
+        self.actions.append(("", "hostName", name))
     def set_domain_name(self, name):
-        self.actions.append(("", "Gozila.cgi", "DomainName", name))
+        self.actions.append(("", "DomainName", name))
     def set_LAN_IP(self, ip):
-        self.set_IP_address("", "Gozila.cgi", "ipAddr", ip)
+        self.set_IP_address("", "ipAddr", ip)
     def set_LAN_netmask(self, ip):
         if not ip.startswith("255.255.255."):
             raise ValueError
         lastquad = ip.split(".")[-1]
         if lastquad not in ("0", "128", "192", "240", "252"):
             raise ValueError
-        self.actions.append("", "Gozila.cgi", "netMask", lastquad)
+        self.actions.append("", "netMask", lastquad)
     def set_wireless(self, flag):
-        self.set_flag("", "Gozila.cgi", "wirelessStatus")
+        self.set_flag("", "wirelessStatus")
     def set_SSID(self, ssid):
-        self.actions.append(("", "Gozila.cgi", "wirelessESSID", ssid))
+        self.actions.append(("", "wirelessESSID", ssid))
     def set_SSID_broadcast(self, flag):
-        self.set_flag("", "Gozila.cgi", "broadcastSSID")
+        self.set_flag("", "broadcastSSID")
     def set_channel(self, channel):
-        self.actions.append(("", "Gozila.cgi", "wirelessChannel", channel))
+        self.actions.append(("", "wirelessChannel", channel))
     def set_WEP(self, flag):
-        self.set_flag("", "Gozila.cgi", "WepType")
+        self.set_flag("", "WepType")
     # FIXME: Add support for setting WEP keys
     def set_connection_type(self, type):
-        self.actions.append(("", "Gozila.cgi", "WANConnectionType", type))
+        self.actions.append(("", "WANConnectionType", type))
     def set_WAN_IP(self, ip):
-        self.set_IP_address("", "Gozila.cgi", "aliasIP", ip)
+        self.set_IP_address("", "aliasIP", ip)
     def set_WAN_netmask(self, ip):
-        self.set_IP_address("", "Gozila.cgi", "aliasMaskIP", ip)
+        self.set_IP_address("", "aliasMaskIP", ip)
     def set_WAN_gateway_address(self, ip):
-        self.set_IP_address("", "Gozila.cgi", "routerIP", ip)
-    def set_DNS_server(self, index, dns1):
-        self.set_IP_address("", "Gozila.cgi", "dns" + "ABC"[index], ip)
+        self.set_IP_address("", "routerIP", ip)
+    def set_DNS_server(self, index, ip):
+        self.set_IP_address("", "dns" + "ABC"[index], ip)
 
     # Set configuration data on the password page
     def set_password(self, str):
-        self.actions.append("Passwd.htm","Gozila.cgi", "sysPasswd", str)
-        self.actions.append("Passwd.htm","Gozila.cgi", "sysPasswdConfirm", str)
+        self.actions.append("Passwd.htm","sysPasswd", str)
+        self.actions.append("Passwd.htm","sysPasswdConfirm", str)
     def set_UPnP(self, flag):
-        self.set_flag("Passwd.htm", "Gozila.cgi", "UPnP_Work")
+        self.set_flag("Passwd.htm", "UPnP_Work")
     def reset(self):
-        self.actions,append("Passwd.htm", "Gozila.cgi", "FactoryDefaults")
+        self.actions.append("Passwd.htm", "FactoryDefaults")
+
+    # DHCP features
+    def set_DHCP(self, flag):
+        if flag:
+            self.actions.append("DHCP.htm","dhcpStatus","Enable")
+        else:
+            self.actions.append("DHCP.htm","dhcpStatus","Disable")
+    def set_DHCP_starting_IP(self, val):
+        self.actions.append("DHCP.htm","dhcpS4", str(val))
+    def set_DHCP_users(self, val):
+        self.actions.append("DHCP.htm","dhcpLen", str(val))
+    def set_DHCP_lease_time(self, val):
+        self.actions.append("DHCP.htm","leaseTime", str(val))
+    def set_DHCP_DNS_server(self, index, ip):
+        self.set_IP_address("DHCP.htm", "dns" + "ABC"[index], ip)
+    # FIXME: add support for setting WINS key
+
+    # Logging features
+    def set_logging(self, flag):
+        if flag:
+            self.actions.append("Log.htm", "rLog", "Enable")
+        else:
+            self.actions.append("Log.htm", "rLog", "Disable")
+    def set_log_address(self, val):
+        self.actions.append("DHCP.htm","trapAddr3", str(val))
+
+    # The AOL parental control flag is not supported by design.
+
+    # FIXME: add Filters and other advanced features
 
     def configure(self):
         "Write configuration changes to the Linksys."
         if self.actions:
-            ship = {}
+            fields = []
             self.cache_flush()
-            for (page, cgi, field, value) in self.actions:
+            for (page, field, value) in self.actions:
                 self.cache_load(page)
                 if self.pagecache[page].find(field) == -1:
                     print >>sys.stderr, "linksys: field %s not found where expected in page %s!" % (field, os.path.join(self.host, page))
                     continue
                 else:
-                    if cgi not in ship:
-                        ship[cgi] = []
-                    ship[cgi].append((field, value))
-            # Clearing the action list before shipping is deliberate.
+                    fields.append((field, value))
+            # Clearing the action list before fieldsping is deliberate.
             # Otherwise we could get permanently wedged by a 401.
             self.actions = []
-            for (cgi, fields) in ship.items():
-                transaction = curl.Curl(self.host)
-                transaction.set_verbosity(self.verbosity)
-                transaction.get(cgi, tuple(fields))
-                transaction.close()
+            transaction = curl.Curl(self.host)
+            transaction.set_verbosity(self.verbosity)
+            transaction.get("Gozila.cgi", tuple(fields))
+            transaction.close()
 
 if __name__ == "__main__":
     import os, cmd
@@ -363,11 +393,58 @@ if __name__ == "__main__":
             print "Usage: upnp {on|off|enable|disable|yes|no}"
             print "Switch to enable or disable Universal Plug and Play."
 
-        def do_reset(self):
+        def do_reset(self, line):
             self.session.reset()
         def help_reset(self):
             print "Usage: reset"
             print "Reset Linksys settings to factory defaults."
+
+        def do_dhcp(self, line):
+            self.flag_command(self.session.set_DHCP)
+        def help_dhcp(self):
+            print "Usage: dhcp {on|off|enable|disable|yes|no}"
+            print "Switch to enable or disable DHCP features."
+
+        def do_dhcp_start(self, line):
+            self.session.set_DHCP_starting_IP(line)
+        def help_dhcp_start(self):
+            print "Usage: dhcp_start <number>"
+            print "Set the start address of the DHCP pool.")
+
+        def do_dhcp_users(self, line):
+            self.session.set_DHCP_users(line)
+        def help_dhcp_users(self):
+            print "Usage: dhcp_users <number>"
+            print "Set number of address slots to allocate in the DHCP pool.")
+
+        def do_dhcp_lease(self, line):
+            self.session.set_DHCP_lease(line)
+        def help_dhcp_lease(self):
+            print "Usage: dhcp_lease <number>"
+            print "Set number of address slots to allocate in the DHCP pool.")
+
+        def do_dhcp_dns(self, line):
+            (index, address) = line.split()
+            if index in ("1", "2", "3"):
+                self.session.set_DHCP_DNS_server(eval(index), address)
+            else:
+                print >>sys.stderr, "linksys: server index out of bounds."
+            return 0
+        def help_dhcp_dns(self):
+            print "Usage: dhcp_dns {1|2|3} <ip-mask>"
+            print "Sets primary, secondary, or tertiary DNS server address."
+
+        def do_logging(self, line):
+            self.flag_command(self.session.set_logging)
+        def help_logging(self):
+            print "Usage: logging {on|off|enable|disable|yes|no}"
+            print "Switch to enable or disable session logging."
+
+        def do_log_address(self, line):
+            self.session.set_Log_address(line)
+        def help_log_address(self):
+            print "Usage: log_address <number>"
+            print "Set the last quad of the address to which to log.")
 
         def do_configure(self, line):
             self.session.configure()
