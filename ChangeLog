@@ -1,5 +1,10 @@
 Version 0.4.9
 
+2002-04-12  Kjetil Jacobsen  <kjetilja>
+
+	* Added 'test_post2.py' file which is another example on how to
+	issue POST requests.
+
 2002-04-11  Markus F.X.J. Oberhumer <mfx>
 
 	* Added the 'test_post.py' file which demonstrates the use of
