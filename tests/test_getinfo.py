@@ -15,8 +15,8 @@ url = 'http://www.cnn.com'
 
 print 'Starting downloading', url
 print
-f = open('body', 'w')
-h = open('header', 'w')
+f = open('body', 'wb')
+h = open('header', 'wb')
 c = pycurl.Curl()
 c.setopt(c.URL, url)
 c.setopt(c.WRITEDATA, f)

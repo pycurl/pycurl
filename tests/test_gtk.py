@@ -87,6 +87,6 @@ if len(sys.argv) < 3:
 # Make a progress bar window
 p = ProgressBar(sys.argv[1])
 # Start thread for fetching url
-Test(sys.argv[1], open(sys.argv[2], 'w'), p.progress).start()
+Test(sys.argv[1], open(sys.argv[2], 'wb'), p.progress).start()
 # Enter the GTK mainloop
 p.mainloop()

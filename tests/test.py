@@ -47,7 +47,7 @@ fileno = 0
 # Start one thread per URI in parallel
 t1 = time.time()
 for url in urls:
-    f = open(str(fileno), 'w')
+    f = open(str(fileno), 'wb')
     t = Test(url, f)
     t.start()
     threads.append((t, f))
@@ -63,7 +63,7 @@ print '\n** Multithreading, %d seconds elapsed for %d uris' % (int(t2-t1), len(u
 fileno = 0
 t1 = time.time()
 for url in urls:
-    f = open(str(fileno), 'w')
+    f = open(str(fileno), 'wb')
     t = Test(url, f)
     t.start()
     fileno = fileno + 1
