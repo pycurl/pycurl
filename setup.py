@@ -82,6 +82,12 @@ setup_args = get_kw(
     data_files = [
         # tuple with path to install to and a list of files
         (os.path.join("doc", "pycurl"), ["README", "COPYING", "INSTALL", "TODO"]),
+        (os.path.join("doc", "pycurl", "examples"), 
+        [os.path.join("examples", "basicfirst.py"), 
+         os.path.join("examples", "sfquery.py"),
+         os.path.join("examples", "curl.py"),
+         os.path.join("examples", "retriever.py"),
+         os.path.join("examples", "xmlrpc_curl.py")]),
     ],
     ext_modules=[ext],
     long_description="""
