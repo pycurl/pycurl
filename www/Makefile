@@ -52,7 +52,8 @@ rsync-check:
 #       so we have to care manually
 __rsync-clean:
 	chgrp -c -R pycurl .
-	chmod -c -R g+rw .
+	chmod -c g+r `find . -perm +400 -print`
+	chmod -c g+w `find . -perm +200 -print`
 	chmod -c g+s `find . -type d -print`
 ##	chmod -c g+rws `find . -type d -perm -770 -print`
 	chmod -c g+rws `find . -type d -print`
