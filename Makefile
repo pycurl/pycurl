@@ -11,8 +11,8 @@ PYTHON = python
 all build:
 	$(PYTHON) setup.py build
 
-install:
-	$(PYTHON) setup.py install
+install install_lib:
+	$(PYTHON) setup.py $@
 
 clean:
 	-rm -rf build dist
@@ -27,7 +27,7 @@ maintainer-clean: distclean
 dist sdist: distclean
 	$(PYTHON) setup.py sdist
 
-.PHONY: all build install clean distclean maintainer-clean dist sdist
+.PHONY: all build install install_lib clean distclean maintainer-clean dist sdist
 
 .NOEXPORT:
 

@@ -1,10 +1,12 @@
 #! /usr/bin/env python
+# vi:ts=4:et
 
 # $Id$
 
 """Setup script for the PycURL module distribution."""
 
 import os, sys
+import distutils
 from distutils.core import setup
 from distutils.extension import Extension
 from distutils.util import split_quoted
@@ -51,6 +53,8 @@ else:
 
 ###############################################################################
 
+def get_kw(**kw): return kw
+
 ext = Extension(
     name="pycurl",
     sources=[
@@ -67,7 +71,7 @@ ext = Extension(
 )
 ##print ext.__dict__; sys.exit(1)
 
-setup(
+setup_args = get_kw(
     name="pycurl",
     version="7.9.8.3",
     description="PycURL -- cURL library module for Python",
@@ -82,8 +86,13 @@ setup(
         (os.path.join("doc", "pycurl"), ["README", "COPYING", "INSTALL", "TODO"]),
     ],
     ext_modules=[ext],
-    platforms="All",
     long_description="""
 This module provides Python bindings for the cURL library.""",
 )
+
+##print distutils.__version__
+if distutils.__version__ >= "1.0.2":
+    setup_args["platforms"] = "All"
+
+apply(setup, (), setup_args)
 
