@@ -10,8 +10,8 @@
 #include <assert.h>
 
 /* Ensure we have an updated libcurl */
-#if LIBCURL_VERSION_NUM < 0x070905
-  #error "Need libcurl version 7.9.5 or greater to compile pycurl."
+#if LIBCURL_VERSION_NUM < 0x070906
+  #error "Need libcurl version 7.9.6 or greater to compile pycurl."
 #endif
 
 static PyObject *ErrorObject;
@@ -29,6 +29,7 @@ typedef struct {
     PyObject *r_cb;
     PyObject *pro_cb;
     PyObject *pwd_cb;
+    PyObject *d_cb;
     PyThreadState *state;
     int writeheader_set;
     char error[CURL_ERROR_SIZE];
@@ -288,6 +289,16 @@ int password_callback(void *client,
 
 
 static
+int debug_callback(CURL *curlobj,
+		   curl_infotype type,
+		   char *buffer,
+		   void *data)
+{
+    return 0;
+}
+
+
+static
 int read_callback(void *ptr,
 		  size_t size,
 		  size_t nmemb,
@@ -419,7 +430,7 @@ do_setopt(CurlObject *self, PyObject *args)
 	res = curl_easy_setopt(self->handle, option, 
 			       (char *)self->options[opt_masked]);
 	/* Check for errors */
-	if (res == 0) {
+	if (res == CURLE_OK) {
 	    Py_INCREF(Py_None);
 	    return Py_None;
 	}
@@ -439,7 +450,7 @@ do_setopt(CurlObject *self, PyObject *args)
 	}
 	res = curl_easy_setopt(self->handle, option, longdata);
 	/* Check for errors */
-	if (res == 0) {
+	if (res == CURLE_OK) {
 	    Py_INCREF(Py_None);
 	    return Py_None;
 	}
@@ -476,7 +487,7 @@ do_setopt(CurlObject *self, PyObject *args)
 	}
 	res = curl_easy_setopt(self->handle, option, fp);
 	/* Check for errors */
-	if (res == 0) {
+	if (res == CURLE_OK) {
 	    Py_INCREF(Py_None);
 	    return Py_None;
 	}
@@ -539,7 +550,7 @@ do_setopt(CurlObject *self, PyObject *args)
 	    }
 	    res = curl_easy_setopt(self->handle, CURLOPT_HTTPPOST, self->httppost);
 	    /* Check for errors */
-	    if (res == 0) {
+	    if (res == CURLE_OK) {
 		Py_INCREF(Py_None);
 		return Py_None;
 	    }
@@ -575,7 +586,7 @@ do_setopt(CurlObject *self, PyObject *args)
 	}
 	res = curl_easy_setopt(self->handle, option, *slist);
 	/* Check for errors */
-	if (res == 0) {
+	if (res == CURLE_OK) {
 	    Py_INCREF(Py_None);
 	    return Py_None;
 	}
@@ -634,6 +645,11 @@ do_setopt(CurlObject *self, PyObject *args)
 	    curl_easy_setopt(self->handle, CURLOPT_PASSWDFUNCTION, password_callback);
 	    curl_easy_setopt(self->handle, CURLOPT_PASSWDDATA, self);
 	    break;
+	case CURLOPT_DEBUGFUNCTION:
+	    Py_INCREF(obj);
+	    Py_XDECREF(self->d_cb);
+	    self->d_cb = obj;
+	    curl_easy_setopt(self->handle, CURLOPT_DEBUGFUNCTION, self);
 	default:
 	    /* None of the list options were recognized, throw exception */
 	    PyErr_SetString(PyExc_TypeError, "functions are not supported for this option");
@@ -674,7 +690,7 @@ do_perform(CurlObject *self, PyObject *args)
     res = curl_easy_perform(self->handle);
     Py_END_ALLOW_THREADS
 
-    if (res == 0) {
+    if (res == CURLE_OK) {
 	Py_INCREF(Py_None);
 	return Py_None;
     }
@@ -710,7 +726,7 @@ do_getinfo(CurlObject *self, PyObject *args)
 		/* Return long as result */
 		res = curl_easy_getinfo(self->handle, option, &l_res);
 		/* Check for errors and return result */
-		if (res == 0) {
+		if (res == CURLE_OK) {
 		    return PyLong_FromLong(l_res);
 		}
 		else {
@@ -724,7 +740,7 @@ do_getinfo(CurlObject *self, PyObject *args)
 		/* Return string as result */
 		res = curl_easy_getinfo(self->handle, option, &s_res);
 		/* Check for errors and return result */
-		if (res == 0) {
+		if (res == CURLE_OK) {
 		    return PyString_FromString(s_res);
 		}
 		else {
@@ -747,7 +763,7 @@ do_getinfo(CurlObject *self, PyObject *args)
 		/* Return float as result */
 		res = curl_easy_getinfo(self->handle, option, &d_res);
 		/* Check for errors and return result */
-		if (res == 0) {
+		if (res == CURLE_OK) {
 		    return PyFloat_FromDouble(d_res);
 		}
 		else {
@@ -839,6 +855,7 @@ do_init(PyObject *arg)
     self->r_cb = NULL;
     self->pro_cb = NULL;
     self->pwd_cb = NULL;
+    self->d_cb = NULL;
 
     /* Initialize curl */
     self->handle = curl_easy_init();
@@ -1064,6 +1081,9 @@ DL_EXPORT(void)
 
     insint(d, "DNS_CACHE_TIMEOUT", CURLOPT_DNS_CACHE_TIMEOUT);
     insint(d, "DNS_USE_GLOBAL_CACHE", CURLOPT_DNS_USE_GLOBAL_CACHE);
+
+    insint(d, "DEBUGFUNCTION", CURLOPT_DEBUGFUNCTION);
+    insint(d, "DEBUGDATA", CURLOPT_DEBUGDATA);
 
     /* Symbolic constants for getinfo */
     insint(d, "EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL);
