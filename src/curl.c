@@ -857,6 +857,8 @@ do_getinfo(CurlObject *self, PyObject *args)
             }
     }
 
+    PyErr_Clear();
+
     /* Got wrong signature on the method call */
     PyErr_SetString(PyExc_TypeError, "invalid arguments to getinfo");
     return NULL;
