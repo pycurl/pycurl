@@ -58,6 +58,11 @@ self_cleanup(CurlObject *self)
 	curl_formfree(self->httppost);
 	self->httppost = NULL;
     }
+    Py_XDECREF(self->w_cb);
+    Py_XDECREF(self->r_cb);
+    Py_XDECREF(self->pro_cb);
+    Py_XDECREF(self->pwd_cb);
+    Py_XDECREF(self->h_cb);
 }
 
 
