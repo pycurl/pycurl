@@ -1,6 +1,5 @@
 # $Id$
 
-import urllib
 import pycurl
 
 pf = ['field1=this is a test using httppost & stuff', 'field2=value2']
