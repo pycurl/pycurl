@@ -44,7 +44,7 @@ if sys.platform[:-1] == "darwin":
 ###############################################################################
 
 setup (name="pycurl",
-       version="7.9.8",
+       version="7.9.9",
        description="PycURL -- cURL library module for Python",
        author="Kjetil Jacobsen",
        author_email="kjetilja@cs.uit.no",
