@@ -51,7 +51,6 @@ class Curl:
         if self.h:
             self.c.setopt(pycurl.HTTPHEADER, self.h)
         self.c.setopt(pycurl.CONNECTTIMEOUT, timeout)
-        self.c.setopt(pycurl.TIMEOUT, timeout)
         self.c.perform()
         self.fp.seek(0,0)
         return (self.fp, self.info())
