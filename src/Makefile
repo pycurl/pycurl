@@ -9,7 +9,7 @@ CCOPTS=-g -O2 -Wall -Wstrict-prototypes -fPIC
 
 all:
 	$(CC) $(INCLUDE) $(CCOPTS) -c curl.c -o curl.o
-	$(CC) $(LIBS) $(LDOPTS) -lcurl curl.o -o curlmodule.so
+	$(CC) $(LIBS) $(LDOPTS) -lcurl curl.o -o pycurlmodule.so
 
 clean:
 	$(RM) -f *~ *.o *.so

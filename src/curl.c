@@ -799,13 +799,36 @@ do_global_init(PyObject *self, PyObject *args)
 }
 
 
+/* Per function docstrings */
+static char pycurl_init_doc [] =
+"init() -> New curl object.  Implicitly calls global_init() if not called.\n";
+
+static char pycurl_global_init_doc [] =
+"global_init(GLOBAL_ALL | GLOBAL_SSL | GLOBAL_NOTHING) -> None.  Initialize curl environment.\n";
+
+static char pycurl_global_cleanup_doc [] =
+"global_cleanup() -> None.  Cleanup curl environment.\n";
+
+
 /* List of functions defined in the curl module */
 static PyMethodDef curl_methods[] = {
-    {"init", (PyCFunction)do_init, METH_VARARGS},
-    {"global_cleanup", (PyCFunction)do_global_cleanup, METH_VARARGS},
-    {"global_init", (PyCFunction)do_global_init, METH_VARARGS},
+    {"init", (PyCFunction)do_init, METH_VARARGS, pycurl_init_doc},
+    {"global_cleanup", (PyCFunction)do_global_cleanup, METH_VARARGS, pycurl_global_cleanup_doc},
+    {"global_init", (PyCFunction)do_global_init, METH_VARARGS, pycurl_global_init_doc},
     {NULL, NULL}
 };
+
+
+/* Module docstring */
+static char module_doc [] =
+"This module implements an interface to the cURL library.\n\
+\n\
+Functions:\n\
+\n\
+init() -- Return a new curl object.  Implicitly calls global_init() if not called.\n\
+global_init(option) -- Initialize curl environment.\n\
+global_cleanup() -- Cleanup curl environment.\n\
+";
 
 
 /* Helper function for inserting constants into the module namespace */
@@ -830,7 +853,7 @@ DL_EXPORT(void)
     Curl_Type.ob_type = &PyType_Type;
   
     /* Create the module and add the functions */
-    m = Py_InitModule("pycurl", curl_methods);
+    m = Py_InitModule3("pycurl", curl_methods, module_doc);
   
     /* Add error object to the module */
     d = PyModule_GetDict(m);
