@@ -6,6 +6,10 @@ try:
     from cStringIO import StringIO
 except ImportError:
     from StringIO import StringIO
+
+# update sys.path when running in the build directory
+from util import get_sys_path
+sys.path = get_sys_path()
 import pycurl
 
 
