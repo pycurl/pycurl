@@ -4,7 +4,7 @@
 
 2001-08-20  Kjetil Jacobsen  <kjetilja>
 
-	* Added test script for using XMLRPC (tests/test_xmlrpc.py).
+	* Added test script for using XML-RPC (tests/test_xmlrpc.py).
 
 	* Added more comments to the test sources.
 
