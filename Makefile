@@ -1,6 +1,9 @@
 all:
 	cd src; $(MAKE)
 
+install:
+	cd src; $(MAKE) install
+
 clean:
 	cd src; $(MAKE) clean
 	rm -rf build dist *~ MANIFEST tests/curlmodule.so
