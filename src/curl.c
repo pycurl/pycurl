@@ -29,6 +29,7 @@ typedef struct {
     PyObject *pro_cb;
     PyObject *pwd_cb;
     PyThreadState *state;
+    int writeheader_set;
     char error[CURL_ERROR_SIZE];
     void *options[CURLOPT_LASTENTRY];
 } CurlObject;
@@ -455,6 +456,13 @@ do_setopt(CurlObject *self, PyObject *args)
 		PyErr_SetString(PyExc_TypeError, "files are not supported for this option");
 		return NULL;
 	    }
+        if (option == CURLOPT_WRITEHEADER) {
+	    self->writeheader_set = 1;
+            if (self->w_cb != NULL) {
+                PyErr_SetString(ErrorObject, "cannot combine WRITEHEADER with WRITEFUNCTION.");
+		return NULL;
+            }
+        }
 	fp = PyFile_AsFile(obj);
 	if (fp == NULL) {
 	    PyErr_SetString(PyExc_TypeError, "second argument must be open file");
@@ -580,6 +588,10 @@ do_setopt(CurlObject *self, PyObject *args)
 
 	switch(option) {
 	case CURLOPT_WRITEFUNCTION:
+	    if (self->writeheader_set == 1) {
+	      PyErr_SetString(ErrorObject, "cannot combine WRITEFUNCTION with WRITEHEADER option.");
+	      return NULL;
+	    }
 	    Py_INCREF(obj);
 	    Py_XDECREF(self->w_cb);
 	    self->w_cb = obj;
