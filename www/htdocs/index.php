@@ -1,4 +1,5 @@
 <?php // vi:ts=4:et
+$version = "7.9.8.4";
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
@@ -13,17 +14,19 @@
   <meta name="description" content="Homepage">
 </head>
 <body bgcolor="#ffffff" link="#0000ee" vlink="#551a8b" alink="#0000ee">
-<h1><font face="Courier New, Courier, mono">PYCURL</font></h1>
-    &gt;&gt;&gt; import pycurl<br>
-    &gt;&gt;&gt; print pycurl.__doc__<br>
+<h1><font face="Courier New, Courier, mono">PYCURL <?php echo $version ?></font></h1>
+&gt;&gt;&gt; import pycurl<br>
+&gt;&gt;&gt; print pycurl.__doc__<br>
 <br>
 PycURL is a Python module interface to the <a
 href="http://curl.haxx.se/">cURL</a> library.<br>
 PycURL can be used to fetch documents identified by a URI
 from within a Python program.<br>
 <br>
-<a href="download/pycurl-7.9.8.4.tar.gz">Download</a> PycURL sources version 7.9.8.4 (Sep 04 2002) or
-try the code from <a href="http://sourceforge.net/cvs/?group_id=28236">CVS</a>.
+<a href="download/pycurl-7.9.8.4.tar.gz">Download</a>
+PycURL sources version <?php echo $version ?> (Sep 04 2002) or
+try the code from 
+<a href="http://sourceforge.net/cvs/?group_id=28236">the CVS repository</a>.
 <br>
 <br>
 For Win32 users there's also an
@@ -31,7 +34,14 @@ For Win32 users there's also an
 You still should download the sources because of the test and example programs.
 <br>
 <br>
-Older versions are available from the <a href="download/?M=D">download area</a>.
+Official Debian packages are available for
+<a href="http://packages.debian.org/python2.1-pycurl">Python 2.1</a>
+and
+<a href="http://packages.debian.org/python2.2-pycurl">Python 2.2</a>.
+<br>
+<br>
+Finally you can get older versions from the
+<a href="download/?M=D">download area</a>.
 <br>
 
     <br />
