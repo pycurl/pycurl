@@ -36,10 +36,9 @@ if 1:
 else:
     c.setopt(pycurl.READFUNCTION, open(filename, 'rb').read)
 
-# Set size of file to be uploaded, we use xxx_LARGE option in case that
-# file size is greater than 2GB
+# Set size of file to be uploaded.
 filesize = os.path.getsize(filename)
-c.setopt(pycurl.INFILESIZE_LARGE, filesize)
+c.setopt(pycurl.INFILESIZE, filesize)
 
 # Start transfer
 print 'Uploading file %s to url %s' % (filename, url)

@@ -1,3 +1,14 @@
+Version 7.13.1 [requires libcurl-7.13.1 or better]
+--------------
+
+2005-02-13  Markus F.X.J. Oberhumer <mfx>
+
+        * The INFILESIZE, MAXFILESIZE, POSTFIELDSIZE and RESUME_FROM
+          options now automatically use the largefile version.
+
+        * Added missing pycurl.PORT constant.
+
+
 Version 7.13.0 [requires libcurl-7.13.0 or better]
 --------------
 

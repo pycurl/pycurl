@@ -1172,7 +1172,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         return Py_None;
     }
 
-    /* Handle the case of long arguments (used by *LARGE options) */
+    /* Handle the case of long arguments (used by *_LARGE options) */
     if (PyLong_Check(obj)) {
         PY_LONG_LONG d = PyLong_AsLongLong(obj);
         if (d == -1 && PyErr_Occurred())
@@ -2493,14 +2493,27 @@ initpycurl(void)
     /* CURLoption: symbolic constants for setopt() */
 /* FIXME: reorder these to match <curl/curl.h> */
     insint_c(d, "FILE", CURLOPT_WRITEDATA);
-    insint_c(d, "INFILE", CURLOPT_READDATA);
-    insint_c(d, "WRITEDATA", CURLOPT_WRITEDATA);
-    insint_c(d, "WRITEFUNCTION", CURLOPT_WRITEFUNCTION);
-    insint_c(d, "READDATA", CURLOPT_READDATA);
-    insint_c(d, "READFUNCTION", CURLOPT_READFUNCTION);
-    insint_c(d, "INFILESIZE", CURLOPT_INFILESIZE);
     insint_c(d, "URL", CURLOPT_URL);
+    insint_c(d, "PORT", CURLOPT_PORT);
     insint_c(d, "PROXY", CURLOPT_PROXY);
+    insint_c(d, "USERPWD", CURLOPT_USERPWD);
+    insint_c(d, "PROXYUSERPWD", CURLOPT_PROXYUSERPWD);
+    insint_c(d, "RANGE", CURLOPT_RANGE);
+    insint_c(d, "INFILE", CURLOPT_READDATA);
+    /* ERRORBUFFER is not supported */
+    insint_c(d, "WRITEFUNCTION", CURLOPT_WRITEFUNCTION);
+    insint_c(d, "READFUNCTION", CURLOPT_READFUNCTION);
+    insint_c(d, "TIMEOUT", CURLOPT_TIMEOUT);
+    insint_c(d, "INFILESIZE", CURLOPT_INFILESIZE_LARGE);    /* _LARGE ! */
+    insint_c(d, "POSTFIELDS", CURLOPT_POSTFIELDS);
+    insint_c(d, "REFERER", CURLOPT_REFERER);
+    insint_c(d, "FTPPORT", CURLOPT_FTPPORT);
+    insint_c(d, "USERAGENT", CURLOPT_USERAGENT);
+    insint_c(d, "LOW_SPEED_LIMIT", CURLOPT_LOW_SPEED_LIMIT);
+    insint_c(d, "LOW_SPEED_TIME", CURLOPT_LOW_SPEED_TIME);
+    insint_c(d, "RESUME_FROM", CURLOPT_RESUME_FROM_LARGE);  /* _LARGE ! */
+    insint_c(d, "WRITEDATA", CURLOPT_WRITEDATA);
+    insint_c(d, "READDATA", CURLOPT_READDATA);
     insint_c(d, "PROXYPORT", CURLOPT_PROXYPORT);
     insint_c(d, "HTTPPROXYTUNNEL", CURLOPT_HTTPPROXYTUNNEL);
     insint_c(d, "VERBOSE", CURLOPT_VERBOSE);
@@ -2516,18 +2529,7 @@ initpycurl(void)
     insint_c(d, "FOLLOWLOCATION", CURLOPT_FOLLOWLOCATION);
     insint_c(d, "TRANSFERTEXT", CURLOPT_TRANSFERTEXT);
     insint_c(d, "PUT", CURLOPT_PUT);
-    insint_c(d, "USERPWD", CURLOPT_USERPWD);
-    insint_c(d, "PROXYUSERPWD", CURLOPT_PROXYUSERPWD);
-    insint_c(d, "RANGE", CURLOPT_RANGE);
-    insint_c(d, "TIMEOUT", CURLOPT_TIMEOUT);
-    insint_c(d, "POSTFIELDS", CURLOPT_POSTFIELDS);
-    insint_c(d, "POSTFIELDSIZE", CURLOPT_POSTFIELDSIZE);
-    insint_c(d, "REFERER", CURLOPT_REFERER);
-    insint_c(d, "USERAGENT", CURLOPT_USERAGENT);
-    insint_c(d, "FTPPORT", CURLOPT_FTPPORT);
-    insint_c(d, "LOW_SPEED_LIMIT", CURLOPT_LOW_SPEED_LIMIT);
-    insint_c(d, "LOW_SPEED_TIME", CURLOPT_LOW_SPEED_TIME);
-    insint_c(d, "CURLOPT_RESUME_FROM", CURLOPT_RESUME_FROM);
+    insint_c(d, "POSTFIELDSIZE", CURLOPT_POSTFIELDSIZE_LARGE);  /* _LARGE ! */
     insint_c(d, "COOKIE", CURLOPT_COOKIE);
     insint_c(d, "HTTPHEADER", CURLOPT_HTTPHEADER);
     insint_c(d, "HTTPPOST", CURLOPT_HTTPPOST);
@@ -2588,7 +2590,7 @@ initpycurl(void)
     insint_c(d, "PROXYAUTH", CURLOPT_PROXYAUTH);
     insint_c(d, "FTP_RESPONSE_TIMEOUT", CURLOPT_FTP_RESPONSE_TIMEOUT);
     insint_c(d, "IPRESOLVE", CURLOPT_IPRESOLVE);
-    insint_c(d, "MAXFILESIZE", CURLOPT_MAXFILESIZE);
+    insint_c(d, "MAXFILESIZE", CURLOPT_MAXFILESIZE_LARGE);  /* _LARGE ! */
     insint_c(d, "INFILESIZE_LARGE", CURLOPT_INFILESIZE_LARGE);
     insint_c(d, "RESUME_FROM_LARGE", CURLOPT_RESUME_FROM_LARGE);
     insint_c(d, "MAXFILESIZE_LARGE", CURLOPT_MAXFILESIZE_LARGE);
