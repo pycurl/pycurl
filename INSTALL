@@ -1,0 +1,24 @@
+You need Python and libcurl installed on your system to use pycurl.
+
+To build pycurl for Python 1.5.2 you also need the distutils package,
+which you can download from:
+	
+	http://www.python.org/sigs/distutils-sig/download.html
+
+Assuming that distutils is installed (which it is by default on Python
+versions above 1.5.2) build and install pycurl with the following
+commands:
+
+	(become root)
+	tar -zxvf pycurl-0.1.tar.gz
+	cd pycurl-0.1
+	python setup.py install
+
+You can also install by hand which does not require distutils.  Edit
+the 'src/Makefile' in the distribution directory to suit your setup.
+Type 'make' and copy the file 'src/curlmodule.so' to the site-package
+directory of your Python installation (for example
+/usr/lib/python2.0/site-packages).
+
+NOTE: I have not tried to build pycurl on Windows, but I assume this
+can be done with minimal efforts using the distutils approach.
