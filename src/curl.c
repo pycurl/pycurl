@@ -235,10 +235,10 @@ header_callback(void *ptr,
 
 static int
 progress_callback(void *client,
-                  size_t dltotal,
-                  size_t dlnow,
-                  size_t ultotal,
-                  size_t ulnow)
+                  double dltotal,
+                  double dlnow,
+                  double ultotal,
+                  double ulnow)
 {
     PyObject *arglist;
     PyObject *result;
@@ -251,7 +251,7 @@ progress_callback(void *client,
     }
 
     PyEval_AcquireThread(self->state);
-    arglist = Py_BuildValue("(iiii)", dltotal, dlnow, ultotal, ulnow);
+    arglist = Py_BuildValue("(dddd)", dltotal, dlnow, ultotal, ulnow);
     result = PyEval_CallObject(self->pro_cb, arglist);
     Py_DECREF(arglist);
     if (result == NULL) {

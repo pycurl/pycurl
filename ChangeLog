@@ -1,5 +1,10 @@
 Version 7.9.9
 
+2002-06-25  Kjetil Jacobsen  <kjetilja>
+
+	* Use 'double' types instead of 'size_t' for progress callbacks
+	(by Conrad Steenberg <conrad@hep.caltech.edu>).
+
 2002-06-24  Kjetil Jacobsen  <kjetilja>
 
 	* Added example code on how to upload a file using HTTPPOST in
