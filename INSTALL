@@ -36,6 +36,9 @@ Python interpreter.  We have not been able to track down and solve this
 problem.  However, the problem seems to occur less frequently if the GC
 support is disabled in pycurl.  Passing the optional commandline paramter
 '--use-gc=0' to setup.py will build pycurl without the GC support enabled.
+Example:
+
+    python setup.py install --use-gc=0
 
 
 Makefile
