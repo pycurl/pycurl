@@ -1,5 +1,10 @@
 Version 7.10.3
 
+2003-01-10  Kjetil Jacobsen  <kjetilja>
+
+	* Added 'examples/retriever-multi.py' which shows how to retrieve
+	a set of URLs concurrently using the multi interface.
+
 2003-01-09  Kjetil Jacobsen  <kjetilja>
 
 	* Added support for CURLOPT_HTTP200ALIASES.
