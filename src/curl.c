@@ -16,7 +16,7 @@
  *
  */
 
-/* 
+/*
     TODO for the multi interface:
     - fix the deallocation race, just apply the same stuff as for deallocation
       of curl objects (handles and state attributes)
@@ -24,9 +24,9 @@
       for anything
     - also try to figure out how to solve the problem of having deallocated
       curl objects in an active curl-multi stack (this causes a segfault when
-      the multi-stack is cleaned up) 
+      the multi-stack is cleaned up)
     - how do we best interface with the fd_set stuff?
-*/ 
+*/
 
 #undef NDEBUG
 #include <assert.h>
@@ -52,6 +52,7 @@ static PyObject *ErrorObject;
 typedef struct {
     PyObject_HEAD
     CURL *handle;
+    PyThreadState *state;
     struct HttpPost *httppost;
     struct curl_slist *httpheader;
     struct curl_slist *quote;
@@ -66,7 +67,6 @@ typedef struct {
     PyObject *readdata;
     PyObject *writedata;
     PyObject *writeheader;
-    PyThreadState *state;
     int writeheader_set;
     char error[CURL_ERROR_SIZE];
     void *options[CURLOPT_LASTENTRY];
@@ -75,7 +75,7 @@ typedef struct {
 typedef struct {
     PyObject_HEAD
     CURLM *multi_handle;
-    PyThreadState *state; 
+    PyThreadState *state;
 } CurlMultiObject;
 
 #if !defined(__cplusplus)
@@ -98,6 +98,9 @@ staticforward PyTypeObject CurlMulti_Type;
     Py_DECREF(v); \
     return NULL; \
 } while (0)
+
+#undef UNUSED
+#define UNUSED(var)     ((void)&var)
 
 /* --------------------------------------------------------------------- */
 
@@ -346,6 +349,7 @@ int debug_callback(CURL *curlobj,
     PyObject *result;
     CurlObject *self;
 
+    UNUSED(curlobj);
     self = (CurlObject *)data;
     if (self == NULL || self->state == NULL) {
         return 0;
@@ -907,8 +911,9 @@ self_multi_cleanup(CurlMultiObject *self)
     assert(self != NULL);
 
     if (self->multi_handle != NULL) {
-        curl_multi_cleanup(self->multi_handle);
+        CURLM *multi_handle = self->multi_handle;
         self->multi_handle = NULL;
+        curl_multi_cleanup(multi_handle);
     }
     self->state = NULL;
 }
@@ -916,6 +921,13 @@ self_multi_cleanup(CurlMultiObject *self)
 static PyObject *
 do_multi_cleanup(CurlMultiObject *self, PyObject *args)
 {
+    if (!PyArg_ParseTuple(args, ":cleanup")) {
+        return NULL;
+    }
+    if (self->state != NULL) {
+        PyErr_SetString(ErrorObject, "cannot invoke cleanup, perform() is running");
+        return NULL;
+    }
     self_multi_cleanup(self);
     Py_INCREF(Py_None);
     return Py_None;
@@ -971,6 +983,26 @@ do_multi_perform(CurlMultiObject *self, PyObject *args)
     }
 }
 
+/* static utiltiy function */
+static int check_curl_object(CurlMultiObject *self, CurlObject *obj)
+{
+    UNUSED(self);
+    if (obj == NULL || obj->ob_type != &Curl_Type) {
+        PyErr_SetString(ErrorObject, "expecting a curl object");
+        return -1;
+    }
+    if (obj->handle == NULL) {
+        PyErr_SetString(ErrorObject, "cannot add/remove closed curl object to multi stack");
+        return -1;
+    }
+    if (obj->state != NULL) {
+        /* FIXME: is this too strict ??? */
+        PyErr_SetString(ErrorObject, "cannot add/remove running curl object to multi stack");
+        return -1;
+    }
+    return 0;
+}
+
 static PyObject *
 do_multi_addhandle(CurlMultiObject *self, PyObject *args)
 {
@@ -978,8 +1010,7 @@ do_multi_addhandle(CurlMultiObject *self, PyObject *args)
     int res;
 
     if (PyArg_ParseTuple(args, "O!:add_handle", &Curl_Type, (PyObject *)&obj)) {
-        if (obj->handle == NULL) {
-            PyErr_SetString(ErrorObject, "cannot add closed curl object to multi stack");
+        if (check_curl_object(self, obj) != 0) {
             return NULL;
         }
         res = curl_multi_add_handle(self->multi_handle, obj->handle);
@@ -1003,8 +1034,7 @@ do_multi_removehandle(CurlMultiObject *self, PyObject *args)
     int res;
 
     if (PyArg_ParseTuple(args, "O!:remove_handle", &Curl_Type, (PyObject *)&obj)) {
-        if (obj->handle == NULL) {
-            PyErr_SetString(ErrorObject, "cannot remove closed curl object from multi stack");
+        if (check_curl_object(self, obj) != 0) {
             return NULL;
         }
         res = curl_multi_remove_handle(self->multi_handle, obj->handle);
@@ -1108,6 +1138,8 @@ do_multi_init(PyObject *arg)
 {
     CurlMultiObject *self;
 
+    UNUSED(arg);
+
     /* Allocate python curl-multi object */
 #if (PY_VERSION_HEX < 0x01060000)
     self = (CurlMultiObject *) PyObject_NEW(CurlMultiObject, &CurlMulti_Type);
@@ -1136,6 +1168,8 @@ do_init(PyObject *arg)
 {
     CurlObject *self;
     int res;
+
+    UNUSED(arg);
 
     /* Allocate python curl object */
 #if (PY_VERSION_HEX < 0x01060000)
@@ -1206,6 +1240,7 @@ error:
 static PyObject *
 do_global_cleanup(PyObject *arg)
 {
+    UNUSED(arg);
     curl_global_cleanup();
     Py_INCREF(Py_None);
     return Py_None;
@@ -1216,6 +1251,8 @@ static PyObject *
 do_global_init(PyObject *self, PyObject *args)
 {
     int res, option;
+
+    UNUSED(self);
 
     if (PyArg_ParseTuple(args, "i:global_init", &option)) {
         if (!(option == CURL_GLOBAL_ALL ||
