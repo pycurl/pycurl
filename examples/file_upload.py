@@ -16,8 +16,27 @@ class filereader:
     def read_callback(self, size):
         return self.f.read(size)
 
-    def close(self):
-        self.f.close()
+
+# Use filereader class to hold the file reference and callback
+def version_1(filename, url):
+    reader = filereader(open(filename, 'rb'))
+    filesize = os.path.getsize(filename)
+    c = pycurl.Curl()
+    c.setopt(pycurl.URL, url)
+    c.setopt(pycurl.READFUNCTION, reader.read_callback)
+    c.setopt(pycurl.INFILESIZE_LARGE, filesize) # to handle > 2GB file sizes
+    c.setopt(pycurl.UPLOAD, 1)
+    return c
+
+# Use the builtin file read method as the callback
+def version_2(filename, url):
+    filesize = os.path.getsize(filename)
+    c = pycurl.Curl()
+    c.setopt(pycurl.URL, url)
+    c.setopt(pycurl.READFUNCTION, open(filename, 'rb').read)
+    c.setopt(pycurl.INFILESIZE_LARGE, filesize) # to handle > 2GB file sizes
+    c.setopt(pycurl.UPLOAD, 1)
+    return c
 
 # Check commandline arguments
 if len(sys.argv) < 3:
@@ -31,17 +50,10 @@ if not os.path.exists(filename):
     print "Error: the file '%s' does not exist" % filename
     raise SystemExit
 
-# Configure pycurl
-reader = filereader(open(filename, 'rb'))
-filesize = os.path.getsize(filename)
-c = pycurl.Curl()
-c.setopt(pycurl.URL, url)
-c.setopt(pycurl.READFUNCTION, reader.read_callback)
-c.setopt(pycurl.INFILESIZE_LARGE, filesize) # to handle > 2GB file sizes
-c.setopt(pycurl.UPLOAD, 1)
-
+# They both do the same, version 2 is fine if you don't need to process the
+# data read from the callback before returning
+c = version_1(filename, url)
 # Start transfer
-print 'Posting file %s to url %s' % (filename, url)
+print 'Uploading file %s to url %s' % (filename, url)
 c.perform()
 c.close()
-reader.close()
