@@ -35,8 +35,8 @@ echo "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
 
 <p>
 PycURL is an
-<a href="http://www.python.org/">Python</a> interface to the
-<a href="http://curl.haxx.se/libcurl/">cURL library</a>.
+<a href="http://www.python.org/">Python</a> interface to
+<a href="http://curl.haxx.se/libcurl/">libcurl</a>.
 PycURL can be used to fetch objects identified by a URL
 from a Python program.
 </p>
