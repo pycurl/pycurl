@@ -8,12 +8,12 @@ import pycurl
 c1 = pycurl.Curl()
 c2 = pycurl.Curl()
 c3 = pycurl.Curl()
-c1.setopt(c1.URL, 'http://www.python.org')
-c2.setopt(c2.URL, 'http://curl.haxx.se')
-c3.setopt(c3.URL, 'http://slashdot.org')
-c1.body = open("doc1", "w")
-c2.body = open("doc2", "w")
-c3.body = open("doc3", "w")
+c1.setopt(c1.URL, "http://www.python.org")
+c2.setopt(c2.URL, "http://curl.haxx.se")
+c3.setopt(c3.URL, "http://slashdot.org")
+c1.body = open("doc1", "wb")
+c2.body = open("doc2", "wb")
+c3.body = open("doc3", "wb")
 c1.setopt(c1.WRITEFUNCTION, c1.body.write)
 c2.setopt(c2.WRITEFUNCTION, c2.body.write)
 c3.setopt(c3.WRITEFUNCTION, c3.body.write)
@@ -53,7 +53,7 @@ c3.body.close()
 c1.close()
 c2.close()
 c3.close()
-print 'http://www.python.org is in file doc1'
-print 'http://curl.haxx.se is in file doc2'
-print 'http://slashdot.org is in file doc3'
+print "http://www.python.org is in file doc1"
+print "http://curl.haxx.se is in file doc2"
+print "http://slashdot.org is in file doc3"
 

@@ -20,7 +20,7 @@ urls = (
 
 # Read list of URIs from file specified on commandline
 try:
-    urls = open(sys.argv[1]).readlines()
+    urls = open(sys.argv[1], "rb").readlines()
 except IndexError:
     # No file was specified
     pass
