@@ -6,8 +6,8 @@
 import sys, threading, Queue
 import pycurl
 
-# We should ignore SIGPIPE when using pycurl.NOSIGNAL - see the libcurl
-# documentation `libcurl-the-guide' for more info.
+# We should ignore SIGPIPE when using pycurl.NOSIGNAL - see
+# the libcurl tutorial for more info.
 try:
     import signal
     from signal import SIGPIPE, SIG_IGN
