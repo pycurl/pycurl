@@ -1,6 +1,7 @@
 <?php // vi:ts=4:et
-$version = "7.10.5";
 echo "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
+$version = "7.10.5";
+$version_date = "May 21 2003";
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
@@ -25,8 +26,12 @@ echo "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
   <a href="http://curl.haxx.se/libcurl/"><img src="http://curl.haxx.se/libcurl/big.jpg" width="416" height="115" border="0" alt="libcurl"></img></a>
 </center>
 
+<center>
+  <br />
+  <b><font size="+3" face="Courier New, Courier, mono">PYCURL <?php echo $version; ?></font></b><br />
+  <?php echo $version_date; ?><br />
+</center>
 
-<h1><font face="Courier New, Courier, mono">PYCURL <?php echo $version; ?></font></h1>
 
 <p>
 &gt;&gt;&gt; import pycurl<br />
@@ -113,7 +118,7 @@ Also have a look at the <a href="ChangeLog">PycURL ChangeLog</a>.
 
 <p>
 <a href="download/pycurl-7.10.5.tar.gz">Download</a>
-PycURL sources version <?php echo $version; ?> (May 21 2003)
+PycURL sources version <?php echo "$version ($version_date)"; ?>
 or try the code from
 <a href="http://sourceforge.net/cvs/?group_id=28236">the CVS repository</a>.
 </p>
