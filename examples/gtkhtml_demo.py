@@ -139,6 +139,7 @@ class HtmlWindow(GtkHTML):
         self.num_obj = 0
         if self.current_doc:
             url = urllib.basejoin(self.current_doc, url)
+        self.current_doc = url
         html.load_empty()
         handle = html.begin()
         url = url.strip()
@@ -158,7 +159,6 @@ class HtmlWindow(GtkHTML):
         # Finished rendering page
         t2 = time.time()
         self.statusbar.set_text("Done (%.3f seconds)" % (t2-t1))
-        self.current_doc = url
 
     def submit(self, html, method, path, params):
         if method != 'GET':
@@ -171,7 +171,6 @@ class HtmlWindow(GtkHTML):
     def request_url(self, html, url, handle):
         if self.current_doc:
             url = urllib.basejoin(self.current_doc, url)
-        self.current_doc = url 
         self.statusbar.set_text("Requesting URL: %s" % url)
         self.queue.put((url, handle))
         self.num_obj += 1
