@@ -917,7 +917,7 @@ ioctl_callback(CURL *curlobj, int cmd, void *stream)
         goto silent_error;
 
     /* run callback */
-    arglist = Py_BuildValue("(i)", (int)cmd);
+    arglist = Py_BuildValue("(i)", cmd);
     if (arglist == NULL)
         goto verbose_error;
     result = PyEval_CallObject(self->ioctl_cb, arglist);
@@ -2292,7 +2292,6 @@ do_global_cleanup(PyObject *dummy)
 }
 
 
-
 static PyObject *vi_str(const char *s)
 {
     if (s == NULL) {
@@ -2324,8 +2323,8 @@ do_version_info(PyObject *dummy, PyObject *args)
         return NULL;
     }
 
-    /* Note: actually libcurl in lib/version.c does ignore
-     * the "stamp" parm, and so do we */
+    /* INFO: actually libcurl in lib/version.c does ignore
+     * the "stamp" parameter, and so do we. */
 
     for (i = 0; vi->protocols[i] != NULL; )
         i++;
