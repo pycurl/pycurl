@@ -2,6 +2,14 @@
 # vi:ts=4:et
 # $Id$
 
+# We should ignore SIGPIPE when using pycurl.NOSIGNAL - see the libcurl
+# documentation `libcurl-the-guide' for more info.
+try:
+    import signal
+    from signal import SIGPIPE, SIG_IGN
+    signal.signal(signal.SIGPIPE, signal.SIG_IGN)
+except ImportError:  pass
+
 import xmlrpclib, pycurl
 try:  import cStringIO as StringIO
 except:  import StringIO
@@ -15,6 +23,7 @@ class CURLTransport(xmlrpclib.Transport):
     def __init__(self, username=None, password=None):
         self.c = pycurl.Curl()
         self.c.setopt(pycurl.POST, 1)
+        self.c.setopt(pycurl.NOSIGNAL, 1)
         self.c.setopt(pycurl.HTTPHEADER, self.xmlrpc_h)
         if username != None and password != None:
             self.c.setopt(pycurl.USERPWD, '%s:%s' % (username, password))
