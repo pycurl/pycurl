@@ -8,7 +8,7 @@
 PACKAGE = "pycurl"
 VERSION = "7.10.3"
 
-import glob, os, sys, string
+import glob, os, re, sys, string
 import distutils
 from distutils.core import setup
 from distutils.extension import Extension
@@ -63,7 +63,9 @@ else:
     print "Using %s (%s)" % (CURL_CONFIG, d)
     for e in split_quoted(os.popen("%s --cflags" % CURL_CONFIG).read()):
         if e[:2] == "-I":
-            include_dirs.append(e[2:])
+            # do not add /usr/include
+            if not re.search(r"^\/+usr\/+include\/*$", e[2:]):
+                include_dirs.append(e[2:])
         else:
             extra_compile_args.append(e)
     for e in split_quoted(os.popen("%s --libs" % CURL_CONFIG).read()):
