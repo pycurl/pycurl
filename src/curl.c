@@ -25,6 +25,7 @@
     - also try to figure out how to solve the problem of having deallocated
       curl objects in an active curl-multi stack (this causes a segfault when
       the multi-stack is cleaned up) 
+    - how do we best interface with the fd_set stuff?
 */ 
 
 #undef NDEBUG
