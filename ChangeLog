@@ -1,3 +1,7 @@
+2001-10-15  Kjetil Jacobsen  <kjetilja>
+
+	* Refactored the test_gtk.py script to avoid global variables.
+
 2001-10-12  Kjetil Jacobsen  <kjetilja>
 
 	* Added module docstrings, terse perhaps, but better than nothing.
