@@ -7,8 +7,7 @@ If you want to hack on pycurl, here's our list of unresolved issues:
 BUGS:
 
     * Find the GC tracking bug which cause Python to fail an assertion
-      (this could be a problem in curl also).  We should make the GC
-      support an option in setup.py.
+      (this could be a problem in curl also).
 
 
 DEPRECATED LIBCURL FEATURES:
