@@ -1,4 +1,5 @@
 #! /usr/bin/env python2.2
+# vi:ts=4:et
 #
 # sfquery -- Source Forge query script
 #
