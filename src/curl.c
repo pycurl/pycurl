@@ -32,6 +32,15 @@ typedef struct {
 staticforward PyTypeObject Curl_Type;
 #endif
 
+#define CURLERROR() \
+{\
+  PyObject *v; \
+  v = Py_BuildValue("(is)", res, self->error); \
+  PyErr_SetObject(ErrorObject, v); \
+  Py_DECREF(v); \
+  return NULL; \
+}
+
 /* --------------------------------------------------------------------- */
 
 static void
@@ -369,8 +378,7 @@ do_setopt(CurlObject *self, PyObject *args)
 	    return Py_None;
 	}
 	else {
-	    PyErr_SetString(ErrorObject, self->error);
-	    return NULL;
+	    CURLERROR();
 	}
     }
 
@@ -390,8 +398,7 @@ do_setopt(CurlObject *self, PyObject *args)
 	    return Py_None;
 	}
 	else {
-	    PyErr_SetString(ErrorObject, self->error);
-	    return NULL;
+	    CURLERROR();
 	}
     }
 
@@ -421,8 +428,7 @@ do_setopt(CurlObject *self, PyObject *args)
 	    return Py_None;
 	}
 	else {
-	    PyErr_SetString(ErrorObject, self->error);
-	    return NULL;
+  	    CURLERROR();
 	}
     }
 
@@ -484,8 +490,7 @@ do_setopt(CurlObject *self, PyObject *args)
 	    }
 	    else {
 		curl_formfree(self->httppost);
-		PyErr_SetString(ErrorObject, self->error);
-		return NULL;
+		CURLERROR();
 	    }
 	}
 
@@ -521,8 +526,7 @@ do_setopt(CurlObject *self, PyObject *args)
 	}
 	else {
 	    curl_slist_free_all(*slist);
-	    PyErr_SetString(ErrorObject, self->error);
-	    return NULL;
+	    CURLERROR();
 	}
     }
 
@@ -615,8 +619,7 @@ do_perform(CurlObject *self, PyObject *args)
 	return Py_None;
     }
     else {
-	PyErr_SetString(ErrorObject, self->error);
-	return NULL;
+        CURLERROR();
     }
 }
 
@@ -651,8 +654,7 @@ do_getinfo(CurlObject *self, PyObject *args)
 		    return PyLong_FromLong(l_res);
 		}
 		else {
-		    PyErr_SetString(ErrorObject, self->error);
-		    return NULL;
+		    CURLERROR();
 		}
 	    }
 
@@ -666,8 +668,7 @@ do_getinfo(CurlObject *self, PyObject *args)
 		    return PyString_FromString(s_res);
 		}
 		else {
-		    PyErr_SetString(ErrorObject, self->error);
-		    return NULL;
+		    CURLERROR();
 		}
 	    }
 
@@ -690,8 +691,7 @@ do_getinfo(CurlObject *self, PyObject *args)
 		    return PyFloat_FromDouble(d_res);
 		}
 		else {
-		    PyErr_SetString(ErrorObject, self->error);
-		    return NULL;
+		    CURLERROR();
 		}
 	    }
     }

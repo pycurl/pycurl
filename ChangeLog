@@ -8,6 +8,9 @@
 	* Added CURLOPT_SSLCERTTYPE, CURLOPT_SSLKEY, CURLOPT_SSLKEYTYPE,
 	CURLOPT_SSLKEYPASSWD, CURLOPT_SSLENGINE and
 	CURLOPT_SSLENGINE_DEFAULT.
+
+	* The pycurl.error exception is now a tuple consisting of the curl
+	error code and the error message.
 	
 2002-02-19  Kjetil Jacobsen  <kjetilja>
 
