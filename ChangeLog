@@ -1,5 +1,9 @@
 Version 7.10.3
 
+2003-01-13  Kjetil Jacobsen  <kjetilja>
+
+	* PycURL memory usage has been reduced.
+
 2003-01-10  Kjetil Jacobsen  <kjetilja>
 
 	* Added 'examples/retriever-multi.py' which shows how to retrieve
