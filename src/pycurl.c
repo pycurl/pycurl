@@ -2527,9 +2527,6 @@ initpycurl(void)
     insint_c(d, "SSL_VERIFYHOST", CURLOPT_SSL_VERIFYHOST);
     insint_c(d, "COOKIEJAR", CURLOPT_COOKIEJAR);
     insint_c(d, "SSL_CIPHER_LIST", CURLOPT_SSL_CIPHER_LIST);
-    insint_c(d, "HTTP_VERSION", CURLOPT_HTTP_VERSION);
-    insint_c(d, "HTTP_VERSION_1_0", CURL_HTTP_VERSION_1_0);
-    insint_c(d, "HTTP_VERSION_1_1", CURL_HTTP_VERSION_1_1);
     insint_c(d, "FTP_USE_EPSV", CURLOPT_FTP_USE_EPSV);
     insint_c(d, "SSLCERTTYPE", CURLOPT_SSLCERTTYPE);
     insint_c(d, "SSLKEY", CURLOPT_SSLKEY);
@@ -2578,13 +2575,11 @@ initpycurl(void)
 
 #if (LIBCURL_VERSION_NUM >= 0x070a07)
     /* constants for setopt(HTTP_VERSION, x) */
-#if 0
-/* FIXME: name-clash with CURLOPT_HTTP_VERSION_1_0 above !!! */
-    insint_c(d, "HTTP_VERSION_NONE", CURL_HTTP_VERSION_NONE);
-    insint_c(d, "HTTP_VERSION_1_0", CURL_HTTP_VERSION_1_0);
-    insint_c(d, "HTTP_VERSION_1_1", CURL_HTTP_VERSION_1_1);
-    insint_c(d, "HTTP_VERSION_LAST", CURL_HTTP_VERSION_LAST);
-#endif
+    insint_c(d, "HTTP_VERSION", CURLOPT_HTTP_VERSION);
+    insint_c(d, "CURL_HTTP_VERSION_NONE", CURL_HTTP_VERSION_NONE);
+    insint_c(d, "CURL_HTTP_VERSION_1_0", CURL_HTTP_VERSION_1_0);
+    insint_c(d, "CURL_HTTP_VERSION_1_1", CURL_HTTP_VERSION_1_1);
+    insint_c(d, "CURL_HTTP_VERSION_LAST", CURL_HTTP_VERSION_LAST);
 #endif
 
     /* CURL_NETRC_OPTION: constants for setopt(NETRC, x) */
@@ -2602,8 +2597,8 @@ initpycurl(void)
     /* CURLINFO: symbolic constants for getinfo(x) */
     insint_c(d, "EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL);
     insint_c(d, "HTTP_CODE", CURLINFO_HTTP_CODE);
-      /* new name since 7.10.8 */
-      insint_c(d, "RESPONSE_CODE", CURLINFO_HTTP_CODE);
+    /* new name since 7.10.8 */
+    insint_c(d, "RESPONSE_CODE", CURLINFO_HTTP_CODE);
     insint_c(d, "TOTAL_TIME", CURLINFO_TOTAL_TIME);
     insint_c(d, "NAMELOOKUP_TIME", CURLINFO_NAMELOOKUP_TIME);
     insint_c(d, "CONNECT_TIME", CURLINFO_CONNECT_TIME);
