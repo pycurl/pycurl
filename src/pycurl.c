@@ -117,9 +117,9 @@ static PyTypeObject *p_CurlMulti_Type;
 /* Throw exception based on return value `res' and `self->error' */
 #define CURLERROR_RETVAL() do {\
     PyObject *v; \
+    self->error[sizeof(self->error) - 1] = 0; \
     v = Py_BuildValue("(is)", (int) (res), self->error); \
-    PyErr_SetObject(ErrorObject, v); \
-    Py_DECREF(v); \
+    if (v != NULL) { PyErr_SetObject(ErrorObject, v); Py_DECREF(v); } \
     return NULL; \
 } while (0)
 
@@ -127,8 +127,7 @@ static PyTypeObject *p_CurlMulti_Type;
 #define CURLERROR_MSG(msg) do {\
     PyObject *v; \
     v = Py_BuildValue("(is)", (int) (res), (msg)); \
-    PyErr_SetObject(ErrorObject, v); \
-    Py_DECREF(v); \
+    if (v != NULL) { PyErr_SetObject(ErrorObject, v); Py_DECREF(v); } \
     return NULL; \
 } while (0)
 
@@ -568,6 +567,7 @@ do_curl_errstr(CurlObject *self, PyObject *args)
     if (check_curl_state(self, 1+2, "errstr") != 0) {
         return NULL;
     }
+    self->error[sizeof(self->error) - 1] = 0;
     return PyString_FromString(self->error);
 }
 
