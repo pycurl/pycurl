@@ -3,11 +3,11 @@
 # Manifest template for creating the source distribution.
 #
 
-include COPYING
 include ChangeLog
+include COPYING
 include INSTALL
-include MANIFEST.in
 include Makefile
+include MANIFEST.in
 include README
 include src/Makefile
 include src/curl.c
