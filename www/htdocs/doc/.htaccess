@@ -5,3 +5,20 @@
 
 Options +Indexes
 
+
+# /***********************************************************************
+# // Module mod_autoindex
+# // permissions needed: AllowOverride Indexes
+# ************************************************************************/
+
+## IndexOrderDefault Descending Date
+
+
+# /***********************************************************************
+# // Module mod_dir
+# // permissions needed: AllowOverride Indexes
+# ************************************************************************/
+
+## DirectoryIndex pycurl.html
+
+
