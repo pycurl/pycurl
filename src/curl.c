@@ -46,9 +46,20 @@
 #  define USE_GC
 #endif
 
+
+#undef UNUSED
+#define UNUSED(var)     ((void)&var)
+
+
 /* Calculate the number of options we need to store */
-#define PYCURL_OPT(x) (x % CURLOPTTYPE_FUNCTIONPOINT) % CURLOPTTYPE_OBJECTPOINT
-#define OPTIONS_SIZE PYCURL_OPT(CURLOPT_LASTENTRY)
+#define OPTIONS_SIZE    105
+static int PYCURL_OPT(int o)
+{
+    assert(o >= CURLOPTTYPE_OBJECTPOINT);
+    assert(o < CURLOPTTYPE_OBJECTPOINT + OPTIONS_SIZE);
+    return o - CURLOPTTYPE_OBJECTPOINT;
+}
+
 
 static PyObject *ErrorObject;
 
@@ -93,7 +104,7 @@ staticforward PyTypeObject Curl_Type;
 staticforward PyTypeObject CurlMulti_Type;
 #endif
 
-/* Throw exception based on return value 'res' */
+/* Throw exception based on return value `res' and `self->error' */
 #define CURLERROR_RETVAL() do {\
     PyObject *v; \
     v = Py_BuildValue("(is)", (int) (res), self->error); \
@@ -110,10 +121,6 @@ staticforward PyTypeObject CurlMulti_Type;
     Py_DECREF(v); \
     return NULL; \
 } while (0)
-
-
-#undef UNUSED
-#define UNUSED(var)     ((void)&var)
 
 
 /*************************************************************************
@@ -324,7 +331,7 @@ do_curl_copy(const CurlObject *self, PyObject *args)
     /* this makes copy() pretty useless */
     if (self->dict)
         goto cannot_copy;
-    if (self->httppost || self->httpheader || self->quote || self->postquote ||  self->prequote)
+    if (self->httppost || self->httpheader || self->http200aliases || self->quote || self->postquote ||  self->prequote)
         goto cannot_copy;
     if (self->w_cb || self->r_cb || self->pro_cb || self->pwd_cb || self->d_cb)
         goto cannot_copy;
