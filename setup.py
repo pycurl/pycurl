@@ -9,7 +9,7 @@ from distutils.core import setup
 from distutils.extension import Extension
 from string import strip, split
 
-# Windows users have to configure the next thress path params
+# Windows users have to configure the next three path params
 # to match their libcurl installation.  The paths set here are
 # just examples and thus unlikely to match your installation.
 W32_INCLUDE = r'C:\User\clib\libcurl\include'
