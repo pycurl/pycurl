@@ -39,7 +39,7 @@ while num_handles:
     while 1:
         ret, num_handles = m.perform()
         # Print the message, if any
-        print m.info_read()
+        print m.info_read(1)
         if ret != pycurl.E_CALL_MULTI_PERFORM: break
 
 # Cleanup
