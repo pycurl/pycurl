@@ -6,6 +6,9 @@ If you want to hack on pycurl, here's our list of unresolved issues:
 
 NEW FEATURES/IMPROVEMENTS:
 
+    * Handle Sourceforge patch #949715
+      http://sourceforge.net/tracker/index.php?func=detail&aid=949715&group_id=28236&atid=392779
+
     * Add new 3rdparty ftp transfer options from libcurl.
 
     * HTTPPOST should take a dict instead of a list of tuples, this way it
