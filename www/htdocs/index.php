@@ -22,13 +22,16 @@ href="http://curl.haxx.se">cURL</a> library.<br>
 PycURL can be used to fetch documents identified by a URI
 from within a Python program.<br>
 <br>
-<a href="download/pycurl-7.9.8.3.tar.gz">Download</a> PycURL sources version 7.9.8.3 (Jul 18 2002) or
+<a href="download/pycurl-7.9.8.4.tar.gz">Download</a> PycURL sources version 7.9.8.4 (Sep 04 2002) or
 try the code from <a href="http://sourceforge.net/cvs/?group_id=28236">CVS</a>.
 <br>
 <br>
 For Win32 users there's also an
 <a href="download/pycurl-7.9.8.3.win32-py2.2.exe">installer with a precompiled module</a>.
 You still should download the sources because of the test and example programs.
+<br>
+<br>
+Older versions are available from the <a href="download/?M=D">download area</a>.
 <br>
 
     <br />
