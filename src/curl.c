@@ -2140,8 +2140,15 @@ insint_m(PyObject *d, char *name, long value)
 
 
 /* Initialization function for the module */
+#if defined(PyMODINIT_FUNC)
+PyMODINIT_FUNC
+#else
+#if defined(__cplusplus)
+extern "C"
+#endif
 DL_EXPORT(void)
-    initpycurl(void)
+#endif
+initpycurl(void)
 {
     PyObject *m, *d;
     const curl_version_info_data *vi;
