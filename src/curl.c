@@ -46,6 +46,9 @@
 #  define USE_GC
 #endif
 
+/* Calculate the number of options we need to store */
+#define PYCURL_OPT(x) (x % CURLOPTTYPE_FUNCTIONPOINT) % CURLOPTTYPE_OBJECTPOINT
+#define OPTIONS_SIZE PYCURL_OPT(CURLOPT_LASTENTRY)
 
 static PyObject *ErrorObject;
 
@@ -82,7 +85,7 @@ typedef struct {
     PyObject *writeheader;
     int writeheader_set;
     char error[CURL_ERROR_SIZE+1];
-    void *options[CURLOPT_LASTENTRY];
+    void *options[OPTIONS_SIZE];
 } CurlObject;
 
 #if !defined(__cplusplus)
@@ -327,7 +330,7 @@ do_curl_copy(const CurlObject *self, PyObject *args)
         goto cannot_copy;
     if (self->readdata || self->writedata || self->writeheader || self->writeheader_set)
         goto cannot_copy;
-    for (i = 0; i < CURLOPT_LASTENTRY; i++) {
+    for (i = 0; i < OPTIONS_SIZE; i++) {
         if (self->options[i] != NULL) {
             goto cannot_copy;
         }
@@ -461,7 +464,7 @@ util_curl_close(CurlObject *self)
 #undef SFREE
     /* Last, free the options.  This must be done after the curl handle is closed
      * since curl assumes that some options are valid when invoking cleanup */
-    for (i = 0; i < CURLOPT_LASTENTRY; i++) {
+    for (i = 0; i < OPTIONS_SIZE; i++) {
         if (self->options[i] != NULL) {
             free(self->options[i]);
             self->options[i] = NULL;
@@ -893,7 +896,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                 return NULL;
             }
         /* Free previously allocated memory to option */
-        opt_masked = option % CURLOPTTYPE_OBJECTPOINT;
+        opt_masked = PYCURL_OPT(option);
         if (self->options[opt_masked] != NULL) {
             free(self->options[opt_masked]);
             self->options[opt_masked] = NULL;
@@ -2339,7 +2342,6 @@ DL_EXPORT(void)
     if (vi->version_num < LIBCURL_VERSION_NUM) {
         Py_FatalError("pycurl: libcurl link-time version is older than compile-time version!");
     }
-
     /* Finally initialize global interpreter lock */
     PyEval_InitThreads();
 }
