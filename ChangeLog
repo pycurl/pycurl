@@ -1,6 +1,11 @@
 Version 7.11.1 [requires libcurl-7.10.3 or better]
 --------------
 
+2004-03-16  Kjetil Jacobsen  <kjetilja>
+
+        * WARNING: Removed support for the PASSWDFUNCTION callback, which
+          is no longer supported by libcurl.
+
 2004-03-15  Kjetil Jacobsen  <kjetilja>
 
         * Added support for libcurl 7.11.1 CURLOPT features:
