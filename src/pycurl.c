@@ -660,7 +660,7 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
     PyObject *result = NULL;
 
 #if (LIBCURL_VERSION_NUM > 0x070c00)
-    size_t ret = CURL_READFUNC_ABORT;     /* assume error, this actuallay works */
+    size_t ret = CURL_READFUNC_ABORT;     /* assume error, this actually works */
 #else
     size_t ret = 0;     /* assume error, this cause things to hang */
 #endif
