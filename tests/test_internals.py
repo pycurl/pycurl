@@ -3,7 +3,7 @@
 
 import pycurl
 print "Testing", pycurl.version
-print pycurl.__file__
+print pycurl.__file__, pycurl.__COMPILE_DATE__
 
 
 #####
@@ -88,7 +88,7 @@ if 1:
     del m1, m2, c
 
 
-# basic check of reference counting
+# basic check of reference counting (use a memory checker like valgrind)
 if 1:
     c = pycurl.init()
     m = pycurl.multi_init()

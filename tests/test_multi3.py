@@ -18,7 +18,6 @@ urls = (
     "http://pycurl.sourceforge.net/THIS_HANDLE_IS_CLOSED",
 )
 
-
 # init
 m = pycurl.multi_init()
 m.handles = []

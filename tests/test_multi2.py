@@ -24,7 +24,6 @@ except IndexError:
     # No file was specified
     pass
 
-
 # init
 m = pycurl.multi_init()
 m.handles = []
