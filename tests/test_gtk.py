@@ -25,11 +25,10 @@ def progress(download_t, download_d, upload_t, upload_d):
 
 class Test(threading.Thread):
 
-    def __init__(self, url, ofile):
+    def __init__(self, url):
         threading.Thread.__init__(self)
         self.curl = pycurl.init()
         self.curl.setopt(pycurl.URL, url)
-        self.curl.setopt(pycurl.FILE, ofile)
         self.curl.setopt(pycurl.FOLLOWLOCATION, 1)
         self.curl.setopt(pycurl.NOPROGRESS, 0)
         self.curl.setopt(pycurl.PROGRESSFUNCTION, progress)
@@ -48,7 +47,7 @@ win.set_statusbar(appbar)
 win.show()
 
 round = 0.0
-t = Test(sys.argv[1], sys.stdout)
+t = Test(sys.argv[1])
 t.start()
 
 threads_enter()
