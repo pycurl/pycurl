@@ -7,7 +7,7 @@ Version 7.10.x [requires libcurl-7.10.3 or better]
           the new HTTPAUTH_BASIC, HTTPAUTH_DIGEST, HTTPAUTH_GSSNEGOTIATE
           and HTTPAUTH_NTML constants.
 
-        * Some existing constants were renamed for consistency:
+        * Some constants were renamed for consistency:
 
           All curl_infotype constants are now prefixed with "INFOTYPE_",
           all curl_proxytype constants are prefixed with "PROXYTYPE_" instead
