@@ -11,6 +11,7 @@
  *  Matt King <matt at gnik.com>
  *  Conrad Steenberg <conrad at hep.caltech.edu>
  *  Amit Mongia <amit_mongia at hotmail.com>
+ *  Eric S. Raymond <esr at thyrsus.com>
  *
  * See file COPYING for license information.
  *
