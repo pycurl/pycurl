@@ -1,7 +1,7 @@
 <?php // vi:ts=4:et
 echo "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
-$version = "7.10.6";
-$version_date = "Aug 16 2003";
+$version = "7.10.8";
+$version_date = "Nov 07 2003";
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
@@ -121,7 +121,7 @@ Also have a look at the <a href="ChangeLog">PycURL ChangeLog</a>.
 <h2>Download</h2>
 
 <p>
-<a href="download/pycurl-7.10.6.tar.gz">Download</a>
+<a href="download/pycurl-7.10.8.tar.gz">Download</a>
 PycURL sources version <?php echo "$version ($version_date)"; ?> or try
 the code from
 <a href="http://sourceforge.net/cvs/?group_id=28236">the CVS repository</a>.
@@ -137,7 +137,7 @@ at your own risk.
 
 Also, official PycURL packages are available for
 <ul>
-  <li><a href="http://packages.debian.org/python2.2-pycurl">Debian GNU/Linux</a></li>
+  <li><a href="http://packages.debian.org/python2.3-pycurl">Debian GNU/Linux</a></li>
   <li><a href="http://www.freebsd.org/cgi/ports.cgi?query=curl">FreeBSD</a></li>
   <li><a href="http://www.gentoo.org/dyn/pkgs/dev-python/pycurl.xml">Gentoo Linux</a></li>
   <li><a href="ftp://ftp.netbsd.org/pub/NetBSD/packages/pkgsrc/www/py-curl/README.html">NetBSD</a></li>
