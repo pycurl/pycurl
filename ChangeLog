@@ -1,3 +1,8 @@
+2001-06-29  Kjetil Jacobsen  <kjetilja>
+
+	* Updated INSTALL, curl version 7.8 or greater is now mandatory to
+	use pycurl.
+
 2001-06-13  Kjetil Jacobsen  <kjetilja>
 
 	* Set NOPROGRESS to 1 by default.
