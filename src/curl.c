@@ -16,13 +16,6 @@
  *
  */
 
-/*
-    TODO for the multi interface:
-    - add interface to the multi_read method, otherwise it's hard to use this
-      for anything
-    - how do we best interface with the fd_set stuff?
-*/
-
 #undef NDEBUG
 #include <assert.h>
 #include <stddef.h>
