@@ -1826,7 +1826,7 @@ statichere PyTypeObject CurlMulti_Type = {
 
 /*************************************************************************
 // module level
-// Note that the object constructors (do_curl_new, do_curl_multi_new)
+// Note that the object constructors (do_curl_new, do_multi_new)
 // are module-level functions as well.
 **************************************************************************/
 
