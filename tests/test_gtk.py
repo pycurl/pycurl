@@ -45,9 +45,8 @@ class Test(threading.Thread):
         self.curl.perform()
         self.curl.cleanup()        
 
-# Read list of URIs from file specified on commandline
+# Check command line args
 if len(sys.argv) < 2:
-    # No uri was specified, show usage string
     print "Usage: %s <URI>" % sys.argv[0]
     raise SystemExit
 
