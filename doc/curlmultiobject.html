@@ -35,8 +35,8 @@ explicitly.</p>
 This method  adds an existing and valid Curl object to the CurlMulti
 object.</p>
 
-<p>IMPORTANT NOTE: add_handle does not implicitly add a reference to
-the Curl object (and thus does not increase the reference count on the Curl
+<p>IMPORTANT NOTE: add_handle does not implicitly add a Python reference
+to the Curl object (and thus does not increase the reference count on the Curl
 object).</p>
 </dd>
 
@@ -47,8 +47,8 @@ object).</p>
 This method removes an existing and valud Curl object from the CurlMulti
 object.</p>
 
-<p>IMPORTANT NOTE: remove_handle does not implicitly remove a reference to
-the Curl object (and thus does not decrease the reference count on the Curl
+<p>IMPORTANT NOTE: remove_handle does not implicitly remove a Python reference
+from the Curl object (and thus does not decrease the reference count on the Curl
 object).</p>
 </dd>
 
