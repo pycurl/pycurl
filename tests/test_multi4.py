@@ -25,13 +25,9 @@ num_handles = m.perform()
 
 while num_handles:
 
-    if 0:
-        # XXX: this does not work for some reason, num_handles never goes 0
-        # if we call m.fdset()
-        r, w, e = m.fdset()
+    apply(select.select, m.fdset() + (1,))
     num_handles = m.perform()
-    print num_handles
-        
+
 m.remove_handle(c3)
 m.remove_handle(c2)
 m.remove_handle(c1)
