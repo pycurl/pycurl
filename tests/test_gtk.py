@@ -38,18 +38,26 @@ class Test(threading.Thread):
         self.curl.perform()
         self.curl.cleanup()        
 
+# Read list of URIs from file specified on commandline
+if len(sys.argv) < 2:
+    # No uri was specified, show usage string
+    print "Usage: %s <URI>" % sys.argv[0]
+    raise SystemExit
 
-win = GnomeApp('test', 'test')
+# Launch a gnome app with a statusbar
+win = GnomeApp('PycURL', 'PycURL')
 appbar = GnomeAppBar()
 appbar.show()
 appbar.set_status('Download status')
 win.set_statusbar(appbar)
 win.show()
 
+# Start thread for fetching url
 round = 0.0
 t = Test(sys.argv[1])
 t.start()
 
+# Start GTK mainloop
 threads_enter()
 mainloop()
 threads_leave()
