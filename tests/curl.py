@@ -1,23 +1,19 @@
 # $Id$
 
-## System modules
 try:
     from cStringIO import StringIO
 except ImportError:
     from StringIO import StringIO
 import urllib, mimetools
-
-## PycURL module
 import pycurl
 
 
 class Curl:
-
     def __init__(self, url, file=None, data=None):
         self.h = []
         self.status = None
         self.server_reply = StringIO()
-        self.c = pycurl.init()
+        self.c = pycurl.Curl()
         self.url = url
         self.data = data
         self.c.setopt(pycurl.URL, self.url)
@@ -70,7 +66,7 @@ class Curl:
         return m
 
     def close(self):
-        self.c.cleanup()
+        self.c.close()
         self.server_reply.close()
         self.fp.close()
 

@@ -8,10 +8,6 @@ try:
     from cStringIO import StringIO
 except ImportError:
     from StringIO import StringIO
-
-# update sys.path when running in the build directory
-from util import get_sys_path
-sys.path = get_sys_path()
 import pycurl
 
 
@@ -23,25 +19,26 @@ urls = (
 )
 
 # init
-m = pycurl.multi_init()
+m = pycurl.CurlMulti()
 m.handles = []
 for url in urls:
-    c = pycurl.init()
+    c = pycurl.Curl()
     # save info in standard Python attributes
     c.url = url
     c.body = StringIO()
+    c.http_code = -1
     c.debug = 0
     m.handles.append(c)
     # pycurl API calls
-    c.setopt(pycurl.URL, c.url)
-    c.setopt(pycurl.WRITEFUNCTION, c.body.write)
+    c.setopt(c.URL, c.url)
+    c.setopt(c.WRITEFUNCTION, c.body.write)
     m.add_handle(c)
 
 # debug - close a handle
 if 1:
     c = m.handles[3]
     c.debug = 1
-    c.cleanup()
+    c.close()
 
 # get data
 while 1:
@@ -56,7 +53,7 @@ while 1:
 for c in m.handles:
     # save info in standard Python attributes
     try:
-        c.http_code = c.getinfo(pycurl.HTTP_CODE)
+        c.http_code = c.getinfo(c.HTTP_CODE)
     except pycurl.error:
         # handle already closed - see debug above
         assert c.debug
@@ -64,16 +61,16 @@ for c in m.handles:
     # pycurl API calls
     if 0:
         m.remove_handle(c)
-        c.cleanup()
+        c.close()
     elif 0:
         # in the C API this is the wrong calling order, but pycurl
         # handles this automatically
-        c.cleanup()
+        c.close()
         m.remove_handle(c)
     else:
-        # actually, remove_handle is called automatically on cleanup
-        c.cleanup()
-m.cleanup()
+        # actually, remove_handle is called automatically on close
+        c.close()
+m.close()
 
 # print result
 for c in m.handles:

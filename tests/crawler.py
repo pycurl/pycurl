@@ -1,16 +1,10 @@
 # $Id$
 
-## System modules
-import sys
-import threading
-import Queue
-
-## PycURL module
+import sys, threading, Queue
 import pycurl
 
 
 class WorkerThread(threading.Thread):
-
     def __init__(self, iq):
         threading.Thread.__init__(self)
         self.iq = iq
@@ -22,7 +16,7 @@ class WorkerThread(threading.Thread):
             except:
                 break
             f = open(str(no), 'w')
-            self.curl = pycurl.init()
+            self.curl = pycurl.Curl()
             self.curl.setopt(pycurl.FOLLOWLOCATION, 1)
             self.curl.setopt(pycurl.MAXREDIRS, 5)
             self.curl.setopt(pycurl.URL, url)
@@ -32,7 +26,7 @@ class WorkerThread(threading.Thread):
             except:
                 pass
             f.close()
-            self.curl.cleanup()
+            self.curl.close()
             sys.stdout.write('.')
             sys.stdout.flush()
 

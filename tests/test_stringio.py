@@ -1,22 +1,22 @@
 # $Id$
 
 import sys
-import pycurl
 try:
     from cStringIO import StringIO
 except ImportError:
     from StringIO import StringIO
+import pycurl
 
 url = 'http://curl.haxx.se/dev/'
 
 print 'Testing', pycurl.version
 
 body = StringIO()
-c = pycurl.init()
-c.setopt(pycurl.URL, url)
-c.setopt(pycurl.WRITEFUNCTION, body.write)
+c = pycurl.Curl()
+c.setopt(c.URL, url)
+c.setopt(c.WRITEFUNCTION, body.write)
 c.perform()
-c.cleanup()
+c.close()
 
 contents = body.getvalue()
 print contents

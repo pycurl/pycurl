@@ -39,7 +39,7 @@ class Curl:
         self.body = StringIO()
         self.http_code = -1
         # pycurl API calls
-        self._curl = pycurl.init()
+        self._curl = pycurl.Curl()
         self._curl.setopt(pycurl.URL, self.url)
         self._curl.setopt(pycurl.WRITEFUNCTION, self.body.write)
 
@@ -48,7 +48,7 @@ class Curl:
 
     def close(self):
         self.http_code = self._curl.getinfo(pycurl.HTTP_CODE)
-        self._curl.cleanup()
+        self._curl.close()
 
 
 def print_result(items):
@@ -72,7 +72,7 @@ def test_multi():
 
     # init
     handles = []
-    m = pycurl.multi_init()
+    m = pycurl.CurlMulti()
     for i in range(NUM_PAGES):
         c = Curl(URL %i)
         m.add_handle(c._curl)
@@ -91,7 +91,7 @@ def test_multi():
     # close handles
     for c in handles:
         c.close()
-    m.cleanup()
+    m.close()
 
     clock4 = time.time()
     print "multi  interface:        %d pages: perform %5.2f secs, total %5.2f secs" % (NUM_PAGES, clock3 - clock2, clock4 - clock1)

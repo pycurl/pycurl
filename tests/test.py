@@ -1,19 +1,13 @@
 # $Id$
 
-## System modules
-import sys
-import threading
-import time
-
-## PycURL module
+import sys, threading, time
 import pycurl
 
 
 class Test(threading.Thread):
-
     def __init__(self, url, ofile):
         threading.Thread.__init__(self)
-        self.curl = pycurl.init()
+        self.curl = pycurl.Curl()
         self.curl.setopt(pycurl.URL, url)
         self.curl.setopt(pycurl.WRITEDATA, ofile)
         self.curl.setopt(pycurl.FOLLOWLOCATION, 1)
@@ -21,7 +15,7 @@ class Test(threading.Thread):
 
     def run(self):
         self.curl.perform()
-        self.curl.cleanup()
+        self.curl.close()
         sys.stdout.write('.')
         sys.stdout.flush()
 

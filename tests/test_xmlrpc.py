@@ -1,10 +1,8 @@
 # $Id$
 
-## PycURL module
-import pycurl
-
 ## XML-RPC lib included in python2.2
 import xmlrpclib
+import pycurl
 
 # Header fields passed in request
 xmlrpc_header = [
@@ -17,12 +15,12 @@ xmlrpc_template = """
 """
 
 # Engage
-c = pycurl.init()
-c.setopt(pycurl.URL, 'http://betty.userland.com/RPC2')
-c.setopt(pycurl.POST, 1)
-c.setopt(pycurl.HTTPHEADER, xmlrpc_header)
-c.setopt(pycurl.POSTFIELDS, xmlrpc_template % ("examples.getStateName", xmlrpclib.dumps((5,))))
+c = pycurl.Curl()
+c.setopt(c.URL, 'http://betty.userland.com/RPC2')
+c.setopt(c.POST, 1)
+c.setopt(c.HTTPHEADER, xmlrpc_header)
+c.setopt(c.POSTFIELDS, xmlrpc_template % ("examples.getStateName", xmlrpclib.dumps((5,))))
 
 print 'Response from http://betty.userland.com/'
 c.perform()
-c.cleanup()
+c.close()

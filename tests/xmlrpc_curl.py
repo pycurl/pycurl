@@ -11,7 +11,7 @@ class CURLTransport(xmlrpclib.Transport):
     xmlrpc_h = [ "User-Agent: PycURL XML-RPC", "Content-Type: text/xml" ]
 
     def __init__(self, username=None, password=None):
-        self.c = pycurl.init()
+        self.c = pycurl.Curl()
         self.c.setopt(pycurl.POST, 1)
         self.c.setopt(pycurl.HTTPHEADER, self.xmlrpc_h)
         if username != None and password != None:

@@ -21,8 +21,7 @@ enctype="multipart/form-data">
 import sys
 import pycurl
 
-
-class test:
+class Test:
     def __init__(self):
         self.contents = ''
 
@@ -42,13 +41,13 @@ file = "file=@C:\upload.gif"
 put_url = 'http://mywebsite.com/uploadfile/using/codeword/'
 
 t = test()
-c = pycurl.init()
+c = Curl()
 c.setopt(pycurl.URL, put_url)
 c.setopt(pycurl.WRITEFUNCTION, t.body_callback)
 c.setopt(pycurl.HTTPPOST, [token, file])
 
 c.perform()
-c.cleanup()
+c.close()
 
 print t.contents
 

@@ -1,11 +1,12 @@
 # $Id$
 
 import pycurl
-m = pycurl.multi_init()
-c1 = pycurl.init()
-c2 = pycurl.init()
-c1.setopt(pycurl.URL, 'http://curl.haxx.se')
-c2.setopt(pycurl.URL, 'http://python.org')
+
+m = pycurl.CurlMulti()
+c1 = pycurl.Curl()
+c2 = pycurl.Curl()
+c1.setopt(c1.URL, 'http://curl.haxx.se')
+c2.setopt(c2.URL, 'http://python.org')
 m.add_handle(c1)
 m.add_handle(c2)
 while 1:
@@ -14,6 +15,6 @@ while 1:
         break
 m.remove_handle(c2)
 m.remove_handle(c1)
-m.cleanup()
-c1.cleanup()
-c2.cleanup()
+m.close()
+c1.close()
+c2.close()

@@ -6,10 +6,6 @@ try:
     from cStringIO import StringIO
 except ImportError:
     from StringIO import StringIO
-
-# update sys.path when running in the build directory
-from util import get_sys_path
-sys.path = get_sys_path()
 import pycurl
 
 
@@ -29,17 +25,18 @@ except IndexError:
     pass
 
 # init
-m = pycurl.multi_init()
+m = pycurl.CurlMulti()
 m.handles = []
 for url in urls:
-    c = pycurl.init()
+    c = pycurl.Curl()
     # save info in standard Python attributes
     c.url = url
     c.body = StringIO()
+    c.http_code = -1
     m.handles.append(c)
     # pycurl API calls
-    c.setopt(pycurl.URL, c.url)
-    c.setopt(pycurl.WRITEFUNCTION, c.body.write)
+    c.setopt(c.URL, c.url)
+    c.setopt(c.WRITEFUNCTION, c.body.write)
     m.add_handle(c)
 
 # get data
@@ -54,11 +51,11 @@ while 1:
 # close handles
 for c in m.handles:
     # save info in standard Python attributes
-    c.http_code = c.getinfo(pycurl.HTTP_CODE)
+    c.http_code = c.getinfo(c.HTTP_CODE)
     # pycurl API calls
     m.remove_handle(c)
-    c.cleanup()
-m.cleanup()
+    c.close()
+m.close()
 
 # print result
 for c in m.handles:

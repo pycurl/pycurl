@@ -13,7 +13,7 @@ try:
     gc.enable()
 except ImportError:
     gc = None
-import os, sys
+import copy, os, sys
 from StringIO import StringIO
 try:
     import cPickle
@@ -24,10 +24,8 @@ try:
 except ImportError:
     pickle = None
 
-# update sys.path when running in the build directory
-from util import get_sys_path
-sys.path = get_sys_path()
 import pycurl
+from pycurl import Curl, CurlMulti
 
 
 class opts:
@@ -48,8 +46,8 @@ print "  %s, compiled %s" % (pycurl.__file__, pycurl.__COMPILE_DATE__)
 
 # remove an invalid handle: this should fail
 if 1:
-    m = pycurl.multi_init()
-    c = pycurl.init()
+    m = CurlMulti()
+    c = Curl()
     try:
         m.remove_handle(c)
     except pycurl.error:
@@ -61,32 +59,32 @@ if 1:
 
 # remove an invalid but closed handle
 if 1:
-    m = pycurl.multi_init()
-    c = pycurl.init()
-    c.cleanup()
+    m = CurlMulti()
+    c = Curl()
+    c.close()
     m.remove_handle(c)
     del m, c
 
 
 # add a closed handle: this should fail
 if 1:
-    m = pycurl.multi_init()
-    c = pycurl.init()
-    c.cleanup()
+    m = CurlMulti()
+    c = Curl()
+    c.close()
     try:
         m.add_handle(c)
     except pycurl.error:
         pass
     else:
         assert 0, "internal error"
-    m.cleanup()
+    m.close()
     del m, c
 
 
 # add a handle twice: this should fail
 if 1:
-    m = pycurl.multi_init()
-    c = pycurl.init()
+    m = CurlMulti()
+    c = Curl()
     m.add_handle(c)
     try:
         m.add_handle(c)
@@ -99,9 +97,9 @@ if 1:
 
 # add a handle on multiple stacks: this should fail
 if 1:
-    m1 = pycurl.multi_init()
-    m2 = pycurl.multi_init()
-    c = pycurl.init()
+    m1 = CurlMulti()
+    m2 = CurlMulti()
+    c = Curl()
     m1.add_handle(c)
     try:
         m2.add_handle(c)
@@ -114,9 +112,9 @@ if 1:
 
 # move a handle
 if 1:
-    m1 = pycurl.multi_init()
-    m2 = pycurl.multi_init()
-    c = pycurl.init()
+    m1 = CurlMulti()
+    m2 = CurlMulti()
+    c = Curl()
     m1.add_handle(c)
     m1.remove_handle(c)
     m2.add_handle(c)
@@ -124,13 +122,29 @@ if 1:
 
 
 # /***********************************************************************
-# // test pickling
+# // test copying and pickling - copying and pickling of
+# // instances of Curl and CurlMulti is not allowed
 # ************************************************************************/
 
-# pickling of instances of Curl and CurlMulti is not allowed
+if 1 and copy:
+    c = Curl()
+    m = CurlMulti()
+    try:
+        copy.copy(c)
+    except copy.Error:
+        pass
+    else:
+        assert 0, "internal error - copying should fail"
+    try:
+        copy.copy(m)
+    except copy.Error:
+        pass
+    else:
+        assert 0, "internal error - copying should fail"
+
 if 1 and pickle:
-    c = pycurl.init()
-    m = pycurl.multi_init()
+    c = Curl()
+    m = CurlMulti()
     fp = StringIO()
     p = pickle.Pickler(fp, 1)
     try:
@@ -148,8 +162,8 @@ if 1 and pickle:
     del c, m, fp, p
 
 if 1 and cPickle:
-    c = pycurl.init()
-    m = pycurl.multi_init()
+    c = Curl()
+    m = CurlMulti()
     fp = StringIO()
     p = cPickle.Pickler(fp, 1)
     try:
@@ -173,20 +187,19 @@ if 1 and cPickle:
 
 # basic check of reference counting (use a memory checker like valgrind)
 if 1:
-    c = pycurl.init()
-    m = pycurl.multi_init()
+    c = Curl()
+    m = CurlMulti()
     m.add_handle(c)
     del m
-    m = pycurl.multi_init()
-    c.cleanup()
+    m = CurlMulti()
+    c.close()
     del m, c
-
 
 # basic check of cyclic garbage collection
 if 1 and gc:
     gc.collect()
-    c = pycurl.init()
-    c.m = pycurl.multi_init()
+    c = Curl()
+    c.m = CurlMulti()
     c.m.add_handle(c)
     # create some nasty cyclic references
     c.c = c
@@ -194,6 +207,8 @@ if 1 and gc:
     c.c.c2 = c
     c.c.c3 = c.c
     c.c.c4 = c.m
+    c.m.c = c
+    c.m.m = c.m
     c.m.c = c
     # delete
     gc.collect()
@@ -207,7 +222,7 @@ if 1 and gc:
     if opts.verbose >= 1:
         print "Tracked objects:", len(gc.get_objects())
     # The `del' should delete these 4 objects:
-    #   CurlObject + internal dict, CurlMuliObject + internal dict
+    #   Curl + internal dict, CurlMulti + internal dict
     del c
     gc.collect()
     if opts.verbose >= 1:

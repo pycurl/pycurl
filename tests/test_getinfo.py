@@ -1,9 +1,8 @@
 # $Id$
 
 import time
-
-## PycURL module
 import pycurl
+
 
 ## Callback function invoked when progress information is updated
 def progress(download_t, download_d, upload_t, upload_d):
@@ -16,29 +15,29 @@ print 'Starting downloading', url
 print
 f = open('body', 'w')
 h = open('header', 'w')
-c = pycurl.init()
-c.setopt(pycurl.URL, url)
-c.setopt(pycurl.WRITEDATA, f)
-c.setopt(pycurl.NOPROGRESS, 0)
-c.setopt(pycurl.PROGRESSFUNCTION, progress)
-c.setopt(pycurl.FOLLOWLOCATION, 1)
-c.setopt(pycurl.MAXREDIRS, 5)
-c.setopt(pycurl.WRITEHEADER, h)
-c.setopt(pycurl.OPT_FILETIME, 1)
+c = pycurl.Curl()
+c.setopt(c.URL, url)
+c.setopt(c.WRITEDATA, f)
+c.setopt(c.NOPROGRESS, 0)
+c.setopt(c.PROGRESSFUNCTION, progress)
+c.setopt(c.FOLLOWLOCATION, 1)
+c.setopt(c.MAXREDIRS, 5)
+c.setopt(c.WRITEHEADER, h)
+c.setopt(c.OPT_FILETIME, 1)
 c.perform()
 
 print
-print 'Download speed: %f bytes/second' % c.getinfo(pycurl.SPEED_DOWNLOAD)
-print 'Document size: %d bytes' % c.getinfo(pycurl.SIZE_DOWNLOAD)
-print 'Effective URL:', c.getinfo(pycurl.EFFECTIVE_URL)
-print 'Content-type:', c.getinfo(pycurl.CONTENT_TYPE)
-print 'Redirect-time:', c.getinfo(pycurl.REDIRECT_TIME)
-print 'Redirect-count:', c.getinfo(pycurl.REDIRECT_COUNT)
-epoch = c.getinfo(pycurl.INFO_FILETIME)
+print 'Download speed: %.2f bytes/second' % c.getinfo(c.SPEED_DOWNLOAD)
+print 'Document size: %d bytes' % c.getinfo(c.SIZE_DOWNLOAD)
+print 'Effective URL:', c.getinfo(c.EFFECTIVE_URL)
+print 'Content-type:', c.getinfo(c.CONTENT_TYPE)
+print 'Redirect-time:', c.getinfo(c.REDIRECT_TIME)
+print 'Redirect-count:', c.getinfo(c.REDIRECT_COUNT)
+epoch = c.getinfo(c.INFO_FILETIME)
 print 'Filetime: %d (%s)' % (epoch, time.ctime(epoch))
 print
 print "Header is in file 'header', body is in file 'body'"
 
-c.cleanup()
+c.close()
 f.close()
 h.close()
