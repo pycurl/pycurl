@@ -15,6 +15,13 @@
  *
  * See file COPYING for license information.
  *
+ * Some quick info on Python's refcount:
+ *   Py_BuildValue          does incref the item(s)
+ *   PyArg_ParseTuple       does NOT incref the item
+ *   PyList_Append          does incref the item
+ *   PyTuple_SET_ITEM       does NOT incref the item
+ *   PyTuple_SetItem        does NOT incref the item
+ *   PyXXX_GetItem          returns a borrowed reference
  */
 
 #include <sys/types.h>
@@ -1546,30 +1553,20 @@ done:
 static PyObject *
 do_multi_fdset(CurlMultiObject *self, PyObject *args)
 {
-    CURLMcode res = -1;
-    int max_fd, fd;
-    PyObject *fdset_list = NULL, *read_list = NULL, *write_list = NULL,
-             *except_list = NULL, *py_fd = NULL;
+    CURLMcode res = CURLM_INTERNAL_ERROR;
+    int max_fd = -1, fd;
+    PyObject *ret = NULL;
+    PyObject *read_list = NULL, *write_list = NULL, *except_list = NULL;
+    PyObject *py_fd = NULL;
 
     /* Sanity checks */
     if (!PyArg_ParseTuple(args, ":fdset")) {
         return NULL;
     }
-
     if (self->multi_handle == NULL) {
         PyErr_SetString(ErrorObject, "cannot invoke fdset, no curl-multi handle");
         return NULL;
     }
-
-    /* Allocate lists */
-    if ((fdset_list = PyTuple_New(3)) == NULL) goto error;
-    if ((read_list = PyList_New(0)) == NULL) goto error;
-    if ((write_list = PyList_New(0)) == NULL) goto error;
-    if ((except_list = PyList_New(0)) == NULL) goto error;
-
-    if (PyTuple_SetItem(fdset_list, 0, read_list) == -1) goto error;
-    if (PyTuple_SetItem(fdset_list, 1, write_list) == -1) goto error;
-    if (PyTuple_SetItem(fdset_list, 2, except_list) == -1) goto error;
 
     /* Clear file descriptor sets */
     FD_ZERO(&self->read_fd_set);
@@ -1577,49 +1574,58 @@ do_multi_fdset(CurlMultiObject *self, PyObject *args)
     FD_ZERO(&self->exc_fd_set);
 
     /* Don't bother releasing the gil as this is just a data structure operation */
-    res = curl_multi_fdset(self->multi_handle, &self->read_fd_set, &self->write_fd_set,
-                           &self->exc_fd_set, &max_fd);
+    res = curl_multi_fdset(self->multi_handle, &self->read_fd_set, 
+                           &self->write_fd_set, &self->exc_fd_set, &max_fd);
+    if (res != CURLM_OK || max_fd < 0) {
+        CURLERROR_MSG("fdset failed due to internal errors");
+    }
 
-    /* We assume these errors are ok, otherwise throw exception */
-    if (res != CURLM_OK) goto error;
+    /* Allocate lists. */
+    if ((read_list = PyList_New(0)) == NULL) goto error;
+    if ((write_list = PyList_New(0)) == NULL) goto error;
+    if ((except_list = PyList_New(0)) == NULL) goto error;
 
     /* Populate lists */
     for (fd = 0; fd < max_fd + 1; fd++) {
         if (FD_ISSET(fd, &self->read_fd_set)) {
             if ((py_fd = PyInt_FromLong((long)fd)) == NULL) goto error;
-            if (PyList_Append(read_list, py_fd) == -1) goto error;
+            if (PyList_Append(read_list, py_fd) != 0) goto error;
+            Py_DECREF(py_fd);
+            py_fd = NULL;
         }
         if (FD_ISSET(fd, &self->write_fd_set)) {
             if ((py_fd = PyInt_FromLong((long)fd)) == NULL) goto error;
-            if (PyList_Append(write_list, py_fd) == -1) goto error;
+            if (PyList_Append(write_list, py_fd) != 0) goto error;
+            Py_DECREF(py_fd);
+            py_fd = NULL;
         }
         if (FD_ISSET(fd, &self->exc_fd_set)) {
             if ((py_fd = PyInt_FromLong((long)fd)) == NULL) goto error;
-            if (PyList_Append(except_list, py_fd) == -1) goto error;
+            if (PyList_Append(except_list, py_fd) != 0) goto error;
+            Py_DECREF(py_fd);
+            py_fd = NULL;
         }
     }
-    return fdset_list;
 
-    /* We reached this part of the code due to some error */
+    /* Return a tuple with the 3 lists */
+    ret = Py_BuildValue("(OOO)", read_list, write_list, except_list);
 error:
-    Py_XDECREF(py_fd);
-    Py_XDECREF(read_list);
-    Py_XDECREF(write_list);
     Py_XDECREF(except_list);
-    Py_XDECREF(fdset_list);
-
-    CURLERROR_MSG("fdset failed due to internal errors");
+    Py_XDECREF(write_list);
+    Py_XDECREF(read_list);
+    return ret;
 }
+
 
 /* --------------- info_read --------------- */
 
 static PyObject *
 do_multi_info_read(CurlMultiObject *self, PyObject *args)
 {
-    int in_queue, res, num_results;
+    PyObject *ret = NULL;
+    PyObject *ok_list = NULL, *err_list = NULL;
     CURLMsg *msg;
-    CurlObject *co;
-    PyObject *ok_list, *err_list;
+    int res, in_queue = 0, num_results = 0;
 
     /* Sanity checks */
     if (!PyArg_ParseTuple(args, "i:info_read", &num_results)) {
@@ -1637,75 +1643,65 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
     }
 
     ok_list = PyList_New(0);
-    if (ok_list == NULL) {
-        return NULL;
-    }
+    if (ok_list == NULL) goto error;
     err_list = PyList_New(0);
-    if (err_list == NULL) {
-        Py_DECREF(ok_list);
-        return NULL;
-    }
-    in_queue = 0;
+    if (err_list == NULL) goto error;
 
-    /* Loop through all messages until no more messages or num_results is 0 */
-    while (1) {
-        /* Try to read a message */
-        msg = curl_multi_info_read(self->multi_handle, &in_queue);
-        if (msg == NULL) {
-            break;
-        }
+    /* Loop through all messages */
+    while ((msg = curl_multi_info_read(self->multi_handle, &in_queue)) != NULL) {
+        CurlObject *co = NULL;
+
         /* Fetch the curl object that corresponds to the curl handle in the message */
-        co = NULL;
         res = curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, &co);
         if (res != CURLE_OK || co == NULL) {
-            Py_DECREF(ok_list);
             Py_DECREF(err_list);
+            Py_DECREF(ok_list);
             CURLERROR_MSG("Unable to fetch curl handle from curl object");
         }
-        assert(co != NULL);
         assert(co->ob_type == &Curl_Type);
         if (msg->data.result == CURLE_OK) {
             /* Append curl object to list of objects which succeeded */
-            if (PyList_Append(ok_list, (PyObject *)co) == -1) {
-                Py_DECREF(ok_list);
-                Py_DECREF(err_list);
-                return NULL;
+            if (PyList_Append(ok_list, (PyObject *)co) != 0) {
+                goto error;
             }
         }
         else {
+            /* Create a result tuple that will get added to err_list. */
+            PyObject *v;
+            v = Py_BuildValue("(isO)", msg->data.result, co->error, (PyObject *)co);
             /* Append curl object to list of objects which failed */
-            if (PyList_Append(err_list, Py_BuildValue("(isO)", msg->data.result,
-                                        co->error, (PyObject *)co)) == -1) {
-                Py_DECREF(ok_list);
-                Py_DECREF(err_list);
-                return NULL;
+            if (v == NULL || PyList_Append(err_list, v) != 0) {
+                Py_XDECREF(v);
+                goto error;
             }
+            Py_DECREF(v);
         }
-        /* Check for termination */
-        num_results--;
-        if (in_queue == 0 || num_results == 0) {
+        /* Check for termination as specified by the user */
+        if (--num_results == 0) {
             break;
         }
     }
-
-    /* Return (number of queued messages, [curl objects]) */
-    return Py_BuildValue("(iOO)", in_queue, ok_list, err_list);
+    /* Return (number of queued messages, [ok_objects], [error_objects]) */
+    ret = Py_BuildValue("(iOO)", in_queue, ok_list, err_list);
+error:
+    Py_XDECREF(err_list);
+    Py_XDECREF(ok_list);
+    return ret;
 }
+
 
 /* --------------- select --------------- */
 
 static PyObject *
 do_multi_select(CurlMultiObject *self, PyObject *args)
 {
-    int max_fd, n;
-    double timeout;
-    long seconds;
-    struct timeval tv, *tvp;
-    PyObject *tout = Py_None;
-    CURLMcode res = -1;
+    int max_fd = -1, n;
+    double timeout = 0.0;
+    struct timeval tv, *tvp = NULL;
+    CURLMcode res;
 
     /* Sanity checks */
-    if (!PyArg_ParseTuple(args, "O:select", &tout)) {
+    if (!PyArg_ParseTuple(args, "|d:select", &timeout)) {
         return NULL;
     }
 
@@ -1714,19 +1710,12 @@ do_multi_select(CurlMultiObject *self, PyObject *args)
         return NULL;
     }
 
-    if (tout == Py_None) {
-        tvp = (struct timeval *)0;
-    }
-    else if (!PyArg_Parse(tout, "d", &timeout)) {
-        PyErr_SetString(PyExc_TypeError, "timeout must be a float or None");
+   if (timeout < 0 || timeout >= 365 * 24 * 60 * 60) {
+        PyErr_SetString(PyExc_OverflowError, "invalid timeout period");
         return NULL;
-    }
-    else {
-        if (timeout > (double)LONG_MAX) {
-            PyErr_SetString(PyExc_OverflowError, "timeout period too long");
-            return NULL;
-        }
-        seconds = (long)timeout;
+   }
+   if (timeout >= 0.001) {
+        long seconds = (long)timeout;
         timeout = timeout - (double)seconds;
         tv.tv_sec = seconds;
         tv.tv_usec = (long)(timeout*1000000.0);
@@ -1739,7 +1728,7 @@ do_multi_select(CurlMultiObject *self, PyObject *args)
 
     res = curl_multi_fdset(self->multi_handle, &self->read_fd_set,
                            &self->write_fd_set, &self->exc_fd_set, &max_fd);
-    if (res != CURLM_OK) {
+    if (res != CURLM_OK) { // || max_fd < 0) {
         CURLERROR_MSG("multi_fdset failed");
     }
 
@@ -2148,13 +2137,11 @@ insint_c(PyObject *d, char *name, long value)
     insobj2(d, curlobject_constants, name, PyInt_FromLong(value));
 }
 
-#if 0
 static void
 insint_m(PyObject *d, char *name, long value)
 {
     insobj2(d, curlmultiobject_constants, name, PyInt_FromLong(value));
 }
-#endif
 
 
 /* Initialization function for the module */
@@ -2210,7 +2197,7 @@ initpycurl(void)
     /* CURLcode: error codes */
 /* FIXME: lots of error codes are missing */
     insint_c(d, "E_OK", CURLE_OK);
-    insint_c(d, "E_PROTOCOL", CURLE_UNSUPPORTED_PROTOCOL);
+    insint_c(d, "E_UNSUPPORTED_PROTOCOL", CURLE_UNSUPPORTED_PROTOCOL);
 
     /* curl_proxytype */
     insint_c(d, "PROXY_HTTP", CURLPROXY_HTTP);
@@ -2366,12 +2353,12 @@ initpycurl(void)
      **/
 
     /* CURLMcode: multi error codes */
-    insint(d, "E_CALL_MULTI_PERFORM", CURLM_CALL_MULTI_PERFORM);
-    insint(d, "E_MULTI_OK", CURLM_OK);
-    insint(d, "E_MULTI_BAD_HANDLE", CURLM_BAD_HANDLE);
-    insint(d, "E_MULTI_BAD_EASY_HANDLE", CURLM_BAD_EASY_HANDLE);
-    insint(d, "E_MULTI_OUT_OF_MEMORY", CURLM_OUT_OF_MEMORY);
-    insint(d, "E_MULTI_INTERNAL_ERROR", CURLM_INTERNAL_ERROR);
+    insint_m(d, "E_CALL_MULTI_PERFORM", CURLM_CALL_MULTI_PERFORM);
+    insint_m(d, "E_MULTI_OK", CURLM_OK);
+    insint_m(d, "E_MULTI_BAD_HANDLE", CURLM_BAD_HANDLE);
+    insint_m(d, "E_MULTI_BAD_EASY_HANDLE", CURLM_BAD_EASY_HANDLE);
+    insint_m(d, "E_MULTI_OUT_OF_MEMORY", CURLM_OUT_OF_MEMORY);
+    insint_m(d, "E_MULTI_INTERNAL_ERROR", CURLM_INTERNAL_ERROR);
 
     /* Check the version, as this has caused nasty problems in
      * some cases. */
