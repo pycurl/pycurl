@@ -10,6 +10,11 @@ except ImportError:
     from StringIO import StringIO
 import pycurl
 
+# We should ignore SIGPIPE when using pycurl.NOSIGNAL - see the libcurl
+# documentation `libcurl-the-guide' for more info.
+import signal
+signal.signal(signal.SIGPIPE, signal.SIG_IGN)
+
 
 #
 # FIXME FIXME FIXME - this is a very first version and
@@ -43,6 +48,7 @@ class Curl:
         self._curl = pycurl.Curl()
         self._curl.setopt(pycurl.URL, self.url)
         self._curl.setopt(pycurl.WRITEFUNCTION, self.body.write)
+        self._curl.setopt(pycurl.NOSIGNAL, 1)
 
     def perform(self):
         self._curl.perform()

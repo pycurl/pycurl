@@ -6,6 +6,11 @@ import sys, threading
 from gtk import *
 import pycurl
 
+# We should ignore SIGPIPE when using pycurl.NOSIGNAL - see the libcurl
+# documentation `libcurl-the-guide' for more info.
+import signal
+signal.signal(signal.SIGPIPE, signal.SIG_IGN)
+
 
 class ProgressBar:
     def __init__(self, uri):
@@ -61,6 +66,7 @@ class Test(threading.Thread):
         self.curl.setopt(pycurl.NOPROGRESS, 0)
         self.curl.setopt(pycurl.PROGRESSFUNCTION, self.progress)
         self.curl.setopt(pycurl.MAXREDIRS, 5)
+        self.curl.setopt(pycurl.NOSIGNAL, 1)
 
     def run(self):
         self.curl.perform()

@@ -5,6 +5,11 @@
 import sys, threading, time
 import pycurl
 
+# We should ignore SIGPIPE when using pycurl.NOSIGNAL - see the libcurl
+# documentation `libcurl-the-guide' for more info.
+import signal
+signal.signal(signal.SIGPIPE, signal.SIG_IGN)
+
 
 class Test(threading.Thread):
     def __init__(self, url, ofile):
@@ -14,6 +19,7 @@ class Test(threading.Thread):
         self.curl.setopt(pycurl.WRITEDATA, ofile)
         self.curl.setopt(pycurl.FOLLOWLOCATION, 1)
         self.curl.setopt(pycurl.MAXREDIRS, 5)
+        self.curl.setopt(pycurl.NOSIGNAL, 1)
 
     def run(self):
         self.curl.perform()
