@@ -1,3 +1,7 @@
+2001-06-13  Kjetil Jacobsen  <kjetilja>
+
+	* Set NOPROGRESS to 1 by default.
+
 2001-06-07  Kjetil Jacobsen  <kjetilja>
 
 	* Added global_init/cleanup.
