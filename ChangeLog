@@ -9,6 +9,7 @@ Version 7.10.4.3 [requires libcurl-7.10.3 or better]
 	* Added new method Curl.errstr() which returns the internal
 	libcurl error buffer string of the handle.
 
+
 Version 7.10.4.2 [requires libcurl-7.10.3 or better]
 
 2003-04-15  Markus F.X.J. Oberhumer <mfx>
@@ -17,6 +18,7 @@ Version 7.10.4.2 [requires libcurl-7.10.3 or better]
         recent Linux distributions (e.g. Mandrake 9.1) ship with 7.10.3,
         and apart from the new CURLOPT_UNRESTRICTED_AUTH option there is
         no need that we require libcurl-7.10.4.
+
 
 Version 7.10.4
 
@@ -40,6 +42,7 @@ Version 7.10.4
         is a tuple with (curl object, error number, error message).
         This addition makes it simpler to do error checking of individual
         curl objects when using the multi interface.
+
 
 Version 7.10.3
 
@@ -71,6 +74,7 @@ Version 7.10.3
 
         * Added new method CurlMulti.info_read().
 
+
 Version 7.10.2
 
 2002-11-14  Kjetil Jacobsen <kjetilja>
@@ -91,12 +95,14 @@ Version 7.10.2
         * API CHANGE: For integral values, Curl.getinfo() now returns a
         Python-int instead of a Python-long.
 
+
 Version 7.10.1
 
 2002-10-03  Markus F.X.J. Oberhumer <mfx>
 
         * Added new module-level function version_info() from
         libcurl-7.10.
+
 
 Version 7.10
 
@@ -108,6 +114,7 @@ Version 7.10
 
         * Added CURLOPT_ENCODING, CURLOPT_NOSIGNAL and CURLOPT_BUFFERSIZE
         from libcurl-7.10 (by Markus Oberhumer).
+
 
 Version 7.9.8.4
 
@@ -153,6 +160,7 @@ Version 7.9.8.4
 
         All changes are fully backward-compatible.
 
+
 Version 7.9.8.3
 
 2002-07-16  Markus F.X.J. Oberhumer <mfx>
@@ -160,6 +168,7 @@ Version 7.9.8.3
         * Under Python 2.2 or better, Curl and CurlMulti objects now
         automatically participate in cyclic garbarge collection
         (using the gc module).
+
 
 Version 7.9.8.2
 
@@ -171,6 +180,7 @@ Version 7.9.8.2
 2002-07-02  Kjetil Jacobsen  <kjetilja>
 
         * Added support for the multi-interface.
+
 
 Version 7.9.8.1
 
@@ -190,6 +200,7 @@ Version 7.9.8.1
         * Added example code on how to upload a file using HTTPPOST in
         pycurl (code by Amit Mongia <amit_mongia@hotmail.com>).  See the
         file 'test_fileupload.py' for details.
+
 
 Version 7.9.8
 
@@ -229,6 +240,7 @@ Version 7.9.8
         INFO_FILETIME for getinfo().  See example usage in
         'test_getinfo.py' for details.
 
+
 Version 7.9.7
 
 2002-05-20  Kjetil Jacobsen  <kjetilja>
@@ -236,6 +248,7 @@ Version 7.9.7
         * New versioning scheme.  Pycurl now has the same version number
         as the libcurl version it was built with.  The pycurl version
         number thus indicates which version of libcurl is required to run.
+
 
 Version 0.4.10 (Not released)
 
@@ -247,6 +260,7 @@ Version 0.4.10 (Not released)
 
         * Fixed potential memory leak and thread race (by Markus
         Oberhumer)
+
 
 Version 0.4.9
 
@@ -273,6 +287,7 @@ Version 0.4.9
         * Added the 'test_post.py' file which demonstrates the use of
         POST requests.
 
+
 Version 0.4.8
 
 2002-03-07  Kjetil Jacobsen  <kjetilja>
@@ -286,6 +301,7 @@ Version 0.4.8
 2002-03-05  Kjetil Jacobsen  <kjetilja>
 
         * Do not allow WRITEFUNCTION and WRITEHEADER on the same handle.
+
 
 Version 0.4.7
 
