@@ -4,13 +4,16 @@ If you want to hack on pycurl, here's our list of unresolved issues:
 
     * Use curl_formadd() instead of the deprecated curl_formparse().
 
+    * Add support for new libcurl 7.10.7 features.
+
     * Add support for CURLOPT_SSL_CTX_FUNCTION and CURLOPT_SSL_CTX_DATA
       (can we do this without having to wrap the ssl-context structure?).
 
     * The current curl HLI only works on Python 2.2 or better. Either
       fix this, or change the docs and setup.py accordingly.
 
-    * Add more options to Curl.unsetopt(). Have to carefully check
-      the libcurl source code for each option we want to support.
-
     * Add docs to the high-level interface.
+
+    * Add more options to the undocumented and currently mostly useless
+      Curl.unsetopt() method. Have to carefully check the libcurl source
+      code for each option we want to support.
