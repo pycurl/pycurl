@@ -3,23 +3,22 @@
 ## System modules
 import sys, threading
 
-## GNOME/Gtk modules
+## Gtk modules
 from gtk import *
-from gnome.ui import *
 
 ## PycURL module
 import pycurl
 
 
 def progress(download_t, download_d, upload_t, upload_d):
-    global round, appbar
+    global round, pbar
     if download_t == 0:
-        appbar.get_progress().set_activity_mode(1)
+        pbar.set_activity_mode(1)
         round = round + 0.1
     else:
-        appbar.get_progress().set_activity_mode(0)
+        pbar.set_activity_mode(0)
         round = float(download_d) / float(download_t)
-    appbar.set_progress(round)
+    pbar.update(round)
     return 0 # Anything else indicates an error
 
 
@@ -44,13 +43,22 @@ if len(sys.argv) < 2:
     print "Usage: %s <URI>" % sys.argv[0]
     raise SystemExit
 
-# Launch a gnome app with a statusbar
-win = GnomeApp('PycURL', 'PycURL')
-appbar = GnomeAppBar()
-appbar.show()
-appbar.set_status('Download status')
-win.set_statusbar(appbar)
+# Launch a window with a statusbar
+win = GtkDialog()
+win.set_title("PycURL progress")
 win.show()
+vbox = GtkVBox(spacing=5)
+vbox.set_border_width(10)
+win.vbox.pack_start(vbox)
+vbox.show()
+label = GtkLabel("Download progress")
+label.set_alignment(0, 0.5)
+vbox.pack_start(label, expand=FALSE)
+label.show()
+pbar = GtkProgressBar()
+pbar.set_usize(200, 20)
+vbox.pack_start(pbar)
+pbar.show()
 
 # Start thread for fetching url
 round = 0.0
