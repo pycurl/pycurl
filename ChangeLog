@@ -4,7 +4,7 @@ Version 7.10.x [requires libcurl-7.10.3 or better]
 2003-06-10  Markus F.X.J. Oberhumer <mfx>
 
         * Added support for CURLOPT_HTTPAUTH (libcurl-7.10.6), including
-          the new HTTPAUTH_BASIC, HTTPAUTH_DIGEST, HTTPAUTH_NEGOTIATE
+          the new HTTPAUTH_BASIC, HTTPAUTH_DIGEST, HTTPAUTH_GSSNEGOTIATE
           and HTTPAUTH_NTML constants.
 
         * Some existing constants were renamed for consistency:
