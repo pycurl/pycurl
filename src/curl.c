@@ -66,7 +66,7 @@ typedef struct {
     CURL *handle;
     PyThreadState *state;
     CurlMultiObject *multi_stack;   /* refcounted Python object */
-    struct HttpPost *httppost;
+    struct curl_httppost *httppost;
     struct curl_slist *httpheader;
     struct curl_slist *quote;
     struct curl_slist *postquote;
@@ -726,15 +726,12 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     char *stringdata;
     long longdata;
     char *buf;
-    PyObject *obj, *listitem;
+    PyObject *obj;
     FILE *fp;
     int res = -1;
-    struct curl_slist **slist;
-    struct curl_slist *nlist;
     int len;
     char *str;
     int i;
-    struct HttpPost *last;
 
     /* Check that we have a valid curl handle for the object */
     if (self->handle == NULL) {
@@ -875,6 +872,8 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
     /* Handle the case of list objects */
     if (PyArg_ParseTuple(args, "iO!:setopt", &option, &PyList_Type, &obj)) {
+        struct curl_slist **slist = NULL;
+
         switch (option) {
         case CURLOPT_HTTPHEADER:
             slist = &self->httpheader;
@@ -906,13 +905,14 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
         /* Handle HTTPPOST different since we construct a HttpPost form struct */
         if (option == CURLOPT_HTTPPOST) {
+            struct curl_httppost *last = NULL;
+
             /* Free previously allocated httppost */
             curl_formfree(self->httppost);
             self->httppost = NULL;
 
-            last = NULL;
             for (i = 0; i < len; i++) {
-                listitem = PyList_GetItem(obj, i);
+                PyObject *listitem = PyList_GetItem(obj, i);
                 if (!PyString_Check(listitem)) {
                     curl_formfree(self->httppost);
                     self->httppost = NULL;
@@ -947,7 +947,9 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
         /* Handle regular list operations on the other options */
         for (i = 0; i < len; i++) {
-            listitem = PyList_GetItem(obj, i);
+            PyObject *listitem = PyList_GetItem(obj, i);
+            struct curl_slist *nlist;
+
             if (!PyString_Check(listitem)) {
                 curl_slist_free_all(*slist);
                 *slist = NULL;
