@@ -14,7 +14,8 @@ history = []
 # links for 'forward'
 forward = []
 # number of concurrent connections to the web-server
-NUM_THREADS = 1
+NUM_THREADS = 4
+
 
 def about(button):
 	GnomeAbout('GtkHTML Test with PycURL', '0.0',
@@ -24,55 +25,69 @@ def about(button):
                     'GtkHTML widget with python and PycURL.')).show()
 
 class WorkerThread(threading.Thread):
-	def __init__(self, queue):
+	def __init__(self, queue, render):
 		threading.Thread.__init__(self)
 		self.queue = queue
+		self.render = render
 		
 	def run(self):
 		while 1:
-			url, html, handle = self.queue.get()
+			url, handle = self.queue.get()
 			if url == None:
-				break
+				raise SystemExit
 			b = cStringIO.StringIO()
 			curl = pycurl.Curl()
 			curl.setopt(pycurl.WRITEFUNCTION, b.write)
 			curl.setopt(pycurl.FOLLOWLOCATION, 1)
 			curl.setopt(pycurl.MAXREDIRS, 5)
 			curl.setopt(pycurl.URL, url)
-			curl.perform()
+			try:
+				curl.perform()
+			except:
+				print 'Error retrieving', url
 			curl.close()
-			threads_enter()
-			html.write(handle, b.getvalue())
-			html.end(handle, HTML_STREAM_OK)
-			threads_leave()
-			
+			self.render.append((b, handle))
+
 
 class HtmlWindow(GtkHTML):
 	def __init__(self):
 		GtkHTML.__init__(self)
 		self.queue = Queue.Queue()
+		self.render = []
 		self.threads = []
 		for num_threads in range(NUM_THREADS):
-			t = WorkerThread(self.queue)
+			t = WorkerThread(self.queue, self.render)
 			t.start()
 			self.threads.append(t)
 
 	def mainquit(self, *args):
 		for t in self.threads:
-			t.queue.put((None, None, None))
-			t.join()
+			t.queue.put((None, None))
 		mainquit()
 		
 	def load_url(self, html, url):
+		self.num_obj = 0
 		if history: url = urllib.basejoin(history[-1], url)
 		history.append(url)
+
+		html.load_empty()
 		handle = html.begin()
 		self.request_url(html, url, handle)
+		while self.num_obj > 0:
+			if len(self.render) == 0:
+				mainiteration(0)
+				continue
+			self.num_obj -= 1
+			buf, handle = self.render.pop(0)
+			html.write(handle, buf.getvalue())
+			html.end(handle, HTML_STREAM_OK)
+			buf.close()
 
 	def request_url(self, html, url, handle):
 		url = urllib.basejoin(history[-1], url)
 		print "Requesting URL: ", url
-		self.queue.put((url, html, handle))
+		self.queue.put((url, handle))
+		self.num_obj += 1
 
 	def entry_activate(self, entry, html):
 		url = entry.get_text()
@@ -96,11 +111,12 @@ class HtmlWindow(GtkHTML):
 		url = history[-1]
 		del history[-1]
 		self.load_url(html, url)
+	
 
 html = HtmlWindow()
 
 file_menu = [
-	UIINFO_ITEM_STOCK('Quit', None, mainquit, STOCK_MENU_QUIT),
+	UIINFO_ITEM_STOCK('Quit', None, html.mainquit, STOCK_MENU_QUIT),
 ]
 help_menu = [
 	UIINFO_ITEM_STOCK('About...', None, about, STOCK_MENU_ABOUT),
@@ -131,7 +147,6 @@ win.set_contents(vbox)
 entry = GtkEntry()
 html.connect('url_requested', html.request_url)
 html.connect('link_clicked', html.load_url)
-
 entry.connect('activate', html.entry_activate, html)
 vbox.pack_start(entry, expand=FALSE)
 entry.show()
