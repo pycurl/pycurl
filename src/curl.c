@@ -889,7 +889,7 @@ do_init(PyObject *arg)
 
     /* Set error buffer */
     res = curl_easy_setopt(self->handle, CURLOPT_ERRORBUFFER, self->error);
-    if (res != 0)
+    if (res != CURLE_OK)
         goto error;
     memset(self->error, 0, sizeof(char) * CURL_ERROR_SIZE);
     
@@ -898,12 +898,12 @@ do_init(PyObject *arg)
 
     /* Enable NOPROGRESS by default */
     res = curl_easy_setopt(self->handle, CURLOPT_NOPROGRESS, 1);
-    if (res != 0)
+    if (res != CURLE_OK)
         goto error;
 
     /* Disable VERBOSE by default */
     res = curl_easy_setopt(self->handle, CURLOPT_VERBOSE, 0);
-    if (res != 0)
+    if (res != CURLE_OK)
         goto error;
 
     /* Success - return new object */
