@@ -12,23 +12,37 @@ PROGRESSFUNCTION, PASSWDFUNCTION or DEBUGFUNCTION. These options
 correspond to the libcurl options with CURLOPT_* prefix removed.  A
 callback in pycurl must be either a regular Python function, a class
 method or an extension type function.<br>
-<br>
+
+<p>
+There are some limitations to some of the options which can be used
+concurrently with the pycurl callbacks compared to the libcurl
+callbacks.  This is to allow different callback functions to be
+associated with different Curl objects.  More specifically,
+WRITEFUNCTION cannot be used with WRITEDATA, READFUNCTION cannot be
+used with READDATA, HEADERFUNCTION cannot be used with WRITEHEADER,
+PROGRESSFUNCTION cannot be used with PROGRESSDATA, PASSWDFUNCTION
+cannot be used with PASSWDDATA and DEBUGFUNCTION cannot be used with
+DEBUGDATA.  In practice, these limitations can be overcome by having a
+callback function be a class member function and rather use the class
+attributes to store per object data used in the callbacks.
+</p>
+
 The signature of each callback used in pycurl is as follows:<br>
 <br>
-<b>WRITEFUNCTION(</b><i>string</i><b>) </b><i>-&gt; number of bytes written<br>
+<b>WRITEFUNCTION(</b><i>string</i><b>) </b><i>-&gt; number of characters written<br>
 </i>
 <br>
-<b>READFUNCTION(</b><i>number of bytes to read</i><b>)<i> </i></b><i>-&gt;
+<b>READFUNCTION(</b><i>number of characters to read</i><b>)<i> </i></b><i>-&gt;
 string</i><br>
 <br>
-<b>HEADERFUNCTION(</b><i>string</i><b>)</b><i> -&gt; number of bytes written<br>
+<b>HEADERFUNCTION(</b><i>string</i><b>)</b><i> -&gt; number of characters written<br>
 </i><br>
 <b>PROGRESSFUNCTION(</b><i>download total, downloaded, upload total, uploaded</i><b>) </b><i>-&gt; status</i><br>
 <br>
-<b>PASSWDFUNCTION(</b><i>prompt string, max number of bytes to read</i><b>)</b>
+<b>PASSWDFUNCTION(</b><i>prompt string, max number of characters to read</i><b>)</b>
 <i>-&gt; string</i><br>
 <br>
-<b>DEBUGFUNCTION(</b><i>debug message type, debug message</i><b>)</b>
+<b>DEBUGFUNCTION(</b><i>debug message type, debug message string</i><b>)</b>
 <i>-&gt; None<br></i>
 <br>
 <hr>
@@ -43,16 +57,16 @@ None implies that all bytes where written.
     ## Callback function invoked when body data is ready
     def body(buf):
         # Print body data to stdout
-	import sys
+        import sys
         sys.stdout.write(buf)
-	# Returning None implies that all bytes were written
+        # Returning None implies that all bytes were written
 
     ## Callback function invoked when header data is ready
     def header(buf):
         # Print header data to stderr
-	import sys
+        import sys
         sys.stderr.write(buf)
-	# Returning None implies that all bytes were written
+        # Returning None implies that all bytes were written
 
     c = pycurl.Curl()
     c.setopt(pycurl.URL, 'http://www.python.org/')
