@@ -372,7 +372,6 @@ do_perform(CurlObject *self, PyObject *args)
     }
 
     /* Save handle to current thread (used to run the callbacks in) */
-    PyEval_InitThreads();
     self->state = PyThreadState_New(PyThreadState_Get()->interp);
 
     /* Release global lock and start */
@@ -547,6 +546,10 @@ do_init(PyObject *arg)
     self->postquote = NULL;
     self->httppost = NULL;
     self->w_cb = NULL;
+
+    /* Initialize global interpreter lock */
+    PyEval_InitThreads();
+
     return self;
 }
 
