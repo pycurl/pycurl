@@ -51,3 +51,7 @@ c3.body.close()
 c1.close()
 c2.close()
 c3.close()
+print 'http://www.python.org is in file doc1'
+print 'http://curl.haxx.se is in file doc2'
+print 'http://slashdot.org is in file doc3'
+
