@@ -47,7 +47,7 @@ collection for NetBSD.
 </p>
 
 <p>
-You can get older versions as well as prebuilt win32 modules from the <a href="download/?M=D">download area</a>.
+You can get older versions as well as prebuilt Win32 modules from the <a href="download/?M=D">download area</a>.
 </p>
 
 <p>
