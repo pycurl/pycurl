@@ -9,14 +9,14 @@ from gtkhtml import *
 import cStringIO, threading, Queue, time
 import pycurl
 
-# url history
+# URL history
 history = []
-# links for 'forward'
+# Links for 'forward'
 forward = []
-# number of concurrent connections to the web-server
+# Number of concurrent connections to the web-server
 NUM_THREADS = 4
 
-
+# About
 def about(button):
     GnomeAbout('GtkHTML Test with PycURL', '',
                 'License GPL2',
@@ -37,12 +37,14 @@ internal_error = """
 </html>
 """
 
+
+# Worker threads downloads objects and passes them to the renderer
 class WorkerThread(threading.Thread):
 
     def __init__(self, queue, render):
         threading.Thread.__init__(self)
-        self.queue = queue      # download request queue
-        self.render = render    # render output queue
+        self.queue = queue      # Download request queue
+        self.render = render    # Render output queue
 
     def run(self):
         curl = pycurl.Curl()
@@ -72,6 +74,7 @@ class WorkerThread(threading.Thread):
             self.render.append((b, handle))
 
 
+# Main rendering window, handles gtk events and sends requests to worker threads
 class HtmlWindow(GtkHTML):
 
     def __init__(self):
@@ -85,6 +88,7 @@ class HtmlWindow(GtkHTML):
             self.threads.append(t)
 
     def mainquit(self, *args):
+        # Send a 'terminate' message to the worker threads
         for t in self.threads:
             t.queue.put((None, None))
         mainquit()
@@ -97,6 +101,7 @@ class HtmlWindow(GtkHTML):
         html.load_empty()
         handle = html.begin()
         self.request_url(html, url, handle)
+        # Render incoming objects
         while self.num_obj > 0:
             if len(self.render) == 0:
                 mainiteration(0)
@@ -144,7 +149,6 @@ class HtmlWindow(GtkHTML):
         self.load_url(html, url)
 
 
-html = HtmlWindow()
 
 file_menu = [
     UIINFO_ITEM_STOCK('Quit', None, html.mainquit, STOCK_MENU_QUIT),
@@ -163,6 +167,9 @@ toolbar = [
     UIINFO_ITEM_STOCK('Reload', 'Reload current page', html.do_reload, STOCK_PIXMAP_REFRESH)
 ]
 
+
+# Setup windows and menus
+html = HtmlWindow()
 
 win = GnomeApp("html_demo", "Python GtkHTML Test")
 win.set_wmclass("gtk_html_test", "GtkHTMLTest")
