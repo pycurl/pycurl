@@ -5,7 +5,7 @@
 
 """Setup script for the PycURL module distribution."""
 
-VERSION = "7.10"
+VERSION = "7.10.2"
 
 import os, sys, string
 import distutils
@@ -31,18 +31,22 @@ if sys.platform == "win32":
     args = sys.argv[:]
     for arg in args:
         if string.find(arg, '--curl-dir=') == 0:
-            CURL_DIR = string.split(arg, '=')[1]
+            CURL_DIR = arg[11:]
+            assert CURL_DIR, arg
             sys.argv.remove(arg)
     print 'Using curl directory:', CURL_DIR
     include_dirs.append(os.path.join(CURL_DIR, "include"))
     extra_objects.append(os.path.join(CURL_DIR, "lib", "libcurl.lib"))
+    assert os.path.isdir(CURL_DIR), "please check CURL_DIR in setup.py"
+    assert os.path.isfile(extra_objects[-1]), "please check CURL_DIR in setup.py"
 else:
     # Find out the rest the hard way
     args = sys.argv[:]
     CURL_CONFIG = 'curl-config'
     for arg in args:
         if string.find(arg, '--curl-config=') == 0:
-            CURL_CONFIG = string.split(arg, '=')[1]
+            CURL_CONFIG = arg[14:]
+            assert CURL_CONFIG, arg
             sys.argv.remove(arg)
     d = os.popen("%s --version" % CURL_CONFIG).read()
     if not string.strip(d):

@@ -1870,12 +1870,68 @@ do_global_cleanup(PyObject *dummy, PyObject *args)
 }
 
 
+
+static PyObject *vi_str(const char *s)
+{
+    if (s == NULL)
+        s = "";
+    while (*s == ' ')
+        s++;
+    return PyString_FromString(s);
+}
+
+static PyObject *
+do_version_info(PyObject *dummy, PyObject *args)
+{
+    const curl_version_info_data *vi;
+    PyObject *t;
+    PyObject *protocols;
+    int i;
+
+    UNUSED(dummy);
+    if (!PyArg_ParseTuple(args, ":version_info")) {
+        return NULL;
+    }
+    vi = curl_version_info(CURLVERSION_NOW);
+    if (vi == NULL) {
+        PyErr_SetString(ErrorObject, "unable to get version info");
+        return NULL;
+    }
+
+    for (i = 0; vi->protocols[i] != NULL; )
+        i++;
+    protocols = PyTuple_New(i);
+    if (protocols == NULL)
+        return NULL;
+    for (i = 0; vi->protocols[i] != NULL; i++) {
+        PyTuple_SET_ITEM(protocols, i, vi_str(vi->protocols[i]));
+    }
+
+    t = PyTuple_New(9);
+    if (t == NULL)
+        return NULL;
+    PyTuple_SET_ITEM(t, 0, PyInt_FromLong((long) vi->age));
+    PyTuple_SET_ITEM(t, 1, vi_str(vi->version));
+    PyTuple_SET_ITEM(t, 2, PyInt_FromLong((long) vi->version_num));
+    PyTuple_SET_ITEM(t, 3, vi_str(vi->host));
+    PyTuple_SET_ITEM(t, 4, PyInt_FromLong(vi->features));
+    PyTuple_SET_ITEM(t, 5, vi_str(vi->ssl_version));
+    PyTuple_SET_ITEM(t, 6, PyInt_FromLong(vi->ssl_version_num));
+    PyTuple_SET_ITEM(t, 7, vi_str(vi->libz_version));
+    PyTuple_SET_ITEM(t, 8, protocols);
+    return t;
+}
+
+
 /* Per function docstrings */
 static char pycurl_global_init_doc [] =
 "global_init(option) -> None.  Initialize curl environment.\n";
 
 static char pycurl_global_cleanup_doc [] =
 "global_cleanup() -> None.  Cleanup curl environment.\n";
+
+static char pycurl_version_info_doc [] =
+"version_info() -> tuple.  Returns a 9-tuple with the version info.\n";
 
 static char pycurl_curl_new_doc [] =
 "Curl() -> New curl object.  Implicitly calls global_init() if not called.\n";
@@ -1892,6 +1948,7 @@ static char pycurl_multi_init_doc [] =
 static PyMethodDef curl_methods[] = {
     {"global_init", (PyCFunction)do_global_init, METH_VARARGS, pycurl_global_init_doc},
     {"global_cleanup", (PyCFunction)do_global_cleanup, METH_VARARGS, pycurl_global_cleanup_doc},
+    {"version_info", (PyCFunction)do_version_info, METH_VARARGS, pycurl_version_info_doc},
     {"Curl", (PyCFunction)do_curl_new, METH_VARARGS, pycurl_curl_new_doc},
     {"init", (PyCFunction)do_curl_new, METH_VARARGS, pycurl_curl_init_doc},
     {"CurlMulti", (PyCFunction)do_multi_new, METH_VARARGS, pycurl_multi_new_doc},
@@ -1920,7 +1977,7 @@ insobj2(PyObject *dict1, PyObject *dict2, char *name, PyObject *value)
 {
     /* Insert an object into one or two dicts. Eats a reference to value.
      * See also the implementation of PyDict_SetItemString(). */
-    PyObject *key;
+    PyObject *key = NULL;
 
     if (dict1 == NULL && dict2 == NULL)
         goto error;

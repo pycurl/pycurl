@@ -42,6 +42,7 @@ if "-q" in sys.argv:
 
 print "Python", sys.version
 print "pycURL", pycurl.version
+print "pycURL version info", pycurl.version_info()
 print "  %s, compiled %s" % (pycurl.__file__, pycurl.__COMPILE_DATE__)
 
 
