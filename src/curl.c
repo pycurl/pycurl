@@ -128,7 +128,7 @@ static PyTypeObject *p_CurlMulti_Type;
 } while (0)
 
 
-/* safe XDECREF for object states */
+/* safe XDECREF for object states that handles nested deallocations */
 #define ZAP(v) { \
     PyObject *tmp = (PyObject *)(v); \
     (v) = NULL; \
@@ -929,9 +929,6 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     int option, opt_masked;
     PyObject *obj;
     int res;
-    int len;
-    char *str;
-    int i;
 
     /* Check that we have a valid curl handle for the object */
     if (self->handle == NULL) {
@@ -1085,6 +1082,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     /* Handle the case of list objects */
     if (PyList_Check(obj)) {
         struct curl_slist **slist = NULL;
+        int i, len;
 
         switch (option) {
         case CURLOPT_HTTP200ALIASES:
@@ -1121,6 +1119,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         /* Handle HTTPPOST different since we construct a HttpPost form struct */
         if (option == CURLOPT_HTTPPOST) {
             struct curl_httppost *last = NULL;
+            char *str;
 
             /* Free previously allocated httppost */
             curl_formfree(self->httppost);
@@ -1164,6 +1163,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         for (i = 0; i < len; i++) {
             PyObject *listitem = PyList_GetItem(obj, i);
             struct curl_slist *nlist;
+            char *str;
 
             if (!PyString_Check(listitem)) {
                 curl_slist_free_all(*slist);
