@@ -1,6 +1,8 @@
 # $Id$
 
-* Documentation (this is actually starting to get critical)
-* Once set, callbacks cannot be subsequently disabled for a given handle
-* The multi interface is not supported, should make something that
-  peacefully co-exists with the select module
+If you want to hack on pycurl, here's our list of unresolved issues:
+
+    * Documentation (this is actually starting to get critical)
+    * Once set, callbacks cannot be subsequently disabled for a given handle
+    * The multi interface is not supported, should make something that
+      peacefully co-exists with the select module
