@@ -1,5 +1,11 @@
+
 Version 7.10.9 [requires libcurl-7.10.3 or better]
 --------------
+
+2004-01-13  Kjetil Jacobsen  <kjetilja>
+
+	* Disable GC tracking by default since this is causing
+	segmentation faults due to asserts in Python.
 
 2003-11-16  Markus F.X.J. Oberhumer <mfx>
 
