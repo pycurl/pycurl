@@ -7,7 +7,7 @@
 #
 
 try:
-    # need Python 2.2 or better
+    # need Python 2.2 or better for garbage collection
     from gc import get_objects
     import gc
     del get_objects
@@ -236,7 +236,7 @@ if 1 and gc:
     ##print gc.get_objects()
     if opts.verbose >= 1:
         print "Tracked objects:", len(gc.get_objects())
-    # The `del' should delete these 4 objects:
+    # The `del' below should delete these 4 objects:
     #   Curl + internal dict, CurlMulti + internal dict
     del c
     gc.collect()

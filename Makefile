@@ -36,4 +36,3 @@ windist: distclean
 .PHONY: all build test install install_lib clean distclean maintainer-clean dist sdist windist
 
 .NOEXPORT:
-
