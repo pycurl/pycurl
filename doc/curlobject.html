@@ -45,17 +45,19 @@ print b.getvalue()
   <b>getinfo(</b><i>option</i><b>) </b>-&gt; <i>Result</i>
 <blockquote> Corresponds to <b>curl_easy_getinfo</b> in libcurl, where <i>option</i>
 is the same as the CURLINFO_* constants in libcurl, except that the CURLINFO_
-prefix has been removed. &nbsp; <i>Result </i>contains an integer, string
-of float depending on which option is given. &nbsp;The <b>getinfo</b> method
+prefix has been removed. &nbsp; <i>Result</i> contains an integer, float or
+string, depending on which option is given. &nbsp;The <b>getinfo</b> method
 should not be called unless <b>perform</b> has been called and finished.<br>
   <br>
  Example usage: <br>
   <pre>import pycurl
 c = pycurl.Curl()
-c.setopt(pycurl.URL, 'file:///dev/null')
+c.setopt(pycurl.URL, 'http://sf.net')
+c.setopt(pycurl.FOLLOWLOCATION, 1)
 c.perform()
-print c.getinfo(pycurl.EFFECTIVE_URL)
+print c.getinfo(pycurl.HTTP_CODE), c.getinfo(pycurl.EFFECTIVE_URL)
 ...
+--&gt; 200 'http://sourceforge.net/'
 </pre>
 </blockquote>
 </body>
