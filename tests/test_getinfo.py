@@ -30,10 +30,13 @@ c.setopt(c.OPT_FILETIME, 1)
 c.perform()
 
 print
+print "HTTP-code:", c.getinfo(c.HTTP_CODE)
+print "Total-time:", c.getinfo(c.TOTAL_TIME)
 print "Download speed: %.2f bytes/second" % c.getinfo(c.SPEED_DOWNLOAD)
 print "Document size: %d bytes" % c.getinfo(c.SIZE_DOWNLOAD)
 print "Effective URL:", c.getinfo(c.EFFECTIVE_URL)
 print "Content-type:", c.getinfo(c.CONTENT_TYPE)
+print "Namelookup-time:", c.getinfo(c.NAMELOOKUP_TIME)
 print "Redirect-time:", c.getinfo(c.REDIRECT_TIME)
 print "Redirect-count:", c.getinfo(c.REDIRECT_COUNT)
 epoch = c.getinfo(c.INFO_FILETIME)
