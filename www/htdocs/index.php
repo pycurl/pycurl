@@ -60,7 +60,10 @@ from a Python program, similar to the
     QNX, OpenVMS, RISC OS and more...
   </li>
   <li>
-    libcurl is thread-safe, IPv6 compatible and fast.
+    libcurl is
+    <a href="http://curl.haxx.se/libcurl/threadsafe.html">thread-safe</a>,
+    <a href="http://curl.haxx.se/libcurl/ipv6.html">IPv6 compatible</a> and
+    <a href="http://curl.haxx.se/libcurl/fast.html">fast</a>.
   </li>
 </ul>
 
