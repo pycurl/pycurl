@@ -14,22 +14,25 @@ class WorkerThread(threading.Thread):
     def __init__(self, iq):
         threading.Thread.__init__(self)
         self.iq = iq
-        self.curl = pycurl.init()
-        self.curl.setopt(pycurl.FOLLOWLOCATION, 1)
-        self.curl.setopt(pycurl.MAXREDIRS, 5)
 
     def run(self):
         while 1:
             try:
                 url, no = self.iq.get_nowait()
             except:
-                self.curl.cleanup()
                 break
             f = open(str(no), 'w')
+            self.curl = pycurl.init()
+            self.curl.setopt(pycurl.FOLLOWLOCATION, 1)
+            self.curl.setopt(pycurl.MAXREDIRS, 5)
             self.curl.setopt(pycurl.URL, url)
             self.curl.setopt(pycurl.WRITEDATA, f)
-            self.curl.perform()
+            try:
+                self.curl.perform()
+            except:
+                pass
             f.close()
+            self.curl.cleanup()
             sys.stdout.write('.')
             sys.stdout.flush()
 
