@@ -39,7 +39,7 @@ PycURL is an
 <a href="http://curl.haxx.se/libcurl/">libcurl</a>.
 PycURL can be used to fetch objects identified by a URL
 from a Python program, similar to the
-<a href="http://python.org/doc/current/lib/module-urllib.html">urllib</a> Python module.
+<a href="http://www.python.org/doc/current/lib/module-urllib.html">urllib</a> Python module.
 </p>
 
 
@@ -47,8 +47,7 @@ from a Python program, similar to the
 
 <ul>
   <li>
-    libcurl
-    is a free and easy-to-use client-side URL transfer library,
+    libcurl is a free and easy-to-use client-side URL transfer library,
     supporting FTP, FTPS, HTTP, HTTPS, GOPHER, TELNET, DICT, FILE and LDAP.
     libcurl supports HTTPS certificates, HTTP POST, HTTP PUT, FTP uploading,
     kerberos, HTTP form based upload, proxies, cookies, user+password
