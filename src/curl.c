@@ -69,11 +69,11 @@ self_cleanup(CurlObject *self)
 	self->httppost = NULL;
     }
     for (i = 0; i < CURLOPT_LASTENTRY; i++) {
-      if (self->options[i] != NULL) {
-	free(self->options[i]);
-	self->options[i] = NULL;
-      }
-    }
+	if (self->options[i] != NULL) {
+	    free(self->options[i]);
+	    self->options[i] = NULL;
+	}		
+    }	
     Py_XDECREF(self->w_cb);
     Py_XDECREF(self->r_cb);
     Py_XDECREF(self->pro_cb);
@@ -363,12 +363,13 @@ do_setopt(CurlObject *self, PyObject *args)
 	/* Free previously allocated memory to option */
 	opt_masked = option & 0xff;
 	if (self->options[opt_masked] != NULL) {
-	  free(self->options[opt_masked]);
+	    free(self->options[opt_masked]);
 	}
 	/* Allocate memory to hold the string */
 	buf = (char *)malloc((strlen(stringdata)*sizeof(char))+sizeof(char));
-	if (buf == NULL)
-	  return PyErr_NoMemory();
+	if (buf == NULL) {
+	    return PyErr_NoMemory();
+	}
 	strcpy(buf, stringdata);
 	self->options[opt_masked] = buf;
 	/* Call setopt */
