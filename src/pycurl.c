@@ -1353,10 +1353,15 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                     PyObject *t = PyTuple_GET_ITEM(listitem, 1);
                     int tlen = PyTuple_Size(t);
                     int j, k, l;
-                    struct curl_forms *forms;
+                    struct curl_forms *forms = NULL;
 
                     /* Allocate enough space to accommodate length options for content */
                     forms = PyMem_Malloc(sizeof(struct curl_forms) * ((tlen*2) + 1));
+                    if (forms == NULL) {
+                        curl_formfree(post);
+                        PyErr_NoMemory();
+                        return NULL;
+                    }
 
                     /* Iterate all the tuple members pairwise */
                     for (j = 0, k = 0, l = 0; j < tlen; j += 2, l++) {
