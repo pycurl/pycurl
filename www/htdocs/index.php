@@ -123,17 +123,14 @@ convenience only and are completely <b>unsupported</b> - use them
 at your own risk!
 </p>
 
-<p>
-Official PycURL packages are available for
-<a href="http://packages.debian.org/python2.2-pycurl">Debian</a>,
-as well as the
-<a href="http://www.freebsd.org/cgi/ports.cgi?query=curl">ports</a>
-collection for FreeBSD, the
-<a href="ftp://ftp.netbsd.org/pub/NetBSD/packages/pkgsrc/www/py-curl/README.html">packages</a>
-collection for NetBSD and the
-<a href="http://www.openbsd.org/cgi-bin/cvsweb/ports/net/py-curl/">ports</a>
-collection for OpenBSD.
-</p>
+Also, official PycURL packages are available for
+<ul>
+  <li><a href="http://packages.debian.org/python2.2-pycurl">Debian GNU/Linux</a></li>
+  <li><a href="http://www.freebsd.org/cgi/ports.cgi?query=curl">FreeBSD</a></li>
+  <li><a href="http://www.gentoo.org/dyn/pkgs/net-ftp/pycurl.xml">Gentoo Linux</a></li>
+  <li><a href="ftp://ftp.netbsd.org/pub/NetBSD/packages/pkgsrc/www/py-curl/README.html">NetBSD</a></li>
+  <li><a href="http://www.openbsd.org/cgi-bin/cvsweb/ports/net/py-curl/">OpenBSD</a></li>
+</ul>
 
 
 <h2>License</h2>

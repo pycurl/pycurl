@@ -46,26 +46,10 @@ pycurl.GLOBAL_NOTHING, pycurl.GLOBAL_DEFAULT.  Corresponds to
 <a href="http://curl.haxx.se/libcurl/c/curl_global_cleanup.html"><code>curl_global_cleanup()</code></a> in libcurl.</p>
 </dd>
 
-<dt><code>pycurl.version_info()</code> -&gt; <em>Result</em></dt>
-<dd>
-<p>Corresponds to
-<a href="http://curl.haxx.se/libcurl/c/curl_version_info.html"><code>curl_version_info()</code></a> in libcurl.
-<em>Result</em> is a list of information which is similar to the
-<code>curl_version_info_data</code> struct returned by
-<code>curl_version_info()</code> in libcurl.</p>
-
-<p>Example usage:</p>
-<pre>
->>> import pycurl
->>> pycurl.version_info()
-(0, '7.10.4', 461316, 'i386-pc-linux-gnu', 13, 'OpenSSL/0.9.7b', 9465903, '1.1.4', ('ftp', 'gopher', 'telnet', 'dict', 'ldap', 'http', 'file', 'https', 'ftps'))
-</pre>
-</dd>
-
 <dt><code>pycurl.version</code></dt>
 
-<dd><p>This is a string with version information on libcurl which is
-linked and used by pycurl, corresponding to
+<dd><p>This is a string with version information on libcurl,
+corresponding to
 <a href="http://curl.haxx.se/libcurl/c/curl_version.html"><code>curl_version()</code></a> in libcurl.</p>
 
 <p>Example usage:</p>
@@ -73,6 +57,23 @@ linked and used by pycurl, corresponding to
 >>> import pycurl
 >>> pycurl.version
 'libcurl/7.10.4 OpenSSL/0.9.7b ipv6 zlib/1.1.4'
+</pre>
+</dd>
+
+<dt><code>pycurl.version_info()</code> -&gt; <em>Tuple</em></dt>
+<dd>
+<p>Corresponds to
+<a href="http://curl.haxx.se/libcurl/c/curl_version_info.html"><code>curl_version_info()</code></a> in libcurl.
+Returns a tuple of information which is similar to the
+<code>curl_version_info_data</code> struct returned by
+<code>curl_version_info()</code> in libcurl.</p>
+
+<p>Example usage:</p>
+<pre>
+>>> import pycurl
+>>> pycurl.version_info()
+(0, '7.10.4', 461316, 'i386-pc-linux-gnu', 13, 'OpenSSL/0.9.7b', 9465903, '1.1.4',
+('ftp', 'gopher', 'telnet', 'dict', 'ldap', 'http', 'file', 'https', 'ftps'))
 </pre>
 </dd>
 
