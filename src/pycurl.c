@@ -665,11 +665,7 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
     PyObject *arglist;
     PyObject *result = NULL;
 
-#if (LIBCURL_VERSION_NUM > 0x070c00)
     size_t ret = CURL_READFUNC_ABORT;     /* assume error, this actually works */
-#else
-    size_t ret = 0;     /* assume error, this cause things to hang */
-#endif
     int total_size;
 
     /* acquire thread */
@@ -1042,12 +1038,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         return Py_None;
     }
 
-/* Up to libcurl 7.12.1 CURLOPT_FILETIME was incorrectly assigned a OBJECTPOINT */
-#if (LIBCURL_VERSION_NUM < 0x070c01)
-#define IS_LONG_OPTION(o)   (o < CURLOPTTYPE_OBJECTPOINT || o == CURLOPT_FILETIME)
-#else
 #define IS_LONG_OPTION(o)   (o < CURLOPTTYPE_OBJECTPOINT)
-#endif
 #define IS_OFF_T_OPTION(o)  (o >= CURLOPTTYPE_OFF_T)
 
     /* Handle the case of integer arguments */
