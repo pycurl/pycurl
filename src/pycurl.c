@@ -13,6 +13,7 @@
  *  Amit Mongia <amit_mongia at hotmail.com>
  *  Eric S. Raymond <esr at thyrsus.com>
  *  Martin Muenstermann <mamuema at sourceforge.net>
+ *  Domenico Andreoli <cavok at libero.it>
  *
  * See file COPYING for license information.
  *

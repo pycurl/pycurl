@@ -1,4 +1,14 @@
-Version 7.12.1 [requires libcurl-7.12.1 or better]
+Version 7.12.1.1 [requires libcurl-7.12.1 or better]
+--------------
+
+2004-08-17 Kjetil Jacobsen <kjetilja>
+
+        * Use LONG_LONG instead of PY_LONG_LONG to make pycurl compile
+          on Python versions < 2.3 (fix from Domenico Andreoli
+          <cavok at libero.it>).
+
+
+Version 7.12.1
 --------------
 
 2004-08-02  Kjetil Jacobsen  <kjetilja>
