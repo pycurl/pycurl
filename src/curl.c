@@ -2433,6 +2433,9 @@ init_pycurl(void)
 #if (LIBCURL_VERSION_NUM >= 0x070a04)
     insint_c(d, "UNRESTRICTED_AUTH", CURLOPT_UNRESTRICTED_AUTH);
 #endif
+#if (LIBCURL_VERSION_NUM >= 0x070a05)
+    insint_c(d, "FTP_USE_EPRT", CURLOPT_FTP_USE_EPRT);
+#endif
 
     /* CURL_NETRC_OPTION: constants for setopt(NETRC, x) */
     insint_c(d, "NETRC_OPTIONAL", CURL_NETRC_OPTIONAL);
