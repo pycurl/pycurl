@@ -734,6 +734,12 @@ do_init(PyObject *arg)
 	curl_easy_cleanup(curlhandle);
 	return NULL;
     }
+    /* Set VERBOSE to 0 by default */
+    res = curl_easy_setopt(curlhandle, CURLOPT_VERBOSE, 0);
+    if (res != 0) {
+	curl_easy_cleanup(curlhandle);
+	return NULL;
+    }
 
     /* Setup python curl object initial values and return object */
     self->handle = curlhandle;
