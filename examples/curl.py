@@ -60,7 +60,9 @@ class Curl:
         url = self.c.getinfo(pycurl.EFFECTIVE_URL)
         if url[:5] == 'http:':
             self.server_reply.readline()
-        m = mimetools.Message(self.server_reply)
+            m = mimetools.Message(self.server_reply)
+        else:
+            m = mimetools.Message(StringIO())
         m['effective-url'] = url
         m['http-code'] = str(self.c.getinfo(pycurl.HTTP_CODE))
         m['total-time'] = str(self.c.getinfo(pycurl.TOTAL_TIME))
@@ -78,6 +80,10 @@ class Curl:
         m['content-length-upload'] = str(self.c.getinfo(pycurl.CONTENT_LENGTH_UPLOAD))
         m['content-type'] = self.c.getinfo(pycurl.CONTENT_TYPE) or ''
         return m
+
+    def get_server_reply(self):
+        self.server_reply.seek(0,0)
+        return self.server_reply.getvalue()
 
     def close(self):
         self.c.close()
