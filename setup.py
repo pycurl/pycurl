@@ -196,5 +196,5 @@ if LooseVersion(distutils.__version__) < LooseVersion("1.0.3"):
 if __name__ == "__main__":
     for o in ext.extra_objects:
         assert os.path.isfile(o), o
-    apply(setup, (), setup_args)
+    setup(**setup_args)
 
