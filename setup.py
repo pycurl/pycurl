@@ -71,10 +71,11 @@ if sys.platform == "win32":
     extra_objects.append(os.path.join(CURL_DIR, "lib", "libcurl.lib"))
     extra_link_args.extend(["gdi32.lib", "winmm.lib", "ws2_32.lib",])
     add_libdirs("LIB", ";")
-    if string.find(sys.version, "MSC") != -1:
-        ##extra_compile_args.append("-GF")
-        extra_compile_args.append("-Gy")
-        extra_compile_args.append("-WX")
+    if string.find(sys.version, "MSC") >= 0:
+        extra_compile_args.append("-GF")        # enable read-only string pooling
+        extra_compile_args.append("-Gy")        # separate functions for linker
+        extra_compile_args.append("-WX")        # treat warnings as errors
+        extra_link_args.append("/opt:nowin98")  # use small section alignment
 else:
     # Find out the rest the hard way
     CURL_CONFIG = "curl-config"
