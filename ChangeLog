@@ -1,6 +1,10 @@
 2001-08-20  Kjetil Jacobsen  <kjetilja>
 
-	* Added test script for using XMLRPC.
+	* Added test script for using PycURL and GNOME (tests/test_gtk.py).
+
+2001-08-20  Kjetil Jacobsen  <kjetilja>
+
+	* Added test script for using XMLRPC (tests/test_xmlrpc.py).
 
 	* Added more comments to the test sources.
 
