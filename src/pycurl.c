@@ -776,14 +776,17 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
     }
     else if (PyInt_Check(result)) {
         long r = PyInt_AsLong(result);
-        if (r != CURL_READFUNC_ABORT)
+        if (r != CURL_READFUNC_ABORT) {
             goto type_error;
-        /* ret is CURL_READFUNC_ABORT */
+        }
+        /* ret is CURL_READUNC_ABORT */
+    }
     else if (PyLong_Check(result)) {
         long r = PyLong_AsLong(result);
-        if (r != CURL_READFUNC_ABORT)
+        if (r != CURL_READFUNC_ABORT) {
             goto type_error;
-        /* ret is CURL_READFUNC_ABORT */
+        }
+        /* ret is CURL_READUNC_ABORT */
     }
     else {
     type_error:
@@ -1321,27 +1324,40 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                 }
                 if (PyTuple_GET_SIZE(listitem) != 2) {
                     curl_formfree(post);
-                    PyErr_SetString(PyExc_TypeError, "tuple must contain two strings (name, value)");
+                    PyErr_SetString(PyExc_TypeError, "tuple must contain two elements (name, value)");
                     return NULL;
                 }
-                /* FIXME: Only support strings as names and values for now */
-                if (PyString_AsStringAndSize(PyTuple_GET_ITEM(listitem, 0), &nstr, &nlen) != 0 ||
-                    PyString_AsStringAndSize(PyTuple_GET_ITEM(listitem, 1), &cstr, &clen) != 0) {
+                if (PyString_AsStringAndSize(PyTuple_GET_ITEM(listitem, 0), &nstr, &nlen) != 0) {
                     curl_formfree(post);
-                    PyErr_SetString(PyExc_TypeError, "tuple must contain two strings (name, value)");
+                    PyErr_SetString(PyExc_TypeError, "tuple must contain string as first element");
                     return NULL;
                 }
-                /* INFO: curl_formadd() internally does memdup() the data, so
-                 * embedded NUL characters _are_ allowed here. */
-                res = curl_formadd(&post, &last,
-                                   CURLFORM_COPYNAME, nstr,
-                                   CURLFORM_NAMELENGTH, (long) nlen,
-                                   CURLFORM_COPYCONTENTS, cstr,
-                                   CURLFORM_CONTENTSLENGTH, (long) clen,
-                                   CURLFORM_END);
-                if (res != CURLE_OK) {
+                if (PyString_Check(PyTuple_GET_ITEM(listitem, 1))) {
+                    /* Handle strings as second argument for backwards compatibility */
+                    PyString_AsStringAndSize(PyTuple_GET_ITEM(listitem, 1), &cstr, &clen);
+                    /* INFO: curl_formadd() internally does memdup() the data, so
+                     * embedded NUL characters _are_ allowed here. */
+                    res = curl_formadd(&post, &last,
+                                       CURLFORM_COPYNAME, nstr,
+                                       CURLFORM_NAMELENGTH, (long) nlen,
+                                       CURLFORM_COPYCONTENTS, cstr,
+                                       CURLFORM_CONTENTSLENGTH, (long) clen,
+                                       CURLFORM_END);
+                    if (res != CURLE_OK) {
+                        curl_formfree(post);
+                        CURLERROR_RETVAL();
+                    }
+                }
+                else if (PyDict_Check(PyTuple_GET_ITEM(listitem, 1))) {
+                    /* Handle dictionary as second argument for setting other options as well */
                     curl_formfree(post);
-                    CURLERROR_RETVAL();
+                    PyErr_SetString(PyExc_TypeError, "unsupported second value, to be done");
+                    return NULL;
+                } else {
+                    /* Some other type was given, ignore */
+                    curl_formfree(post);
+                    PyErr_SetString(PyExc_TypeError, "unsupported second value in tuple");
+                    return NULL;
                 }
             }
             res = curl_easy_setopt(self->handle, CURLOPT_HTTPPOST, post);
