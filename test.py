@@ -1,6 +1,9 @@
+## System modules
 import sys
 import threading
 import time
+
+## PycURL module
 import curl
 
 
@@ -20,10 +23,17 @@ class Test(threading.Thread):
         self.curl.cleanup()        
         sys.stdout.write('.')
         sys.stdout.flush()
-        
+       
 
 # Read list of URIs from file specified on commandline
-urls = open(sys.argv[1]).readlines()
+try:
+    urls = open(sys.argv[1]).readlines()
+except IndexError:
+    # No file was specified, show usage string
+    print "Usage: %s <file with uris to fetch>" % sys.argv[0]
+    raise SystemExit
+
+# Initialize thread array and the file number
 threads = []
 fileno = 0
 
@@ -40,9 +50,9 @@ for thread, file in threads:
     thread.join()
     file.close()
 t2 = time.time()
-print '\n** multithreading, %d seconds elapsed for %d uris' % (int(t2-t1), len(urls))
+print '\n** Multithreading, %d seconds elapsed for %d uris' % (int(t2-t1), len(urls))
 
-# Start on thread per URI in sequence
+# Start one thread per URI in sequence
 fileno = 0
 t1 = time.time()
 for url in urls:
@@ -53,4 +63,4 @@ for url in urls:
     t.join()
     f.close()
 t2 = time.time()
-print '\n** singlethreading, %d seconds elapsed for %d uris' % (int(t2-t1), len(urls))
+print '\n** Singlethreading, %d seconds elapsed for %d uris' % (int(t2-t1), len(urls))
