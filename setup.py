@@ -40,27 +40,22 @@ def scan_argv(s, default):
     return p
 
 
-# transform an environment variable (e.g. "LIB") to library_dirs[]
-def add_libdirs(envvar, sep, delete=0, fatal=1):
-    env = os.environ
-    if not env.get(envvar):
-        return 0
-    r = 0
-    for dir in string.split(env.get(envvar), sep):
+# append contents of an environment variable to library_dirs[]
+def add_libdirs(envvar, sep, fatal=1):
+    v = os.environ.get(envvar)
+    if not v:
+        return
+    for dir in string.split(v, sep):
         dir = string.strip(dir)
         if not dir:
             continue
+        dir = os.path.normpath(dir)
         if os.path.isdir(dir):
-            if dir not in library_dirs:
+            if not dir in library_dirs:
                 library_dirs.append(dir)
-        else:
-            r = -1
-            if fatal:
-                print "FATAL: bad directory %s in environment variable %s" % (dir, envvar)
-                raise SystemExit
-    if delete:
-        del env[envvar]
-    return r
+        elif fatal:
+            print "FATAL: bad directory %s in environment variable %s" % (dir, envvar)
+            sys.exit(1)
 
 
 if sys.platform == "win32":
