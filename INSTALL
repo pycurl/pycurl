@@ -1,4 +1,4 @@
-You need Python and libcurl version 7.8 or greater installed on your
+You need Python and libcurl version 7.8.1 or greater installed on your
 system to use pycurl.
 
 To build pycurl for Python 1.5.2 you also need the distutils package,
