@@ -1,5 +1,9 @@
 Version 7.9.8
 
+2002-06-19  Kjetil Jacobsen  <kjetilja>
+
+ 	* Disallow recursive callback invocations (by Markus Oberhumer).
+
 2002-06-18  Kjetil Jacobsen  <kjetilja>
 
 	* Made some changes to setup.py which should fix the build
