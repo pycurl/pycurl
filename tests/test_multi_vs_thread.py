@@ -2,7 +2,7 @@
 # vi:ts=4:et
 
 import os, sys, time
-from threading import Thread
+from threading import Thread, RLock
 try:
     from cStringIO import StringIO
 except ImportError:
@@ -15,6 +15,10 @@ import pycurl
 #     needs much cleanup and comments
 #
 # anyway, the conclusion is: threads are much faster!
+#
+#
+# XXX after this program is finished I'd like to add some real-world
+#   timings here
 #
 
 NUM_PAGES = 30
@@ -31,8 +35,7 @@ URL = "http://pycurl.sourceforge.net/tests/teststaticpage.html?%d"
 
 class Curl:
     def __init__(self, url):
-        # save info in standard Python attributes
-        self.url = URL % i
+        self.url = url
         self.body = StringIO()
         self.http_code = -1
         # pycurl API calls
@@ -64,42 +67,37 @@ def print_result(items):
 ### 1) multi
 ###
 
-clock1 = time.time()
+def test_multi():
+    clock1 = time.time()
 
-# init
-handles = []
-m = pycurl.multi_init()
-for i in range(NUM_PAGES):
-    c = Curl(URL %i)
-    m.add_handle(c._curl)
-    handles.append(c)
+    # init
+    handles = []
+    m = pycurl.multi_init()
+    for i in range(NUM_PAGES):
+        c = Curl(URL %i)
+        m.add_handle(c._curl)
+        handles.append(c)
 
-clock2 = time.time()
+    clock2 = time.time()
 
-# get data
-while 1:
-    num_handles = m.perform()
-    if num_handles == 0:
-        break
-    # currently no more I/O is pending, could do something in the meantime
-    # (display a progress bar, etc.)
-    time.sleep(0.01)
+    # get data
+    while 1:
+        num_handles = m.perform()
+        if num_handles == 0:
+            break
 
-clock3 = time.time()
+    clock3 = time.time()
 
-# close handles
-for c in handles:
-    c.close()
-m.cleanup()
-del m
+    # close handles
+    for c in handles:
+        c.close()
+    m.cleanup()
 
-clock4 = time.time()
-print "multi  interface: %d pages: perform %5.2f secs, total %5.2f secs" % (NUM_PAGES, clock3 - clock2, clock4 - clock1)
+    clock4 = time.time()
+    print "multi  interface:        %d pages: perform %5.2f secs, total %5.2f secs" % (NUM_PAGES, clock3 - clock2, clock4 - clock1)
 
-# print result
-print_result(handles)
-
-del handles
+    # print result
+    print_result(handles)
 
 
 
@@ -108,53 +106,80 @@ del handles
 ###
 
 class Test(Thread):
-    def __init__(self):
+    def __init__(self, lock=None):
         Thread.__init__(self)
+        self.lock = lock
         self.items = []
 
     def run(self):
+        if self.lock:
+            self.lock.acquire()
+            self.lock.release()
         for c in self.items:
             c.perform()
 
 
-clock1 = time.time()
+def test_threads(lock=None):
+    clock1 = time.time()
 
-# init (FIXME - this is ugly)
-handles = []
-threads = []
-t = None
-for i in range(NUM_PAGES):
-    if i % (NUM_PAGES / NUM_THREADS) == 0:
-        t = Test()
-        threads.append(t)
-    c = Curl(URL % i)
-    t.items.append(c)
-    handles.append(c)
-assert len(handles) == NUM_PAGES
-assert len(threads) == NUM_THREADS
-del t, c
+    # create and start threads, but block them
+    if lock:
+        lock.acquire()
 
-clock2 = time.time()
+    # init (FIXME - this is ugly)
+    threads = []
+    handles = []
+    t = None
+    for i in range(NUM_PAGES):
+        if i % (NUM_PAGES / NUM_THREADS) == 0:
+            t = Test(lock)
+            if lock:
+                t.start()
+            threads.append(t)
+        c = Curl(URL % i)
+        t.items.append(c)
+        handles.append(c)
+    assert len(handles) == NUM_PAGES
+    assert len(threads) == NUM_THREADS
 
-# get data
-for t in threads:
-    t.start()
-for t in threads:
-    t.join()
+    clock2 = time.time()
 
-clock3 = time.time()
-del t, threads
+    #
+    if lock:
+        # release lock to let the blocked threads run
+        lock.release()
+    else:
+        # start threads
+        for t in threads:
+            t.start()
+    # wait for threads to finish
+    for t in threads:
+        t.join()
 
-# close handles
-for c in handles:
-    c.close()
+    clock3 = time.time()
 
-clock4 = time.time()
-print "thread interface: %d pages: perform %5.2f secs, total %5.2f secs" % (NUM_PAGES, clock3 - clock2, clock4 - clock1)
+    # close handles
+    for c in handles:
+        c.close()
 
-# print result
-print_result(handles)
+    clock4 = time.time()
+    if lock:
+        print "thread interface [lock]: %d pages: perform %5.2f secs, total %5.2f secs" % (NUM_PAGES, clock3 - clock2, clock4 - clock1)
+    else:
+        print "thread interface:        %d pages: perform %5.2f secs, total %5.2f secs" % (NUM_PAGES, clock3 - clock2, clock4 - clock1)
 
-del handles
+    # print result
+    print_result(handles)
 
+
+
+lock = RLock()
+if 1:
+    test_multi()
+    test_threads()
+    test_threads(lock)
+else:
+    test_threads(lock)
+    test_threads()
+    test_multi()
 
