@@ -11,5 +11,8 @@ If you want to hack on pycurl, here's our list of unresolved issues:
 
     * Add an entry for Curl.errstr() to the HTML docs.
 
+    * Are we possibly leaking references with CURLOPT_PROGRESSDATA
+      and CURLOPT_PASSWDDATA ??
+
     * A high-level interface to pycurl, like the standard urllib (see
       the file 'doc/examples/curl.py' for a simple example)
