@@ -4,5 +4,3 @@ If you want to hack on pycurl, here's our list of unresolved issues:
 
     * A high-level interface to pycurl, like the standard urllib (see
       the file 'doc/examples/curl.py' for a simple example)
-    * Make Curl objects and CurlMulti objects into new-style objects
-      to allow subclassing.
