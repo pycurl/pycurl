@@ -21,6 +21,7 @@
     - add interface to the multi_read method, otherwise it's hard to use this
       for anything
     - how do we best interface with the fd_set stuff?
+    - check the cyclic garbage collection
 */
 
 #undef NDEBUG
@@ -400,10 +401,15 @@ static int
 do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
 {
     int err;
-    if (self->dict != NULL && (err = visit(self->dict, arg)) != 0)
-        return err;
-    if (self->multi_stack != NULL && (err = visit(self->multi_stack, arg)) != 0)
-        return err;
+
+    if (self->dict != NULL) {
+        if ((err = visit(self->dict, arg)) != 0)
+            return err;
+    }
+    if (self->multi_stack != NULL) {
+        if ((err = visit((PyObject *) self->multi_stack, arg)) != 0)
+            return err;
+    }
     return 0;
 }
 
@@ -1238,8 +1244,11 @@ static int
 do_multi_traverse(CurlMultiObject *self, visitproc visit, void *arg)
 {
     int err;
-    if (self->dict != NULL && (err = visit(self->dict, arg)) != 0)
-        return err;
+
+    if (self->dict != NULL) {
+        if ((err = visit(self->dict, arg)) != 0)
+            return err;
+    }
     return 0;
 }
 
