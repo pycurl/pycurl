@@ -9,6 +9,7 @@ include INSTALL
 include Makefile
 include README
 include TODO
+include MANIFEST.in
 include src/Makefile
 include src/curl.c
 include examples/*.py
