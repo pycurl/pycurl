@@ -1,5 +1,8 @@
 2002-02-27  Kjetil Jacobsen  <kjetilja>
 
+	* Abort callback if the thread state of the calling thread cannot
+	be determined.
+
 	* Check that the installed version of libcurl matches the
 	requirements of pycurl.
 
