@@ -7,7 +7,7 @@
 import os, sys
 from distutils.core import setup
 from distutils.extension import Extension
-from string import strip, split
+from distutils.util import split_quoted
 
 include_dirs = []
 define_macros = []
@@ -15,6 +15,7 @@ library_dirs = []
 libraries = []
 runtime_library_dirs = []
 extra_objects = []
+extra_compile_args = []
 extra_link_args = []
 
 if sys.platform == "win32":
@@ -26,15 +27,22 @@ if sys.platform == "win32":
     extra_objects.append(os.path.join(CURL_DIR, "lib", "libcurl.lib"))
 else:
     # Find out the rest the hard way
-    cflags = split(strip(os.popen("curl-config --cflags").read()), " ")
+    cflags = split_quoted(os.popen("curl-config --cflags").read())
     for e in cflags[:]:
         if e[:2] == "-I":
             include_dirs.append(e[2:])
-    libs = split(strip(os.popen("curl-config --libs").read()), " ")
+        else:
+            extra_compile_args.append(e)
+    libs = split_quoted(os.popen("curl-config --libs").read())
     for e in libs[:]:
-        if e[:2] == "-L":
+        if e[:2] == "-l":
+            libraries.append(e[2:])
+        elif e[:2] == "-L":
             library_dirs.append(e[2:])
-    libraries = ["curl"]
+        else:
+            extra_link_args.append(e)
+    if not libraries:
+        libraries = ["curl"]
 
     # Add extra compile flag for MacOS X
     if sys.platform[:-1] == "darwin":
@@ -59,5 +67,6 @@ setup (name="pycurl",
                               libraries=libraries,
                               runtime_library_dirs=runtime_library_dirs,
                               extra_objects=extra_objects,
+                              extra_compile_args=extra_compile_args,
                               extra_link_args=extra_link_args)]
         )
