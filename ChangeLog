@@ -1,3 +1,8 @@
+2001-10-12  Kjetil Jacobsen  <kjetilja>
+
+	* Added the 'basicfirst.py' file which is a Python version of the
+	corresponding Perl script.
+
 2001-08-21  Kjetil Jacobsen  <kjetilja>
 
 	* Cleaned up the script with GNOME/PycURL integration.
