@@ -39,6 +39,11 @@ or try the code from
 <p>
 You can get older versions as well as prebuilt Win32 modules from the
 <a href="download/?M=D">download area</a>.
+Please note that the prebuilt versions are provided for your convenience
+and do not contain extras like
+<a href="http://www.openssl.org/">SSL</a> and
+<a href="http://www.gzip.org/zlib/">zlib</a> support - you have to grab
+all relevant sources and compile them by yourself if you need that.
 </p>
 
 <p>
