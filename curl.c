@@ -92,6 +92,12 @@ do_setopt(CurlObject *self, PyObject *args)
     int i;
     struct HttpPost *last;
 
+    /* Check that we have a valid curl handle for the object */
+    if (self->handle == NULL) {
+	PyErr_SetString(ErrorObject, "cannot invoke setopt, no curl handle");
+	return NULL;
+    }
+
     /* Handle the case of string arguments */
     if (PyArg_ParseTuple(args, "is:setopt", &option, &stringdata)) {
 	if (option == CURLOPT_URL) {
@@ -278,7 +284,6 @@ do_perform(CurlObject *self, PyObject *args)
 	return NULL;
     }
 
-
     Py_BEGIN_ALLOW_THREADS
     res = curl_easy_perform(self->handle);
     Py_END_ALLOW_THREADS
@@ -296,6 +301,73 @@ do_perform(CurlObject *self, PyObject *args)
 static PyObject *
 do_getinfo(CurlObject *self, PyObject *args)
 {
+    int option;
+    int res;
+    double d_res;
+    long l_res;
+    char *s_res;
+
+    /* Check that we have a valid curl handle for the object */
+    if (self->handle == NULL) {
+	PyErr_SetString(ErrorObject, "cannot invoke getinfo, no curl handle");
+	return NULL;
+    }
+
+    /* Parse option */
+    if (PyArg_ParseTuple(args, "i:getinfo", &option)) {
+	if (option == CURLINFO_HEADER_SIZE || 
+	    option == CURLINFO_REQUEST_SIZE ||
+	    option == CURLINFO_SSL_VERIFYRESULT ||
+	    option == CURLINFO_FILETIME ||
+	    option == CURLINFO_HTTP_CODE) 
+	    {
+		/* Return long as result */
+		res = curl_easy_getinfo(self->handle, option, &l_res);
+		/* Check for errors and return result */
+		if (res == 0) {
+		    return PyLong_FromLong(l_res);
+		} else {
+		    PyErr_SetString(ErrorObject, self->error);
+		    return NULL;
+		}
+	    }
+
+	if (option == CURLINFO_EFFECTIVE_URL)
+	    {
+		/* Return string as result */
+		res = curl_easy_getinfo(self->handle, option, &s_res);
+		/* Check for errors and return result */
+		if (res == 0) {
+		    return PyString_FromString(s_res);
+		} else {
+		    PyErr_SetString(ErrorObject, self->error);
+		    return NULL;
+		}
+	    }
+
+	if (option == CURLINFO_TOTAL_TIME ||
+	    option == CURLINFO_NAMELOOKUP_TIME ||
+	    option == CURLINFO_CONNECT_TIME ||
+	    option == CURLINFO_PRETRANSFER_TIME ||
+	    option == CURLINFO_SIZE_UPLOAD ||
+	    option == CURLINFO_SIZE_DOWNLOAD ||
+	    option == CURLINFO_SPEED_DOWNLOAD ||
+	    option == CURLINFO_SPEED_UPLOAD ||
+	    option == CURLINFO_CONTENT_LENGTH_DOWNLOAD ||
+	    option == CURLINFO_CONTENT_LENGTH_UPLOAD)
+	    {
+		/* Return float as result */
+		res = curl_easy_getinfo(self->handle, option, &d_res);
+		if (res == 0) {
+		    return PyFloat_FromDouble(d_res);
+		} else {
+		    PyErr_SetString(ErrorObject, self->error);
+		    return NULL;
+		}
+	    }
+    } 
+
+    /* Got wrong signature on the method call */
     return NULL;
 }
 
