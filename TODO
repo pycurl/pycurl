@@ -1,5 +1,6 @@
 # $Id$
 
+* Documentation (this is actually starting to get critical)
 * duphandle() is not supported
 * Once set, callbacks cannot be subsequently disabled for a given handle
 * The multi interface is not supported, should make something that
