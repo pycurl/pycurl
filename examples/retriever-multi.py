@@ -25,7 +25,7 @@ num_conn = min(num_conn, len(urls))
 assert 1 <= num_conn <= 10000, "invalid number of connections"
 
 # Make a queue with (url, filename) tuples
-fileno = 0
+fileno = 1
 queue = []
 for u in urls:
     queue.append((u, "data_%d" % fileno))
