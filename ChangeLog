@@ -1,5 +1,9 @@
 2001-08-06  Kjetil Jacobsen  <kjetilja>
 
+	* Renamed module namespace to pycurl instead of curl.
+
+2001-08-06  Kjetil Jacobsen  <kjetilja>
+
 	* Set CURLOPT_VERBOSE to 0 by default.
 
 2001-06-29  Kjetil Jacobsen  <kjetilja>
