@@ -17,16 +17,15 @@
  *
  */
 
-#undef NDEBUG
-#include <assert.h>
+#include <sys/types.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-/* Are these portable to Windows? */
-#include <sys/time.h>
-#include <sys/types.h>
 #include <unistd.h>
+#include <sys/time.h>
+#undef NDEBUG
+#include <assert.h>
 
 #if (defined(_WIN32) || defined(__WIN32__)) && !defined(WIN32)
 #  define WIN32 1
@@ -1829,7 +1828,7 @@ statichere PyTypeObject CurlMulti_Type = {
 /*************************************************************************
 // module level
 // Note that the object constructors (do_curl_init, do_curl_multi_init)
-// are implemented as module-level functions as well.
+// are module-level functions as well.
 **************************************************************************/
 
 static PyObject *

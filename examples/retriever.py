@@ -5,15 +5,15 @@ import pycurl
 
 
 class WorkerThread(threading.Thread):
-    def __init__(self, iq):
+    def __init__(self, queue):
         threading.Thread.__init__(self)
-        self.iq = iq
+        self.queue = queue
 
     def run(self):
         while 1:
             try:
-                url, no = self.iq.get_nowait()
-            except:
+                url, no = self.queue.get_nowait()
+            except Queue.Empty:
                 break
             f = open(str(no), 'w')
             self.curl = pycurl.Curl()
@@ -42,16 +42,16 @@ except:
 # Initialize thread array and the file number used to store documents
 threads = []
 fileno = 0
-iq = Queue.Queue()
+queue = Queue.Queue()
 
 # Fill the work input queue with URLs
 for url in urls:
     fileno = fileno + 1
-    iq.put((url, fileno))
+    queue.put((url, fileno))
 
 # Start a bunch of threads
 for num_threads in range(num_workers):
-    t = WorkerThread(iq)
+    t = WorkerThread(queue)
     t.start()
     threads.append(t)
 
