@@ -2,7 +2,7 @@
 # vi:ts=4:et
 # $Id$
 
-import os, sys, time
+import os, sys
 try:
     from cStringIO import StringIO
 except ImportError:
@@ -47,7 +47,7 @@ while 1:
         break
     # currently no more I/O is pending, could do something in the meantime
     # (display a progress bar, etc.)
-    time.sleep(0.01)
+    m.select()
 
 # close handles
 for c in m.handles:
