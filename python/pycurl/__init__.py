@@ -10,7 +10,7 @@ from _pycurl import *
 
 import os, sys, urllib, exceptions
 
-class CGIClient:
+class CurlCGI:
     "Encapsulate user operations on CGIs through cURL."
     def __init__(self, base_url=""):
         # These members might be set.
@@ -60,3 +60,95 @@ class CGIClient:
     def close(self):
         "Close a session, freeing resources."
         self.curlobj.close()
+
+# We should ignore SIGPIPE when using pycurl.NOSIGNAL - see the libcurl
+# documentation `libcurl-the-guide' for more info.
+try:
+    import signal
+    signal.signal(signal.SIGPIPE, signal.SIG_IGN)
+except ImportError:
+    pass
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from StringIO import StringIO
+import mimetools
+
+class HiCurl:
+    def __init__(self, url, file=None, data=None):
+        self.h = []
+        self.status = None
+        self.server_reply = StringIO()
+        self.c = Curl()
+        self.url = url
+        self.data = data
+        self.c.setopt(URL, self.url)
+        self.c.setopt(NOSIGNAL, 1)
+        self.c.setopt(HEADERFUNCTION, self.server_reply.write)
+
+        if file is None:
+            self.fp = StringIO()
+            self.c.setopt(WRITEFUNCTION, self.fp.write)
+        else:
+            self.fp = file
+            self.c.setopt(WRITEDATA, self.fp)
+        if self.data != None:
+            self.c.setopt(POST, 1)
+            self.c.setopt(POSTFIELDS, urllib.urlencode(self.data))
+
+    def set_url(self, url):
+        "Set the URL to be fetched,"
+        self.c.setopt(URL, url)
+        self.url = url
+
+    def add_header(self, *args):
+        "Add a header to the message object representing info about the URL."
+        self.h.append(args[0] + ': ' +args[1])
+
+    def retrieve(self, timeout=30):
+        "Perform the page retrieval."
+        if self.h:
+            self.c.setopt(HTTPHEADER, self.h)
+        self.c.setopt(CONNECTTIMEOUT, timeout)
+        self.c.perform()
+        self.fp.seek(0,0)
+        return (self.fp, self.info())
+
+    def info(self):
+        "Return an RFC822 object with info on the page."
+        self.server_reply.seek(0,0)
+        url = self.c.getinfo(EFFECTIVE_URL)
+        if url[:5] == 'http:':
+            self.server_reply.readline()
+            m = mimetools.Message(self.server_reply)
+        else:
+            m = mimetools.Message(StringIO())
+        m['effective-url'] = url
+        m['http-code'] = str(self.c.getinfo(HTTP_CODE))
+        m['total-time'] = str(self.c.getinfo(TOTAL_TIME))
+        m['namelookup-time'] = str(self.c.getinfo(NAMELOOKUP_TIME))
+        m['connect-time'] = str(self.c.getinfo(CONNECT_TIME))
+        m['pretransfer-time'] = str(self.c.getinfo(PRETRANSFER_TIME))
+        m['redirect-time'] = str(self.c.getinfo(REDIRECT_TIME))
+        m['redirect-count'] = str(self.c.getinfo(REDIRECT_COUNT))
+        m['size-upload'] = str(self.c.getinfo(SIZE_UPLOAD))
+        m['size-download'] = str(self.c.getinfo(SIZE_DOWNLOAD))
+        m['speed-upload'] = str(self.c.getinfo(SPEED_UPLOAD))
+        m['header-size'] = str(self.c.getinfo(HEADER_SIZE))
+        m['request-size'] = str(self.c.getinfo(REQUEST_SIZE))
+        m['content-length-download'] = str(self.c.getinfo(CONTENT_LENGTH_DOWNLOAD))
+        m['content-length-upload'] = str(self.c.getinfo(CONTENT_LENGTH_UPLOAD))
+        m['content-type'] = (self.c.getinfo(CONTENT_TYPE) or '').strip(';')
+        return m
+
+    def get_server_reply(self):
+        self.server_reply.seek(0,0)
+        return self.server_reply.getvalue()
+
+    def close(self):
+        self.c.close()
+        self.server_reply.close()
+        self.fp.close()
+
+    def __del__(self):
+        self.close()

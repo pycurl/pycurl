@@ -16,7 +16,7 @@ import pycurl
 
 assert sys.version[:3] >= "2.2", "requires Python 2.2 or better"
 
-class SourceForgeUserSession(pycurl.CGIClient):
+class SourceForgeUserSession(pycurl.CurlCGI):
     # SourceForge-specific methods.  Sensitive to changes in site design.
     def login(self, name, password):
         "Establish a login session."
