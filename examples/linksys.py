@@ -220,6 +220,7 @@ if __name__ == "__main__":
     class LinksysInterpreter(cmd.Cmd):
         """Interpret commands to perform LinkSys programming actions."""
         def __init__(self):
+            cmd.Cmd.__init__(self)
             self.session = LinksysSession()
             if os.isatty(0):
                 import readline
@@ -229,7 +230,7 @@ if __name__ == "__main__":
                 self.prompt = ""
                 print "Bar1"
 
-        def flag_command(self, func):
+        def flag_command(self, func, line):
             if line.strip() in ("on", "enable", "yes"):
                 func(True)
             elif line.strip() in ("off", "disable", "no"):
@@ -268,7 +269,7 @@ if __name__ == "__main__":
             print "the box is responding correctly."
 
         def do_verbose(self, line):
-            self.flag_command(self.session.set_verbosity)
+            self.flag_command(self.session.set_verbosity, line)
         def help_verbose(self):
             print "Usage: verbose {on|off|enable|disable|yes|no}"
             print "Enables display of HTTP requests."
@@ -302,7 +303,7 @@ if __name__ == "__main__":
             print "Sets the LAN subnetwork mask."
 
         def do_wireless(self, line):
-            self.flag_command(self.session.set_wireless)
+            self.flag_command(self.session.set_wireless, line)
             return 0
         def help_wireless(self):
             print "Usage: wireless {on|off|enable|disable|yes|no}"
@@ -316,7 +317,7 @@ if __name__ == "__main__":
             print "Sets the SSID used to control wireless access."
 
         def do_ssid_broadcast(self, line):
-            self.flag_command(self.session.set_SSID_broadcast)
+            self.flag_command(self.session.set_SSID_broadcast, line)
             return 0
         def help_ssid_broadcast(self):
             print "Usage: ssid_broadcast {on|off|enable|disable|yes|no}"
@@ -330,7 +331,7 @@ if __name__ == "__main__":
             print "Sets the wireless channel."
 
         def do_wep(self, line):
-            self.flag_command(self.session.set_WEP)
+            self.flag_command(self.session.set_WEP, line)
             return 0
         def help_wep(self):
             print "Usage: wep {on|off|enable|disable|yes|no}"
@@ -387,7 +388,7 @@ if __name__ == "__main__":
             print "Sets the router password."
 
         def do_upnp(self, line):
-            self.flag_command(self.session.set_UPnP)
+            self.flag_command(self.session.set_UPnP, line)
             return 0
         def help_upnp(self):
             print "Usage: upnp {on|off|enable|disable|yes|no}"
@@ -400,7 +401,7 @@ if __name__ == "__main__":
             print "Reset Linksys settings to factory defaults."
 
         def do_dhcp(self, line):
-            self.flag_command(self.session.set_DHCP)
+            self.flag_command(self.session.set_DHCP, line)
         def help_dhcp(self):
             print "Usage: dhcp {on|off|enable|disable|yes|no}"
             print "Switch to enable or disable DHCP features."
@@ -435,7 +436,7 @@ if __name__ == "__main__":
             print "Sets primary, secondary, or tertiary DNS server address."
 
         def do_logging(self, line):
-            self.flag_command(self.session.set_logging)
+            self.flag_command(self.session.set_logging, line)
         def help_logging(self):
             print "Usage: logging {on|off|enable|disable|yes|no}"
             print "Switch to enable or disable session logging."
