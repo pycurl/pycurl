@@ -119,7 +119,9 @@ get_thread_state(const CurlObject *self)
     {
         /* inside perform() */
         assert(self->handle != NULL);
-        assert(self->multi_stack == NULL || self->multi_stack->state == NULL);
+        if (self->multi_stack != NULL) {
+            assert(self->multi_stack->state == NULL);
+        }
         return self->state;
     }
     if (self->multi_stack != NULL && self->multi_stack->state != NULL)
@@ -245,6 +247,8 @@ curl_dealloc(CurlObject *self)
 static PyObject *
 do_cleanup(CurlObject *self, PyObject *args)
 {
+    int res = CURLM_OK;
+
     if (!PyArg_ParseTuple(args, ":cleanup")) {
         return NULL;
     }
@@ -259,18 +263,16 @@ do_cleanup(CurlObject *self, PyObject *args)
             return NULL;
         }
         /* Remove object from the multi stack if the multi stack is still valid */
-        if (self->multi_stack->multi_handle != NULL && self->handle != NULL)
-        {
-            int res;
+        if (self->multi_stack->multi_handle != NULL && self->handle != NULL) {
             res = curl_multi_remove_handle(self->multi_stack->multi_handle, self->handle);
-            if (res != CURLM_OK) {
-                CURLERROR2("remove_handle failed");
-            }
         }
         Py_XDECREF(self->multi_stack);
         self->multi_stack = NULL;
     }
     self_cleanup(self);
+    if (res != CURLM_OK) {
+        CURLERROR2("remove_handle failed");
+    }
     Py_INCREF(Py_None);
     return Py_None;
 }
@@ -1110,30 +1112,26 @@ do_multi_addhandle(CurlMultiObject *self, PyObject *args)
     CurlObject *obj;
     int res;
 
-    if (PyArg_ParseTuple(args, "O!:add_handle", &Curl_Type, (PyObject *)&obj)) {
-        if (check_curl_object(self, obj) != 0) {
-            return NULL;
-        }
-        if (obj->handle == NULL) {
-            PyErr_SetString(ErrorObject, "curl object already closed");
-            return NULL;
-        }
-        if (obj->multi_stack == self) {
-            PyErr_SetString(ErrorObject, "curl object already on this multi-stack");
-            return NULL;
-        }
-        res = curl_multi_add_handle(self->multi_handle, obj->handle);
-        if (res != CURLM_CALL_MULTI_PERFORM) {
-            CURLERROR2("add_handle failed");
-        }
-        obj->multi_stack = self;
-        Py_INCREF(obj->multi_stack);
-        Py_INCREF(obj);
-    }
-    else {
-        PyErr_SetString(PyExc_TypeError, "expecting a curl object");
+    if (!PyArg_ParseTuple(args, "O!:add_handle", &Curl_Type, &obj)) {
         return NULL;
     }
+    if (check_curl_object(self, obj) != 0) {
+        return NULL;
+    }
+    if (obj->handle == NULL) {
+        PyErr_SetString(ErrorObject, "curl object already closed");
+        return NULL;
+    }
+    if (obj->multi_stack == self) {
+        PyErr_SetString(ErrorObject, "curl object already on this multi-stack");
+        return NULL;
+    }
+    res = curl_multi_add_handle(self->multi_handle, obj->handle);
+    if (res != CURLM_CALL_MULTI_PERFORM) {
+        CURLERROR2("add_handle failed");
+    }
+    obj->multi_stack = self;
+    Py_INCREF(obj->multi_stack);
     Py_INCREF(Py_None);
     return Py_None;
 }
@@ -1144,30 +1142,26 @@ do_multi_removehandle(CurlMultiObject *self, PyObject *args)
     CurlObject *obj;
     int res;
 
-    if (PyArg_ParseTuple(args, "O!:remove_handle", &Curl_Type, (PyObject *)&obj)) {
-        if (check_curl_object(self, obj) != 0) {
-            return NULL;
-        }
-        if (obj->handle == NULL) {
-            /* handle already closed -- ignore */
-            goto done;
-        }
-        if (obj->multi_stack != self) {
-            PyErr_SetString(ErrorObject, "curl object not on this multi-stack");
-            return NULL;
-        }
-        res = curl_multi_remove_handle(self->multi_handle, obj->handle);
-        if (res != CURLM_OK) {
-            CURLERROR2("remove_handle failed");
-        }
-        Py_DECREF(obj->multi_stack);
-        obj->multi_stack = NULL;
-        Py_DECREF(obj);
-    }
-    else {
-        PyErr_SetString(PyExc_TypeError, "expecting a curl object");
+    if (!PyArg_ParseTuple(args, "O!:remove_handle", &Curl_Type, &obj)) {
         return NULL;
     }
+    if (check_curl_object(self, obj) != 0) {
+        return NULL;
+    }
+    if (obj->handle == NULL) {
+        /* handle already closed -- ignore */
+        goto done;
+    }
+    if (obj->multi_stack != self) {
+        PyErr_SetString(ErrorObject, "curl object not on this multi-stack");
+        return NULL;
+    }
+    res = curl_multi_remove_handle(self->multi_handle, obj->handle);
+    if (res != CURLM_OK) {
+        CURLERROR2("remove_handle failed");
+    }
+    Py_DECREF(obj->multi_stack);
+    obj->multi_stack = NULL;
 done:
     Py_INCREF(Py_None);
     return Py_None;
