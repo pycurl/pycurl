@@ -1,3 +1,2 @@
 * Allow methods as callbacks (currently only functions work)
-* Test with gtk and threads to see how that works
 * Add more examples in particular handling forms and all that
