@@ -2,6 +2,8 @@
 
 If you want to hack on pycurl, here's our list of unresolved issues:
 
+    * I think CURLOPT_FILETIME needs to be checked.
+
     * A nicer mechanism to decrease the reference count on container
       objects and classes passed as options to setopt (this has to be
       hacked in ugly ways now)
