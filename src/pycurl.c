@@ -903,7 +903,19 @@ do_curl_unsetopt(CurlObject *self, PyObject *args)
         return NULL;
     }
 
+    /* early checks of option value */
+    if (option <= 0)
+        goto error;
+    if (option >= (int)CURLOPTTYPE_OFF_T + OPTIONS_SIZE)
+        goto error;
+    if (option % 10000 >= OPTIONS_SIZE)
+        goto error;
+
     return util_curl_unsetopt(self, option);
+
+error:
+    PyErr_SetString(PyExc_TypeError, "invalid arguments to unsetopt");
+    return NULL;
 }
 
 
@@ -1026,12 +1038,12 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
     /* Handle the case of integer arguments */
     if (PyInt_Check(obj)) {
-        long longdata = PyInt_AsLong(obj);
+        long d = PyInt_AsLong(obj);
 
         if (IS_LONG_OPTION(option))
-            res = curl_easy_setopt(self->handle, (CURLoption)option, longdata);
+            res = curl_easy_setopt(self->handle, (CURLoption)option, (long)d);
         else if (IS_OFF_T_OPTION(option))
-            res = curl_easy_setopt(self->handle, (CURLoption)option, (curl_off_t)longdata);
+            res = curl_easy_setopt(self->handle, (CURLoption)option, (curl_off_t)d);
         else {
             PyErr_SetString(PyExc_TypeError, "integers are not supported for this option");
             return NULL;
@@ -1045,14 +1057,14 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
     /* Handle the case of long arguments (used by *LARGE options) */
     if (PyLong_Check(obj)) {
-        curl_off_t llongdata = PyLong_AsLongLong(obj);
-        if (llongdata == -1 && PyErr_Occurred())
+        PY_LONG_LONG d = PyLong_AsLongLong(obj);
+        if (d == -1 && PyErr_Occurred())
             return NULL;
 
-        if (IS_LONG_OPTION(option) && (long)llongdata == llongdata)
-            res = curl_easy_setopt(self->handle, (CURLoption)option, (long)llongdata);
-        else if (IS_OFF_T_OPTION(option))
-            res = curl_easy_setopt(self->handle, (CURLoption)option, llongdata);
+        if (IS_LONG_OPTION(option) && (long)d == d)
+            res = curl_easy_setopt(self->handle, (CURLoption)option, (long)d);
+        else if (IS_OFF_T_OPTION(option) && (curl_off_t)d == d)
+            res = curl_easy_setopt(self->handle, (CURLoption)option, (curl_off_t)d);
         else {
             PyErr_SetString(PyExc_TypeError, "longs are not supported for this option");
             return NULL;
