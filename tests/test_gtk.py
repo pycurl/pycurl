@@ -15,6 +15,8 @@ def progress(download_t, download_d, upload_t, upload_d):
     if download_t == 0:
         pbar.set_activity_mode(1)
         round = round + 0.1
+        if round >= 1.0:
+            round = 0.0
     else:
         pbar.set_activity_mode(0)
         round = float(download_d) / float(download_t)
