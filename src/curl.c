@@ -1410,18 +1410,14 @@ done:
     return Py_None;
 }
 
-/* --------------- fdset ---------------------- *
- * This looks inelegant, but will remain        *
- * independent of changes in libcurl internals  */
+/* --------------- fdset ---------------------- */
 
 static PyObject *
 do_multi_fdset(CurlMultiObject *self, PyObject *args)
 {   
     CURLMcode res;
-    fd_set read_fd_set;
-    fd_set write_fd_set;
-    fd_set exc_fd_set;
-    int max_fd,fd;
+    fd_set read_fd_set, write_fd_set, exc_fd_set;
+    int max_fd, fd;
     PyObject *list, *read_list, *write_list, *except_list;
 
     /* Sanity checks */
@@ -1430,22 +1426,21 @@ do_multi_fdset(CurlMultiObject *self, PyObject *args)
     }
 
     if (self->multi_handle == NULL) {
-        PyErr_SetString(ErrorObject, "cannot invoke perform, no curl-multi handle");
+        PyErr_SetString(ErrorObject, 
+			"cannot invoke perform, no curl-multi handle");
         return NULL;
     }
 
     if (self->state != NULL) {
-        PyErr_SetString(ErrorObject, "cannot obtain fdset - multi_perform() or fdset() already running");
+        PyErr_SetString(ErrorObject, 
+			"cannot obtain fdset - multi_perform() is running");
         return NULL;
     }
 
-    list = PyList_New(0);
-    read_list = PyList_New(0);
-    write_list = PyList_New(0);
-    except_list = PyList_New(0);
-    PyList_Append(list, read_list);
-    PyList_Append(list, write_list);
-    PyList_Append(list, except_list);
+    /* Clear file descriptor sets */
+    FD_ZERO(&read_fd_set);
+    FD_ZERO(&write_fd_set);
+    FD_ZERO(&exc_fd_set);
 
     /* Don't bother releasing the gil as this is just a data structure operation */
     res = curl_multi_fdset(self->multi_handle, &read_fd_set, &write_fd_set, 
@@ -1454,26 +1449,23 @@ do_multi_fdset(CurlMultiObject *self, PyObject *args)
         CURLERROR2("fdset failed");
     }
 
-    /* It is actually quite difficult/non-portable to extract fds from
-       fd_sets.  Since max_fd is assumed to be small(ish) using the
-       FD_ISSET macro is not that inefficient for most cases.  */
+    /* Initialize lists */
+    list = PyList_New(0);
+    read_list = PyList_New(0);
+    write_list = PyList_New(0);
+    except_list = PyList_New(0);
+    PyList_Append(list, read_list);
+    PyList_Append(list, write_list);
+    PyList_Append(list, except_list);
 
-    /* Populate read_list */
+    /* Populate read, write and exception lists */
     for (fd = 0; fd < max_fd; fd++) {
         if (FD_ISSET(fd, &read_fd_set)) {
             PyList_Append(read_list, PyInt_FromLong((long)fd));
 	}
-    }
-
-    /* Populate write_list */
-    for (fd = 0; fd < max_fd; fd++) {
         if (FD_ISSET(fd, &write_fd_set)) {
             PyList_Append(write_list, PyInt_FromLong((long)fd));
 	}
-    }
-
-    /* Populate write_list */
-    for (fd = 0; fd < max_fd; fd++) {
         if (FD_ISSET(fd, &exc_fd_set)) {
             PyList_Append(except_list, PyInt_FromLong((long)fd));
         }
