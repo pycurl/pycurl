@@ -14,6 +14,9 @@ NEW FEATURES/IMPROVEMENTS:
       Curl.unsetopt() method. Have to carefully check the libcurl source
       code for each option we want to support.
 
+
+DEFICIENICES;
+
     * Using certain invalid options, it may be possible to cause a crash (e.g.
       setting a too large POSTFIELDSIZE).  This is un-Pythonic behaviour, but
       you somewhere have to draw a line between efficiency (and feature
@@ -21,6 +24,7 @@ NEW FEATURES/IMPROVEMENTS:
       error checks, but tracking and catching all possible (deliberate) misuses
       is not a goal (and probably impossible anyway, due to the complexity
       of libcurl).
-      [ In the POSTFIELDS case, the Python way would be to simply not expose
-        the POSTFIELDSIZE option and require string slicing instead. ]
+      [ In the simple POSTFIELDS case, the Python way would be to simply not
+        expose the POSTFIELDSIZE option and require string slicing instead.
+        In the next case (we're not going to tell you) it stays up to you. ]
 
