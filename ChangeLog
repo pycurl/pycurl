@@ -1,3 +1,9 @@
+2001-11-04  Kjetil Jacobsen  <kjetilja>
+
+	* Exception handling has been improved and should no longer throw
+	spurious exceptions (by Markus F.X.J. Oberhumer
+	<markus@oberhumer.com>).
+
 2001-10-15  Kjetil Jacobsen  <kjetilja>
 
 	* Refactored the test_gtk.py script to avoid global variables.
