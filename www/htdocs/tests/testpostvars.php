@@ -1,4 +1,4 @@
-<?php
+<?php // vi:ts=4:et
 set_magic_quotes_runtime(0);
 
 // send the result back as text/plain, so that we don't have to care
@@ -11,10 +11,10 @@ echo "POST vars from HTTP request:\n\n";
 
 if (is_array($HTTP_POST_VARS))
 {
-	while (list($k, $v) = each($HTTP_POST_VARS))
-	{
-		printf("  '%s': '%s'\n", $k, $v);
-	}
+    while (list($k, $v) = each($HTTP_POST_VARS))
+    {
+        printf("  '%s': '%s'\n", $k, $v);
+    }
 }
 
 echo "\n[end of file]\n";

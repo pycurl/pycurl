@@ -1,3 +1,6 @@
+<?php // vi:ts=4:et
+?>
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
@@ -35,7 +38,7 @@ You still should download the sources because of the test and example programs.
       <table align="right">
         <tr align="right">
           <td><a href="http://curl.haxx.se/"><img
-	  src="http://curl.haxx.se/pix/powered_by_curl.gif" alt=""
+          src="http://curl.haxx.se/pix/powered_by_curl.gif" alt=""
           width="88" height="31" border="0" /></a>
           </td>
 

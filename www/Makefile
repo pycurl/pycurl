@@ -42,6 +42,8 @@ rsync-dry:
 rsync-check:
 	$(MAKE) rsync 'RSYNC=rsync --dry-run -c'
 
+
+# note: CVS does not maintain file permissions, so we have to care manually
 __rsync-clean:
 	chgrp -c -R pycurl .
 	chmod -c g+s `find . -type d -print`
