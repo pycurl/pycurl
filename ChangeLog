@@ -1,15 +1,23 @@
-
-Version 7.10.9 [requires libcurl-7.10.3 or better]
+Version 7.11.0 [requires libcurl-7.10.3 or better]
 --------------
 
-2004-01-13  Kjetil Jacobsen  <kjetilja>
+2004-02-11  Kjetil Jacobsen  <kjetilja>
 
-        * Disable GC tracking by default since this is causing
-        segmentation faults due to asserts in Python.
+        * Added support for libcurl 7.11.0 CURLOPT features:
+          INFILESIZE_LARGE, RESUME_FROM_LARGE, MAXFILESIZE_LARGE
+          and FTP_SSL.
+
+        * Circular garbage collection support can now be enabled or
+          disabled by passing the '--use-gc=[0|1]' parameter to setup.py
+          when building pycurl.
+
+        * HTTP_VERSION options are known as CURL_HTTP_VERSION_NONE,
+          CURL_HTTP_VERSION_1_0, CURL_HTTP_VERSION_1_1 and
+          CURL_HTTP_VERSION_LAST.
 
 2003-11-16  Markus F.X.J. Oberhumer <mfx>
 
-        * Added support for these new libcurl 7.10.9 features:
+        * Added support for these new libcurl 7.11.0 features:
           CURLOPT_NETRC_FILE.
 
 
