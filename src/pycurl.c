@@ -99,8 +99,7 @@ typedef struct {
     PyObject *h_cb;
     PyObject *r_cb;
     PyObject *pro_cb;
-    PyObject *pwd_cb;
-    PyObject *d_cb;
+    PyObject *debug_cb;
     /* file objects */
     PyObject *readdata_fp;
     PyObject *writedata_fp;
@@ -260,8 +259,7 @@ util_curl_new(void)
     self->h_cb = NULL;
     self->r_cb = NULL;
     self->pro_cb = NULL;
-    self->pwd_cb = NULL;
-    self->d_cb = NULL;
+    self->debug_cb = NULL;
 
     /* Set file object pointers to NULL by default */
     self->readdata_fp = NULL;
@@ -353,11 +351,10 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
     if (flags & 4) {
         /* Decrement refcount for python callbacks. */
         ZAP(self->w_cb);
+        ZAP(self->h_cb);
         ZAP(self->r_cb);
         ZAP(self->pro_cb);
-        ZAP(self->pwd_cb);
-        ZAP(self->h_cb);
-        ZAP(self->d_cb);
+        ZAP(self->debug_cb);
     }
 
     if (flags & 8) {
@@ -415,8 +412,9 @@ util_curl_close(CurlObject *self)
     SFREE(self->prequote);
 #undef SFREE
 
-    /* Last, free the options.  This must be done after the curl handle is closed
-     * since curl assumes that some options are valid when invoking cleanup */
+    /* Last, free the options.  This must be done after the curl handle
+     * is closed since libcurl assumes that some options are valid when
+     * invoking curl_easy_cleanup(). */
     for (i = 0; i < OPTIONS_SIZE; i++) {
         if (self->options[i] != NULL) {
             free(self->options[i]);
@@ -461,7 +459,7 @@ do_curl_errstr(CurlObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, ":errstr")) {
         return NULL;
     }
-    if (check_curl_state(self, 1+2, "errstr") != 0) {
+    if (check_curl_state(self, 1 | 2, "errstr") != 0) {
         return NULL;
     }
     self->error[sizeof(self->error) - 1] = 0;
@@ -492,11 +490,10 @@ do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
     VISIT((PyObject *) self->multi_stack);
 
     VISIT(self->w_cb);
+    VISIT(self->h_cb);
     VISIT(self->r_cb);
     VISIT(self->pro_cb);
-    VISIT(self->pwd_cb);
-    VISIT(self->h_cb);
-    VISIT(self->d_cb);
+    VISIT(self->debug_cb);
 
     VISIT(self->readdata_fp);
     VISIT(self->writedata_fp);
@@ -517,7 +514,7 @@ do_curl_perform(CurlObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, ":perform")) {
         return NULL;
     }
-    if (check_curl_state(self, 1+2, "perform") != 0) {
+    if (check_curl_state(self, 1 | 2, "perform") != 0) {
         return NULL;
     }
 
@@ -546,50 +543,61 @@ do_curl_perform(CurlObject *self, PyObject *args)
 static size_t
 util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *stream)
 {
-    PyObject *arglist;
-    PyObject *result;
-    PyObject *cb;
     CurlObject *self;
-    PyThreadState *tmp_state;
-    int write_size;
+    PyThreadState *tmp_state = NULL;
+    int have_tmp_state = 0;
+    PyObject *arglist;
+    PyObject *result = NULL;
     size_t ret = 0;     /* assume error */
+    PyObject *cb;
+    int total_size;
 
     self = (CurlObject *)stream;
     tmp_state = get_thread_state(self);
-    if (tmp_state == NULL) {
-        return ret;
-    }
     cb = flags ? self->h_cb : self->w_cb;
-    if (cb == NULL) {
-        return ret;
+    if (tmp_state == NULL || cb == NULL)
+        goto silent_error;
+    if (size <= 0 || nmemb <= 0)
+        goto done;
+    total_size = (int)(size * nmemb);
+    if (total_size < 0 || (size_t)total_size / size != nmemb) {
+        PyErr_SetString(ErrorObject, "integer overflow in write callback");
+        goto verbose_error;
     }
-    write_size = (int)(size * nmemb);
-    if (write_size <= 0)
-        return ret;
-    if (size <= 0 || (size_t)write_size / size != nmemb)
-        return ret;
+
     PyEval_AcquireThread(tmp_state);
-    arglist = Py_BuildValue("(s#)", ptr, write_size);
-    if (arglist == NULL) {
-        PyEval_ReleaseThread(tmp_state);
-        return ret;
-    }
+    have_tmp_state = 1;
+    arglist = Py_BuildValue("(s#)", ptr, total_size);
+    if (arglist == NULL)
+        goto verbose_error;
     result = PyEval_CallObject(cb, arglist);
     Py_DECREF(arglist);
-    if (result == NULL) {
-        PyErr_Print();
+    if (result == NULL)
+        goto verbose_error;
+    if (result == Py_None) {
+        ret = total_size;           /* None means success */
     }
-    else if (result == Py_None) {               /* None means success */
-        ret = (size_t)write_size;
+    else if (PyInt_Check(result)) {
+        long obj_size = PyInt_AsLong(result);
+        if (obj_size < 0 || obj_size > total_size) {
+            PyErr_Format(ErrorObject, "invalid return value for write callback %ld %ld", (long)obj_size, (long)total_size);
+            goto verbose_error;
+        }
+        ret = total_size;           /* success */
     }
     else {
-        write_size = (int)PyInt_AsLong(result);
-        if (write_size >= 0)
-            ret = (size_t)write_size;                   /* success */
+        PyErr_SetString(ErrorObject, "write callback must return int or None");
+        goto verbose_error;
     }
+
+done:
+silent_error:
     Py_XDECREF(result);
-    PyEval_ReleaseThread(tmp_state);
+    if (have_tmp_state) PyEval_ReleaseThread(tmp_state);
     return ret;
+verbose_error:
+    PyErr_Print();
+    goto silent_error;
 }
 
 
@@ -607,135 +615,156 @@ header_callback(char *ptr, size_t size, size_t nmemb, void *stream)
 
 
 static size_t
-read_callback(char *ptr, size_t size, size_t nmemb, void  *stream)
+read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
 {
-    PyObject *arglist;
-    PyObject *result;
     CurlObject *self;
-    PyThreadState *tmp_state;
-    char *buf;
-    int obj_size, read_size;
+    PyThreadState *tmp_state = NULL;
+    int have_tmp_state = 0;
+    PyObject *arglist;
+    PyObject *result = NULL;
     size_t ret = 0;     /* assume error */
+    int total_size;
 
     self = (CurlObject *)stream;
     tmp_state = get_thread_state(self);
-    if (tmp_state == NULL || self->r_cb == NULL) {
-        return ret;
+    if (tmp_state == NULL || self->r_cb == NULL)
+        goto silent_error;
+    if (size <= 0 || nmemb <= 0)
+        goto done;
+    total_size = (int)(size * nmemb);
+    if (total_size < 0 || (size_t)total_size / size != nmemb) {
+        PyErr_SetString(ErrorObject, "integer overflow in read callback");
+        goto verbose_error;
     }
-    read_size = (int)(size * nmemb);
-    if (read_size <= 0)
-        return ret;
-    if (size <= 0 || (size_t)read_size / size != nmemb)
-        return ret;
+
     PyEval_AcquireThread(tmp_state);
-    arglist = Py_BuildValue("(i)", read_size);
-    if (arglist == NULL) {
-        PyEval_ReleaseThread(tmp_state);
-        return ret;
-    }
+    have_tmp_state = 1;
+    arglist = Py_BuildValue("(i)", total_size);
+    if (arglist == NULL)
+        goto verbose_error;
     result = PyEval_CallObject(self->r_cb, arglist);
     Py_DECREF(arglist);
-    if (result == NULL) {
-        PyErr_Print();
+    if (result == NULL)
+        goto verbose_error;
+    if (PyString_Check(result)) {
+        char *buf = NULL;
+        int obj_size = -1;
+        PyString_AsStringAndSize(result, &buf, &obj_size);
+        if (buf == NULL || obj_size < 0 || obj_size > total_size) {
+            PyErr_Format(ErrorObject, "invalid return value for read callback %ld %ld", (long)obj_size, (long)total_size);
+            goto verbose_error;
+        }
+        memcpy(ptr, buf, obj_size);
+        ret = obj_size;             /* success */
     }
     else {
-        if (!PyString_Check(result)) {
-            PyErr_SetString(ErrorObject, "callback for READFUNCTION must return string");
-            PyErr_Print();
-        }
-        else {
-            PyString_AsStringAndSize(result, &buf, &obj_size);
-            if (obj_size > read_size) {
-                PyErr_SetString(ErrorObject, "string from READFUNCTION callback is too long");
-                PyErr_Print();
-            }
-            else {
-                memcpy(ptr, buf, obj_size);
-                ret = (size_t)obj_size;         /* success */
-            }
-        }
+        PyErr_SetString(ErrorObject, "read callback must return string");
+        goto verbose_error;
     }
+
+done:
+silent_error:
     Py_XDECREF(result);
-    PyEval_ReleaseThread(tmp_state);
+    if (have_tmp_state) PyEval_ReleaseThread(tmp_state);
     return ret;
+verbose_error:
+    PyErr_Print();
+    goto silent_error;
 }
 
 
 static int
 progress_callback(void *client,
-                  double dltotal,
-                  double dlnow,
-                  double ultotal,
-                  double ulnow)
+                  double dltotal, double dlnow, double ultotal, double ulnow)
 {
-    PyObject *arglist;
-    PyObject *result;
     CurlObject *self;
-    PyThreadState *tmp_state;
+    PyThreadState *tmp_state = NULL;
+    int have_tmp_state = 0;
+    PyObject *arglist;
+    PyObject *result = NULL;
     int ret = 1;       /* assume error */
 
     self = (CurlObject *)client;
     tmp_state = get_thread_state(self);
-    if (tmp_state == NULL || self->pro_cb == NULL) {
-        return ret;
-    }
+    if (tmp_state == NULL || self->pro_cb == NULL)
+        goto silent_error;
+
     PyEval_AcquireThread(tmp_state);
+    have_tmp_state = 1;
     arglist = Py_BuildValue("(dddd)", dltotal, dlnow, ultotal, ulnow);
-    if (arglist == NULL) {
-        PyEval_ReleaseThread(tmp_state);
-        return ret;
-    }
+    if (arglist == NULL)
+        goto verbose_error;
     result = PyEval_CallObject(self->pro_cb, arglist);
     Py_DECREF(arglist);
-    if (result == NULL) {
-        PyErr_Print();
+    if (result == NULL)
+        goto verbose_error;
+    if (result == Py_None) {
+        ret = 0;        /* None means success */
     }
-    else if (result == Py_None) {               /* None means success */
-        ret = 0;
+    else if (PyInt_Check(result)) {
+        ret = (int) PyInt_AsLong(result);
     }
     else {
-        ret = (int)PyInt_AsLong(result);
+        ret = PyObject_IsTrue(result);  /* FIXME ??? */
     }
+
+silent_error:
     Py_XDECREF(result);
-    PyEval_ReleaseThread(tmp_state);
+    if (have_tmp_state) PyEval_ReleaseThread(tmp_state);
     return ret;
+verbose_error:
+    PyErr_Print();
+    goto silent_error;
 }
 
 
 static int
-debug_callback(CURL *curlobj,
-               curl_infotype type,
-               char *buffer,
-               size_t size,
-               void *data)
+debug_callback(CURL *curlobj, curl_infotype type,
+               char *buffer, size_t total_size, void *data)
 {
-    PyObject *arglist;
-    PyObject *result;
     CurlObject *self;
-    PyThreadState *tmp_state;
+    PyThreadState *tmp_state = NULL;
+    int have_tmp_state = 0;
+    PyObject *arglist;
+    PyObject *result = NULL;
     int ret = 0;       /* always success */
 
     UNUSED(curlobj);
     self = (CurlObject *)data;
     tmp_state = get_thread_state(self);
-    if (tmp_state == NULL || self->d_cb == NULL) {
-        return ret;
+    if (tmp_state == NULL || self->debug_cb == NULL)
+        goto silent_error;
+    if ((int)total_size < 0 || (size_t)((int)total_size) != total_size) {
+        PyErr_SetString(ErrorObject, "integer overflow in debug callback");
+        goto verbose_error;
     }
-    if ((int)size < 0 || (size_t)((int)size) != size)
-        return ret;
+
     PyEval_AcquireThread(tmp_state);
-    arglist = Py_BuildValue("(is#)", (int)type, buffer, (int)size);
-    if (arglist == NULL) {
-        PyEval_ReleaseThread(tmp_state);
-        return ret;
-    }
-    result = PyEval_CallObject(self->d_cb, arglist);
+    have_tmp_state = 1;
+    arglist = Py_BuildValue("(is#)", (int)type, buffer, (int)total_size);
+    if (arglist == NULL)
+        goto verbose_error;
+    result = PyEval_CallObject(self->debug_cb, arglist);
     Py_DECREF(arglist);
-    if (result == NULL) {
-        PyErr_Print();
+    if (result == NULL)
+        goto verbose_error;
+
+    /* ignore result */
+#if 0
+    if (result == Py_None) {
+        ret = 0;        /* None means success */
+    } else {
+        ret = 0;        /* ??? */
     }
-    PyEval_ReleaseThread(tmp_state);
+#endif
+
+silent_error:
+    Py_XDECREF(result);
+    if (have_tmp_state) PyEval_ReleaseThread(tmp_state);
     return ret;
+verbose_error:
+    PyErr_Print();
+    goto silent_error;
 }
 
 
@@ -751,7 +780,7 @@ util_curl_unsetopt(CurlObject *self, int option)
     if ((res = curl_easy_setopt(self->handle, (o), (x))) != CURLE_OK) goto error
 #define SETOPT(x)   SETOPT2((CURLoption)option, (x))
 
-    /* FIXME: implement more options. Have to check lib/url.c in the
+    /* FIXME: implement more options. Have to carefully check lib/url.c in the
      *   libcurl source code to see if it's actually safe to simply
      *   unset the option. */
     switch (option)
@@ -792,7 +821,6 @@ util_curl_unsetopt(CurlObject *self, int option)
     }
 
     if (opt_masked >= 0 && self->options[opt_masked] != NULL) {
-        assert(opt_masked == PYCURL_OPT(opt_masked));
         free(self->options[opt_masked]);
         self->options[opt_masked] = NULL;
     }
@@ -816,7 +844,7 @@ do_curl_unsetopt(CurlObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "i:unsetopt", &option)) {
         return NULL;
     }
-    if (check_curl_state(self, 1+2, "unsetopt") != 0) {
+    if (check_curl_state(self, 1 | 2, "unsetopt") != 0) {
         return NULL;
     }
 
@@ -831,12 +859,12 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     PyObject *obj;
     int res;
 
-    if (!PyArg_ParseTuple(args, "iO:setopt", &option, &obj)) {
+    if (!PyArg_ParseTuple(args, "iO:setopt", &option, &obj))
         return NULL;
-    }
-    if (check_curl_state(self, 1+2, "setopt") != 0) {
+    if (check_curl_state(self, 1 | 2, "setopt") != 0)
         return NULL;
-    }
+    if (option <= 0)
+        goto error;
 
 #if 0 /* XXX - should we ??? */
     /* Handle the case of None */
@@ -913,12 +941,14 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     if (PyInt_Check(obj)) {
         long longdata = PyInt_AsLong(obj);
 
-        /* Check that option is integer as well as the input data */
-        if (option <= 0 || (option >= CURLOPTTYPE_OBJECTPOINT && option != CURLOPT_FILETIME)) {
+        if (option < CURLOPTTYPE_OBJECTPOINT)
+            res = curl_easy_setopt(self->handle, (CURLoption)option, longdata);
+        else if (option >= CURLOPTTYPE_OFF_T)
+            res = curl_easy_setopt(self->handle, (CURLoption)option, (curl_off_t)longdata);
+        else {
             PyErr_SetString(PyExc_TypeError, "integers are not supported for this option");
             return NULL;
         }
-        res = curl_easy_setopt(self->handle, (CURLoption)option, longdata);
         if (res != CURLE_OK) {
             CURLERROR_RETVAL();
         }
@@ -928,12 +958,18 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
     /* Handle the case of long arguments (used by *LARGE options) */
     if (PyLong_Check(obj)) {
-        curl_off_t longdata = PyLong_AsLongLong(obj);
-        if (option < CURLOPTTYPE_OFF_T) {
+        curl_off_t llongdata = PyLong_AsLongLong(obj);
+        if (llongdata == -1 && PyErr_Occurred())
+            return NULL;
+
+        if (option < CURLOPTTYPE_OBJECTPOINT && (long)llongdata == llongdata)
+            res = curl_easy_setopt(self->handle, (CURLoption)option, (long)llongdata);
+        else if (option >= CURLOPTTYPE_OFF_T)
+            res = curl_easy_setopt(self->handle, (CURLoption)option, llongdata);
+        else {
             PyErr_SetString(PyExc_TypeError, "longs are not supported for this option");
             return NULL;
         }
-        res = curl_easy_setopt(self->handle, (CURLoption)option, longdata);
         if (res != CURLE_OK) {
             CURLERROR_RETVAL();
         }
@@ -957,8 +993,8 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             }
             break;
         default:
-                PyErr_SetString(PyExc_TypeError, "files are not supported for this option");
-                return NULL;
+            PyErr_SetString(PyExc_TypeError, "files are not supported for this option");
+            return NULL;
         }
 
         fp = PyFile_AsFile(obj);
@@ -1134,10 +1170,10 @@ do_curl_setopt(CurlObject *self, PyObject *args)
          * definitions exactly match the <curl/curl.h> interface.
          */
         const curl_write_callback w_cb = write_callback;
-        const curl_read_callback r_cb = read_callback;
         const curl_write_callback h_cb = header_callback;
+        const curl_read_callback r_cb = read_callback;
         const curl_progress_callback pro_cb = progress_callback;
-        const curl_debug_callback d_cb = debug_callback;
+        const curl_debug_callback debug_cb = debug_callback;
 
         switch(option) {
         case CURLOPT_WRITEFUNCTION:
@@ -1152,6 +1188,13 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             curl_easy_setopt(self->handle, CURLOPT_WRITEFUNCTION, w_cb);
             curl_easy_setopt(self->handle, CURLOPT_WRITEDATA, self);
             break;
+        case CURLOPT_HEADERFUNCTION:
+            Py_INCREF(obj);
+            ZAP(self->h_cb);
+            self->h_cb = obj;
+            curl_easy_setopt(self->handle, CURLOPT_HEADERFUNCTION, h_cb);
+            curl_easy_setopt(self->handle, CURLOPT_WRITEHEADER, self);
+            break;
         case CURLOPT_READFUNCTION:
             Py_INCREF(obj);
             ZAP(self->readdata_fp);
@@ -1159,13 +1202,6 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             self->r_cb = obj;
             curl_easy_setopt(self->handle, CURLOPT_READFUNCTION, r_cb);
             curl_easy_setopt(self->handle, CURLOPT_READDATA, self);
-            break;
-        case CURLOPT_HEADERFUNCTION:
-            Py_INCREF(obj);
-            ZAP(self->h_cb);
-            self->h_cb = obj;
-            curl_easy_setopt(self->handle, CURLOPT_HEADERFUNCTION, h_cb);
-            curl_easy_setopt(self->handle, CURLOPT_WRITEHEADER, self);
             break;
         case CURLOPT_PROGRESSFUNCTION:
             Py_INCREF(obj);
@@ -1176,9 +1212,9 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             break;
         case CURLOPT_DEBUGFUNCTION:
             Py_INCREF(obj);
-            ZAP(self->d_cb);
-            self->d_cb = obj;
-            curl_easy_setopt(self->handle, CURLOPT_DEBUGFUNCTION, d_cb);
+            ZAP(self->debug_cb);
+            self->debug_cb = obj;
+            curl_easy_setopt(self->handle, CURLOPT_DEBUGFUNCTION, debug_cb);
             curl_easy_setopt(self->handle, CURLOPT_DEBUGDATA, self);
             break;
         default:
@@ -1191,6 +1227,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     }
 
     /* Failed to match any of the function signatures -- return error */
+error:
     PyErr_SetString(PyExc_TypeError, "invalid arguments to setopt");
     return NULL;
 }
@@ -1205,7 +1242,7 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "i:getinfo", &option)) {
         return NULL;
     }
-    if (check_curl_state(self, 1+2, "getinfo") != 0) {
+    if (check_curl_state(self, 1 | 2, "getinfo") != 0) {
         return NULL;
     }
 
@@ -1397,7 +1434,7 @@ do_multi_perform(CurlMultiObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, ":perform")) {
         return NULL;
     }
-    if (check_multi_state(self, 1+2, "perform") != 0) {
+    if (check_multi_state(self, 1 | 2, "perform") != 0) {
         return NULL;
     }
 
@@ -1528,7 +1565,7 @@ do_multi_fdset(CurlMultiObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, ":fdset")) {
         return NULL;
     }
-    if (check_multi_state(self, 1+2, "fdset") != 0) {
+    if (check_multi_state(self, 1 | 2, "fdset") != 0) {
         return NULL;
     }
 
@@ -1600,7 +1637,7 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
         PyErr_SetString(ErrorObject, "argument to info_read must be greater than zero");
         return NULL;
     }
-    if (check_multi_state(self, 1+2, "info_read") != 0) {
+    if (check_multi_state(self, 1 | 2, "info_read") != 0) {
         return NULL;
     }
 
@@ -1664,7 +1701,7 @@ do_multi_select(CurlMultiObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "|d:select", &timeout)) {
         return NULL;
     }
-    if (check_multi_state(self, 1+2, "select") != 0) {
+    if (check_multi_state(self, 1 | 2, "select") != 0) {
         return NULL;
     }
 
@@ -2254,7 +2291,10 @@ initpycurl(void)
     insint_c(d, "SSL_VERIFYPEER", CURLOPT_SSL_VERIFYPEER);
     insint_c(d, "CAPATH", CURLOPT_CAPATH);
     insint_c(d, "CAINFO", CURLOPT_CAINFO);
+#if 0
+    /* CURLOPT_FILETIME wants a pointer to a time_t */
     insint_c(d, "OPT_FILETIME", CURLOPT_FILETIME);
+#endif
     insint_c(d, "MAXREDIRS", CURLOPT_MAXREDIRS);
     insint_c(d, "MAXCONNECTS", CURLOPT_MAXCONNECTS);
     insint_c(d, "CLOSEPOLICY", CURLOPT_CLOSEPOLICY);
