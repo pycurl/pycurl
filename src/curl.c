@@ -27,6 +27,7 @@
 #endif
 #include <Python.h>
 #include <curl/curl.h>
+#include <curl/multi.h>
 
 
 /* Ensure we have an updated libcurl */
@@ -59,8 +60,15 @@ typedef struct {
     void *options[CURLOPT_LASTENTRY];
 } CurlObject;
 
+typedef struct {
+    PyObject_HEAD
+    CURLM *multi_handle;
+    PyThreadState *state; 
+} CurlMultiObject;
+
 #if !defined(__cplusplus)
 staticforward PyTypeObject Curl_Type;
+staticforward PyTypeObject CurlMulti_Type;
 #endif
 
 #define CURLERROR() do {\
@@ -873,6 +881,105 @@ do_getinfo(CurlObject *self, PyObject *args)
 
 /* --------------------------------------------------------------------- */
 
+static void
+self_multi_cleanup(CurlMultiObject *self)
+{
+    assert(self != NULL);
+
+    if (self->multi_handle != NULL) {
+        curl_multi_cleanup(self->multi_handle);
+        self->multi_handle = NULL;
+    }
+    self->state = NULL;
+}
+
+static PyObject *
+do_multi_cleanup(CurlMultiObject *self, PyObject *args)
+{
+    self_multi_cleanup(self);
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static void
+curl_multi_dealloc(CurlMultiObject *self)
+{
+    self_multi_cleanup(self);
+#if (PY_VERSION_HEX < 0x01060000)
+    PyMem_DEL(self);
+#else
+    PyObject_Del(self);
+#endif
+}
+
+static PyObject *
+do_multi_perform(CurlMultiObject *self, PyObject *args)
+{
+    int res, running;
+
+    /* Sanity checks */
+    if (!PyArg_ParseTuple(args, ":perform")) {
+        return NULL;
+    }
+
+    if (self->multi_handle == NULL) {
+        PyErr_SetString(ErrorObject, "cannot invoke perform, no curl-multi handle");
+        return NULL;
+    }
+    if (self->state != NULL) {
+        PyErr_SetString(ErrorObject, "cannot invoke perform - already running");
+        return NULL;
+    }
+
+    /* Save handle to current thread (used as context for python callbacks) */
+    self->state = PyThreadState_Get();
+
+    /* Release global lock and start */
+    Py_BEGIN_ALLOW_THREADS
+    res = curl_multi_perform(self->multi_handle, &running);
+    Py_END_ALLOW_THREADS
+
+    /* Zero thread-state to disallow callbacks to be run from now on */
+    self->state = NULL;
+
+    if (res == CURLM_OK) {
+        return PyInt_FromLong((long)res);
+    }
+    else {
+        printf("curl-multi error: %d\n", res);
+        PyErr_SetString(ErrorObject, "perform failed");
+        return NULL;
+    }
+}
+
+static PyObject *
+do_multi_addhandle(CurlMultiObject *self, PyObject *args)
+{
+    CurlObject *obj;
+    int res;
+
+    if (PyArg_ParseTuple(args, "O!:add_handle", &Curl_Type, (PyObject *)&obj)) {
+        if (obj->handle == NULL) {
+            PyErr_SetString(ErrorObject, "cannot add closed curl object to multi stack");
+            return NULL;
+        }
+        res = curl_multi_add_handle(self->multi_handle, obj->handle);
+        if (res != CURLM_CALL_MULTI_PERFORM) {
+            PyErr_SetString(ErrorObject, "add_handle failed");
+            return NULL;
+        }
+    }
+    else {
+        PyErr_SetString(ErrorObject, "invalid options to add_handle");
+        return NULL;
+    }
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+
+/* --------------------------------------------------------------------- */
+
 static char co_cleanup_doc [] = "cleanup() -> None.  End curl session.\n";
 static char co_setopt_doc [] = "setopt(option, parameter) -> None.  Set curl session options.  Throws pycurl.error exception upon failure.\n";
 static char co_perform_doc [] = "perform() -> None.  Perform a file transfer.  Throws pycurl.error exception upon failure.\n";
@@ -887,6 +994,12 @@ static PyMethodDef curlobject_methods[] = {
     {NULL, NULL, 0, NULL}
 };
 
+static PyMethodDef curlmultiobject_methods[] = {
+    {"cleanup", (PyCFunction)do_multi_cleanup, METH_VARARGS, NULL},
+    {"add_handle", (PyCFunction)do_multi_addhandle, METH_VARARGS, NULL},
+    {"perform", (PyCFunction)do_multi_perform, METH_VARARGS, NULL},
+    {NULL, NULL, 0, NULL}
+};
 
 static PyObject *
 curl_getattr(CurlObject *co, char *name)
@@ -894,6 +1007,11 @@ curl_getattr(CurlObject *co, char *name)
     return Py_FindMethod(curlobject_methods, (PyObject *)co, name);
 }
 
+static PyObject *
+curl_multi_getattr(CurlMultiObject *co, char *name)
+{
+    return Py_FindMethod(curlmultiobject_methods, (PyObject *)co, name);
+}
 
 statichere PyTypeObject Curl_Type = {
     PyObject_HEAD_INIT(NULL)
@@ -917,7 +1035,58 @@ statichere PyTypeObject Curl_Type = {
      */
 };
 
+statichere PyTypeObject CurlMulti_Type = {
+    PyObject_HEAD_INIT(NULL)
+    0,                          /* ob_size */
+    "CurlMulti",                /* tp_name */
+    sizeof(CurlMultiObject),    /* tp_basicsize */
+    0,                          /* tp_itemsize */
+    /* Methods */
+    (destructor)curl_multi_dealloc,   /* dealloc */
+    0,                          /* tp_print */
+    (getattrfunc)curl_multi_getattr,  /* getattr */
+    0,                          /* setattr */
+    0,                          /* tp_compare */
+    0,                          /* tp_repr */
+    0,                          /* tp_as_number */
+    0,                          /* tp_as_sequence */
+    0,                          /* tp_as_mapping */
+    0                           /* tp_hash */
+    /* More fields follow here, depending on your Python version.
+     * You can safely ignore any compiler warnings.
+     */
+};
+
+
 /* --------------------------------------------------------------------- */
+
+static CurlMultiObject *
+do_multi_init(PyObject *arg)
+{
+    CurlMultiObject *self;
+
+    /* Allocate python curl-multi object */
+#if (PY_VERSION_HEX < 0x01060000)
+    self = (CurlMultiObject *) PyObject_NEW(CurlMultiObject, &CurlMulti_Type);
+#else
+    self = (CurlMultiObject *) PyObject_New(CurlMultiObject, &CurlMulti_Type);
+#endif
+    if (self == NULL)
+        return NULL;
+
+    /* Initialize object attributes */
+    self->state = NULL;
+
+    /* Allocate libcurl multi handle */
+    self->multi_handle = curl_multi_init();
+    if (self->multi_handle == NULL) {
+        Py_DECREF(self);
+        PyErr_SetString(ErrorObject, "initializing curl-multi failed");
+        return NULL;
+    }
+    return self;
+}
+
 
 static CurlObject *
 do_init(PyObject *arg)
@@ -1044,6 +1213,7 @@ static PyMethodDef curl_methods[] = {
     {"init", (PyCFunction)do_init, METH_VARARGS, pycurl_init_doc},
     {"global_cleanup", (PyCFunction)do_global_cleanup, METH_VARARGS, pycurl_global_cleanup_doc},
     {"global_init", (PyCFunction)do_global_init, METH_VARARGS, pycurl_global_init_doc},
+    {"multi_init", (PyCFunction)do_multi_init, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}
 };
 
@@ -1080,6 +1250,7 @@ DL_EXPORT(void)
     /* Initialize the type of the new type object here; doing it here
      * is required for portability to Windows without requiring C++. */
     Curl_Type.ob_type = &PyType_Type;
+    CurlMulti_Type.ob_type = &PyType_Type;
 
     /* Create the module and add the functions */
     m = Py_InitModule3("pycurl", curl_methods, module_doc);
