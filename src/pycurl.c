@@ -239,11 +239,9 @@ util_curl_new(void)
     CurlObject *self;
 
     self = (CurlObject *) PyObject_GC_New(CurlObject, p_Curl_Type);
-    if (self) { 
-        PyObject_GC_Track(self);
-    } else {
+    if (self == NULL)
         return NULL;
-    }
+    PyObject_GC_Track(self);
 
     /* Set python curl object initial values */
     self->dict = NULL;
@@ -1696,7 +1694,7 @@ do_multi_select(CurlMultiObject *self, PyObject *args)
 
     if (max_fd < 0) {
         n = 0;
-    } 
+    }
     else {
         Py_BEGIN_ALLOW_THREADS
         n = select(max_fd + 1, &self->read_fd_set, &self->write_fd_set, &self->exc_fd_set, tvp);
