@@ -1355,24 +1355,42 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                     int j, k, l;
                     struct curl_forms *forms;
 
-                    printf("tlen: %d\n", tlen);
+                    /* Allocate enough space to accommodate length options for content */
+                    forms = PyMem_Malloc(sizeof(struct curl_forms) * ((tlen*2) + 1));
 
-                    forms = malloc(sizeof(struct curl_forms) * ((tlen*2) + 1));
+                    /* Iterate all the tuple members pairwise */
                     for (j = 0, k = 0, l = 0; j < tlen; j += 2, l++) {
                         char *ostr;
                         int olen, val;
 
+                        if (j == (tlen-1)) {
+                            PyErr_SetString(PyExc_TypeError, "expected one more tuple value");
+                            PyMem_Free(forms);
+                            curl_formfree(post);
+                            return NULL;
+                        }
+                        if (!PyInt_Check(PyTuple_GET_ITEM(t, j))) {
+                            PyErr_SetString(PyExc_TypeError, "expected long value in tuple");
+                            PyMem_Free(forms);
+                            curl_formfree(post);
+                            return NULL;
+                        }
+                        if (!PyString_Check(PyTuple_GET_ITEM(t, j+1))) {
+                            PyErr_SetString(PyExc_TypeError, "expected string value in tuple");
+                            PyMem_Free(forms);
+                            curl_formfree(post);
+                            return NULL;
+                        }
+
                         val = PyLong_AsLong(PyTuple_GET_ITEM(t, j));
                         PyString_AsStringAndSize(PyTuple_GET_ITEM(t, j+1), &ostr, &olen);
-
-                        printf("o: %d, val: %s\n", (int)val, (char*)ostr);
-
                         forms[k].option = val;
                         forms[k].value = ostr;
                         ++k;
                         if (val == CURLFORM_COPYCONTENTS) {
+                            /* Contents can contain \0 bytes so we specify the length */
                             forms[k].option = CURLFORM_CONTENTSLENGTH;
-                            forms[k].value = olen;
+                            forms[k].value = (char *)olen;
                             ++k;
                         }
                     }
@@ -1382,7 +1400,11 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                                        CURLFORM_NAMELENGTH, (long) nlen,
                                        CURLFORM_ARRAY, forms,
                                        CURLFORM_END);
-                    free(forms);
+                    PyMem_Free(forms);
+                    if (res != CURLE_OK) {
+                        curl_formfree(post);
+                        CURLERROR_RETVAL();
+                    }
                 } else {
                     /* Some other type was given, ignore */
                     curl_formfree(post);
