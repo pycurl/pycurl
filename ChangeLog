@@ -272,10 +272,6 @@ Version 7.9.7
         as the libcurl version it was built with.  The pycurl version
         number thus indicates which version of libcurl is required to run.
 
-
-Version 0.4.10 (Not released)
---------------
-
 2002-05-17  Kjetil Jacobsen  <kjetilja>
 
         * Added CURLINFO_REDIRECT_TIME and CURLINFO_REDIRECT_COUNT.
