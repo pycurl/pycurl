@@ -34,7 +34,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
-#define CURL_OLDSTYLE 1     /* needed for curl_formparse() in 7.10.6 - FIXME */
 #include <curl/curl.h>
 #include <curl/multi.h>
 #undef NDEBUG
@@ -1183,22 +1182,43 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         /* Handle HTTPPOST different since we construct a HttpPost form struct */
         if (option == CURLOPT_HTTPPOST) {
             struct curl_httppost *last = NULL;
-            char *str;
+            char *pname, *pvalue;
 
             /* Free previously allocated httppost */
-            curl_formfree(self->httppost);
-            self->httppost = NULL;
+            if (self->httppost != NULL) {
+                curl_formfree(self->httppost);
+                self->httppost = NULL;
+            }
 
             for (i = 0; i < len; i++) {
                 PyObject *listitem = PyList_GetItem(obj, i);
-                if (!PyString_Check(listitem)) {
+                if (!PyTuple_Check(listitem)) {
                     curl_formfree(self->httppost);
                     self->httppost = NULL;
-                    PyErr_SetString(PyExc_TypeError, "list items must be string objects");
+                    PyErr_SetString(PyExc_TypeError, "list items must be tuple objects");
                     return NULL;
                 }
-                str = PyString_AsString(listitem);
-                res = curl_formparse(str, &self->httppost, &last);
+                if (PyTuple_GET_SIZE(listitem) != 2) {
+                    curl_formfree(self->httppost);
+                    self->httppost = NULL;
+                    PyErr_SetString(PyExc_TypeError, "tuple must contain two items (name and value)");
+                    return NULL;
+                }
+                /* FIXME: Only support strings as names and values for now */
+                pname = PyString_AsString(PyTuple_GET_ITEM(listitem, 0));
+                pvalue = PyString_AsString(PyTuple_GET_ITEM(listitem, 1));
+                if (pname == NULL || pvalue == NULL) {
+                    curl_formfree(self->httppost);
+                    self->httppost = NULL;
+                    PyErr_SetString(PyExc_TypeError, "tuple items must be strings");
+                    return NULL;
+                }
+                res = curl_formadd(&self->httppost, &last, 
+                                   CURLFORM_COPYNAME,
+                                   pname, CURLFORM_NAMELENGTH, PyString_GET_SIZE(PyTuple_GET_ITEM(listitem, 0)),
+                                   CURLFORM_COPYCONTENTS, 
+                                   pvalue, CURLFORM_CONTENTSLENGTH, PyString_GET_SIZE(PyTuple_GET_ITEM(listitem, 1)),
+                                   CURLFORM_END);
                 if (res != CURLE_OK) {
                     curl_formfree(self->httppost);
                     self->httppost = NULL;

@@ -1,4 +1,14 @@
-Version 7.11.2 [requires libcurl-7.10.3 or better]
+Version 7.12.0 [requires libcurl-7.10.3 or better]
+--------------
+
+2004-04-30  Kjetil Jacobsen  <kjetilja>
+
+        * Do not use the deprecated curl_formparse function.
+          API CHANGE: HTTPPOST now takes a list of tuples where each
+          tuple contains a form name and a form value, both strings.
+
+
+Version 7.11.2
 --------------
 
 2004-04-21  Kjetil Jacobsen  <kjetilja>

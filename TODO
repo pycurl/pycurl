@@ -10,11 +10,6 @@ BUGS:
       (this could be a problem in curl also).
 
 
-DEPRECATED LIBCURL FEATURES:
-
-    * Use curl_formadd() instead of the deprecated curl_formparse().
-
-
 NEW FEATURES:
 
     * The current curl HLI only works on Python 2.2 or better. Either
