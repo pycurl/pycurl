@@ -596,8 +596,8 @@ do_setopt(CurlObject *self, PyObject *args)
 	switch(option) {
 	case CURLOPT_WRITEFUNCTION:
 	    if (self->writeheader_set == 1) {
-	      PyErr_SetString(ErrorObject, "cannot combine WRITEFUNCTION with WRITEHEADER option.");
-	      return NULL;
+	        PyErr_SetString(ErrorObject, "cannot combine WRITEFUNCTION with WRITEHEADER option.");
+	        return NULL;
 	    }
 	    Py_INCREF(obj);
 	    Py_XDECREF(self->w_cb);
@@ -655,6 +655,7 @@ do_perform(CurlObject *self, PyObject *args)
 {
     int res;
 
+    /* Sanity checks */
     if (!PyArg_ParseTuple(args, ":perform")) {
 	return NULL;
     }
