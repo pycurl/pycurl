@@ -18,14 +18,13 @@
 
 /*
     TODO for the multi interface:
-    - fix the deallocation race, just apply the same stuff as for deallocation
-      of curl objects (handles and state attributes)
     - add interface to the multi_read method, otherwise it's hard to use this
       for anything
+    - how do we best interface with the fd_set stuff?
     - also try to figure out how to solve the problem of having deallocated
       curl objects in an active curl-multi stack (this causes a segfault when
       the multi-stack is cleaned up)
-    - how do we best interface with the fd_set stuff?
+    - check multi_stack usage
 */
 
 #undef NDEBUG
@@ -51,8 +50,15 @@ static PyObject *ErrorObject;
 
 typedef struct {
     PyObject_HEAD
+    CURLM *multi_handle;
+    PyThreadState *state;
+} CurlMultiObject;
+
+typedef struct {
+    PyObject_HEAD
     CURL *handle;
     PyThreadState *state;
+    CurlMultiObject *multi_stack;   /* internal pointer, _not_ a Python object */
     struct HttpPost *httppost;
     struct curl_slist *httpheader;
     struct curl_slist *quote;
@@ -71,12 +77,6 @@ typedef struct {
     char error[CURL_ERROR_SIZE];
     void *options[CURLOPT_LASTENTRY];
 } CurlObject;
-
-typedef struct {
-    PyObject_HEAD
-    CURLM *multi_handle;
-    PyThreadState *state;
-} CurlMultiObject;
 
 #if !defined(__cplusplus)
 staticforward PyTypeObject Curl_Type;
@@ -114,6 +114,7 @@ self_cleanup(CurlObject *self)
     }
     /* Zero thread-state to disallow callbacks to be run from now on */
     self->state = NULL;
+    self->multi_stack = NULL;
     /* Free curl handle */
     if (self->handle != NULL) {
         CURL *handle = self->handle;
@@ -186,6 +187,31 @@ do_cleanup(CurlObject *self, PyObject *args)
     if (self->state != NULL) {
         PyErr_SetString(ErrorObject, "cannot invoke cleanup, perform() is running");
         return NULL;
+    }
+    if (self->multi_stack != NULL) {
+        /* FIXME - what now ??? */
+        if (self->multi_stack->multi_handle == NULL) {
+            /* ??? */
+        }
+        if (self->multi_stack->state != NULL) {
+            PyErr_SetString(ErrorObject, "cannot invoke cleanup, multi-perform() is running");
+            return NULL;
+        }
+#if 1
+        /* automatically remove from multi ??? */
+        if (self->handle != NULL)
+        {
+            int res;
+            res = curl_multi_remove_handle(self->multi_stack->multi_handle, self->handle);
+            if (res != CURLM_OK) {
+                CURLERROR2("remove_handle failed");
+            }
+        }
+        self->multi_stack = NULL;
+#else
+        PyErr_SetString(ErrorObject, "cannot invoke cleanup, object still on a multi-stack");
+        return NULL;
+#endif
     }
     self_cleanup(self);
     Py_INCREF(Py_None);
@@ -910,12 +936,14 @@ self_multi_cleanup(CurlMultiObject *self)
 {
     assert(self != NULL);
 
+    self->state = NULL;
     if (self->multi_handle != NULL) {
         CURLM *multi_handle = self->multi_handle;
         self->multi_handle = NULL;
+        Py_BEGIN_ALLOW_THREADS
         curl_multi_cleanup(multi_handle);
+        Py_END_ALLOW_THREADS
     }
-    self->state = NULL;
 }
 
 static PyObject *
@@ -983,21 +1011,27 @@ do_multi_perform(CurlMultiObject *self, PyObject *args)
     }
 }
 
-/* static utiltiy function */
+/* static utility function */
 static int check_curl_object(CurlMultiObject *self, CurlObject *obj)
 {
-    UNUSED(self);
+    if (self->state != NULL) {
+        PyErr_SetString(ErrorObject, "cannot add/remove - already running");
+        return -1;
+    }
     if (obj == NULL || obj->ob_type != &Curl_Type) {
         PyErr_SetString(ErrorObject, "expecting a curl object");
         return -1;
     }
     if (obj->handle == NULL) {
-        PyErr_SetString(ErrorObject, "cannot add/remove closed curl object to multi stack");
+        PyErr_SetString(ErrorObject, "cannot add/remove closed curl object to multi-stack");
         return -1;
     }
     if (obj->state != NULL) {
-        /* FIXME: is this too strict ??? */
-        PyErr_SetString(ErrorObject, "cannot add/remove running curl object to multi stack");
+        PyErr_SetString(ErrorObject, "cannot add/remove running curl object to multi-stack");
+        return -1;
+    }
+    if (obj->multi_stack != NULL && obj->multi_stack != self) {
+        PyErr_SetString(ErrorObject, "cannot add/remove - curl object already on another multi-stack");
         return -1;
     }
     return 0;
@@ -1013,10 +1047,15 @@ do_multi_addhandle(CurlMultiObject *self, PyObject *args)
         if (check_curl_object(self, obj) != 0) {
             return NULL;
         }
+        if (obj->multi_stack == self) {
+            PyErr_SetString(ErrorObject, "curl object already on this multi-stack");
+            return NULL;
+        }
         res = curl_multi_add_handle(self->multi_handle, obj->handle);
         if (res != CURLM_CALL_MULTI_PERFORM) {
             CURLERROR2("add_handle failed");
         }
+        obj->multi_stack = self;
         Py_INCREF(obj);
     }
     else {
@@ -1037,10 +1076,15 @@ do_multi_removehandle(CurlMultiObject *self, PyObject *args)
         if (check_curl_object(self, obj) != 0) {
             return NULL;
         }
+        if (obj->multi_stack == NULL) {
+            PyErr_SetString(ErrorObject, "curl object not on any multi-stack");
+            return NULL;
+        }
         res = curl_multi_remove_handle(self->multi_handle, obj->handle);
         if (res != CURLM_OK) {
             CURLERROR2("remove_handle failed");
         }
+        obj->multi_stack = NULL;
         Py_DECREF(obj);
     }
     else {
@@ -1491,3 +1535,6 @@ DL_EXPORT(void)
     /* Initialize global interpreter lock */
     PyEval_InitThreads();
 }
+
+/* vi:ts=4:et
+ */
