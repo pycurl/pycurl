@@ -2076,9 +2076,11 @@ do_global_cleanup(PyObject *dummy, PyObject *args)
 
 static PyObject *vi_str(const char *s)
 {
-    if (s == NULL)
-        s = "";
-    while (*s == ' ')
+    if (s == NULL) {
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+    while (*s == ' ' || *s == '\t')
         s++;
     return PyString_FromString(s);
 }
@@ -2087,15 +2089,17 @@ static PyObject *
 do_version_info(PyObject *dummy, PyObject *args)
 {
     const curl_version_info_data *vi;
-    PyObject *ret;
-    PyObject *protocols;
+    PyObject *ret = NULL;
+    PyObject *protocols = NULL;
+    PyObject *tmp;
     int i;
+    int version = CURLVERSION_NOW;
 
     UNUSED(dummy);
-    if (!PyArg_ParseTuple(args, ":version_info")) {
+    if (!PyArg_ParseTuple(args, "|i:version_info", &version)) {
         return NULL;
     }
-    vi = curl_version_info(CURLVERSION_NOW);
+    vi = curl_version_info((CURLversion) version);
     if (vi == NULL) {
         PyErr_SetString(ErrorObject, "unable to get version info");
         return NULL;
@@ -2104,28 +2108,36 @@ do_version_info(PyObject *dummy, PyObject *args)
     for (i = 0; vi->protocols[i] != NULL; )
         i++;
     protocols = PyTuple_New(i);
-    if (protocols == NULL) {
-        return NULL;
-    }
+    if (protocols == NULL)
+        goto error;
     for (i = 0; vi->protocols[i] != NULL; i++) {
-        PyTuple_SET_ITEM(protocols, i, vi_str(vi->protocols[i]));
+        tmp = vi_str(vi->protocols[i]);
+        if (tmp == NULL)
+            goto error;
+        PyTuple_SET_ITEM(protocols, i, tmp);
     }
     ret = PyTuple_New(9);
-    if (ret == NULL) {
-        Py_DECREF(protocols);
-        return NULL;
-    }
+    if (ret == NULL)
+        goto error;
 
-    PyTuple_SET_ITEM(ret, 0, PyInt_FromLong((long) vi->age));
-    PyTuple_SET_ITEM(ret, 1, vi_str(vi->version));
-    PyTuple_SET_ITEM(ret, 2, PyInt_FromLong((long) vi->version_num));
-    PyTuple_SET_ITEM(ret, 3, vi_str(vi->host));
-    PyTuple_SET_ITEM(ret, 4, PyInt_FromLong(vi->features));
-    PyTuple_SET_ITEM(ret, 5, vi_str(vi->ssl_version));
-    PyTuple_SET_ITEM(ret, 6, PyInt_FromLong(vi->ssl_version_num));
-    PyTuple_SET_ITEM(ret, 7, vi_str(vi->libz_version));
-    PyTuple_SET_ITEM(ret, 8, protocols);
+#define SET(i, v) \
+        tmp = (v); if (tmp == NULL) goto error; PyTuple_SET_ITEM(ret, i, tmp)
+    SET(0, PyInt_FromLong((long) vi->age));
+    SET(1, vi_str(vi->version));
+    SET(2, PyInt_FromLong((long) vi->version_num));
+    SET(3, vi_str(vi->host));
+    SET(4, PyInt_FromLong(vi->features));
+    SET(5, vi_str(vi->ssl_version));
+    SET(6, PyInt_FromLong(vi->ssl_version_num));
+    SET(7, vi_str(vi->libz_version));
+    SET(8, protocols);
+#undef SET
     return ret;
+
+error:
+    Py_XDECREF(ret);
+    Py_XDECREF(protocols);
+    return NULL;
 }
 
 
