@@ -1767,8 +1767,8 @@ static char co_perform_doc [] = "perform() -> None.  Perform a file transfer.  T
 static char co_setopt_doc [] = "setopt(option, parameter) -> None.  Set curl session options.  Throws pycurl.error exception upon failure.\n";
 static char co_getinfo_doc [] = "getinfo(info) -> Res.  Extract and return information from a curl session.  Throws pycurl.error exception upon failure.\n";
 static char co_multi_fdset_doc [] = "fdset() -> Tuple.  Returns a tuple of three lists that can be passed to the select.select() method .\n";
-static char co_multi_select_doc [] = "select(timeout) -> Int.  Returns result from doing a select() on the curl multi file descriptor with the given timeout.\n";
-static char co_multi_info_read_doc [] = "info_read(max_objects) -> Tuple. Returns a tuple (number of queued handles, [curl objects]).\n";
+static char co_multi_select_doc [] = "select([timeout]) -> Int.  Returns result from doing a select() on the curl multi file descriptor with the given timeout.\n";
+static char co_multi_info_read_doc [] = "info_read([max_objects]) -> Tuple. Returns a tuple (number of queued handles, [curl objects]).\n";
 
 static PyMethodDef curlobject_methods[] = {
     {"cleanup", (PyCFunction)do_curl_close, METH_VARARGS, co_cleanup_doc},
