@@ -56,6 +56,9 @@ self_cleanup(CurlObject *self)
 {
     int i;
 
+    if (self->handle == NULL) {
+        return;
+    }
     if (self->handle != NULL) {
         Py_BEGIN_ALLOW_THREADS
 	curl_easy_cleanup(self->handle);
