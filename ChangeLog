@@ -1,10 +1,18 @@
+Version 0.4.8
+
 2002-03-07  Kjetil Jacobsen  <kjetilja>
 
 	* Added CURLOPT_PREQUOTE.
 
+	* Now requires libcurl 7.9.5 or greater.
+
+	* Other minor code cleanups and bugfixes.
+	
 2002-03-05  Kjetil Jacobsen  <kjetilja>
 
 	* Do not allow WRITEFUNCTION and WRITEHEADER on the same handle.
+
+Version 0.4.7
 
 2002-02-27  Kjetil Jacobsen  <kjetilja>
 
