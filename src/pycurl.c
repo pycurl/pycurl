@@ -133,6 +133,27 @@ typedef struct {
 
 
 /*************************************************************************
+// python utility functions
+**************************************************************************/
+
+/* Like PyString_AsString(), but set an exception if the string contains
+ * embedded NULs. Actually PyString_AsStringAndSize() already does that for
+ * us if the `len' parameter is NULL - see Objects/stringobject.c.
+ */
+
+static char *PyString_AsString_NoNUL(PyObject *obj)
+{
+    char *s = NULL;
+    int r;
+    r = PyString_AsStringAndSize(obj, &s, NULL);
+    if (r != 0)
+        return NULL;    /* exception already set */
+    assert(s != NULL);
+    return s;
+}
+
+
+/*************************************************************************
 // static utility functions
 **************************************************************************/
 
@@ -670,8 +691,9 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
     if (PyString_Check(result)) {
         char *buf = NULL;
         int obj_size = -1;
-        PyString_AsStringAndSize(result, &buf, &obj_size);
-        if (buf == NULL || obj_size < 0 || obj_size > total_size) {
+        int r;
+        r = PyString_AsStringAndSize(result, &buf, &obj_size);
+        if (r != 0 || obj_size < 0 || obj_size > total_size) {
             PyErr_Format(ErrorObject, "invalid return value for read callback %ld %ld", (long)obj_size, (long)total_size);
             goto verbose_error;
         }
@@ -1082,27 +1104,27 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
     /* Handle the case of list objects */
     if (PyList_Check(obj)) {
-        struct curl_slist **slist = NULL;
+        struct curl_slist **old_slist = NULL;
+        struct curl_slist *slist = NULL;
         int i, len;
 
         switch (option) {
         case CURLOPT_HTTP200ALIASES:
-            slist = &self->http200aliases;
+            old_slist = &self->http200aliases;
             break;
         case CURLOPT_HTTPHEADER:
-            slist = &self->httpheader;
+            old_slist = &self->httpheader;
             break;
         case CURLOPT_QUOTE:
-            slist = &self->quote;
+            old_slist = &self->quote;
             break;
         case CURLOPT_POSTQUOTE:
-            slist = &self->postquote;
+            old_slist = &self->postquote;
             break;
         case CURLOPT_PREQUOTE:
-            slist = &self->prequote;
+            old_slist = &self->prequote;
             break;
         case CURLOPT_HTTPPOST:
-            slist = NULL;
             break;
         default:
             /* None of the list options were recognized, throw exception */
@@ -1119,67 +1141,58 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
         /* Handle HTTPPOST different since we construct a HttpPost form struct */
         if (option == CURLOPT_HTTPPOST) {
+            struct curl_httppost *cur = NULL;
             struct curl_httppost *last = NULL;
-            char *pname, *pvalue;
-
-            /* Free previously allocated httppost */
-            if (self->httppost != NULL) {
-                curl_formfree(self->httppost);
-                self->httppost = NULL;
-            }
 
             for (i = 0; i < len; i++) {
+                char *nstr = NULL, *cstr = NULL;
+                int nlen = -1, clen = -1;
                 PyObject *listitem = PyList_GetItem(obj, i);
+
                 if (!PyTuple_Check(listitem)) {
-                    curl_formfree(self->httppost);
-                    self->httppost = NULL;
+                    curl_formfree(cur);
                     PyErr_SetString(PyExc_TypeError, "list items must be tuple objects");
                     return NULL;
                 }
                 if (PyTuple_GET_SIZE(listitem) != 2) {
-                    curl_formfree(self->httppost);
-                    self->httppost = NULL;
+                    curl_formfree(cur);
                     PyErr_SetString(PyExc_TypeError, "tuple must contain two items (name and value)");
                     return NULL;
                 }
                 /* FIXME: Only support strings as names and values for now */
-                pname = PyString_AsString(PyTuple_GET_ITEM(listitem, 0));
-                pvalue = PyString_AsString(PyTuple_GET_ITEM(listitem, 1));
-                if (pname == NULL || pvalue == NULL) {
-                    curl_formfree(self->httppost);
-                    self->httppost = NULL;
+                if (PyString_AsStringAndSize(PyTuple_GET_ITEM(listitem, 0), &nstr, &nlen) != 0 ||
+                    PyString_AsStringAndSize(PyTuple_GET_ITEM(listitem, 1), &cstr, &clen) != 0) {
+                    curl_formfree(cur);
                     PyErr_SetString(PyExc_TypeError, "tuple items must be strings");
                     return NULL;
                 }
-                res = curl_formadd(&self->httppost, &last,
-                                   CURLFORM_COPYNAME,
-                                   pname, CURLFORM_NAMELENGTH, PyString_GET_SIZE(PyTuple_GET_ITEM(listitem, 0)),
-                                   CURLFORM_COPYCONTENTS,
-                                   pvalue, CURLFORM_CONTENTSLENGTH, PyString_GET_SIZE(PyTuple_GET_ITEM(listitem, 1)),
+                res = curl_formadd(&cur, &last,
+                                   CURLFORM_COPYNAME, nstr,
+                                   CURLFORM_NAMELENGTH, (long) nlen,
+                                   CURLFORM_COPYCONTENTS, cstr,
+                                   CURLFORM_CONTENTSLENGTH, (long) clen,
                                    CURLFORM_END);
                 if (res != CURLE_OK) {
-                    curl_formfree(self->httppost);
-                    self->httppost = NULL;
+                    curl_formfree(cur);
                     CURLERROR_RETVAL();
                 }
             }
-            res = curl_easy_setopt(self->handle, CURLOPT_HTTPPOST, self->httppost);
+            res = curl_easy_setopt(self->handle, CURLOPT_HTTPPOST, cur);
             /* Check for errors */
             if (res != CURLE_OK) {
-                curl_formfree(self->httppost);
-                self->httppost = NULL;
+                curl_formfree(cur);
                 CURLERROR_RETVAL();
             }
+            /* Finally, free previously allocated httppost and update */
+            curl_formfree(self->httppost);
+            self->httppost = cur;
+
             Py_INCREF(Py_None);
             return Py_None;
         }
 
         /* Just to be sure we do not bug off here */
-        assert(slist != NULL);
-
-        /* Free previously allocated list */
-        curl_slist_free_all(*slist);
-        *slist = NULL;
+        assert(old_slist != NULL && slist == NULL);
 
         /* Handle regular list operations on the other options */
         for (i = 0; i < len; i++) {
@@ -1188,29 +1201,34 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             char *str;
 
             if (!PyString_Check(listitem)) {
-                curl_slist_free_all(*slist);
-                *slist = NULL;
+                curl_slist_free_all(slist);
                 PyErr_SetString(PyExc_TypeError, "list items must be string objects");
                 return NULL;
             }
-            /* INFO: curl_slist_append() internally does strdup() the data */
-            str = PyString_AsString(listitem);
-            assert(str != NULL);
-            nlist = curl_slist_append(*slist, str);
+            /* INFO: curl_slist_append() internally does strdup() the data, so
+             * no embedded NUL characters allowed here. */
+            str = PyString_AsString_NoNUL(listitem);
+            if (str == NULL) {
+                curl_slist_free_all(slist);
+                return NULL;
+            }
+            nlist = curl_slist_append(slist, str);
             if (nlist == NULL || nlist->data == NULL) {
-                curl_slist_free_all(*slist);
-                *slist = NULL;
+                curl_slist_free_all(slist);
                 return PyErr_NoMemory();
             }
-            *slist = nlist;
+            slist = nlist;
         }
-        res = curl_easy_setopt(self->handle, (CURLoption)option, *slist);
+        res = curl_easy_setopt(self->handle, (CURLoption)option, slist);
         /* Check for errors */
         if (res != CURLE_OK) {
-            curl_slist_free_all(*slist);
-            *slist = NULL;
+            curl_slist_free_all(slist);
             CURLERROR_RETVAL();
         }
+        /* Finally, free previously allocated list and update */
+        curl_slist_free_all(*old_slist);
+        *old_slist = slist;
+
         Py_INCREF(Py_None);
         return Py_None;
     }
