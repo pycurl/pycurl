@@ -12,9 +12,9 @@ try:
 except ImportError:
     pass
 try:
-    import cStringIO as StringIO
-except:
-    import StringIO
+    from cStringIO import StringIO
+except ImportError:
+    from StringIO import StringIO
 import xmlrpclib, pycurl
 
 
@@ -33,7 +33,7 @@ class CURLTransport(xmlrpclib.Transport):
             self.c.setopt(pycurl.USERPWD, '%s:%s' % (username, password))
 
     def request(self, host, handler, request_body, verbose=0):
-        b = StringIO.StringIO()
+        b = StringIO()
         self.c.setopt(pycurl.URL, 'http://%s%s' % (host, handler))
         self.c.setopt(pycurl.POSTFIELDS, request_body)
         self.c.setopt(pycurl.WRITEFUNCTION, b.write)
