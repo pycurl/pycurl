@@ -118,7 +118,7 @@ class HtmlWindow(GtkHTML):
 
     def submit(self, html, method, path, params):
         if method != 'GET':
-            print "Submit currently only works for GET requests"
+            print "Submit currently only works for GET requests, not POST"
             return
         if params != None: path += "?" + params
         url = urllib.basejoin(history[-1], path)
