@@ -46,12 +46,14 @@ static PyObject *ErrorObject;
 
 typedef struct {
     PyObject_HEAD
+    PyObject *dict;                 /* Python attributes dictionary */
     CURLM *multi_handle;
     PyThreadState *state;
 } CurlMultiObject;
 
 typedef struct {
     PyObject_HEAD
+    PyObject *dict;                 /* Python attributes dictionary */
     CURL *handle;
     PyThreadState *state;
     CurlMultiObject *multi_stack;   /* internal pointer, _not_ a Python object */
@@ -216,6 +218,7 @@ self_cleanup(CurlObject *self)
 static void
 curl_dealloc(CurlObject *self)
 {
+    Py_XDECREF(self->dict);
     self_cleanup(self);
 #if (PY_VERSION_HEX < 0x01060000)
     PyMem_DEL(self);
@@ -1015,6 +1018,7 @@ do_multi_cleanup(CurlMultiObject *self, PyObject *args)
 static void
 curl_multi_dealloc(CurlMultiObject *self)
 {
+    Py_XDECREF(self->dict);
     self_multi_cleanup(self);
 #if (PY_VERSION_HEX < 0x01060000)
     PyMem_DEL(self);
@@ -1175,17 +1179,66 @@ static PyMethodDef curlmultiobject_methods[] = {
     {NULL, NULL, 0, NULL}
 };
 
+
+static int
+my_setattr(PyObject **dict, char *name, PyObject *v)
+{
+    assert(dict != NULL);
+    if (*dict == NULL) {
+        *dict = PyDict_New();
+        if (*dict == NULL)
+            return -1;
+    }
+    if (v == NULL) {
+        int rv = PyDict_DelItemString(*dict, name);
+        if (rv < 0)
+            PyErr_SetString(PyExc_AttributeError, "delete non-existing attribute");
+        return rv;
+    }
+    return PyDict_SetItemString(*dict, name, v);
+}
+
+static PyObject *
+my_getattr(PyObject *co, char *name, PyObject *dict, PyMethodDef *m)
+{
+    if (dict != NULL) {
+        PyObject *v = PyDict_GetItemString(dict, name);
+        if (v != NULL) {
+            Py_INCREF(v);
+            return v;
+        }
+    }
+    return Py_FindMethod(m, co, name);
+}
+
+static int
+curl_setattr(CurlObject *co, char *name, PyObject *v)
+{
+    assert_curl_object(co);
+    return my_setattr(&co->dict, name, v);
+}
+
+static int
+curl_multi_setattr(CurlMultiObject *co, char *name, PyObject *v)
+{
+    assert_curl_multi_object(co);
+    return my_setattr(&co->dict, name, v);
+}
+
 static PyObject *
 curl_getattr(CurlObject *co, char *name)
 {
-    return Py_FindMethod(curlobject_methods, (PyObject *)co, name);
+    assert_curl_object(co);
+    return my_getattr((PyObject *)co, name, co->dict, curlobject_methods);
 }
 
 static PyObject *
 curl_multi_getattr(CurlMultiObject *co, char *name)
 {
-    return Py_FindMethod(curlmultiobject_methods, (PyObject *)co, name);
+    assert_curl_multi_object(co);
+    return my_getattr((PyObject *)co, name, co->dict, curlmultiobject_methods);
 }
+
 
 statichere PyTypeObject Curl_Type = {
     PyObject_HEAD_INIT(NULL)
@@ -1194,10 +1247,10 @@ statichere PyTypeObject Curl_Type = {
     sizeof(CurlObject),         /* tp_basicsize */
     0,                          /* tp_itemsize */
     /* Methods */
-    (destructor)curl_dealloc,   /* dealloc */
+    (destructor)curl_dealloc,   /* tp_dealloc */
     0,                          /* tp_print */
-    (getattrfunc)curl_getattr,  /* getattr */
-    0,                          /* setattr */
+    (getattrfunc)curl_getattr,  /* tp_getattr */
+    (setattrfunc)curl_setattr,  /* tp_setattr */
     0,                          /* tp_compare */
     0,                          /* tp_repr */
     0,                          /* tp_as_number */
@@ -1216,10 +1269,10 @@ statichere PyTypeObject CurlMulti_Type = {
     sizeof(CurlMultiObject),    /* tp_basicsize */
     0,                          /* tp_itemsize */
     /* Methods */
-    (destructor)curl_multi_dealloc,   /* dealloc */
+    (destructor)curl_multi_dealloc,   /* tp_dealloc */
     0,                          /* tp_print */
-    (getattrfunc)curl_multi_getattr,  /* getattr */
-    0,                          /* setattr */
+    (getattrfunc)curl_multi_getattr,  /* tp_getattr */
+    (setattrfunc)curl_multi_setattr,  /* tp_setattr */
     0,                          /* tp_compare */
     0,                          /* tp_repr */
     0,                          /* tp_as_number */
@@ -1250,6 +1303,7 @@ do_multi_init(PyObject *arg)
         return NULL;
 
     /* Initialize object attributes */
+    self->dict = NULL;
     self->state = NULL;
 
     /* Allocate libcurl multi handle */
@@ -1281,6 +1335,7 @@ do_init(PyObject *arg)
         return NULL;
 
     /* Set python curl object initial values */
+    self->dict = NULL;
     self->handle = NULL;
     self->state = NULL;
     self->multi_stack = NULL;
