@@ -846,21 +846,21 @@ curl_getattr(CurlObject *co, char *name)
 
 statichere PyTypeObject Curl_Type = {
     PyObject_HEAD_INIT(NULL)
-    0,                        /*ob_size*/
-    "Curl",                /*tp_name*/
-    sizeof(CurlObject),        /*tp_basicsize*/
-    0,                        /*tp_itemsize*/
+    0,                          /* ob_size */
+    "Curl",                     /* tp_name */
+    sizeof(CurlObject),         /* tp_basicsize */
+    0,                          /* tp_itemsize */
     /* Methods */
-    (destructor)curl_dealloc, /*dealloc*/
-    0,                         /*tp_print*/
-    (getattrfunc)curl_getattr,/*getattr*/
-    0,                        /*setattr*/
-    0,                            /*tp_compare*/
-    0,                            /*tp_repr*/
-    0,                            /*tp_as_number*/
-    0,                            /*tp_as_sequence*/
-    0,                            /*tp_as_mapping*/
-    0                            /*tp_hash*/
+    (destructor)curl_dealloc,   /* dealloc */
+    0,                          /* tp_print */
+    (getattrfunc)curl_getattr,  /* getattr */
+    0,                          /* setattr */
+    0,                          /* tp_compare */
+    0,                          /* tp_repr */
+    0,                          /* tp_as_number */
+    0,                          /* tp_as_sequence */
+    0,                          /* tp_as_mapping */
+    0                           /* tp_hash */
     /* More fields follow here, depending on your Python version.
      * You can safely ignore any compiler warnings.
      */
