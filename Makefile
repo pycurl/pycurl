@@ -33,7 +33,7 @@ dist sdist: distclean
 windist:
 	$(PYTHON) setup.py bdist_wininst
 
-.PHONY: all build test install install_lib clean distclean maintainer-clean dist sdist windist
+.PHONY: all build test install install_lib clean distclean maintainer-clean dist sdist wininst
 
 .NOEXPORT:
 
