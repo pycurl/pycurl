@@ -4,7 +4,7 @@
 # $Id$
 
 import os, sys, string
-assert sys.platform == "win32"
+assert sys.platform == "win32", "Only for building on Win32 with SSL and zlib"
 
 
 CURL_DIR = r"c:\src\build\curl-7.10.3-ssl"
