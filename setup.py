@@ -109,7 +109,7 @@ def get_kw(**kw): return kw
 ext = Extension(
     name=PACKAGE,
     sources=[
-        os.path.join("src", "curl.c"),
+        os.path.join("src", "pycurl.c"),
     ],
     include_dirs=include_dirs,
     define_macros=define_macros,

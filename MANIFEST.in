@@ -11,7 +11,7 @@ include README
 include TODO
 include MANIFEST.in
 include src/Makefile
-include src/curl.c
+include src/pycurl.c
 include examples/*.py
 include tests/*.py
 include doc/*.html
