@@ -1,5 +1,11 @@
 Version 7.9.8.4
 
+2002-08-14  Kjetil Jacobsen  <kjetilja>
+
+	* Added new method 'select' on CurlMulti objects.  Example usage
+	in 'tests/test_multi5.py'.  This method is just an optimization of
+	the combined use of fdset and select.
+
 2002-08-12  Kjetil Jacobsen  <kjetilja>
 
 	* Added support for curl_multi_fdset.  See the file
