@@ -17,6 +17,7 @@ typedef struct {
     struct curl_slist *quote;
     struct curl_slist *postquote;
     PyObject *w_cb;
+  PyThreadState *state;
     char error[CURL_ERROR_SIZE];
 } CurlObject;
 
@@ -90,6 +91,8 @@ write_callback(void *ptr,
     
     self = (CurlObject *)stream;
     arglist = Py_BuildValue("(s#)", (char *)ptr, size*nmemb);
+
+    PyEval_AcquireThread(self->state);
     result = PyEval_CallObject(self->w_cb, arglist);
     Py_DECREF(arglist);
     if (result == NULL) {
@@ -99,6 +102,8 @@ write_callback(void *ptr,
     else
 	write_size = (int)PyInt_AsLong(result);
     Py_XDECREF(result);
+    PyEval_ReleaseThread(self->state);
+
     return write_size;
 }
 
@@ -366,6 +371,11 @@ do_perform(CurlObject *self, PyObject *args)
 	return NULL;
     }
 
+    /* Save handle to current thread (used to run the callbacks in) */
+    PyEval_InitThreads();
+    self->state = PyThreadState_New(PyThreadState_Get()->interp);
+
+    /* Release global lock and start */
     Py_BEGIN_ALLOW_THREADS
     res = curl_easy_perform(self->handle);
     Py_END_ALLOW_THREADS
