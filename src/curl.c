@@ -1381,7 +1381,8 @@ do_multi_traverse(CurlMultiObject *self, visitproc visit, void *arg)
 static PyObject *
 do_multi_perform(CurlMultiObject *self, PyObject *args)
 {
-    int res, running = -1;
+    int res = -1;
+    int running = -1;
 
     /* Sanity checks */
     if (!PyArg_ParseTuple(args, ":perform")) {
@@ -1410,7 +1411,8 @@ do_multi_perform(CurlMultiObject *self, PyObject *args)
         CURLERROR2("perform failed");
     }
 
-    return PyInt_FromLong((long)running);
+    /* Return a tuple with the result and the number of running handles */
+    return Py_BuildValue("(ii)", res, running);
 }
 
 
