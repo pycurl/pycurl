@@ -4,6 +4,3 @@ If you want to hack on pycurl, here's our list of unresolved issues:
 
     * A high-level interface to pycurl, like the standard urllib (see
       the file 'doc/examples/curl.py' for a simple example)
-    * Add error handling when an individual curl handle fails on the
-      multi stack (need a way to extract errors from curl objects
-      after the info_read method has been called)
