@@ -5,7 +5,7 @@ import pycurl
 
 # Header fields passed in request
 xmlrpc_header = [
-    "User-Agent: pycurl xmlrpc test", "Content-Type: text/xml"
+    "User-Agent: PycURL XML-RPC Test", "Content-Type: text/xml"
     ]
 
 # XML-RPC request body
@@ -29,6 +29,6 @@ c.setopt(pycurl.MAXREDIRS, 5)
 c.setopt(pycurl.POST, 1)
 c.setopt(pycurl.HTTPHEADER, xmlrpc_header)
 c.setopt(pycurl.POSTFIELDS, xmlrpc_req)
-print 'Response from http://betty.userland.com/\n'
+print 'Response from http://betty.userland.com/'
 c.perform()
 c.cleanup()
