@@ -1,10 +1,33 @@
-all:
-	cd src && $(MAKE)
+#
+# to use a specific python version call
+#   `make PYTHON=python2.2'
+#
+
+SHELL = /bin/sh
+
+PYTHON = python2.2
+PYTHON = python
+
+all build:
+	$(PYTHON) setup.py build
 
 install:
-	cd src && $(MAKE) install
+	$(PYTHON) setup.py install
 
 clean:
+	-rm -rf build dist
+	-rm -f *.pyc *.pyo */*.pyc */*.pyo
+	-rm -f MANIFEST
 	cd src && $(MAKE) clean
-	rm -rf build dist *~ MANIFEST tests/curlmodule.so
-	rm -rf tests/*~ tests/*.pyc tests/*.pyo tests/header tests/body
+
+distclean: clean
+
+maintainer-clean: distclean
+
+dist sdist: distclean
+	$(PYTHON) setup.py sdist
+
+.PHONY: all build install clean distclean maintainer-clean dist sdist
+
+.NOEXPORT:
+

@@ -1,16 +1,3 @@
 #! /bin/sh
 set -e
-
-# Project name
-NAME=pycurl
-
-# Generate tar archive of the source
-export VERSION=$*
-cp -r . ../$NAME-$VERSION
-cd ../$NAME-$VERSION
-rm -rf CVS */CVS
-rm -f mkdist .cvsignore */.cvsignore .#* */.#*
-make clean
-cd ..
-tar zcf $NAME-${VERSION}.tar.gz $NAME-$VERSION
-rm -r $NAME-$VERSION
+make sdist

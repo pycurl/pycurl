@@ -73,11 +73,17 @@ setup(
     description="PycURL -- cURL library module for Python",
     author="Kjetil Jacobsen, Markus F.X.J. Oberhumer",
     author_email="kjetilja@cs.uit.no, markus@oberhumer.com",
+    maintainer="Kjetil Jacobsen, Markus F.X.J. Oberhumer",
+    maintainer_email="kjetilja@cs.uit.no, markus@oberhumer.com",
     url="http://pycurl.sourceforge.net/",
+    licence="GNU Lesser General Public License (LGPL)",
     data_files = [
         # tuple with path to install to and a list of files
         (os.path.join("doc", "pycurl"), ["README", "COPYING", "INSTALL", "TODO"]),
     ],
     ext_modules=[ext],
+    platforms="All",
+    long_description="""
+This module provides Python bindings for the cURL library.""",
 )
 

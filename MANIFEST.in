@@ -1,0 +1,13 @@
+#
+# MANIFEST.in
+# Manifest template for creating the source distribution.
+#
+include COPYING
+include ChangeLog
+include INSTALL
+include MANIFEST.in
+include Makefile
+include README
+include src/Makefile
+include src/curl.c
+include tests/*.py
