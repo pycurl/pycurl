@@ -5,7 +5,6 @@
 import sys
 import pycurl
 
-
 try:
     urls = open(sys.argv[1]).readlines()
     num_conn = int(sys.argv[2])
@@ -14,32 +13,34 @@ except:
     raise SystemExit
 
 fileno = 0
-conn = 0
 queue = []
-curls = {}
-multi = pycurl.CurlMulti()
-
 for u in urls:
     queue.append((u, 'data_%d' % fileno))
     fileno += 1
 
-assert len(queue) > 0, "No URLs given"
+freelist = []
+for c in range(num_conn):
+    curl = pycurl.Curl()
+    curl.setopt(pycurl.HTTPHEADER, ["User-Agent: PycURL"])
+    curl.setopt(pycurl.FOLLOWLOCATION, 1)
+    curl.setopt(pycurl.MAXREDIRS, 5)
+    curl.setopt(pycurl.CONNECTTIMEOUT, 30)
+    freelist.append(curl)
 
-while len(queue) > 0 or conn > 0:
-    while conn < num_conn:
+processed = 0
+curls = {}
+multi = pycurl.CurlMulti()
+
+while processed < len(urls):
+    while len(freelist) > 0:
         if len(queue) > 0:
             u, n = queue.pop(0)
+            c = freelist.pop(0)
             f = open(n, "wb")
-            curl = pycurl.Curl()
-            curl.setopt(pycurl.URL, u)
-            curl.setopt(pycurl.WRITEDATA, f)
-            curl.setopt(pycurl.HTTPHEADER, ["User-Agent: PycURL"])
-            curl.setopt(pycurl.FOLLOWLOCATION, 1)
-            curl.setopt(pycurl.MAXREDIRS, 5)
-            curl.setopt(pycurl.CONNECTTIMEOUT, 30)
-            multi.add_handle(curl)
-            curls[curl] = f
-            conn += 1
+            c.setopt(pycurl.URL, u)
+            c.setopt(pycurl.WRITEDATA, f)
+            curls[c] = f
+            multi.add_handle(c)
         else:
             break
     while 1:
@@ -49,15 +50,18 @@ while len(queue) > 0 or conn > 0:
     while 1:
         num_q, handles = multi.info_read(num_conn)
         for h in handles:
-            h.close()
-            multi.remove_handle(h)
             curls[h].close()
-            del curls[h]
-        conn -= len(handles)
+            freelist.append(h)
+            processed += 1
+            multi.remove_handle(h)
+        del handles
         if num_q == 0:
             break
 
-del handles
-multi.close()
+for c in curls:
+    c.close()
+    multi.remove_handle(c)
+    freelist.remove(c)
 
-assert len(curls) == 0
+del curls
+del freelist
