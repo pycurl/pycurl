@@ -34,7 +34,7 @@ class Test(threading.Thread):
         self.target_file = target_file
         self.curl = pycurl.init()
         self.curl.setopt(pycurl.URL, url)
-        self.curl.setopt(pycurl.FILE, target_file)
+        self.curl.setopt(pycurl.FILE, self.target_file)
         self.curl.setopt(pycurl.FOLLOWLOCATION, 1)
         self.curl.setopt(pycurl.NOPROGRESS, 0)
         self.curl.setopt(pycurl.PROGRESSFUNCTION, progress)
