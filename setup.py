@@ -35,9 +35,7 @@ else:
     for e in libs[:]:
         if e[:2] == '-L':
             library_dirs.append(e[2:])
-            libs.remove(e)
     libraries = ["curl"]
-    extra_link_args = libs
     runtime_library_dirs = []
     extra_objects = []
 
@@ -59,6 +57,5 @@ setup (name="pycurl",
                                library_dirs=library_dirs,
                                runtime_library_dirs=runtime_library_dirs,
                                libraries=libraries,
-                               extra_link_args=extra_link_args,
                                extra_objects=extra_objects)]
         )
