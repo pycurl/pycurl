@@ -82,7 +82,7 @@ def test_multi():
 
     # get data
     while 1:
-        num_handles = m.perform()
+        ret, num_handles = m.perform()
         if num_handles == 0:
             break
 

@@ -10,7 +10,7 @@ c2.setopt(c2.URL, 'http://python.org')
 m.add_handle(c1)
 m.add_handle(c2)
 while 1:
-    num_handles = m.perform()
+    ret, num_handles = m.perform()
     if num_handles == 0:
         break
 m.remove_handle(c2)

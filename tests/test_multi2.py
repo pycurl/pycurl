@@ -41,7 +41,7 @@ for url in urls:
 
 # get data
 while 1:
-    num_handles = m.perform()
+    ret, num_handles = m.perform()
     if num_handles == 0:
         break
     # currently no more I/O is pending, could do something in the meantime

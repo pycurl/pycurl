@@ -21,12 +21,19 @@ m.add_handle(c1)
 m.add_handle(c2)
 m.add_handle(c3)
 
-num_handles = m.perform()
+SELECT_TIMEOUT = 0.1
+
+while 1:
+    ret, num_handles = m.perform()
+    if ret != pycurl.CALL_MULTI_PERFORM:
+        break
 
 while num_handles:
-
-    apply(select.select, m.fdset() + (1,))
-    num_handles = m.perform()
+    apply(select.select, m.fdset() + (SELECT_TIMEOUT,))
+    while 1:
+        ret, num_handles = m.perform()
+        if ret != pycurl.CALL_MULTI_PERFORM:
+            break
 
 m.remove_handle(c3)
 m.remove_handle(c2)
