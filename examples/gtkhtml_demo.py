@@ -113,6 +113,7 @@ class HtmlWindow(GtkHTML):
                 html.write(handle, buf.getvalue())
                 buf.close()
             html.end(handle, HTML_STREAM_OK)
+        # Finished rendering page
         t2 = time.time()
         self.statusbar.set_text("Done (%.3f seconds)" % (t2-t1))
 
