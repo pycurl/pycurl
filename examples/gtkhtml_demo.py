@@ -40,11 +40,11 @@ class WorkerThread(threading.Thread):
 			curl.setopt(pycurl.MAXREDIRS, 5)
 			curl.setopt(pycurl.URL, url)
 			curl.perform()
+			curl.close()
 			threads_enter()
 			html.write(handle, b.getvalue())
 			html.end(handle, HTML_STREAM_OK)
 			threads_leave()
-			curl.close()
 			
 
 class HtmlWindow(GtkHTML):
@@ -58,7 +58,6 @@ class HtmlWindow(GtkHTML):
 			self.threads.append(t)
 
 	def mainquit(self, *args):
-		print 'jalla'
 		for t in self.threads:
 			t.queue.put((None, None, None))
 			t.join()
@@ -66,37 +65,14 @@ class HtmlWindow(GtkHTML):
 		
 	def load_url(self, html, url):
 		if history: url = urllib.basejoin(history[-1], url)
-		print "load_url", url
 		history.append(url)
 		handle = html.begin()
 		self.request_url(html, url, handle)
 
 	def request_url(self, html, url, handle):
 		url = urllib.basejoin(history[-1], url)
-		print "Requesting url", url
-		if url == 'blank':
-			print "here"
-			source = "<html><body>foobar</body></html>"
-		elif os.path.exists(url):
-			f = open(url)
-			source = f.read()
-			html.write(handle, source)
-		else:
-			self.queue.put((url, html, handle))
-
-	def anchor_track(self, html, info):
-		if info.href:
-			full_url = urlparse.urljoin(history[-1], info.href)
-			status.set_text(full_url)
-		else:
-			status.set_text('')
-
-	def activate(self, html, info):
-		if info.href:
-			url = urlparse.urljoin(history[-1], info.href)
-			self.load_url(html, url)
-			entry.set_text(url)
-			status.set('')
+		print "Requesting URL: ", url
+		self.queue.put((url, html, handle))
 
 	def entry_activate(self, entry, html):
 		url = entry.get_text()
@@ -174,8 +150,6 @@ status = GtkLabel('')
 status.set_justify(JUSTIFY_LEFT)
 status.set_alignment(0.0, 0.5)
 win.set_statusbar(status)
-
-# This is at the end, since pixmap creation changes the default visual
 win.create_menus(menus)
 win.create_toolbar(toolbar)
 
