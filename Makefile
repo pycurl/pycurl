@@ -3,4 +3,4 @@ all:
 
 clean:
 	cd src; $(MAKE) clean
-	rm -rf build dist *~ MANIFEST
+	rm -rf build dist *~ MANIFEST tests/curlmodule.so
