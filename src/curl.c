@@ -28,7 +28,9 @@ typedef struct {
     char error[CURL_ERROR_SIZE];
 } CurlObject;
 
+#if !defined(__cplusplus)
 staticforward PyTypeObject Curl_Type;
+#endif
 
 /* --------------------------------------------------------------------- */
 
@@ -733,7 +735,10 @@ statichere PyTypeObject Curl_Type = {
     0,			    /*tp_as_number*/
     0,			    /*tp_as_sequence*/
     0,			    /*tp_as_mapping*/
-    0,			    /*tp_hash*/
+    0			    /*tp_hash*/
+    /* More fields follow here, depending on your Python version.
+     * You can safely ignore any compiler warnings.
+     */
 };
 
 /* --------------------------------------------------------------------- */
@@ -851,7 +856,7 @@ static PyMethodDef curl_methods[] = {
     {"init", (PyCFunction)do_init, METH_VARARGS, pycurl_init_doc},
     {"global_cleanup", (PyCFunction)do_global_cleanup, METH_VARARGS, pycurl_global_cleanup_doc},
     {"global_init", (PyCFunction)do_global_init, METH_VARARGS, pycurl_global_init_doc},
-    {NULL, NULL}
+    {NULL, NULL, 0, NULL}
 };
 
 
