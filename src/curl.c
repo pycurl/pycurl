@@ -79,6 +79,14 @@ staticforward PyTypeObject CurlMulti_Type;
     return NULL; \
 } while (0)
 
+#define CURLERROR2(msg) do {\
+    PyObject *v; \
+    v = Py_BuildValue("(is)", (int) (res), msg); \
+    PyErr_SetObject(ErrorObject, v); \
+    Py_DECREF(v); \
+    return NULL; \
+} while (0)
+
 /* --------------------------------------------------------------------- */
 
 static void
@@ -942,13 +950,12 @@ do_multi_perform(CurlMultiObject *self, PyObject *args)
     /* Zero thread-state to disallow callbacks to be run from now on */
     self->state = NULL;
 
-    if (res == CURLM_OK) {
-        return PyInt_FromLong((long)res);
+    /* We assume these errors are ok, otherwise throw exception */
+    if (res == CURLM_OK || res == CURLM_CALL_MULTI_PERFORM) {
+        return PyInt_FromLong((long)running);
     }
     else {
-        printf("curl-multi error: %d\n", res);
-        PyErr_SetString(ErrorObject, "perform failed");
-        return NULL;
+        CURLERROR2("perform failed");
     }
 }
 
@@ -965,8 +972,7 @@ do_multi_addhandle(CurlMultiObject *self, PyObject *args)
         }
         res = curl_multi_add_handle(self->multi_handle, obj->handle);
         if (res != CURLM_CALL_MULTI_PERFORM) {
-            PyErr_SetString(ErrorObject, "add_handle failed");
-            return NULL;
+            CURLERROR2("add_handle failed");
         }
         Py_INCREF(obj);
     }
@@ -991,8 +997,7 @@ do_multi_removehandle(CurlMultiObject *self, PyObject *args)
         }
         res = curl_multi_remove_handle(self->multi_handle, obj->handle);
         if (res != CURLM_OK) {
-            PyErr_SetString(ErrorObject, "remove_handle failed");
-            return NULL;
+            CURLERROR2("remove_handle failed");
         }
         Py_DECREF(obj);
     }
