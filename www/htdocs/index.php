@@ -68,7 +68,7 @@ from a Python program, similar to the
 <h2>Documentation</h2>
 
 PycURL now includes API documentation in the <i><a href="pycurl.html">doc</a></i> directory of the distribution,
-as well as a number of test and example scripts in the <i><a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/pycurl/pycurl/tests/">tests</a></i> 
+as well as a number of test and example scripts in the <i><a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/pycurl/pycurl/tests/">tests</a></i>
 and <i><a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/pycurl/pycurl/examples/">examples</a></i>
 directories of the distribution.
 
@@ -114,9 +114,9 @@ collection for OpenBSD.
 
 
 <h2>License</h2>
-Copyright (c) 2001-2002 by Kjetil Jacobsen<br>
-Copyright (c) 2001-2002 by Markus F.X.J. Oberhumer<br>
-<br>
+Copyright (C) 2001-2002 by Kjetil Jacobsen<br />
+Copyright (C) 2001-2002 by Markus F.X.J. Oberhumer<br />
+<br />
 PycURL is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
 License as published by the Free Software Foundation; either
