@@ -384,6 +384,11 @@ do_curl_new(PyObject *dummy, PyObject *args)
     if (res != CURLE_OK)
         goto error;
 
+    /* Set FTP_ACCOUNT to NULL by default */
+    res = curl_easy_setopt(self->handle, CURLOPT_FTP_ACCOUNT, NULL);
+    if (res != CURLE_OK)
+        goto error;
+
     /* Success - return new object */
     return self;
 
@@ -2512,14 +2517,13 @@ initpycurl(void)
     insint_c(d, "FTP_SSL", CURLOPT_FTP_SSL);
     insint_c(d, "POSTFIELDSIZE_LARGE", CURLOPT_POSTFIELDSIZE_LARGE);
     insint_c(d, "TCP_NODELAY", CURLOPT_TCP_NODELAY);
-    insint_c(d, "SOURCE_HOST", CURLOPT_SOURCE_HOST);
     insint_c(d, "SOURCE_USERPWD", CURLOPT_SOURCE_USERPWD);
-    insint_c(d, "SOURCE_PATH", CURLOPT_SOURCE_PATH);
-    insint_c(d, "SOURCE_PORT", CURLOPT_SOURCE_PORT);
-    insint_c(d, "PASV_HOST", CURLOPT_PASV_HOST);
     insint_c(d, "SOURCE_PREQUOTE", CURLOPT_SOURCE_PREQUOTE);
     insint_c(d, "SOURCE_POSTQUOTE", CURLOPT_SOURCE_POSTQUOTE);
     insint_c(d, "FTPSSLAUTH", CURLOPT_FTPSSLAUTH);
+    insint_c(d, "FTP_ACCOUNT", CURLOPT_FTP_ACCOUNT);
+    insint_c(d, "SOURCE_URL", CURLOPT_SOURCE_URL);
+    insint_c(d, "SOURCE_QUOTE", CURLOPT_SOURCE_QUOTE);
 #if 0
     /* TODO - FIXME */
     insint_c(d, "IOCTLFUNCTION", CURLOPT_IOCTLFUNCTION);
