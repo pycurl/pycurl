@@ -2,12 +2,12 @@
 <html>
 <head>
   <title>CurlMulti Objects</title>
-                                  
+
   <meta http-equiv="content-type"
  content="text/html; charset=ISO-8859-1">
 </head>
   <body>
-         
+
 <h2>CurlMulti Ojects<br>
 </h2>
 <p>
@@ -15,36 +15,36 @@
 </p>
 
     <b>close()</b> -&gt; <i>None</i><br>
-       
-<blockquote> Corresponds to <b>curl_multi_cleanup()</b> in libcurl. &nbsp;This 
- method is automatically called by pycurl when a CurlMulti object no longer 
+
+<blockquote> Corresponds to <b>curl_multi_cleanup()</b> in libcurl. &nbsp;This
+ method is automatically called by pycurl when a CurlMulti object no longer
  has any references to it, but can also be called explicitly.<br>
    </blockquote>
     <b> perform()</b> -&gt; <i>tuple of status and the number of active Curl
   objects</i><br>
-      
+
 <blockquote>  Corresponds to <b>curl_multi_perform()</b> in libcurl. <br>
     </blockquote>
     <b> add_handle(</b><i>Curl Object</i><b>) </b>-&gt; <i>None</i><br>
-   
+
 <blockquote>   Corresponds to <b>curl_multi_add_handle()</b> in libcurl. &nbsp;This
 method  adds an existing and valid Curl object to the CurlMulti object.</blockquote>
  <b>remove_handle(</b><i>Curl Object</i><b>)</b> -&gt; <i>None</i><br>
-      
+
 <blockquote>  Corresponds to <b>curl_multi_remove_handle()</b> in libcurl.
  &nbsp;This method removes an existing and valud Curl object from the CurlMulti
  object.<br>
     </blockquote>
-    <b> fdset()</b> -&gt; <i>tripe of lists with active file descriptors, 
+    <b> fdset()</b> -&gt; <i>tripe of lists with active file descriptors,
 readable,  writeable, exceptions.</i><br>
-      
+
 <blockquote>  Corresponds to <b>curl_multi_fdset() </b>in libcurl. &nbsp;This
  method extracts  the file descriptor information from a CurlMulti object.
  &nbsp;The returned  lists can be used with the <b>select</b> module to poll
  for events.<br>
     <br>
     Example usage:<br>
-           
+
 <pre>import pycurl
 c = pycurl.Curl()
 c.setopt(pycurl.URL, 'http://curl.haxx.se')
@@ -67,7 +67,7 @@ while num_handles:
 use of <b>fdset()</b>   and the <b>select</b> module. &nbsp;<br>
     <br>
     Example usage:<br>
-       
+
   <pre>import pycurl
 c = pycurl.Curl()
 c.setopt(pycurl.URL, 'http://curl.haxx.se')
@@ -84,6 +84,6 @@ while num_handles:
         if ret != pycurl.E_CALL_MULTI_PERFORM: break
 </pre>
     </blockquote>
-       
+
 </body>
 </html>
