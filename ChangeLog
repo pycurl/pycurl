@@ -1,5 +1,12 @@
 Version 7.9.8.4
 
+2002-08-28  Kjetil Jacobsen  <kjetilja>
+
+	* Added a simple web-browser example based on gtkhtml and pycurl.
+	See the file 'examples/gtkhtml_demo.py' for details.  The example
+	requires a working installation of gnome-python with gtkhtml
+	bindings enabled (pass --with-gtkhtml to gnome-python configure).
+
 2002-08-14  Kjetil Jacobsen  <kjetilja>
 
 	* Added new method 'select' on CurlMulti objects.  Example usage
