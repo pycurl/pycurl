@@ -4,7 +4,7 @@
 # $Id$
 
 #
-# Usage: python retriever_multi.py <file with URLs to fetch> [<# of
+# Usage: python retriever-multi.py <file with URLs to fetch> [<# of
 #          concurrent connections>]
 #
 
@@ -48,7 +48,7 @@ del fileno, url, urls
 assert queue, "no URLs given"
 num_urls = len(queue)
 num_conn = min(num_conn, num_urls)
-assert 1 <= num_conn <= 10000, "invalid number of connections"
+assert 1 <= num_conn <= 10000, "invalid number of concurrent connections"
 print "PycURL %s (compiled against 0x%x)" % (pycurl.version, pycurl.COMPILE_LIBCURL_VERSION_NUM)
 print "----- Getting", num_urls, "URLs using", num_conn, "connections -----"
 
