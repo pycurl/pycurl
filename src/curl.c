@@ -29,6 +29,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+/* Are these portable to Windows? */
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 #if (defined(_WIN32) || defined(__WIN32__)) && !defined(WIN32)
 #  define WIN32 1
 #endif
@@ -1405,6 +1410,85 @@ done:
     return Py_None;
 }
 
+/* --------------- fdset ---------------------- *
+ * This looks inelegant, but will remain        *
+ * independent of changes in libcurl internals  */
+
+static PyObject *
+do_multi_fdset(CurlMultiObject *self, PyObject *args)
+{   CURLMcode res;
+    fd_set read_fd_set;
+    fd_set write_fd_set;
+    fd_set exc_fd_set;
+    int max_fd,fd;
+    PyObject *list, *read_list, *write_list, *except_list;
+
+    /* Sanity checks */
+    if (!PyArg_ParseTuple(args, ":fdset")) {
+        return NULL;
+    }
+
+    if (self->multi_handle == NULL) {
+        PyErr_SetString(ErrorObject, "cannot invoke perform, no curl-multi handle");
+        return NULL;
+    }
+
+    if (self->state != NULL) {
+        PyErr_SetString(ErrorObject, "cannot obtain fdset - multi_perform() or fdset() already running");
+        return NULL;
+    }
+
+    list = PyList_New(0);
+    read_list=PyList_New(0);
+    write_list=PyList_New(0);
+    except_list=PyList_New(0);
+    PyList_Append(list,read_list);
+    PyList_Append(list,write_list);
+    PyList_Append(list,except_list);
+
+    /* Don't bother releasing the gil as this is just a data structure operation */
+    res = curl_multi_fdset(self->multi_handle, &read_fd_set, &write_fd_set, &exc_fd_set, &max_fd);
+
+    /* We assume these errors are ok, otherwise throw exception */
+    if (res != CURLM_OK && res != CURLM_CALL_MULTI_PERFORM) {
+        CURLERROR2("fdset failed");
+    }
+
+    /* It is actually quite difficult/non-portable to extract fds from fd_sets. 
+       Since max_fd is assumed to be small(ish) using the FD_ISSET macro is not
+       that inefficient for most cases.
+    */
+
+    /* Populate read_list */
+    for (fd = 0; fd < max_fd; fd++) {
+      if (FD_ISSET(fd, &read_fd_set))
+        PyList_Append(read_list,PyInt_FromLong((long)fd));
+    }
+
+    /* Populate write_list */
+    for (fd = 0; fd < max_fd; fd++) {
+      if (FD_ISSET(fd, &write_fd_set))
+        PyList_Append(write_list,PyInt_FromLong((long)fd));
+    }
+
+   /* Populate write_list */
+   for (fd = 0; fd < max_fd; fd++) {
+      if (FD_ISSET(fd, &exc_fd_set))
+        PyList_Append(except_list,PyInt_FromLong((long)fd));
+    }
+
+    /* We assume these errors are ok, otherwise throw exception */
+    if (res != CURLM_OK && res != CURLM_CALL_MULTI_PERFORM) {
+        CURLERROR2("fdset failed");
+    }
+    /* FIXME: If any of the PyList_Append operations fail, objects
+       on the lists should be decref'ed as well as the lists themselves.  Hence,
+       the current implementation will be leaking memory of any of the list
+       operations fail.
+    */
+    return list;
+}
+
 
 /*************************************************************************
 // type definitions
@@ -1417,7 +1501,7 @@ static char co_close_doc [] = "close() -> None.  Close handle and end curl sessi
 static char co_perform_doc [] = "perform() -> None.  Perform a file transfer.  Throws pycurl.error exception upon failure.\n";
 static char co_setopt_doc [] = "setopt(option, parameter) -> None.  Set curl session options.  Throws pycurl.error exception upon failure.\n";
 static char co_getinfo_doc [] = "getinfo(info) -> res.  Extract and return information from a curl session.  Throws pycurl.error exception upon failure.\n";
-
+static char co_multi_fdset_doc [] = "fdset() -> dict.  Returns a list of three lists that can be passed to the select.select() method .\n";
 
 static PyMethodDef curlobject_methods[] = {
     {"cleanup", (PyCFunction)do_curl_cleanup, METH_VARARGS, co_cleanup_doc},
@@ -1434,6 +1518,7 @@ static PyMethodDef curlmultiobject_methods[] = {
     {"perform", (PyCFunction)do_multi_perform, METH_VARARGS, NULL},
     {"add_handle", (PyCFunction)do_multi_add_handle, METH_VARARGS, NULL},
     {"remove_handle", (PyCFunction)do_multi_remove_handle, METH_VARARGS, NULL},
+    {"fdset", (PyCFunction)do_multi_fdset, METH_VARARGS, co_multi_fdset_doc},
     {NULL, NULL, 0, NULL}
 };
 
@@ -1886,6 +1971,14 @@ DL_EXPORT(void)
     insint_c(d, "HEADER_OUT", CURLINFO_HEADER_OUT);
     insint_c(d, "DATA_IN", CURLINFO_DATA_IN);
     insint_c(d, "DATA_OUT", CURLINFO_DATA_OUT);
+
+    /* Multi call result codes */
+    insint(d, "CALL_MULTI_PERFORM", CURLM_CALL_MULTI_PERFORM);
+    insint(d, "MULTI_OK", CURLM_OK);
+    insint(d, "MULTI_BAD_HANDLE", CURLM_BAD_HANDLE);
+    insint(d, "MULTI_BAD_EASY_HANDLE", CURLM_BAD_EASY_HANDLE);
+    insint(d, "MULTI_OUT_OF_MEMORY", CURLM_OUT_OF_MEMORY);
+    insint(d, "MULTI_INTERNAL_ERROR", CURLM_INTERNAL_ERROR);
 
     /* Initialize global interpreter lock */
     PyEval_InitThreads();
