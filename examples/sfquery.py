@@ -16,7 +16,7 @@ import curl
 
 assert sys.version[:3] >= "2.2", "requires Python 2.2 or better"
 
-class SourceForgeUserSession(curl.CurlCGI):
+class SourceForgeUserSession(curl.Curl):
     # SourceForge-specific methods.  Sensitive to changes in site design.
     def login(self, name, password):
         "Establish a login session."
@@ -33,9 +33,9 @@ class SourceForgeUserSession(curl.CurlCGI):
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        print "Usage: %s <project id> <name> <password>" % sys.argv[0]
-        sys.exit(1)
-    project_id = sys.argv[1]
+        project_id = '28236'	# PyCurl project ID
+    else:
+        project_id = sys.argv[1]
     # Try to grab authenticators out of your .netrc
     try:
         auth = netrc.netrc().authenticators("sourceforge.net")
@@ -48,17 +48,17 @@ if __name__ == "__main__":
     session.login(name, password)
     # Login could fail.
     if session.answered("Invalid Password or User Name"):
-        sys.stderr.write("Login/password not accepted (%d bytes)\n" % len(session.response))
+        sys.stderr.write("Login/password not accepted (%d bytes)\n" % len(session.body()))
         sys.exit(1)
     # We'll see this if we get the right thing.
     elif session.answered("Personal Page For: " + name):
         session.fetch_xml(project_id)
-        sys.stdout.write(session.response)
+        sys.stdout.write(session.body())
         session.logout()
         sys.exit(0)
     # Or maybe SourceForge has changed its site design so our check strings
     # are no longer valid.
     else:
-        sys.stderr.write("Unexpected page (%d bytes)\n"%len(session.response))
+        sys.stderr.write("Unexpected page (%d bytes)\n"%len(session.body()))
         sys.exit(1)
 

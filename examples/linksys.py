@@ -32,7 +32,7 @@
 #
 # By Eric S. Raymond, August April 2003.  All rites reversed.
 
-import sys, re, copy, pycurl, exceptions
+import sys, re, copy, curl, exceptions
 
 class LinksysError(exceptions.Exception):
     def __init__(self, *args):
@@ -67,14 +67,14 @@ class LinksysSession:
     # sanity checks at configure time.
     def cache_load(self, page):
         if page not in self.pagecache:
-            fetch = pycurl.CurlCGI(self.host)
+            fetch = curl.Curl(self.host)
             fetch.set_verbosity(self.verbosity)
             fetch.get(page)
-            #print "Response:", fetch.response
-            self.pagecache[page] = fetch.response
-            if fetch.response.find("401") > -1:
+            #print "Response:", fetch.body()
+            self.pagecache[page] = fetch.body()
+            if fetch.answered("401") > -1:
                 raise LinksysError("authorization failure.", True)
-            elif fetch.response.find(LinksysSession.check_strings[page]) == -1:
+            elif fetch.answered(LinksysSession.check_strings[page]) == -1:
                 del self.pagecache[page]
                 raise LinksysError("check string for page %s missing!" % os.path.join(self.host, page), False)
             fetch.close()
