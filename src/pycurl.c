@@ -1062,7 +1062,11 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
     /* Handle the case of long arguments (used by *LARGE options) */
     if (PyLong_Check(obj)) {
+#ifndef PY_LONG_LONG
+        LONG_LONG d = PyLong_AsLongLong(obj);
+#else
         PY_LONG_LONG d = PyLong_AsLongLong(obj);
+#endif
         if (d == -1 && PyErr_Occurred())
             return NULL;
 
