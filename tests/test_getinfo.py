@@ -26,6 +26,7 @@ print
 print 'Download speed: %f bytes/second' % c.getinfo(pycurl.SPEED_DOWNLOAD)
 print 'Document size: %d bytes' % c.getinfo(pycurl.SIZE_DOWNLOAD)
 print 'Effective URL:', c.getinfo(pycurl.EFFECTIVE_URL)
+print 'Content-type:', c.getinfo(pycurl.CONTENT_TYPE)
 print
 print "Header is in file 'header', body is in file 'body'"
 
