@@ -1,94 +1,105 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <title>PycURL</title>
-
-  <meta http-equiv="content-type"
- content="text/html; charset=ISO-8859-1">
+  <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1"/>
 </head>
-  <body>
+<body>
 
-<h1><tt>pycurl</tt> -- A Python interface to the cURL library </h1>
-  The pycurl package is a Python interface to libcurl (<a
- href="http://curl.haxx.se/libcurl/">http://curl.haxx.se/libcurl/</a>). pycurl
-has been successfully built and tested with Python versions from 1.5.2 to
-the current 2.2.x releases.<br>
-  <br>
-  libcurl is a client-side URL transfer library supporting FTP, FTPS,
+<h1><tt>pycurl</tt> &mdash; A Python interface to the cURL library</h1>
+
+<p>The pycurl package is a Python interface to libcurl (<a
+href="http://curl.haxx.se/libcurl/">http://curl.haxx.se/libcurl/</a>). pycurl
+has been successfully built and tested with Python versions from
+1.5.2 to the current 2.2.x releases.</p>
+
+<p>libcurl is a client-side URL transfer library supporting FTP, FTPS,
 HTTP, HTTPS, GOPHER, TELNET, DICT, FILE and LDAP.  libcurl
 also supports HTTPS certificates, HTTP POST, HTTP PUT, FTP uploads, proxies,
 cookies, basic authentication, file transfer resume of FTP sessions, HTTP
-proxy tunneling and more.<br>
-  <br>
-  All the functionality provided by libcurl can used through the
-pycurl interface. The following subsections describe how to use the
-pycurl interface, and assume familiarity with how libcurl works.
-For information on how libcurl works, please consult the curl
-library web pages (<a href="http://curl.haxx.se/libcurl/c/">http://curl.haxx.se/libcurl/c/</a>).<br>
- <br>
-<hr width="100%" size="2">
-<h2>Module Functionality <br>
-</h2>
-<b>pycurl.global_init(</b><i>option</i><b>)</b> -&gt; <i>None</i> <i></i>
-<blockquote><i> option</i>&nbsp; is one of the constants pycurl.GLOBAL_SSL,
-pycurl.GLOBAL_WIN32, pycurl.GLOBAL_ALL, pycurl.GLOBAL_NOTHING, pycurl.GLOBAL_DEFAULT.
-Corresponds to <b>curl_global_init</b>() in libcurl.<br>
-</blockquote>
- <b>pycurl.global_cleanup()</b> -&gt; <i>None</i>
-<blockquote> Corresponds to <b>curl_global</b>_<b>cleanup</b>()<b> </b>in
-libcurl. <br>
-</blockquote>
+proxy tunneling and more.</p>
 
-<b>pycurl.version_info()</b> -&gt; <i>Result</i>
-<blockquote>
-Corresponds to <b>curl_version_info()</b> in libcurl.  <i>Result</i> is a
-list of information which is similar to the
-<b>curl_version_info_data</b> struct returned by
-<b>curl_version_info()</b> in libcurl.<br>
-<br>
-Example usage:
-<pre>>>> import pycurl
+<p>All the functionality provided by libcurl can used through the
+pycurl interface. The following subsections describe how to use the
+pycurl interface, and assume familiarity with how libcurl works.  For
+information on how libcurl works, please consult the curl library web
+pages (<a
+href="http://curl.haxx.se/libcurl/c/">http://curl.haxx.se/libcurl/c/</a>).</p>
+
+<hr/>
+
+<h1>Module Functionality</h1>
+
+<dl>
+<dt><code>pycurl.global_init(</code><em>option</em><code>)</code> -&gt;<em>None</em></dt>
+
+<dd><p><em>option</em>&nbsp; is one of the constants
+pycurl.GLOBAL_SSL, pycurl.GLOBAL_WIN32, pycurl.GLOBAL_ALL,
+pycurl.GLOBAL_NOTHING, pycurl.GLOBAL_DEFAULT.  Corresponds to
+<code>curl_global_init</code>() in libcurl.</p></dd>
+
+<dt><code>pycurl.global_cleanup()</code> -&gt; <em>None</em></dt>
+<dd> 
+<p>Corresponds to
+<code>curl_global_cleanup()</code> in libcurl.</p>
+</dd>
+
+<dt><code>pycurl.version_info()</code> -&gt; <em>Result</em></dt>
+<dd>
+<p>Corresponds to <code>curl_version_info()</code> in libcurl.
+<em>Result</em> is a list of information which is similar to the
+<code>curl_version_info_data</code> struct returned by
+<code>curl_version_info()</code> in libcurl.</p>
+
+<p>Example usage:</p>
+<pre>
+>>> import pycurl
 >>> pycurl.version_info()
 (0, '7.10.2', 461314, 'i686-pc-linux-gnu', 12, 'OpenSSL/0.9.6', 9461775, '1.1.3',
 ('ftp', 'gopher', 'telnet', 'dict', 'ldap', 'http', 'file', 'https', 'ftps'))
 </pre>
-</blockquote>
+</dd>
 
+<dt><code>pycurl.version</code></dt>
 
-<b>pycurl.version</b>
-<blockquote> This is a string with version information on libcurl
-which is linked and used by pycurl, corresponding to <b>curl_version()</b>
-in libcurl.<br>
-  <br>
-   Example usage:
-  <pre>>>> import pycurl
->>> pycurl.version<br>'libcurl 7.9.8 (OpenSSL 0.9.6)'</pre>
-</blockquote>
+<dd><p>This is a string with version information on libcurl which is
+linked and used by pycurl, corresponding to
+<code>curl_version()</code> in libcurl.</p>
 
- <b>pycurl.Curl()</b> -&gt; <i>Curl object</i>
-<blockquote> This function returns a Curl object which corresponds to a <b>CURL</b>
-handle in libcurl. &nbsp;Curl objects automatically set CURLOPT_VERBOSE to
-0, CURLOPT_NOPROGRESS to 1 and CURLOPT_ERRORBUFFER to point to a private error
-buffer. <br>
-</blockquote>
-<b>pycurl.CurlMulti()</b> -&gt; <i>CurlMulti object</i>
-<blockquote>This function returns a CurlMulti object which corresponds to
-a <b>CURLM</b> handle in libcurl.<br>
-</blockquote>
+<p>Example usage:</p>
+<pre>
+>>> import pycurl
+>>> pycurl.version
+'libcurl 7.9.8 (OpenSSL 0.9.6)'
+</pre>
+</dd>
 
-<hr width="100%" size="2">
-<h3>Subsections</h3>
+<dt><code>pycurl.Curl()</code> -&gt; <em>Curl object</em></dt>
+<dd> 
+<p>This function returns a Curl object which corresponds to a
+<code>CURL</code> handle in libcurl. &nbsp;Curl objects automatically
+set CURLOPT_VERBOSE to 0, CURLOPT_NOPROGRESS to 1 and
+CURLOPT_ERRORBUFFER to point to a private error buffer.</p>
+</dd>
+
+<dt><code>pycurl.CurlMulti()</code> -&gt; <em>CurlMulti object</em></dt>
+<dd>
+<p>This function returns a CurlMulti object which corresponds to
+a <code>CURLM</code> handle in libcurl.</p>
+</dd>
+</dl>
+
+<hr/>
+
+<h1>Subsections</h1>
 
 <ul>
-    <li><a href="curlobject.html">Curl objects</a></li>
-   <li><a href="curlmultiobjects.html">CurlMulti objects</a></li>
-  <li><a href="callbacks.html">Callbacks</a><br>
-  </li>
-
-  <ul>
-
-  </ul>
+<li><a href="curlobject.html">Curl objects</a></li>
+<li><a href="curlmultiobjects.html">CurlMulti objects</a></li>
+<li><a href="callbacks.html">Callbacks</a></li>
 </ul>
-<hr width="100%" size="2">
+
 </body>
 </html>
