@@ -1,3 +1,7 @@
+2001-06-01  Kjetil Jacobsen  <kjetilja@cs.UiT.No>
+
+	* Moved source to src and tests to tests directory.
+
 2001-05-31  Kjetil Jacobsen  <kjetilja@cs.UiT.No>
 
 	* Added better type checking for setopt.
