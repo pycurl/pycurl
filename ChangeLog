@@ -1,3 +1,5 @@
+Version 7.10.4
+
 2003-02-25  Kjetil Jacobsen  <kjetilja>
 
 	* Fixed some broken test code and removed the fileupload test
@@ -9,11 +11,11 @@
 
 2003-01-22  Kjetil Jacobsen  <kjetilja>
 
-	* The info_read method now returns a separate array with handles
-	that failed.  Each entry in this array is a tuple with (curl
-	object, error number, error message).  This addition makes it
-	simpler to do error checking of individual curl objects when using
-	the multi interface.
+	* API CHANGE: the CurlMulti.info_read() method now returns
+	a separate array with handles that failed.  Each entry in this array
+	is a tuple with (curl object, error number, error message).
+	This addition makes it simpler to do error checking of individual
+	curl objects when using the multi interface.
 
 Version 7.10.3
 
@@ -43,7 +45,7 @@ Version 7.10.3
 
 2002-11-19  Kjetil Jacobsen  <kjetilja>
 
-	* Added support for curl_multi_info_read.
+	* Added new method CurlMulti.info_read().
 
 Version 7.10.2
 
@@ -62,8 +64,8 @@ Version 7.10.2
 
 2002-10-30  Markus F.X.J. Oberhumer <mfx>
 
-	* For integral values, Curl.getinfo() now returns an int
-	instead of a long.
+	* API CHANGE: For integral values, Curl.getinfo() now returns a
+	Python-int instead of a Python-long.
 
 Version 7.10.1
 
