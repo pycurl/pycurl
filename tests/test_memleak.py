@@ -23,7 +23,6 @@ if 1:
     flags = flags | gc.DEBUG_STATS
 gc.set_debug(flags)
 gc.collect()
-gc.get_objects()    # dummy
 
 print "Tracked objects:", len(gc.get_objects())
 
@@ -42,6 +41,7 @@ for curl in t:
 
 print "Tracked objects:", len(gc.get_objects())
 
+del curl
 del t
 del multi
 
