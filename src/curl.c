@@ -1108,7 +1108,6 @@ DL_EXPORT(void)
     insint(d, "DNS_USE_GLOBAL_CACHE", CURLOPT_DNS_USE_GLOBAL_CACHE);
 
     insint(d, "DEBUGFUNCTION", CURLOPT_DEBUGFUNCTION);
-    insint(d, "DEBUGDATA", CURLOPT_DEBUGDATA);
 
     /* Symbolic constants for getinfo */
     insint(d, "EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL);
