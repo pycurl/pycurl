@@ -5,6 +5,8 @@
 
 """Setup script for the PycURL module distribution."""
 
+VERSION = "7.9.8.4"
+
 import os, sys
 import distutils
 from distutils.core import setup
@@ -71,7 +73,7 @@ ext = Extension(
 
 setup_args = get_kw(
     name="pycurl",
-    version="7.9.8.4",
+    version=VERSION,
     description="PycURL -- cURL library module for Python",
     author="Kjetil Jacobsen, Markus F.X.J. Oberhumer",
     author_email="kjetilja@cs.uit.no, markus@oberhumer.com",
