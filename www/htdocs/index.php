@@ -67,7 +67,7 @@ from a Python program, similar to the
 <h2>Documentation</h2>
 
 <p>
-Read the <a href="ChangeLog">ChangeLog</a>.
+Take a look at the <a href="ChangeLog">ChangeLog</a>.
 </p>
 
 <p>
