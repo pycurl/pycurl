@@ -107,15 +107,8 @@ typedef struct {
 } CurlObject;
 
 /* forward declarations */
-#if defined(__cplusplus)
-static PyTypeObject& get_Curl_Type();
-static PyTypeObject& get_CurlMulti_Type();
-#define Curl_Type       get_Curl_Type()
-#define CurlMulti_Type  get_CurlMulti_Type()
-#else
-staticforward PyTypeObject Curl_Type;
-staticforward PyTypeObject CurlMulti_Type;
-#endif
+static PyTypeObject* p_Curl_Type;
+static PyTypeObject* p_CurlMulti_Type;
 
 /* Throw exception based on return value `res' and `self->error' */
 #define CURLERROR_RETVAL() do {\
@@ -185,7 +178,7 @@ static void
 assert_curl_object(const CurlObject *self)
 {
     assert(self != NULL);
-    assert(self->ob_type == &Curl_Type);
+    assert(self->ob_type == p_Curl_Type);
     (void) get_thread_state(self);
 }
 
@@ -195,7 +188,7 @@ static void
 assert_curl_multi_object(const CurlMultiObject *self)
 {
     assert(self != NULL);
-    assert(self->ob_type == &CurlMulti_Type);
+    assert(self->ob_type == p_CurlMulti_Type);
     if (self->state != NULL) {
         assert(self->multi_handle != NULL);
     }
@@ -215,12 +208,12 @@ util_curl_new(void)
     CurlObject *self;
 
 #if defined(USE_GC)
-    self = (CurlObject *) PyObject_GC_New(CurlObject, &Curl_Type);
+    self = (CurlObject *) PyObject_GC_New(CurlObject, p_Curl_Type);
     if (self) PyObject_GC_Track(self);
 #elif (PY_VERSION_HEX >= 0x01060000)
-    self = (CurlObject *) PyObject_New(CurlObject, &Curl_Type);
+    self = (CurlObject *) PyObject_New(CurlObject, p_Curl_Type);
 #else
-    self = (CurlObject *) PyObject_NEW(CurlObject, &Curl_Type);
+    self = (CurlObject *) PyObject_NEW(CurlObject, p_Curl_Type);
 #endif
     if (self == NULL)
         return NULL;
@@ -448,7 +441,7 @@ util_curl_close(CurlObject *self)
     /* Zero handle and thread-state to disallow any operations to be run
      * from now on */
     assert(self != NULL);
-    assert(self->ob_type == &Curl_Type);
+    assert(self->ob_type == p_Curl_Type);
     handle = self->handle;
     self->handle = NULL;
     if (handle == NULL) {
@@ -1317,12 +1310,12 @@ do_multi_new(PyObject *dummy, PyObject *args)
 
     /* Allocate python curl-multi object */
 #if defined(USE_GC)
-    self = (CurlMultiObject *) PyObject_GC_New(CurlMultiObject, &CurlMulti_Type);
+    self = (CurlMultiObject *) PyObject_GC_New(CurlMultiObject, p_CurlMulti_Type);
     if (self) PyObject_GC_Track(self);
 #elif (PY_VERSION_HEX >= 0x01060000)
-    self = (CurlMultiObject *) PyObject_New(CurlMultiObject, &CurlMulti_Type);
+    self = (CurlMultiObject *) PyObject_New(CurlMultiObject, p_CurlMulti_Type);
 #else
-    self = (CurlMultiObject *) PyObject_NEW(CurlMultiObject, &CurlMulti_Type);
+    self = (CurlMultiObject *) PyObject_NEW(CurlMultiObject, p_CurlMulti_Type);
 #endif
     if (self == NULL)
         return NULL;
@@ -1500,7 +1493,7 @@ do_multi_add_handle(CurlMultiObject *self, PyObject *args)
     CurlObject *obj;
     CURLMcode res;
 
-    if (!PyArg_ParseTuple(args, "O!:add_handle", &Curl_Type, &obj)) {
+    if (!PyArg_ParseTuple(args, "O!:add_handle", p_Curl_Type, &obj)) {
         return NULL;
     }
     if (check_multi_handle(self, obj) != 0) {
@@ -1532,7 +1525,7 @@ do_multi_remove_handle(CurlMultiObject *self, PyObject *args)
     CurlObject *obj;
     CURLMcode res;
 
-    if (!PyArg_ParseTuple(args, "O!:remove_handle", &Curl_Type, &obj)) {
+    if (!PyArg_ParseTuple(args, "O!:remove_handle", p_Curl_Type, &obj)) {
         return NULL;
     }
     if (check_multi_handle(self, obj) != 0) {
@@ -1682,7 +1675,7 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
             Py_DECREF(ok_list);
             CURLERROR_MSG("Unable to fetch curl handle from curl object");
         }
-        assert(co->ob_type == &Curl_Type);
+        assert(co->ob_type == p_Curl_Type);
         if (msg->data.result == CURLE_OK) {
             /* Append curl object to list of objects which succeeded */
             if (PyList_Append(ok_list, (PyObject *)co) != 0) {
@@ -1888,10 +1881,7 @@ do_multi_getattr(CurlMultiObject *co, char *name)
 
 /* --------------- actual type definitions --------------- */
 
-#undef Curl_Type
-#undef CurlMulti_Type
-
-statichere PyTypeObject Curl_Type = {
+static PyTypeObject Curl_Type = {
     PyObject_HEAD_INIT(NULL)
     0,                          /* ob_size */
     "Curl",                     /* tp_name */
@@ -1926,7 +1916,7 @@ statichere PyTypeObject Curl_Type = {
      */
 };
 
-statichere PyTypeObject CurlMulti_Type = {
+static PyTypeObject CurlMulti_Type = {
     PyObject_HEAD_INIT(NULL)
     0,                          /* ob_size */
     "CurlMulti",                /* tp_name */
@@ -1960,11 +1950,6 @@ statichere PyTypeObject CurlMulti_Type = {
      * safely ignore any compiler warnings about missing initializers.
      */
 };
-
-#if defined(__cplusplus)
-static PyTypeObject& get_Curl_Type() { return Curl_Type; }
-static PyTypeObject& get_CurlMulti_Type() { return CurlMulti_Type; }
-#endif
 
 
 /*************************************************************************
@@ -2201,6 +2186,8 @@ initpycurl(void)
 
     /* Initialize the type of the new type object here; doing it here
      * is required for portability to Windows without requiring C++. */
+    p_Curl_Type = &Curl_Type;
+    p_CurlMulti_Type = &CurlMulti_Type;
     Curl_Type.ob_type = &PyType_Type;
     CurlMulti_Type.ob_type = &PyType_Type;
 
