@@ -332,7 +332,8 @@ do_setopt(CurlObject *self, PyObject *args)
 	    strcpy(buf, stringdata);
 	    self->url = buf;
 	    res = curl_easy_setopt(self->handle, CURLOPT_URL, self->url);
-	} else {
+	} 
+	else {
 	    /* Handle the regular cases of string arguments */
 	    res = curl_easy_setopt(self->handle, option, stringdata);
 	}
@@ -340,7 +341,8 @@ do_setopt(CurlObject *self, PyObject *args)
 	if (res == 0) {
 	    Py_INCREF(Py_None);
 	    return Py_None;
-	} else {
+	} 
+	else {
 	    PyErr_SetString(ErrorObject, self->error);
 	    return NULL;
 	}
@@ -360,7 +362,8 @@ do_setopt(CurlObject *self, PyObject *args)
 	if (res == 0) {
 	    Py_INCREF(Py_None);
 	    return Py_None;
-	} else {
+	} 
+	else {
 	    PyErr_SetString(ErrorObject, self->error);
 	    return NULL;
 	}
@@ -390,7 +393,8 @@ do_setopt(CurlObject *self, PyObject *args)
 	if (res == 0) {
 	    Py_INCREF(Py_None);
 	    return Py_None;
-	} else {
+	} 
+	else {
 	    PyErr_SetString(ErrorObject, self->error);
 	    return NULL;
 	}      
@@ -453,7 +457,8 @@ do_setopt(CurlObject *self, PyObject *args)
 	    if (res == 0) {
 		Py_INCREF(Py_None);
 		return Py_None;
-	    } else {
+	    } 
+	    else {
 		curl_formfree(self->httppost);
 		PyErr_SetString(ErrorObject, self->error);
 		return NULL;
@@ -491,7 +496,8 @@ do_setopt(CurlObject *self, PyObject *args)
 	if (res == 0) {
 	    Py_INCREF(Py_None);
 	    return Py_None;
-	} else {
+	} 
+	else {
 	    curl_slist_free_all(*slist);
 	    PyErr_SetString(ErrorObject, self->error);
 	    return NULL;
@@ -576,7 +582,8 @@ do_perform(CurlObject *self, PyObject *args)
     if (res == 0) {
 	Py_INCREF(Py_None);
 	return Py_None;
-    } else {
+    } 
+    else {
 	PyErr_SetString(ErrorObject, self->error);
 	return NULL;
     }
@@ -613,7 +620,8 @@ do_getinfo(CurlObject *self, PyObject *args)
 		/* Check for errors and return result */
 		if (res == 0) {
 		    return PyLong_FromLong(l_res);
-		} else {
+		} 
+		else {
 		    PyErr_SetString(ErrorObject, self->error);
 		    return NULL;
 		}
@@ -628,7 +636,8 @@ do_getinfo(CurlObject *self, PyObject *args)
 		/* Check for errors and return result */
 		if (res == 0) {
 		    return PyString_FromString(s_res);
-		} else {
+		} 
+		else {
 		    PyErr_SetString(ErrorObject, self->error);
 		    return NULL;
 		}
@@ -652,7 +661,8 @@ do_getinfo(CurlObject *self, PyObject *args)
 		/* Check for errors and return result */
 		if (res == 0) {
 		    return PyFloat_FromDouble(d_res);
-		} else {
+		} 
+		else {
 		    PyErr_SetString(ErrorObject, self->error);
 		    return NULL;
 		}
