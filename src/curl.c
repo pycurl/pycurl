@@ -665,11 +665,18 @@ do_getinfo(CurlObject *self, PyObject *args)
 
 /* --------------------------------------------------------------------- */
 
+
+static char co_cleanup_doc [] = "cleanup() -> None.  End curl session.\n";
+static char co_setopt_doc [] = "setopt(option, parameter) -> None.  Set curl session options.  Throws pycurl.error exception upon failure.\n";
+static char co_perform_doc [] = "perform() -> None.  Perform a file transfer.  Throws pycurl.error exception upon failure.\n";
+static char co_getinfo_doc [] = "getinfo(info, parameter) -> None.  Extract information from a curl session.  Throws pycurl.error upon failure.\n";
+
+
 static PyMethodDef curlobject_methods[] = {
-    {"cleanup", (PyCFunction)do_cleanup, METH_VARARGS, NULL},
-    {"setopt", (PyCFunction)do_setopt, METH_VARARGS, NULL},
-    {"perform", (PyCFunction)do_perform, METH_VARARGS, NULL},
-    {"getinfo", (PyCFunction)do_getinfo, METH_VARARGS, NULL},
+    {"cleanup", (PyCFunction)do_cleanup, METH_VARARGS, co_cleanup_doc},
+    {"setopt", (PyCFunction)do_setopt, METH_VARARGS, co_setopt_doc},
+    {"perform", (PyCFunction)do_perform, METH_VARARGS, co_perform_doc},
+    {"getinfo", (PyCFunction)do_getinfo, METH_VARARGS, co_getinfo_doc},
     {NULL, NULL}
 };
 
