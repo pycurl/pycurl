@@ -141,7 +141,7 @@ header_callback(void *ptr,
 
 
 static int 
-progress_callback(void *clientp,
+progress_callback(void *client,
 		  size_t dltotal,
 		  size_t dlnow,
 		  size_t ultotal,
@@ -152,7 +152,7 @@ progress_callback(void *clientp,
     CurlObject *self;
     int ret;
     
-    self = (CurlObject *)clientp;
+    self = (CurlObject *)client;
     arglist = Py_BuildValue("(ii)", dltotal, dlnow);
 
     PyEval_AcquireThread(self->state);
@@ -164,6 +164,43 @@ progress_callback(void *clientp,
     }
     else
 	ret = (int)PyInt_AsLong(result);
+    Py_XDECREF(result);
+    PyEval_ReleaseThread(self->state);
+    return ret;
+}
+
+
+int password_callback(void *client,
+		      char *prompt, 
+		      char* buffer, 
+		      int buflen)
+{
+    PyObject *arglist;
+    PyObject *result;
+    CurlObject *self;
+    char *buf;
+    int ret;
+    
+    self = (CurlObject *)client;
+    arglist = Py_BuildValue("(s)", prompt);
+
+    PyEval_AcquireThread(self->state);
+    result = PyEval_CallObject(self->pwd_cb, arglist);
+    Py_DECREF(arglist);
+    if (result == NULL) {
+	PyErr_Print();
+	ret = -1;
+    }
+    else {
+	buf = PyString_AsString(result);
+	if (strlen(buf) > buflen) {
+	    ret = -1;
+	}
+	else {
+	    strcpy(buffer, buf);
+	    ret = 0;
+	}
+    }
     Py_XDECREF(result);
     PyEval_ReleaseThread(self->state);
     return ret;
@@ -421,6 +458,13 @@ do_setopt(CurlObject *self, PyObject *args)
 	    self->pro_cb = obj;
 	    curl_easy_setopt(self->handle, CURLOPT_PROGRESSFUNCTION, progress_callback);
 	    curl_easy_setopt(self->handle, CURLOPT_PROGRESSDATA, self);
+	    break;
+	case CURLOPT_PASSWDFUNCTION:
+	    Py_INCREF(obj);
+	    Py_XDECREF(self->h_cb);
+	    self->pwd_cb = obj;
+	    curl_easy_setopt(self->handle, CURLOPT_PASSWDFUNCTION, password_callback);
+	    curl_easy_setopt(self->handle, CURLOPT_PASSWDDATA, self);
 	    break;
 	default:
 	    /* None of the list options were recognized, throw exception */
