@@ -1,4 +1,21 @@
-Version 7.12.3 [requires libcurl-7.12.3 or better]
+Version 7.13.0 [requires libcurl-7.13.0 or better]
+--------------
+
+2005-02-10  Kjetil Jacobsen  <kjetilja>
+
+        * Added file_upload.py to examples, shows how to upload
+          a file.
+
+        * Added CURLOPT_IOCTLFUNCTION/DATA.
+
+        * Added options from libcurl 7.13.0: FTP_ACCOUNT, SOURCE_URL,
+          SOURCE_QUOTE.
+
+        * Obsoleted options: SOURCE_HOST, SOURCE_PATH, SOURCE_PORT,
+          PASV_HOST.
+
+
+Version 7.12.3
 --------------
 
 2004-12-22  Markus F.X.J. Oberhumer <mfx>
@@ -36,8 +53,8 @@ Version 7.12.1
 
 2004-07-16  Markus F.X.J. Oberhumer <mfx>
 
-        * WARNING: removed deprecated PROXY_, TIMECOND_ and non-prefixed INFOTYPE
-          constant names. See ChangeLog entry 2003-06-10.
+        * WARNING: removed deprecated PROXY_, TIMECOND_ and non-prefixed
+          INFOTYPE constant names. See ChangeLog entry 2003-06-10.
 
 2004-06-21  Kjetil Jacobsen  <kjetilja>
 
@@ -72,7 +89,7 @@ Version 7.12
 2004-05-18  Kjetil Jacobsen  <kjetilja>
 
         * WARNING: To simplify code maintenance pycurl now requires
-          libcurl 7.11.2 and python 2.2 or newer to work.
+          libcurl 7.11.2 and Python 2.2 or newer to work.
 
         * GC support is now always enabled.
 
@@ -195,8 +212,9 @@ Version 7.10.6
         * WARNING: Removed the deprecated pycurl.init() and pycurl.multi_init()
           names - use pycurl.Curl() and pycurl.CurlMulti() instead.
 
-        * WARNING: Removed the deprecated Curl.cleanup() and CurlMulti.cleanup()
-          methods - use Curl.close() and CurlMulti.close() instead.
+        * WARNING: Removed the deprecated Curl.cleanup() and
+          CurlMulti.cleanup() methods - use Curl.close() and
+          CurlMulti.close() instead.
 
 
 Version 7.10.5
@@ -482,7 +500,7 @@ Version 7.9.7
 2002-04-27  Kjetil Jacobsen  <kjetilja>
 
         * Fixed potential memory leak and thread race (by Markus
-        Oberhumer)
+        Oberhumer).
 
 
 Version 0.4.9

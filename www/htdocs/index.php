@@ -1,7 +1,7 @@
 <?php // vi:ts=4:et
 echo "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
-$version = "7.12.3";
-$version_date = "Dec 23 2004";
+$version = "7.13.0";
+$version_date = "Feb 10 2005";
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
@@ -129,7 +129,7 @@ For a list of changes consult the <a href="ChangeLog">PycURL ChangeLog</a>.
 <h2>Download</h2>
 
 <p>
-<a href="download/pycurl-7.12.3.tar.gz">Download</a>
+<a href="download/pycurl-7.13.0.tar.gz">Download</a>
 PycURL sources version <?php echo "$version ($version_date)"; ?> or try
 the code from
 <a href="http://sourceforge.net/cvs/?group_id=28236">the CVS repository</a>.
