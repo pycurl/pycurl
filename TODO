@@ -2,4 +2,3 @@ PycURL - cURL Python module
 ---------------------------
 
 * handle function objects as callbacks (READ/WRITEFUNCTION)
-* distutils instead of hand-crafted Makefile

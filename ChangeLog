@@ -1,6 +1,12 @@
+2001-06-05  Kjetil Jacobsen  <kjetilja>
+
+	* WRITEFUNCTION callbacks now work (see tests/test_cb.py for details).
+
+	* Preliminary distutils installation.
+
 2001-06-04  Kjetil Jacobsen  <kjetilja>
 
-	* Return -1 on error from Python callback in write function.
+	* Return -1 on error from Python callback in WRITEFUNCTION callback.
 
 2001-06-01  Kjetil Jacobsen  <kjetilja>
 
