@@ -1078,6 +1078,8 @@ DL_EXPORT(void)
     PyDict_SetItemString(d, "version", PyString_FromString(curl_version()));
 
     /* Symbolic constants for setopt */
+    insint(d, "FILE", CURLOPT_WRITEDATA);
+    insint(d, "INFILE", CURLOPT_READDATA);
     insint(d, "WRITEDATA", CURLOPT_WRITEDATA);
     insint(d, "WRITEFUNCTION", CURLOPT_WRITEFUNCTION);
     insint(d, "READDATA", CURLOPT_READDATA);
