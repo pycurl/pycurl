@@ -1,5 +1,9 @@
 Version 7.10.3
 
+2003-01-09  Kjetil Jacobsen  <kjetilja>
+
+	* Added support for CURLOPT_HTTP200ALIASES.
+
 2002-11-22  Kjetil Jacobsen  <kjetilja>
 
 	* Updated pycurl documentation in the 'doc' directory.
