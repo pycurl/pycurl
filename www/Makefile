@@ -22,6 +22,7 @@ RSYNC_FILES = \
 	htdocs/download/.htaccess
 
 RSYNC_EXCLUDES = \
+	'--exclude=.xvpics/' \
 	'--exclude=CVS/' \
 	'--exclude=htdocs/download/' \
 	'--exclude=.cvsignore'
@@ -44,7 +45,8 @@ rsync-check:
 	$(MAKE) rsync 'RSYNC=rsync --dry-run -c'
 
 
-# note: CVS does not maintain file permissions, so we have to care manually
+# note: CVS does not maintain metadata like owners and file permissions,
+#       so we have to care manually
 __rsync-clean:
 	chgrp -c -R pycurl .
 	chmod -c g+s `find . -type d -print`
