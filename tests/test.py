@@ -19,6 +19,8 @@ class Test(threading.Thread):
         self.curl.setopt(pycurl.NOPROGRESS, 1)
         self.curl.setopt(pycurl.FOLLOWLOCATION, 1)
         self.curl.setopt(pycurl.MAXREDIRS, 5)
+        self.curl.setopt(pycurl.DNS_USE_GLOBAL_CACHE, 1)
+        self.curl.setopt(pycurl.DNS_CACHE_TIMEOUT, 10)
 
     def run(self):
         self.curl.perform()
