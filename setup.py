@@ -5,9 +5,10 @@
 
 """Setup script for the PycURL module distribution."""
 
+PACKAGE = "pycurl"
 VERSION = "7.10.2"
 
-import os, sys, string
+import glob, os, sys, string
 import distutils
 from distutils.core import setup
 from distutils.extension import Extension
@@ -83,7 +84,7 @@ else:
 def get_kw(**kw): return kw
 
 ext = Extension(
-    name="pycurl",
+    name=PACKAGE,
     sources=[
         os.path.join("src", "curl.c"),
     ],
@@ -98,8 +99,45 @@ ext = Extension(
 )
 ##print ext.__dict__; sys.exit(1)
 
+
+###############################################################################
+
+# prepare data_files
+
+def get_data_files():
+    # a list of tuples with (path to install to, a list of files)
+    data_files = []
+    #
+    datadir = os.path.join("share", "doc", PACKAGE)
+    #
+    files = ["ChangeLog", "COPYING", "INSTALL", "README", "TODO",]
+    if files:
+        data_files.append((datadir, files))
+    #
+    files = glob.glob(os.path.join("doc", "*.html"))
+    if files:
+        data_files.append((os.path.join(datadir, "html"), files))
+    #
+    files = glob.glob(os.path.join("examples", "*.py"))
+    if files:
+        data_files.append((os.path.join(datadir, "examples"), files))
+    #
+    files = glob.glob(os.path.join("tests", "*.py"))
+    if files:
+        data_files.append((os.path.join(datadir, "tests"), files))
+    #
+    for dir, files in data_files:
+        for f in files:
+            assert os.path.isfile(f), (f, dir)
+    return data_files
+
+##print get_data_files(); sys.exit(1)
+
+
+###############################################################################
+
 setup_args = get_kw(
-    name="pycurl",
+    name=PACKAGE,
     version=VERSION,
     description="PycURL -- cURL library module for Python",
     author="Kjetil Jacobsen, Markus F.X.J. Oberhumer",
@@ -108,20 +146,7 @@ setup_args = get_kw(
     maintainer_email="kjetilja@cs.uit.no, markus@oberhumer.com",
     url="http://pycurl.sourceforge.net/",
     license="GNU Lesser General Public License (LGPL)",
-    data_files = [
-        # list of tuples with (path to install to, a list of files)
-        (os.path.join("doc", "pycurl"), [
-            "ChangeLog", "COPYING", "INSTALL", "README", "TODO",
-        ]),
-        (os.path.join("doc", "pycurl", "examples"), [
-            os.path.join("examples", "basicfirst.py"),
-            os.path.join("examples", "curl.py"),
-            os.path.join("examples", "gtkhtml_demo.py"),
-            os.path.join("examples", "retriever.py"),
-            os.path.join("examples", "sfquery.py"),
-            os.path.join("examples", "xmlrpc_curl.py"),
-        ]),
-    ],
+    data_files = get_data_files(),
     ext_modules=[ext],
     long_description="""
 This module provides Python bindings for the cURL library.""",

@@ -14,6 +14,7 @@ include src/Makefile
 include src/curl.c
 include examples/*.py
 include tests/*.py
+include doc/*.html
 
 # exclude unfinished test scripts
 exclude tests/test_multi_vs_thread.py
