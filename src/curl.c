@@ -1961,12 +1961,16 @@ static PyMethodDef curl_methods[] = {
 static char module_doc [] =
 "This module implements an interface to the cURL library.\n"
 "\n"
+"Types:\n"
+"\n"
+"Curl() -> New object.  Create a new curl object.\n"
+"CurlMulti() -> New object.  Create a new curl multi-object.\n"
+"\n"
 "Functions:\n"
 "\n"
 "global_init(option) -> None.  Initialize curl environment.\n"
 "global_cleanup() -> None.  Cleanup curl environment.\n"
-"Curl() -> New curl object.  Create a new curl object.\n"
-"CurlMulti() -> New curl multi-object.  Create a new curl multi-object.\n"
+"version_info() -> tuple.  Return version information.\n"
 ;
 
 
