@@ -1196,7 +1196,7 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
         if (res != CURLE_OK) {
             CURLERROR();
         }
-        return PyLong_FromLong(l_res);
+        return PyInt_FromLong(l_res);
     }
 
     if (option == CURLINFO_EFFECTIVE_URL ||

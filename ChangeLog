@@ -1,4 +1,9 @@
-Version 7.10.1.1
+Version 7.10.2
+
+2002-10-30  Markus F.X.J. Oberhumer <mfx>
+
+	* For integral values, Curl.getinfo() now returns an int
+	instead of a long.
 
 Version 7.10.1
 
