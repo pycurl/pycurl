@@ -69,7 +69,7 @@ ext = Extension(
 
 setup(
     name="pycurl",
-    version="7.9.8.2",
+    version="7.9.8.3",
     description="PycURL -- cURL library module for Python",
     author="Kjetil Jacobsen, Markus F.X.J. Oberhumer",
     author_email="kjetilja@cs.uit.no, markus@oberhumer.com",
