@@ -70,11 +70,10 @@ class LinksysSession:
             fetch = curl.Curl(self.host)
             fetch.set_verbosity(self.verbosity)
             fetch.get(page)
-            #print "Response:", fetch.body()
             self.pagecache[page] = fetch.body()
-            if fetch.answered("401") > -1:
+            if fetch.answered("401"):
                 raise LinksysError("authorization failure.", True)
-            elif fetch.answered(LinksysSession.check_strings[page]) == -1:
+            elif not fetch.answered(LinksysSession.check_strings[page]):
                 del self.pagecache[page]
                 raise LinksysError("check string for page %s missing!" % os.path.join(self.host, page), False)
             fetch.close()
@@ -180,7 +179,7 @@ class LinksysSession:
             # Otherwise we could get permanently wedged by a 401.
             self.actions = []
             for (cgi, fields) in ship.items():
-                transaction = pycurl.CurlCGI(self.host)
+                transaction = curl.Curl(self.host)
                 transaction.set_verbosity(self.verbosity)
                 transaction.get(cgi, tuple(fields))
                 transaction.close()
