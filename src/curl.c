@@ -13,16 +13,19 @@
  * See file COPYING for license information.
  *
  */
-#include "Python.h"
-#include <curl/curl.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#if (defined(_WIN32) || defined(__WIN32__)) && !defined(WIN32)
+#  define WIN32 1
+#endif
+#include <Python.h>
+#include <curl/curl.h>
 
 /* Ensure we have an updated libcurl */
 #if LIBCURL_VERSION_NUM < 0x070908
-  #error "Need libcurl version 7.9.8 or greater to compile pycurl."
+#  error "Need libcurl version 7.9.8 or greater to compile pycurl."
 #endif
 
 static PyObject *ErrorObject;
