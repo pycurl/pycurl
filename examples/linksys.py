@@ -67,7 +67,7 @@ class LinksysSession:
     # sanity checks at configure time.
     def cache_load(self, page):
         if page not in self.pagecache:
-            fetch = pycurl.CGIClient(self.host)
+            fetch = pycurl.CurlCGI(self.host)
             fetch.set_verbosity(self.verbosity)
             fetch.get(page)
             #print "Response:", fetch.response
@@ -180,7 +180,7 @@ class LinksysSession:
             # Otherwise we could get permanently wedged by a 401.
             self.actions = []
             for (cgi, fields) in ship.items():
-                transaction = pycurl.CGIClient(self.host)
+                transaction = pycurl.CurlCGI(self.host)
                 transaction.set_verbosity(self.verbosity)
                 transaction.get(cgi, tuple(fields))
                 transaction.close()
