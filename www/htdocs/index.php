@@ -122,10 +122,6 @@ most important being
 Also have a look at the <a href="ChangeLog">PycURL ChangeLog</a>.
 </p>
 
-<p>
-If you want to ask questions or discuss pycurl related issues, our <a href="http://cool.haxx.se/mailman/listinfo/curl-and-python">mailing list</a>
-is the place to be.
-</p>
 
 <h2>Download</h2>
 
@@ -152,6 +148,26 @@ Also, official PycURL packages are available for
   <li><a href="ftp://ftp.netbsd.org/pub/NetBSD/packages/pkgsrc/www/py-curl/README.html">NetBSD</a></li>
   <li><a href="http://www.openbsd.org/cgi-bin/cvsweb/ports/net/py-curl/">OpenBSD</a></li>
 </ul>
+
+
+<h2>Community</h2>
+
+<p>
+If you want to ask questions or discuss PycURL related issues, our
+<a href="http://cool.haxx.se/mailman/listinfo/curl-and-python">mailing list</a>
+is the place to be.
+</p>
+
+<p>
+The
+<a href="http://sourceforge.net/projects/pycurl/">PycURL SourceForge</a>
+project page provides bug- and patch tracking systems.
+</p>
+
+<p>
+And the libcurl library also has it's own
+<a href="http://curl.haxx.se/mail/">mailing lists</a>.
+</p>
 
 
 <h2>License</h2>
