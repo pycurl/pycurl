@@ -88,7 +88,10 @@ if __name__ == "__main__":
         raise SystemExit
     project_id = sys.argv[1]
     # Try to grab authenticators out of your .netrc
-    auth = netrc.netrc().authenticators("sourceforge.net")
+    try:
+        auth = netrc.netrc().authenticators("sourceforge.net")
+    except IOError:
+        auth = None
     if auth:
         (name, account, password) = auth
     else:
