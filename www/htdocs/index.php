@@ -52,26 +52,30 @@ from a Python program, similar to the
 
 <ul>
   <li>
-    libcurl is a free and easy-to-use client-side URL transfer library,
-    supporting FTP, FTPS, HTTP, HTTPS, GOPHER, TELNET, DICT, FILE and LDAP.
-    libcurl supports HTTPS certificates, HTTP POST, HTTP PUT, FTP uploading,
-    kerberos, HTTP form based upload, proxies, cookies, user+password
-    authentication, file transfer resume, http proxy tunneling and more!
+    libcurl is a free and easy-to-use
+    client-side URL transfer library, supporting FTP, FTPS, HTTP, HTTPS, GOPHER,
+    TELNET, DICT, FILE and LDAP.  libcurl supports HTTPS certificates, HTTP POST,
+    HTTP PUT, FTP uploading, kerberos, HTTP form based upload, proxies, cookies,
+    user+password authentication, file transfer resume, http proxy tunneling and
+    more!
     <br />
     <br />
   </li>
   <li>
     libcurl is highly portable, it builds and works identically on numerous
-    platforms, including Solaris, Net/Free/Open BSD, Darwin, HPUX, IRIX,
-    AIX, Tru64, Linux, Windows, Amiga, OS/2, BeOs, Mac OS X, Ultrix,
-    QNX, OpenVMS, RISC OS and more...
+    platforms, including Solaris, NetBSD, FreeBSD, OpenBSD, Darwin, HPUX, IRIX,
+    AIX, Tru64, Linux, Windows, Amiga, OS/2, BeOs, Mac OS X, Ultrix, QNX,
+    OpenVMS, RISC OS, Novell NetWare, DOS and more...
     <br />
     <br />
   </li>
   <li>
     libcurl is
+    <a href="http://curl.haxx.se/docs/copyright.html">free</a>,
     <a href="http://curl.haxx.se/libcurl/threadsafe.html">thread-safe</a>,
-    <a href="http://curl.haxx.se/libcurl/ipv6.html">IPv6 compatible</a> and
+    <a href="http://curl.haxx.se/libcurl/ipv6.html">IPv6 compatible</a>,
+    <a href="http://curl.haxx.se/libcurl/features.html">feature rich</a>,
+    <a href="http://curl.haxx.se/libcurl/support.html">well supported</a> and
     <a href="http://curl.haxx.se/libcurl/fast.html">fast</a>.
   </li>
 </ul>
