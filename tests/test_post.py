@@ -12,7 +12,7 @@ pf = 'field1=value1'
 pf = 'field1=value1&field2=value2 with blanks&field3=value3'
 
 c = pycurl.init()
-c.setopt(pycurl.URL, 'http://pycurl.sourceforge.net/testpostvars.php')
+c.setopt(pycurl.URL, 'http://pycurl.sourceforge.net/tests/testpostvars.php')
 c.setopt(pycurl.POST, 1)
 c.setopt(pycurl.POSTFIELDS, pf)
 c.perform()
