@@ -70,13 +70,16 @@ self_cleanup(CurlObject *self)
     if (self->handle == NULL) {
         return;
     }
+    /* Free curl handle */
     if (self->handle != NULL) {
         CURL *handle = self->handle;
         self->handle = NULL;
+        /* Must be done without the gil */
         Py_BEGIN_ALLOW_THREADS
         curl_easy_cleanup(handle);
         Py_END_ALLOW_THREADS
     }
+    /* Free all slists allocated by setopt */
     if (self->httpheader != NULL) {
         curl_slist_free_all(self->httpheader);
         self->httpheader = NULL;
@@ -97,13 +100,16 @@ self_cleanup(CurlObject *self)
         curl_formfree(self->httppost);
         self->httppost = NULL;
     }
+    /* Free all the strings allocated for setopt */
     for (i = 0; i < CURLOPT_LASTENTRY; i++) {
         if (self->options[i] != NULL) {
             free(self->options[i]);
             self->options[i] = NULL;
         }
     }
+    /* Zero thread-state to disallow callbacks to be run from now on */
     self->state = NULL;
+    /* Decrement refcount for python callbacks */
     Py_XDECREF(self->w_cb);
     Py_XDECREF(self->r_cb);
     Py_XDECREF(self->pro_cb);
@@ -723,7 +729,7 @@ do_perform(CurlObject *self, PyObject *args)
         return NULL;
     }
 
-    /* Save handle to current thread (used to run the callbacks in) */
+    /* Save handle to current thread (used as context for python callbacks) */
     self->state = PyThreadState_Get();
 
     /* Release global lock and start */
@@ -883,7 +889,7 @@ do_init(PyObject *arg)
     if (self == NULL)
         return NULL;
 
-    /* Setup python curl object initial values */
+    /* Set python curl object initial values */
     self->handle = NULL;
     self->httpheader = NULL;
     self->quote = NULL;
@@ -893,7 +899,7 @@ do_init(PyObject *arg)
     self->state = NULL;
     self->writeheader_set = 0;
 
-    /* Set callback pointers to NULL */
+    /* Set callback pointers to NULL by default */
     self->w_cb = NULL;
     self->h_cb = NULL;
     self->r_cb = NULL;
@@ -901,26 +907,26 @@ do_init(PyObject *arg)
     self->pwd_cb = NULL;
     self->d_cb = NULL;
 
-    /* Initialize curl */
+    /* Initialize curl handle */
     self->handle = curl_easy_init();
     if (self->handle == NULL)
         goto error;
 
-    /* Set error buffer */
+    /* Set curl error buffer and zero it */
     res = curl_easy_setopt(self->handle, CURLOPT_ERRORBUFFER, self->error);
     if (res != CURLE_OK)
         goto error;
     memset(self->error, 0, sizeof(char) * CURL_ERROR_SIZE);
 
-    /* Zero memory buffer for setopt */
+    /* Zero string pointer memory buffer used by setopt */
     memset(self->options, 0, sizeof(void *) * CURLOPT_LASTENTRY);
 
-    /* Enable NOPROGRESS by default */
+    /* Enable NOPROGRESS by default, i.e. no progress output */
     res = curl_easy_setopt(self->handle, CURLOPT_NOPROGRESS, 1);
     if (res != CURLE_OK)
         goto error;
 
-    /* Disable VERBOSE by default */
+    /* Disable VERBOSE by default, i.e. no verbose output */
     res = curl_easy_setopt(self->handle, CURLOPT_VERBOSE, 0);
     if (res != CURLE_OK)
         goto error;
