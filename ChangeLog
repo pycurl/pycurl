@@ -1,3 +1,7 @@
+2002-02-19  Kjetil Jacobsen  <kjetilja>
+
+	* Fixed docstring for getopt() function.
+
 2001-12-18  Kjetil Jacobsen  <kjetilja>
 
 	* Updated the INSTALL information for Win32.
