@@ -32,7 +32,7 @@ for url in urls:
     url = url.strip()
     if not url or url[0] == "#":
         continue
-    filename = "data_%d" % (fileno)
+    filename = "doc_%d" % (fileno)
     queue.append((url, filename))
     fileno += 1
 del fileno, url, urls

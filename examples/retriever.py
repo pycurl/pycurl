@@ -65,7 +65,7 @@ queue = Queue.Queue()
 # Fill the work input queue with URLs
 for url in urls:
     fileno = fileno + 1
-    filename = "data_%d" % (fileno,)
+    filename = "doc_%d" % (fileno,)
     queue.put((url, filename))
 
 # Start a bunch of threads
