@@ -1,4 +1,50 @@
-Version 7.11.0 [requires libcurl-7.10.3 or better]
+Version 7.11.3 [requires libcurl-7.10.3 or better]
+--------------
+
+2004-04-30  Kjetil Jacobsen  <kjetilja>
+
+        * Do not use the deprecated curl_formparse function.
+          API CHANGE: HTTPPOST now takes a list of tuples where each
+          tuple contains a form name and a form value, both strings
+          (see test/test_post2.py for example usage).
+
+        * Found a possible reference count bug in the multithreading
+          code which may have contributed to the long-standing GC
+          segfault which has haunted pycurl.  Fingers crossed.
+
+
+Version 7.11.2
+--------------
+
+2004-04-21  Kjetil Jacobsen  <kjetilja>
+
+        * Added support for libcurl 7.11.2 CURLOPT features:
+          CURLOPT_TCP_NODELAY.
+
+2004-03-25 Kjetil Jacobsen   <kjetilja>
+
+        * Store Python longs in off_t with PyLong_AsLongLong instead
+          of PyLong_AsLong.  Should make the options which deal
+          with large files behave a little better.  Note that this
+          requires the long long support in Python 2.2 or newer to
+          work properly.
+
+
+Version 7.11.1
+--------------
+
+2004-03-16  Kjetil Jacobsen  <kjetilja>
+
+        * WARNING: Removed support for the PASSWDFUNCTION callback, which
+          is no longer supported by libcurl.
+
+2004-03-15  Kjetil Jacobsen  <kjetilja>
+
+        * Added support for libcurl 7.11.1 CURLOPT features:
+          CURLOPT_POSTFIELDSIZE_LARGE.
+
+
+Version 7.11.0
 --------------
 
 2004-02-11  Kjetil Jacobsen  <kjetilja>
@@ -8,7 +54,7 @@ Version 7.11.0 [requires libcurl-7.10.3 or better]
           and FTP_SSL.
 
         * Circular garbage collection support can now be enabled or
-          disabled by passing the '--use-gc=[0|1]' parameter to setup.py
+          disabled by passing the '--use-gc=[1|0]' parameter to setup.py
           when building pycurl.
 
         * HTTP_VERSION options are known as CURL_HTTP_VERSION_NONE,
