@@ -10,7 +10,7 @@ CURDIR=`pwd`
 export VERSION=$*
 cp -r . ../$NAME-$VERSION
 cd ../$NAME-$VERSION
-rm -rf CVS tests/CVS src/CVS .cvsignore .#* mkdist
+rm -rf CVS tests/CVS tests/.cvsignore src/CVS .cvsignore .#* mkdist
 make clean
 cd ..
 tar zcf $NAME-${VERSION}.tar.gz $NAME-$VERSION
