@@ -2410,6 +2410,9 @@ initpycurl(void)
 #if (LIBCURL_VERSION_NUM >= 0x070a05)
     insint_c(d, "FTP_USE_EPRT", CURLOPT_FTP_USE_EPRT);
 #endif
+#if (LIBCURL_VERSION_NUM >= 0x070a06)
+    insint_c(d, "HTTPDIGEST", CURLOPT_HTTPDIGEST);
+#endif
 
     /* CURL_NETRC_OPTION: constants for setopt(NETRC, x) */
     insint_c(d, "NETRC_OPTIONAL", CURL_NETRC_OPTIONAL);
