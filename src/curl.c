@@ -1307,6 +1307,7 @@ do_multi_perform(CurlMultiObject *self, PyObject *args)
     if (res != CURLM_OK && res != CURLM_CALL_MULTI_PERFORM) {
         CURLERROR2("perform failed");
     }
+
     return PyInt_FromLong((long)running);
 }
 
@@ -1452,7 +1453,7 @@ do_multi_fdset(CurlMultiObject *self, PyObject *args)
     PyList_Append(list, except_list);
 
     /* Populate read, write and exception lists */
-    for (fd = 0; fd < max_fd; fd++) {
+    for (fd = 0; fd < max_fd+1; fd++) {
         if (FD_ISSET(fd, &read_fd_set)) {
             PyList_Append(read_list, PyInt_FromLong((long)fd));
 	}
