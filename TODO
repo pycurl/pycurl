@@ -25,4 +25,3 @@ DEFICIENICES:
       There _are_ quite a number of internal error checks, but tracking and
       catching all possible (deliberate) misuses is not a goal (and probably
       impossible anyway, due to the complexity of libcurl).
-
