@@ -322,7 +322,9 @@ do_getinfo(CurlObject *self, PyObject *args)
 	    option == CURLINFO_HTTP_CODE) 
 	    {
 		/* Return long as result */
+		Py_BEGIN_ALLOW_THREADS
 		res = curl_easy_getinfo(self->handle, option, &l_res);
+		Py_END_ALLOW_THREADS
 		/* Check for errors and return result */
 		if (res == 0) {
 		    return PyLong_FromLong(l_res);
@@ -335,7 +337,9 @@ do_getinfo(CurlObject *self, PyObject *args)
 	if (option == CURLINFO_EFFECTIVE_URL)
 	    {
 		/* Return string as result */
+		Py_BEGIN_ALLOW_THREADS
 		res = curl_easy_getinfo(self->handle, option, &s_res);
+		Py_END_ALLOW_THREADS
 		/* Check for errors and return result */
 		if (res == 0) {
 		    return PyString_FromString(s_res);
@@ -357,7 +361,9 @@ do_getinfo(CurlObject *self, PyObject *args)
 	    option == CURLINFO_CONTENT_LENGTH_UPLOAD)
 	    {
 		/* Return float as result */
+		Py_BEGIN_ALLOW_THREADS
 		res = curl_easy_getinfo(self->handle, option, &d_res);
+		Py_END_ALLOW_THREADS
 		if (res == 0) {
 		    return PyFloat_FromDouble(d_res);
 		} else {
