@@ -3,7 +3,7 @@ Version 7.10.5 [requires libcurl-7.10.3 or better]
 
 2003-05-15  Markus F.X.J. Oberhumer <mfx>
 
-        * Added support for CURLOPT_FTP_USE_EPRT.
+        * Added support for CURLOPT_FTP_USE_EPRT (libcurl-7.10.5).
 
 2003-05-07  Eric S. Raymond  <esr@snark.thyrsus.com>
 
@@ -35,7 +35,7 @@ Version 7.10.4
 
 2003-04-01  Kjetil Jacobsen  <kjetilja>
 
-        * Markus added CURLOPT_UNRESTRICTED_AUTH.
+        * Markus added CURLOPT_UNRESTRICTED_AUTH (libcurl-7.10.4).
 
 2003-02-25  Kjetil Jacobsen  <kjetilja>
 
