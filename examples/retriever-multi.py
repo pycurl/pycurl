@@ -14,6 +14,7 @@ try:
 except ImportError:
     pass
 
+
 # Get args
 num_conn = 10
 try:
@@ -23,6 +24,7 @@ try:
 except:
     print "Usage: %s <file with URLs to fetch> [<# of concurrent connections>]" % sys.argv[0]
     raise SystemExit
+
 
 # Make a queue with (url, filename) tuples
 queue = []
@@ -36,6 +38,7 @@ for url in urls:
     fileno = fileno + 1
 del fileno, url, urls
 
+
 # Check args
 assert queue, "no URLs given"
 num_urls = len(queue)
@@ -43,6 +46,7 @@ num_conn = min(num_conn, num_urls)
 assert 1 <= num_conn <= 10000, "invalid number of connections"
 print "PycURL %s (compiled against 0x%x)" % (pycurl.version, pycurl.COMPILE_LIBCURL_VERSION_NUM)
 print "----- Getting", num_urls, "URLs using", num_conn, "connections -----"
+
 
 # Preallocate a list of curl objects
 m = pycurl.CurlMulti()
@@ -58,6 +62,8 @@ for i in range(num_conn):
     c.setopt(pycurl.NOSIGNAL, 1)
     m.handles.append(c)
 
+
+# Main loop
 freelist = m.handles[:]
 num_processed = 0
 while num_processed < num_urls:
@@ -99,6 +105,7 @@ while num_processed < num_urls:
     # (display a progress bar, etc.).
     # We just use select() to wait until some more data is available.
     m.select()
+
 
 # Cleanup
 for c in m.handles:
