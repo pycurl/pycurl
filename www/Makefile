@@ -1,9 +1,9 @@
 SHELL = /bin/sh
 
 default:
-	echo "usage: `make rsync' to upload"
-	echo "usage: `make rsync-dry' to test"
-	echo "usage: `make rsync-check' to test with checksum"
+	@echo "usage: \`make rsync-dry' to test"
+	@echo "usage: \`make rsync' to upload"
+	@echo "usage: \`make rsync-check' to test with checksum"
 
 
 # /***********************************************************************
@@ -14,6 +14,7 @@ default:
 
 RSYNC = rsync
 
+##RSYNC_FLAGS = -av --relative -e ssh
 RSYNC_FLAGS = -av --relative --delete --delete-after -e ssh
 
 RSYNC_FILES = \

@@ -12,4 +12,5 @@ Options +Indexes
 # ************************************************************************/
 
 AddDescription "precompiled win32 installer"        .exe
+AddDescription " "                                  .gz
 
