@@ -15,6 +15,10 @@ $version = "7.10.1";
 
 <body bgcolor="#ffffff" link="#0000ee" vlink="#551a8b" alink="#0000ee">
 
+<center>
+    <a href="http://curl.haxx.se/libcurl/"><img src="http://curl.haxx.se/libcurl/big.jpg" border="0" alt="libcurl"></a>
+</center>
+
 <h1><font face="Courier New, Courier, mono">PYCURL <?php echo $version ?></font></h1>
 
 <p>
