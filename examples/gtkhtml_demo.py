@@ -133,11 +133,12 @@ class HtmlWindow(GtkHTML):
         del forward[:]
 
     def do_back(self, _b):
-        forward.append(history[-1])
-        del history[-1]
-        url = history[-1]
-        del history[-1]
-        self.load_url(html, url)
+        if len(history) > 1:
+            forward.append(history[-1])
+            del history[-1]
+            url = history[-1]
+            del history[-1]
+            self.load_url(html, url)
 
     def do_forward(self, _b):
         if len(forward) == 0: return
