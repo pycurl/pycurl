@@ -117,8 +117,6 @@ typedef struct {
     PyObject *readdata_fp;
     PyObject *writedata_fp;
     PyObject *writeheader_fp;
-    PyObject *progressdata_fp;
-    PyObject *passwddata_fp;
     /* misc */
     void *options[OPTIONS_SIZE];
     char error[CURL_ERROR_SIZE+1];
@@ -288,8 +286,6 @@ util_curl_new(void)
     self->readdata_fp = NULL;
     self->writedata_fp = NULL;
     self->writeheader_fp = NULL;
-    self->progressdata_fp = NULL;
-    self->passwddata_fp = NULL;
 
     /* Zero string pointer memory buffer used by setopt */
     memset(self->options, 0, sizeof(self->options));
@@ -391,7 +387,7 @@ do_curl_copy(const CurlObject *self, PyObject *args)
         goto cannot_copy;
     if (self->w_cb || self->r_cb || self->pro_cb || self->pwd_cb || self->d_cb || self->ssl_ctx_cb)
         goto cannot_copy;
-    if (self->readdata_fp || self->writedata_fp || self->writeheader_fp || self->progressdata_fp || self->passwddata_fp)
+    if (self->readdata_fp || self->writedata_fp || self->writeheader_fp)
         goto cannot_copy;
     for (i = 0; i < OPTIONS_SIZE; i++) {
         if (self->options[i] != NULL) {
@@ -469,8 +465,6 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
         ZAP(self->readdata_fp);
         ZAP(self->writedata_fp);
         ZAP(self->writeheader_fp);
-        ZAP(self->progressdata_fp);
-        ZAP(self->passwddata_fp);
     }
 }
 
@@ -621,8 +615,6 @@ do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
     VISIT(self->readdata_fp);
     VISIT(self->writedata_fp);
     VISIT(self->writeheader_fp);
-    VISIT(self->progressdata_fp);
-    VISIT(self->passwddata_fp);
 
     return 0;
 #undef VISIT
@@ -821,53 +813,6 @@ progress_callback(void *client,
     }
     else {
         ret = (int)PyInt_AsLong(result);
-    }
-    Py_XDECREF(result);
-    PyEval_ReleaseThread(tmp_state);
-    return ret;
-}
-
-
-static int
-password_callback(void *client, const char *prompt, char* buffer, int buflen)
-{
-    PyObject *arglist;
-    PyObject *result;
-    CurlObject *self;
-    PyThreadState *tmp_state;
-    int ret = 1;       /* assume error */
-
-    self = (CurlObject *)client;
-    tmp_state = get_thread_state(self);
-    if (tmp_state == NULL || self->pwd_cb == NULL) {
-        return ret;
-    }
-    arglist = Py_BuildValue("(si)", prompt, buflen);
-    if (arglist == NULL)
-        return ret;
-
-    PyEval_AcquireThread(tmp_state);
-    result = PyEval_CallObject(self->pwd_cb, arglist);
-    Py_DECREF(arglist);
-    if (result == NULL) {
-        PyErr_Print();
-    }
-    else {
-        if (!PyString_Check(result)) {
-            PyErr_SetString(ErrorObject, "callback for PASSWDFUNCTION must return string");
-            PyErr_Print();
-        }
-        else {
-            char *buf = PyString_AsString(result);
-            if ((int)strlen(buf) > buflen) {
-                PyErr_SetString(ErrorObject, "string from PASSWDFUNCTION callback is too long");
-                PyErr_Print();
-            }
-            else {
-                strcpy(buffer, buf);
-                ret = 0;        /* success */
-            }
-        }
     }
     Py_XDECREF(result);
     PyEval_ReleaseThread(tmp_state);
@@ -1141,11 +1086,6 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
         /* Ensure the option specified a file as well as the input */
         switch (option) {
-#if 0
-        /* REMOVED */
-        case CURLOPT_PASSWDDATA:
-        case CURLOPT_PROGRESSDATA:
-#endif
         case CURLOPT_READDATA:
         case CURLOPT_WRITEDATA:
             break;
@@ -1172,17 +1112,6 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         Py_INCREF(obj);
 
         switch (option) {
-#if 0
-        /* REMOVED */
-        case CURLOPT_PASSWDDATA:
-            ZAP(self->passwddata_fp);
-            self->passwddata_fp = obj;
-            break;
-        case CURLOPT_PROGRESSDATA:
-            ZAP(self->progressdata_fp);
-            self->progressdata_fp = obj;
-            break;
-#endif
         case CURLOPT_READDATA:
             ZAP(self->readdata_fp);
             self->readdata_fp = obj;
@@ -1326,7 +1255,6 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         const curl_read_callback r_cb = read_callback;
         const curl_write_callback h_cb = header_callback;
         const curl_progress_callback pro_cb = progress_callback;
-        const curl_passwd_callback pwd_cb = password_callback;
         const curl_debug_callback d_cb = debug_callback;
 #if (LIBCURL_VERSION_NUM >= 0x070a06)
 #if 0
@@ -1364,19 +1292,10 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             break;
         case CURLOPT_PROGRESSFUNCTION:
             Py_INCREF(obj);
-            ZAP(self->progressdata_fp);
             ZAP(self->pro_cb);
             self->pro_cb = obj;
             curl_easy_setopt(self->handle, CURLOPT_PROGRESSFUNCTION, pro_cb);
             curl_easy_setopt(self->handle, CURLOPT_PROGRESSDATA, self);
-            break;
-        case CURLOPT_PASSWDFUNCTION:
-            Py_INCREF(obj);
-            ZAP(self->passwddata_fp);
-            ZAP(self->pwd_cb);
-            self->pwd_cb = obj;
-            curl_easy_setopt(self->handle, CURLOPT_PASSWDFUNCTION, pwd_cb);
-            curl_easy_setopt(self->handle, CURLOPT_PASSWDDATA, self);
             break;
         case CURLOPT_DEBUGFUNCTION:
             Py_INCREF(obj);
@@ -1385,18 +1304,6 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             curl_easy_setopt(self->handle, CURLOPT_DEBUGFUNCTION, d_cb);
             curl_easy_setopt(self->handle, CURLOPT_DEBUGDATA, self);
             break;
-#if (LIBCURL_VERSION_NUM >= 0x070a06)
-#if 0
-        /* FIXME - implement this */
-        case CURLOPT_SSL_CTX_FUNCTION:
-            Py_INCREF(obj);
-            ZAP(self->ssl_ctx_cb);
-            self->ssl_ctx_cb = obj;
-            curl_easy_setopt(self->handle, CURLOPT_SSL_CTX_FUNCTION, ssl_ctx_cb);
-            curl_easy_setopt(self->handle, CURLOPT_SSL_CTX_DATA, self);
-            break;
-#endif
-#endif
         default:
             /* None of the function options were recognized, throw exception */
             PyErr_SetString(PyExc_TypeError, "functions are not supported for this option");
@@ -2509,18 +2416,9 @@ initpycurl(void)
     insint_c(d, "INTERFACE", CURLOPT_INTERFACE);
     insint_c(d, "KRB4LEVEL", CURLOPT_KRB4LEVEL);
     insint_c(d, "PROGRESSFUNCTION", CURLOPT_PROGRESSFUNCTION);
-#if 0
-     /* REMOVED */
-    insint_c(d, "PROGRESSDATA", CURLOPT_PROGRESSDATA);
-#endif
     insint_c(d, "SSL_VERIFYPEER", CURLOPT_SSL_VERIFYPEER);
     insint_c(d, "CAPATH", CURLOPT_CAPATH);
     insint_c(d, "CAINFO", CURLOPT_CAINFO);
-    insint_c(d, "PASSWDFUNCTION", CURLOPT_PASSWDFUNCTION);
-#if 0
-     /* REMOVED */
-    insint_c(d, "PASSWDDATA", CURLOPT_PASSWDDATA);
-#endif
     insint_c(d, "OPT_FILETIME", CURLOPT_FILETIME);
     insint_c(d, "MAXREDIRS", CURLOPT_MAXREDIRS);
     insint_c(d, "MAXCONNECTS", CURLOPT_MAXCONNECTS);
