@@ -47,7 +47,7 @@ static PyObject *ErrorObject;
 typedef struct {
     PyObject_HEAD
     CURLM *multi_handle;
-    int performing;
+    PyThreadState *state;
 } CurlMultiObject;
 
 typedef struct {
@@ -186,7 +186,7 @@ do_cleanup(CurlObject *self, PyObject *args)
     }
     if (self->multi_stack != NULL) {
         /* Do not remove object from multi stack if the stack is still running */
-        if (self->multi_stack->performing != 0) {
+        if (self->multi_stack->state != NULL) {
             PyErr_SetString(ErrorObject, "cannot invoke cleanup, multi-perform() is running");
             return NULL;
         }
@@ -235,7 +235,14 @@ do_write_callback(int flags,
         return ret;
     }
 
-    PyEval_AcquireThread(self->state);
+    assert(self->state != NULL || self->multi_stack != NULL);
+    if (self->state != NULL) {
+        PyEval_AcquireThread(self->state);
+    }
+    else {
+        PyEval_AcquireThread(self->multi_stack->state);
+    }
+
     arglist = Py_BuildValue("(s#)", ptr, write_size);
     result = PyEval_CallObject(cb, arglist);
     Py_DECREF(arglist);
@@ -286,7 +293,14 @@ progress_callback(void *client,
         return ret;
     }
 
-    PyEval_AcquireThread(self->state);
+    assert(self->state != NULL || self->multi_stack != NULL);
+    if (self->state != NULL) {
+        PyEval_AcquireThread(self->state);
+    }
+    else {
+        PyEval_AcquireThread(self->multi_stack->state);
+    }
+
     arglist = Py_BuildValue("(dddd)", dltotal, dlnow, ultotal, ulnow);
     result = PyEval_CallObject(self->pro_cb, arglist);
     Py_DECREF(arglist);
@@ -322,7 +336,14 @@ int password_callback(void *client,
         return ret;
     }
 
-    PyEval_AcquireThread(self->state);
+    assert(self->state != NULL || self->multi_stack != NULL);
+    if (self->state != NULL) {
+        PyEval_AcquireThread(self->state);
+    }
+    else {
+        PyEval_AcquireThread(self->multi_stack->state);
+    }
+
     arglist = Py_BuildValue("(si)", prompt, buflen);
     result = PyEval_CallObject(self->pwd_cb, arglist);
     Py_DECREF(arglist);
@@ -372,7 +393,14 @@ int debug_callback(CURL *curlobj,
         return 0;
     }
 
-    PyEval_AcquireThread(self->state);
+    assert(self->state != NULL || self->multi_stack != NULL);
+    if (self->state != NULL) {
+        PyEval_AcquireThread(self->state);
+    }
+    else {
+        PyEval_AcquireThread(self->multi_stack->state);
+    }
+
     arglist = Py_BuildValue("(is#)", (int)type, buffer, (int)size);
     result = PyEval_CallObject(self->d_cb, arglist);
     Py_DECREF(arglist);
@@ -406,7 +434,14 @@ size_t read_callback(char *ptr,
         return ret;
     }
 
-    PyEval_AcquireThread(self->state);
+    assert(self->state != NULL || self->multi_stack != NULL);
+    if (self->state != NULL) {
+        PyEval_AcquireThread(self->state);
+    }
+    else {
+        PyEval_AcquireThread(self->multi_stack->state);
+    }
+
     arglist = Py_BuildValue("(i)", read_size);
     result = PyEval_CallObject(self->r_cb, arglist);
     Py_DECREF(arglist);
@@ -923,7 +958,7 @@ static void
 self_multi_cleanup(CurlMultiObject *self)
 {
     assert(self != NULL);
-    self->performing = 0;
+    self->state = NULL;
     if (self->multi_handle != NULL) {
         CURLM *multi_handle = self->multi_handle;
         self->multi_handle = NULL;
@@ -937,7 +972,7 @@ do_multi_cleanup(CurlMultiObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, ":cleanup")) {
         return NULL;
     }
-    if (self->performing != 0) {
+    if (self->state != NULL) {
         PyErr_SetString(ErrorObject, "cannot invoke cleanup, perform() is running");
         return NULL;
     }
@@ -971,17 +1006,17 @@ do_multi_perform(CurlMultiObject *self, PyObject *args)
         PyErr_SetString(ErrorObject, "cannot invoke perform, no curl-multi handle");
         return NULL;
     }
-    if (self->performing != 0) {
+    if (self->state != NULL) {
         PyErr_SetString(ErrorObject, "cannot invoke perform - already running");
         return NULL;
     }
 
     /* Release global lock and start */
-    self->performing = 1;
+    self->state = PyThreadState_Get();
     Py_BEGIN_ALLOW_THREADS
     res = curl_multi_perform(self->multi_handle, &running);
     Py_END_ALLOW_THREADS
-    self->performing = 0;
+    self->state = NULL;
 
     /* We assume these errors are ok, otherwise throw exception */
     if (res == CURLM_OK || res == CURLM_CALL_MULTI_PERFORM) {
@@ -995,7 +1030,7 @@ do_multi_perform(CurlMultiObject *self, PyObject *args)
 /* static utility function */
 static int check_curl_object(CurlMultiObject *self, CurlObject *obj)
 {
-    if (self->performing != 0) {
+    if (self->state != NULL) {
         PyErr_SetString(ErrorObject, "cannot add/remove - already running");
         return -1;
     }
@@ -1175,7 +1210,7 @@ do_multi_init(PyObject *arg)
         return NULL;
 
     /* Initialize object attributes */
-    self->performing = 0;
+    self->state = NULL;
 
     /* Allocate libcurl multi handle */
     self->multi_handle = curl_multi_init();
