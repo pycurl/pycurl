@@ -9,7 +9,7 @@ echo "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
 <html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
   <title>PycURL Home Page</title>
   <meta name="author" content="Kjetil Jacobsen, Markus F.X.J. Oberhumer" />
   <meta name="description" content="PycURL Homepage" />
@@ -18,11 +18,13 @@ echo "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
   <meta name="robots" content="index, follow" />
 </head>
 
+
 <body bgcolor="#ffffff" link="#0000ee" vlink="#551a8b" alink="#0000ee">
 
 <center>
   <a href="http://curl.haxx.se/libcurl/"><img src="http://curl.haxx.se/libcurl/big.jpg" width="416" height="115" border="0" alt="libcurl"></img></a>
 </center>
+
 
 <h1><font face="Courier New, Courier, mono">PYCURL <?php echo $version ?></font></h1>
 
@@ -39,7 +41,9 @@ PycURL can be used to fetch documents identified by a URI
 from within a Python program.
 </p>
 
+
 <h2>Overview</h2>
+
 <ul>
   <li>
     <a href="http://curl.haxx.se/libcurl/">libcurl</a>
@@ -73,10 +77,11 @@ or try the code from
 </p>
 
 <p>
-You can get older versions as well as prebuilt Win32 modules from the
+You can get prebuilt Win32 modules as well as older versions from the
 <a href="download/?M=D">download area</a>.
-Please note that the prebuilt versions are <b>unsupported</b>
-and provided for your convenience only - use them at your own risk!
+Please note that the prebuilt versions are provided for your
+convenience only and are completely <b>unsupported</b> - use them
+at your own risk!
 </p>
 
 <?php if (0) { ?>
@@ -94,14 +99,15 @@ requirements.
 Official packages are available for
 <a href="http://packages.debian.org/python2.2-pycurl">Debian</a>,
 and PycURL is also in the
-<a href="http://www.freebsd.org/ports/">ports</a>
+<a href="http://www.freebsd.org/cgi/ports.cgi?query=curl">ports</a>
 collection for FreeBSD and in the
-<a href="http://www.netbsd.org/Documentation/software/packages.html">packages</a>
+<a href="ftp://ftp.netbsd.org/pub/NetBSD/packages/pkgsrc/www/py-curl/README.html">packages</a>
 collection for NetBSD.
 </p>
 
 
 <h2>License</h2>
+
 <pre>
 LICENSE
 -------
