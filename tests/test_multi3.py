@@ -61,11 +61,14 @@ for c in m.handles:
     if 0:
         m.remove_handle(c)
         c.cleanup()
-    else:
+    elif 0:
         # in the C API this is the wrong calling order, but pycurl
         # handles this automatically
         c.cleanup()
         m.remove_handle(c)
+    else:
+        # actually, remove_handle is called automatically on cleanup
+        c.cleanup()
 m.cleanup()
 
 # print result
