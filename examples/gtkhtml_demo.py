@@ -6,7 +6,7 @@ import urllib, urlparse
 from gtk import *
 from gnome.ui import *
 from gtkhtml import *
-import cStringIO, threading, Queue
+import cStringIO, threading, Queue, time
 import pycurl
 
 # url history
@@ -63,6 +63,11 @@ class WorkerThread(threading.Thread):
             except:
                 msg = "Error retrieving URL: %s" % url
                 b.write(internal_error % msg)
+            # Flag empty documents to the renderer
+            if b.tell() == 0:
+                b.close()
+                b = None
+            # Enqueue the document on the rendering pipeline
             self.render.append((b, handle))
 
 
@@ -84,10 +89,10 @@ class HtmlWindow(GtkHTML):
         mainquit()
 
     def load_url(self, html, url):
+        t1 = time.time()
         self.num_obj = 0
         if history: url = urllib.basejoin(history[-1], url)
         history.append(url)
-
         html.load_empty()
         handle = html.begin()
         self.request_url(html, url, handle)
@@ -97,9 +102,12 @@ class HtmlWindow(GtkHTML):
                 continue
             self.num_obj -= 1
             buf, handle = self.render.pop(0)
-            html.write(handle, buf.getvalue())
+            if buf != None:
+                html.write(handle, buf.getvalue())
+                buf.close()
             html.end(handle, HTML_STREAM_OK)
-            buf.close()
+        t2 = time.time()
+        self.statusbar.set_text("Done (%.3f seconds)" % (t2-t1))
 
     def submit(self, html, method, path, params):
         print 'Submit is not supported yet'
@@ -107,7 +115,7 @@ class HtmlWindow(GtkHTML):
 
     def request_url(self, html, url, handle):
         url = urllib.basejoin(history[-1], url)
-        print "Requesting URL: ", url
+        self.statusbar.set_text("Requesting URL: %s" % url)
         self.queue.put((url, handle))
         self.num_obj += 1
 
@@ -189,6 +197,7 @@ win.set_statusbar(status)
 win.create_menus(menus)
 win.create_toolbar(toolbar)
 
+html.statusbar = status
 html.load_empty()
 
 win.show_all()
