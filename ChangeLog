@@ -5,6 +5,16 @@
 	* Added the 'basicfirst.py' file which is a Python version of the
 	corresponding Perl script by Daniel.
 
+	* PycURL now works properly under Python 1.5 and 1.6 (by Markus
+	F.X.J. Oberhumer <markus@oberhumer.com>).
+
+	* Allow C-functions and Python methods as callbacks (by Markus
+	F.X.J. Oberhumer <markus@oberhumer.com>).
+
+	* Allow None as success result of write, header and progress
+	callback invocations (by Markus F.X.J. Oberhumer
+	<markus@oberhumer.com>).
+	
 2001-08-21  Kjetil Jacobsen  <kjetilja>
 
 	* Cleaned up the script with GNOME/PycURL integration.

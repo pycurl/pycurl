@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 
 static PyObject *ErrorObject;
 
@@ -70,7 +71,12 @@ static void
 curl_dealloc(CurlObject *self)
 {
     self_cleanup(self);
+
+#if (PY_VERSION_HEX < 0x01060000)
+    PyMem_DEL(self);
+#else
     PyObject_Del(self);
+#endif
 }
 
 
@@ -108,8 +114,10 @@ write_callback(void *ptr,
 	PyErr_Print();
 	write_size = -1;
     }
+    else if (result == Py_None)               /* None means success */
+        write_size = (int)(size * nmemb);
     else
-	write_size = (int)PyInt_AsLong(result);
+        write_size = (int)PyInt_AsLong(result);
     Py_XDECREF(result);
     PyEval_ReleaseThread(self->state);
     return write_size;
@@ -137,8 +145,10 @@ header_callback(void *ptr,
 	PyErr_Print();
 	write_size = -1;
     }
+    else if (result == Py_None)               /* None means success */
+        write_size = (int)(size * nmemb);
     else
-	write_size = (int)PyInt_AsLong(result);
+        write_size = (int)PyInt_AsLong(result);
     Py_XDECREF(result);
     PyEval_ReleaseThread(self->state);
     return write_size;
@@ -167,6 +177,8 @@ progress_callback(void *client,
 	PyErr_Print();
 	ret = -1;
     }
+    else if (result == Py_None)               /* None means success */
+        ret = 0;
     else
 	ret = (int)PyInt_AsLong(result);
     Py_XDECREF(result);
@@ -175,6 +187,7 @@ progress_callback(void *client,
 }
 
 
+static
 int password_callback(void *client,
 		      char *prompt, 
 		      char* buffer, 
@@ -204,7 +217,7 @@ int password_callback(void *client,
 	}
 	else {
 	    buf = PyString_AsString(result);
-	    if (strlen(buf) > buflen) {
+	    if ((int)strlen(buf) > buflen) {
 		PyErr_SetString(ErrorObject, "string from PASSWDFUNCTION callback is too long");
 		PyErr_Print();
 		ret = -1;
@@ -221,6 +234,7 @@ int password_callback(void *client,
 }
 
 
+static
 int read_callback(void *ptr,
 		  size_t size,
 		  size_t nmemb,
@@ -251,7 +265,12 @@ int read_callback(void *ptr,
 	    ret = -1;
 	}
 	else {
+#if (PY_VERSION_HEX < 0x02000000)
+            buf = PyString_AS_STRING(result);
+            obj_size = PyString_GET_SIZE(result);
+#else
 	    PyString_AsStringAndSize(result, &buf, &obj_size);
+#endif
 	    if (obj_size > read_size) {
 		PyErr_SetString(ErrorObject, "string from READFUNCTION callback is too long");
 		PyErr_Print();
@@ -280,7 +299,7 @@ do_setopt(CurlObject *self, PyObject *args)
     char *buf;
     PyObject *obj, *listitem;
     FILE *fp;
-    int res;
+    int res = -1;
     struct curl_slist **slist;
     int len;
     char *str;
@@ -499,7 +518,11 @@ do_setopt(CurlObject *self, PyObject *args)
     }
 
     /* Handle the case of function objects for callbacks */
-    if (PyArg_ParseTuple(args, "iO!:setopt", &option, &PyFunction_Type, &obj)) {
+
+    if (PyArg_ParseTuple(args, "iO!:setopt", &option, &PyFunction_Type, &obj) ||
+	PyArg_ParseTuple(args, "iO!:setopt", &option, &PyCFunction_Type, &obj) ||
+	PyArg_ParseTuple(args, "iO!:setopt", &option, &PyMethod_Type, &obj))
+      {
 	switch(option) {
 	case CURLOPT_WRITEFUNCTION:
 	    Py_INCREF(obj);
@@ -588,7 +611,7 @@ static PyObject *
 do_getinfo(CurlObject *self, PyObject *args)
 {
     int option;
-    int res;
+    int res = -1;
     double d_res;
     long l_res;
     char *s_res;
@@ -662,9 +685,7 @@ do_getinfo(CurlObject *self, PyObject *args)
     return NULL;
 }
 
-
 /* --------------------------------------------------------------------- */
-
 
 static char co_cleanup_doc [] = "cleanup() -> None.  End curl session.\n";
 static char co_setopt_doc [] = "setopt(option, parameter) -> None.  Set curl session options.  Throws pycurl.error exception upon failure.\n";
@@ -723,7 +744,11 @@ do_init(PyObject *arg)
     }
 
     /* Allocate python curl object */
-    self = PyObject_NEW(CurlObject, &Curl_Type);
+#if (PY_VERSION_HEX < 0x01060000)
+    self = (CurlObject *) PyObject_NEW(CurlObject, &Curl_Type);
+#else
+    self = (CurlObject *) PyObject_New(CurlObject, &Curl_Type);
+#endif
     if (self == NULL) {
 	curl_easy_cleanup(curlhandle);
 	return NULL;

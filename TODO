@@ -1,2 +1,1 @@
-* Allow methods as callbacks (currently only functions work)
 * Maybe use curl_formadd() instead of curl_formparse()
