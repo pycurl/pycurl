@@ -115,8 +115,12 @@ class HtmlWindow(GtkHTML):
         self.statusbar.set_text("Done (%.3f seconds)" % (t2-t1))
 
     def submit(self, html, method, path, params):
-        print 'Submit is not supported yet'
-        print method, path, params
+        if method != 'GET':
+            print "Submit currently only works for GET requests"
+            return
+        if params != None: path += "?" + params
+        url = urllib.basejoin(history[-1], path)
+        self.load_url(html, url)
 
     def request_url(self, html, url, handle):
         url = urllib.basejoin(history[-1], url)
