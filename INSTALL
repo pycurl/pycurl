@@ -1,4 +1,8 @@
 You need Python and libcurl installed on your system to use or build pycurl.
+Note that some RPM distributions of curl does not include everything 
+necessary to build pycurl, as some RPMs have separated the developer specific
+files into another RPM which is usually called curl-dev or something
+similar.
 
 Disutils
 --------
