@@ -10,6 +10,7 @@ import distutils
 from distutils.core import setup
 from distutils.extension import Extension
 from distutils.util import split_quoted
+from distutils.version import LooseVersion
 
 include_dirs = []
 define_macros = []
@@ -91,7 +92,7 @@ This module provides Python bindings for the cURL library.""",
 )
 
 ##print distutils.__version__
-if distutils.__version__ >= "1.0.2":
+if LooseVersion(distutils.__version__) > LooseVersion("1.0.1"):
     setup_args["platforms"] = "All"
 
 apply(setup, (), setup_args)

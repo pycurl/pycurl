@@ -2,6 +2,7 @@
 # MANIFEST.in
 # Manifest template for creating the source distribution.
 #
+
 include COPYING
 include ChangeLog
 include INSTALL
@@ -11,4 +12,6 @@ include README
 include src/Makefile
 include src/curl.c
 include tests/*.py
+
+# exclude unfinished test scripts
 exclude tests/test_multi_vs_thread.py
