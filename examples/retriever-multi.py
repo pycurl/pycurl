@@ -1,9 +1,11 @@
 #! /usr/bin/env python
+# -*- coding: iso-8859-1 -*-
 # vi:ts=4:et
 # $Id$
 
 import sys
 import pycurl
+assert sys.version[:3] >= "2.2", "requires Python 2.2 or better"
 
 try:
     urls = open(sys.argv[1]).readlines()
@@ -12,10 +14,13 @@ except:
     print "Usage: %s <file with URLs to fetch> <# of concurrent connections>" % sys.argv[0]
     raise SystemExit
 
+num_conn = min(num_conn, len(urls))
+assert 1 <= num_conn <= 10000
+
 fileno = 0
 queue = []
 for u in urls:
-    queue.append((u, 'data_%d' % fileno))
+    queue.append((u, "data_%d" % fileno))
     fileno += 1
 
 freelist = []
@@ -32,17 +37,14 @@ curls = {}
 multi = pycurl.CurlMulti()
 
 while processed < len(urls):
-    while len(freelist) > 0:
-        if len(queue) > 0:
-            u, n = queue.pop(0)
-            c = freelist.pop(0)
-            f = open(n, "wb")
-            c.setopt(pycurl.URL, u)
-            c.setopt(pycurl.WRITEDATA, f)
-            curls[c] = f
-            multi.add_handle(c)
-        else:
-            break
+    while queue and freelist:
+        u, n = queue.pop(0)
+        f = open(n, "wb")
+        c = freelist.pop(0)
+        c.setopt(pycurl.URL, u)
+        c.setopt(pycurl.WRITEDATA, f)
+        curls[c] = f
+        multi.add_handle(c)
     while 1:
         ret, num_handles = multi.perform()
         if ret != pycurl.E_CALL_MULTI_PERFORM:
@@ -51,10 +53,9 @@ while processed < len(urls):
         num_q, handles = multi.info_read(num_conn)
         for h in handles:
             curls[h].close()
-            freelist.append(h)
             multi.remove_handle(h)
+            freelist.append(h)
         processed += len(handles)
-        del handles
         if num_q == 0:
             break
 
@@ -62,6 +63,9 @@ for c in curls:
     c.close()
     multi.remove_handle(c)
     freelist.remove(c)
+multi.close()
 
 del curls
 del freelist
+del queue
+
