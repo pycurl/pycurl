@@ -1,2 +1,3 @@
 * Allow methods as callbacks (currently only functions work)
 * Add module docstrings
+* Use curl_formadd() instead of curl_formparse()
