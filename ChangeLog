@@ -1,7 +1,12 @@
 Version 7.11.2 [requires libcurl-7.10.3 or better]
 --------------
 
-2004-03-25 Kjetil Jacobsen <kjetilja>
+2004-04-21  Kjetil Jacobsen  <kjetilja>
+
+        * Added support for libcurl 7.11.2 CURLOPT features:
+          CURLOPT_TCP_NODELAY.
+
+2004-03-25 Kjetil Jacobsen   <kjetilja>
 
         * Store Python longs in off_t with PyLong_AsLongLong instead
           of PyLong_AsLong.  Should make the options which deal
