@@ -46,6 +46,9 @@
 #  define USE_GC
 #endif
 
+/* Whether to enable curl_multi_info_read or not */
+#define ENABLE_INFO_READ 0
+
 
 static PyObject *ErrorObject;
 
@@ -264,7 +267,7 @@ do_curl_new(PyObject *dummy, PyObject *args)
     if (res != CURLE_OK)
         goto error;
 
-#if 0
+#if ENABLE_INFO_READ
     /* Set backreference */
     res = curl_easy_setopt(self->handle, CURLOPT_PRIVATE, (char *) self);
     if (res != CURLE_OK)
@@ -1595,7 +1598,7 @@ error:
 
 /* --------------- info_read --------------- */
 
-#if 0
+#if ENABLE_INFO_READ
 static PyObject *
 do_multi_info_read(CurlMultiObject *self, PyObject *args)
 {
@@ -1614,7 +1617,7 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
         return NULL;
     }
 
-    if (results <= 0) {
+    if (num_results <= 0) {
         PyErr_SetString(ErrorObject, "argument to info_read must be greater than zero");
         return NULL;
     }
@@ -1623,6 +1626,7 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
     if (list == NULL) {
         return NULL;
     }
+    in_queue = 0;
 
     /* Loop through all messages until no more messages or num_results is 0 */
     while (1) {
@@ -1638,7 +1642,7 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
         }
         assert(co != NULL);
         /* Append curl object to list of returned objects */
-        if (PyList_Append(list, co) == -1) {
+        if (PyList_Append(list, (PyObject *)co) == -1) {
             goto error;
         }
         /* Check for termination */
@@ -1733,7 +1737,7 @@ static char co_setopt_doc [] = "setopt(option, parameter) -> None.  Set curl ses
 static char co_getinfo_doc [] = "getinfo(info) -> Res.  Extract and return information from a curl session.  Throws pycurl.error exception upon failure.\n";
 static char co_multi_fdset_doc [] = "fdset() -> Tuple.  Returns a tuple of three lists that can be passed to the select.select() method .\n";
 static char co_multi_select_doc [] = "select(timeout) -> Int.  Returns result from doing a select() on the curl multi file descriptor with the given timeout.\n";
-#if 0
+#if ENABLE_INFO_READ
 static char co_multi_info_read_doc [] = "info_read(max_objects) -> Tuple. Returns a tuple (number of queued handles, [curl objects]).\n";
 #endif
 
@@ -1757,8 +1761,8 @@ static PyMethodDef curlmultiobject_methods[] = {
     {"remove_handle", (PyCFunction)do_multi_remove_handle, METH_VARARGS, NULL},
     {"fdset", (PyCFunction)do_multi_fdset, METH_VARARGS, co_multi_fdset_doc},
     {"select", (PyCFunction)do_multi_select, METH_VARARGS, co_multi_select_doc},
-#if 0
-    {"info_read", (PyCFunction)do_multi_info_read, METH_VARARGS, NULL},
+#if ENABLE_INFO_READ
+    {"info_read", (PyCFunction)do_multi_info_read, METH_VARARGS, co_multi_info_read_doc},
 #endif
     {NULL, NULL, 0, NULL}
 };
