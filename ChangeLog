@@ -1,5 +1,12 @@
 Version 7.10.2
 
+2002-11-14  Kjetil Jacobsen <kjetilja>
+
+	* Free options set with setopt after cleanup is called, as cleanup
+	assumes that options are still valid when invoked.  This fixes the
+	bug with COOKIEJAR reported by Bastiaan Naber
+	<bastiaan@ricardis.tudelft.nl>.
+
 2002-11-06  Markus F.X.J. Oberhumer <mfx>
 
 	* Install documentation under /usr/share/doc instead of /usr/doc.
