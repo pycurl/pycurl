@@ -29,15 +29,17 @@ class WorkerThread(threading.Thread):
             self.curl.setopt(pycurl.URL, url)
             self.curl.setopt(pycurl.WRITEDATA, f)
             self.curl.perform()
+            f.close()
             sys.stdout.write('.')
             sys.stdout.flush()
 
 # Read list of URIs from file specified on commandline
 try:
     urls = open(sys.argv[1]).readlines()
+    num_workers = int(sys.argv[2])
 except IndexError:
     # No file was specified, show usage string
-    print "Usage: %s <file with uris to fetch>" % sys.argv[0]
+    print "Usage: %s <file with uris to fetch> <number of workers>" % sys.argv[0]
     raise SystemExit
 
 # Initialize thread array and the file number
@@ -51,7 +53,7 @@ for url in urls:
     iq.put((url, fileno))
 
 # Start a bunch of threads
-for num_threads in range(32):
+for num_threads in range(num_workers):
     t = WorkerThread(iq)
     t.start()
     threads.append(t)
