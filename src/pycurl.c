@@ -774,7 +774,19 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
         memcpy(ptr, buf, obj_size);
         ret = obj_size;             /* success */
     }
+    else if (PyInt_Check(result)) {
+        long r = PyInt_AsLong(result);
+        if (r != CURL_READFUNC_ABORT)
+            goto type_error;
+        /* ret is CURL_READFUNC_ABORT */
+    else if (PyLong_Check(result)) {
+        long r = PyLong_AsLong(result);
+        if (r != CURL_READFUNC_ABORT)
+            goto type_error;
+        /* ret is CURL_READFUNC_ABORT */
+    }
     else {
+    type_error:
         PyErr_SetString(ErrorObject, "read callback must return string");
         goto verbose_error;
     }
@@ -2450,6 +2462,14 @@ initpycurl(void)
      ** the order of these constants mostly follows <curl/curl.h>
      **/
 
+    /* Abort curl_read_callback(). */
+    insint_c(d, "READFUNC_ABORT", CURL_READFUNC_ABORT);
+
+    /* constants for ioctl callback return values */
+    insint_c(d, "IOE_OK", CURLIOE_OK);
+    insint_c(d, "IOE_UNKNOWNCMD", CURLIOE_UNKNOWNCMD);
+    insint_c(d, "IOE_FAILRESTART", CURLIOE_FAILRESTART);
+
     /* curl_infotype: the kind of data that is passed to information_callback */
 /* XXX do we actually need curl_infotype in pycurl ??? */
     insint_c(d, "INFOTYPE_TEXT", CURLINFO_TEXT);
@@ -2607,11 +2627,6 @@ initpycurl(void)
     insint_c(d, "SOURCE_QUOTE", CURLOPT_SOURCE_QUOTE);
     insint_c(d, "IOCTLFUNCTION", CURLOPT_IOCTLFUNCTION);
     insint_c(d, "IOCTLDATA", CURLOPT_IOCTLDATA);
-
-    /* constants for ioctl callback return values */
-    insint_c(d, "IOE_OK", CURLIOE_OK);
-    insint_c(d, "IOE_UNKNOWNCMD", CURLIOE_UNKNOWNCMD);
-    insint_c(d, "IOE_FAILRESTART", CURLIOE_FAILRESTART);
 
     /* constants for setopt(IPRESOLVE, x) */
     insint_c(d, "IPRESOLVE_WHATEVER", CURL_IPRESOLVE_WHATEVER);
