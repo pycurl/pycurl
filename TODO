@@ -1,4 +1,1 @@
-PycURL - cURL Python module
----------------------------
-
-* handle function objects as callbacks (READ/WRITEFUNCTION)
+* Header, password, progress and read function callbacks are not supported
