@@ -741,15 +741,8 @@ statichere PyTypeObject Curl_Type = {
 static CurlObject *
 do_init(PyObject *arg)
 {
-    CURL *curlhandle;
     CurlObject *self;
     int res;
-
-    /* Initialize curl */
-    curlhandle = curl_easy_init();
-    if (curlhandle == NULL) {
-	return NULL;
-    }
 
     /* Allocate python curl object */
 #if (PY_VERSION_HEX < 0x01060000)
@@ -757,34 +750,11 @@ do_init(PyObject *arg)
 #else
     self = (CurlObject *) PyObject_New(CurlObject, &Curl_Type);
 #endif
-    if (self == NULL) {
-	curl_easy_cleanup(curlhandle);
+    if (self == NULL)
 	return NULL;
-    }
 
-    /* Set error buffer */
-    res = curl_easy_setopt(curlhandle, CURLOPT_ERRORBUFFER, self->error);
-    if (res != 0) {
-	curl_easy_cleanup(curlhandle);
-	return NULL;
-    }
-    memset(self->error, 0, sizeof(char) * CURL_ERROR_SIZE);
-
-    /* Set NOPROGRESS to 1 by default */
-    res = curl_easy_setopt(curlhandle, CURLOPT_NOPROGRESS, 1);
-    if (res != 0) {
-	curl_easy_cleanup(curlhandle);
-	return NULL;
-    }
-    /* Set VERBOSE to 0 by default */
-    res = curl_easy_setopt(curlhandle, CURLOPT_VERBOSE, 0);
-    if (res != 0) {
-	curl_easy_cleanup(curlhandle);
-	return NULL;
-    }
-
-    /* Setup python curl object initial values and return object */
-    self->handle = curlhandle;
+    /* Setup python curl object initial values */
+    self->handle = NULL;
     self->url = NULL;
     self->httpheader = NULL;
     self->quote = NULL;
@@ -798,7 +768,33 @@ do_init(PyObject *arg)
     self->pro_cb = NULL;
     self->pwd_cb = NULL;
 
+    /* Initialize curl */
+    self->handle = curl_easy_init();
+    if (self->handle == NULL)
+        goto error;
+
+    /* Set error buffer */
+    res = curl_easy_setopt(self->handle, CURLOPT_ERRORBUFFER, self->error);
+    if (res != 0)
+        goto error;
+    memset(self->error, 0, sizeof(char) * CURL_ERROR_SIZE);
+
+    /* Set NOPROGRESS to 1 by default */
+    res = curl_easy_setopt(self->handle, CURLOPT_NOPROGRESS, 1);
+    if (res != 0)
+        goto error;
+    /* Set VERBOSE to 0 by default */
+    res = curl_easy_setopt(self->handle, CURLOPT_VERBOSE, 0);
+    if (res != 0)
+        goto error;
+
+    /* Success - return new object */
     return self;
+
+error:
+    Py_DECREF(self);    /* this also closes self->handle */
+    PyErr_SetString(ErrorObject, "initializing curl failed");
+    return NULL;
 }
 
 
