@@ -320,10 +320,8 @@ do_setopt(CurlObject *self, PyObject *args)
 	if (option == CURLOPT_URL) {
 	    /* Need to store uri for later use if the option is OPTCURL_URL */
 	    buf = (char *)malloc((strlen(stringdata)*sizeof(char))+sizeof(char));
-	    if (buf == NULL) {
-		PyErr_SetString(ErrorObject, "unable to allocate memory for url");
-		return NULL;
-	    }
+	    if (buf == NULL)
+	        return PyErr_NoMemory();
 	    if (self->url != NULL) {
 		free(self->url);
 	    }
@@ -438,10 +436,8 @@ do_setopt(CurlObject *self, PyObject *args)
 		}
 		str = PyString_AsString(listitem);
 		buf = (char *)malloc((sizeof(char)*strlen(str)) + sizeof(char));
-		if (buf == NULL) {
-		    PyErr_SetString(ErrorObject, "unable to allocate memory for list element");
-		    return NULL;
-		}
+		if (buf == NULL)
+		    return PyErr_NoMemory();
 		strcpy(buf, str);
 		res = curl_formparse(buf, &self->httppost, &last);
 		if (res != 0) {
@@ -482,10 +478,8 @@ do_setopt(CurlObject *self, PyObject *args)
 	    }
 	    str = PyString_AsString(listitem);
 	    buf = (char *)malloc((sizeof(char)*strlen(str)) + sizeof(char));
-	    if (buf == NULL) {
-		PyErr_SetString(ErrorObject, "unable to allocate memory for list element");
-		return NULL;
-	    }
+	    if (buf == NULL)
+	        return PyErr_NoMemory();
 	    strcpy(buf, str);
 	    *slist = curl_slist_append(*slist, buf);
 	}
