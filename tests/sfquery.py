@@ -37,7 +37,7 @@ class CGIClient:
         self.curlobj.setopt(pycurl.MAXREDIRS, 5)
         # Setting this option with even a nonexistent file makes libcurl
         # handle cookie capture and playback automatically.
-        self.curlobj.setopt(pycurl.COOKIEFILE, "/foo/bar")
+        self.curlobj.setopt(pycurl.COOKIEFILE, "/dev/null")
         # Set up a callback to capture
         def response_callback(x):
             self.response += x

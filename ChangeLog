@@ -3,7 +3,7 @@ Version 7.9.8.4
 2002-08-08  Kjetil Jacobsen  <kjetilja>
 
 	* Added the 'sfquery' script which retrieves a SourceForge XML
-	export object for a given project.  See the file 'tests/sfquery'
+	export object for a given project.  See the file 'tests/sfquery.py'
 	for details and usage.  'sfquery' was contributed by Eric
 	S. Raymond <esr@thyrsus.com>.
 
