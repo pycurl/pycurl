@@ -445,6 +445,7 @@ do_setopt(CurlObject *self, PyObject *args)
 	opt_masked = option % CURLOPTTYPE_OBJECTPOINT;
 	if (self->options[opt_masked] != NULL) {
 	    free(self->options[opt_masked]);
+	    self->options[opt_masked] = NULL;
 	}
 	/* Allocate memory to hold the string */
 	buf = (char *)malloc((strlen(stringdata)*sizeof(char))+sizeof(char));
@@ -452,16 +453,16 @@ do_setopt(CurlObject *self, PyObject *args)
 	    return PyErr_NoMemory();
 	}
 	strcpy(buf, stringdata);
-	self->options[opt_masked] = buf;
 	/* Call setopt */
-	res = curl_easy_setopt(self->handle, option,
-			       (char *)self->options[opt_masked]);
+	res = curl_easy_setopt(self->handle, option, buf);
 	/* Check for errors */
 	if (res == CURLE_OK) {
+	    self->options[opt_masked] = buf;
 	    Py_INCREF(Py_None);
 	    return Py_None;
 	}
 	else {
+	    free(buf);
 	    CURLERROR();
 	}
     }
