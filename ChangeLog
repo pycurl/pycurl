@@ -1,5 +1,12 @@
-Version 7.12.1.1 [requires libcurl-7.12.1 or better]
+Version 7.12.2 [requires libcurl-7.12.2 or better]
 --------------
+
+2004-10-15  Kjetil Jacobsen  <kjetilja>
+
+        * Added CURLOPT_FTPSSLAUTH (and CURLFTPAUTH_*).
+
+        * Added CURLINFO_OS_ERRNO.
+
 
 2004-08-17 Kjetil Jacobsen <kjetilja>
 
