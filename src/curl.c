@@ -80,7 +80,7 @@ typedef struct {
     PyObject *writedata;
     PyObject *writeheader;
     int writeheader_set;
-    char error[CURL_ERROR_SIZE];
+    char error[CURL_ERROR_SIZE+1]; 
     void *options[CURLOPT_LASTENTRY];
 } CurlObject;
 
