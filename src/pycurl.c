@@ -178,14 +178,16 @@ static PyObject *convert_slist(struct curl_slist *slist, int free_flags)
     for ( ; slist != NULL; slist = slist->next) {
         PyObject *v = NULL;
 
-        if (slist->data != NULL) {
+        if (slist->data == NULL) {
+            v = Py_None; Py_INCREF(v);
+        } else {
             v = PyString_FromString(slist->data);
-            if (v == NULL || PyList_Append(ret, v) != 0) {
-                Py_XDECREF(v);
-                goto error;
-            }
-            Py_DECREF(v);
         }
+        if (v == NULL || PyList_Append(ret, v) != 0) {
+            Py_XDECREF(v);
+            goto error;
+        }
+        Py_DECREF(v);
     }
 
     if ((free_flags & 1) && slist)
