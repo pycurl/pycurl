@@ -112,7 +112,7 @@ get_thread_state(const CurlObject *self)
     /* Get the thread state for callbacks to run in.
      * This is either `self->state' when running inside perform() or
      * `self->multi_stack->state' when running inside multi_perform().
-     * This also implicitly asserts a valid `self->handle'.
+     * When the result is != NULL also implicitly asserts a valid `self->handle'.
      */
     if (self == NULL)
         return NULL;
@@ -412,12 +412,12 @@ do_write_callback(int flags,
     if (tmp_state == NULL) {
         return ret;
     }
-    write_size = (int)(size * nmemb);
-    if (write_size <= 0) {
-        return ret;
-    }
     cb = flags ? self->h_cb : self->w_cb;
     if (cb == NULL) {
+        return ret;
+    }
+    write_size = (int)(size * nmemb);
+    if (write_size <= 0) {
         return ret;
     }
 
@@ -429,7 +429,7 @@ do_write_callback(int flags,
         PyErr_Print();
     }
     else if (result == Py_None) {               /* None means success */
-        ret = write_size;
+        ret = (size_t)write_size;
     }
     else {
         write_size = (int)PyInt_AsLong(result);
@@ -1190,7 +1190,7 @@ do_multi_perform(CurlMultiObject *self, PyObject *args)
 
 /* static utility function */
 static int
-check_curl_object(const CurlMultiObject *self, const CurlObject *obj)
+check_multi_handle(const CurlMultiObject *self, const CurlObject *obj)
 {
     /* check CurlMultiObject status */
     assert_curl_multi_object(self);
@@ -1224,7 +1224,7 @@ do_multi_add_handle(CurlMultiObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "O!:add_handle", &Curl_Type, &obj)) {
         return NULL;
     }
-    if (check_curl_object(self, obj) != 0) {
+    if (check_multi_handle(self, obj) != 0) {
         return NULL;
     }
     if (obj->handle == NULL) {
@@ -1255,7 +1255,7 @@ do_multi_remove_handle(CurlMultiObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "O!:remove_handle", &Curl_Type, &obj)) {
         return NULL;
     }
-    if (check_curl_object(self, obj) != 0) {
+    if (check_multi_handle(self, obj) != 0) {
         return NULL;
     }
     if (obj->handle == NULL) {
@@ -1313,16 +1313,18 @@ static PyMethodDef curlmultiobject_methods[] = {
 static int
 my_setattr(PyObject **dict, char *name, PyObject *v)
 {
+    if (v == NULL) {
+        int rv = -1;
+        if (*dict != NULL)
+            rv = PyDict_DelItemString(*dict, name);
+        if (rv < 0)
+            PyErr_SetString(PyExc_AttributeError, "delete non-existing attribute");
+        return rv;
+    }
     if (*dict == NULL) {
         *dict = PyDict_New();
         if (*dict == NULL)
             return -1;
-    }
-    if (v == NULL) {
-        int rv = PyDict_DelItemString(*dict, name);
-        if (rv < 0)
-            PyErr_SetString(PyExc_AttributeError, "delete non-existing attribute");
-        return rv;
     }
     return PyDict_SetItemString(*dict, name, v);
 }
