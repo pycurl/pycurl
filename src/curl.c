@@ -566,7 +566,7 @@ do_setopt(CurlObject *self, PyObject *args)
 		    return PyErr_NoMemory();
 		strcpy(buf, str);
 		res = curl_formparse(buf, &self->httppost, &last);
-		if (res != 0) {
+		if (res != CURLE_OK) {
 		    curl_formfree(self->httppost);
                     CURLERROR();
 		}
@@ -939,7 +939,7 @@ do_global_init(PyObject *self, PyObject *args)
 	}
 
 	res = curl_global_init(option);
-	if (res != 0) {
+	if (res != CURLE_OK) {
 	    PyErr_SetString(ErrorObject, "unable to set global option");
 	    return NULL;
 	}
