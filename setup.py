@@ -9,19 +9,20 @@ from distutils.core import setup
 from distutils.extension import Extension
 from string import strip, split
 
+# Windows users have to configure the next thress path params
+# to match their libcurl installation
+W32_INCLUDE = [r'C:\User\clib\libcurl\include']
+W32_LIB = [r'C:\User\clib\libcurl\lib']
+W32_EXTRA_OBJ = [r'C:\User\clib\libcurl\lib\libcurl.lib']
+
 if sys.platform == "win32":
-    # Windows users have to configure the next thress path params
-    # to match their libcurl installation
-    include_dirs = [r'C:\User\clib\libcurl\include']
-    library_dirs = [r'C:\User\clib\libcurl\lib']
-    extra_objects = [r'C:\User\clib\libcurl\lib\libcurl.lib']
-    # These should be fine as they are, please notify if they need updates
+    include_dirs = W32_INCLUDE
+    library_dirs = W32_LIB
+    extra_objects = W32_EXTRA_OBJ
     libraries = ['libcurl', 'zlib', 'msvcrt', 'libcmt', 'wsock32', 'advapi32']
     runtime_library_dirs = []
     extra_link_args = ['/NODEFAULTLIB:LIBCMTD.lib']
 else:
-    # Otherwise, be brave and try to figure out dynamically through 
-    # curl-config
     include_dirs = []
     cflags=split(strip(os.popen('curl-config --cflags').read()), ' ')
     for e in cflags:
