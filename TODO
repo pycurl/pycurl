@@ -2,6 +2,7 @@
 
 If you want to hack on pycurl, here's our list of unresolved issues:
 
+    * Support curl_multi_info_read
     * Documentation
     * A high-level interface to pycurl, like the standard urllib (see
       the file 'doc/examples/curl.py' for a simple example)
