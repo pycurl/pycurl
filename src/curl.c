@@ -60,7 +60,7 @@ staticforward PyTypeObject Curl_Type;
     PyErr_SetObject(ErrorObject, v); \
     Py_DECREF(v); \
     return NULL; \
-} while (0);
+} while (0)
 
 /* --------------------------------------------------------------------- */
 
