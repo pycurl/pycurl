@@ -1923,12 +1923,25 @@ insstr(PyObject *d, char *name, char *value)
 static void
 insint2(PyObject *d1, PyObject *d2, char *name, int value)
 {
-    PyObject *v = PyInt_FromLong((long) value);
-    if (v == NULL || (d1 != NULL && PyDict_SetItemString(d1, name, v) != 0))
-        Py_FatalError("pycurl: insint");
-    if (v == NULL || (d2 != NULL && PyDict_SetItemString(d2, name, v) != 0))
-        Py_FatalError("pycurl: insint");
+    PyObject *k, *v;
+
+    /* see implementation of PyDict_SetItemString() */
+    k = PyString_FromString(name);
+    v = PyInt_FromLong((long) value);
+    if (k == NULL || v == NULL)
+        goto error;
+#if 0
+    PyString_InternInPlace(&k);     /* XXX Should we really? */
+#endif
+    if (d1 != NULL && PyDict_SetItem(d1, k, v) != 0)
+        goto error;
+    if (d2 != NULL && PyDict_SetItem(d2, k, v) != 0)
+        goto error;
     Py_DECREF(v);
+    Py_DECREF(k);
+    return;
+error:
+    Py_FatalError("pycurl: insint2");
 }
 
 static void
