@@ -64,11 +64,11 @@
 
 
 /* Calculate the number of options we need to store */
-#define OPTIONS_SIZE    116
+#define OPTIONS_SIZE    120
 static int PYCURL_OPT(int o)
 {
-#if (LIBCURL_VERSION_NUM >= 0x070a09)
-    COMPILE_TIME_ASSERT(OPTIONS_SIZE == CURLOPT_NETRC_FILE - CURLOPTTYPE_OBJECTPOINT + 1)
+#if (LIBCURL_VERSION_NUM >= 0x070b00)
+    COMPILE_TIME_ASSERT(OPTIONS_SIZE == CURLOPT_FTP_SSL + 1)
 #endif
     assert(o >= CURLOPTTYPE_OBJECTPOINT);
     assert(o < CURLOPTTYPE_OBJECTPOINT + OPTIONS_SIZE);
@@ -1044,6 +1044,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_FTPPORT:
         case CURLOPT_INTERFACE:
         case CURLOPT_KRB4LEVEL:
+        case CURLOPT_NETRC_FILE:
         case CURLOPT_POSTFIELDS:
         case CURLOPT_PROXY:
         case CURLOPT_PROXYUSERPWD:
@@ -1102,6 +1103,21 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         /* Check that option is integer as well as the input data */
         if (option <= 0 || (option >= CURLOPTTYPE_OBJECTPOINT && option != CURLOPT_FILETIME)) {
             PyErr_SetString(PyExc_TypeError, "integers are not supported for this option");
+            return NULL;
+        }
+        res = curl_easy_setopt(self->handle, (CURLoption)option, longdata);
+        if (res != CURLE_OK) {
+            CURLERROR_RETVAL();
+        }
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+
+    /* Handle the case of long arguments (used by large varables) */
+    if (PyLong_Check(obj)) {
+        off_t longdata = PyLong_AsLong(obj);
+        if (option < CURLOPTTYPE_OFF_T) {
+            PyErr_SetString(PyExc_TypeError, "longs are not supported for this option");
             return NULL;
         }
         res = curl_easy_setopt(self->handle, (CURLoption)option, longdata);
@@ -2552,9 +2568,6 @@ initpycurl(void)
     insint_c(d, "IPRESOLVE", CURLOPT_IPRESOLVE);
     insint_c(d, "MAXFILESIZE", CURLOPT_MAXFILESIZE);
 #endif
-#if (LIBCURL_VERSION_NUM >= 0x070a09)
-    insint_c(d, "NETRC_FILE", CURLOPT_NETRC_FILE);
-#endif
 
 #if (LIBCURL_VERSION_NUM >= 0x070a08)
     /* constants for setopt(IPRESOLVE, x) */
@@ -2615,6 +2628,14 @@ initpycurl(void)
 #if (LIBCURL_VERSION_NUM >= 0x070a08)
     insint_c(d, "HTTPAUTH_AVAIL", CURLINFO_HTTPAUTH_AVAIL);
     insint_c(d, "PROXYAUTH_AVAIL", CURLINFO_PROXYAUTH_AVAIL);
+#endif
+
+#if (LIBCURL_VERSION_NUM >= 0x070b00)
+    insint_c(d, "FTP_SSL", CURLOPT_FTP_SSL);
+    insint_c(d, "NETRC_FILE", CURLOPT_NETRC_FILE);
+    insint_c(d, "MAXFILESIZE_LARGE", CURLOPT_MAXFILESIZE_LARGE);
+    insint_c(d, "RESUME_FROM_LARGE", CURLOPT_RESUME_FROM_LARGE);
+    insint_c(d, "INFILESIZE_LARGE", CURLOPT_INFILESIZE_LARGE);
 #endif
 
     /* curl_closepolicy: constants for setopt(CLOSEPOLICY, x) */
