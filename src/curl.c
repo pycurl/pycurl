@@ -189,17 +189,13 @@ do_cleanup(CurlObject *self, PyObject *args)
         return NULL;
     }
     if (self->multi_stack != NULL) {
-        /* FIXME - what now ??? */
-        if (self->multi_stack->multi_handle == NULL) {
-            /* ??? */
-        }
+        /* Do not remove object from multi stack if the stack is still running */
         if (self->multi_stack->state != NULL) {
             PyErr_SetString(ErrorObject, "cannot invoke cleanup, multi-perform() is running");
             return NULL;
         }
-#if 1
-        /* automatically remove from multi ??? */
-        if (self->handle != NULL)
+        /* Remove object from the multi stack if the multi stack is still valid */
+        if (self->handle != NULL && self->multi_stack->multi_handle != NULL)
         {
             int res;
             res = curl_multi_remove_handle(self->multi_stack->multi_handle, self->handle);
@@ -208,10 +204,6 @@ do_cleanup(CurlObject *self, PyObject *args)
             }
         }
         self->multi_stack = NULL;
-#else
-        PyErr_SetString(ErrorObject, "cannot invoke cleanup, object still on a multi-stack");
-        return NULL;
-#endif
     }
     self_cleanup(self);
     Py_INCREF(Py_None);
@@ -940,9 +932,10 @@ self_multi_cleanup(CurlMultiObject *self)
     if (self->multi_handle != NULL) {
         CURLM *multi_handle = self->multi_handle;
         self->multi_handle = NULL;
-        Py_BEGIN_ALLOW_THREADS
+        /* Cannot allow this to run with the gil held as it will cause a race
+         * with the cleanup handler for the curl objects
+         */
         curl_multi_cleanup(multi_handle);
-        Py_END_ALLOW_THREADS
     }
 }
 
