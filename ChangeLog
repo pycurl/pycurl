@@ -11,6 +11,8 @@ Version 7.10.5 [requires libcurl-7.10.3 or better]
 
 2003-05-02  Markus F.X.J. Oberhumer <mfx>
 
+        * Fixed some `int' vs. `long' mismatches that affected 64-bit systems.
+
         * Fixed wrong pycurl.CAPATH constant.
 
 2003-05-01  Markus F.X.J. Oberhumer <mfx>
