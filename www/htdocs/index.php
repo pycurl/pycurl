@@ -9,8 +9,8 @@ echo "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
 <html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
   <title>PycURL Home Page</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
   <meta name="author" content="Kjetil Jacobsen, Markus F.X.J. Oberhumer" />
   <meta name="description" content="PycURL Homepage" />
   <meta name="keywords" content="pycurl, curl, libcurl, python, wget, file transfer, urllib" />
@@ -26,7 +26,7 @@ echo "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
 </center>
 
 
-<h1><font face="Courier New, Courier, mono">PYCURL <?php echo $version ?></font></h1>
+<h1><font face="Courier New, Courier, mono">PYCURL <?php echo $version; ?></font></h1>
 
 <p>
 &gt;&gt;&gt; import pycurl<br />
@@ -75,7 +75,7 @@ directories of the distribution.
 
 <p>
 <a href="download/pycurl-7.10.3.tar.gz">Download</a>
-PycURL sources version <?php echo $version ?> (Jan 14 2003)
+PycURL sources version <?php echo $version; ?> (Jan 14 2003)
 or try the code from
 <a href="http://sourceforge.net/cvs/?group_id=28236">the CVS repository</a>.
 </p>
@@ -87,17 +87,6 @@ Please note that the prebuilt versions are provided for your
 convenience only and are completely <b>unsupported</b> - use them
 at your own risk!
 </p>
-
-<?php if (0) { ?>
-<p>
-Please note that the prebuilt versions are provided for your convenience
-and do not contain extras like
-<a href="http://www.openssl.org/">SSL</a> and
-<a href="http://www.gzip.org/zlib/">zlib</a> support - you have to grab
-all relevant sources and compile them by yourself if you have such special
-requirements.
-</p>
-<?php } ?>
 
 <p>
 Official PycURL packages are available for
@@ -113,8 +102,8 @@ collection for OpenBSD.
 
 
 <h2>License</h2>
-Copyright (C) 2001-2003 by Kjetil Jacobsen<br />
-Copyright (C) 2001-2003 by Markus F.X.J. Oberhumer<br />
+Copyright (C) 2001-2003 Kjetil Jacobsen<br />
+Copyright (C) 2001-2003 Markus F.X.J. Oberhumer<br />
 <br />
 PycURL is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
