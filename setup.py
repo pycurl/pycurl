@@ -6,7 +6,7 @@
 """Setup script for the PycURL module distribution."""
 
 PACKAGE = "pycurl"
-VERSION = "7.10.4"
+VERSION = "7.10.4.2"
 
 import glob, os, re, sys, string
 import distutils

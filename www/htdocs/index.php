@@ -1,5 +1,5 @@
 <?php // vi:ts=4:et
-$version = "7.10.4";
+$version = "7.10.4.2";
 echo "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
 ?>
 
@@ -66,16 +66,22 @@ from a Python program, similar to the
 
 <h2>Documentation</h2>
 
+<p>
+Read the <a href="ChangeLog">ChangeLog</a>.
+</p>
+
+<p>
 PycURL now includes API documentation in the <i><a href="doc/pycurl.html">doc</a></i> directory of the distribution,
 as well as a number of test and example scripts in the <i><a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/pycurl/pycurl/tests/">tests</a></i>
 and <i><a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/pycurl/pycurl/examples/">examples</a></i>
 directories of the distribution.
+</p>
 
 <h2>Download</h2>
 
 <p>
-<a href="download/pycurl-7.10.4.tar.gz">Download</a>
-PycURL sources version <?php echo $version; ?> (April 2 2003)
+<a href="download/pycurl-7.10.4.2.tar.gz">Download</a>
+PycURL sources version <?php echo $version; ?> (April 15 2003)
 or try the code from
 <a href="http://sourceforge.net/cvs/?group_id=28236">the CVS repository</a>.
 </p>
