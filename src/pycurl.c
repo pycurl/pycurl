@@ -905,6 +905,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         const char *stringdata = PyString_AsString(obj);
         char *buf;
         int opt_masked;
+        assert(stringdata != NULL);
 
         /* Check that the option specified a string as well as the input */
         switch (option) {
@@ -964,13 +965,16 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         return Py_None;
     }
 
+#define IS_LONG_OPTION(o)   (o < CURLOPTTYPE_OBJECTPOINT || o == CURLOPT_FILETIME)
+#define IS_OFF_T_OPTION(o)  (o >= CURLOPTTYPE_OFF_T)
+
     /* Handle the case of integer arguments */
     if (PyInt_Check(obj)) {
         long longdata = PyInt_AsLong(obj);
 
-        if (option < CURLOPTTYPE_OBJECTPOINT)
+        if (IS_LONG_OPTION(option))
             res = curl_easy_setopt(self->handle, (CURLoption)option, longdata);
-        else if (option >= CURLOPTTYPE_OFF_T)
+        else if (IS_OFF_T_OPTION(option))
             res = curl_easy_setopt(self->handle, (CURLoption)option, (curl_off_t)longdata);
         else {
             PyErr_SetString(PyExc_TypeError, "integers are not supported for this option");
@@ -989,9 +993,9 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         if (llongdata == -1 && PyErr_Occurred())
             return NULL;
 
-        if (option < CURLOPTTYPE_OBJECTPOINT && (long)llongdata == llongdata)
+        if (IS_LONG_OPTION(option) && (long)llongdata == llongdata)
             res = curl_easy_setopt(self->handle, (CURLoption)option, (long)llongdata);
-        else if (option >= CURLOPTTYPE_OFF_T)
+        else if (IS_OFF_T_OPTION(option))
             res = curl_easy_setopt(self->handle, (CURLoption)option, llongdata);
         else {
             PyErr_SetString(PyExc_TypeError, "longs are not supported for this option");
@@ -1003,6 +1007,9 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         Py_INCREF(Py_None);
         return Py_None;
     }
+
+#undef IS_LONG_OPTION
+#undef IS_OFF_T_OPTION
 
     /* Handle the case of file objects */
     if (PyFile_Check(obj)) {
@@ -1172,6 +1179,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             }
             /* INFO: curl_slist_append() internally does strdup() the data */
             str = PyString_AsString(listitem);
+            assert(str != NULL);
             nlist = curl_slist_append(*slist, str);
             if (nlist == NULL || nlist->data == NULL) {
                 curl_slist_free_all(*slist);
@@ -1887,7 +1895,7 @@ do_multi_getattr(CurlMultiObject *co, char *name)
 static PyTypeObject Curl_Type = {
     PyObject_HEAD_INIT(NULL)
     0,                          /* ob_size */
-    "Curl",                     /* tp_name */
+    "pycurl.Curl",              /* tp_name */
     sizeof(CurlObject),         /* tp_basicsize */
     0,                          /* tp_itemsize */
     /* Methods */
@@ -1918,7 +1926,7 @@ static PyTypeObject Curl_Type = {
 static PyTypeObject CurlMulti_Type = {
     PyObject_HEAD_INIT(NULL)
     0,                          /* ob_size */
-    "CurlMulti",                /* tp_name */
+    "pycurl.CurlMulti",         /* tp_name */
     sizeof(CurlMultiObject),    /* tp_basicsize */
     0,                          /* tp_itemsize */
     /* Methods */
@@ -2318,10 +2326,6 @@ initpycurl(void)
     insint_c(d, "SSL_VERIFYPEER", CURLOPT_SSL_VERIFYPEER);
     insint_c(d, "CAPATH", CURLOPT_CAPATH);
     insint_c(d, "CAINFO", CURLOPT_CAINFO);
-#if 0
-    /* CURLOPT_FILETIME wants a pointer to a time_t */
-    insint_c(d, "OPT_FILETIME", CURLOPT_FILETIME);
-#endif
     insint_c(d, "MAXREDIRS", CURLOPT_MAXREDIRS);
     insint_c(d, "MAXCONNECTS", CURLOPT_MAXCONNECTS);
     insint_c(d, "CLOSEPOLICY", CURLOPT_CLOSEPOLICY);

@@ -8,8 +8,6 @@ Version 7.12.0.1 [requires libcurl-7.11.2 or better]
         * For 64-bit systems, allow to use both int and long as parameters
           where appropriate.
 
-        * Removed OPT_FILETIME (this has never worked as it does not map to Python).
-
 
 Version 7.12
 ------------
