@@ -11,3 +11,4 @@ include README
 include src/Makefile
 include src/curl.c
 include tests/*.py
+exclude tests/test_multi_vs_thread.py
