@@ -337,13 +337,18 @@ do_setopt(CurlObject *self, PyObject *args)
 	      option == CURLOPT_RANDOM_FILE ||
 	      option == CURLOPT_COOKIEJAR ||
 	      option == CURLOPT_SSL_CIPHER_LIST ||
-	      option == CURLOPT_EGDSOCKET))
+	      option == CURLOPT_EGDSOCKET ||
+	      option == CURLOPT_SSLCERTTYPE ||
+	      option == CURLOPT_SSLKEY ||
+	      option == CURLOPT_SSLKEYTYPE ||
+	      option == CURLOPT_SSLKEYPASSWD ||
+	      option == CURLOPT_SSLENGINE))
 	    {
 		PyErr_SetString(ErrorObject, "strings are not supported for this option");
 		return NULL;
 	    }
 	if (option == CURLOPT_URL) {
-	    /* Need to store uri for later use if the option is OPTCURL_URL */
+	    /* Need to store uri for later use if the option is CURLOPT_URL */
 	    buf = (char *)malloc((strlen(stringdata)*sizeof(char))+sizeof(char));
 	    if (buf == NULL)
 	        return PyErr_NoMemory();
@@ -524,7 +529,6 @@ do_setopt(CurlObject *self, PyObject *args)
     PyErr_Clear();
 
     /* Handle the case of function objects for callbacks */
-
     if (PyArg_ParseTuple(args, "iO!:setopt", &option, &PyFunction_Type, &obj) ||
 	PyArg_ParseTuple(args, "iO!:setopt", &option, &PyCFunction_Type, &obj) ||
 	PyArg_ParseTuple(args, "iO!:setopt", &option, &PyMethod_Type, &obj))
@@ -652,7 +656,8 @@ do_getinfo(CurlObject *self, PyObject *args)
 		}
 	    }
 
-	if (option == CURLINFO_EFFECTIVE_URL)
+	if (option == CURLINFO_EFFECTIVE_URL ||
+            option == CURLINFO_CONTENT_TYPE)
 	    {
 		/* Return string as result */
 		res = curl_easy_getinfo(self->handle, option, &s_res);
@@ -984,6 +989,13 @@ DL_EXPORT(void)
     insint(d, "HTTP_VERSION_1_1", CURL_HTTP_VERSION_1_1);
     insint(d, "FTP_USE_EPSV", CURLOPT_FTP_USE_EPSV);
 
+    insint(d, "SSLCERTTYPE", CURLOPT_SSLCERTTYPE); 
+    insint(d, "SSLKEY", CURLOPT_SSLKEY);
+    insint(d, "SSLKEYTYPE", CURLOPT_SSLKEYTYPE);
+    insint(d, "SSLKEYPASSWD", CURLOPT_SSLKEYPASSWD);
+    insint(d, "SSLENGINE", CURLOPT_SSLENGINE);
+    insint(d, "SSLENGINE_DEFAULT", CURLOPT_SSLENGINE_DEFAULT);
+
     /* Symbolic constants for getinfo */
     insint(d, "EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL);
     insint(d, "HTTP_CODE", CURLINFO_HTTP_CODE);
@@ -1002,6 +1014,7 @@ DL_EXPORT(void)
     insint(d, "CONTENT_LENGTH_DOWNLOAD", CURLINFO_CONTENT_LENGTH_DOWNLOAD);
     insint(d, "CONTENT_LENGTH_UPLOAD", CURLINFO_CONTENT_LENGTH_UPLOAD);
     insint(d, "STARTTRANSFER_TIME", CURLINFO_STARTTRANSFER_TIME);
+    insint(d, "CONTENT_TYPE", CURLINFO_CONTENT_TYPE);
 
     /* CLOSEPOLICY constants for setopt */
     insint(d, "CLOSEPOLICY_LEAST_RECENTLY_USED", CURLCLOSEPOLICY_LEAST_RECENTLY_USED);
@@ -1022,4 +1035,3 @@ DL_EXPORT(void)
 /*
 vi:ts=8
 */
-
