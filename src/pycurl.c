@@ -67,11 +67,11 @@
 
 
 /* Calculate the number of options we need to store */
-#define OPTIONS_SIZE    120
+#define OPTIONS_SIZE    121
 static int PYCURL_OPT(int o)
 {
-#if (LIBCURL_VERSION_NUM >= 0x070b00)
-    COMPILE_TIME_ASSERT(OPTIONS_SIZE == CURLOPT_FTP_SSL + 1)
+#if (LIBCURL_VERSION_NUM >= 0x070b01)
+    COMPILE_TIME_ASSERT(OPTIONS_SIZE == CURLOPT_POSTFIELDSIZE_LARGE + 1 - CURLOPTTYPE_OFF_T)
 #endif
     assert(o >= CURLOPTTYPE_OBJECTPOINT);
     assert(o < CURLOPTTYPE_OBJECTPOINT + OPTIONS_SIZE);
@@ -2634,6 +2634,10 @@ initpycurl(void)
     insint_c(d, "MAXFILESIZE_LARGE", CURLOPT_MAXFILESIZE_LARGE);
     insint_c(d, "RESUME_FROM_LARGE", CURLOPT_RESUME_FROM_LARGE);
     insint_c(d, "INFILESIZE_LARGE", CURLOPT_INFILESIZE_LARGE);
+#endif
+
+#ifdef CURL_VERSION_LARGEFILE
+    insint_c(d, "POSTFIELDSIZE_LARGE", CURLOPT_POSTFIELDSIZE_LARGE);
 #endif
 
     /* curl_closepolicy: constants for setopt(CLOSEPOLICY, x) */
