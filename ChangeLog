@@ -9,6 +9,10 @@ Version 7.9.8
 
 	* Added option constants for CURLOPT_TIMECONDITION:
 	TIMECOND_IFMODSINCE and TIMECOND_IFUNMODSINCE.
+
+	* Added an simple example crawler, which downloads documents
+	listed in a file with a configurable number of worker threads.
+	See the file 'crawler.py' in the 'tests' directory for details.
 	
  	* Disallow recursive callback invocations (by Markus Oberhumer).
 
