@@ -19,8 +19,6 @@ t = Test()
 c = pycurl.Curl()
 c.setopt(c.URL, 'http://curl.haxx.se/dev/')
 c.setopt(c.WRITEFUNCTION, t.body_callback)
-c.setopt(c.HTTPHEADER, ["I-am-a-silly-programmer: yes indeed you are",
-                        "User-Agent: Python interface for libcURL"])
 c.perform()
 c.close()
 

@@ -29,7 +29,6 @@ class WorkerThread(threading.Thread):
                 raise SystemExit
             f = open(filename, "wb")
             curl = pycurl.Curl()
-            curl.setopt(pycurl.HTTPHEADER, ["User-Agent: PycURL"])
             curl.setopt(pycurl.FOLLOWLOCATION, 1)
             curl.setopt(pycurl.MAXREDIRS, 5)
             curl.setopt(pycurl.URL, url)

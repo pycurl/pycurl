@@ -59,7 +59,6 @@ m.handles = []
 for i in range(num_conn):
     c = pycurl.Curl()
     c.fp = None
-    c.setopt(pycurl.HTTPHEADER, ["User-Agent: PycURL"])
     c.setopt(pycurl.FOLLOWLOCATION, 1)
     c.setopt(pycurl.MAXREDIRS, 5)
     c.setopt(pycurl.CONNECTTIMEOUT, 30)

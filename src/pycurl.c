@@ -349,6 +349,7 @@ do_curl_new(PyObject *dummy, PyObject *args)
 {
     CurlObject *self;
     int res;
+    char *s;
 
     UNUSED(dummy);
     if (!PyArg_ParseTuple(args, ":Curl")) {
@@ -371,6 +372,11 @@ do_curl_new(PyObject *dummy, PyObject *args)
         goto error;
     memset(self->error, 0, sizeof(self->error));
 
+    /* Set backreference */
+    res = curl_easy_setopt(self->handle, CURLOPT_PRIVATE, (char *) self);
+    if (res != CURLE_OK)
+        goto error;
+
     /* Enable NOPROGRESS by default, i.e. no progress output */
     res = curl_easy_setopt(self->handle, CURLOPT_NOPROGRESS, (long)1);
     if (res != CURLE_OK)
@@ -381,15 +387,22 @@ do_curl_new(PyObject *dummy, PyObject *args)
     if (res != CURLE_OK)
         goto error;
 
-    /* Set backreference */
-    res = curl_easy_setopt(self->handle, CURLOPT_PRIVATE, (char *) self);
-    if (res != CURLE_OK)
-        goto error;
-
     /* Set FTP_ACCOUNT to NULL by default */
     res = curl_easy_setopt(self->handle, CURLOPT_FTP_ACCOUNT, NULL);
     if (res != CURLE_OK)
         goto error;
+
+    /* Set default USERAGENT */
+    s = (char *) malloc(7 + strlen(LIBCURL_VERSION) + 1);
+    if (s != NULL) {
+        strcpy(s, "PycURL/"); strcpy(s+7, LIBCURL_VERSION);
+        res = curl_easy_setopt(self->handle, CURLOPT_USERAGENT, (char *) s);
+        if (res != CURLE_OK) {
+            free(s);
+            goto error;
+        }
+        self->options[ OPT_INDEX(CURLOPT_USERAGENT) ] = s;
+    }
 
     /* Success - return new object */
     return self;
@@ -891,7 +904,7 @@ ioctl_callback(CURL *curlobj, int cmd, void *stream)
     self = (CurlObject *)stream;
     tmp_state = get_thread_state(self);
     if (tmp_state == NULL)
-        return ret;
+        return (curlioerr) ret;
     PyEval_AcquireThread(tmp_state);
 
     /* check args */
@@ -922,7 +935,7 @@ ioctl_callback(CURL *curlobj, int cmd, void *stream)
 silent_error:
     Py_XDECREF(result);
     PyEval_ReleaseThread(tmp_state);
-    return ret;
+    return (curlioerr) ret;
 verbose_error:
     PyErr_Print();
     goto silent_error;

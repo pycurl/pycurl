@@ -45,7 +45,7 @@ integer, long integer, file objects, lists, or functions.</p>
 import pycurl
 c = pycurl.Curl()
 c.setopt(pycurl.URL, "http://www.python.org/")
-c.setopt(pycurl.HTTPHEADER, ["User-Agent: PycURL test", "Accept:"])
+c.setopt(pycurl.HTTPHEADER, ["Accept:"])
 import StringIO
 b = StringIO.StringIO()
 c.setopt(pycurl.WRITEFUNCTION, b.write)
