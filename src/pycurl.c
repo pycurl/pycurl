@@ -1355,6 +1355,13 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                     int j, k, l;
                     struct curl_forms *forms = NULL;
 
+                    /* Sanity check that there are at least two tuple items */
+                    if (tlen < 2) {
+                        curl_formfree(post);
+                        PyErr_SetString(PyExc_TypeError, "tuple must contain at least one option and one value");
+                        return NULL;
+                    }
+
                     /* Allocate enough space to accommodate length options for content */
                     forms = PyMem_Malloc(sizeof(struct curl_forms) * ((tlen*2) + 1));
                     if (forms == NULL) {
@@ -1369,19 +1376,19 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                         int olen, val;
 
                         if (j == (tlen-1)) {
-                            PyErr_SetString(PyExc_TypeError, "expected one more tuple value");
+                            PyErr_SetString(PyExc_TypeError, "expected value");
                             PyMem_Free(forms);
                             curl_formfree(post);
                             return NULL;
                         }
                         if (!PyInt_Check(PyTuple_GET_ITEM(t, j))) {
-                            PyErr_SetString(PyExc_TypeError, "expected long value in tuple");
+                            PyErr_SetString(PyExc_TypeError, "option must be long");
                             PyMem_Free(forms);
                             curl_formfree(post);
                             return NULL;
                         }
                         if (!PyString_Check(PyTuple_GET_ITEM(t, j+1))) {
-                            PyErr_SetString(PyExc_TypeError, "expected string value in tuple");
+                            PyErr_SetString(PyExc_TypeError, "value must be string");
                             PyMem_Free(forms);
                             curl_formfree(post);
                             return NULL;
