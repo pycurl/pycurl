@@ -27,15 +27,8 @@ fine for RedHat distros).
 Windows
 -------
 
-When installing on Windows, you need to manually configure three path
-setting variables in the file 'setup.py':
+When installing on Windows, you need to manually configure the path to
+the curl source tree, specified with the CURL_DIR variable in the file
+'setup.py'.
 
-	W32_INCLUDE	- Path to the libcurl 'include' directory
-	W32_LIB		- Path to the libcurl 'lib' directory
-	W32_EXTRA_OBJ	- Path to libcurl library file itself
-
-Then run 'python setup.py install' as usual.  Note that you currently
-need Visual C/C++ installed to build pycurl.  If someone can provide
-the necessary modifications (if any) to setup.py to build with other
-compilers (e.g. Cygwin or Borland/Inprise) I'd be happy to include
-that.
+Then run the command 'python setup.py install' as usual.

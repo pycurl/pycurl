@@ -18,9 +18,9 @@ extra_objects = []
 extra_link_args = []
 
 if sys.platform == "win32":
-    # Windows users have to configure the next path params to match
-    # their curl source installation.  The paths set here are
-    # just examples and thus unlikely to match your installation.
+    # Windows users have to configure the CURL_DIR path parameter to match
+    # their curl source installation.  The path set here is
+    # just an example and thus unlikely to match your installation.
     CURL_DIR = r"c:\src\curl-7.9.8"
     include_dirs.append(os.path.join(CURL_DIR, "include"))
     extra_objects.append(os.path.join(CURL_DIR, "lib", "libcurl.lib"))
