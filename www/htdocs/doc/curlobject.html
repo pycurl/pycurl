@@ -1,34 +1,43 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <title>Curl Objects</title>
-
-  <meta http-equiv="content-type"
- content="text/html; charset=ISO-8859-1">
+  <title>PycURL: Curl Objects</title>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1"/>
 </head>
-  <body>
+<body>
 
-<h2>Curl Objects<br>
-</h2>
-<p>
-Curl objects have the following methods:
-</p>
- <b>close()</b><b> </b>-&gt; <i>None</i>
-<blockquote> Corresponds to <b>curl_easy_cleanup</b> in libcurl. &nbsp;This
+<h1>Curl Objects</h1>
+
+<p>Curl objects have the following methods:</p>
+
+<dl>
+<dt><code>close()</code> -&gt; <em>None</em></dt>
+<dd>
+<p>Corresponds to <code>curl_easy_cleanup</code> in libcurl. &nbsp;This
 method is automatically called by pycurl when a Curl object no longer has
-any references to it, but can also be called explicitly.<br>
-</blockquote>
- <b>perform()</b> -&gt; <i>None</i>
-<blockquote>Corresponds to <b>curl_easy_perform</b> in libcurl.<br>
-</blockquote>
- <b>setopt(</b><i>option, value</i><b>)</b> -&gt; <i>None</i>
-<blockquote> Corresponds to <b>curl_easy_setopt</b> in libcurl, where <i>option</i>
-is specified with the CURLOPT_* constants in libcurl, except that the CURLOPT_
-prefix has been removed. The type for <i>value</i> depends on the option,
-and can be either a string, integer, file objects, lists, &nbsp;or functions.<br>
-  <br>
- Example usage:
-<pre>import pycurl
+any references to it, but can also be called explicitly.</p>
+</dd>
+
+<dt><code>perform()</code> -&gt; <em>None</em></dt>
+<dd>
+<p>Corresponds to <code>curl_easy_perform</code> in libcurl.</p>
+</dd>
+
+<dt><code>setopt(</code><em>option, value</em><code>)</code> -&gt; <em>None</em></dt>
+<dd>
+
+<p>Corresponds to <code>curl_easy_setopt</code> in libcurl, where
+<em>option</em> is specified with the CURLOPT_* constants in libcurl,
+except that the CURLOPT_ prefix has been removed. The type for
+<em>value</em> depends on the option, and can be either a string,
+integer, file objects, lists, &nbsp;or functions.</p>
+
+<p>Example usage:</p>
+
+<pre>
+import pycurl
 c = pycurl.Curl()
 c.setopt(pycurl.URL, 'http://www.python.org/')
 c.setopt(pycurl.HTTPHEADER, ['User-Agent: PycURL test', 'Accept:'])
@@ -41,16 +50,23 @@ c.perform()
 print b.getvalue()
 ...
 </pre>
-</blockquote>
-  <b>getinfo(</b><i>option</i><b>) </b>-&gt; <i>Result</i>
-<blockquote> Corresponds to <b>curl_easy_getinfo</b> in libcurl, where <i>option</i>
-is the same as the CURLINFO_* constants in libcurl, except that the CURLINFO_
-prefix has been removed. &nbsp; <i>Result</i> contains an integer, float or
-string, depending on which option is given. &nbsp;The <b>getinfo</b> method
-should not be called unless <b>perform</b> has been called and finished.<br>
-  <br>
- Example usage: <br>
-  <pre>import pycurl
+</dd>
+
+<dt><code>getinfo(</code><em>option</em><code>) </code>-&gt; <em>Result</em></dt>
+<dd>
+
+<p>Corresponds to <code>curl_easy_getinfo</code> in libcurl, where
+<em>option</em> is the same as the CURLINFO_* constants in libcurl,
+except that the CURLINFO_ prefix has been removed. &nbsp;
+<em>Result</em> contains an integer, float or string, depending on
+which option is given. &nbsp;The <code>getinfo</code> method should
+not be called unless <code>perform</code> has been called and
+finished.</p>
+
+<p>Example usage:</p>
+
+<pre>
+import pycurl
 c = pycurl.Curl()
 c.setopt(pycurl.URL, 'http://sf.net')
 c.setopt(pycurl.FOLLOWLOCATION, 1)
@@ -59,7 +75,13 @@ print c.getinfo(pycurl.HTTP_CODE), c.getinfo(pycurl.EFFECTIVE_URL)
 ...
 --&gt; 200 'http://sourceforge.net/'
 </pre>
-</blockquote>
+</dd>
+
+<dt><code>errstr()</code> -&gt; <em>String</em></dt>
+<dd>
+<p>Returns the internal libcurl error buffer string of the handle.</p>
+</dd>
+</dl>
+
 </body>
 </html>
-

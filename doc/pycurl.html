@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <title>PycURL</title>
-  <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1"/>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1"/>
 </head>
 <body>
 
@@ -13,7 +13,7 @@
 <p>The pycurl package is a Python interface to libcurl (<a
 href="http://curl.haxx.se/libcurl/">http://curl.haxx.se/libcurl/</a>). pycurl
 has been successfully built and tested with Python versions from
-1.5.2 to the current 2.2.x releases.</p>
+1.5.2 to the current 2.3.x releases.</p>
 
 <p>libcurl is a client-side URL transfer library supporting FTP, FTPS,
 HTTP, HTTPS, GOPHER, TELNET, DICT, FILE and LDAP.  libcurl
@@ -24,9 +24,8 @@ proxy tunneling and more.</p>
 <p>All the functionality provided by libcurl can used through the
 pycurl interface. The following subsections describe how to use the
 pycurl interface, and assume familiarity with how libcurl works.  For
-information on how libcurl works, please consult the curl library web
-pages (<a
-href="http://curl.haxx.se/libcurl/c/">http://curl.haxx.se/libcurl/c/</a>).</p>
+information on how libcurl works, please consult the curl library web pages
+(<a href="http://curl.haxx.se/libcurl/c/">http://curl.haxx.se/libcurl/c/</a>).</p>
 
 <hr/>
 
@@ -57,8 +56,7 @@ pycurl.GLOBAL_NOTHING, pycurl.GLOBAL_DEFAULT.  Corresponds to
 <pre>
 >>> import pycurl
 >>> pycurl.version_info()
-(0, '7.10.2', 461314, 'i686-pc-linux-gnu', 12, 'OpenSSL/0.9.6', 9461775, '1.1.3',
-('ftp', 'gopher', 'telnet', 'dict', 'ldap', 'http', 'file', 'https', 'ftps'))
+(0, '7.10.4', 461316, 'i386-pc-linux-gnu', 13, 'OpenSSL/0.9.7b', 9465903, '1.1.4', ('ftp', 'gopher', 'telnet', 'dict', 'ldap', 'http', 'file', 'https', 'ftps'))
 </pre>
 </dd>
 
@@ -72,7 +70,7 @@ linked and used by pycurl, corresponding to
 <pre>
 >>> import pycurl
 >>> pycurl.version
-'libcurl 7.9.8 (OpenSSL 0.9.6)'
+'libcurl/7.10.4 OpenSSL/0.9.7b ipv6 zlib/1.1.4'
 </pre>
 </dd>
 
