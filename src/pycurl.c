@@ -1843,7 +1843,6 @@ do_multi_select(CurlMultiObject *self, PyObject *args)
 
 /* --------------- methods --------------- */
 
-static char co_cleanup_doc [] = "cleanup() -> None.  Deprecated, use close().\n";
 static char co_close_doc [] = "close() -> None.  Close handle and end curl session.\n";
 #if 0
 static char co_copy_doc [] = "copy() -> New curl object. FIXME\n";
@@ -1859,7 +1858,6 @@ static char co_multi_info_read_doc [] = "info_read([max_objects]) -> Tuple. Retu
 static char co_multi_select_doc [] = "select([timeout]) -> Int.  Returns result from doing a select() on the curl multi file descriptor with the given timeout.\n";
 
 static PyMethodDef curlobject_methods[] = {
-    {"cleanup", (PyCFunction)do_curl_close, METH_VARARGS, co_cleanup_doc},
     {"close", (PyCFunction)do_curl_close, METH_VARARGS, co_close_doc},
 #if 0
     {"copy", (PyCFunction)do_curl_copy, METH_VARARGS, co_copy_doc},
@@ -1874,7 +1872,6 @@ static PyMethodDef curlobject_methods[] = {
 
 static PyMethodDef curlmultiobject_methods[] = {
     {"add_handle", (PyCFunction)do_multi_add_handle, METH_VARARGS, NULL},
-    {"cleanup", (PyCFunction)do_multi_close, METH_VARARGS, NULL},
     {"close", (PyCFunction)do_multi_close, METH_VARARGS, NULL},
     {"fdset", (PyCFunction)do_multi_fdset, METH_VARARGS, co_multi_fdset_doc},
     {"info_read", (PyCFunction)do_multi_info_read, METH_VARARGS, co_multi_info_read_doc},
@@ -2145,13 +2142,9 @@ static char pycurl_version_info_doc [] =
 
 static char pycurl_curl_new_doc [] =
 "Curl() -> New curl object.  Implicitly calls global_init() if not called.\n";
-static char pycurl_curl_init_doc [] =
-"init() -> New curl object.   Deprecated, use Curl() instead.\n";
 
 static char pycurl_multi_new_doc [] =
 "CurlMulti() -> New curl multi-object.\n";
-static char pycurl_multi_init_doc [] =
-"multi_init() -> New curl multi-object. Deprecated, use CurlMulti() instead.\n";
 
 
 /* List of functions defined in the curl module */
@@ -2160,9 +2153,12 @@ static PyMethodDef curl_methods[] = {
     {"global_cleanup", (PyCFunction)do_global_cleanup, METH_VARARGS, pycurl_global_cleanup_doc},
     {"version_info", (PyCFunction)do_version_info, METH_VARARGS, pycurl_version_info_doc},
     {"Curl", (PyCFunction)do_curl_new, METH_VARARGS, pycurl_curl_new_doc},
-    {"init", (PyCFunction)do_curl_new, METH_VARARGS, pycurl_curl_init_doc},
     {"CurlMulti", (PyCFunction)do_multi_new, METH_VARARGS, pycurl_multi_new_doc},
-    {"multi_init", (PyCFunction)do_multi_new, METH_VARARGS, pycurl_multi_init_doc},
+#if 0
+    /* deprecated and finally removed 2003-06-10 */
+    {"init", (PyCFunction)do_curl_new, METH_VARARGS, NULL},
+    {"multi_init", (PyCFunction)do_multi_new, METH_VARARGS, NULL},
+#endif
     {NULL, NULL, 0, NULL}
 };
 
@@ -2292,6 +2288,13 @@ initpycurl(void)
      **/
 
     /* curl_infotype: the kind of data that is passed to information_callback */
+/* XXX do we actually need curl_infotype in pycurl ??? */
+    insint_c(d, "INFOTYPE_TEXT", CURLINFO_TEXT);
+    insint_c(d, "INFOTYPE_HEADER_IN", CURLINFO_HEADER_IN);
+    insint_c(d, "INFOTYPE_HEADER_OUT", CURLINFO_HEADER_OUT);
+    insint_c(d, "INFOTYPE_DATA_IN", CURLINFO_DATA_IN);
+    insint_c(d, "INFOTYPE_DATA_OUT", CURLINFO_DATA_OUT);
+    /* deprecated names (for compatibility with old pycurl versions) */
     insint_c(d, "TEXT", CURLINFO_TEXT);
     insint_c(d, "HEADER_IN", CURLINFO_HEADER_IN);
     insint_c(d, "HEADER_OUT", CURLINFO_HEADER_OUT);
@@ -2303,10 +2306,22 @@ initpycurl(void)
     insint_c(d, "E_OK", CURLE_OK);
     insint_c(d, "E_UNSUPPORTED_PROTOCOL", CURLE_UNSUPPORTED_PROTOCOL);
 
-    /* curl_proxytype */
+    /* curl_proxytype: constants for setopt(PROXYTYPE, x) */
+    insint_c(d, "PROXYTYPE_HTTP", CURLPROXY_HTTP);
+    insint_c(d, "PROXYTYPE_SOCKS4", CURLPROXY_SOCKS4);
+    insint_c(d, "PROXYTYPE_SOCKS5", CURLPROXY_SOCKS5);
+    /* deprecated names (for compatibility with old pycurl versions) */
     insint_c(d, "PROXY_HTTP", CURLPROXY_HTTP);
     insint_c(d, "PROXY_SOCKS4", CURLPROXY_SOCKS4);
     insint_c(d, "PROXY_SOCKS5", CURLPROXY_SOCKS5);
+
+    /* curl_httpauth: constants for setopt(HTTPAUTH, x) */
+#if (LIBCURL_VERSION_NUM >= 0x070a06)
+    insint_c(d, "HTTPAUTH_BASIC", CURLHTTP_BASIC);
+    insint_c(d, "HTTPAUTH_DIGEST", CURLHTTP_DIGEST);
+    insint_c(d, "HTTPAUTH_NEGOTIATE", CURLHTTP_NEGOTIATE);
+    insint_c(d, "HTTPAUTH_NTLM", CURLHTTP_NTLM);
+#endif
 
     /* CURLoption: symbolic constants for setopt() */
 /* FIXME: reorder these to match <curl/curl.h> */
@@ -2411,7 +2426,7 @@ initpycurl(void)
     insint_c(d, "FTP_USE_EPRT", CURLOPT_FTP_USE_EPRT);
 #endif
 #if (LIBCURL_VERSION_NUM >= 0x070a06)
-    insint_c(d, "HTTPDIGEST", CURLOPT_HTTPDIGEST);
+    insint_c(d, "HTTPAUTH", CURLOPT_HTTPAUTH);
 #endif
 
     /* CURL_NETRC_OPTION: constants for setopt(NETRC, x) */
@@ -2420,10 +2435,13 @@ initpycurl(void)
     insint_c(d, "NETRC_REQUIRED", CURL_NETRC_REQUIRED);
 
     /* curl_TimeCond: constants for setopt(TIMECONDITION, x) */
+    insint_c(d, "TIMECONDITION_IFMODSINCE", CURL_TIMECOND_IFMODSINCE);
+    insint_c(d, "TIMECONDITION_IFUNMODSINCE", CURL_TIMECOND_IFUNMODSINCE);
+    /* deprecated names (for compatibility with old pycurl versions) */
     insint_c(d, "TIMECOND_IFMODSINCE", CURL_TIMECOND_IFMODSINCE);
     insint_c(d, "TIMECOND_IFUNMODSINCE", CURL_TIMECOND_IFUNMODSINCE);
 
-    /* CURLINFO: symbolic constants for getinfo */
+    /* CURLINFO: symbolic constants for getinfo(x) */
     insint_c(d, "EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL);
     insint_c(d, "HTTP_CODE", CURLINFO_HTTP_CODE);
     insint_c(d, "TOTAL_TIME", CURLINFO_TOTAL_TIME);
