@@ -118,6 +118,11 @@ most important being
 Also have a look at the <a href="ChangeLog">PycURL ChangeLog</a>.
 </p>
 
+<p>
+If you have problem or want tips, our <a href="http://cool.haxx.se/mailman/listinfo/curl-and-python">mailing list</a>
+may have the information you need.
+</p>
+
 <h2>Download</h2>
 
 <p>
