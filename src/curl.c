@@ -46,9 +46,6 @@
 #  define USE_GC
 #endif
 
-/* Whether to enable curl_multi_info_read or not */
-#define ENABLE_INFO_READ 1
-
 
 static PyObject *ErrorObject;
 
@@ -267,12 +264,10 @@ do_curl_new(PyObject *dummy, PyObject *args)
     if (res != CURLE_OK)
         goto error;
 
-#if ENABLE_INFO_READ
     /* Set backreference */
     res = curl_easy_setopt(self->handle, CURLOPT_PRIVATE, (char *) self);
     if (res != CURLE_OK)
         goto error;
-#endif
 
     /* Success - return new object */
     return self;
@@ -1598,7 +1593,6 @@ error:
 
 /* --------------- info_read --------------- */
 
-#if ENABLE_INFO_READ
 static PyObject *
 do_multi_info_read(CurlMultiObject *self, PyObject *args)
 {
@@ -1659,7 +1653,6 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
         Py_DECREF(list);
         return NULL;
 }
-#endif
 
 /* --------------- select --------------- */
 
@@ -1737,9 +1730,7 @@ static char co_setopt_doc [] = "setopt(option, parameter) -> None.  Set curl ses
 static char co_getinfo_doc [] = "getinfo(info) -> Res.  Extract and return information from a curl session.  Throws pycurl.error exception upon failure.\n";
 static char co_multi_fdset_doc [] = "fdset() -> Tuple.  Returns a tuple of three lists that can be passed to the select.select() method .\n";
 static char co_multi_select_doc [] = "select(timeout) -> Int.  Returns result from doing a select() on the curl multi file descriptor with the given timeout.\n";
-#if ENABLE_INFO_READ
 static char co_multi_info_read_doc [] = "info_read(max_objects) -> Tuple. Returns a tuple (number of queued handles, [curl objects]).\n";
-#endif
 
 static PyMethodDef curlobject_methods[] = {
     {"cleanup", (PyCFunction)do_curl_close, METH_VARARGS, co_cleanup_doc},
@@ -1761,9 +1752,7 @@ static PyMethodDef curlmultiobject_methods[] = {
     {"remove_handle", (PyCFunction)do_multi_remove_handle, METH_VARARGS, NULL},
     {"fdset", (PyCFunction)do_multi_fdset, METH_VARARGS, co_multi_fdset_doc},
     {"select", (PyCFunction)do_multi_select, METH_VARARGS, co_multi_select_doc},
-#if ENABLE_INFO_READ
     {"info_read", (PyCFunction)do_multi_info_read, METH_VARARGS, co_multi_info_read_doc},
-#endif
     {NULL, NULL, 0, NULL}
 };
 
