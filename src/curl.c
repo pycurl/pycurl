@@ -649,7 +649,7 @@ do_setopt(CurlObject *self, PyObject *args)
 	    Py_INCREF(obj);
 	    Py_XDECREF(self->d_cb);
 	    self->d_cb = obj;
-	    curl_easy_setopt(self->handle, CURLOPT_DEBUGFUNCTION, self);
+	    curl_easy_setopt(self->handle, CURLOPT_DEBUGFUNCTION, debug_callback);
 	    break;
 	default:
 	    /* None of the list options were recognized, throw exception */
