@@ -10,6 +10,5 @@ setup(name="pycurl",
       url="http://pycurl.sourceforge.net/",
       ext_modules=[Extension("curl", ["src/curl.c"],
                              include_dirs=["include"],
-                             library_dirs=["lib"],
                              libraries=["curl"]),]
       )
