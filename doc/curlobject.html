@@ -28,8 +28,7 @@ prefix has been removed. The type for <i>value</i> depends on the option,
 and can be either a string, integer, file objects, lists, &nbsp;or functions.<br>
   <br>
  Example usage:
-<pre>
-import pycurl
+<pre>import pycurl
 c = pycurl.Curl()
 c.setopt(pycurl.URL, 'http://www.python.org/')
 c.setopt(pycurl.HTTPHEADER, ['User-Agent: PycURL test', 'Accept:'])
@@ -51,8 +50,7 @@ of float depending on which option is given. &nbsp;The <b>getinfo</b> method
 should not be called unless <b>perform</b> has been called and finished.<br>
   <br>
  Example usage: <br>
-  <pre>
-import pycurl
+  <pre>import pycurl
 c = pycurl.Curl()
 c.setopt(pycurl.URL, 'file:///dev/null')
 c.perform()
