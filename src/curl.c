@@ -1416,7 +1416,8 @@ done:
 
 static PyObject *
 do_multi_fdset(CurlMultiObject *self, PyObject *args)
-{   CURLMcode res;
+{   
+    CURLMcode res;
     fd_set read_fd_set;
     fd_set write_fd_set;
     fd_set exc_fd_set;
@@ -1447,45 +1448,42 @@ do_multi_fdset(CurlMultiObject *self, PyObject *args)
     PyList_Append(list,except_list);
 
     /* Don't bother releasing the gil as this is just a data structure operation */
-    res = curl_multi_fdset(self->multi_handle, &read_fd_set, &write_fd_set, &exc_fd_set, &max_fd);
-
-    /* We assume these errors are ok, otherwise throw exception */
-    if (res != CURLM_OK && res != CURLM_CALL_MULTI_PERFORM) {
+    res = curl_multi_fdset(self->multi_handle, &read_fd_set, &write_fd_set, 
+			   &exc_fd_set, &max_fd);
+    if (res != CURLM_OK) {
         CURLERROR2("fdset failed");
     }
 
-    /* It is actually quite difficult/non-portable to extract fds from fd_sets. 
-       Since max_fd is assumed to be small(ish) using the FD_ISSET macro is not
-       that inefficient for most cases.
-    */
+    /* It is actually quite difficult/non-portable to extract fds from
+       fd_sets.  Since max_fd is assumed to be small(ish) using the
+       FD_ISSET macro is not that inefficient for most cases.  */
 
     /* Populate read_list */
     for (fd = 0; fd < max_fd; fd++) {
-      if (FD_ISSET(fd, &read_fd_set))
-        PyList_Append(read_list,PyInt_FromLong((long)fd));
+        if (FD_ISSET(fd, &read_fd_set)) {
+            PyList_Append(read_list,PyInt_FromLong((long)fd));
+	}
     }
 
     /* Populate write_list */
     for (fd = 0; fd < max_fd; fd++) {
-      if (FD_ISSET(fd, &write_fd_set))
-        PyList_Append(write_list,PyInt_FromLong((long)fd));
+        if (FD_ISSET(fd, &write_fd_set)) {
+            PyList_Append(write_list,PyInt_FromLong((long)fd));
+	}
     }
 
-   /* Populate write_list */
-   for (fd = 0; fd < max_fd; fd++) {
-      if (FD_ISSET(fd, &exc_fd_set))
-        PyList_Append(except_list,PyInt_FromLong((long)fd));
+    /* Populate write_list */
+    for (fd = 0; fd < max_fd; fd++) {
+        if (FD_ISSET(fd, &exc_fd_set)) {
+            PyList_Append(except_list,PyInt_FromLong((long)fd));
+        }
     }
 
-    /* We assume these errors are ok, otherwise throw exception */
-    if (res != CURLM_OK && res != CURLM_CALL_MULTI_PERFORM) {
-        CURLERROR2("fdset failed");
-    }
-    /* FIXME: If any of the PyList_Append operations fail, objects
-       on the lists should be decref'ed as well as the lists themselves.  Hence,
-       the current implementation will be leaking memory of any of the list
-       operations fail.
-    */
+    /* FIXME: If any of the PyList_Append operations fail, objects on
+       the lists should be decref'ed as well as the lists themselves.
+       Hence, the current implementation will be leaking memory of any
+       of the list operations fail.  */
+
     return list;
 }
 
