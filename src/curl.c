@@ -37,15 +37,17 @@
 #include <curl/curl.h>
 #include <curl/multi.h>
 
-
-/* Ensure we have an updated libcurl */
+/* Ensure we have updated versions */
+#if !defined(PY_VERSION_HEX) || (PY_VERSION_HEX < 0x010502f0)
+#  error "Need Python version 1.5.2 or greater to compile pycurl."
+#endif
 #if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x070908)
 #  error "Need libcurl version 7.9.8 or greater to compile pycurl."
 #endif
 
 /* Beginning with Python 2.2 we support Cyclic Garbarge Collection */
 #undef USE_GC
-#if 0 && (PY_VERSION_HEX >= 0x02020000)
+#if 1 && (PY_VERSION_HEX >= 0x02020000)
 #  define USE_GC
 #endif
 
@@ -80,7 +82,7 @@ typedef struct {
     PyObject *writedata;
     PyObject *writeheader;
     int writeheader_set;
-    char error[CURL_ERROR_SIZE+1]; 
+    char error[CURL_ERROR_SIZE+1];
     void *options[CURLOPT_LASTENTRY];
 } CurlObject;
 
@@ -224,7 +226,8 @@ do_init(PyObject *dummy, PyObject *args)
     self->writeheader_set = 0;
 
     /* Zero string pointer memory buffer used by setopt */
-    memset(self->options, 0, sizeof(void *) * CURLOPT_LASTENTRY);
+    memset(self->options, 0, sizeof(self->options));
+    memset(self->error, 0, sizeof(self->error));
 
     /* Initialize curl handle */
     self->handle = curl_easy_init();
@@ -235,7 +238,7 @@ do_init(PyObject *dummy, PyObject *args)
     res = curl_easy_setopt(self->handle, CURLOPT_ERRORBUFFER, self->error);
     if (res != CURLE_OK)
         goto error;
-    memset(self->error, 0, sizeof(char) * CURL_ERROR_SIZE+1);
+    memset(self->error, 0, sizeof(self->error));
 
     /* Enable NOPROGRESS by default, i.e. no progress output */
     res = curl_easy_setopt(self->handle, CURLOPT_NOPROGRESS, 1);
@@ -518,11 +521,8 @@ header_callback(char *ptr, size_t size, size_t nmemb, void *stream)
 }
 
 
-static
-size_t read_callback(char *ptr,
-                  size_t size,
-                  size_t nmemb,
-                  void  *stream)
+static size_t
+read_callback(char *ptr, size_t size, size_t nmemb, void  *stream)
 {
     PyObject *arglist;
     PyObject *result;
@@ -615,11 +615,8 @@ progress_callback(void *client,
 }
 
 
-static
-int password_callback(void *client,
-                      const char *prompt,
-                      char* buffer,
-                      int buflen)
+static int
+password_callback(void *client, const char *prompt, char* buffer, int buflen)
 {
     PyObject *arglist;
     PyObject *result;
@@ -664,12 +661,12 @@ int password_callback(void *client,
 }
 
 
-static
-int debug_callback(CURL *curlobj,
-                   curl_infotype type,
-                   char *buffer,
-                   size_t size,
-                   void *data)
+static int
+debug_callback(CURL *curlobj,
+               curl_infotype type,
+               char *buffer,
+               size_t size,
+               void *data)
 {
     PyObject *arglist;
     PyObject *result;

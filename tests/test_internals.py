@@ -1,7 +1,15 @@
 # $Id$
 # vi:ts=4:et
 
-import pycurl
+import pycurl, sys
+try:
+    from gc import get_objects
+    import gc
+    del get_objects
+    gc.enable()
+except ImportError:
+    gc = None
+
 print "Testing", pycurl.version
 print pycurl.__file__, pycurl.__COMPILE_DATE__
 
@@ -97,6 +105,30 @@ if 1:
     m = pycurl.multi_init()
     c.cleanup()
     del m, c
+
+
+# basic check of cyclic garbage collection
+if 1 and gc:
+    c = pycurl.init()
+    c.m = pycurl.multi_init()
+    c.m.add_handle(c)
+    # create some cyclic references
+    c.c = c
+    c.c.c1 = c
+    c.c.c2 = c
+    c.c.c3 = c.c
+    c.c.c4 = c.m
+    c.m.c = c
+    # delete
+    gc.collect()
+    ##print gc.get_referrers(c)
+    ##print gc.get_objects()
+    print "Tracked objects:", len(gc.get_objects())
+    # if gc.isenabled() this should delete 4 objects:
+    #   CurlObject + internal dict, CurlMuliObject + internal dict
+    del c
+    gc.collect()
+    print "Tracked objects:", len(gc.get_objects())
 
 
 print "All tests passed."
