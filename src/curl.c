@@ -983,9 +983,9 @@ static char module_doc [] =
 \n\
 Functions:\n\
 \n\
-init() -- Return a new curl object.  Implicitly calls global_init() if not called.\n\
-global_init(option) -- Initialize curl environment.\n\
-global_cleanup() -- Cleanup curl environment.\n\
+global_init(option) -> None.  Initialize curl environment.\n\
+global_cleanup() -> None.  Cleanup curl environment.\n\
+init() -> New curl object.  Create a new curl object.\n\
 ";
 
 
