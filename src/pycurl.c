@@ -1027,12 +1027,6 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                 PyErr_SetString(PyExc_TypeError, "strings are not supported for this option");
                 return NULL;
             }
-        /* Free previously allocated memory to option */
-        opt_masked = PYCURL_OPT(option);
-        if (self->options[opt_masked] != NULL) {
-            free(self->options[opt_masked]);
-            self->options[opt_masked] = NULL;
-        }
         /* Allocate memory to hold the string */
         buf = strdup(stringdata);
         if (buf == NULL) {
@@ -1044,6 +1038,12 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         if (res != CURLE_OK) {
             free(buf);
             CURLERROR_RETVAL();
+        }
+        /* Save allocated option buffer */
+        opt_masked = PYCURL_OPT(option);
+        if (self->options[opt_masked] != NULL) {
+            free(self->options[opt_masked]);
+            self->options[opt_masked] = NULL;
         }
         self->options[opt_masked] = buf;
         Py_INCREF(Py_None);

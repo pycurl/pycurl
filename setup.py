@@ -71,7 +71,7 @@ if sys.platform == "win32":
     extra_objects.append(os.path.join(CURL_DIR, "lib", "libcurl.lib"))
     extra_link_args.extend(["gdi32.lib", "winmm.lib", "ws2_32.lib",])
     add_libdirs("LIB", ";")
-    if string.find(sys.version, "MSC") != 1:
+    if string.find(sys.version, "MSC") != -1:
         ##extra_compile_args.append("-GF")
         extra_compile_args.append("-Gy")
         extra_compile_args.append("-WX")
