@@ -130,6 +130,14 @@ staticforward PyTypeObject CurlMulti_Type;
 } while (0)
 
 
+/* safe XDECREF for object states */
+#define ZAP(v) { \
+    PyObject *tmp = (PyObject *)(v); \
+    v = NULL; \
+    Py_XDECREF(tmp); \
+}
+
+
 /*************************************************************************
 // static utility functions
 **************************************************************************/
@@ -388,12 +396,9 @@ cannot_copy:
 static void
 util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
 {
-#undef XDECREF
-#define XDECREF(v)  Py_XDECREF(v); v = NULL
-
     if (flags & 1) {
         /* Decrement refcount for attributes dictionary. */
-        XDECREF(self->dict);
+        ZAP(self->dict);
     }
 
     if (flags & 2) {
@@ -410,22 +415,21 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
 
     if (flags & 4) {
         /* Decrement refcount for python callbacks. */
-        XDECREF(self->w_cb);
-        XDECREF(self->r_cb);
-        XDECREF(self->pro_cb);
-        XDECREF(self->pwd_cb);
-        XDECREF(self->h_cb);
-        XDECREF(self->d_cb);
+        ZAP(self->w_cb);
+        ZAP(self->r_cb);
+        ZAP(self->pro_cb);
+        ZAP(self->pwd_cb);
+        ZAP(self->h_cb);
+        ZAP(self->d_cb);
     }
 
     if (flags & 8) {
         /* Decrement refcount for python file objects. */
-        XDECREF(self->readdata);
-        XDECREF(self->writedata);
-        XDECREF(self->writeheader);
+        ZAP(self->readdata);
+        ZAP(self->writedata);
+        ZAP(self->writeheader);
         self->writeheader_set = 0;
     }
-#undef XDECREF
 }
 
 
@@ -496,8 +500,7 @@ do_curl_dealloc(CurlObject *self)
     Py_TRASHCAN_SAFE_BEGIN(self)
 #endif
 
-    Py_XDECREF(self->dict);
-    self->dict = NULL;
+    ZAP(self->dict);
     util_curl_close(self);
 
 #if defined(USE_GC)
@@ -985,15 +988,15 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         /* Increment reference to file object and register reference in curl object */
         Py_INCREF(obj);
         if (option == CURLOPT_WRITEDATA) {
-            Py_XDECREF(self->writedata);
+            ZAP(self->writedata);
             self->writedata = obj;
         }
         if (option == CURLOPT_READDATA) {
-            Py_XDECREF(self->readdata);
+            ZAP(self->readdata);
             self->readdata = obj;
         }
         if (option == CURLOPT_WRITEHEADER) {
-            Py_XDECREF(self->writeheader);
+            ZAP(self->writeheader);
             self->writeheader = obj;
             self->writeheader_set = 1;
         }
@@ -1140,44 +1143,44 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                 return NULL;
             }
             Py_INCREF(obj);
-            Py_XDECREF(self->writedata);
-            Py_XDECREF(self->w_cb);
+            ZAP(self->writedata);
+            ZAP(self->w_cb);
             self->w_cb = obj;
             curl_easy_setopt(self->handle, CURLOPT_WRITEFUNCTION, w_cb);
             curl_easy_setopt(self->handle, CURLOPT_WRITEDATA, self);
             break;
         case CURLOPT_READFUNCTION:
             Py_INCREF(obj);
-            Py_XDECREF(self->readdata);
-            Py_XDECREF(self->r_cb);
+            ZAP(self->readdata);
+            ZAP(self->r_cb);
             self->r_cb = obj;
             curl_easy_setopt(self->handle, CURLOPT_READFUNCTION, r_cb);
             curl_easy_setopt(self->handle, CURLOPT_READDATA, self);
             break;
         case CURLOPT_HEADERFUNCTION:
             Py_INCREF(obj);
-            Py_XDECREF(self->h_cb);
+            ZAP(self->h_cb);
             self->h_cb = obj;
             curl_easy_setopt(self->handle, CURLOPT_HEADERFUNCTION, h_cb);
             curl_easy_setopt(self->handle, CURLOPT_WRITEHEADER, self);
             break;
         case CURLOPT_PROGRESSFUNCTION:
             Py_INCREF(obj);
-            Py_XDECREF(self->pro_cb);
+            ZAP(self->pro_cb);
             self->pro_cb = obj;
             curl_easy_setopt(self->handle, CURLOPT_PROGRESSFUNCTION, pro_cb);
             curl_easy_setopt(self->handle, CURLOPT_PROGRESSDATA, self);
             break;
         case CURLOPT_PASSWDFUNCTION:
             Py_INCREF(obj);
-            Py_XDECREF(self->pwd_cb);
+            ZAP(self->pwd_cb);
             self->pwd_cb = obj;
             curl_easy_setopt(self->handle, CURLOPT_PASSWDFUNCTION, pwd_cb);
             curl_easy_setopt(self->handle, CURLOPT_PASSWDDATA, self);
             break;
         case CURLOPT_DEBUGFUNCTION:
             Py_INCREF(obj);
-            Py_XDECREF(self->d_cb);
+            ZAP(self->d_cb);
             self->d_cb = obj;
             curl_easy_setopt(self->handle, CURLOPT_DEBUGFUNCTION, d_cb);
             curl_easy_setopt(self->handle, CURLOPT_DEBUGDATA, self);
@@ -1354,8 +1357,7 @@ do_multi_dealloc(CurlMultiObject *self)
     Py_TRASHCAN_SAFE_BEGIN(self)
 #endif
 
-    Py_XDECREF(self->dict);
-    self->dict = NULL;
+    ZAP(self->dict);
     util_multi_close(self);
 
 #if defined(USE_GC)
@@ -1396,8 +1398,7 @@ do_multi_close(CurlMultiObject *self, PyObject *args)
 static int
 do_multi_clear(CurlMultiObject *self)
 {
-    Py_XDECREF(self->dict);
-    self->dict = NULL;
+    ZAP(self->dict);
     return 0;
 }
 
