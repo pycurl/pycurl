@@ -9,8 +9,10 @@ include INSTALL
 include Makefile
 include MANIFEST.in
 include README
+include TODO
 include src/Makefile
 include src/curl.c
+include examples/*.py
 include tests/*.py
 
 # exclude unfinished test scripts
