@@ -1,4 +1,35 @@
-Version 7.10.5 [requires libcurl-7.10.3 or better]
+Version 7.10.6 [requires libcurl-7.10.3 or better]
+--------------
+
+2003-07-29  Markus F.X.J. Oberhumer <mfx>
+
+        * Started working on support for CURLOPT_SSL_CTX_FUNCTION and
+          CURLOPT_SSL_CTX_DATA (libcurl-7.10.6) - not yet finished.
+
+2003-06-10  Markus F.X.J. Oberhumer <mfx>
+
+        * Added support for CURLOPT_HTTPAUTH (libcurl-7.10.6), including
+          the new HTTPAUTH_BASIC, HTTPAUTH_DIGEST, HTTPAUTH_GSSNEGOTIATE
+          and HTTPAUTH_NTML constants.
+
+        * Some constants were renamed for consistency:
+
+          All curl_infotype constants are now prefixed with "INFOTYPE_",
+          all curl_proxytype constants are prefixed with "PROXYTYPE_" instead
+          of "PROXY_", and all curl_TimeCond constants are now prefixed
+          with "TIMECONDITION_" instead of "TIMECOND_".
+
+          (The old names are still available but will get removed
+          in a future release.)
+
+        * WARNING: Removed the deprecated pycurl.init() and pycurl.multi_init()
+          names - use pycurl.Curl() and pycurl.CurlMulti() instead.
+
+        * WARNING: Removed the deprecated Curl.cleanup() and CurlMulti.cleanup()
+          methods - use Curl.close() and CurlMulti.close() instead.
+
+
+Version 7.10.5
 --------------
 
 2003-05-15  Markus F.X.J. Oberhumer <mfx>

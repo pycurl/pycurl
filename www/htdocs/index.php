@@ -1,7 +1,7 @@
 <?php // vi:ts=4:et
 echo "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
-$version = "7.10.5";
-$version_date = "May 21 2003";
+$version = "7.10.6";
+$version_date = "Aug 15 2003";
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
@@ -121,7 +121,7 @@ Also have a look at the <a href="ChangeLog">PycURL ChangeLog</a>.
 <h2>Download</h2>
 
 <p>
-<a href="download/pycurl-7.10.5.tar.gz">Download</a>
+<a href="download/pycurl-7.10.6.tar.gz">Download</a>
 PycURL sources version <?php echo "$version ($version_date)"; ?> or try
 the code from
 <a href="http://sourceforge.net/cvs/?group_id=28236">the CVS repository</a>.
@@ -132,7 +132,7 @@ You can get prebuilt Win32 modules as well as older versions from the
 <a href="download/">download area</a>.
 Please note that the prebuilt versions are provided for your
 convenience only and are completely <b>unsupported</b> - use them
-at your own risk!
+at your own risk.
 </p>
 
 Also, official PycURL packages are available for
