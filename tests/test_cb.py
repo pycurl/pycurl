@@ -3,12 +3,12 @@
 ## PycURL module
 import pycurl
 
-
+## Callback function invoked when body data is ready
 def body(buf):
     print buf
     return len(buf)
 
-
+## Callback function invoked when header data is ready
 def header(buf):
     print buf
     return len(buf)

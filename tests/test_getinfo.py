@@ -3,9 +3,10 @@
 ## PycURL module
 import pycurl
 
-
+## Callback function invoked when progress information is updated
 def progress(download_t, download_d, upload_t, upload_d):
-    print 'total to download %d bytes, have %d bytes so far' % (download_t, download_d)
+    print 'total to download %d bytes, have %d bytes so far' % \
+          (download_t, download_d)
     return 0 # Anything else indicates an error
 
 
