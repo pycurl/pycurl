@@ -98,6 +98,57 @@ staticforward PyTypeObject CurlMulti_Type;
 #undef UNUSED
 #define UNUSED(var)     ((void)&var)
 
+
+/* --------------------------------------------------------------------- */
+
+/* static utility functions */
+
+static PyThreadState *
+get_thread_state(const CurlObject *self)
+{
+    /* Get the thread state for callbacks to run in.
+     * This is either `self->state' when running inside perform() or
+     * `self->multi_stack->state' when running inside multi_perform().
+     */
+    if (self == NULL)
+        return NULL;
+    if (self->state != NULL)
+    {
+        /* inside perform() */
+        assert(self->handle != NULL);
+        assert(self->multi_stack == NULL || self->multi_stack->state == NULL);
+        return self->state;
+    }
+    if (self->multi_stack != NULL && self->multi_stack->state != NULL)
+    {
+        /* inside multi_perform() */
+        assert(self->multi_stack->multi_handle != NULL);
+        assert(self->state == NULL);
+        return self->multi_stack->state;
+    }
+    return NULL;
+}
+
+
+/* assert some CurlObject invariants */
+static void
+assert_curl_object(const CurlObject *self)
+{
+    assert(self != NULL);
+    assert(self->ob_type == &Curl_Type);
+    (void) get_thread_state(self);
+}
+
+
+/* assert some CurlMultiObject invariants */
+static void
+assert_curl_multi_object(const CurlMultiObject *self)
+{
+    assert(self != NULL);
+    assert(self->ob_type == &CurlMulti_Type);
+}
+
+
 /* --------------------------------------------------------------------- */
 
 static void
@@ -224,7 +275,8 @@ do_write_callback(int flags,
     size_t ret = 0;     /* assume error */
 
     self = (CurlObject *)stream;
-    if (self == NULL || (self->state == NULL && self->multi_stack == NULL)) {
+    tmp_state = get_thread_state(self);
+    if (tmp_state == NULL) {
         return ret;
     }
     write_size = (int)(size * nmemb);
@@ -236,9 +288,7 @@ do_write_callback(int flags,
         return ret;
     }
 
-    tmp_state = self->state == NULL ? self->multi_stack->state : self->state;
     PyEval_AcquireThread(tmp_state);
-
     arglist = Py_BuildValue("(s#)", ptr, write_size);
     result = PyEval_CallObject(cb, arglist);
     Py_DECREF(arglist);
@@ -254,7 +304,6 @@ do_write_callback(int flags,
             ret = (size_t)write_size;                   /* success */
     }
     Py_XDECREF(result);
-
     PyEval_ReleaseThread(tmp_state);
     return ret;
 }
@@ -287,21 +336,12 @@ progress_callback(void *client,
     int ret = 1;       /* assume error */
 
     self = (CurlObject *)client;
-    if (self == NULL || (self->state == NULL && self->multi_stack == NULL)) {
+    tmp_state = get_thread_state(self);
+    if (tmp_state == NULL) {
         return ret;
     }
 
-    tmp_state = self->state == NULL ? self->multi_stack->state : self->state;
     PyEval_AcquireThread(tmp_state);
-
-    assert(self->state != NULL || self->multi_stack != NULL);
-    if (self->state != NULL) {
-        PyEval_AcquireThread(self->state);
-    }
-    else {
-        PyEval_AcquireThread(self->multi_stack->state);
-    }
-
     arglist = Py_BuildValue("(dddd)", dltotal, dlnow, ultotal, ulnow);
     result = PyEval_CallObject(self->pro_cb, arglist);
     Py_DECREF(arglist);
@@ -334,13 +374,12 @@ int password_callback(void *client,
     int ret = 1;       /* assume error */
 
     self = (CurlObject *)client;
-    if (self == NULL || (self->state == NULL && self->multi_stack == NULL)) {
+    tmp_state = get_thread_state(self);
+    if (tmp_state == NULL) {
         return ret;
     }
 
-    tmp_state = self->state == NULL ? self->multi_stack->state : self->state;
     PyEval_AcquireThread(tmp_state);
-
     arglist = Py_BuildValue("(si)", prompt, buflen);
     result = PyEval_CallObject(self->pwd_cb, arglist);
     Py_DECREF(arglist);
@@ -381,19 +420,19 @@ int debug_callback(CURL *curlobj,
     PyObject *result;
     CurlObject *self;
     PyThreadState *tmp_state;
+    int ret = 0;       /* always success */
 
     UNUSED(curlobj);
     self = (CurlObject *)data;
-    if (self == NULL || (self->state == NULL && self->multi_stack == NULL)) {
-        return 0;
+    tmp_state = get_thread_state(self);
+    if (tmp_state == NULL) {
+        return ret;
     }
     if ((int)size < 0) {
-        return 0;
+        return ret;
     }
 
-    tmp_state = self->state == NULL ? self->multi_stack->state : self->state;
     PyEval_AcquireThread(tmp_state);
-
     arglist = Py_BuildValue("(is#)", (int)type, buffer, (int)size);
     result = PyEval_CallObject(self->d_cb, arglist);
     Py_DECREF(arglist);
@@ -401,7 +440,7 @@ int debug_callback(CURL *curlobj,
         PyErr_Print();
     }
     PyEval_ReleaseThread(tmp_state);
-    return 0;
+    return ret;
 }
 
 
@@ -420,7 +459,8 @@ size_t read_callback(char *ptr,
     size_t ret = 0;     /* assume error */
 
     self = (CurlObject *)stream;
-    if (self == NULL || (self->state == NULL && self->multi_stack == NULL)) {
+    tmp_state = get_thread_state(self);
+    if (tmp_state == NULL) {
         return ret;
     }
     read_size = (int)(size * nmemb);
@@ -428,9 +468,7 @@ size_t read_callback(char *ptr,
         return ret;
     }
 
-    tmp_state = self->state == NULL ? self->multi_stack->state : self->state;
     PyEval_AcquireThread(tmp_state);
-
     arglist = Py_BuildValue("(i)", read_size);
     result = PyEval_CallObject(self->r_cb, arglist);
     Py_DECREF(arglist);
@@ -834,6 +872,10 @@ do_perform(CurlObject *self, PyObject *args)
         PyErr_SetString(ErrorObject, "cannot invoke perform - already running");
         return NULL;
     }
+    if (self->multi_stack != NULL && self->multi_stack->state != NULL) {
+        PyErr_SetString(ErrorObject, "cannot invoke perform - multi_perfrom() already running");
+        return NULL;
+    }
 
     /* Save handle to current thread (used as context for python callbacks) */
     self->state = PyThreadState_Get();
@@ -1017,28 +1059,37 @@ do_multi_perform(CurlMultiObject *self, PyObject *args)
 }
 
 /* static utility function */
-static int check_curl_object(CurlMultiObject *self, CurlObject *obj)
+static int
+check_curl_object(const CurlMultiObject *self, const CurlObject *obj)
 {
-    if (self->state != NULL) {
-        PyErr_SetString(ErrorObject, "cannot add/remove - already running");
+    /* check CurlMultiObject */
+    assert_curl_multi_object(self);
+    if (self->multi_handle == NULL) {
+        PyErr_SetString(ErrorObject, "cannot add/remove handle - multi-stack is closed");
         return -1;
     }
+    if (self->state != NULL) {
+        PyErr_SetString(ErrorObject, "cannot add/remove handle - multi_perform() already running");
+        return -1;
+    }
+    /* check CurlObject parameter */
     if (obj == NULL || obj->ob_type != &Curl_Type) {
-        PyErr_SetString(ErrorObject, "expecting a curl object");
+        PyErr_SetString(ErrorObject, "cannot add/remove handle - expecting a curl object");
         return -1;
     }
     if (obj->handle == NULL) {
-        PyErr_SetString(ErrorObject, "cannot add/remove closed curl object to multi-stack");
+        PyErr_SetString(ErrorObject, "cannot add/remove handle - curl object is closed");
         return -1;
     }
     if (obj->state != NULL) {
-        PyErr_SetString(ErrorObject, "cannot add/remove running curl object to multi-stack");
+        PyErr_SetString(ErrorObject, "cannot add/remove handle - perform() of curl object already running");
         return -1;
     }
     if (obj->multi_stack != NULL && obj->multi_stack != self) {
-        PyErr_SetString(ErrorObject, "cannot add/remove - curl object already on another multi-stack");
+        PyErr_SetString(ErrorObject, "cannot add/remove handle - curl object already on another multi-stack");
         return -1;
     }
+    assert_curl_object(obj);
     return 0;
 }
 
