@@ -23,5 +23,11 @@ Type 'make' and copy the file 'src/pycurlmodule.so' to the site-package
 directory of your Python installation (for example
 /usr/lib/python2.0/site-packages).
 
-NOTE: I have not tried to build pycurl on Windows, but I assume this
-can be done with minimal efforts using the distutils approach.
+When installing on Windows, you need to manually configure three path
+settings in setup.py defined by the following variables:
+
+	W32_INCLUDE - Path to the libcurl 'include' directory
+	W32_LIB - Path to the libcurl 'lib' directory
+	W32_EXTRA_OBJ - Path to libcurl library file itself
+
+Then run 'python setup.py install' as usual.
