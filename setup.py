@@ -3,7 +3,7 @@
 from distutils.core import setup, Extension
 
 setup(name="pycurl",
-      version="0.3.4",
+      version="0.3.6",
       description="PycURL -- cURL library module for Python",
       author="Kjetil Jacobsen",
       author_email="kjetilja@cs.uit.no",
