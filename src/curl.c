@@ -927,14 +927,10 @@ static void
 self_multi_cleanup(CurlMultiObject *self)
 {
     assert(self != NULL);
-
     self->state = NULL;
     if (self->multi_handle != NULL) {
         CURLM *multi_handle = self->multi_handle;
         self->multi_handle = NULL;
-        /* Cannot allow this to run with the gil held as it will cause a race
-         * with the cleanup handler for the curl objects
-         */
         curl_multi_cleanup(multi_handle);
     }
 }
