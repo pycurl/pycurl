@@ -1348,11 +1348,41 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                         CURLERROR_RETVAL();
                     }
                 }
-                else if (PyDict_Check(PyTuple_GET_ITEM(listitem, 1))) {
-                    /* Handle dictionary as second argument for setting other options as well */
-                    curl_formfree(post);
-                    PyErr_SetString(PyExc_TypeError, "unsupported second value, to be done");
-                    return NULL;
+                else if (PyTuple_Check(PyTuple_GET_ITEM(listitem, 1))) {
+                    /* Supports content, file and content-type */
+                    PyObject *t = PyTuple_GET_ITEM(listitem, 1);
+                    int tlen = PyTuple_Size(t);
+                    int j, k, l;
+                    struct curl_forms *forms;
+
+                    printf("tlen: %d\n", tlen);
+
+                    forms = malloc(sizeof(struct curl_forms) * ((tlen*2) + 1));
+                    for (j = 0, k = 0, l = 0; j < tlen; j += 2, l++) {
+                        char *ostr;
+                        int olen, val;
+
+                        val = PyLong_AsLong(PyTuple_GET_ITEM(t, j));
+                        PyString_AsStringAndSize(PyTuple_GET_ITEM(t, j+1), &ostr, &olen);
+
+                        printf("o: %d, val: %s\n", (int)val, (char*)ostr);
+
+                        forms[k].option = val;
+                        forms[k].value = ostr;
+                        ++k;
+                        if (val == CURLFORM_COPYCONTENTS) {
+                            forms[k].option = CURLFORM_CONTENTSLENGTH;
+                            forms[k].value = olen;
+                            ++k;
+                        }
+                    }
+                    forms[k].option = CURLFORM_END;
+                    res = curl_formadd(&post, &last,
+                                       CURLFORM_COPYNAME, nstr,
+                                       CURLFORM_NAMELENGTH, (long) nlen,
+                                       CURLFORM_ARRAY, forms,
+                                       CURLFORM_END);
+                    free(forms);
                 } else {
                     /* Some other type was given, ignore */
                     curl_formfree(post);
@@ -2525,6 +2555,11 @@ initpycurl(void)
     insint_c(d, "FTPAUTH_DEFAULT", CURLFTPAUTH_DEFAULT);
     insint_c(d, "FTPAUTH_SSL", CURLFTPAUTH_SSL);
     insint_c(d, "FTPAUTH_TLS", CURLFTPAUTH_TLS);
+
+    /* curl_ftpauth: constants for setopt(FTPSSLAUTH, x) */
+    insint_c(d, "FORM_CONTENTS", CURLFORM_COPYCONTENTS);
+    insint_c(d, "FORM_FILE", CURLFORM_FILE);
+    insint_c(d, "FORM_CONTENTTYPE", CURLFORM_CONTENTTYPE);
 
     /* CURLoption: symbolic constants for setopt() */
 /* FIXME: reorder these to match <curl/curl.h> */
