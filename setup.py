@@ -7,7 +7,7 @@
 
 VERSION = "7.10-pre2"
 
-import os, sys
+import os, sys, string
 import distutils
 from distutils.core import setup
 from distutils.extension import Extension
@@ -32,6 +32,9 @@ if sys.platform == "win32":
     extra_objects.append(os.path.join(CURL_DIR, "lib", "libcurl.lib"))
 else:
     # Find out the rest the hard way
+    d = os.popen("curl-config --version").read()
+    if not string.strip(d):
+        raise Exception, "`curl-config' not found -- please install the libcurl development files"
     for e in split_quoted(os.popen("curl-config --cflags").read()):
         if e[:2] == "-I":
             include_dirs.append(e[2:])
