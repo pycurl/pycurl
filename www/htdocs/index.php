@@ -85,7 +85,7 @@ from a Python program, similar to the
 
 <p>
 PycURL is targeted at the advanced developer - if you need dozens of
-concurrent reliable connections or any of the sophisiticated
+concurrent fast and reliable connections or any of the sophisiticated
 features as listed above then PycURL is for you.
 </p>
 
@@ -97,8 +97,16 @@ are already familiar with libcurl's C API.
 </p>
 
 <p>
-For a quick start have a look at the high-performance URL downloader
-<a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/pycurl/pycurl/examples/retriever-multi.py?rev=HEAD&amp;content-type=text/vnd.viewcvs-markup">retriever-multi.py</a>.
+To sum up, PycURL is very fast (esp. for multiple parallel operations)
+and very feature complete, but has a somewhat complex interface.
+If you need something simpler or prefer a pure Python
+module you might want to check out
+<a href="http://www.python.org/doc/current/lib/module-urllib2.html">urllib2</a>
+and
+<a href="http://linux.duke.edu/projects/urlgrabber/">urlgrabber</a>.
+There is also a good
+<a href="http://linux.duke.edu/projects/urlgrabber/comparison.ptml">comparision</a>
+of the various libraries.
 </p>
 
 
@@ -119,6 +127,11 @@ most important being
 The
 <a href="http://curl.haxx.se/libcurl/c/libcurl-tutorial.html">libcurl tutorial</a>
 also provides a lot of useful information.
+</p>
+
+<p>
+For a quick start have a look at the high-performance URL downloader
+<a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/pycurl/pycurl/examples/retriever-multi.py?rev=HEAD&amp;content-type=text/vnd.viewcvs-markup">retriever-multi.py</a>.
 </p>
 
 <p>
