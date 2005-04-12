@@ -97,7 +97,7 @@ are already familiar with libcurl's C API.
 </p>
 
 <p>
-To sum up, PycURL is very fast (esp. for multiple parallel operations)
+To sum up, PycURL is very fast (esp. for multiple concurrent operations)
 and very feature complete, but has a somewhat complex interface.
 If you need something simpler or prefer a pure Python
 module you might want to check out
