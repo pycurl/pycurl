@@ -8,7 +8,7 @@ assert sys.platform == "win32", "Only for building on Win32 with SSL and zlib"
 
 
 CURL_DIR = r"c:\src\build\pycurl\curl-7.13.2-ssl"
-OPENSSL_DIR = r"c:\src\build\pycurl\openssl-0.9.7e"
+OPENSSL_DIR = r"c:\src\build\pycurl\openssl-0.9.7g"
 sys.argv.insert(1, "--curl-dir=" + CURL_DIR)
 
 from setup import *
@@ -23,8 +23,8 @@ pool = "\\" + r"pool\win32\vc6" + "\\"
 if string.find(sys.version, "MSC v.1310") >= 0:
     pool = "\\" + r"pool\win32\vc71" + "\\"
 ext.extra_objects.append(r"c:\src\pool\zlib-1.2.2" + pool + "zlib.lib")
-ext.extra_objects.append(r"c:\src\pool\c-ares-20041212" + pool + "ares.lib")
-ext.extra_objects.append(r"c:\src\pool\libidn-0.5.13" + pool + "idn.lib")
+ext.extra_objects.append(r"c:\src\pool\c-ares-20050411" + pool + "ares.lib")
+ext.extra_objects.append(r"c:\src\pool\libidn-0.5.15" + pool + "idn.lib")
 
 
 if __name__ == "__main__":
