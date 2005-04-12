@@ -90,7 +90,7 @@ def test_multi():
 
     # get data
     while num_handles:
-        m.select()
+        m.select(1.0)
         while 1:
             ret, num_handles = m.perform()
             if ret != pycurl.E_CALL_MULTI_PERFORM:
