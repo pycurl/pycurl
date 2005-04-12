@@ -45,6 +45,7 @@ PycURL is a
 PycURL can be used to fetch objects identified by a URL
 from a Python program, similar to the
 <a href="http://www.python.org/doc/current/lib/module-urllib.html">urllib</a> Python module.
+PycURL is mature, very fast, and supports a lot of features.
 </p>
 
 
