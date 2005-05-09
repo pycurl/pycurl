@@ -48,8 +48,7 @@ class Curl:
         self.set_option(pycurl.HEADERFUNCTION, header_callback)
 
     def set_timeout(self, timeout):
-        "Set timeout for connect and object retrieval (applies for both)"
-        self.set_option(pycurl.CONNECTTIMEOUT, timeout)
+        "Set timeout for a retrieving an object"
         self.set_option(pycurl.TIMEOUT, timeout)
 
     def set_url(self, url):
