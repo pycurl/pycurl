@@ -17,7 +17,7 @@ except ImportError:
 
 
 class Curl:
-    "High-level interface to cURL functions."
+    "High-level interface to pycurl functions."
     def __init__(self, base_url="", fakeheaders=[]):
         self.handle = pycurl.Curl()
         # These members might be set.
@@ -58,7 +58,7 @@ class Curl:
         self.set_option(pycurl.URL, self.base_url)
 
     def set_option(self, *args):
-        "Set an option on the retrieval,"
+        "Set an option on the retrieval."
         apply(self.handle.setopt, args)
 
     def set_verbosity(self, level):
@@ -93,6 +93,10 @@ class Curl:
         "Return the body from the last response."
         return self.payload
 
+    def get_info(self, *args):
+        "Get information about retrieval."
+        return apply(self.handle.getinfo, args)
+
     def info(self):
         "Return an RFC822 object with info on the page."
         self.header.seek(0,0)
@@ -126,8 +130,11 @@ class Curl:
 
     def close(self):
         "Close a session, freeing resources."
-        self.handle.close()
-        self.header.close()
+        if self.handle:  self.handle.close()
+        if self.header:  self.header.close()
+        self.handle = None
+        self.header = None
+        self.payload = ""
 
     def __del__(self):
         self.close()
