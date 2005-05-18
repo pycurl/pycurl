@@ -121,6 +121,19 @@ class Curl:
         m['content-length-download'] = str(self.handle.getinfo(pycurl.CONTENT_LENGTH_DOWNLOAD))
         m['content-length-upload'] = str(self.handle.getinfo(pycurl.CONTENT_LENGTH_UPLOAD))
         m['content-type'] = (self.handle.getinfo(pycurl.CONTENT_TYPE) or '').strip(';')
+        m['response-code'] = str(self.handle.getinfo(pycurl.RESPONSE_CODE))
+        m['speed-download'] = str(self.handle.getinfo(pycurl.SPEED_DOWNLOAD))
+        m['ssl-verifyresult'] = str(self.handle.getinfo(pycurl.SSL_VERIFYRESULT))
+        m['filetime'] = str(self.handle.getinfo(pycurl.INFO_FILETIME))
+        m['starttransfer-time'] = str(self.handle.getinfo(pycurl.STARTTRANSFER_TIME))
+        m['redirect-time'] = str(self.handle.getinfo(pycurl.REDIRECT_TIME))
+        m['redirect-count'] = str(self.handle.getinfo(pycurl.REDIRECT_COUNT))
+        m['http-connectcode'] = str(self.handle.getinfo(pycurl.HTTP_CONNECTCODE))
+        m['httpauth-avail'] = str(self.handle.getinfo(pycurl.HTTPAUTH_AVAIL))
+        m['proxyauth-avail'] = str(self.handle.getinfo(pycurl.PROXYAUTH_AVAIL))
+        m['os-errno'] = str(self.handle.getinfo(pycurl.OS_ERRNO))
+        m['num-connects'] = str(self.handle.getinfo(pycurl.NUM_CONNECTS))
+        m['ssl-engines'] = str(self.handle.getinfo(pycurl.SSL_ENGINES))
         return m
 
     def answered(self, check):
