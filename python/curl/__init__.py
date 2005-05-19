@@ -26,7 +26,7 @@ class Curl:
         self.fakeheaders = fakeheaders
         # Nothing past here should be modified by the caller.
         self.payload = ""
-        self.header = StringIO()
+        self.hrd = ""
         # Verify that we've got the right site; harmless on a non-SSL connect.
         self.set_option(pycurl.SSL_VERIFYHOST, 2)
         # Follow redirects in case it wants to take us to a CGI...
@@ -44,7 +44,7 @@ class Curl:
             self.payload += x
         self.set_option(pycurl.WRITEFUNCTION, payload_callback)
         def header_callback(x):
-            self.header.write(x)
+            self.hdr += x
         self.set_option(pycurl.HEADERFUNCTION, header_callback)
 
     def set_timeout(self, timeout):
@@ -70,8 +70,8 @@ class Curl:
             self.set_option(pycurl.HTTPHEADER, self.fakeheaders)
         if relative_url:
             self.set_option(pycurl.URL,os.path.join(self.base_url,relative_url))
-        self.header.seek(0,0)
         self.payload = ""
+        self.hdr = ""
         self.handle.perform()
         return self.payload
 
@@ -94,7 +94,7 @@ class Curl:
 
     def header(self):
         "Return the header from the last response."
-        return self.header.getvalue()
+        return self.hdr
 
     def get_info(self, *args):
         "Get information about retrieval."
@@ -141,9 +141,8 @@ class Curl:
     def close(self):
         "Close a session, freeing resources."
         if self.handle:  self.handle.close()
-        if self.header:  self.header.close()
         self.handle = None
-        self.header = None
+        self.hdr = ""
         self.payload = ""
 
     def __del__(self):
