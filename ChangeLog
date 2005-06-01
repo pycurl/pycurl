@@ -3,8 +3,8 @@ Version 7.14.0 [requires libcurl-7.13.2 or better]
 
 2005-05-18  Kjetil Jacobsen  <kjetilja>
 
-        * Added missing information returned in the info() method
-          of the high-level interface.
+        * Added missing information returned from the info() method
+          in the high-level interface.
 
 
 Version 7.13.2
