@@ -14,6 +14,7 @@
  *  Eric S. Raymond <esr at thyrsus.com>
  *  Martin Muenstermann <mamuema at sourceforge.net>
  *  Domenico Andreoli <cavok at libero.it>
+ *  Dominique <curl-and-python at d242.net>
  *
  * See file COPYING for license information.
  *
