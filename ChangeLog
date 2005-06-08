@@ -6,6 +6,9 @@ Version 7.14.0 [requires libcurl-7.13.2 or better]
         * Added missing information returned from the info() method
           in the high-level interface.
 
+        * Added the FORM_FILENAME option to the CURLFORM API
+          with HTTPPOST.
+
 
 Version 7.13.2
 --------------
