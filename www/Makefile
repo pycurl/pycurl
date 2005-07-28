@@ -13,9 +13,11 @@ default:
 # ************************************************************************/
 
 RSYNC = rsync
-
 ##RSYNC_FLAGS = -av --relative -e ssh
 RSYNC_FLAGS = -av --relative --delete --delete-after -e ssh
+
+UNISON = unison
+UNISON_FLAGS = -times -perms 0
 
 RSYNC_FILES = \
 	htdocs \
@@ -28,10 +30,17 @@ RSYNC_EXCLUDES = \
 	'--exclude=htdocs/favicon.ico' \
 	'--exclude=upload/Ignore/' \
 	'--exclude=.cvsignore'
+UNISON_EXCLUDES = \
+	-ignore 'Name CVS' \
+	-ignore 'Path download' \
+	-ignore 'Name favicon.ico' \
+	-ignore 'Name .cvsignore'
 
 RSYNC_USER = kjetilja@shell.sourceforge.net
 ifeq ($(USER),mfx)
-RSYNC_USER = mfx@shell.sourceforge.net
+RSYNC_USER    = mfx@shell.sourceforge.net
+RSYNC_FLAGS  += --itemize-changes
+UNISON_FLAGS += -servercmd local/bin/unison
 endif
 
 RSYNC_TARGET = /home/groups/p/py/pycurl/
@@ -46,8 +55,8 @@ rsync-dry:
 rsync-check:
 	$(MAKE) rsync 'RSYNC=rsync --dry-run -c'
 
-unison:
-	unison -times -perms 0 htdocs ssh://shell.sourceforge.net/$(RSYNC_TARGET)/htdocs
+unison: __rsync-clean
+	$(UNISON) $(UNISON_FLAGS) $(UNISON_EXCLUDES) htdocs ssh://$(RSYNC_USER)/$(RSYNC_TARGET)/htdocs
 
 
 # NOTE: CVS does not maintain metadata like owners and file permissions,
