@@ -132,6 +132,7 @@ class Curl:
         m['os-errno'] = self.handle.getinfo(pycurl.OS_ERRNO)
         m['num-connects'] = self.handle.getinfo(pycurl.NUM_CONNECTS)
         m['ssl-engines'] = self.handle.getinfo(pycurl.SSL_ENGINES)
+        m['cookielist'] = self.handle.getinfo(pycurl.INFO_COOKIELIST)
         return m
 
     def answered(self, check):

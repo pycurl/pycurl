@@ -49,8 +49,8 @@
 #if !defined(PY_VERSION_HEX) || (PY_VERSION_HEX < 0x02020000)
 #  error "Need Python version 2.2 or greater to compile pycurl."
 #endif
-#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x070d02)
-#  error "Need libcurl version 7.13.2 or greater to compile pycurl."
+#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x070e01)
+#  error "Need libcurl version 7.14.1 or greater to compile pycurl."
 #endif
 
 #undef UNUSED
@@ -1084,6 +1084,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_CAPATH:
         case CURLOPT_COOKIE:
         case CURLOPT_COOKIEFILE:
+        case CURLOPT_COOKIELIST:
         case CURLOPT_COOKIEJAR:
         case CURLOPT_CUSTOMREQUEST:
         case CURLOPT_EGDSOCKET:
@@ -1638,6 +1639,7 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
         }
 
     case CURLINFO_SSL_ENGINES:
+    case CURLINFO_COOKIELIST:
         {
             /* Return a list of strings */
             struct curl_slist *slist = NULL;
@@ -2694,6 +2696,8 @@ initpycurl(void)
     insint_c(d, "SOURCE_URL", CURLOPT_SOURCE_URL);
     insint_c(d, "SOURCE_QUOTE", CURLOPT_SOURCE_QUOTE);
     insint_c(d, "FTP_ACCOUNT", CURLOPT_FTP_ACCOUNT);
+    insint_c(d, "IGNORE_CONTENT_LENGTH", CURLOPT_IGNORE_CONTENT_LENGTH);
+    insint_c(d, "COOKIELIST", CURLOPT_COOKIELIST);
 
     /* constants for setopt(IPRESOLVE, x) */
     insint_c(d, "IPRESOLVE_WHATEVER", CURL_IPRESOLVE_WHATEVER);
@@ -2751,6 +2755,7 @@ initpycurl(void)
     insint_c(d, "OS_ERRNO", CURLINFO_OS_ERRNO);
     insint_c(d, "NUM_CONNECTS", CURLINFO_NUM_CONNECTS);
     insint_c(d, "SSL_ENGINES", CURLINFO_SSL_ENGINES);
+    insint_c(d, "INFO_COOKIELIST", CURLINFO_COOKIELIST);
 
     /* curl_closepolicy: constants for setopt(CLOSEPOLICY, x) */
     insint_c(d, "CLOSEPOLICY_OLDEST", CURLCLOSEPOLICY_OLDEST);
