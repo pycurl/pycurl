@@ -1,4 +1,25 @@
-Version 7.13.2 [requires libcurl-7.13.2 or better]
+Version 7.14.1 [requires libcurl-7.14.1 or better]
+--------------
+
+2005-09-05  Kjetil Jacobsen  <kjetilja>
+
+        * Added CURLOPT_IGNORE_CONTENT_LENGTH, CURLOPT_COOKIELIST as
+          COOKIELIST and CURLINFO_COOKIELIST as INFO_COOKIELIST.
+
+
+Version 7.14.0
+--------------
+
+2005-05-18  Kjetil Jacobsen  <kjetilja>
+
+        * Added missing information returned from the info() method
+          in the high-level interface.
+
+        * Added the FORM_FILENAME option to the CURLFORM API
+          with HTTPPOST.
+
+
+Version 7.13.2
 --------------
 
 2005-03-30  Kjetil Jacobsen  <kjetilja>
