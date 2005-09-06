@@ -7,16 +7,14 @@ install the developer specific RPM which is usually called curl-dev.
 Distutils
 ---------
 
-Assuming that distutils is installed (which it is by default on Python
-versions greater than 1.5.2) build and install pycurl with the
-following commands:
+Build and install pycurl with the following commands:
 
     (if necessary, become root)
     tar -zxvf pycurl-$VER.tar.gz
     cd pycurl-$VER
     python setup.py install
 
-$VER should be substituted with the version number, e.g. 7.10.5.
+$VER should be substituted with the pycurl version number, e.g. 7.10.5.
 
 Note that the installation script assumes that 'curl-config' can be
 located in your path setting.  If curl-config is installed outside
@@ -41,4 +39,3 @@ the curl source tree, specified with the CURL_DIR variable in the file
 commandline option '--curl-dir' when invoking setup.py:
 
     python setup.py install --curl-dir=c:\curl-7.10.5
-
