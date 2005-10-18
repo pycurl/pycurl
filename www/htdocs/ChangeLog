@@ -1,4 +1,12 @@
-Version 7.14.1 [requires libcurl-7.14.1 or better]
+Version 7.15.0 [requires libcurl-7.15.0 or better]
+--------------
+
+2005-10-18  Kjetil Jacobsen  <kjetilja>
+
+        * Added CURLOPT_FTP_SKIP_PASV_IP.
+
+
+Version 7.14.1
 --------------
 
 2005-09-05  Kjetil Jacobsen  <kjetilja>
