@@ -1,4 +1,13 @@
-Version 7.15.0 [requires libcurl-7.15.0 or better]
+Version 7.15.1 [requires libcurl-7.15.0 or better]
+--------------
+
+2006-01-31 Kjetil Jacobsen <kjetilja>
+
+        * Fixed memory leak for getinfo calls that return a
+          list as result.  Patch by Paul Pacheco.
+
+
+Version 7.15.0
 --------------
 
 2005-10-18  Kjetil Jacobsen  <kjetilja>
