@@ -172,6 +172,7 @@ static char *PyString_AsString_NoNUL(PyObject *obj)
 static PyObject *convert_slist(struct curl_slist *slist, int free_flags)
 {
     PyObject *ret = NULL;
+    struct curl_slist *slist_start = slist;
 
     ret = PyList_New(0);
     if (ret == NULL) goto error;
@@ -191,14 +192,14 @@ static PyObject *convert_slist(struct curl_slist *slist, int free_flags)
         Py_DECREF(v);
     }
 
-    if ((free_flags & 1) && slist)
-        curl_slist_free_all(slist);
+    if ((free_flags & 1) && slist_start)
+        curl_slist_free_all(slist_start);
     return ret;
 
 error:
     Py_XDECREF(ret);
-    if ((free_flags & 2) && slist)
-        curl_slist_free_all(slist);
+    if ((free_flags & 2) && slist_start)
+        curl_slist_free_all(slist_start);
     return NULL;
 }
 
