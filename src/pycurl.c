@@ -15,6 +15,7 @@
  *  Martin Muenstermann <mamuema at sourceforge.net>
  *  Domenico Andreoli <cavok at libero.it>
  *  Dominique <curl-and-python at d242.net>
+ *  Paul Pacheco
  *
  * See file COPYING for license information.
  *
