@@ -49,8 +49,8 @@
 #if !defined(PY_VERSION_HEX) || (PY_VERSION_HEX < 0x02020000)
 #  error "Need Python version 2.2 or greater to compile pycurl."
 #endif
-#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x070f00)
-#  error "Need libcurl version 7.15.0 or greater to compile pycurl."
+#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x070f02)
+#  error "Need libcurl version 7.15.2 or greater to compile pycurl."
 #endif
 
 #undef UNUSED
@@ -1586,6 +1586,7 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
     case CURLINFO_PROXYAUTH_AVAIL:
     case CURLINFO_OS_ERRNO:
     case CURLINFO_NUM_CONNECTS:
+    case CURLINFO_LASTSOCKET:
         {
             /* Return PyInt as result */
             long l_res = -1;
@@ -2700,6 +2701,9 @@ initpycurl(void)
     insint_c(d, "IGNORE_CONTENT_LENGTH", CURLOPT_IGNORE_CONTENT_LENGTH);
     insint_c(d, "COOKIELIST", CURLOPT_COOKIELIST);
     insint_c(d, "FTP_SKIP_PASV_IP", CURLOPT_FTP_SKIP_PASV_IP);
+    insint_c(d, "CONNECT_ONLY", CURLOPT_CONNECT_ONLY);
+    insint_c(d, "LOCALPORT", CURLOPT_LOCALPORT);
+    insint_c(d, "LOCALPORTRANGE", CURLOPT_LOCALPORTRANGE);
 
     /* constants for setopt(IPRESOLVE, x) */
     insint_c(d, "IPRESOLVE_WHATEVER", CURL_IPRESOLVE_WHATEVER);
@@ -2758,6 +2762,7 @@ initpycurl(void)
     insint_c(d, "NUM_CONNECTS", CURLINFO_NUM_CONNECTS);
     insint_c(d, "SSL_ENGINES", CURLINFO_SSL_ENGINES);
     insint_c(d, "INFO_COOKIELIST", CURLINFO_COOKIELIST);
+    insint_c(d, "LASTSOCKET", CURLINFO_LASTSOCKET);
 
     /* curl_closepolicy: constants for setopt(CLOSEPOLICY, x) */
     insint_c(d, "CLOSEPOLICY_OLDEST", CURLCLOSEPOLICY_OLDEST);
