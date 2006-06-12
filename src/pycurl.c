@@ -16,6 +16,7 @@
  *  Domenico Andreoli <cavok at libero.it>
  *  Dominique <curl-and-python at d242.net>
  *  Paul Pacheco
+ *  Victor Lascurain <bittor@eleka.net>
  *
  * See file COPYING for license information.
  *
@@ -35,6 +36,7 @@
 #  define CURL_STATICLIB 1
 #endif
 #include <Python.h>
+#include <pythread.h>
 #include <sys/types.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -50,8 +52,8 @@
 #if !defined(PY_VERSION_HEX) || (PY_VERSION_HEX < 0x02020000)
 #  error "Need Python version 2.2 or greater to compile pycurl."
 #endif
-#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x070f02)
-#  error "Need libcurl version 7.15.2 or greater to compile pycurl."
+#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x070f04)
+#  error "Need libcurl version 7.15.4 or greater to compile pycurl."
 #endif
 
 #undef UNUSED
@@ -75,6 +77,64 @@ static int OPT_INDEX(int o)
 static PyObject *ErrorObject = NULL;
 static PyTypeObject *p_Curl_Type = NULL;
 static PyTypeObject *p_CurlMulti_Type = NULL;
+static PyTypeObject *p_CurlShare_Type = NULL;
+
+typedef struct {
+    PyThread_type_lock locks[CURL_LOCK_DATA_LAST];
+} ShareLock;
+
+static void share_lock_lock(ShareLock *lock, curl_lock_data data)
+{
+    PyThread_acquire_lock(lock->locks[data], 1);
+}
+
+static void share_lock_unlock(ShareLock *lock, curl_lock_data data)
+{
+    PyThread_release_lock(lock->locks[data]);
+}
+
+static ShareLock *share_lock_new(void)
+{
+    int i;
+    ShareLock *lock = (ShareLock*)PyMem_Malloc(sizeof(ShareLock));
+
+    assert(lock);
+    for (i = 0; i < CURL_LOCK_DATA_LAST; ++i) {
+        lock->locks[i] = PyThread_allocate_lock();
+        if (lock->locks[i] == NULL) {
+            goto error;
+        }
+    }
+    return lock;
+ error:
+    for (--i; i >= 0; --i) {
+        PyThread_free_lock(lock->locks[i]);
+        lock->locks[i] = NULL;
+    }
+    PyMem_Free(lock);
+    return NULL;
+}
+
+static void share_lock_destroy(ShareLock *lock)
+{
+    int i;
+
+    assert(lock);
+    for (i = 0; i < CURL_LOCK_DATA_LAST; ++i){
+        assert(lock->locks[i] != NULL);
+        PyThread_free_lock(lock->locks[i]);
+    }
+    PyMem_Free(lock);
+    lock = NULL;
+}
+
+
+typedef struct {
+    PyObject_HEAD
+    PyObject *dict;                 /* Python attributes dictionary */
+    CURLSH *share_handle;
+    ShareLock *lock;                /* lock object to implement CURLSHOPT_LOCKFUNC */
+} CurlShareObject;
 
 typedef struct {
     PyObject_HEAD
@@ -92,6 +152,7 @@ typedef struct {
     CURL *handle;
     PyThreadState *state;
     CurlMultiObject *multi_stack;
+    CurlShareObject *share;
     struct curl_httppost *httppost;
     struct curl_slist *httpheader;
     struct curl_slist *http200aliases;
@@ -241,6 +302,15 @@ get_thread_state(const CurlObject *self)
     return NULL;
 }
 
+/* assert some CurlShareObject invariants */
+static void
+assert_share_state(const CurlShareObject *self)
+{
+    assert(self != NULL);
+    assert(self->ob_type == p_CurlShare_Type);
+    assert(self->lock != NULL);
+}
+
 
 /* assert some CurlObject invariants */
 static void
@@ -295,6 +365,152 @@ check_multi_state(const CurlMultiObject *self, int flags, const char *name)
     return 0;
 }
 
+static int
+check_share_state(const CurlShareObject *self, int flags, const char *name)
+{
+    assert_share_state(self);
+    return 0;
+}
+
+
+/*************************************************************************
+// CurlShareObject
+**************************************************************************/
+void
+share_lock_callback(CURL *handle, curl_lock_data data, curl_lock_access locktype, void *userptr)
+{
+    CurlShareObject *share = (CurlShareObject*)userptr;
+    share_lock_lock(share->lock, data);
+}
+
+void
+share_unlock_callback(CURL *handle, curl_lock_data data, void *userptr)
+{
+    CurlShareObject *share = (CurlShareObject*)userptr;
+    share_lock_unlock(share->lock, data);
+}
+
+/* constructor - this is a module-level function returning a new instance */
+static CurlShareObject *
+do_share_new(PyObject *dummy)
+{
+    int res;
+    CurlShareObject *self;
+    const curl_lock_function lock_cb = share_lock_callback;
+    const curl_unlock_function unlock_cb = share_unlock_callback;
+
+    UNUSED(dummy);
+
+    /* Allocate python curl-share object */
+    self = (CurlShareObject *) PyObject_GC_New(CurlShareObject, p_CurlShare_Type);
+    if (self) {
+        PyObject_GC_Track(self);
+    }
+    else {
+        return NULL;
+    }
+
+    /* Initialize object attributes */
+    self->dict = NULL;
+    self->lock = share_lock_new();
+    assert(self->lock != NULL);
+
+    /* Allocate libcurl share handle */
+    self->share_handle = curl_share_init();
+    if (self->share_handle == NULL) {
+        Py_DECREF(self);
+        PyErr_SetString(ErrorObject, "initializing curl-share failed");
+        return NULL;
+    }
+
+    /* Set locking functions and data  */
+    res = curl_share_setopt(self->share_handle, CURLSHOPT_LOCKFUNC, lock_cb);
+    assert(res == CURLE_OK);
+    res = curl_share_setopt(self->share_handle, CURLSHOPT_USERDATA, self);
+    assert(res == CURLE_OK);
+    res = curl_share_setopt(self->share_handle, CURLSHOPT_UNLOCKFUNC, unlock_cb);
+    assert(res == CURLE_OK);
+    res = curl_share_setopt(self->share_handle, CURLSHOPT_USERDATA, self);
+    assert(res == CURLE_OK);
+
+    return self;
+}
+
+
+static int
+do_share_traverse(CurlShareObject *self, visitproc visit, void *arg)
+{
+    int err;
+#undef VISIT
+#define VISIT(v)    if ((v) != NULL && ((err = visit(v, arg)) != 0)) return err
+
+    VISIT(self->dict);
+
+    return 0;
+#undef VISIT
+}
+
+/* Drop references that may have created reference cycles. */
+static int
+do_share_clear(CurlShareObject *self)
+{
+    ZAP(self->dict);
+    return 0;
+}
+
+/* setopt, unsetopt*/
+/* --------------- unsetopt/setopt/getinfo --------------- */
+
+static PyObject *
+do_curlshare_setopt(CurlShareObject *self, PyObject *args)
+{
+    int option;
+    PyObject *obj;
+
+    if (!PyArg_ParseTuple(args, "iO:setopt", &option, &obj))
+        return NULL;
+    if (check_share_state(self, 1 | 2, "sharesetopt") != 0)
+        return NULL;
+
+    /* early checks of option value */
+    if (option <= 0)
+        goto error;
+    if (option >= (int)CURLOPTTYPE_OFF_T + OPTIONS_SIZE)
+        goto error;
+    if (option % 10000 >= OPTIONS_SIZE)
+        goto error;
+
+#if 0 /* XXX - should we ??? */
+    /* Handle the case of None */
+    if (obj == Py_None) {
+        return util_curl_unsetopt(self, option);
+    }
+#endif
+
+    /* Handle the case of integer arguments */
+    if (PyInt_Check(obj)) {
+        long d = PyInt_AsLong(obj);
+        if (d != CURL_LOCK_DATA_COOKIE && d != CURL_LOCK_DATA_DNS) {
+            goto error;
+        }
+        switch(option) {
+        case CURLSHOPT_SHARE:
+        case CURLSHOPT_UNSHARE:
+            curl_share_setopt(self->share_handle, option, d);
+            break;
+        default:
+            PyErr_SetString(PyExc_TypeError, "integers are not supported for this option");
+            return NULL;
+        }
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+    /* Failed to match any of the function signatures -- return error */
+error:
+    PyErr_SetString(PyExc_TypeError, "invalid arguments to setopt");
+    return NULL;
+}
+
 
 /*************************************************************************
 // CurlObject
@@ -317,6 +533,7 @@ util_curl_new(void)
     self->dict = NULL;
     self->handle = NULL;
     self->state = NULL;
+    self->share = NULL;
     self->multi_stack = NULL;
     self->httppost = NULL;
     self->httpheader = NULL;
@@ -453,6 +670,18 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
         ZAP(self->writedata_fp);
         ZAP(self->writeheader_fp);
     }
+
+    if (flags & 16) {
+        /* Decrement refcount for share objects. */
+        if (self->share != NULL) {
+            CurlShareObject *share = self->share;
+            self->share = NULL;
+            if (share->share_handle != NULL && handle != NULL) {
+                curl_easy_setopt(handle, CURLOPT_SHARE, NULL);
+            }
+            Py_DECREF(share);
+        }
+    }
 }
 
 
@@ -473,12 +702,15 @@ util_curl_close(CurlObject *self)
          * deallocation problem is finally really fixed... */
         assert(self->state == NULL);
         assert(self->multi_stack == NULL);
+        assert(self->share == NULL);
         return;             /* already closed */
     }
     self->state = NULL;
 
     /* Decref multi stuff which uses this handle */
     util_curl_xdecref(self, 2, handle);
+    /* Decref share which uses this handle */
+    util_curl_xdecref(self, 16, handle);
 
     /* Cleanup curl handle - must be done without the gil */
     Py_BEGIN_ALLOW_THREADS
@@ -560,7 +792,7 @@ static int
 do_curl_clear(CurlObject *self)
 {
     assert(get_thread_state(self) == NULL);
-    util_curl_xdecref(self, 1 | 2 | 4 | 8, self->handle);
+    util_curl_xdecref(self, 1 | 2 | 4 | 8 | 16, self->handle);
     return 0;
 }
 
@@ -967,6 +1199,11 @@ util_curl_unsetopt(CurlObject *self, int option)
      *   unset the option. */
     switch (option)
     {
+    case CURLOPT_SHARE:
+        SETOPT((long)0);
+        Py_XDECREF(self->share);
+        self->share = NULL;
+        break;
     case CURLOPT_HTTPPOST:
         SETOPT((void *) 0);
         curl_formfree(self->httppost);
@@ -1554,6 +1791,42 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         Py_INCREF(Py_None);
         return Py_None;
     }
+    /* handle the SHARE case */
+    if (option == CURLOPT_SHARE) {
+        if (self->share == NULL && (obj == NULL || obj == Py_None)){
+            Py_INCREF(Py_None);
+            return Py_None;
+        }
+        if (self->share) {
+            if (obj != Py_None) {
+                PyErr_SetString(ErrorObject, "Curl object already sharing. Unshare first.");
+                return NULL;
+            }else{
+                CurlShareObject *share = self->share;
+                res = curl_easy_setopt(self->handle, CURLOPT_SHARE, NULL);
+                if (res != CURLE_OK){
+                    CURLERROR_RETVAL();
+                }
+                self->share = NULL;
+                Py_DECREF(share);
+                Py_INCREF(Py_None);
+                return Py_None;
+            }
+        }
+        if (obj->ob_type != p_CurlShare_Type) {
+            PyErr_SetString(PyExc_TypeError, "invalid arguments to setopt");
+            return NULL;
+        }
+        CurlShareObject *share = (CurlShareObject*)obj;
+        res = curl_easy_setopt(self->handle, CURLOPT_SHARE, share->share_handle);
+        if (res != CURLE_OK) {
+            CURLERROR_RETVAL();
+        }
+        self->share = share;
+        Py_INCREF(share);
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
 
     /* Failed to match any of the function signatures -- return error */
 error:
@@ -1602,6 +1875,7 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
 
     case CURLINFO_CONTENT_TYPE:
     case CURLINFO_EFFECTIVE_URL:
+    case CURLINFO_FTP_ENTRY_PATH:
         {
             /* Return PyString as result */
             char *s_res = NULL;
@@ -1660,7 +1934,6 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
     return NULL;
 }
 
-
 /*************************************************************************
 // CurlMultiObject
 **************************************************************************/
@@ -1698,6 +1971,11 @@ do_multi_new(PyObject *dummy)
     return self;
 }
 
+static void
+util_share_close(CurlShareObject *self){
+    share_lock_destroy(self->lock);
+    curl_share_cleanup(self->share_handle);
+}
 
 static void
 util_multi_close(CurlMultiObject *self)
@@ -1711,6 +1989,17 @@ util_multi_close(CurlMultiObject *self)
     }
 }
 
+static void
+do_share_dealloc(CurlShareObject *self){
+    PyObject_GC_UnTrack(self);
+    Py_TRASHCAN_SAFE_BEGIN(self);
+
+    ZAP(self->dict);
+    util_share_close(self);
+
+    PyObject_GC_Del(self);
+    Py_TRASHCAN_SAFE_END(self)
+}
 
 static void
 do_multi_dealloc(CurlMultiObject *self)
@@ -2086,6 +2375,7 @@ do_multi_select(CurlMultiObject *self, PyObject *args)
 
 /* --------------- methods --------------- */
 
+static char cso_setopt_doc [] = "setopt(option, parameter) -> None.  Set curl share option.  Throws pycurl.error exception upon failure.\n";
 static char co_close_doc [] = "close() -> None.  Close handle and end curl session.\n";
 static char co_errstr_doc [] = "errstr() -> String.  Return the internal libcurl error buffer string.\n";
 static char co_getinfo_doc [] = "getinfo(info) -> Res.  Extract and return information from a curl session.  Throws pycurl.error exception upon failure.\n";
@@ -2096,6 +2386,11 @@ static char co_unsetopt_doc [] = "unsetopt(option) -> None.  Reset curl session 
 static char co_multi_fdset_doc [] = "fdset() -> Tuple.  Returns a tuple of three lists that can be passed to the select.select() method .\n";
 static char co_multi_info_read_doc [] = "info_read([max_objects]) -> Tuple. Returns a tuple (number of queued handles, [curl objects]).\n";
 static char co_multi_select_doc [] = "select([timeout]) -> Int.  Returns result from doing a select() on the curl multi file descriptor with the given timeout.\n";
+
+static PyMethodDef curlshareobject_methods[] = {
+    {"setopt", (PyCFunction)do_curlshare_setopt, METH_VARARGS, cso_setopt_doc},
+    {NULL, NULL, 0, 0}
+};
 
 static PyMethodDef curlobject_methods[] = {
     {"close", (PyCFunction)do_curl_close, METH_NOARGS, co_close_doc},
@@ -2123,6 +2418,7 @@ static PyMethodDef curlmultiobject_methods[] = {
 
 static PyObject *curlobject_constants = NULL;
 static PyObject *curlmultiobject_constants = NULL;
+static PyObject *curlshareobject_constants = NULL;
 
 static int
 my_setattr(PyObject **dict, char *name, PyObject *v)
@@ -2159,6 +2455,13 @@ my_getattr(PyObject *co, char *name, PyObject *dict1, PyObject *dict2, PyMethodD
 }
 
 static int
+do_share_setattr(CurlShareObject *so, char *name, PyObject *v)
+{
+    assert_share_state(so);
+    return my_setattr(&so->dict, name, v);
+}
+
+static int
 do_curl_setattr(CurlObject *co, char *name, PyObject *v)
 {
     assert_curl_state(co);
@@ -2170,6 +2473,14 @@ do_multi_setattr(CurlMultiObject *co, char *name, PyObject *v)
 {
     assert_multi_state(co);
     return my_setattr(&co->dict, name, v);
+}
+
+static PyObject *
+do_share_getattr(CurlShareObject *cso, char *name)
+{
+    assert_share_state(cso);
+    return my_getattr((PyObject *)cso, name, cso->dict,
+                      curlshareobject_constants, curlshareobject_methods);
 }
 
 static PyObject *
@@ -2190,6 +2501,37 @@ do_multi_getattr(CurlMultiObject *co, char *name)
 
 
 /* --------------- actual type definitions --------------- */
+
+static PyTypeObject CurlShare_Type = {
+    PyObject_HEAD_INIT(NULL)
+    0,                          /* ob_size */
+    "pycurl.CurlShare",         /* tp_name */
+    sizeof(CurlMultiObject),    /* tp_basicsize */
+    0,                          /* tp_itemsize */
+    /* Methods */
+    (destructor)do_share_dealloc,   /* tp_dealloc */
+    0,                          /* tp_print */
+    (getattrfunc)do_share_getattr,  /* tp_getattr */
+    (setattrfunc)do_share_setattr,  /* tp_setattr */
+    0,                          /* tp_compare */
+    0,                          /* tp_repr */
+    0,                          /* tp_as_number */
+    0,                          /* tp_as_sequence */
+    0,                          /* tp_as_mapping */
+    0,                          /* tp_hash */
+    0,                          /* tp_call */
+    0,                          /* tp_str */
+    0,                          /* tp_getattro */
+    0,                          /* tp_setattro */
+    0,                          /* tp_as_buffer */
+    Py_TPFLAGS_HAVE_GC,         /* tp_flags */
+    0,                          /* tp_doc */
+    (traverseproc)do_share_traverse, /* tp_traverse */
+    (inquiry)do_share_clear     /* tp_clear */
+    /* More fields follow here, depending on your Python version. You can
+     * safely ignore any compiler warnings about missing initializers.
+     */
+};
 
 static PyTypeObject Curl_Type = {
     PyObject_HEAD_INIT(NULL)
@@ -2382,6 +2724,9 @@ static char pycurl_global_cleanup_doc [] =
 static char pycurl_version_info_doc [] =
 "version_info() -> tuple.  Returns a 12-tuple with the version info.\n";
 
+static char pycurl_share_new_doc [] =
+"CurlShare() -> New CurlShare object.";
+
 static char pycurl_curl_new_doc [] =
 "Curl() -> New curl object.  Implicitly calls global_init() if not called.\n";
 
@@ -2396,6 +2741,7 @@ static PyMethodDef curl_methods[] = {
     {"version_info", (PyCFunction)do_version_info, METH_VARARGS, pycurl_version_info_doc},
     {"Curl", (PyCFunction)do_curl_new, METH_NOARGS, pycurl_curl_new_doc},
     {"CurlMulti", (PyCFunction)do_multi_new, METH_NOARGS, pycurl_multi_new_doc},
+    {"CurlShare", (PyCFunction)do_share_new, METH_NOARGS, pycurl_share_new_doc},
     {NULL, NULL, 0, NULL}
 };
 
@@ -2469,6 +2815,13 @@ insint(PyObject *d, char *name, long value)
 }
 
 static void
+insint_s(PyObject *d, char *name, long value)
+{
+    PyObject *v = PyInt_FromLong(value);
+    insobj2(d, curlshareobject_constants, name, v);
+}
+
+static void
 insint_c(PyObject *d, char *name, long value)
 {
     PyObject *v = PyInt_FromLong(value);
@@ -2501,8 +2854,10 @@ initpycurl(void)
      * is required for portability to Windows without requiring C++. */
     p_Curl_Type = &Curl_Type;
     p_CurlMulti_Type = &CurlMulti_Type;
+    p_CurlShare_Type = &CurlShare_Type;
     Curl_Type.ob_type = &PyType_Type;
     CurlMulti_Type.ob_type = &PyType_Type;
+    CurlShare_Type.ob_type = &PyType_Type;
 
     /* Create the module and add the functions */
     m = Py_InitModule3("pycurl", curl_methods, module_doc);
@@ -2764,6 +3119,7 @@ initpycurl(void)
     insint_c(d, "SSL_ENGINES", CURLINFO_SSL_ENGINES);
     insint_c(d, "INFO_COOKIELIST", CURLINFO_COOKIELIST);
     insint_c(d, "LASTSOCKET", CURLINFO_LASTSOCKET);
+    insint_c(d, "FTP_ENTRY_PATH", CURLINFO_FTP_ENTRY_PATH);
 
     /* curl_closepolicy: constants for setopt(CLOSEPOLICY, x) */
     insint_c(d, "CLOSEPOLICY_OLDEST", CURLCLOSEPOLICY_OLDEST);
@@ -2821,6 +3177,14 @@ initpycurl(void)
     insint_m(d, "E_MULTI_BAD_EASY_HANDLE", CURLM_BAD_EASY_HANDLE);
     insint_m(d, "E_MULTI_OUT_OF_MEMORY", CURLM_OUT_OF_MEMORY);
     insint_m(d, "E_MULTI_INTERNAL_ERROR", CURLM_INTERNAL_ERROR);
+
+    /* curl shared constants */
+    curlshareobject_constants = PyDict_New();
+    assert(curlshareobject_constants != NULL);
+    insint_s(d, "SH_SHARE", CURLSHOPT_SHARE);
+    insint_s(d, "SH_UNSHARE", CURLSHOPT_UNSHARE);
+    insint_s(d, "LOCK_DATA_COOKIE", CURL_LOCK_DATA_COOKIE);
+    insint_s(d, "LOCK_DATA_DNS", CURL_LOCK_DATA_DNS);
 
     /* Check the version, as this has caused nasty problems in
      * some cases. */
