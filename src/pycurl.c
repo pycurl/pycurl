@@ -83,51 +83,6 @@ typedef struct {
     PyThread_type_lock locks[CURL_LOCK_DATA_LAST];
 } ShareLock;
 
-static void share_lock_lock(ShareLock *lock, curl_lock_data data)
-{
-    PyThread_acquire_lock(lock->locks[data], 1);
-}
-
-static void share_lock_unlock(ShareLock *lock, curl_lock_data data)
-{
-    PyThread_release_lock(lock->locks[data]);
-}
-
-static ShareLock *share_lock_new(void)
-{
-    int i;
-    ShareLock *lock = (ShareLock*)PyMem_Malloc(sizeof(ShareLock));
-
-    assert(lock);
-    for (i = 0; i < CURL_LOCK_DATA_LAST; ++i) {
-        lock->locks[i] = PyThread_allocate_lock();
-        if (lock->locks[i] == NULL) {
-            goto error;
-        }
-    }
-    return lock;
- error:
-    for (--i; i >= 0; --i) {
-        PyThread_free_lock(lock->locks[i]);
-        lock->locks[i] = NULL;
-    }
-    PyMem_Free(lock);
-    return NULL;
-}
-
-static void share_lock_destroy(ShareLock *lock)
-{
-    int i;
-
-    assert(lock);
-    for (i = 0; i < CURL_LOCK_DATA_LAST; ++i){
-        assert(lock->locks[i] != NULL);
-        PyThread_free_lock(lock->locks[i]);
-    }
-    PyMem_Free(lock);
-    lock = NULL;
-}
-
 
 typedef struct {
     PyObject_HEAD
@@ -376,6 +331,60 @@ check_share_state(const CurlShareObject *self, int flags, const char *name)
 /*************************************************************************
 // CurlShareObject
 **************************************************************************/
+
+static void
+share_lock_lock(ShareLock *lock, curl_lock_data data)
+{
+    PyThread_acquire_lock(lock->locks[data], 1);
+}
+
+
+static void
+share_lock_unlock(ShareLock *lock, curl_lock_data data)
+{
+    PyThread_release_lock(lock->locks[data]);
+}
+
+
+static
+ShareLock *share_lock_new(void)
+{
+    int i;
+    ShareLock *lock = (ShareLock*)PyMem_Malloc(sizeof(ShareLock));
+
+    assert(lock);
+    for (i = 0; i < CURL_LOCK_DATA_LAST; ++i) {
+        lock->locks[i] = PyThread_allocate_lock();
+        if (lock->locks[i] == NULL) {
+            goto error;
+        }
+    }
+    return lock;
+ error:
+    for (--i; i >= 0; --i) {
+        PyThread_free_lock(lock->locks[i]);
+        lock->locks[i] = NULL;
+    }
+    PyMem_Free(lock);
+    return NULL;
+}
+
+
+static void
+share_lock_destroy(ShareLock *lock)
+{
+    int i;
+
+    assert(lock);
+    for (i = 0; i < CURL_LOCK_DATA_LAST; ++i){
+        assert(lock->locks[i] != NULL);
+        PyThread_free_lock(lock->locks[i]);
+    }
+    PyMem_Free(lock);
+    lock = NULL;
+}
+
+
 void
 share_lock_callback(CURL *handle, curl_lock_data data, curl_lock_access locktype, void *userptr)
 {
@@ -383,12 +392,14 @@ share_lock_callback(CURL *handle, curl_lock_data data, curl_lock_access locktype
     share_lock_lock(share->lock, data);
 }
 
+
 void
 share_unlock_callback(CURL *handle, curl_lock_data data, void *userptr)
 {
     CurlShareObject *share = (CurlShareObject*)userptr;
     share_lock_unlock(share->lock, data);
 }
+
 
 /* constructor - this is a module-level function returning a new instance */
 static CurlShareObject *
@@ -430,8 +441,6 @@ do_share_new(PyObject *dummy)
     assert(res == CURLE_OK);
     res = curl_share_setopt(self->share_handle, CURLSHOPT_UNLOCKFUNC, unlock_cb);
     assert(res == CURLE_OK);
-    res = curl_share_setopt(self->share_handle, CURLSHOPT_USERDATA, self);
-    assert(res == CURLE_OK);
 
     return self;
 }
@@ -449,6 +458,7 @@ do_share_traverse(CurlShareObject *self, visitproc visit, void *arg)
     return 0;
 #undef VISIT
 }
+
 
 /* Drop references that may have created reference cycles. */
 static int
@@ -1973,8 +1983,8 @@ do_multi_new(PyObject *dummy)
 
 static void
 util_share_close(CurlShareObject *self){
-    share_lock_destroy(self->lock);
     curl_share_cleanup(self->share_handle);
+    share_lock_destroy(self->lock);
 }
 
 static void
