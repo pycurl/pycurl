@@ -8,7 +8,7 @@ Version 7.15.4 [requires libcurl-7.15.4 or better]
         * Added support for CURLINFO_FTP_ENTRY_PATH.
 
 
-Version 7.15.2 [requires libcurl-7.15.2 or better]
+Version 7.15.2
 --------------
 
         * Added CURLOPT_CONNECT_ONLY, CURLINFO_LASTSOCKET,
