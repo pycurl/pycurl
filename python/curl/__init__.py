@@ -4,9 +4,6 @@
 #    combination with a non-existant file name. See the libcurl docs
 #    for more info.
 #
-# If you want thread-safe operation, you'll have to set the NOSIGNAL option
-# yourself.
-#
 # By Eric S. Raymond, April 2003.
 
 import os, sys, urllib, exceptions, mimetools, pycurl
@@ -14,6 +11,13 @@ try:
     from cStringIO import StringIO
 except ImportError:
     from StringIO import StringIO
+
+try:
+    import signal
+    from signal import SIGPIPE, SIG_IGN
+    signal.signal(signal.SIGPIPE, signal.SIG_IGN)
+except ImportError:
+    pass
 
 
 class Curl:
@@ -32,6 +36,7 @@ class Curl:
         # Follow redirects in case it wants to take us to a CGI...
         self.set_option(pycurl.FOLLOWLOCATION, 1)
         self.set_option(pycurl.MAXREDIRS, 5)
+        self.set_option(pycurl.NOSIGNAL, 1)
         # Setting this option with even a nonexistent file makes libcurl
         # handle cookie capture and playback automatically.
         self.set_option(pycurl.COOKIEFILE, "/dev/null")
@@ -133,6 +138,8 @@ class Curl:
         m['num-connects'] = self.handle.getinfo(pycurl.NUM_CONNECTS)
         m['ssl-engines'] = self.handle.getinfo(pycurl.SSL_ENGINES)
         m['cookielist'] = self.handle.getinfo(pycurl.INFO_COOKIELIST)
+        m['lastsocket'] = self.handle.getinfo(pycurl.LASTSOCKET)
+        m['ftp-entry-path'] = self.handle.getinfo(pycurl.FTP_ENTRY_PATH)
         return m
 
     def answered(self, check):
