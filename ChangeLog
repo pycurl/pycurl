@@ -1,3 +1,13 @@
+Version 7.15.4 [requires libcurl-7.15.4 or better]
+--------------
+
+        * Added support for libcurl shares, patch from
+        Victor Lascurain <bittor at eleka.net>.  See the
+        file tests/test_share.py for example usage.
+
+        * Added support for CURLINFO_FTP_ENTRY_PATH.
+
+
 Version 7.15.2 [requires libcurl-7.15.2 or better]
 --------------
 
