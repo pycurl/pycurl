@@ -1803,6 +1803,8 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     }
     /* handle the SHARE case */
     if (option == CURLOPT_SHARE) {
+        CurlShareObject *share;
+
         if (self->share == NULL && (obj == NULL || obj == Py_None)){
             Py_INCREF(Py_None);
             return Py_None;
@@ -1811,10 +1813,11 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             if (obj != Py_None) {
                 PyErr_SetString(ErrorObject, "Curl object already sharing. Unshare first.");
                 return NULL;
-            }else{
-                CurlShareObject *share = self->share;
+            }
+            else {
+                share = self->share;
                 res = curl_easy_setopt(self->handle, CURLOPT_SHARE, NULL);
-                if (res != CURLE_OK){
+                if (res != CURLE_OK) {
                     CURLERROR_RETVAL();
                 }
                 self->share = NULL;
@@ -1827,7 +1830,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             PyErr_SetString(PyExc_TypeError, "invalid arguments to setopt");
             return NULL;
         }
-        CurlShareObject *share = (CurlShareObject*)obj;
+        share = (CurlShareObject*)obj;
         res = curl_easy_setopt(self->handle, CURLOPT_SHARE, share->share_handle);
         if (res != CURLE_OK) {
             CURLERROR_RETVAL();
