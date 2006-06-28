@@ -16,8 +16,8 @@
  *  Domenico Andreoli <cavok at libero.it>
  *  Dominique <curl-and-python at d242.net>
  *  Paul Pacheco
- *  Victor Lascurain <bittor@eleka.net>
- *  K.S.Sreeram <sreeram@tachyontech.net>
+ *  Victor Lascurain <bittor at eleka.net>
+ *  K.S.Sreeram <sreeram at tachyontech.net>
  *
  * See file COPYING for license information.
  *
