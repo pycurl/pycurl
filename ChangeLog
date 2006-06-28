@@ -1,3 +1,6 @@
+Version 7.15.4.1 [requires libcurl-7.15.4 or better]
+----------------
+
         * Fixed compilation problem with C compilers
           not allowing declarations in the middle of
           code blocks (patch by
