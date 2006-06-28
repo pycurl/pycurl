@@ -1,4 +1,14 @@
-Version 7.15.4 [requires libcurl-7.15.4 or better]
+        * Fixed compilation problem with C compilers
+          not allowing declarations in the middle of
+          code blocks (patch by
+          K.S.Sreeram <sreeram at tachyontech.net>).
+
+        * Fixed bug in curl_multi_fdset wrapping,
+          max_fd < 0 is not an error (patch by
+          K.S.Sreeram <sreeram at tachyontech.net>).
+
+
+Version 7.15.4
 --------------
 
         * Added support for libcurl shares, patch from
