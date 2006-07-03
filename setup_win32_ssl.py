@@ -15,9 +15,11 @@ from setup import *
 
 setup_args["name"] = "pycurl-ssl"
 
-
 for l in ("libeay32.lib", "ssleay32.lib",):
     ext.extra_objects.append(os.path.join(OPENSSL_DIR, "out32", l))
+
+define_macros.append(('HAVE_CURL_SSL', 1))
+define_macros.append(('HAVE_CURL_OPENSSL', 1))
 
 pool = "\\" + r"pool\win32\vc6" + "\\"
 if string.find(sys.version, "MSC v.1310") >= 0:
