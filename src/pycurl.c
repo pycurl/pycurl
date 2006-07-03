@@ -18,6 +18,7 @@
  *  Paul Pacheco
  *  Victor Lascurain <bittor at eleka.net>
  *  K.S.Sreeram <sreeram at tachyontech.net>
+ *  Jayne <corvine at gmail.com>
  *
  * See file COPYING for license information.
  *
@@ -45,6 +46,7 @@
 #include <string.h>
 #include <limits.h>
 #include <curl/curl.h>
+#include <curl/easy.h>
 #include <curl/multi.h>
 #undef NDEBUG
 #include <assert.h>
@@ -64,6 +66,33 @@
 #define COMPILE_TIME_ASSERT(expr) \
      { typedef int compile_time_assert_fail__[1 - 2 * !(expr)]; }
 
+/* Cruft for thread safe SSL crypto locks, snapped from the PHP curl extension */
+#if 0
+#define HAVE_CURL_SSL
+#define HAVE_CURL_OPENSSL
+#endif
+
+#if defined(HAVE_CURL_SSL)
+# if defined(HAVE_CURL_OPENSSL)
+#   define PYCURL_NEED_SSL_TSL
+#   define PYCURL_NEED_OPENSSL_TSL
+#   include <openssl/crypto.h>
+# elif defined(HAVE_CURL_GNUTLS)
+#   define PYCURL_NEED_SSL_TSL
+#   define PYCURL_NEED_GNUTLS_TSL
+#   include <gcrypt.h>
+# else
+#  warning \
+   "libcurl was compiled with SSL support, but configure could not determine which " \
+   "library was used; thus no SSL crypto locking callbacks will be set, which may " \
+   "cause random crashes on SSL requests"
+# endif /* HAVE_CURL_OPENSSL || HAVE_CURL_GNUTLS */
+#endif /* HAVE_CURL_SSL */
+
+#if defined(PYCURL_NEED_SSL_TSL)
+static void pycurl_ssl_init(void);
+static void pycurl_ssl_cleanup(void);
+#endif
 
 /* Calculate the number of OBJECTPOINT options we need to store */
 #define OPTIONS_SIZE    ((int)CURLOPT_LASTENTRY % 10000)
@@ -328,6 +357,106 @@ check_share_state(const CurlShareObject *self, int flags, const char *name)
     return 0;
 }
 
+/*************************************************************************
+// SSL TSL
+**************************************************************************/
+
+#ifdef PYCURL_NEED_OPENSSL_TSL
+
+static PyThread_type_lock *pycurl_openssl_tsl = NULL;
+
+static void pycurl_ssl_lock(int mode, int n, const char * file, int line)
+{
+    if (mode & CRYPTO_LOCK) {
+        PyThread_acquire_lock(pycurl_openssl_tsl[n], 1);
+    } else {
+        PyThread_release_lock(pycurl_openssl_tsl[n]);
+    }
+}
+
+static unsigned long pycurl_ssl_id(void)
+{
+    return (unsigned long) PyThread_get_thread_ident();
+}
+
+static void pycurl_ssl_init(void)
+{
+    int i, c = CRYPTO_num_locks();
+
+    pycurl_openssl_tsl = PyMem_Malloc(c * sizeof(PyThread_type_lock));
+
+    for (i = 0; i < c; ++i) {
+        pycurl_openssl_tsl[i] = PyThread_allocate_lock();
+    }
+
+    CRYPTO_set_id_callback(pycurl_ssl_id);
+    CRYPTO_set_locking_callback(pycurl_ssl_lock);
+}
+
+static void pycurl_ssl_cleanup(void)
+{
+    if (pycurl_openssl_tsl) {
+        int i, c = CRYPTO_num_locks();
+
+        CRYPTO_set_id_callback(NULL);
+        CRYPTO_set_locking_callback(NULL);
+
+        for (i = 0; i < c; ++i) {
+            PyThread_free_lock(pycurl_openssl_tsl[i]);
+        }
+
+        PyMem_Free(pycurl_openssl_tsl);
+        pycurl_openssl_tsl = NULL;
+    }
+}
+#endif
+
+
+#ifdef PYCURL_NEED_GNUTLS_TSL
+static int pycurl_ssl_mutex_create(void **m)
+{
+    if (*((PyThread_type_lock *) m) = PyThread_allocate_lock()) {
+        return SUCCESS;
+    } else {
+        return FAILURE;
+    }
+}
+
+static int pycurl_ssl_mutex_destroy(void **m)
+{
+    PyThread_free_lock(*((PyThread_type_lock *) m));
+    return SUCCESS;
+}
+
+static int pycurl_ssl_mutex_lock(void **m)
+{
+    return PyThread_acquire_lock(*((PyThread_type_lock *) m));
+}
+
+static int pycurl_ssl_mutex_unlock(void **m)
+{
+    return PyThread_release_lock(*((PyThread_type_lock *) m));
+}
+
+static struct gcry_thread_cbs pycurl_gnutls_tsl = {
+    GCRY_THREAD_OPTION_USER,
+    NULL,
+    pycurl_ssl_mutex_create,
+    pycurl_ssl_mutex_destroy,
+    pycurl_ssl_mutex_lock,
+    pycurl_ssl_mutex_unlock
+};
+
+static void pycurl_ssl_init(void)
+{
+    gcry_control(GCRYCTL_SET_THREAD_CBS, &pycurl_gnutls_tsl);
+}
+
+static void pycurl_ssl_cleanup(void)
+{
+    return;
+}
+#endif
 
 /*************************************************************************
 // CurlShareObject
@@ -2650,6 +2779,9 @@ do_global_cleanup(PyObject *dummy)
 {
     UNUSED(dummy);
     curl_global_cleanup();
+#ifdef PHP_CURL_NEED_SSL_TSL
+    pycurl_ssl_cleanup();
+#endif
     Py_INCREF(Py_None);
     return Py_None;
 }
@@ -3212,8 +3344,14 @@ initpycurl(void)
         assert(0);
     }
 
+    /* Initialize callback locks if ssl is enabled */
+#if defined(PYCURL_NEEDS_SSL_TSL)
+    pycurl_ssl_init();
+#endif
+
     /* Finally initialize global interpreter lock */
     PyEval_InitThreads();
+
 }
 
 /* vi:ts=4:et:nowrap
