@@ -3339,7 +3339,7 @@ initpycurl(void)
     }
 
     /* Initialize callback locks if ssl is enabled */
-#if defined(PYCURL_NEEDS_SSL_TSL)
+#if defined(PYCURL_NEED_SSL_TSL)
     pycurl_ssl_init();
 #endif
 
