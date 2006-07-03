@@ -96,10 +96,17 @@ else:
     for e in split_quoted(os.popen("'%s' --libs" % CURL_CONFIG).read()):
         if e[:2] == "-l":
             libraries.append(e[2:])
+            if e[2:] == 'ssl':
+                define_macros.append(('HAVE_CURL_OPENSSL', 1))
+            if e[2:] == 'gnutls':
+                define_macros.append(('HAVE_CURL_GNUTLS', 1))
         elif e[:2] == "-L":
             library_dirs.append(e[2:])
         else:
             extra_link_args.append(e)
+    for e in split_quoted(os.popen("'%s' --features" % CURL_CONFIG).read()):
+        if e == 'SSL':
+            define_macros.append(('HAVE_CURL_SSL', 1))
     if not libraries:
         libraries.append("curl")
     # Add extra compile flag for MacOS X

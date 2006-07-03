@@ -67,11 +67,6 @@
      { typedef int compile_time_assert_fail__[1 - 2 * !(expr)]; }
 
 /* Cruft for thread safe SSL crypto locks, snapped from the PHP curl extension */
-#if 0
-#define HAVE_CURL_SSL
-#define HAVE_CURL_OPENSSL
-#endif
-
 #if defined(HAVE_CURL_SSL)
 # if defined(HAVE_CURL_OPENSSL)
 #   define PYCURL_NEED_SSL_TSL
@@ -103,7 +98,7 @@ static int OPT_INDEX(int o)
     return o - CURLOPTTYPE_OBJECTPOINT;
 }
 
-
+/* Type objects */
 static PyObject *ErrorObject = NULL;
 static PyTypeObject *p_Curl_Type = NULL;
 static PyTypeObject *p_CurlMulti_Type = NULL;
@@ -410,7 +405,6 @@ static void pycurl_ssl_cleanup(void)
     }
 }
 #endif
-
 
 #ifdef PYCURL_NEED_GNUTLS_TSL
 static int pycurl_ssl_mutex_create(void **m)
