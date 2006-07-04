@@ -401,27 +401,28 @@ static void pycurl_ssl_cleanup(void)
 #ifdef PYCURL_NEED_GNUTLS_TSL
 static int pycurl_ssl_mutex_create(void **m)
 {
-    if (*((PyThread_type_lock *) m) = PyThread_allocate_lock()) {
-        return SUCCESS;
+    if ((*((PyThread_type_lock *) m) = PyThread_allocate_lock()) == NULL) {
+        return -1;
     } else {
-        return FAILURE;
+        return 0;
     }
 }
 
 static int pycurl_ssl_mutex_destroy(void **m)
 {
     PyThread_free_lock(*((PyThread_type_lock *) m));
-    return SUCCESS;
+    return 0;
 }
 
 static int pycurl_ssl_mutex_lock(void **m)
 {
-    return PyThread_acquire_lock(*((PyThread_type_lock *) m));
+    return PyThread_acquire_lock(*((PyThread_type_lock *) m), 1);
 }
 
 static int pycurl_ssl_mutex_unlock(void **m)
 {
-    return PyThread_release_lock(*((PyThread_type_lock *) m));
+    PyThread_release_lock(*((PyThread_type_lock *) m));
+    return 0;
 }
 
 static struct gcry_thread_cbs pycurl_gnutls_tsl = {
