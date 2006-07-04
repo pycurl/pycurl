@@ -2773,7 +2773,7 @@ do_global_cleanup(PyObject *dummy)
 {
     UNUSED(dummy);
     curl_global_cleanup();
-#ifdef PHP_CURL_NEED_SSL_TSL
+#ifdef PYCURL_NEED_SSL_TSL
     pycurl_ssl_cleanup();
 #endif
     Py_INCREF(Py_None);
