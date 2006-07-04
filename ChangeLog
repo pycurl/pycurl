@@ -1,4 +1,12 @@
-Version 7.15.4.1 [requires libcurl-7.15.4 or better]
+Version 7.15.XX  [requires libcurl-7.15.4 or better]
+---------------
+
+        * Use SSL locking callbacks, fixes random
+          crashes for multithreaded SSL connections
+          (patch by Jayne <corvine at gmail.com>).
+
+
+Version 7.15.4.1
 ----------------
 
         * Fixed compilation problem with C compilers
