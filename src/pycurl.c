@@ -21,14 +21,6 @@
  *  Jayne <corvine at gmail.com>
  *
  * See file COPYING for license information.
- *
- * Some quick info on Python's refcount:
- *   Py_BuildValue          does incref the item(s)
- *   PyArg_ParseTuple       does NOT incref the item
- *   PyList_Append          does incref the item
- *   PyTuple_SET_ITEM       does NOT incref the item
- *   PyTuple_SetItem        does NOT incref the item
- *   PyXXX_GetItem          returns a borrowed reference
  */
 
 #if (defined(_WIN32) || defined(__WIN32__)) && !defined(WIN32)
