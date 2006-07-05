@@ -78,6 +78,9 @@ if sys.platform == "win32":
         extra_link_args.append("/opt:nowin98")  # use small section alignment
 else:
     # Find out the rest the hard way
+    OPENSSL_DIR = scan_argv("--openssl-dir=", "")
+    if OPENSSL_DIR != "":
+        include_dirs.append(os.path.join(OPENSSL_DIR, "include"))
     CURL_CONFIG = "curl-config"
     CURL_CONFIG = scan_argv("--curl-config=", CURL_CONFIG)
     d = os.popen("'%s' --version" % CURL_CONFIG).read()
