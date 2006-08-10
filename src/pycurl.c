@@ -47,8 +47,8 @@
 #if !defined(PY_VERSION_HEX) || (PY_VERSION_HEX < 0x02020000)
 #  error "Need Python version 2.2 or greater to compile pycurl."
 #endif
-#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x070f04)
-#  error "Need libcurl version 7.15.4 or greater to compile pycurl."
+#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x070f05)
+#  error "Need libcurl version 7.15.5 or greater to compile pycurl."
 #endif
 
 #undef UNUSED
@@ -1477,6 +1477,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_SOURCE_HOST:
         case CURLOPT_SOURCE_USERPWD:
         case CURLOPT_SOURCE_PATH:
+        case CURLOPT_FTP_ALTERNATIVE_TO_USER:
 /* FIXME: check if more of these options allow binary data */
             str = PyString_AsString_NoNUL(obj);
             if (str == NULL)
@@ -3193,6 +3194,9 @@ initpycurl(void)
     insint_c(d, "CONNECT_ONLY", CURLOPT_CONNECT_ONLY);
     insint_c(d, "LOCALPORT", CURLOPT_LOCALPORT);
     insint_c(d, "LOCALPORTRANGE", CURLOPT_LOCALPORTRANGE);
+    insint_c(d, "FTP_ALTERNATIVE_TO_USER", CURLOPT_FTP_ALTERNATIVE_TO_USER);
+    insint_c(d, "MAX_SEND_SPEED_LARGE", CURLOPT_MAX_SEND_SPEED_LARGE);
+    insint_c(d, "MAX_RECV_SPEED_LARGE", CURLOPT_MAX_RECV_SPEED_LARGE);
 
     /* constants for setopt(IPRESOLVE, x) */
     insint_c(d, "IPRESOLVE_WHATEVER", CURL_IPRESOLVE_WHATEVER);

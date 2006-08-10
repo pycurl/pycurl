@@ -1,4 +1,43 @@
-Version 7.15.2 [requires libcurl-7.15.2 or better]
+Version 7.15.5 [requires libcurl-7.15.5 or better]
+--------------
+
+        * Added CURLOPT_FTP_ALTERNATIVE_TO_USER,
+          CURLOPT_MAX_SEND_SPEED_LARGE,
+          and CURLOPT_MAX_RECV_SPEED_LARGE.
+
+
+Version 7.15.4.2
+----------------
+
+        * Use SSL locking callbacks, fixes random
+          crashes for multithreaded SSL connections
+          (patch by Jayne <corvine at gmail.com>).
+
+
+Version 7.15.4.1
+----------------
+
+        * Fixed compilation problem with C compilers
+          not allowing declarations in the middle of
+          code blocks (patch by
+          K.S.Sreeram <sreeram at tachyontech.net>).
+
+        * Fixed bug in curl_multi_fdset wrapping,
+          max_fd < 0 is not an error (patch by
+          K.S.Sreeram <sreeram at tachyontech.net>).
+
+
+Version 7.15.4
+--------------
+
+        * Added support for libcurl shares, patch from
+        Victor Lascurain <bittor at eleka.net>.  See the
+        file tests/test_share.py for example usage.
+
+        * Added support for CURLINFO_FTP_ENTRY_PATH.
+
+
+Version 7.15.2
 --------------
 
         * Added CURLOPT_CONNECT_ONLY, CURLINFO_LASTSOCKET,
@@ -276,7 +315,7 @@ Version 7.10.8
 2003-10-28  Kjetil Jacobsen  <kjetilja>
 
         * Added missing CURLOPT_ENCODING option (patch by Martijn
-          Boerwinkel <xim@xs4all.nl>)
+          Boerwinkel <xim at xs4all.nl>)
 
 
 Version 7.10.6
@@ -320,7 +359,7 @@ Version 7.10.5
 
         * Documentation updates.
 
-2003-05-07  Eric S. Raymond  <esr@snark.thyrsus.com>
+2003-05-07  Eric S. Raymond  <esr>
 
         * Lifted all HTML docs to clean XHTML, verified by tidy.
 
@@ -412,7 +451,7 @@ Version 7.10.2
         * Free options set with setopt after cleanup is called, as cleanup
         assumes that options are still valid when invoked.  This fixes the
         bug with COOKIEJAR reported by Bastiaan Naber
-        <bastiaan@ricardis.tudelft.nl>.
+        <bastiaan at ricardis.tudelft.nl>.
 
 2002-11-06  Markus F.X.J. Oberhumer <mfx>
 
@@ -468,7 +507,7 @@ Version 7.9.8.4
 
         * Added support for curl_multi_fdset.  See the file
         'tests/test_multi4.py' for example usage.  Contributed by Conrad
-        Steenberg <conrad@hep.caltech.edu>.
+        Steenberg <conrad at hep.caltech.edu>.
 
         * perform() on multi objects now returns a tuple (result, number
         of handles) like the libcurl interface does.
@@ -478,7 +517,7 @@ Version 7.9.8.4
         * Added the 'sfquery' script which retrieves a SourceForge XML
         export object for a given project.  See the file 'examples/sfquery.py'
         for details and usage.  'sfquery' was contributed by Eric
-        S. Raymond <esr@thyrsus.com>.
+        S. Raymond <esr at thyrsus.com>.
 
 2002-07-20  Markus F.X.J. Oberhumer <mfx>
 
@@ -528,13 +567,13 @@ Version 7.9.8.1
 2002-06-25  Kjetil Jacobsen  <kjetilja>
 
         * Use 'double' type instead of 'size_t' for progress callbacks
-        (by Conrad Steenberg <conrad@hep.caltech.edu>).  Also cleaned up
+        (by Conrad Steenberg <conrad at hep.caltech.edu>).  Also cleaned up
         some other type mismatches in the callback interfaces.
 
 2002-06-24  Kjetil Jacobsen  <kjetilja>
 
         * Added example code on how to upload a file using HTTPPOST in
-        pycurl (code by Amit Mongia <amit_mongia@hotmail.com>).  See the
+        pycurl (code by Amit Mongia <amit_mongia at hotmail.com>).  See the
         file 'test_fileupload.py' for details.
 
 
@@ -566,7 +605,7 @@ Version 7.9.8
 2002-06-18  Kjetil Jacobsen  <kjetilja>
 
         * Made some changes to setup.py which should fix the build
-        problems on RedHat 7.3 (suggested by Benji <benji@kioza.net>).
+        problems on RedHat 7.3 (suggested by Benji <benji at kioza.net>).
 
         * Use CURLOPT_READDATA instead of CURLOPT_INFILE, and
         CURLOPT_WRITEDATA instead of CURLOPT_FILE.  Also fixed some
@@ -653,7 +692,7 @@ Version 0.4.7
 
 2002-02-26  Kjetil Jacobsen  <kjetilja>
 
-        * Clarence Garnder <clarence@silcom.com> found a bug where string
+        * Clarence Garnder <clarence at silcom.com> found a bug where string
         arguments to setopt sometimes were prematurely deallocated, this
         should now be fixed.
 
@@ -684,7 +723,7 @@ Version 0.4.7
 2001-12-12  Kjetil Jacobsen  <kjetilja>
 
         * Added missing link flag to make pycurl build on MacOS X (by Matt
-        King <matt@gnik.com>).
+        King <matt at gnik.com>).
 
 2001-12-06  Kjetil Jacobsen  <kjetilja>
 
@@ -704,7 +743,7 @@ Version 0.4.7
 2001-11-29  Kjetil Jacobsen  <kjetilja>
 
         * Added code in setup.py to install on Windows.  Requires some
-        manual configuration (by Tino Lange <Tino.Lange@gmx.de>).
+        manual configuration (by Tino Lange <Tino.Lange at gmx.de>).
 
 2001-11-27  Kjetil Jacobsen  <kjetilja>
 
@@ -721,7 +760,7 @@ Version 0.4.7
 
         * Exception handling has been improved and should no longer throw
         spurious exceptions (by Markus F.X.J. Oberhumer
-        <markus@oberhumer.com>).
+        <markus at oberhumer.com>).
 
 2001-10-15  Kjetil Jacobsen  <kjetilja>
 
@@ -735,14 +774,14 @@ Version 0.4.7
         corresponding Perl script by Daniel.
 
         * PycURL now works properly under Python 1.5 and 1.6 (by Markus
-        F.X.J. Oberhumer <markus@oberhumer.com>).
+        F.X.J. Oberhumer <markus at oberhumer.com>).
 
         * Allow C-functions and Python methods as callbacks (by Markus
-        F.X.J. Oberhumer <markus@oberhumer.com>).
+        F.X.J. Oberhumer <markus at oberhumer.com>).
 
         * Allow None as success result of write, header and progress
         callback invocations (by Markus F.X.J. Oberhumer
-        <markus@oberhumer.com>).
+        <markus at oberhumer.com>).
 
         * Added the 'basicfirst2.py' file which demonstrates the use of a
         class method as callback instead of just a function.

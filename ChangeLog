@@ -1,4 +1,12 @@
-Version 7.15.4.2 [requires libcurl-7.15.4 or better]
+Version 7.15.5 [requires libcurl-7.15.5 or better]
+--------------
+
+        * Added CURLOPT_FTP_ALTERNATIVE_TO_USER,
+          CURLOPT_MAX_SEND_SPEED_LARGE,
+          and CURLOPT_MAX_RECV_SPEED_LARGE.
+
+
+Version 7.15.4.2
 ----------------
 
         * Use SSL locking callbacks, fixes random
