@@ -19,6 +19,7 @@
  *  Victor Lascurain <bittor at eleka.net>
  *  K.S.Sreeram <sreeram at tachyontech.net>
  *  Jayne <corvine at gmail.com>
+ *  Bastian Kleineidam
  *
  * See file COPYING for license information.
  */

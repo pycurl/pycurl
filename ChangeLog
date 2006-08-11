@@ -1,4 +1,11 @@
-Version 7.15.5 [requires libcurl-7.15.5 or better]
+Version 7.15.5.1 [requires libcurl-7.15.5 or better]
+--------------
+
+        * Fix broken ssl mutex lock funcction when using
+          GNU TLS (Debina bug #380156, fix by Bastian Kleineidam)
+
+
+Version 7.15.5
 --------------
 
         * Added CURLOPT_FTP_ALTERNATIVE_TO_USER,
