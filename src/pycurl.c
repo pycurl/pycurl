@@ -416,7 +416,7 @@ static int pycurl_ssl_mutex_destroy(void **m)
 
 static int pycurl_ssl_mutex_lock(void **m)
 {
-    return PyThread_acquire_lock(*((PyThread_type_lock *) m), 1);
+    return !PyThread_acquire_lock(*((PyThread_type_lock *) m), 1);
 }
 
 static int pycurl_ssl_mutex_unlock(void **m)
