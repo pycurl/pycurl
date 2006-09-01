@@ -4,7 +4,7 @@ Version 7.15.5.1 [requires libcurl-7.15.5 or better]
         * Added test for basic ftp usage.
 
         * Fix broken ssl mutex lock funcction when using
-          GNU TLS (Debina bug #380156, fix by Bastian Kleineidam)
+          GNU TLS (Debian bug #380156, fix by Bastian Kleineidam)
 
 
 Version 7.15.5
