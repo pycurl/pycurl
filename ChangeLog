@@ -3,7 +3,7 @@ Version 7.15.5.1 [requires libcurl-7.15.5 or better]
 
         * Added test for basic ftp usage (tests/test_ftp.py).
 
-        * Fix broken ssl mutex lock funcction when using
+        * Fix broken ssl mutex lock function when using
           GNU TLS (Debian bug #380156, fix by Bastian Kleineidam)
 
 
