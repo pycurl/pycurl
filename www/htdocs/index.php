@@ -115,8 +115,8 @@ of the various libraries.
 
 <p>
 PycURL now includes API documentation in the <i><a href="doc/pycurl.html">doc</a></i> directory of the distribution,
-as well as a number of test and example scripts in the <i><a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/pycurl/pycurl/tests/">tests</a></i>
-and <i><a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/pycurl/pycurl/examples/">examples</a></i>
+as well as a number of test and example scripts in the <i><a href="http://pycurl.cvs.sourceforge.net/pycurl/pycurl/tests/">tests</a></i>
+and <i><a href="http://pycurl.cvs.sourceforge.net/pycurl/pycurl/examples/">examples</a></i>
 directories of the distribution.
 </p>
 
@@ -132,7 +132,7 @@ also provides a lot of useful information.
 
 <p>
 For a quick start have a look at the high-performance URL downloader
-<a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/pycurl/pycurl/examples/retriever-multi.py?rev=HEAD&amp;content-type=text/vnd.viewcvs-markup">retriever-multi.py</a>.
+<a href="http://pycurl.cvs.sourceforge.net/pycurl/pycurl/examples/retriever-multi.py?view=markup">retriever-multi.py</a>.
 </p>
 
 <p>
