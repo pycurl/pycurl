@@ -48,8 +48,8 @@
 #if !defined(PY_VERSION_HEX) || (PY_VERSION_HEX < 0x02020000)
 #  error "Need Python version 2.2 or greater to compile pycurl."
 #endif
-#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x070f05)
-#  error "Need libcurl version 7.15.5 or greater to compile pycurl."
+#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x071000)
+#  error "Need libcurl version 7.16.0 or greater to compile pycurl."
 #endif
 
 #undef UNUSED
@@ -132,8 +132,6 @@ typedef struct {
     struct curl_slist *quote;
     struct curl_slist *postquote;
     struct curl_slist *prequote;
-    struct curl_slist *source_prequote;
-    struct curl_slist *source_postquote;
     /* callbacks */
     PyObject *w_cb;
     PyObject *h_cb;
@@ -669,8 +667,6 @@ util_curl_new(void)
     self->quote = NULL;
     self->postquote = NULL;
     self->prequote = NULL;
-    self->source_postquote = NULL;
-    self->source_prequote = NULL;
 
     /* Set callback pointers to NULL by default */
     self->w_cb = NULL;
@@ -860,8 +856,6 @@ util_curl_close(CurlObject *self)
     SFREE(self->quote);
     SFREE(self->postquote);
     SFREE(self->prequote);
-    SFREE(self->source_postquote);
-    SFREE(self->source_prequote);
 #undef SFREE
 
     /* Last, free the options.  This must be done after the curl handle
@@ -1475,9 +1469,6 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_URL:
         case CURLOPT_USERAGENT:
         case CURLOPT_USERPWD:
-        case CURLOPT_SOURCE_HOST:
-        case CURLOPT_SOURCE_USERPWD:
-        case CURLOPT_SOURCE_PATH:
         case CURLOPT_FTP_ALTERNATIVE_TO_USER:
 /* FIXME: check if more of these options allow binary data */
             str = PyString_AsString_NoNUL(obj);
@@ -1645,12 +1636,6 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             break;
         case CURLOPT_PREQUOTE:
             old_slist = &self->prequote;
-            break;
-        case CURLOPT_SOURCE_PREQUOTE:
-            old_slist = &self->source_prequote;
-            break;
-        case CURLOPT_SOURCE_POSTQUOTE:
-            old_slist = &self->source_postquote;
             break;
         case CURLOPT_HTTPPOST:
             break;
@@ -3180,14 +3165,9 @@ initpycurl(void)
     insint_c(d, "FTP_SSL", CURLOPT_FTP_SSL);
     insint_c(d, "POSTFIELDSIZE_LARGE", CURLOPT_POSTFIELDSIZE_LARGE);
     insint_c(d, "TCP_NODELAY", CURLOPT_TCP_NODELAY);
-    insint_c(d, "SOURCE_USERPWD", CURLOPT_SOURCE_USERPWD);
-    insint_c(d, "SOURCE_PREQUOTE", CURLOPT_SOURCE_PREQUOTE);
-    insint_c(d, "SOURCE_POSTQUOTE", CURLOPT_SOURCE_POSTQUOTE);
     insint_c(d, "FTPSSLAUTH", CURLOPT_FTPSSLAUTH);
     insint_c(d, "IOCTLFUNCTION", CURLOPT_IOCTLFUNCTION);
     insint_c(d, "IOCTLDATA", CURLOPT_IOCTLDATA);
-    insint_c(d, "SOURCE_URL", CURLOPT_SOURCE_URL);
-    insint_c(d, "SOURCE_QUOTE", CURLOPT_SOURCE_QUOTE);
     insint_c(d, "FTP_ACCOUNT", CURLOPT_FTP_ACCOUNT);
     insint_c(d, "IGNORE_CONTENT_LENGTH", CURLOPT_IGNORE_CONTENT_LENGTH);
     insint_c(d, "COOKIELIST", CURLOPT_COOKIELIST);
