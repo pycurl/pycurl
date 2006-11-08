@@ -1,4 +1,4 @@
-Version 7.16.0 [requires libcurl-7.15.5 or better]
+Version 7.16.0 [requires libcurl-7.16.0 or better]
 --------------
 
         * Added CURLOPT_SSL_SESSIONID_CACHE.
