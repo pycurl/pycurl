@@ -2283,6 +2283,31 @@ do_multi_timeout(CurlMultiObject *self)
 }
 
 
+/* --------------- assign --------------- */
+
+static PyObject *
+do_multi_assign(CurlMultiObject *self, PyObject *args)
+{
+    CURLMcode res;
+    curl_socket_t socket;
+    PyObject *obj;
+
+    if (!PyArg_ParseTuple(args, "iO:assign", &socket, &obj))
+        return NULL;
+    if (check_multi_state(self, 1 | 2, "assign") != 0) {
+        return NULL;
+    }
+
+    res = curl_multi_assign(self->multi_handle, socket, obj);
+    if (res != CURLM_OK) {
+        CURLERROR_MSG("assign failed");
+    }
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+
 /* --------------- perform --------------- */
 
 static PyObject *
@@ -2640,8 +2665,9 @@ static PyMethodDef curlmultiobject_methods[] = {
     {"fdset", (PyCFunction)do_multi_fdset, METH_NOARGS, co_multi_fdset_doc},
     {"info_read", (PyCFunction)do_multi_info_read, METH_VARARGS, co_multi_info_read_doc},
     {"perform", (PyCFunction)do_multi_perform, METH_NOARGS, NULL},
-    {"setopt", (PyCFunction)do_multi_setopt, METH_NOARGS, NULL},
+    {"setopt", (PyCFunction)do_multi_setopt, METH_VARARGS, NULL},
     {"timeout", (PyCFunction)do_multi_timeout, METH_NOARGS, NULL},
+    {"assign", (PyCFunction)do_multi_assign, METH_VARARGS, NULL},
     {"remove_handle", (PyCFunction)do_multi_remove_handle, METH_VARARGS, NULL},
     {"select", (PyCFunction)do_multi_select, METH_VARARGS, co_multi_select_doc},
     {NULL, NULL, 0, NULL}
