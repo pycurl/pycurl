@@ -84,6 +84,7 @@ static void pycurl_ssl_cleanup(void);
 
 /* Calculate the number of OBJECTPOINT options we need to store */
 #define OPTIONS_SIZE    ((int)CURLOPT_LASTENTRY % 10000)
+#define MOPTIONS_SIZE   ((int)CURLMOPT_LASTENTRY % 10000)
 static int OPT_INDEX(int o)
 {
     assert(o >= CURLOPTTYPE_OBJECTPOINT);
@@ -117,6 +118,9 @@ typedef struct {
     fd_set read_fd_set;
     fd_set write_fd_set;
     fd_set exc_fd_set;
+    /* callbacks */
+    PyObject *t_cb;
+    PyObject *s_cb;
 } CurlMultiObject;
 
 typedef struct {
@@ -583,6 +587,27 @@ do_share_clear(CurlShareObject *self)
     ZAP(self->dict);
     return 0;
 }
+
+
+static void
+util_share_close(CurlShareObject *self){
+    curl_share_cleanup(self->share_handle);
+    share_lock_destroy(self->lock);
+}
+
+
+static void
+do_share_dealloc(CurlShareObject *self){
+    PyObject_GC_UnTrack(self);
+    Py_TRASHCAN_SAFE_BEGIN(self);
+
+    ZAP(self->dict);
+    util_share_close(self);
+
+    PyObject_GC_Del(self);
+    Py_TRASHCAN_SAFE_END(self)
+}
+
 
 /* setopt, unsetopt*/
 /* --------------- unsetopt/setopt/getinfo --------------- */
@@ -2077,6 +2102,8 @@ do_multi_new(PyObject *dummy)
     /* Initialize object attributes */
     self->dict = NULL;
     self->state = NULL;
+    self->t_cb = NULL;
+    self->s_cb = NULL;
 
     /* Allocate libcurl multi handle */
     self->multi_handle = curl_multi_init();
@@ -2086,12 +2113,6 @@ do_multi_new(PyObject *dummy)
         return NULL;
     }
     return self;
-}
-
-static void
-util_share_close(CurlShareObject *self){
-    curl_share_cleanup(self->share_handle);
-    share_lock_destroy(self->lock);
 }
 
 static void
@@ -2106,17 +2127,6 @@ util_multi_close(CurlMultiObject *self)
     }
 }
 
-static void
-do_share_dealloc(CurlShareObject *self){
-    PyObject_GC_UnTrack(self);
-    Py_TRASHCAN_SAFE_BEGIN(self);
-
-    ZAP(self->dict);
-    util_share_close(self);
-
-    PyObject_GC_Del(self);
-    Py_TRASHCAN_SAFE_END(self)
-}
 
 static void
 do_multi_dealloc(CurlMultiObject *self)
@@ -2167,8 +2177,113 @@ do_multi_traverse(CurlMultiObject *self, visitproc visit, void *arg)
 #undef VISIT
 }
 
-/* --------------- perform --------------- */
 
+/* --------------- setopt --------------- */
+
+int multi_socket_callback(CURL *easy,
+                         curl_socket_t s,
+                         int what,
+                         void *userp,
+                         void *socketp)
+{
+    return 0;
+}
+
+
+int multi_timer_callback(CURLM *multi,
+                         long timeout_ms,
+                         void *userp)
+{
+    return 0;
+}
+
+
+static PyObject *
+do_multi_setopt(CurlMultiObject *self, PyObject *args)
+{
+    int option;
+    PyObject *obj;
+
+    if (!PyArg_ParseTuple(args, "iO:setopt", &option, &obj))
+        return NULL;
+    if (check_multi_state(self, 1 | 2, "setopt") != 0)
+        return NULL;
+
+    /* Early checks of option value */
+    if (option <= 0)
+        goto error;
+    if (option >= (int)CURLOPTTYPE_OFF_T + MOPTIONS_SIZE)
+        goto error;
+    if (option % 10000 >= MOPTIONS_SIZE)
+        goto error;
+
+    /* Handle the case of integer arguments */
+    if (PyInt_Check(obj)) {
+        long d = PyInt_AsLong(obj);
+        switch(option) {
+        case CURLMOPT_PIPELINING:
+            curl_multi_setopt(self->multi_handle, option, d);
+            break;
+        default:
+            PyErr_SetString(PyExc_TypeError, "integers are not supported for this option");
+            return NULL;
+        }
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+    if (PyFunction_Check(obj) || PyCFunction_Check(obj) || PyMethod_Check(obj)) {
+        /* We use function types here to make sure that our callback
+         * definitions exactly match the <curl/multi.h> interface.
+         */
+        const curl_multi_timer_callback t_cb = multi_timer_callback;
+        const curl_socket_callback s_cb = multi_socket_callback;
+
+        switch(option) {
+        case CURLMOPT_SOCKETFUNCTION:
+            curl_multi_setopt(self->multi_handle, CURLMOPT_SOCKETFUNCTION, s_cb);
+            curl_multi_setopt(self->multi_handle, CURLMOPT_SOCKETDATA, self);
+            break;
+        case CURLMOPT_TIMERFUNCTION:
+            curl_multi_setopt(self->multi_handle, CURLMOPT_TIMERFUNCTION, t_cb);
+            curl_multi_setopt(self->multi_handle, CURLMOPT_TIMERDATA, self);
+            break;
+        default:
+            PyErr_SetString(PyExc_TypeError, "callables are not supported for this option");
+            return NULL;
+        }
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+    /* Failed to match any of the function signatures -- return error */
+error:
+    PyErr_SetString(PyExc_TypeError, "invalid arguments to setopt");
+    return NULL;
+}
+
+
+/* --------------- timeout --------------- */
+
+static PyObject *
+do_multi_timeout(CurlMultiObject *self)
+{
+    CURLMcode res;
+    long timeout;
+
+    if (check_multi_state(self, 1 | 2, "timeout") != 0) {
+        return NULL;
+    }
+
+    res = curl_multi_timeout(self->multi_handle, &timeout);
+    if (res != CURLM_OK) {
+        CURLERROR_MSG("timeout failed");
+    }
+
+    /* Return number of millisecs until timeout */
+    return Py_BuildValue("i", timeout);
+}
+
+
+/* --------------- perform --------------- */
 
 static PyObject *
 do_multi_perform(CurlMultiObject *self)
@@ -2525,6 +2640,8 @@ static PyMethodDef curlmultiobject_methods[] = {
     {"fdset", (PyCFunction)do_multi_fdset, METH_NOARGS, co_multi_fdset_doc},
     {"info_read", (PyCFunction)do_multi_info_read, METH_VARARGS, co_multi_info_read_doc},
     {"perform", (PyCFunction)do_multi_perform, METH_NOARGS, NULL},
+    {"setopt", (PyCFunction)do_multi_setopt, METH_NOARGS, NULL},
+    {"timeout", (PyCFunction)do_multi_timeout, METH_NOARGS, NULL},
     {"remove_handle", (PyCFunction)do_multi_remove_handle, METH_VARARGS, NULL},
     {"select", (PyCFunction)do_multi_select, METH_VARARGS, co_multi_select_doc},
     {NULL, NULL, 0, NULL}
@@ -3181,7 +3298,7 @@ initpycurl(void)
     insint_c(d, "SSL_SESSIONID_CACHE", CURLOPT_SSL_SESSIONID_CACHE);
 
     insint_c(d, "M_TIMERFUNCTION", CURLMOPT_TIMERFUNCTION);
-    insint_c(d, "M_TIMERDATA", CURLMOPT_TIMERDATA);
+    insint_c(d, "M_SOCKETFUNCTION", CURLMOPT_SOCKETFUNCTION);
     insint_c(d, "M_PIPELINING", CURLMOPT_PIPELINING);
 
     /* constants for setopt(IPRESOLVE, x) */
