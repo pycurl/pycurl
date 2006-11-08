@@ -277,6 +277,26 @@ get_thread_state(const CurlObject *self)
     return NULL;
 }
 
+
+static PyThreadState *
+get_thread_state_multi(const CurlMultiObject *self)
+{
+    /* Get the thread state for callbacks to run in when given
+     * multi handles instead of regular handles
+     */
+    if (self == NULL)
+        return NULL;
+    assert(self->ob_type == p_CurlMulti_Type);
+    if (self->state != NULL)
+    {
+        /* inside multi_perform() */
+        assert(self->multi_handle != NULL);
+        return self->state;
+    }
+    return NULL;
+}
+
+
 /* assert some CurlShareObject invariants */
 static void
 assert_share_state(const CurlShareObject *self)
@@ -2181,10 +2201,10 @@ do_multi_traverse(CurlMultiObject *self, visitproc visit, void *arg)
 /* --------------- setopt --------------- */
 
 int multi_socket_callback(CURL *easy,
-                         curl_socket_t s,
-                         int what,
-                         void *userp,
-                         void *socketp)
+                          curl_socket_t s,
+                          int what,
+                          void *userp,
+                          void *socketp)
 {
     return 0;
 }
@@ -2194,6 +2214,44 @@ int multi_timer_callback(CURLM *multi,
                          long timeout_ms,
                          void *userp)
 {
+    CurlMultiObject *self;
+    PyThreadState *tmp_state;
+    PyObject *arglist;
+    PyObject *result = NULL;
+    int ret = 0;       /* always success */
+
+    UNUSED(multi);
+
+    /* acquire thread */
+    self = (CurlMultiObject *)userp;
+    tmp_state = get_thread_state_multi(self);
+    if (tmp_state == NULL)
+        return ret;
+    PyEval_AcquireThread(tmp_state);
+
+    /* check args */
+    if (self->t_cb == NULL)
+        goto silent_error;
+
+    /* run callback */
+    arglist = Py_BuildValue("i", timeout_ms);
+    if (arglist == NULL)
+        goto verbose_error;
+    result = PyEval_CallObject(self->t_cb, arglist);
+    Py_DECREF(arglist);
+    if (result == NULL)
+        goto verbose_error;
+
+    /* return values from timer callbacks should be ignored */
+
+silent_error:
+    Py_XDECREF(result);
+    PyEval_ReleaseThread(tmp_state);
+    return ret;
+verbose_error:
+    PyErr_Print();
+    goto silent_error;
+
     return 0;
 }
 
@@ -2242,10 +2300,14 @@ do_multi_setopt(CurlMultiObject *self, PyObject *args)
         case CURLMOPT_SOCKETFUNCTION:
             curl_multi_setopt(self->multi_handle, CURLMOPT_SOCKETFUNCTION, s_cb);
             curl_multi_setopt(self->multi_handle, CURLMOPT_SOCKETDATA, self);
+            Py_INCREF(obj);
+            self->s_cb = obj;
             break;
         case CURLMOPT_TIMERFUNCTION:
             curl_multi_setopt(self->multi_handle, CURLMOPT_TIMERFUNCTION, t_cb);
             curl_multi_setopt(self->multi_handle, CURLMOPT_TIMERDATA, self);
+            Py_INCREF(obj);
+            self->t_cb = obj;
             break;
         default:
             PyErr_SetString(PyExc_TypeError, "callables are not supported for this option");
