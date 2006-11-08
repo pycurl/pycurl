@@ -1,4 +1,13 @@
-Version 7.15.5.1 [requires libcurl-7.15.5 or better]
+Version 7.16.0 [requires libcurl-7.15.5 or better]
+--------------
+
+        * Added CURLOPT_SSL_SESSIONID_CACHE.
+
+        * Removed SOURCE_* options since they are no longer
+          supported by libcurl.
+
+
+Version 7.15.5.1
 ----------------
 
         * Added test for basic ftp usage (tests/test_ftp.py).
