@@ -2206,6 +2206,48 @@ int multi_socket_callback(CURL *easy,
                           void *userp,
                           void *socketp)
 {
+    CurlMultiObject *self;
+    CurlObject *easy_self;
+    PyThreadState *tmp_state;
+    PyObject *arglist;
+    PyObject *result = NULL;
+    int ret;
+
+    /* acquire thread */
+    self = (CurlMultiObject *)userp;
+    ret = curl_easy_getinfo(easy, CURLINFO_PRIVATE, &easy_self);
+    tmp_state = get_thread_state_multi(self);
+    if (tmp_state == NULL)
+        return 0;
+    PyEval_AcquireThread(tmp_state);
+
+    /* check args */
+    if (self->s_cb == NULL)
+        goto silent_error;
+
+    if (socketp == NULL) {
+        Py_INCREF(Py_None);
+        socketp = Py_None;
+    }
+
+    /* run callback */
+    arglist = Py_BuildValue("(iiOO)", what, s, userp, (PyObject *)socketp);
+    if (arglist == NULL)
+        goto verbose_error;
+    result = PyEval_CallObject(self->s_cb, arglist);
+    Py_DECREF(arglist);
+    if (result == NULL)
+        goto verbose_error;
+
+    /* return values from socket callbacks should be ignored */
+
+silent_error:
+    Py_XDECREF(result);
+    PyEval_ReleaseThread(tmp_state);
+    return 0;
+verbose_error:
+    PyErr_Print();
+    goto silent_error;
     return 0;
 }
 
@@ -2359,6 +2401,7 @@ do_multi_assign(CurlMultiObject *self, PyObject *args)
     if (check_multi_state(self, 1 | 2, "assign") != 0) {
         return NULL;
     }
+    Py_INCREF(obj);
 
     res = curl_multi_assign(self->multi_handle, socket, obj);
     if (res != CURLM_OK) {
@@ -2367,6 +2410,36 @@ do_multi_assign(CurlMultiObject *self, PyObject *args)
 
     Py_INCREF(Py_None);
     return Py_None;
+}
+
+
+/* --------------- socket_all --------------- */
+
+static PyObject *
+do_multi_socket_all(CurlMultiObject *self)
+{
+    CURLMcode res;
+    int running = -1;
+
+    if (check_multi_state(self, 1 | 2, "socket_all") != 0) {
+        return NULL;
+    }
+
+    /* Release global lock and start */
+    self->state = PyThreadState_Get();
+    assert(self->state != NULL);
+    Py_BEGIN_ALLOW_THREADS
+    res = curl_multi_socket_all(self->multi_handle, &running);
+    Py_END_ALLOW_THREADS
+    self->state = NULL;
+
+    /* We assume these errors are ok, otherwise throw exception */
+    if (res != CURLM_OK && res != CURLM_CALL_MULTI_PERFORM) {
+        CURLERROR_MSG("perform failed");
+    }
+
+    /* Return a tuple with the result and the number of running handles */
+    return Py_BuildValue("(ii)", (int)res, running);
 }
 
 
@@ -2727,6 +2800,7 @@ static PyMethodDef curlmultiobject_methods[] = {
     {"fdset", (PyCFunction)do_multi_fdset, METH_NOARGS, co_multi_fdset_doc},
     {"info_read", (PyCFunction)do_multi_info_read, METH_VARARGS, co_multi_info_read_doc},
     {"perform", (PyCFunction)do_multi_perform, METH_NOARGS, NULL},
+    {"socket_all", (PyCFunction)do_multi_socket_all, METH_NOARGS, NULL},
     {"setopt", (PyCFunction)do_multi_setopt, METH_VARARGS, NULL},
     {"timeout", (PyCFunction)do_multi_timeout, METH_NOARGS, NULL},
     {"assign", (PyCFunction)do_multi_assign, METH_VARARGS, NULL},
