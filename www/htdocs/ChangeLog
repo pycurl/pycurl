@@ -9,7 +9,7 @@ Version 7.16.1 [requires libcurl-7.16.1 or better]
         * Added CURLOPT_FTP_SSL_CCC, CURLOPT_SSH_PUBLIC_KEYFILE,
           CURLOPT_SSH_PRIVATE_KEYFILE, CURLOPT_SSH_AUTH_TYPES.
 
-        * Removed CLOSEPOLICY and friends since this options is now
+        * Removed CLOSEPOLICY and friends since this option is now
           deprecated in libcurl.
 
         * Set the _use_datetime attribute on the CURLTransport class
