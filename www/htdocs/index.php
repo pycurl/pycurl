@@ -1,7 +1,7 @@
 <?php // vi:ts=4:et
 echo "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
 $version = "7.16.1";
-$version_date = "Mar 4 2006";
+$version_date = "Mar 4 2007";
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
@@ -189,8 +189,8 @@ And the libcurl library also has it's own
 
 <h2>License</h2>
 
-Copyright (C) 2001-2006 Kjetil Jacobsen<br />
-Copyright (C) 2001-2006 Markus F.X.J. Oberhumer<br />
+Copyright (C) 2001-2007 Kjetil Jacobsen<br />
+Copyright (C) 2001-2007 Markus F.X.J. Oberhumer<br />
 <br />
 PycURL is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
