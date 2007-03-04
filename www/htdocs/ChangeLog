@@ -1,9 +1,36 @@
-Version 7.15.5.1 [requires libcurl-7.15.5 or better]
+Version 7.16.1 [requires libcurl-7.16.1 or better]
+--------------
+
+        * Added constants for all libcurl (error) return codes.  They
+          are named the same as the macro constants in curl.h but prefixed
+          with E_ instead of CURLE.  Return codes for the multi API are
+          prefixed with M_ instead of CURLM.
+
+        * Added CURLOPT_FTP_SSL_CCC, CURLOPT_SSH_PUBLIC_KEYFILE,
+          CURLOPT_SSH_PRIVATE_KEYFILE, CURLOPT_SSH_AUTH_TYPES.
+
+        * Removed CLOSEPOLICY and friends since this options is now
+          deprecated in libcurl.
+
+        * Set the _use_datetime attribute on the CURLTransport class
+          to unbreak xmlrpc_curl.py on Python 2.5.
+
+
+Version 7.16.0 [no public release]
+--------------
+
+        * Added CURLOPT_SSL_SESSIONID_CACHE.
+
+        * Removed SOURCE_* options since they are no longer
+          supported by libcurl.
+
+
+Version 7.15.5.1
 ----------------
 
         * Added test for basic ftp usage (tests/test_ftp.py).
 
-        * Fix broken ssl mutex lock funcction when using
+        * Fix broken ssl mutex lock function when using
           GNU TLS (Debian bug #380156, fix by Bastian Kleineidam)
 
 
