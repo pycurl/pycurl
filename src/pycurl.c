@@ -48,8 +48,8 @@
 #if !defined(PY_VERSION_HEX) || (PY_VERSION_HEX < 0x02020000)
 #  error "Need Python version 2.2 or greater to compile pycurl."
 #endif
-#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x071000)
-#  error "Need libcurl version 7.16.0 or greater to compile pycurl."
+#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x071001)
+#  error "Need libcurl version 7.16.1 or greater to compile pycurl."
 #endif
 
 #undef UNUSED
@@ -1515,6 +1515,8 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_USERAGENT:
         case CURLOPT_USERPWD:
         case CURLOPT_FTP_ALTERNATIVE_TO_USER:
+        case CURLOPT_SSH_PUBLIC_KEYFILE:
+        case CURLOPT_SSH_PRIVATE_KEYFILE:
 /* FIXME: check if more of these options allow binary data */
             str = PyString_AsString_NoNUL(obj);
             if (str == NULL)
@@ -3301,9 +3303,81 @@ initpycurl(void)
     insint_c(d, "INFOTYPE_SSL_DATA_OUT", CURLINFO_SSL_DATA_OUT);
 
     /* CURLcode: error codes */
-/* FIXME: lots of error codes are missing */
     insint_c(d, "E_OK", CURLE_OK);
     insint_c(d, "E_UNSUPPORTED_PROTOCOL", CURLE_UNSUPPORTED_PROTOCOL);
+    insint_c(d, "E_FAILED_INIT", CURLE_FAILED_INIT);
+    insint_c(d, "E_URL_MALFORMAT", CURLE_URL_MALFORMAT);
+    insint_c(d, "E_COULDNT_RESOLVE_PROXY", CURLE_COULDNT_RESOLVE_PROXY);
+    insint_c(d, "E_COULDNT_RESOLVE_HOST", CURLE_COULDNT_RESOLVE_HOST);
+    insint_c(d, "E_COULDNT_CONNECT", CURLE_COULDNT_CONNECT);
+    insint_c(d, "E_FTP_WEIRD_SERVER_REPLY", CURLE_FTP_WEIRD_SERVER_REPLY);
+    insint_c(d, "E_FTP_ACCESS_DENIED", CURLE_FTP_ACCESS_DENIED);
+    insint_c(d, "E_FTP_WEIRD_PASS_REPLY", CURLE_FTP_WEIRD_PASS_REPLY);
+    insint_c(d, "E_FTP_WEIRD_USER_REPLY", CURLE_FTP_WEIRD_USER_REPLY);
+    insint_c(d, "E_FTP_WEIRD_PASV_REPLY", CURLE_FTP_WEIRD_PASV_REPLY);
+    insint_c(d, "E_FTP_WEIRD_227_FORMAT", CURLE_FTP_WEIRD_227_FORMAT);
+    insint_c(d, "E_FTP_CANT_GET_HOST", CURLE_FTP_CANT_GET_HOST);
+    insint_c(d, "E_FTP_CANT_RECONNECT", CURLE_FTP_CANT_RECONNECT);
+    insint_c(d, "E_FTP_COULDNT_SET_BINARY", CURLE_FTP_COULDNT_SET_BINARY);
+    insint_c(d, "E_PARTIAL_FILE", CURLE_PARTIAL_FILE);
+    insint_c(d, "E_FTP_COULDNT_RETR_FILE", CURLE_FTP_COULDNT_RETR_FILE);
+    insint_c(d, "E_FTP_WRITE_ERROR", CURLE_FTP_WRITE_ERROR);
+    insint_c(d, "E_FTP_QUOTE_ERROR", CURLE_FTP_QUOTE_ERROR);
+    insint_c(d, "E_HTTP_RETURNED_ERROR", CURLE_HTTP_RETURNED_ERROR);
+    insint_c(d, "E_WRITE_ERROR", CURLE_WRITE_ERROR);
+    insint_c(d, "E_FTP_COULDNT_STOR_FILE", CURLE_FTP_COULDNT_STOR_FILE);
+    insint_c(d, "E_READ_ERROR", CURLE_READ_ERROR);
+    insint_c(d, "E_OUT_OF_MEMORY", CURLE_OUT_OF_MEMORY);
+    insint_c(d, "E_OPERATION_TIMEOUTED", CURLE_OPERATION_TIMEOUTED);
+    insint_c(d, "E_FTP_COULDNT_SET_ASCII", CURLE_FTP_COULDNT_SET_ASCII);
+    insint_c(d, "E_FTP_PORT_FAILED", CURLE_FTP_PORT_FAILED);
+    insint_c(d, "E_FTP_COULDNT_USE_REST", CURLE_FTP_COULDNT_USE_REST);
+    insint_c(d, "E_FTP_COULDNT_GET_SIZE", CURLE_FTP_COULDNT_GET_SIZE);
+    insint_c(d, "E_HTTP_RANGE_ERROR", CURLE_HTTP_RANGE_ERROR);
+    insint_c(d, "E_HTTP_POST_ERROR", CURLE_HTTP_POST_ERROR);
+    insint_c(d, "E_SSL_CONNECT_ERROR", CURLE_SSL_CONNECT_ERROR);
+    insint_c(d, "E_BAD_DOWNLOAD_RESUME", CURLE_BAD_DOWNLOAD_RESUME);
+    insint_c(d, "E_FILE_COULDNT_READ_FILE", CURLE_FILE_COULDNT_READ_FILE);
+    insint_c(d, "E_LDAP_CANNOT_BIND", CURLE_LDAP_CANNOT_BIND);
+    insint_c(d, "E_LDAP_SEARCH_FAILED", CURLE_LDAP_SEARCH_FAILED);
+    insint_c(d, "E_LIBRARY_NOT_FOUND", CURLE_LIBRARY_NOT_FOUND);
+    insint_c(d, "E_FUNCTION_NOT_FOUND", CURLE_FUNCTION_NOT_FOUND);
+    insint_c(d, "E_ABORTED_BY_CALLBACK", CURLE_ABORTED_BY_CALLBACK);
+    insint_c(d, "E_BAD_FUNCTION_ARGUMENT", CURLE_BAD_FUNCTION_ARGUMENT);
+    insint_c(d, "E_INTERFACE_FAILED", CURLE_INTERFACE_FAILED);
+    insint_c(d, "E_TOO_MANY_REDIRECTS", CURLE_TOO_MANY_REDIRECTS);
+    insint_c(d, "E_UNKNOWN_TELNET_OPTION", CURLE_UNKNOWN_TELNET_OPTION);
+    insint_c(d, "E_TELNET_OPTION_SYNTAX", CURLE_TELNET_OPTION_SYNTAX);
+    insint_c(d, "E_SSL_PEER_CERTIFICATE", CURLE_SSL_PEER_CERTIFICATE);
+    insint_c(d, "E_GOT_NOTHING", CURLE_GOT_NOTHING);
+    insint_c(d, "E_SSL_ENGINE_NOTFOUND", CURLE_SSL_ENGINE_NOTFOUND);
+    insint_c(d, "E_SSL_ENGINE_SETFAILED", CURLE_SSL_ENGINE_SETFAILED);
+    insint_c(d, "E_SEND_ERROR", CURLE_SEND_ERROR);
+    insint_c(d, "E_RECV_ERROR", CURLE_RECV_ERROR);
+    insint_c(d, "E_SHARE_IN_USE", CURLE_SHARE_IN_USE);
+    insint_c(d, "E_SSL_CERTPROBLEM", CURLE_SSL_CERTPROBLEM);
+    insint_c(d, "E_SSL_CIPHER", CURLE_SSL_CIPHER);
+    insint_c(d, "E_SSL_CACERT", CURLE_SSL_CACERT);
+    insint_c(d, "E_BAD_CONTENT_ENCODING", CURLE_BAD_CONTENT_ENCODING);
+    insint_c(d, "E_LDAP_INVALID_URL", CURLE_LDAP_INVALID_URL);
+    insint_c(d, "E_FILESIZE_EXCEEDED", CURLE_FILESIZE_EXCEEDED);
+    insint_c(d, "E_FTP_SSL_FAILED", CURLE_FTP_SSL_FAILED);
+    insint_c(d, "E_SEND_FAIL_REWIND", CURLE_SEND_FAIL_REWIND);
+    insint_c(d, "E_SSL_ENGINE_INITFAILED", CURLE_SSL_ENGINE_INITFAILED);
+    insint_c(d, "E_LOGIN_DENIED", CURLE_LOGIN_DENIED);
+    insint_c(d, "E_TFTP_NOTFOUND", CURLE_TFTP_NOTFOUND);
+    insint_c(d, "E_TFTP_PERM", CURLE_TFTP_PERM);
+    insint_c(d, "E_TFTP_DISKFULL",CURLE_TFTP_DISKFULL );
+    insint_c(d, "E_TFTP_ILLEGAL",CURLE_TFTP_ILLEGAL );
+    insint_c(d, "E_TFTP_UNKNOWNID",CURLE_TFTP_UNKNOWNID );
+    insint_c(d, "E_TFTP_EXISTS", CURLE_TFTP_EXISTS);
+    insint_c(d, "E_TFTP_NOSUCHUSER",CURLE_TFTP_NOSUCHUSER );
+    insint_c(d, "E_CONV_FAILED",CURLE_CONV_FAILED );
+    insint_c(d, "E_CONV_REQD",CURLE_CONV_REQD );
+    insint_c(d, "E_SSL_CACERT_BADFILE", CURLE_SSL_CACERT_BADFILE);
+    insint_c(d, "E_REMOTE_FILE_NOT_FOUND",CURLE_REMOTE_FILE_NOT_FOUND );
+    insint_c(d, "E_SSH",CURLE_SSH );
+    insint_c(d, "E_SSL_SHUTDOWN_FAILED",CURLE_SSL_SHUTDOWN_FAILED );
 
     /* curl_proxytype: constants for setopt(PROXYTYPE, x) */
     insint_c(d, "PROXYTYPE_HTTP", CURLPROXY_HTTP);
@@ -3336,8 +3410,14 @@ initpycurl(void)
     insint_c(d, "FORM_CONTENTTYPE", CURLFORM_CONTENTTYPE);
     insint_c(d, "FORM_FILENAME", CURLFORM_FILENAME);
 
+    /* FTP_FILEMETHOD options */
+    insint_c(d, "FTPMETHOD_DEFAULT", CURLFTPMETHOD_DEFAULT);
+    insint_c(d, "FTPMETHOD_MULTICWD", CURLFTPMETHOD_MULTICWD);
+    insint_c(d, "FTPMETHOD_NOCWD", CURLFTPMETHOD_NOCWD);
+    insint_c(d, "FTPMETHOD_SINGLECWD", CURLFTPMETHOD_SINGLECWD);
+
     /* CURLoption: symbolic constants for setopt() */
-/* FIXME: reorder these to match <curl/curl.h> */
+    /* FIXME: reorder these to match <curl/curl.h> */
     insint_c(d, "FILE", CURLOPT_WRITEDATA);
     insint_c(d, "URL", CURLOPT_URL);
     insint_c(d, "PORT", CURLOPT_PORT);
@@ -3402,7 +3482,6 @@ initpycurl(void)
     insint_c(d, "OPT_FILETIME", CURLOPT_FILETIME);
     insint_c(d, "MAXREDIRS", CURLOPT_MAXREDIRS);
     insint_c(d, "MAXCONNECTS", CURLOPT_MAXCONNECTS);
-    insint_c(d, "CLOSEPOLICY", CURLOPT_CLOSEPOLICY);
     insint_c(d, "FRESH_CONNECT", CURLOPT_FRESH_CONNECT);
     insint_c(d, "FORBID_REUSE", CURLOPT_FORBID_REUSE);
     insint_c(d, "RANDOM_FILE", CURLOPT_RANDOM_FILE);
@@ -3451,6 +3530,7 @@ initpycurl(void)
     insint_c(d, "IGNORE_CONTENT_LENGTH", CURLOPT_IGNORE_CONTENT_LENGTH);
     insint_c(d, "COOKIELIST", CURLOPT_COOKIELIST);
     insint_c(d, "FTP_SKIP_PASV_IP", CURLOPT_FTP_SKIP_PASV_IP);
+    insint_c(d, "FTP_FILEMETHOD", CURLOPT_FTP_FILEMETHOD);
     insint_c(d, "CONNECT_ONLY", CURLOPT_CONNECT_ONLY);
     insint_c(d, "LOCALPORT", CURLOPT_LOCALPORT);
     insint_c(d, "LOCALPORTRANGE", CURLOPT_LOCALPORTRANGE);
@@ -3458,6 +3538,10 @@ initpycurl(void)
     insint_c(d, "MAX_SEND_SPEED_LARGE", CURLOPT_MAX_SEND_SPEED_LARGE);
     insint_c(d, "MAX_RECV_SPEED_LARGE", CURLOPT_MAX_RECV_SPEED_LARGE);
     insint_c(d, "SSL_SESSIONID_CACHE", CURLOPT_SSL_SESSIONID_CACHE);
+    insint_c(d, "SSH_AUTH_TYPES", CURLOPT_SSH_AUTH_TYPES);
+    insint_c(d, "SSH_PUBLIC_KEYFILE", CURLOPT_SSH_PUBLIC_KEYFILE);
+    insint_c(d, "SSH_PRIVATE_KEYFILE", CURLOPT_SSH_PRIVATE_KEYFILE);
+    insint_c(d, "FTP_SSL_CCC", CURLOPT_FTP_SSL_CCC);
 
     insint_c(d, "M_TIMERFUNCTION", CURLMOPT_TIMERFUNCTION);
     insint_c(d, "M_SOCKETFUNCTION", CURLMOPT_SOCKETFUNCTION);
@@ -3491,6 +3575,15 @@ initpycurl(void)
     insint_c(d, "TIMECONDITION_IFUNMODSINCE", CURL_TIMECOND_IFUNMODSINCE);
     insint_c(d, "TIMECONDITION_LASTMOD", CURL_TIMECOND_LASTMOD);
 
+    /* constants for setopt(CURLOPT_SSH_AUTH_TYPES, x) */
+    insint_c(d, "SSH_AUTH_ANY", CURLSSH_AUTH_ANY);
+    insint_c(d, "SSH_AUTH_NONE", CURLSSH_AUTH_NONE);
+    insint_c(d, "SSH_AUTH_PUBLICKEY", CURLSSH_AUTH_PUBLICKEY);
+    insint_c(d, "SSH_AUTH_PASSWORD", CURLSSH_AUTH_PASSWORD);
+    insint_c(d, "SSH_AUTH_HOST", CURLSSH_AUTH_HOST);
+    insint_c(d, "SSH_AUTH_KEYBOARD", CURLSSH_AUTH_KEYBOARD);
+    insint_c(d, "SSH_AUTH_DEFAULT", CURLSSH_AUTH_DEFAULT);
+
     /* CURLINFO: symbolic constants for getinfo(x) */
     insint_c(d, "EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL);
     insint_c(d, "HTTP_CODE", CURLINFO_HTTP_CODE);
@@ -3522,13 +3615,6 @@ initpycurl(void)
     insint_c(d, "INFO_COOKIELIST", CURLINFO_COOKIELIST);
     insint_c(d, "LASTSOCKET", CURLINFO_LASTSOCKET);
     insint_c(d, "FTP_ENTRY_PATH", CURLINFO_FTP_ENTRY_PATH);
-
-    /* curl_closepolicy: constants for setopt(CLOSEPOLICY, x) */
-    insint_c(d, "CLOSEPOLICY_OLDEST", CURLCLOSEPOLICY_OLDEST);
-    insint_c(d, "CLOSEPOLICY_LEAST_RECENTLY_USED", CURLCLOSEPOLICY_LEAST_RECENTLY_USED);
-    insint_c(d, "CLOSEPOLICY_LEAST_TRAFFIC", CURLCLOSEPOLICY_LEAST_TRAFFIC);
-    insint_c(d, "CLOSEPOLICY_SLOWEST", CURLCLOSEPOLICY_SLOWEST);
-    insint_c(d, "CLOSEPOLICY_CALLBACK", CURLCLOSEPOLICY_CALLBACK);
 
     /* options for global_init() */
     insint(d, "GLOBAL_SSL", CURL_GLOBAL_SSL);
