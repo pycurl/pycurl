@@ -6,8 +6,6 @@ If you want to hack on pycurl, here's our list of unresolved issues:
 
 NEW FEATURES/IMPROVEMENTS:
 
-    * Add all error constants to the pycurl namespace.
-
     * Add docs to the high-level interface.
 
     * Add more options to the undocumented and currently mostly useless
