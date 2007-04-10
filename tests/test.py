@@ -49,7 +49,7 @@ fileno = 0
 t1 = time.time()
 for url in urls:
     f = open(str(fileno), "wb")
-    t = Test(url, f)
+    t = Test(url.rstrip(), f)
     t.start()
     threads.append((t, f))
     fileno = fileno + 1
@@ -65,7 +65,7 @@ fileno = 0
 t1 = time.time()
 for url in urls:
     f = open(str(fileno), "wb")
-    t = Test(url, f)
+    t = Test(url.rstrip(), f)
     t.start()
     fileno = fileno + 1
     t.join()

@@ -32,7 +32,7 @@ m.handles = []
 for url in urls:
     c = pycurl.Curl()
     # save info in standard Python attributes
-    c.url = url
+    c.url = url.rstrip()
     c.body = StringIO()
     c.http_code = -1
     m.handles.append(c)
