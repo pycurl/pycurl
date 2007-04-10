@@ -1,4 +1,10 @@
-Version 7.16.1 [requires libcurl-7.16.1 or better]
+Version 7.16.x [requires libcurl-7.16.1 or better]
+
+        * Right-strip URLs read from files in the test scripts
+          to avoid sending requests with '\n' at the end.
+
+
+Version 7.16.1
 --------------
 
         * Added constants for all libcurl (error) return codes.  They
