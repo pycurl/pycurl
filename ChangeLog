@@ -1,4 +1,8 @@
-Version 7.16.x [requires libcurl-7.16.1 or better]
+Version 7.16.2 [requires libcurl-7.16.2 or better]
+--------------
+
+        * Added options HTTP_TRANSFER_DECODING, HTTP_CONTENT_DECODING,
+          TIMEOUT_MS, CONNECTTIMEOUT_MS from libcurl 7.16.2.
 
         * Right-strip URLs read from files in the test scripts
           to avoid sending requests with '\n' at the end.
