@@ -20,6 +20,7 @@
  *  K.S.Sreeram <sreeram at tachyontech.net>
  *  Jayne <corvine at gmail.com>
  *  Bastian Kleineidam
+ *  Mark Eichin
  *
  * See file COPYING for license information.
  */
