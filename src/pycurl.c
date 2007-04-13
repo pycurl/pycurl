@@ -3292,6 +3292,10 @@ initpycurl(void)
     insint_c(d, "IOE_UNKNOWNCMD", CURLIOE_UNKNOWNCMD);
     insint_c(d, "IOE_FAILRESTART", CURLIOE_FAILRESTART);
 
+    /* constants for ioctl callback argument values */
+    insint_c(d, "IOCMD_NOP", CURLIOCMD_NOP);
+    insint_c(d, "IOCMD_RESTARTREAD", CURLIOCMD_RESTARTREAD);
+
     /* curl_infotype: the kind of data that is passed to information_callback */
 /* XXX do we actually need curl_infotype in pycurl ??? */
     insint_c(d, "INFOTYPE_TEXT", CURLINFO_TEXT);
