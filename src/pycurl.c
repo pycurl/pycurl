@@ -202,7 +202,7 @@ typedef struct {
 static char *PyString_AsString_NoNUL(PyObject *obj)
 {
     char *s = NULL;
-    int r;
+    Py_ssize_t r;
     r = PyString_AsStringAndSize(obj, &s, NULL);
     if (r != 0)
         return NULL;    /* exception already set */
@@ -219,7 +219,7 @@ static PyObject *convert_slist(struct curl_slist *slist, int free_flags)
     PyObject *ret = NULL;
     struct curl_slist *slist_start = slist;
 
-    ret = PyList_New(0);
+    ret = PyList_New((Py_ssize_t)0);
     if (ret == NULL) goto error;
 
     for ( ; slist != NULL; slist = slist->next) {
@@ -1165,7 +1165,7 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
     if (PyString_Check(result)) {
         char *buf = NULL;
         int obj_size = -1;
-        int r;
+        Py_ssize_t r;
         r = PyString_AsStringAndSize(result, &buf, &obj_size);
         if (r != 0 || obj_size < 0 || obj_size > total_size) {
             PyErr_Format(ErrorObject, "invalid return value for read callback %ld %ld", (long)obj_size, (long)total_size);
@@ -1489,6 +1489,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     if (PyString_Check(obj)) {
         char *str = NULL;
         int len = -1;
+        Py_ssize_t slen = -1;
         char *buf;
         int opt_index;
 
@@ -1531,10 +1532,14 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                 return NULL;
             break;
         case CURLOPT_POSTFIELDS:
-            if (PyString_AsStringAndSize(obj, &str, &len) != 0)
+            if (PyString_AsStringAndSize(obj, &str, &slen) != 0)
                 return NULL;
             /* automatically set POSTFIELDSIZE */
-            res = curl_easy_setopt(self->handle, CURLOPT_POSTFIELDSIZE, (long)len);
+            if (slen <= INT_MAX) {
+                res = curl_easy_setopt(self->handle, CURLOPT_POSTFIELDSIZE, (long)slen);
+            } else {
+                res = curl_easy_setopt(self->handle, CURLOPT_POSTFIELDSIZE_LARGE, (curl_off_t)slen);
+            }
             if (res != CURLE_OK) {
                 CURLERROR_RETVAL();
             }
@@ -1674,7 +1679,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     if (PyList_Check(obj)) {
         struct curl_slist **old_slist = NULL;
         struct curl_slist *slist = NULL;
-        int i, len;
+        Py_ssize_t i, len;
 
         switch (option) {
         case CURLOPT_HTTP200ALIASES:
@@ -1714,7 +1719,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
             for (i = 0; i < len; i++) {
                 char *nstr = NULL, *cstr = NULL;
-                int nlen = -1, clen = -1;
+                Py_ssize_t nlen = -1, clen = -1;
                 PyObject *listitem = PyList_GetItem(obj, i);
 
                 if (!PyTuple_Check(listitem)) {
@@ -1751,7 +1756,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                 else if (PyTuple_Check(PyTuple_GET_ITEM(listitem, 1))) {
                     /* Supports content, file and content-type */
                     PyObject *t = PyTuple_GET_ITEM(listitem, 1);
-                    int tlen = PyTuple_Size(t);
+                    Py_ssize_t tlen = PyTuple_Size(t);
                     int j, k, l;
                     struct curl_forms *forms = NULL;
 
@@ -1773,7 +1778,8 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                     /* Iterate all the tuple members pairwise */
                     for (j = 0, k = 0, l = 0; j < tlen; j += 2, l++) {
                         char *ostr;
-                        int olen, val;
+                        Py_ssize_t olen;
+                        int val;
 
                         if (j == (tlen-1)) {
                             PyErr_SetString(PyExc_TypeError, "expected value");
@@ -1812,7 +1818,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                         if (val == CURLFORM_COPYCONTENTS) {
                             /* Contents can contain \0 bytes so we specify the length */
                             forms[k].option = CURLFORM_CONTENTSLENGTH;
-                            forms[k].value = (char *)olen;
+                            forms[k].value = (const char *)olen;
                             ++k;
                         }
                     }
@@ -2606,9 +2612,9 @@ do_multi_fdset(CurlMultiObject *self)
     }
 
     /* Allocate lists. */
-    if ((read_list = PyList_New(0)) == NULL) goto error;
-    if ((write_list = PyList_New(0)) == NULL) goto error;
-    if ((except_list = PyList_New(0)) == NULL) goto error;
+    if ((read_list = PyList_New((Py_ssize_t)0)) == NULL) goto error;
+    if ((write_list = PyList_New((Py_ssize_t)0)) == NULL) goto error;
+    if ((except_list = PyList_New((Py_ssize_t)0)) == NULL) goto error;
 
     /* Populate lists */
     for (fd = 0; fd < max_fd + 1; fd++) {
@@ -2665,8 +2671,8 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
         return NULL;
     }
 
-    if ((ok_list = PyList_New(0)) == NULL) goto error;
-    if ((err_list = PyList_New(0)) == NULL) goto error;
+    if ((ok_list = PyList_New((Py_ssize_t)0)) == NULL) goto error;
+    if ((err_list = PyList_New((Py_ssize_t)0)) == NULL) goto error;
 
     /* Loop through all messages */
     while ((msg = curl_multi_info_read(self->multi_handle, &in_queue)) != NULL) {
@@ -3068,7 +3074,7 @@ do_version_info(PyObject *dummy, PyObject *args)
     PyObject *ret = NULL;
     PyObject *protocols = NULL;
     PyObject *tmp;
-    int i;
+    Py_ssize_t i;
     int stamp = CURLVERSION_NOW;
 
     UNUSED(dummy);
@@ -3095,7 +3101,7 @@ do_version_info(PyObject *dummy, PyObject *args)
             goto error;
         PyTuple_SET_ITEM(protocols, i, tmp);
     }
-    ret = PyTuple_New(12);
+    ret = PyTuple_New((Py_ssize_t)12);
     if (ret == NULL)
         goto error;
 
