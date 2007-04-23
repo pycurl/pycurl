@@ -1488,8 +1488,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     /* Handle the case of string arguments */
     if (PyString_Check(obj)) {
         char *str = NULL;
-        int len = -1;
-        Py_ssize_t slen = -1;
+        Py_ssize_t len = -1;
         char *buf;
         int opt_index;
 
@@ -1532,13 +1531,13 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                 return NULL;
             break;
         case CURLOPT_POSTFIELDS:
-            if (PyString_AsStringAndSize(obj, &str, &slen) != 0)
+            if (PyString_AsStringAndSize(obj, &str, &len) != 0)
                 return NULL;
             /* automatically set POSTFIELDSIZE */
-            if (slen <= INT_MAX) {
-                res = curl_easy_setopt(self->handle, CURLOPT_POSTFIELDSIZE, (long)slen);
+            if (len <= INT_MAX) {
+                res = curl_easy_setopt(self->handle, CURLOPT_POSTFIELDSIZE, (long)len);
             } else {
-                res = curl_easy_setopt(self->handle, CURLOPT_POSTFIELDSIZE_LARGE, (curl_off_t)slen);
+                res = curl_easy_setopt(self->handle, CURLOPT_POSTFIELDSIZE_LARGE, (curl_off_t)len);
             }
             if (res != CURLE_OK) {
                 CURLERROR_RETVAL();
