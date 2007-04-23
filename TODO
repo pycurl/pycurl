@@ -20,8 +20,8 @@ NEW FEATURES/IMPROVEMENTS:
 DEFICIENICES:
 
     * Using certain invalid options, it may be possible to cause a crash.
-      This is un-Pythonic behaviour, but you somewhere have to draw a line
-      between efficiency (and feature completeness) and safety.
-      There _are_ quite a number of internal error checks, but tracking and
-      catching all possible (deliberate) misuses is not a goal (and probably
-      impossible anyway, due to the complexity of libcurl).
+      This is un-Pythonic behaviour, but you somewhere have to draw a
+      line between efficiency (and feature completeness) and safety.
+      There _are_ quite a number of internal error checks, but tracking
+      and catching all possible (deliberate) misuses is not a goal
+      (and probably impossible anyway, due to the complexity of libcurl).
