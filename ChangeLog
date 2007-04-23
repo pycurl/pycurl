@@ -1,10 +1,13 @@
-Version 7.16.2.x [requires libcurl-7.16.2 or better]
+Version 7.16.2.1 [requires libcurl-7.16.2 or better]
 
         * Added IOCMD_NOP and IOCMD_RESTARTREAD for ioctl callback
           handling (patch by Mark Eichin).
 
         * Use Py_ssize_t where appropriate for Python 2.5 and 64bit
-          compatibility.
+          compatibility.  This fixes the problem reported by Aaron
+          Hill, where the exception "pycurl.error: (2, '')" is thrown
+          when calling setopt(pycurl.POSTFIELDS,...) on 64-bit
+          platforms.
 
 
 Version 7.16.2
