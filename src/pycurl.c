@@ -21,6 +21,7 @@
  *  Jayne <corvine at gmail.com>
  *  Bastian Kleineidam
  *  Mark Eichin
+ *  Aaron Hill <visine19 at hotmail.com>
  *
  * See file COPYING for license information.
  */
