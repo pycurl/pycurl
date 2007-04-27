@@ -1,4 +1,5 @@
 Version 7.16.2.1 [requires libcurl-7.16.2 or better]
+----------------
 
         * Added IOCMD_NOP and IOCMD_RESTARTREAD for ioctl callback
           handling (patch by Mark Eichin).
