@@ -1897,7 +1897,8 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     }
 
     /* Handle the case of function objects for callbacks */
-    if (PyFunction_Check(obj) || PyCFunction_Check(obj) || PyMethod_Check(obj)) {
+    if (PyFunction_Check(obj) || PyCFunction_Check(obj) ||
+        PyCallable_Check(obj) || PyMethod_Check(obj)) {
         /* We use function types here to make sure that our callback
          * definitions exactly match the <curl/curl.h> interface.
          */
@@ -2347,7 +2348,8 @@ do_multi_setopt(CurlMultiObject *self, PyObject *args)
         Py_INCREF(Py_None);
         return Py_None;
     }
-    if (PyFunction_Check(obj) || PyCFunction_Check(obj) || PyMethod_Check(obj)) {
+    if (PyFunction_Check(obj) || PyCFunction_Check(obj) ||
+        PyCallable_Check(obj) || PyMethod_Check(obj)) {
         /* We use function types here to make sure that our callback
          * definitions exactly match the <curl/multi.h> interface.
          */
