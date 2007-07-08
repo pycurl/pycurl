@@ -1,3 +1,13 @@
+Version 7.16.2.2 [requires libcurl-7.16.2 or better]
+----------------
+
+        * Allow any callable object as the callback function.
+          This change comes handy when you would like to use objects
+          which are callable but are not functions or methods, for
+          example those objects created by the functions in the functools
+          module (patch by Daniel Peña Arteaga <dpena at ph.tum.de>).
+
+
 Version 7.16.2.1 [requires libcurl-7.16.2 or better]
 ----------------
 
