@@ -22,6 +22,7 @@
  *  Bastian Kleineidam
  *  Mark Eichin
  *  Aaron Hill <visine19 at hotmail.com>
+ *  Daniel Peña Arteaga <dpena ph.tum.de>
  *
  * See file COPYING for license information.
  */
