@@ -1,4 +1,16 @@
-Version 7.16.2.1 [requires libcurl-7.16.2 or better]
+Version 7.16.4 [requires libcurl-7.16.4 or better]
+--------------
+
+        * Allow any callable object as the callback function.
+          This change comes handy when you would like to use objects
+          which are callable but are not functions or methods, for
+          example those objects created by the functions in the functools
+          module (patch by Daniel Peña Arteaga <dpena at ph.tum.de>).
+
+        * Added NEW_DIRECTORY_PERMS and NEW_FILE_PERMS options.
+
+
+Version 7.16.2.1
 ----------------
 
         * Added IOCMD_NOP and IOCMD_RESTARTREAD for ioctl callback
