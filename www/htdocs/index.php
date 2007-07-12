@@ -86,7 +86,7 @@ PycURL is mature, very fast, and supports a lot of features.
 
 <p>
 PycURL is targeted at the advanced developer - if you need dozens of
-concurrent fast and reliable connections or any of the sophisiticated
+concurrent fast and reliable connections or any of the sophisticated
 features as listed above then PycURL is for you.
 </p>
 
@@ -106,7 +106,7 @@ module you might want to check out
 and
 <a href="http://linux.duke.edu/projects/urlgrabber/">urlgrabber</a>.
 There is also a good
-<a href="http://linux.duke.edu/projects/urlgrabber/comparison.ptml">comparision</a>
+<a href="http://linux.duke.edu/projects/urlgrabber/comparison.ptml">comparison</a>
 of the various libraries.
 </p>
 
