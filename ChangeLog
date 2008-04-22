@@ -4,9 +4,8 @@ Version 7.18.1 [requires libcurl-7.18.1 or better]
         * Added POST301, SSH_HOST_PUBLIC_KEY_MD5,
           COPYPOSTFIELDS and PROXY_TRANSFER_MODE options.
 
-        * Check for static libs in setup.py as well
-          to better detect whether libcurl was linked with
-          OpenSSL or GNUTLS.
+        * Check for static libs in setup.py to better detect
+          whether libcurl was linked with OpenSSL or GNUTLS.
 
         * PycURL is now dual licensed under the LGPL and
           a license similar to the cURL license (a MIT/X
