@@ -1,6 +1,10 @@
 Version 7.18.X
 --------------
 
+        * Check for static libs in setup.py as well
+          to better detect whether libcurl was linked with
+          OpenSSL or GNUTLS.
+
         * PycURL is now dual licensed under the LGPL and
           a license similar to the cURL license (a MIT/X
           derivate).

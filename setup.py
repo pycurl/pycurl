@@ -96,7 +96,10 @@ else:
                 include_dirs.append(e[2:])
         else:
             extra_compile_args.append(e)
-    for e in split_quoted(os.popen("'%s' --libs" % CURL_CONFIG).read()):
+    libs = split_quoted(
+        os.popen("'%s' --libs" % CURL_CONFIG).read()+\
+        os.popen("'%s' --static-libs" % CURL_CONFIG).read())
+    for e in libs:
         if e[:2] == "-l":
             libraries.append(e[2:])
             if e[2:] == 'ssl':
