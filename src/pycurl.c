@@ -24,7 +24,7 @@
  *  Aaron Hill <visine19 at hotmail.com>
  *  Daniel Pena Arteaga <dpena ph.tum.de>
  *
- * See file COPYING for license information.
+ * See file README for license information.
  */
 
 #if (defined(_WIN32) || defined(__WIN32__)) && !defined(WIN32)
@@ -51,8 +51,8 @@
 #if !defined(PY_VERSION_HEX) || (PY_VERSION_HEX < 0x02020000)
 #  error "Need Python version 2.2 or greater to compile pycurl."
 #endif
-#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x071004)
-#  error "Need libcurl version 7.16.4 or greater to compile pycurl."
+#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x071201)
+#  error "Need libcurl version 7.18.1 or greater to compile pycurl."
 #endif
 
 /* Python < 2.5 compat for Py_ssize_t */
@@ -1527,6 +1527,8 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_FTP_ALTERNATIVE_TO_USER:
         case CURLOPT_SSH_PUBLIC_KEYFILE:
         case CURLOPT_SSH_PRIVATE_KEYFILE:
+        case CURLOPT_COPYPOSTFIELDS:
+        case CURLOPT_SSH_HOST_PUBLIC_KEY_MD5:
 /* FIXME: check if more of these options allow binary data */
             str = PyString_AsString_NoNUL(obj);
             if (str == NULL)
@@ -3569,6 +3571,10 @@ initpycurl(void)
     insint_c(d, "HTTP_CONTENT_DECODING", CURLOPT_HTTP_CONTENT_DECODING);
     insint_c(d, "NEW_FILE_PERMS", CURLOPT_NEW_FILE_PERMS);
     insint_c(d, "NEW_DIRECTORY_PERMS", CURLOPT_NEW_DIRECTORY_PERMS);
+    insint_c(d, "POST301", CURLOPT_POST301);
+    insint_c(d, "PROXY_TRANSFER_MODE", CURLOPT_PROXY_TRANSFER_MODE);
+    insint_c(d, "COPYPOSTFIELDS", CURLOPT_COPYPOSTFIELDS);
+    insint_c(d, "SSH_HOST_PUBLIC_KEY_MD5", CURLOPT_SSH_HOST_PUBLIC_KEY_MD5);
 
     insint_c(d, "M_TIMERFUNCTION", CURLMOPT_TIMERFUNCTION);
     insint_c(d, "M_SOCKETFUNCTION", CURLMOPT_SOCKETFUNCTION);

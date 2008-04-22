@@ -1,5 +1,8 @@
-Version 7.18.X
+Version 7.18.1 [requires libcurl-7.18.1 or better]
 --------------
+
+        * Added POST301, SSH_HOST_PUBLIC_KEY_MD5,
+          COPYPOSTFIELDS and PROXY_TRANSFER_MODE options.
 
         * Check for static libs in setup.py as well
           to better detect whether libcurl was linked with
@@ -10,7 +13,7 @@ Version 7.18.X
           derivate).
 
 
-Version 7.16.4 [requires libcurl-7.16.4 or better]
+Version 7.16.4
 --------------
 
         * Allow any callable object as the callback function.
