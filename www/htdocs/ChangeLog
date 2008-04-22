@@ -8,7 +8,7 @@ Version 7.18.1 [requires libcurl-7.18.1 or better]
           whether libcurl was linked with OpenSSL or GNUTLS.
 
         * PycURL is now dual licensed under the LGPL and
-          a license similar to the cURL license (a MIT/X
+          a license similar to the cURL license (an MIT/X
           derivate).
 
 
