@@ -5,6 +5,7 @@
 
 include ChangeLog
 include COPYING
+include COPYING2
 include INSTALL
 include Makefile
 include README
