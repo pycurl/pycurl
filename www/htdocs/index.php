@@ -190,13 +190,12 @@ And the libcurl library also has it's own
 
 <h2>License</h2>
 
-Copyright (C) 2001-2007 Kjetil Jacobsen<br />
-Copyright (C) 2001-2007 Markus F.X.J. Oberhumer<br />
+Copyright (C) 2001-2008 Kjetil Jacobsen<br />
+Copyright (C) 2001-2008 Markus F.X.J. Oberhumer<br />
 <br />
-PycURL is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
+PycURL is dual licensed under the LGPL and an MIT/X derivative license
+based on the cURL license. You can redistribute and/or modify PycURL
+according to the terms of either license.
 
 <hr />
 <div align="right">
