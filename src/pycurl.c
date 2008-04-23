@@ -6,6 +6,8 @@
  *  Copyright (C) 2001-2007 by Kjetil Jacobsen <kjetilja at gmail.com>
  *  Copyright (C) 2001-2007 by Markus F.X.J. Oberhumer <markus at oberhumer.com>
  *
+ *  All rights reserved.
+ *
  * Contributions:
  *  Tino Lange <Tino.Lange at gmx.de>
  *  Matt King <matt at gnik.com>
@@ -23,6 +25,7 @@
  *  Mark Eichin
  *  Aaron Hill <visine19 at hotmail.com>
  *  Daniel Pena Arteaga <dpena ph.tum.de>
+ *  Jim Patterson
  *
  * See file README for license information.
  */
