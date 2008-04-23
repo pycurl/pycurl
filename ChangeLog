@@ -1,4 +1,14 @@
-Version 7.18.1 [requires libcurl-7.18.1 or better]
+Version 7.18.X [requires libcurl-7.18.1 or better]
+--------------
+
+        * Added AUTOREFERER option.
+
+        * Allow resetting some list operations (HTTPHEADER,
+          QUOTE, POSTQUOTE, PREQUOTE) by passing an empty
+          list to setopt (patch by Jim Patterson).
+
+
+Version 7.18.1
 --------------
 
         * Added POST301, SSH_HOST_PUBLIC_KEY_MD5,
