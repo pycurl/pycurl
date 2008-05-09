@@ -69,7 +69,7 @@ if sys.platform == "win32":
     assert os.path.isdir(CURL_DIR), "please check CURL_DIR in setup.py"
     include_dirs.append(os.path.join(CURL_DIR, "include"))
     extra_objects.append(os.path.join(CURL_DIR, "lib", "libcurl.lib"))
-    extra_link_args.extend(["gdi32.lib", "winmm.lib", "ws2_32.lib",])
+    extra_link_args.extend(["gdi32.lib", "wldap32.lib", "winmm.lib", "ws2_32.lib",])
     add_libdirs("LIB", ";")
     if string.find(sys.version, "MSC") >= 0:
         extra_compile_args.append("-O2")
