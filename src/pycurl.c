@@ -2445,6 +2445,36 @@ do_multi_assign(CurlMultiObject *self, PyObject *args)
 }
 
 
+/* --------------- socket_action --------------- */
+static PyObject *
+do_multi_socket_action(CurlMultiObject *self, PyObject *args)
+{
+    CURLMcode res;
+    curl_socket_t socket;
+    int ev_bitmask;
+    int running = -1;
+    
+    if (!PyArg_ParseTuple(args, "ii:socket_action", &socket, &ev_bitmask))
+        return NULL;
+    if (check_multi_state(self, 1 | 2, "socket_action") != 0) {
+        return NULL;
+    }
+    /* Release global lock and start */
+    self->state = PyThreadState_Get();
+    assert(self->state != NULL);
+    Py_BEGIN_ALLOW_THREADS
+
+    res = curl_multi_socket_action(self->multi_handle, socket, ev_bitmask, &running);
+    Py_END_ALLOW_THREADS
+    self->state = NULL;
+
+    if (res != CURLM_OK) {
+        CURLERROR_MSG("multi_socket_action failed");
+    }
+    /* Return a tuple with the result and the number of running handles */
+    return Py_BuildValue("(ii)", (int)res, running);
+}
+
 /* --------------- socket_all --------------- */
 
 static PyObject *
@@ -2810,6 +2840,8 @@ static char co_unsetopt_doc [] = "unsetopt(option) -> None.  Reset curl session 
 static char co_multi_fdset_doc [] = "fdset() -> Tuple.  Returns a tuple of three lists that can be passed to the select.select() method .\n";
 static char co_multi_info_read_doc [] = "info_read([max_objects]) -> Tuple. Returns a tuple (number of queued handles, [curl objects]).\n";
 static char co_multi_select_doc [] = "select([timeout]) -> Int.  Returns result from doing a select() on the curl multi file descriptor with the given timeout.\n";
+static char co_multi_socket_action_doc [] = "socket_action(sockfd, ev_bitmask) -> Tuple.  Returns result from doing a socket_action() on the curl multi file descriptor with the given timeout.\n";
+static char co_multi_socket_all_doc [] = "socket_all() -> Tuple.  Returns result from doing a socket_all() on the curl multi file descriptor with the given timeout.\n";
 
 static PyMethodDef curlshareobject_methods[] = {
     {"setopt", (PyCFunction)do_curlshare_setopt, METH_VARARGS, cso_setopt_doc},
@@ -2832,7 +2864,8 @@ static PyMethodDef curlmultiobject_methods[] = {
     {"fdset", (PyCFunction)do_multi_fdset, METH_NOARGS, co_multi_fdset_doc},
     {"info_read", (PyCFunction)do_multi_info_read, METH_VARARGS, co_multi_info_read_doc},
     {"perform", (PyCFunction)do_multi_perform, METH_NOARGS, NULL},
-    {"socket_all", (PyCFunction)do_multi_socket_all, METH_NOARGS, NULL},
+    {"socket_action", (PyCFunction)do_multi_socket_action, METH_VARARGS, co_multi_socket_action_doc},
+    {"socket_all", (PyCFunction)do_multi_socket_all, METH_NOARGS, co_multi_socket_all_doc},
     {"setopt", (PyCFunction)do_multi_setopt, METH_VARARGS, NULL},
     {"timeout", (PyCFunction)do_multi_timeout, METH_NOARGS, NULL},
     {"assign", (PyCFunction)do_multi_assign, METH_VARARGS, NULL},
@@ -3667,6 +3700,18 @@ initpycurl(void)
     insint(d, "GLOBAL_ALL", CURL_GLOBAL_ALL);
     insint(d, "GLOBAL_NOTHING", CURL_GLOBAL_NOTHING);
     insint(d, "GLOBAL_DEFAULT", CURL_GLOBAL_DEFAULT);
+
+
+    /* constants for curl_multi_socket interface */
+    insint(d, "CSELECT_IN", CURL_CSELECT_IN);
+    insint(d, "CSELECT_OUT", CURL_CSELECT_OUT);
+    insint(d, "CSELECT_ERR", CURL_CSELECT_ERR);
+    insint(d, "SOCKET_TIMEOUT", CURL_SOCKET_TIMEOUT);
+    insint(d, "POLL_NONE", CURL_POLL_NONE);
+    insint(d, "POLL_IN", CURL_POLL_IN);
+    insint(d, "POLL_OUT", CURL_POLL_OUT);
+    insint(d, "POLL_INOUT", CURL_POLL_INOUT);
+    insint(d, "POLL_REMOVE", CURL_POLL_REMOVE);
 
     /* curl_lock_data: XXX do we need this in pycurl ??? */
     /* curl_lock_access: XXX do we need this in pycurl ??? */
