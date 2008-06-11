@@ -1,6 +1,10 @@
 Version 7.18.X [requires libcurl-7.18.1 or better]
 --------------
 
+        * Added socket_action() method to CurlMulti objects.
+          See 'tests/test_multi_socket_select.py' for example
+          usage (Patch by Yuhui H <eyecat at gmail.com>).
+
         * Added AUTOREFERER option.
 
         * Allow resetting some list operations (HTTPHEADER,
