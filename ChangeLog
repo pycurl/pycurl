@@ -1,5 +1,8 @@
-Version 7.18.X [requires libcurl-7.18.1 or better]
+Version 7.18.2 [requires libcurl-7.18.2 or better]
 --------------
+
+        * Added REDIRECT_URL info and M_MAXCONNECTS option
+          (patch by Yuhui H <eyecat at gmail.com>).
 
         * Added socket_action() method to CurlMulti objects.
           See 'tests/test_multi_socket_select.py' for example

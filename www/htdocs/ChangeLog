@@ -1,4 +1,21 @@
-Version 7.18.1 [requires libcurl-7.18.1 or better]
+Version 7.18.2 [requires libcurl-7.18.2 or better]
+--------------
+
+        * Added REDIRECT_URL info and M_MAXCONNECTS option
+          (patch by Yuhui H <eyecat at gmail.com>).
+
+        * Added socket_action() method to CurlMulti objects.
+          See 'tests/test_multi_socket_select.py' for example
+          usage (patch by Yuhui H <eyecat at gmail.com>).
+
+        * Added AUTOREFERER option.
+
+        * Allow resetting some list operations (HTTPHEADER,
+          QUOTE, POSTQUOTE, PREQUOTE) by passing an empty
+          list to setopt (patch by Jim Patterson).
+
+
+Version 7.18.1
 --------------
 
         * Added POST301, SSH_HOST_PUBLIC_KEY_MD5,
@@ -9,7 +26,7 @@ Version 7.18.1 [requires libcurl-7.18.1 or better]
 
         * PycURL is now dual licensed under the LGPL and
           a license similar to the cURL license (an MIT/X
-          derivate).
+          derivative).
 
 
 Version 7.16.4
