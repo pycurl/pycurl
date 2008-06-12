@@ -55,8 +55,8 @@
 #if !defined(PY_VERSION_HEX) || (PY_VERSION_HEX < 0x02020000)
 #  error "Need Python version 2.2 or greater to compile pycurl."
 #endif
-#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x071202)
-#  error "Need libcurl version 7.18.2 or greater to compile pycurl."
+#if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x071300)
+#  error "Need libcurl version 7.19.0 or greater to compile pycurl."
 #endif
 
 /* Python < 2.5 compat for Py_ssize_t */
@@ -2071,6 +2071,7 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
     case CURLINFO_EFFECTIVE_URL:
     case CURLINFO_FTP_ENTRY_PATH:
     case CURLINFO_REDIRECT_URL:
+    case CURLINFO_PRIMARY_IP:
         {
             /* Return PyString as result */
             char *s_res = NULL;
@@ -3691,6 +3692,7 @@ initpycurl(void)
     insint_c(d, "REDIRECT_TIME", CURLINFO_REDIRECT_TIME);
     insint_c(d, "REDIRECT_COUNT", CURLINFO_REDIRECT_COUNT);
     insint_c(d, "REDIRECT_URL", CURLINFO_REDIRECT_URL);
+    insint_c(d, "PRIMARY_IP", CURLINFO_PRIMARY_IP);
     insint_c(d, "HTTP_CONNECTCODE", CURLINFO_HTTP_CONNECTCODE);
     insint_c(d, "HTTPAUTH_AVAIL", CURLINFO_HTTPAUTH_AVAIL);
     insint_c(d, "PROXYAUTH_AVAIL", CURLINFO_PROXYAUTH_AVAIL);

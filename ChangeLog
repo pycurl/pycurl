@@ -1,4 +1,11 @@
-Version 7.18.2 [requires libcurl-7.18.2 or better]
+Version 7.19.0 [requires libcurl-7.19.0 or better]
+--------------
+
+        * Added PRIMARY_IP info (patch by
+          Yuhui H <eyecat at gmail.com>).
+
+
+Version 7.18.2
 --------------
 
         * Added REDIRECT_URL info and M_MAXCONNECTS option
