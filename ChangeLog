@@ -4,6 +4,10 @@ Version 7.19.0 [requires libcurl-7.19.0 or better]
         * Added PRIMARY_IP info (patch by
           Yuhui H <eyecat at gmail.com>).
 
+        * Added support for curl_easy_reset through a
+          new 'reset' method on curl objects
+          (patch by Nick Pilon <npilon at oreilly.com>).
+
 
 Version 7.18.2
 --------------

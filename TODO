@@ -14,10 +14,6 @@ NEW FEATURES/IMPROVEMENTS:
       Curl.unsetopt() method. Have to carefully check the libcurl source
       code for each option we want to support.
 
-    * curl_easy_reset() should probably be supported.  But we have to be
-      careful since curl_easy_reset() e.g. modifies callbacks and other
-      pointers which could leave pycurl and libcurl out of sync.
-
 
 DEFICIENICES:
 

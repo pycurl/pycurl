@@ -27,6 +27,7 @@
  *  Daniel Pena Arteaga <dpena at ph.tum.de>
  *  Jim Patterson
  *  Yuhui H <eyecat at gmail.com>
+ *  Nick Pilon <npilon at oreilly.com>
  *
  * See file README for license information.
  */
@@ -1362,6 +1363,42 @@ verbose_error:
     goto silent_error;
 }
 
+
+/* ------------------------ reset ------------------------ */
+
+static PyObject*
+do_curl_reset(CurlObject *self)
+{
+    unsigned int i;
+
+    curl_easy_reset(self->handle);
+
+    /* Decref callbacks and file handles */
+    util_curl_xdecref(self, 4 | 8, self->handle);
+
+    /* Free all variables allocated by setopt */
+#undef SFREE
+#define SFREE(v)   if ((v) != NULL) (curl_formfree(v), (v) = NULL)
+    SFREE(self->httppost);
+#undef SFREE
+#define SFREE(v)   if ((v) != NULL) (curl_slist_free_all(v), (v) = NULL)
+    SFREE(self->httpheader);
+    SFREE(self->http200aliases);
+    SFREE(self->quote);
+    SFREE(self->postquote);
+    SFREE(self->prequote);
+#undef SFREE
+
+    /* Last, free the options */
+    for (i = 0; i < OPTIONS_SIZE; i++) {
+        if (self->options[i] != NULL) {
+            free(self->options[i]);
+            self->options[i] = NULL;
+        }
+    }
+
+    return Py_None;
+}
 
 /* --------------- unsetopt/setopt/getinfo --------------- */
 
@@ -2842,6 +2879,7 @@ static char co_getinfo_doc [] = "getinfo(info) -> Res.  Extract and return infor
 static char co_perform_doc [] = "perform() -> None.  Perform a file transfer.  Throws pycurl.error exception upon failure.\n";
 static char co_setopt_doc [] = "setopt(option, parameter) -> None.  Set curl session option.  Throws pycurl.error exception upon failure.\n";
 static char co_unsetopt_doc [] = "unsetopt(option) -> None.  Reset curl session option to default value.  Throws pycurl.error exception upon failure.\n";
+static char co_reset_doc [] = "reset() -> None. Reset all options set on curl handle to default values, but preserves live connections, session ID cache, DNS cache, cookies, and shares.\n";
 
 static char co_multi_fdset_doc [] = "fdset() -> Tuple.  Returns a tuple of three lists that can be passed to the select.select() method .\n";
 static char co_multi_info_read_doc [] = "info_read([max_objects]) -> Tuple. Returns a tuple (number of queued handles, [curl objects]).\n";
@@ -2861,6 +2899,7 @@ static PyMethodDef curlobject_methods[] = {
     {"perform", (PyCFunction)do_curl_perform, METH_NOARGS, co_perform_doc},
     {"setopt", (PyCFunction)do_curl_setopt, METH_VARARGS, co_setopt_doc},
     {"unsetopt", (PyCFunction)do_curl_unsetopt, METH_VARARGS, co_unsetopt_doc},
+    {"reset", (PyCFunction)do_curl_reset, METH_NOARGS, co_reset_doc},
     {NULL, NULL, 0, NULL}
 };
 
