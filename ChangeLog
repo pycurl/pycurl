@@ -8,6 +8,10 @@ Version 7.19.0 [requires libcurl-7.19.0 or better]
           new 'reset' method on curl objects
           (patch by Nick Pilon <npilon at oreilly.com>).
 
+        * Added support for OPENSOCKET callbacks.
+          See 'tests/test_opensocket.py' for example
+          usage (patch by Thomas Hunger <teh at camvine.com>).
+
 
 Version 7.18.2
 --------------

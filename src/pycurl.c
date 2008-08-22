@@ -28,6 +28,7 @@
  *  Jim Patterson
  *  Yuhui H <eyecat at gmail.com>
  *  Nick Pilon <npilon at oreilly.com>
+ *  Thomas Hunger <teh at camvine.org>
  *
  * See file README for license information.
  */
@@ -158,6 +159,7 @@ typedef struct {
     PyObject *pro_cb;
     PyObject *debug_cb;
     PyObject *ioctl_cb;
+    PyObject *opensocket_cb;
     /* file objects */
     PyObject *readdata_fp;
     PyObject *writedata_fp;
@@ -735,6 +737,7 @@ util_curl_new(void)
     self->pro_cb = NULL;
     self->debug_cb = NULL;
     self->ioctl_cb = NULL;
+    self->opensocket_cb = NULL;
 
     /* Set file object pointers to NULL by default */
     self->readdata_fp = NULL;
@@ -1129,6 +1132,62 @@ header_callback(char *ptr, size_t size, size_t nmemb, void *stream)
     return util_write_callback(1, ptr, size, nmemb, stream);
 }
 
+/* curl_socket_t is just an int on unix/windows (with limitations that
+ * are not important here) */
+static curl_socket_t
+opensocket_callback(void *clientp, curlsocktype purpose,
+		    struct curl_sockaddr *address)
+{
+    PyObject *arglist;
+    PyObject *result = NULL;
+    PyObject *fileno_result = NULL;
+    CurlObject *self;
+    PyThreadState *tmp_state;
+    int ret = CURL_SOCKET_BAD;
+
+    self = (CurlObject *)clientp;
+    tmp_state = get_thread_state(self);
+    
+    PyEval_AcquireThread(tmp_state);
+    arglist = Py_BuildValue("(iii)", address->family, address->socktype, address->protocol);
+    if (arglist == NULL)
+        goto verbose_error;
+
+    result = PyEval_CallObject(self->opensocket_cb, arglist);
+
+    Py_DECREF(arglist);
+    if (result == NULL) {
+        goto verbose_error;
+    }
+
+    if (PyObject_HasAttrString(result, "fileno")) {
+	fileno_result = PyObject_CallMethod(result, "fileno", NULL);
+
+	if (fileno_result == NULL) {
+	    ret = CURL_SOCKET_BAD;
+	    goto verbose_error;
+	}
+	// normal operation:
+	if (PyInt_Check(fileno_result)) {
+	    ret = dup(PyInt_AsLong(fileno_result));
+	    goto done;
+	}
+    } else {
+	PyErr_SetString(ErrorObject, "Return value must be a socket.");
+	ret = CURL_SOCKET_BAD;
+	goto verbose_error;
+    }
+
+silent_error:
+done:
+    Py_XDECREF(result);
+    Py_XDECREF(fileno_result);
+    PyEval_ReleaseThread(tmp_state);
+    return ret;
+verbose_error:
+    PyErr_Print();
+    goto silent_error;
+}
 
 static size_t
 read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
@@ -1960,6 +2019,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         const curl_progress_callback pro_cb = progress_callback;
         const curl_debug_callback debug_cb = debug_callback;
         const curl_ioctl_callback ioctl_cb = ioctl_callback;
+	const curl_opensocket_callback opensocket_cb = opensocket_callback;
 
         switch(option) {
         case CURLOPT_WRITEFUNCTION:
@@ -2009,6 +2069,13 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             self->ioctl_cb = obj;
             curl_easy_setopt(self->handle, CURLOPT_IOCTLFUNCTION, ioctl_cb);
             curl_easy_setopt(self->handle, CURLOPT_IOCTLDATA, self);
+            break;
+        case CURLOPT_OPENSOCKETFUNCTION:
+            Py_INCREF(obj);
+            ZAP(self->opensocket_cb);
+            self->opensocket_cb = obj;
+            curl_easy_setopt(self->handle, CURLOPT_OPENSOCKETFUNCTION, opensocket_cb);
+            curl_easy_setopt(self->handle, CURLOPT_OPENSOCKETDATA, self);
             break;
 
         default:
@@ -3638,6 +3705,7 @@ initpycurl(void)
     insint_c(d, "FTPSSLAUTH", CURLOPT_FTPSSLAUTH);
     insint_c(d, "IOCTLFUNCTION", CURLOPT_IOCTLFUNCTION);
     insint_c(d, "IOCTLDATA", CURLOPT_IOCTLDATA);
+    insint_c(d, "OPENSOCKETFUNCTION", CURLOPT_OPENSOCKETFUNCTION);
     insint_c(d, "FTP_ACCOUNT", CURLOPT_FTP_ACCOUNT);
     insint_c(d, "IGNORE_CONTENT_LENGTH", CURLOPT_IGNORE_CONTENT_LENGTH);
     insint_c(d, "COOKIELIST", CURLOPT_COOKIELIST);
