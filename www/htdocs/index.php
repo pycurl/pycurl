@@ -157,15 +157,10 @@ convenience only and are completely <b>unsupported</b> - use them
 at your own risk.
 </p>
 
-Also, official PycURL packages are available for
-<ul>
-  <li><a href="http://packages.ubuntulinux.org/cgi-bin/search_packages.pl?keywords=pycurl&searchon=names&subword=1&version=all&release=all">Ubuntu</a></li>
-  <li><a href="http://packages.debian.org/cgi-bin/search_packages.pl?keywords=pycurl&searchon=names&subword=1&version=all&release=all">Debian GNU/Linux</a></li>
-  <li><a href="http://www.freebsd.org/cgi/ports.cgi?query=curl">FreeBSD</a></li>
-  <li><a href="http://packages.gentoo.org/packages/?category=dev-python;name=pycurl">Gentoo Linux</a></li>
-  <li><a href="ftp://ftp.netbsd.org/pub/NetBSD/packages/pkgsrc/www/py-curl/README.html">NetBSD</a></li>
-  <li><a href="http://www.openbsd.org/cgi-bin/cvsweb/ports/net/py-curl/">OpenBSD</a></li>
-</ul>
+Also, official PycURL packages are available for <a href="http://ubuntulinux.org">Ubuntu</A>,
+<a href="http://debian.org">Debian GNU/Linux</a>, <a href="http://freebsd.org">FreeBSD</a>,
+<a href="http://gentoo.org">Gentoo Linux</a>, <a href="http://netbsd.org">NetBSD</a>,
+and <a href="http://openbsd.org">OpenBSD</a>.
 
 
 <h2>Community</h2>
