@@ -6,13 +6,9 @@ If you want to hack on pycurl, here's our list of unresolved issues:
 
 NEW FEATURES/IMPROVEMENTS:
 
-    * Callback handling for opening socket and stream seek.
+    * Callback handling for stream seek.
 
     * Add docs to the high-level interface.
-
-    * Add more options to the undocumented and currently mostly useless
-      Curl.unsetopt() method. Have to carefully check the libcurl source
-      code for each option we want to support.
 
 
 DEFICIENICES:

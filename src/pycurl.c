@@ -71,10 +71,6 @@ typedef int Py_ssize_t;
 #undef UNUSED
 #define UNUSED(var)     ((void)&var)
 
-#undef COMPILE_TIME_ASSERT
-#define COMPILE_TIME_ASSERT(expr) \
-     { typedef int compile_time_assert_fail__[1 - 2 * !(expr)]; }
-
 /* Cruft for thread safe SSL crypto locks, snapped from the PHP curl extension */
 #if defined(HAVE_CURL_SSL)
 # if defined(HAVE_CURL_OPENSSL)
@@ -1629,6 +1625,8 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_SSH_PRIVATE_KEYFILE:
         case CURLOPT_COPYPOSTFIELDS:
         case CURLOPT_SSH_HOST_PUBLIC_KEY_MD5:
+        case CURLOPT_CRLFILE:
+        case CURLOPT_ISSUERCERT:
 /* FIXME: check if more of these options allow binary data */
             str = PyString_AsString_NoNUL(obj);
             if (str == NULL)
@@ -2193,6 +2191,7 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
         }
 
     case CURLINFO_CONNECT_TIME:
+    case CURLINFO_APPCONNECT_TIME:
     case CURLINFO_CONTENT_LENGTH_DOWNLOAD:
     case CURLINFO_CONTENT_LENGTH_UPLOAD:
     case CURLINFO_NAMELOOKUP_TIME:
@@ -3733,6 +3732,9 @@ initpycurl(void)
     insint_c(d, "COPYPOSTFIELDS", CURLOPT_COPYPOSTFIELDS);
     insint_c(d, "SSH_HOST_PUBLIC_KEY_MD5", CURLOPT_SSH_HOST_PUBLIC_KEY_MD5);
     insint_c(d, "AUTOREFERER", CURLOPT_AUTOREFERER);
+    insint_c(d, "CRLFILE", CURLOPT_CRLFILE);
+    insint_c(d, "ISSUERCERT", CURLOPT_ISSUERCERT);
+    insint_c(d, "ADDRESS_SCOPE", CURLOPT_ADDRESS_SCOPE);
 
     insint_c(d, "M_TIMERFUNCTION", CURLMOPT_TIMERFUNCTION);
     insint_c(d, "M_SOCKETFUNCTION", CURLMOPT_SOCKETFUNCTION);
@@ -3783,6 +3785,7 @@ initpycurl(void)
     insint_c(d, "TOTAL_TIME", CURLINFO_TOTAL_TIME);
     insint_c(d, "NAMELOOKUP_TIME", CURLINFO_NAMELOOKUP_TIME);
     insint_c(d, "CONNECT_TIME", CURLINFO_CONNECT_TIME);
+    insint_c(d, "APPCONNECT_TIME", CURLINFO_APPCONNECT_TIME);
     insint_c(d, "PRETRANSFER_TIME", CURLINFO_PRETRANSFER_TIME);
     insint_c(d, "SIZE_UPLOAD", CURLINFO_SIZE_UPLOAD);
     insint_c(d, "SIZE_DOWNLOAD", CURLINFO_SIZE_DOWNLOAD);
