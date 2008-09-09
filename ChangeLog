@@ -1,7 +1,7 @@
 Version 7.19.0 [requires libcurl-7.19.0 or better]
 --------------
 
-        * Added CURLFILE, ADDRESS_SCOPE and ISSUERCERT options, 
+        * Added CURLFILE, ADDRESS_SCOPE and ISSUERCERT options,
           as well as the APPCONNECT_TIME info.
 
         * Added PRIMARY_IP info (patch by
