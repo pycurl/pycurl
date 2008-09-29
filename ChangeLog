@@ -1,4 +1,12 @@
-Version 7.19.0 [requires libcurl-7.19.0 or better]
+Version 7.19.1 [requires libcurl-7.19.0 or better]
+--------------
+
+        * No longer keep string options copies in the
+          Curl Python objects, since string options are
+          now managed by libcurl.
+
+
+Version 7.19.0
 --------------
 
         * Added CURLFILE, ADDRESS_SCOPE and ISSUERCERT options,

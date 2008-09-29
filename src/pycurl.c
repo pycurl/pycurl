@@ -97,12 +97,6 @@ static void pycurl_ssl_cleanup(void);
 /* Calculate the number of OBJECTPOINT options we need to store */
 #define OPTIONS_SIZE    ((int)CURLOPT_LASTENTRY % 10000)
 #define MOPTIONS_SIZE   ((int)CURLMOPT_LASTENTRY % 10000)
-static int OPT_INDEX(int o)
-{
-    assert(o >= CURLOPTTYPE_OBJECTPOINT);
-    assert(o < CURLOPTTYPE_OBJECTPOINT + OPTIONS_SIZE);
-    return o - CURLOPTTYPE_OBJECTPOINT;
-}
 
 /* Type objects */
 static PyObject *ErrorObject = NULL;
@@ -161,7 +155,6 @@ typedef struct {
     PyObject *writedata_fp;
     PyObject *writeheader_fp;
     /* misc */
-    void *options[OPTIONS_SIZE];    /* for OBJECTPOINT options */
     char error[CURL_ERROR_SIZE+1];
 } CurlObject;
 
@@ -741,7 +734,6 @@ util_curl_new(void)
     self->writeheader_fp = NULL;
 
     /* Zero string pointer memory buffer used by setopt */
-    memset(self->options, 0, sizeof(self->options));
     memset(self->error, 0, sizeof(self->error));
 
     return self;
@@ -804,7 +796,6 @@ do_curl_new(PyObject *dummy)
         free(s);
         goto error;
     }
-    self->options[ OPT_INDEX(CURLOPT_USERAGENT) ] = s; s = NULL;
 
     /* Success - return new object */
     return self;
@@ -872,7 +863,6 @@ static void
 util_curl_close(CurlObject *self)
 {
     CURL *handle;
-    int i;
 
     /* Zero handle and thread-state to disallow any operations to be run
      * from now on */
@@ -916,16 +906,6 @@ util_curl_close(CurlObject *self)
     SFREE(self->postquote);
     SFREE(self->prequote);
 #undef SFREE
-
-    /* Last, free the options.  This must be done after the curl handle
-     * is closed since libcurl assumes that some options are valid when
-     * invoking curl_easy_cleanup(). */
-    for (i = 0; i < OPTIONS_SIZE; i++) {
-        if (self->options[i] != NULL) {
-            free(self->options[i]);
-            self->options[i] = NULL;
-        }
-    }
 }
 
 
@@ -1424,8 +1404,6 @@ verbose_error:
 static PyObject*
 do_curl_reset(CurlObject *self)
 {
-    unsigned int i;
-
     curl_easy_reset(self->handle);
 
     /* Decref callbacks and file handles */
@@ -1443,15 +1421,6 @@ do_curl_reset(CurlObject *self)
     SFREE(self->postquote);
     SFREE(self->prequote);
 #undef SFREE
-
-    /* Last, free the options */
-    for (i = 0; i < OPTIONS_SIZE; i++) {
-        if (self->options[i] != NULL) {
-            free(self->options[i]);
-            self->options[i] = NULL;
-        }
-    }
-
     return Py_None;
 }
 
@@ -1461,7 +1430,6 @@ static PyObject *
 util_curl_unsetopt(CurlObject *self, int option)
 {
     int res;
-    int opt_index = -1;
 
 #define SETOPT2(o,x) \
     if ((res = curl_easy_setopt(self->handle, (o), (x))) != CURLE_OK) goto error
@@ -1502,7 +1470,6 @@ util_curl_unsetopt(CurlObject *self, int option)
     case CURLOPT_SSL_CIPHER_LIST:
     case CURLOPT_USERPWD:
         SETOPT((char *) 0);
-        opt_index = OPT_INDEX(option);
         break;
 
     /* info: we explicitly list unsupported options here */
@@ -1510,11 +1477,6 @@ util_curl_unsetopt(CurlObject *self, int option)
     default:
         PyErr_SetString(PyExc_TypeError, "unsetopt() is not supported for this option");
         return NULL;
-    }
-
-    if (opt_index >= 0 && self->options[opt_index] != NULL) {
-        free(self->options[opt_index]);
-        self->options[opt_index] = NULL;
     }
 
     Py_INCREF(Py_None);
@@ -1587,8 +1549,6 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     if (PyString_Check(obj)) {
         char *str = NULL;
         Py_ssize_t len = -1;
-        char *buf;
-        int opt_index;
 
         /* Check that the option specified a string as well as the input */
         switch (option) {
@@ -1651,28 +1611,12 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         }
         /* Allocate memory to hold the string */
         assert(str != NULL);
-        if (len <= 0)
-            buf = strdup(str);
-        else {
-            buf = (char *) malloc(len);
-            if (buf) memcpy(buf, str, len);
-        }
-        if (buf == NULL)
-            return PyErr_NoMemory();
         /* Call setopt */
-        res = curl_easy_setopt(self->handle, (CURLoption)option, buf);
+        res = curl_easy_setopt(self->handle, (CURLoption)option, str);
         /* Check for errors */
         if (res != CURLE_OK) {
-            free(buf);
             CURLERROR_RETVAL();
         }
-        /* Save allocated option buffer */
-        opt_index = OPT_INDEX(option);
-        if (self->options[opt_index] != NULL) {
-            free(self->options[opt_index]);
-            self->options[opt_index] = NULL;
-        }
-        self->options[opt_index] = buf;
         Py_INCREF(Py_None);
         return Py_None;
     }
