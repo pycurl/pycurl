@@ -105,9 +105,6 @@ module you might want to check out
 <a href="http://www.python.org/doc/current/lib/module-urllib2.html">urllib2</a>
 and
 <a href="http://linux.duke.edu/projects/urlgrabber/">urlgrabber</a>.
-There is also a good
-<a href="http://linux.duke.edu/projects/urlgrabber/comparison.ptml">comparison</a>
-of the various libraries.
 </p>
 
 
