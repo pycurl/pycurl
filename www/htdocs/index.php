@@ -53,32 +53,28 @@ PycURL is mature, very fast, and supports a lot of features.
 
 <ul>
   <li>
-    libcurl is a free and easy-to-use
-    client-side URL transfer library, supporting FTP, FTPS, HTTP, HTTPS, GOPHER,
-    TELNET, DICT, FILE and LDAP.  libcurl supports HTTPS certificates, HTTP POST,
-    HTTP PUT, FTP uploading, kerberos, HTTP form based upload, proxies, cookies,
-    user+password authentication, file transfer resume, http proxy tunneling and
-    more!
+	libcurl is a free and easy-to-use client-side URL transfer library, supporting FTP, FTPS, HTTP, HTTPS, SCP, SFTP, TFTP, TELNET, DICT, LDAP, LDAPS, FILE, IMAP, SMTP, POP3 and RTSP. libcurl supports SSL certificates, HTTP POST, HTTP PUT, FTP uploading, HTTP form based upload, proxies, cookies, user+password authentication (Basic, Digest, NTLM, Negotiate, Kerberos4), file transfer resume, http proxy tunneling and more! 	
     <br />
     <br />
   </li>
   <li>
-    libcurl is highly portable, it builds and works identically on numerous
-    platforms, including Solaris, NetBSD, FreeBSD, OpenBSD, Darwin, HPUX, IRIX,
-    AIX, Tru64, Linux, Windows, Amiga, OS/2, BeOs, Mac OS X, Ultrix, QNX,
-    OpenVMS, RISC OS, Novell NetWare, DOS and more...
+	libcurl is highly portable, it builds and works identically on numerous platforms, including Solaris, NetBSD, FreeBSD, OpenBSD, Darwin, HPUX, IRIX, AIX, Tru64, Linux, UnixWare, HURD, Windows, Amiga, OS/2, BeOs, Mac OS X, Ultrix, QNX, OpenVMS, RISC OS, Novell NetWare, DOS and more...
     <br />
     <br />
   </li>
   <li>
     libcurl is
     <a href="http://curl.haxx.se/docs/copyright.html">free</a>,
-    <a href="http://curl.haxx.se/libcurl/threadsafe.html">thread-safe</a>,
-    <a href="http://curl.haxx.se/libcurl/ipv6.html">IPv6 compatible</a>,
-    <a href="http://curl.haxx.se/libcurl/features.html">feature rich</a>,
-    <a href="http://curl.haxx.se/libcurl/support.html">well supported</a> and
-    <a href="http://curl.haxx.se/libcurl/fast.html">fast</a>.
+    <a href="http://curl.haxx.se/libcurl/features.html#thread">thread-safe</a>,
+    <a href="http://curl.haxx.se/libcurl/features.html#ipv6">IPv6 compatible</a>,
+    <a href="http://curl.haxx.se/libcurl/features.html#features">feature rich</a>,
+    <a href="http://curl.haxx.se/libcurl/features.html#support">well supported</a>,
+    <a href="http://curl.haxx.se/libcurl/features.html#fast">fast</a>,
+    <a href="http://curl.haxx.se/libcurl/features.html#docs">thoroughly documented</a>
+	and is already used by many known, big and successful <a href="http://curl.haxx.se/docs/companies.html">companies</a>
+	and numerous <a href="http://curl.haxx.se/libcurl/using/apps.html">applications</a>.
   </li>
+	
 </ul>
 
 
