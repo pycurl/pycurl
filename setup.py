@@ -9,7 +9,7 @@ PACKAGE = "pycurl"
 PY_PACKAGE = "curl"
 VERSION = "7.19.0"
 
-import glob, os, re, sys, string
+import glob, os, re, sys, string, subprocess
 import distutils
 from distutils.core import setup
 from distutils.extension import Extension
@@ -96,9 +96,22 @@ else:
                 include_dirs.append(e[2:])
         else:
             extra_compile_args.append(e)
-    libs = split_quoted(
-        os.popen("'%s' --libs" % CURL_CONFIG).read()+\
-        os.popen("'%s' --static-libs" % CURL_CONFIG).read())
+
+    # Run curl-config --libs and --static-libs.  Some platforms may not
+    # support one or the other of these curl-config options, so gracefully
+    # tolerate failure of either, but not both.
+    optbuf = ""
+    for option in ["--libs", "--static-libs"]:
+        p = subprocess.Popen("'%s' %s" % (CURL_CONFIG, option), shell=True,
+            stdout=subprocess.PIPE)
+        (stdout, stderr) = p.communicate()
+        if p.wait() == 0:
+            optbuf += stdout
+    if optbuf == "":
+        raise Exception, ("Neither of curl-config --libs or --static-libs" +
+            "produced output")
+    libs = split_quoted(optbuf)
+
     for e in libs:
         if e[:2] == "-l":
             libraries.append(e[2:])
