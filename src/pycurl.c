@@ -739,6 +739,57 @@ util_curl_new(void)
     return self;
 }
 
+/* initializer - used to intialize curl easy handles for use with pycurl */
+static int
+util_curl_init(CurlObject *self)
+{
+    int res;
+    char *s = NULL;
+
+    /* Set curl error buffer and zero it */
+    res = curl_easy_setopt(self->handle, CURLOPT_ERRORBUFFER, self->error);
+    if (res != CURLE_OK) {
+        return (-1);
+    }
+    memset(self->error, 0, sizeof(self->error));
+
+    /* Set backreference */
+    res = curl_easy_setopt(self->handle, CURLOPT_PRIVATE, (char *) self);
+    if (res != CURLE_OK) {
+        return (-1);
+    }
+
+    /* Enable NOPROGRESS by default, i.e. no progress output */
+    res = curl_easy_setopt(self->handle, CURLOPT_NOPROGRESS, (long)1);
+    if (res != CURLE_OK) {
+        return (-1);
+    }
+
+    /* Disable VERBOSE by default, i.e. no verbose output */
+    res = curl_easy_setopt(self->handle, CURLOPT_VERBOSE, (long)0);
+    if (res != CURLE_OK) {
+        return (-1);
+    }
+
+    /* Set FTP_ACCOUNT to NULL by default */
+    res = curl_easy_setopt(self->handle, CURLOPT_FTP_ACCOUNT, NULL);
+    if (res != CURLE_OK) {
+        return (-1);
+    }
+
+    /* Set default USERAGENT */
+    s = (char *) malloc(7 + strlen(LIBCURL_VERSION) + 1);
+    if (s == NULL) {
+        return (-1);
+    }
+    strcpy(s, "PycURL/"); strcpy(s+7, LIBCURL_VERSION);
+    res = curl_easy_setopt(self->handle, CURLOPT_USERAGENT, (char *) s);
+    if (res != CURLE_OK) {
+        free(s);
+        return (-1);
+    }
+    return (0);
+}
 
 /* constructor - this is a module-level function returning a new instance */
 static CurlObject *
@@ -746,7 +797,6 @@ do_curl_new(PyObject *dummy)
 {
     CurlObject *self = NULL;
     int res;
-    char *s = NULL;
 
     UNUSED(dummy);
 
@@ -760,43 +810,9 @@ do_curl_new(PyObject *dummy)
     if (self->handle == NULL)
         goto error;
 
-    /* Set curl error buffer and zero it */
-    res = curl_easy_setopt(self->handle, CURLOPT_ERRORBUFFER, self->error);
-    if (res != CURLE_OK)
-        goto error;
-    memset(self->error, 0, sizeof(self->error));
-
-    /* Set backreference */
-    res = curl_easy_setopt(self->handle, CURLOPT_PRIVATE, (char *) self);
-    if (res != CURLE_OK)
-        goto error;
-
-    /* Enable NOPROGRESS by default, i.e. no progress output */
-    res = curl_easy_setopt(self->handle, CURLOPT_NOPROGRESS, (long)1);
-    if (res != CURLE_OK)
-        goto error;
-
-    /* Disable VERBOSE by default, i.e. no verbose output */
-    res = curl_easy_setopt(self->handle, CURLOPT_VERBOSE, (long)0);
-    if (res != CURLE_OK)
-        goto error;
-
-    /* Set FTP_ACCOUNT to NULL by default */
-    res = curl_easy_setopt(self->handle, CURLOPT_FTP_ACCOUNT, NULL);
-    if (res != CURLE_OK)
-        goto error;
-
-    /* Set default USERAGENT */
-    s = (char *) malloc(7 + strlen(LIBCURL_VERSION) + 1);
-    if (s == NULL)
-        goto error;
-    strcpy(s, "PycURL/"); strcpy(s+7, LIBCURL_VERSION);
-    res = curl_easy_setopt(self->handle, CURLOPT_USERAGENT, (char *) s);
-    if (res != CURLE_OK) {
-        free(s);
-        goto error;
-    }
-
+    res = util_curl_init(self);
+    if (res < 0)
+            goto error;
     /* Success - return new object */
     return self;
 
@@ -1404,6 +1420,8 @@ verbose_error:
 static PyObject*
 do_curl_reset(CurlObject *self)
 {
+    int res;
+
     curl_easy_reset(self->handle);
 
     /* Decref callbacks and file handles */
@@ -1421,10 +1439,19 @@ do_curl_reset(CurlObject *self)
     SFREE(self->postquote);
     SFREE(self->prequote);
 #undef SFREE
+    res = util_curl_init(self);
+    if (res < 0) {
+        Py_DECREF(self);    /* this also closes self->handle */
+        PyErr_SetString(ErrorObject, "resetting curl failed");
+        return NULL;
+    }
+
+    Py_INCREF(Py_None);
     return Py_None;
 }
 
 /* --------------- unsetopt/setopt/getinfo --------------- */
+    int res;
 
 static PyObject *
 util_curl_unsetopt(CurlObject *self, int option)
