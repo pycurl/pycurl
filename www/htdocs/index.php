@@ -100,7 +100,7 @@ If you need something simpler or prefer a pure Python
 module you might want to check out
 <a href="http://www.python.org/doc/current/lib/module-urllib2.html">urllib2</a>
 and
-<a href="http://linux.duke.edu/projects/urlgrabber/">urlgrabber</a>.
+<a href="http://urlgrabber.baseurl.org/">urlgrabber</a>.
 </p>
 
 
