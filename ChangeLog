@@ -1,3 +1,14 @@
+Version 7.19.2
+--------------
+
+        * Cleaned up website
+
+        * Fix pycurl.reset() (patch by <johansen at sun.com>).
+
+        * Fix install routine in setup.py where
+          certain platforms (Solaris, Mac OSX, etc)
+          would search for a static copy of libcurl (dbp)
+
 Version 7.19.1 [requires libcurl-7.19.0 or better]
 --------------
 
