@@ -150,6 +150,7 @@ typedef struct {
     PyObject *debug_cb;
     PyObject *ioctl_cb;
     PyObject *opensocket_cb;
+    PyObject *seek_cb;
     /* file objects */
     PyObject *readdata_fp;
     PyObject *writedata_fp;
@@ -727,6 +728,7 @@ util_curl_new(void)
     self->debug_cb = NULL;
     self->ioctl_cb = NULL;
     self->opensocket_cb = NULL;
+    self->seek_cb = NULL;
 
     /* Set file object pointers to NULL by default */
     self->readdata_fp = NULL;
@@ -1180,6 +1182,82 @@ verbose_error:
     PyErr_Print();
     goto silent_error;
 }
+
+static int
+seek_callback(void *stream, curl_off_t offset, int origin)
+{
+    CurlObject *self;
+    PyThreadState *tmp_state;
+    PyObject *arglist;
+    PyObject *result = NULL;
+    int ret = 2;     /* assume error 2 (can't seek, libcurl free to work around). */
+    PyObject *cb;
+    int source = 0;     /* assume beginning */
+
+    /* acquire thread */
+    self = (CurlObject *)stream;
+    tmp_state = get_thread_state(self);
+    if (tmp_state == NULL)
+        return ret;
+    PyEval_AcquireThread(tmp_state);
+
+    /* check arguments */
+    switch (origin)
+    {
+      case SEEK_SET:
+          source = 0;
+          break;
+      case SEEK_CUR:
+          source = 1;
+          break;
+      case SEEK_END:
+          source = 2;
+          break;
+      default:
+          source = origin;
+          break;
+    }
+    
+    /* run callback */
+    cb = self->seek_cb;
+    if (cb == NULL)
+        goto silent_error;
+    arglist = Py_BuildValue("(i,i)", offset, source);
+    if (arglist == NULL)
+        goto verbose_error;
+    result = PyEval_CallObject(cb, arglist);
+    Py_DECREF(arglist);
+    if (result == NULL)
+        goto verbose_error;
+
+    /* handle result */
+    if (result == Py_None) {
+        ret = 0;           /* None means success */
+    }
+    else if (PyInt_Check(result)) {
+        int ret_code = PyInt_AsLong(result);
+        if (ret_code < 0 || ret_code > 2) {
+            PyErr_Format(ErrorObject, "invalid return value for seek callback %d not in (0, 1, 2)", ret_code);
+            goto verbose_error;
+        }
+        ret = ret_code;    /* pass the return code from the callback */
+    }
+    else {
+        PyErr_SetString(ErrorObject, "seek callback must return 0 (CURL_SEEKFUNC_OK), 1 (CURL_SEEKFUNC_FAIL), 2 (CURL_SEEKFUNC_CANTSEEK) or None");
+        goto verbose_error;
+    }
+
+silent_error:
+    Py_XDECREF(result);
+    PyEval_ReleaseThread(tmp_state);
+    return ret;
+verbose_error:
+    PyErr_Print();
+    goto silent_error;
+}
+
+
+
 
 static size_t
 read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
@@ -1988,7 +2066,8 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         const curl_progress_callback pro_cb = progress_callback;
         const curl_debug_callback debug_cb = debug_callback;
         const curl_ioctl_callback ioctl_cb = ioctl_callback;
-	const curl_opensocket_callback opensocket_cb = opensocket_callback;
+        const curl_opensocket_callback opensocket_cb = opensocket_callback;
+        const curl_seek_callback seek_cb = seek_callback;
 
         switch(option) {
         case CURLOPT_WRITEFUNCTION:
@@ -2045,6 +2124,13 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             self->opensocket_cb = obj;
             curl_easy_setopt(self->handle, CURLOPT_OPENSOCKETFUNCTION, opensocket_cb);
             curl_easy_setopt(self->handle, CURLOPT_OPENSOCKETDATA, self);
+            break;
+        case CURLOPT_SEEKFUNCTION:
+            Py_INCREF(obj);
+            ZAP(self->seek_cb);
+            self->seek_cb = obj;
+            curl_easy_setopt(self->handle, CURLOPT_SEEKFUNCTION, seek_cb);
+            curl_easy_setopt(self->handle, CURLOPT_SEEKDATA, self);
             break;
 
         default:
@@ -3616,6 +3702,7 @@ initpycurl(void)
     insint_c(d, "PREQUOTE", CURLOPT_PREQUOTE);
     insint_c(d, "WRITEHEADER", CURLOPT_WRITEHEADER);
     insint_c(d, "HEADERFUNCTION", CURLOPT_HEADERFUNCTION);
+    insint_c(d, "SEEKFUNCTION", CURLOPT_SEEKFUNCTION);
     insint_c(d, "COOKIEFILE", CURLOPT_COOKIEFILE);
     insint_c(d, "SSLVERSION", CURLOPT_SSLVERSION);
     insint_c(d, "TIMECONDITION", CURLOPT_TIMECONDITION);
