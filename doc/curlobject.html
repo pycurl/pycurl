@@ -94,6 +94,18 @@ print c.getinfo(pycurl.HTTP_CODE), c.getinfo(pycurl.EFFECTIVE_URL)
 </pre>
 </dd>
 
+<dt><code>pause(</code><em>bitmask</em><code>) </code>-&gt; <em>None</em></dt>
+<dd>
+<p>Corresponds to
+<a href="http://curl.haxx.se/libcurl/c/curl_easy_pause.html"><code>curl_easy_pause</code></a>
+in libcurl. The argument should be derived from
+the <code>PAUSE_RECV</code>, <code>PAUSE_SEND</code>, <code>PAUSE_ALL</code>
+and <code>PAUSE_CONT</code> constants.</p>
+
+<p>The <code>pause()</code> method (and its associated constants) is only
+available if the version of libcurl with which pycurl was built is at
+least version 7.18.0.</p>
+
 <dt><code>errstr()</code> -&gt; <em>String</em></dt>
 <dd>
 <p>Returns the internal libcurl error buffer of this handle as a string.</p>
