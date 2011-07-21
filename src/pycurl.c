@@ -793,8 +793,8 @@ util_curl_init(CurlObject *self)
     }
     strcpy(s, "PycURL/"); strcpy(s+7, LIBCURL_VERSION);
     res = curl_easy_setopt(self->handle, CURLOPT_USERAGENT, (char *) s);
+    free(s);
     if (res != CURLE_OK) {
-        free(s);
         return (-1);
     }
     return (0);
