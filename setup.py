@@ -17,7 +17,7 @@ from distutils.util import split_quoted
 from distutils.version import LooseVersion
 
 include_dirs = []
-define_macros = []
+define_macros = [("PYCURL_VERSION", '"%s"' % VERSION)]
 library_dirs = []
 libraries = []
 runtime_library_dirs = []
