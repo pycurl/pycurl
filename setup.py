@@ -108,7 +108,7 @@ else:
         if p.wait() == 0:
             optbuf += stdout
     if optbuf == "":
-        raise Exception, ("Neither of curl-config --libs or --static-libs" +
+        raise Exception("Neither of curl-config --libs or --static-libs" +
             "produced output")
     libs = split_quoted(optbuf)
 
