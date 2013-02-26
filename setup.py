@@ -106,7 +106,7 @@ else:
             stdout=subprocess.PIPE)
         (stdout, stderr) = p.communicate()
         if p.wait() == 0:
-            optbuf += stdout
+            optbuf += stdout.decode()
     if optbuf == "":
         raise Exception("Neither of curl-config --libs or --static-libs" +
             "produced output")
