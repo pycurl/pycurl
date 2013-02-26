@@ -31,7 +31,7 @@ def scan_argv(s, default):
     i = 1
     while i < len(sys.argv):
         arg = sys.argv[i]
-        if string.find(arg, s) == 0:
+        if str.find(arg, s) == 0:
             p = arg[len(s):]
             assert p, arg
             del sys.argv[i]
@@ -46,8 +46,8 @@ def add_libdirs(envvar, sep, fatal=0):
     v = os.environ.get(envvar)
     if not v:
         return
-    for dir in string.split(v, sep):
-        dir = string.strip(dir)
+    for dir in str.split(v, sep):
+        dir = str.strip(dir)
         if not dir:
             continue
         dir = os.path.normpath(dir)
@@ -55,7 +55,7 @@ def add_libdirs(envvar, sep, fatal=0):
             if not dir in library_dirs:
                 library_dirs.append(dir)
         elif fatal:
-            print "FATAL: bad directory %s in environment variable %s" % (dir, envvar)
+            print("FATAL: bad directory %s in environment variable %s" % (dir, envvar))
             sys.exit(1)
 
 
@@ -65,13 +65,13 @@ if sys.platform == "win32":
     # and thus unlikely to match your installation.
     CURL_DIR = r"c:\src\build\pycurl\curl-7.16.2.1"
     CURL_DIR = scan_argv("--curl-dir=", CURL_DIR)
-    print "Using curl directory:", CURL_DIR
+    print("Using curl directory:", CURL_DIR)
     assert os.path.isdir(CURL_DIR), "please check CURL_DIR in setup.py"
     include_dirs.append(os.path.join(CURL_DIR, "include"))
     extra_objects.append(os.path.join(CURL_DIR, "lib", "libcurl.lib"))
     extra_link_args.extend(["gdi32.lib", "wldap32.lib", "winmm.lib", "ws2_32.lib",])
     add_libdirs("LIB", ";")
-    if string.find(sys.version, "MSC") >= 0:
+    if str.find(sys.version, "MSC") >= 0:
         extra_compile_args.append("-O2")
         extra_compile_args.append("-GF")        # enable read-only string pooling
         extra_compile_args.append("-WX")        # treat warnings as errors
@@ -85,10 +85,10 @@ else:
     CURL_CONFIG = scan_argv("--curl-config=", CURL_CONFIG)
     d = os.popen("'%s' --version" % CURL_CONFIG).read()
     if d:
-        d = string.strip(d)
+        d = str.strip(d)
     if not d:
-        raise Exception, ("`%s' not found -- please install the libcurl development files" % CURL_CONFIG)
-    print "Using %s (%s)" % (CURL_CONFIG, d)
+        raise Exception("`%s' not found -- please install the libcurl development files" % CURL_CONFIG)
+    print("Using %s (%s)" % (CURL_CONFIG, d))
     for e in split_quoted(os.popen("'%s' --cflags" % CURL_CONFIG).read()):
         if e[:2] == "-I":
             # do not add /usr/include
