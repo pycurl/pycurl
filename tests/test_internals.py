@@ -245,6 +245,11 @@ if 1 and gc:
     if opts.verbose >= 1:
         print "Tracked objects:", len(gc.get_objects())
 
+if 1:
+    # Ensure that the refcounting error in "reset" is fixed:
+    for i in xrange(100000):
+        c = Curl()
+        c.reset()
 
 # /***********************************************************************
 # // done

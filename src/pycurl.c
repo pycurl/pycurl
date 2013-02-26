@@ -1529,7 +1529,6 @@ do_curl_reset(CurlObject *self)
 }
 
 /* --------------- unsetopt/setopt/getinfo --------------- */
-    int res;
 
 static PyObject *
 util_curl_unsetopt(CurlObject *self, int option)
