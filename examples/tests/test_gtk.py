@@ -83,7 +83,7 @@ class Test(threading.Thread):
 
 # Check command line args
 if len(sys.argv) < 3:
-    print "Usage: %s <URL> <filename>" % sys.argv[0]
+    print("Usage: %s <URL> <filename>" % sys.argv[0])
     raise SystemExit
 
 # Make a progress bar window

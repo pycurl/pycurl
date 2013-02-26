@@ -24,6 +24,6 @@ c.setopt(c.POST, 1)
 c.setopt(c.HTTPHEADER, xmlrpc_header)
 c.setopt(c.POSTFIELDS, xmlrpc_template % ("examples.getStateName", xmlrpclib.dumps((5,))))
 
-print 'Response from http://betty.userland.com/'
+print('Response from http://betty.userland.com/')
 c.perform()
 c.close()
