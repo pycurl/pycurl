@@ -6,7 +6,11 @@
 #
 # By Eric S. Raymond, April 2003.
 
-import os, sys, urllib, exceptions, mimetools, pycurl
+import os, sys, exceptions, mimetools, pycurl
+try:
+    import urllib.parse as urllib_parse
+except ImportError:
+    import urllib as urllib_parse
 try:
     from cStringIO import StringIO
 except ImportError:
@@ -86,14 +90,14 @@ class Curl:
     def get(self, url="", params=None):
         "Ship a GET request for a specified URL, capture the response."
         if params:
-            url += "?" + urllib.urlencode(params)
+            url += "?" + urllib_parse.urlencode(params)
         self.set_option(pycurl.HTTPGET, 1)
         return self.__request(url)
 
     def post(self, cgi, params):
         "Ship a POST request to a specified CGI, capture the response."
         self.set_option(pycurl.POST, 1)
-        self.set_option(pycurl.POSTFIELDS, urllib.urlencode(params))
+        self.set_option(pycurl.POSTFIELDS, urllib_parse.urlencode(params))
         return self.__request(cgi)
 
     def body(self):
