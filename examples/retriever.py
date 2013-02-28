@@ -31,7 +31,7 @@ try:
     if len(sys.argv) >= 3:
         num_conn = int(sys.argv[2])
 except:
-    print "Usage: %s <file with URLs to fetch> [<# of concurrent connections>]" % sys.argv[0]
+    print("Usage: %s <file with URLs to fetch> [<# of concurrent connections>]" % sys.argv[0])
     raise SystemExit
 
 
@@ -50,8 +50,8 @@ assert queue.queue, "no URLs given"
 num_urls = len(queue.queue)
 num_conn = min(num_conn, num_urls)
 assert 1 <= num_conn <= 10000, "invalid number of concurrent connections"
-print "PycURL %s (compiled against 0x%x)" % (pycurl.version, pycurl.COMPILE_LIBCURL_VERSION_NUM)
-print "----- Getting", num_urls, "URLs using", num_conn, "connections -----"
+print("PycURL %s (compiled against 0x%x)" % (pycurl.version, pycurl.COMPILE_LIBCURL_VERSION_NUM))
+print("----- Getting", num_urls, "URLs using", num_conn, "connections -----")
 
 
 class WorkerThread(threading.Thread):
