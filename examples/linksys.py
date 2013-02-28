@@ -34,6 +34,10 @@
 
 import sys, re, copy, curl, exceptions
 
+def print_stderr(arg):
+    sys.stderr.write(arg)
+    sys.stderr.write("\n")
+
 class LinksysError(exceptions.Exception):
     def __init__(self, *args):
         self.args = args
@@ -202,7 +206,7 @@ class LinksysSession:
             for (page, field, value) in self.actions:
                 self.cache_load(page)
                 if self.pagecache[page].find(field) == -1:
-                    print >>sys.stderr, "linksys: field %s not found where expected in page %s!" % (field, os.path.join(self.host, page))
+                    print_stderr("linksys: field %s not found where expected in page %s!" % (field, os.path.join(self.host, page)))
                     continue
                 else:
                     fields.append((field, value))
@@ -236,7 +240,7 @@ if __name__ == "__main__":
             elif line.strip() in ("off", "disable", "no"):
                 func(False)
             else:
-                print >>sys.stderr, "linksys: unknown switch value"
+                print_stderr("linksys: unknown switch value")
             return 0
 
         def do_connect(self, line):
@@ -342,7 +346,7 @@ if __name__ == "__main__":
                 type=eval("LinksysSession.WAN_CONNECT_"+line.strip().upper())
                 self.session.set_connection_type(type)
             except ValueError:
-                print >>sys.stderr, "linksys: unknown connection type."
+                print_stderr("linksys: unknown connection type.")
             return 0
         def help_wan_type(self):
             print("Usage: wan_type {auto|static|ppoe|ras|pptp|heartbeat}")
@@ -374,7 +378,7 @@ if __name__ == "__main__":
             if index in ("1", "2", "3"):
                 self.session.set_DNS_server(eval(index), address)
             else:
-                print >>sys.stderr, "linksys: server index out of bounds."
+                print_stderr("linksys: server index out of bounds.")
             return 0
         def help_dns(self):
             print("Usage: dns {1|2|3} <ip-mask>")
@@ -429,7 +433,7 @@ if __name__ == "__main__":
             if index in ("1", "2", "3"):
                 self.session.set_DHCP_DNS_server(eval(index), address)
             else:
-                print >>sys.stderr, "linksys: server index out of bounds."
+                print_stderr("linksys: server index out of bounds.")
             return 0
         def help_dhcp_dns(self):
             print("Usage: dhcp_dns {1|2|3} <ip-mask>")
