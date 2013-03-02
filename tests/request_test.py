@@ -8,16 +8,10 @@ import tempfile
 import pycurl
 import unittest
 import io
-try:
-    from cStringIO import StringIO
-except ImportError:
-    try:
-        from StringIO import StringIO
-    except ImportError:
-        from io import StringIO
 
 from . import app
 from . import runwsgi
+from . import util
 
 setup_module, teardown_module = runwsgi.app_runner_setup((app.app, 8380))
 
@@ -42,7 +36,7 @@ class RequestTest(unittest.TestCase):
     
     def test_perform_get_with_write_function(self):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
-        sio = StringIO()
+        sio = util.StringIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
         self.assertEqual('success', sio.getvalue())
