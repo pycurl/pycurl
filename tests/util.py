@@ -4,6 +4,14 @@
 
 import os, sys
 
+try:
+    from cStringIO import StringIO
+except ImportError:
+    try:
+        from StringIO import StringIO
+    except ImportError:
+        from io import StringIO
+
 #
 # prepare sys.path in case we are still in the build directory
 # see also: distutils/command/build.py (build_platlib)
