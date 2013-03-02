@@ -7,6 +7,7 @@ import unittest
 
 from . import app
 from . import runwsgi
+from . import util
 
 setup_module, teardown_module = runwsgi.app_runner_setup((app.app, 8380))
 
@@ -25,6 +26,8 @@ class DebugTest(unittest.TestCase):
         self.curl.setopt(pycurl.VERBOSE, 1)
         self.curl.setopt(pycurl.DEBUGFUNCTION, self.debug_function)
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
+        sio = util.StringIO()
+        self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
         
         # Some checks with no particular intent
