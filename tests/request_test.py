@@ -41,6 +41,15 @@ class RequestTest(unittest.TestCase):
         self.curl.perform()
         self.assertEqual('success', sio.getvalue())
     
+    def test_write_to_file(self):
+        self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
+        with tempfile.NamedTemporaryFile() as f:
+            self.curl.setopt(pycurl.WRITEFUNCTION, f.write)
+            self.curl.perform()
+            f.seek(0)
+            body = f.read()
+        self.assertEqual('success', body)
+    
     def test_perform_get_with_default_write_function(self):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
         #with tempfile.NamedTemporaryFile() as f:
