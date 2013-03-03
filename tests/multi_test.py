@@ -109,7 +109,7 @@ class MultiTest(unittest.TestCase):
         assert 'Error 404: Not Found' in m.handles[2].body.getvalue()
         self.assertEqual(404, m.handles[2].http_code)
     
-    def test_adding_closed_handle(self):
+    def check_adding_closed_handle(self, close_fn):
         # init
         m = pycurl.CurlMulti()
         m.handles = []
@@ -157,17 +157,7 @@ class MultiTest(unittest.TestCase):
                 assert c.debug
                 c.http_code = -1
             # pycurl API calls
-            if 0:
-                m.remove_handle(c)
-                c.close()
-            elif 0:
-                # in the C API this is the wrong calling order, but pycurl
-                # handles this automatically
-                c.close()
-                m.remove_handle(c)
-            else:
-                # actually, remove_handle is called automatically on close
-                c.close()
+            close_fn(m, c)
         m.close()
 
         # check result
@@ -179,3 +169,26 @@ class MultiTest(unittest.TestCase):
         # bottle generated response body
         self.assertEqual('', m.handles[2].body.getvalue())
         self.assertEqual(-1, m.handles[2].http_code)
+    
+    def _remove_then_close(self, m, c):
+        m.remove_handle(c)
+        c.close()
+    
+    def _close_then_remove(self, m, c):
+        # in the C API this is the wrong calling order, but pycurl
+        # handles this automatically
+        c.close()
+        m.remove_handle(c)
+    
+    def _close_without_removing(self, m, c):
+        # actually, remove_handle is called automatically on close
+        c.close
+    
+    def test_adding_closed_handle_remove_then_close(self):
+        self.check_adding_closed_handle(self._remove_then_close)
+    
+    def test_adding_closed_handle_close_then_remove(self):
+        self.check_adding_closed_handle(self._close_then_remove)
+    
+    def test_adding_closed_handle_close_without_removing(self):
+        self.check_adding_closed_handle(self._close_without_removing)
