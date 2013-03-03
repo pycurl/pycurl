@@ -2,9 +2,6 @@
 # -*- coding: iso-8859-1 -*-
 # vi:ts=4:et
 
-import os
-import sys
-import tempfile
 import pycurl
 import unittest
 import io
