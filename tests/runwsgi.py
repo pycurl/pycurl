@@ -77,6 +77,8 @@ def app_runner_setup(*specs):
     
     def teardown(self):
         for server in self.servers:
-            server.srv.shutdown()
+            # if no tests from module were run, there is no server to shut down
+            if hasattr(server, 'srv'):
+                server.srv.shutdown()
     
     return [setup, teardown]
