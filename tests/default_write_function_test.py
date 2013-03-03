@@ -32,6 +32,9 @@ class RequestTest(unittest.TestCase):
         
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
         self.curl.perform()
+        # If this flush is not done, stdout output bleeds into the next test
+        # that is executed
+        sys.stdout.flush()
     
     def test_perform_get_with_default_write_function(self):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
@@ -57,8 +60,8 @@ class RequestTest(unittest.TestCase):
                 sys.stdout = f
             try:
                 self.curl.perform()
-            finally:
                 sys.stdout.flush()
+            finally:
                 if perform_dup:
                     os.fsync(sys.stdout.fileno())
                     os.dup2(saved_stdout_fd, sys.stdout.fileno())
