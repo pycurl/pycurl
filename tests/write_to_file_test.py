@@ -12,7 +12,7 @@ from . import util
 
 setup_module, teardown_module = runwsgi.app_runner_setup((app.app, 8380))
 
-class RequestTest(unittest.TestCase):
+class WriteToFileTest(unittest.TestCase):
     def setUp(self):
         self.curl = pycurl.Curl()
     

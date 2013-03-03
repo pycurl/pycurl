@@ -17,7 +17,7 @@ setup_module, teardown_module = runwsgi.app_runner_setup((app.app, 8380))
 
 STDOUT_FD_NUM = 1
 
-class RequestTest(unittest.TestCase):
+class DefaultWriteFunctionTest(unittest.TestCase):
     def setUp(self):
         self.curl = pycurl.Curl()
     
