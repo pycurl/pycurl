@@ -2,12 +2,12 @@
 # -*- coding: iso-8859-1 -*-
 # vi:ts=4:et
 
-import os
+import unittest
+import pycurl
 import sys
 import tempfile
-import pycurl
-import unittest
 import io
+import os
 
 from . import app
 from . import runwsgi
@@ -29,26 +29,9 @@ class RequestTest(unittest.TestCase):
         # As a result this test is commented out. Uncomment for debugging.
         # test_perform_get_with_default_write_function is the test
         # which exercises default curl write handler.
-        return
         
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
         self.curl.perform()
-    
-    def test_perform_get_with_write_function(self):
-        self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
-        sio = util.StringIO()
-        self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
-        self.curl.perform()
-        self.assertEqual('success', sio.getvalue())
-    
-    def test_write_to_file(self):
-        self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
-        with tempfile.NamedTemporaryFile() as f:
-            self.curl.setopt(pycurl.WRITEFUNCTION, f.write)
-            self.curl.perform()
-            f.seek(0)
-            body = f.read()
-        self.assertEqual('success', body)
     
     def test_perform_get_with_default_write_function(self):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
