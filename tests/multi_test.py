@@ -108,3 +108,74 @@ class MultiTest(unittest.TestCase):
         # bottle generated response body
         assert 'Error 404: Not Found' in m.handles[2].body.getvalue()
         self.assertEqual(404, m.handles[2].http_code)
+    
+    def test_adding_closed_handle(self):
+        # init
+        m = pycurl.CurlMulti()
+        m.handles = []
+        urls = [
+            'http://localhost:8380/success',
+            'http://localhost:8381/status/403',
+            'http://localhost:8382/status/404',
+        ]
+        for url in urls:
+            c = pycurl.Curl()
+            # save info in standard Python attributes
+            c.url = url
+            c.body = util.StringIO()
+            c.http_code = -1
+            c.debug = 0
+            m.handles.append(c)
+            # pycurl API calls
+            c.setopt(c.URL, c.url)
+            c.setopt(c.WRITEFUNCTION, c.body.write)
+            m.add_handle(c)
+
+        # debug - close a handle
+        c = m.handles[2]
+        c.debug = 1
+        c.close()
+
+        # get data
+        num_handles = len(m.handles)
+        while num_handles:
+            while 1:
+                ret, num_handles = m.perform()
+                if ret != pycurl.E_CALL_MULTI_PERFORM:
+                    break
+            # currently no more I/O is pending, could do something in the meantime
+            # (display a progress bar, etc.)
+            m.select(0.1)
+
+        # close handles
+        for c in m.handles:
+            # save info in standard Python attributes
+            try:
+                c.http_code = c.getinfo(c.HTTP_CODE)
+            except pycurl.error:
+                # handle already closed - see debug above
+                assert c.debug
+                c.http_code = -1
+            # pycurl API calls
+            if 0:
+                m.remove_handle(c)
+                c.close()
+            elif 0:
+                # in the C API this is the wrong calling order, but pycurl
+                # handles this automatically
+                c.close()
+                m.remove_handle(c)
+            else:
+                # actually, remove_handle is called automatically on close
+                c.close()
+        m.close()
+
+        # check result
+        self.assertEqual('success', m.handles[0].body.getvalue())
+        self.assertEqual(200, m.handles[0].http_code)
+        # bottle generated response body
+        assert 'Error 403: Forbidden' in m.handles[1].body.getvalue()
+        self.assertEqual(403, m.handles[1].http_code)
+        # bottle generated response body
+        self.assertEqual('', m.handles[2].body.getvalue())
+        self.assertEqual(-1, m.handles[2].http_code)
