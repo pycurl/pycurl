@@ -12,6 +12,7 @@ except ImportError:
 import pickle
 import gc
 import copy
+import re
 
 class InternalsTest(unittest.TestCase):
     def setUp(self):
@@ -179,6 +180,7 @@ class InternalsTest(unittest.TestCase):
         del m, c
     
     def test_cyclic_gc(self):
+        regexp = re.compile(r'at (0x\d+)')
         gc.collect()
         c = pycurl.Curl()
         c.m = pycurl.CurlMulti()
@@ -206,10 +208,17 @@ class InternalsTest(unittest.TestCase):
         ##print gc.get_objects()
         #if opts.verbose >= 1:
             #print("Tracked objects:", len(gc.get_objects()))
+        match = regexp.search(repr(c))
+        assert match is not None
+        address = match.group(1)
         # The `del' below should delete these 4 objects:
         #   Curl + internal dict, CurlMulti + internal dict
         del c
         gc.collect()
+        objects = gc.get_objects()
+        search = 'at %s' % address
+        for object in objects:
+            assert search not in repr(object)
         #if opts.verbose >= 1:
             #print("Tracked objects:", len(gc.get_objects()))
     
