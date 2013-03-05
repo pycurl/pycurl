@@ -271,6 +271,7 @@ class MultiTest(unittest.TestCase):
             if ret != pycurl.E_CALL_MULTI_PERFORM:
                 break
 
+        infos = []
         # Keep going until all the connections have terminated
         while num_handles:
             # The select method uses fdset internally to determine which file descriptors
@@ -278,13 +279,23 @@ class MultiTest(unittest.TestCase):
             m.select(SELECT_TIMEOUT)
             while 1:
                 ret, num_handles = m.perform()
-                # Print the message, if any
-                while True:
-                    info = m.info_read()
-                    print info
+                info = m.info_read()
+                infos.append(info)
                 if ret != pycurl.E_CALL_MULTI_PERFORM:
                     break
 
+        all_handles = []
+        for info in infos:
+            handles = info[1]
+            # last info is an empty array
+            if handles:
+                all_handles.extend(handles)
+        
+        self.assertEqual(3, len(all_handles))
+        assert c1 in all_handles
+        assert c2 in all_handles
+        assert c3 in all_handles
+        
         # Cleanup
         m.remove_handle(c3)
         m.remove_handle(c2)
