@@ -242,3 +242,58 @@ class MultiTest(unittest.TestCase):
     
     def test_adding_closed_handle_close_without_removing(self):
         self.check_adding_closed_handle(self._close_without_removing)
+    
+    def test_multi_info_read(self):
+        c1 = pycurl.Curl()
+        c2 = pycurl.Curl()
+        c3 = pycurl.Curl()
+        c1.setopt(c1.URL, "http://localhost:8380/success")
+        c2.setopt(c2.URL, "http://localhost:8381/success")
+        c3.setopt(c3.URL, "http://localhost:8382/success")
+        c1.body = util.StringIO()
+        c2.body = util.StringIO()
+        c3.body = util.StringIO()
+        c1.setopt(c1.WRITEFUNCTION, c1.body.write)
+        c2.setopt(c2.WRITEFUNCTION, c2.body.write)
+        c3.setopt(c3.WRITEFUNCTION, c3.body.write)
+
+        m = pycurl.CurlMulti()
+        m.add_handle(c1)
+        m.add_handle(c2)
+        m.add_handle(c3)
+
+        # Number of seconds to wait for a timeout to happen
+        SELECT_TIMEOUT = 1.0
+
+        # Stir the state machine into action
+        while 1:
+            ret, num_handles = m.perform()
+            if ret != pycurl.E_CALL_MULTI_PERFORM:
+                break
+
+        # Keep going until all the connections have terminated
+        while num_handles:
+            # The select method uses fdset internally to determine which file descriptors
+            # to check.
+            m.select(SELECT_TIMEOUT)
+            while 1:
+                ret, num_handles = m.perform()
+                # Print the message, if any
+                while True:
+                    info = m.info_read()
+                    print info
+                if ret != pycurl.E_CALL_MULTI_PERFORM:
+                    break
+
+        # Cleanup
+        m.remove_handle(c3)
+        m.remove_handle(c2)
+        m.remove_handle(c1)
+        m.close()
+        c1.close()
+        c2.close()
+        c3.close()
+        
+        self.assertEqual('success', c1.body.getvalue())
+        self.assertEqual('success', c2.body.getvalue())
+        self.assertEqual('success', c3.body.getvalue())
