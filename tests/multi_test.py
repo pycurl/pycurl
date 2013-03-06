@@ -214,7 +214,10 @@ class MultiTest(unittest.TestCase):
         self.assertEqual('success', m.handles[0].body.getvalue())
         self.assertEqual(200, m.handles[0].http_code)
         # bottle generated response body
-        assert 'Error 403: Forbidden' in m.handles[1].body.getvalue()
+        body = m.handles[1].body.getvalue()
+        search = 'Error 403: Forbidden'
+        if search not in body:
+            assert False, "'%s' not found in body:\n%s" % (search, body)
         self.assertEqual(403, m.handles[1].http_code)
         # bottle generated response body
         self.assertEqual('', m.handles[2].body.getvalue())
