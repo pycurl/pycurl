@@ -46,4 +46,5 @@ class DebugTest(unittest.TestCase):
         for t, b in self.debug_entries:
             if t == wanted_t and wanted_b in b:
                 return
-        assert False, "%d: %s not found in debug entries" % (wanted_t, wanted_b)
+        assert False, "%d: %s not found in debug entries\nEntries are:\n%s" % \
+            (wanted_t, wanted_b, repr(self.debug_entries))
