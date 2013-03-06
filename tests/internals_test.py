@@ -180,7 +180,7 @@ class InternalsTest(unittest.TestCase):
         del m, c
     
     def test_cyclic_gc(self):
-        regexp = re.compile(r'at (0x\d+)')
+        regexp = re.compile(r'at (0x[\da-f]+)')
         gc.collect()
         c = pycurl.Curl()
         c.m = pycurl.CurlMulti()
