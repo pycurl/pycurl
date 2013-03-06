@@ -32,25 +32,16 @@ class MultiSocketTest(unittest.TestCase):
             'http://localhost:8382/success',
         ]
 
-        timers = []
-        
-        # timer callback
-        def timer(msecs):
-            #print('Timer callback msecs:', msecs)
-            timers.append(msecs)
-
         socket_events = []
 
         # socket callback
         def socket(event, socket, multi, data):
             #print(event, socket, multi, data)
-        #    multi.assign(socket, timer)
             socket_events.append((event, multi))
 
         # init
         m = pycurl.CurlMulti()
         m.setopt(pycurl.M_PIPELINING, 1)
-        m.setopt(pycurl.M_TIMERFUNCTION, timer)
         m.setopt(pycurl.M_SOCKETFUNCTION, socket)
         m.handles = []
         for url in urls:
@@ -92,10 +83,6 @@ class MultiSocketTest(unittest.TestCase):
             self.check(pycurl.POLL_IN, m, socket_events)
             self.check(pycurl.POLL_REMOVE, m, socket_events)
         
-        assert len(timers) > 0
-        assert timers[0] > 0
-        self.assertEqual(-1, timers[-1])
-
         # close handles
         for c in m.handles:
             # pycurl API calls
