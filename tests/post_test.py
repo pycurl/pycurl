@@ -73,6 +73,7 @@ class PostTest(unittest.TestCase):
         }]
         self.check_post(send, expect, 'http://localhost:8380/files')
     
+    # XXX this test takes about a second to run, check keep-alives?
     def check_post(self, send, expect, endpoint):
         self.curl.setopt(pycurl.URL, endpoint)
         self.curl.setopt(pycurl.HTTPPOST, send)
