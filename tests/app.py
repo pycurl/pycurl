@@ -12,11 +12,11 @@ def ok():
 
 @app.route('/status/403')
 def forbidden():
-    bottle.abort(403, 'forbidden')
+    return bottle.HTTPResponse('forbidden', 403)
 
 @app.route('/status/404')
 def not_found():
-    bottle.abort(404, 'not found')
+    return bottle.HTTPResponse('not found', 404)
 
 @app.route('/postfields', method='post')
 def postfields():
