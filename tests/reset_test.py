@@ -18,7 +18,7 @@ setup_module, teardown_module = runwsgi.app_runner_setup((app.app, 8380))
 
 class ResetTest(unittest.TestCase):
     # XXX this test was broken when it was test_reset.py
-    def skip_test_reset(self):
+    def skip_reset(self):
         outf = util.StringIO()
         cm = pycurl.CurlMulti()
 

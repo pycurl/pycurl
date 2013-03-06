@@ -40,7 +40,7 @@ class DefaultWriteFunctionTest(unittest.TestCase):
         os.fsync(STDOUT_FD_NUM)
     
     # I have a really hard time getting this to work with nose output capture
-    def skip_test_perform_get_with_default_write_function(self):
+    def skip_perform_get_with_default_write_function(self):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
         with tempfile.NamedTemporaryFile() as f:
         #with open('w', 'w+') as f:
