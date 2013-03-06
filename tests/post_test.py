@@ -2,6 +2,7 @@
 # -*- coding: iso-8859-1 -*-
 # vi:ts=4:et
 
+import os.path
 import pycurl
 import unittest
 import io
@@ -55,10 +56,25 @@ class PostTest(unittest.TestCase):
         expect = {
             'field3': 'this is wei\000rd, but null-bytes are okay',
         }
-        self.check_post(send, expect)
+        self.check_post(send, expect, 'http://localhost:8380/postfields')
     
-    def check_post(self, send, expect):
-        self.curl.setopt(pycurl.URL, 'http://localhost:8380/postfields')
+    def test_post_file(self):
+        path = os.path.join(os.path.dirname(__file__), '..', 'README')
+        with open(path) as f:
+            contents = f.read()
+        send = [
+            #('field2', (pycurl.FORM_FILE, 'test_post.py', pycurl.FORM_FILE, 'test_post2.py')),
+            ('field2', (pycurl.FORM_FILE, path)),
+        ]
+        expect = [{
+            'name': 'field2',
+            'filename': 'README',
+            'data': contents,
+        }]
+        self.check_post(send, expect, 'http://localhost:8380/files')
+    
+    def check_post(self, send, expect, endpoint):
+        self.curl.setopt(pycurl.URL, endpoint)
         self.curl.setopt(pycurl.HTTPPOST, send)
         #self.curl.setopt(pycurl.VERBOSE, 1)
         sio = util.StringIO()
