@@ -8,7 +8,6 @@ import unittest
 import pycurl
 import sys
 import tempfile
-import io
 import os
 
 from . import app

@@ -7,7 +7,6 @@ from __future__ import with_statement
 import os.path
 import pycurl
 import unittest
-import io
 try:
     import json
 except ImportError:

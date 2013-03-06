@@ -4,7 +4,6 @@
 
 import pycurl
 import unittest
-import io
 
 from . import app
 from . import runwsgi

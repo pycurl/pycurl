@@ -5,7 +5,6 @@
 import os.path
 import pycurl
 import unittest
-import io
 try:
     import json
 except ImportError:

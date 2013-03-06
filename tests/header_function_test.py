@@ -4,7 +4,6 @@
 
 import pycurl
 import unittest
-import io
 import time as _time
 
 from . import app
