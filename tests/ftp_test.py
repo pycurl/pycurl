@@ -8,6 +8,9 @@ import pycurl
 import unittest
 
 from . import util
+from . import procmgr
+
+setup_module, teardown_module = procmgr.vsftpd_setup()
 
 class FtpTest(unittest.TestCase):
     def setUp(self):

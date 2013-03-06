@@ -16,21 +16,25 @@ class Server(bottle.WSGIRefServer):
         self.srv = make_server(self.host, self.port, handler, **self.options)
         self.srv.serve_forever(poll_interval=0.1)
 
+def wait_for_network_service(netloc, check_interval, num_attempts):
+    ok = False
+    for i in range(num_attempts):
+        try:
+            conn = socket.create_connection(netloc, check_interval)
+        except socket.error as e:
+            _time.sleep(check_interval)
+        else:
+            conn.close()
+            ok = True
+            break
+    return ok
+
 def start_bottle_server(app, port, **kwargs):
     server_thread = ServerThread(app, port, kwargs)
     server_thread.daemon = True
     server_thread.start()
     
-    ok = False
-    for i in range(10):
-        try:
-            conn = socket.create_connection(('127.0.0.1', port), 0.1)
-        except socket.error as e:
-            _time.sleep(0.1)
-        else:
-            conn.close()
-            ok = True
-            break
+    ok = wait_for_network_service(('127.0.0.1', port), 0.1, 10)
     if not ok:
         import warnings
         warnings.warn('Server did not start after 1 second')
