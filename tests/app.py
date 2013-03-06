@@ -1,5 +1,8 @@
 import bottle
-import json
+try:
+    import json
+except ImportError:
+    import simplejson as json
 
 app = bottle.Bottle()
 

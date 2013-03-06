@@ -6,7 +6,10 @@ import os.path
 import pycurl
 import unittest
 import io
-import json
+try:
+    import json
+except ImportError:
+    import simplejson as json
 try:
     import urllib.parse as urllib_parse
 except ImportError:
