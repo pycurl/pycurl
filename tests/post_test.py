@@ -2,6 +2,8 @@
 # -*- coding: iso-8859-1 -*-
 # vi:ts=4:et
 
+from __future__ import with_statement
+
 import os.path
 import pycurl
 import unittest
