@@ -1,4 +1,5 @@
 import bottle
+import json
 
 app = bottle.Bottle()
 
@@ -13,3 +14,7 @@ def forbidden():
 @app.route('/status/404')
 def not_found():
     bottle.abort(404, 'not found')
+
+@app.route('/postfields', method='post')
+def postfields():
+    return json.dumps(dict(bottle.request.forms))
