@@ -73,8 +73,9 @@ class MultiSocketSelectTest(unittest.TestCase):
             
         timeout = m.timeout()
 
-
-        while True:
+        # timeout might be -1, indicating that all work is done
+        # XXX make sure there is always work to be done here?
+        while timeout >= 0:
             (rr, wr, er) = select.select(sockets,sockets,sockets,timeout/1000.0)
             socketSet = set(rr+wr+er)
             if socketSet:
