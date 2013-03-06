@@ -8,6 +8,6 @@ install: >
   sudo apt-get install vsftpd
 script: >
   make &&
-  export PYTHONPATH=build/lib.* &&
+  export PYTHONPATH=$(ls -d build/lib.*) &&
   export PYCURL_VSFTPD_PATH=/usr/sbin/vsftpd &&
   nosetests
