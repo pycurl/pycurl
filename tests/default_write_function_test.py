@@ -18,6 +18,15 @@ setup_module, teardown_module = runwsgi.app_runner_setup((app.app, 8380))
 
 STDOUT_FD_NUM = 1
 
+def try_fsync(fd):
+    try:
+        os.fsync(fd)
+    except OSError:
+        # On travis:
+        # OSError: [Errno 22] Invalid argument
+        # ignore
+        pass
+
 class DefaultWriteFunctionTest(unittest.TestCase):
     def setUp(self):
         self.curl = pycurl.Curl()
@@ -38,7 +47,7 @@ class DefaultWriteFunctionTest(unittest.TestCase):
         # If this flush is not done, stdout output bleeds into the next test
         # that is executed (without nose output capture)
         sys.stdout.flush()
-        os.fsync(STDOUT_FD_NUM)
+        try_fsync(STDOUT_FD_NUM)
     
     # I have a really hard time getting this to work with nose output capture
     def skip_perform_get_with_default_write_function(self):
@@ -67,7 +76,7 @@ class DefaultWriteFunctionTest(unittest.TestCase):
                 self.curl.perform()
                 sys.stdout.flush()
             finally:
-                os.fsync(STDOUT_FD_NUM)
+                try_fsync(STDOUT_FD_NUM)
                 os.dup2(saved_stdout_fd, STDOUT_FD_NUM)
                 os.close(saved_stdout_fd)
                 #os.dup2(100, 1)
