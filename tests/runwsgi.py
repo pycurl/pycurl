@@ -48,6 +48,8 @@ class ServerThread(threading.Thread):
     def run(self):
         bottle.run(self.app, server=self.server, quiet=True)
 
+started_servers = {}
+
 def app_runner_setup(*specs):
     '''Returns setup and teardown methods for running a list of WSGI
     applications in a daemon thread.
@@ -73,9 +75,14 @@ def app_runner_setup(*specs):
                 kwargs = {}
             else:
                 app, port, kwargs = spec
-            self.servers.append(start_bottle_server(app, port, **kwargs))
+            if port in started_servers:
+                assert started_servers[port] == (app, kwargs)
+            else:
+                self.servers.append(start_bottle_server(app, port, **kwargs))
+            started_servers[port] = (app, kwargs)
     
     def teardown(self):
+        return
         for server in self.servers:
             # if no tests from module were run, there is no server to shut down
             if hasattr(server, 'srv'):
