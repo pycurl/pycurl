@@ -32,8 +32,7 @@ class DebugTest(unittest.TestCase):
         
         # Some checks with no particular intent
         self.check(0, 'About to connect')
-        version = map(int, pycurl.version_info()[1].split('.'))
-        if version[0] < 7 or version[0] == 7 and version[1] <= 22:
+        if util.pycurl_version_less_than(7, 24):
             self.check(0, 'connected')
         else:
             self.check(0, 'Connected to localhost')

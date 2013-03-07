@@ -23,9 +23,9 @@ def version_less_than_spec(version_tuple, spec_tuple):
             return False
     return False
 
-def pycurl_version_less_than(spec_tuple):
+def pycurl_version_less_than(*spec):
     version = map(int, pycurl.version_info()[1].split('.'))
-    return version_less_than_spec(version, spec_tuple)
+    return version_less_than_spec(version, spec)
 
 #
 # prepare sys.path in case we are still in the build directory
