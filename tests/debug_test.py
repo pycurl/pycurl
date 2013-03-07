@@ -32,7 +32,11 @@ class DebugTest(unittest.TestCase):
         
         # Some checks with no particular intent
         self.check(0, 'About to connect')
-        self.check(0, 'Connected to localhost')
+        version = map(int, pycurl.version_info()[1].split('.'))
+        if version[0] < 7 or version[0] == 7 and version[1] <= 22:
+            self.check(0, 'connected')
+        else:
+            self.check(0, 'Connected to localhost')
         self.check(0, 'port 8380')
         # request
         self.check(2, 'GET /success HTTP/1.1')
