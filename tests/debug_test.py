@@ -32,7 +32,10 @@ class DebugTest(unittest.TestCase):
         
         # Some checks with no particular intent
         self.check(0, 'About to connect')
-        self.check(0, 'Connected to localhost')
+        if util.pycurl_version_less_than(7, 24):
+            self.check(0, 'connected')
+        else:
+            self.check(0, 'Connected to localhost')
         self.check(0, 'port 8380')
         # request
         self.check(2, 'GET /success HTTP/1.1')
@@ -46,4 +49,5 @@ class DebugTest(unittest.TestCase):
         for t, b in self.debug_entries:
             if t == wanted_t and wanted_b in b:
                 return
-        assert False, "%d: %s not found in debug entries" % (wanted_t, wanted_b)
+        assert False, "%d: %s not found in debug entries\nEntries are:\n%s" % \
+            (wanted_t, wanted_b, repr(self.debug_entries))

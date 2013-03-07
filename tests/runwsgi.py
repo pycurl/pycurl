@@ -1,5 +1,6 @@
 # Run a WSGI application in a daemon thread
 
+import sys
 import bottle
 import threading
 import socket
@@ -21,7 +22,8 @@ def wait_for_network_service(netloc, check_interval, num_attempts):
     for i in range(num_attempts):
         try:
             conn = socket.create_connection(netloc, check_interval)
-        except socket.error as e:
+        except socket.error:
+            e = sys.exc_info()[1]
             _time.sleep(check_interval)
         else:
             conn.close()

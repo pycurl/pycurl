@@ -77,8 +77,11 @@ class MultiSocketTest(unittest.TestCase):
             self.assertEqual(200, c.http_code)
         
         assert len(timers) > 0
-        assert timers[0] > 0
-        self.assertEqual(-1, timers[-1])
+        # libcurl 7.23.0 produces a 0 timer
+        assert timers[0] >= 0
+        # this assertion does not appear to hold on older libcurls
+        if not util.pycurl_version_less_than(7, 24):
+            self.assertEqual(-1, timers[-1])
 
         # close handles
         for c in m.handles:

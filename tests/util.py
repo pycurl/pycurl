@@ -3,6 +3,7 @@
 # $Id$
 
 import os, sys
+import pycurl
 
 try:
     from cStringIO import StringIO
@@ -11,6 +12,20 @@ except ImportError:
         from StringIO import StringIO
     except ImportError:
         from io import StringIO
+
+def version_less_than_spec(version_tuple, spec_tuple):
+    # spec_tuple may have 2 elements, expect version_tuple to have 3 elements
+    assert len(version_tuple) >= len(spec_tuple)
+    for i in range(len(spec_tuple)):
+        if version_tuple[i] < spec_tuple[i]:
+            return True
+        if version_tuple[i] > spec_tuple[i]:
+            return False
+    return False
+
+def pycurl_version_less_than(*spec):
+    version = map(int, pycurl.version_info()[1].split('.'))
+    return version_less_than_spec(version, spec)
 
 #
 # prepare sys.path in case we are still in the build directory

@@ -5,12 +5,9 @@
 import pycurl
 import unittest
 import gc
-import re
 
 class MemleakTest(unittest.TestCase):
     def test_collection(self):
-        regexp = re.compile(r'at (0x\d+)')
-        
         gc.collect()
         flags = gc.DEBUG_COLLECTABLE | gc.DEBUG_UNCOLLECTABLE
         # python 3 has no DEBUG_OBJECTS
@@ -31,12 +28,10 @@ class MemleakTest(unittest.TestCase):
             multi.add_handle(curl)
             t.append(curl)
             
-            match = regexp.search(repr(curl))
-            assert match is not None
-            searches.append(match.group(1))
-        match = regexp.search(repr(multi))
-        assert match
-        searches.append(match.group(1))
+            c_id = id(curl)
+            searches.append(c_id)
+        m_id = id(multi)
+        searches.append(m_id)
 
         #print("Tracked objects:", len(gc.get_objects()))
 
@@ -56,4 +51,5 @@ class MemleakTest(unittest.TestCase):
         
         objects = gc.get_objects()
         for search in searches:
-            assert 'at %s' % search not in repr(object)
+            for object in objects:
+                assert search != id(object)

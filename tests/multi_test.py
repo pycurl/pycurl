@@ -153,10 +153,10 @@ class MultiTest(unittest.TestCase):
         self.assertEqual('success', m.handles[0].body.getvalue())
         self.assertEqual(200, m.handles[0].http_code)
         # bottle generated response body
-        assert 'Error 403: Forbidden' in m.handles[1].body.getvalue()
+        self.assertEqual('forbidden', m.handles[1].body.getvalue())
         self.assertEqual(403, m.handles[1].http_code)
         # bottle generated response body
-        assert 'Error 404: Not Found' in m.handles[2].body.getvalue()
+        self.assertEqual('not found', m.handles[2].body.getvalue())
         self.assertEqual(404, m.handles[2].http_code)
     
     def check_adding_closed_handle(self, close_fn):
@@ -214,7 +214,7 @@ class MultiTest(unittest.TestCase):
         self.assertEqual('success', m.handles[0].body.getvalue())
         self.assertEqual(200, m.handles[0].http_code)
         # bottle generated response body
-        assert 'Error 403: Forbidden' in m.handles[1].body.getvalue()
+        self.assertEqual('forbidden', m.handles[1].body.getvalue())
         self.assertEqual(403, m.handles[1].http_code)
         # bottle generated response body
         self.assertEqual('', m.handles[2].body.getvalue())
