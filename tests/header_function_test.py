@@ -34,7 +34,8 @@ class HeaderFunctionTest(unittest.TestCase):
         assert len(self.header_lines) > 0
         self.assertEqual("HTTP/1.0 200 OK\r\n", self.header_lines[0])
         # day of week
-        todays_day = _time.strftime('%a')
+        # important: must be in utc
+        todays_day = _time.strftime('%a', _time.gmtime())
         # Date: Sun, 03 Mar 2013 05:38:12 GMT\r\n
         self.check('Date: %s' % todays_day)
         # Server: WSGIServer/0.1 Python/2.7.3\r\n
