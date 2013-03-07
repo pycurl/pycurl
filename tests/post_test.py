@@ -81,7 +81,7 @@ class PostTest(unittest.TestCase):
         self.check_post(send, expect, 'http://localhost:8380/postfields')
     
     def test_post_file(self):
-        path = os.path.join(os.path.dirname(__file__), '..', 'README')
+        path = os.path.join(os.path.dirname(__file__), '..', 'README.rst')
         with open(path) as f:
             contents = f.read()
         send = [
@@ -90,7 +90,7 @@ class PostTest(unittest.TestCase):
         ]
         expect = [{
             'name': 'field2',
-            'filename': 'README',
+            'filename': 'README.rst',
             'data': contents,
         }]
         self.check_post(send, expect, 'http://localhost:8380/files')

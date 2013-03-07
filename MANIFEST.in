@@ -8,7 +8,7 @@ include COPYING
 include COPYING2
 include INSTALL
 include Makefile
-include README
+include README.rst
 include TODO
 include MANIFEST.in
 include src/Makefile

@@ -26,7 +26,7 @@ class FtpTest(unittest.TestCase):
         self.curl.perform()
         
         result = sio.getvalue()
-        assert 'README' in result
+        assert 'README.rst' in result
         assert 'INSTALL' in result
     
     # XXX this test needs to be fixed
@@ -38,7 +38,7 @@ class FtpTest(unittest.TestCase):
         self.curl.perform()
         
         result = sio.getvalue()
-        assert 'README' not in result
+        assert 'README.rst' not in result
         assert 'ftp_test.py' in result
     
     def test_epsv(self):
@@ -49,5 +49,5 @@ class FtpTest(unittest.TestCase):
         self.curl.perform()
         
         result = sio.getvalue()
-        assert 'README' in result
+        assert 'README.rst' in result
         assert 'INSTALL' in result
