@@ -1,3 +1,9 @@
 *.pyc
 *.pyo
+/MANIFEST
 /build
+/dist
+/www/htdocs/download/*.bz2
+/www/htdocs/download/*.exe
+/www/htdocs/download/*.gz
+/www/upload/*
