@@ -1,6 +1,7 @@
 import threading
 import subprocess
 import os
+import sys
 import signal
 
 from . import runwsgi
@@ -53,7 +54,16 @@ def vsftpd_setup():
     ]
     setup_module = start_setup(cmd)
     def do_setup_module():
-        setup_module()
+        try:
+            setup_module()
+        except OSError:
+            import errno
+            e = sys.exc_info()[1]
+            if e.errno == errno.ENOENT:
+                msg = "Tried to execute `%s`\nTry specifying path to vsftpd via PYCURL_VSFTPD_PATH environment variable\n" % vsftpd_path
+                raise OSError(e.errno, e.strerror + "\n" + msg)
+            else:
+                raise
         ok = runwsgi.wait_for_network_service(('127.0.0.1', 8321), 0.1, 10)
         if not ok:
             import warnings
