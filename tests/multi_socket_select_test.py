@@ -94,7 +94,7 @@ class MultiSocketSelectTest(unittest.TestCase):
             c.http_code = c.getinfo(c.HTTP_CODE)
 
         # at least in and remove events per socket
-        assert len(socket_events) >= 6
+        assert len(socket_events) >= 6, 'Less than 6 socket events: %s' % repr(socket_events)
 
         # print result
         for c in m.handles:
