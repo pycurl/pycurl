@@ -80,8 +80,10 @@ class MultiSocketTest(unittest.TestCase):
         # libcurl 7.23.0 produces a 0 timer
         assert timers[0] >= 0
         # this assertion does not appear to hold on older libcurls
-        if not util.pycurl_version_less_than(7, 24):
-            self.assertEqual(-1, timers[-1])
+        # or apparently on any linuxes, see
+        # https://github.com/p/pycurl/issues/19
+        #if not util.pycurl_version_less_than(7, 24):
+        #    self.assertEqual(-1, timers[-1])
 
         # close handles
         for c in m.handles:
