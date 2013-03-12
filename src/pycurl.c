@@ -1082,21 +1082,9 @@ util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *strea
     if (result == Py_None) {
         ret = total_size;           /* None means success */
     }
-    else if (PyInt_Check(result)) {
-        long obj_size = PyInt_AsLong(result);
-        if (obj_size < 0 || obj_size > total_size) {
-            PyErr_Format(ErrorObject, "invalid return value for write callback %ld %ld", (long)obj_size, (long)total_size);
-            goto verbose_error;
-        }
-        ret = (size_t) obj_size;    /* success */
-    }
-    else if (PyLong_Check(result)) {
-        long obj_size = PyLong_AsLong(result);
-        if (obj_size < 0 || obj_size > total_size) {
-            PyErr_Format(ErrorObject, "invalid return value for write callback %ld %ld", (long)obj_size, (long)total_size);
-            goto verbose_error;
-        }
-        ret = (size_t) obj_size;    /* success */
+    else if (PyInt_Check(result) || PyLong_Check(result)) {
+        /* if the cast to long fails, PyLong_AsLong() returns -1L */
+        ret = (size_t) PyLong_AsLong(result);
     }
     else {
         PyErr_SetString(ErrorObject, "write callback must return int or None");
@@ -3516,6 +3504,9 @@ initpycurl(void)
 
     /* Abort curl_read_callback(). */
     insint_c(d, "READFUNC_ABORT", CURL_READFUNC_ABORT);
+
+    /* Pause curl_write_callback(). */
+    insint_c(d, "WRITEFUNC_PAUSE", CURL_WRITEFUNC_PAUSE);
 
     /* constants for ioctl callback return values */
     insint_c(d, "IOE_OK", CURLIOE_OK);
