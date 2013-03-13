@@ -18,6 +18,8 @@ except AttributeError:
         s.connect(netloc)
         return s
 
+global_stop = False
+
 class Server(bottle.WSGIRefServer):
     def run(self, handler): # pragma: no cover
         from wsgiref.simple_server import make_server, WSGIRequestHandler
@@ -27,7 +29,13 @@ class Server(bottle.WSGIRefServer):
                 def log_request(*args, **kw): pass
             self.options['handler_class'] = QuietHandler
         self.srv = make_server(self.host, self.port, handler, **self.options)
-        self.srv.serve_forever(poll_interval=0.1)
+        if sys.version_info[0] == 2 and sys.version_info[1] < 6:
+            # python 2.5 has no poll_interval
+            # and thus no way to stop the server
+            while not global_stop:
+                self.srv.handle_request()
+        else:
+            self.srv.serve_forever(poll_interval=0.1)
 
 def wait_for_network_service(netloc, check_interval, num_attempts):
     ok = False
@@ -104,6 +112,11 @@ def app_runner_setup(*specs):
         for server in self.servers:
             # if no tests from module were run, there is no server to shut down
             if hasattr(server, 'srv'):
-                server.srv.shutdown()
+                if hasattr(server.srv, 'shutdown'):
+                    server.srv.shutdown()
+                else:
+                    # python 2.5
+                    global global_stop
+                    global_stop = True
     
     return [setup, teardown]
