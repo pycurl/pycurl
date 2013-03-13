@@ -6,6 +6,18 @@ import threading
 import socket
 import time as _time
 
+try:
+    create_connection = socket.create_connection
+except AttributeError:
+    # python 2.5
+    def create_connection(netloc, timeout=None):
+        # XXX ipv4 only
+        s = socket.socket()
+        if timeout is not None:
+            s.settimeout(timeout)
+        s.connect(netloc)
+        return s
+
 class Server(bottle.WSGIRefServer):
     def run(self, handler): # pragma: no cover
         from wsgiref.simple_server import make_server, WSGIRequestHandler
@@ -21,7 +33,7 @@ def wait_for_network_service(netloc, check_interval, num_attempts):
     ok = False
     for i in range(num_attempts):
         try:
-            conn = socket.create_connection(netloc, check_interval)
+            conn = create_connection(netloc, check_interval)
         except socket.error:
             e = sys.exc_info()[1]
             _time.sleep(check_interval)
