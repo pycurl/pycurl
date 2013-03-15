@@ -72,5 +72,3 @@ class ResetTest(unittest.TestCase):
         eh.close()
         cm.close()
         outf.close()
-
-        pycurl.global_cleanup()
