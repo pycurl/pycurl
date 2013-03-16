@@ -32,5 +32,5 @@ ext.extra_objects.append(r"c:\src\pool\libidn-0.5.15" + pool + "idn.lib")
 if __name__ == "__main__":
     for o in ext.extra_objects:
         assert os.path.isfile(o), o
-    apply(setup, (), setup_args)
+    setup(**setup_args)
 
