@@ -55,8 +55,8 @@ if __name__ == "__main__":
     ## Test
     server = xmlrpclib.ServerProxy("http://betty.userland.com",
                                    transport=CURLTransport())
-    print server
+    print(server)
     try:
-        print server.examples.getStateName(41)
+        print(server.examples.getStateName(41))
     except xmlrpclib.Error, v:
-        print "ERROR", v
+        print("ERROR", v)

@@ -15,13 +15,13 @@ class FileReader:
 
 # Check commandline arguments
 if len(sys.argv) < 3:
-    print "Usage: %s <url> <file to upload>" % sys.argv[0]
+    print("Usage: %s <url> <file to upload>" % sys.argv[0])
     raise SystemExit
 url = sys.argv[1]
 filename = sys.argv[2]
 
 if not os.path.exists(filename):
-    print "Error: the file '%s' does not exist" % filename
+    print("Error: the file '%s' does not exist" % filename)
     raise SystemExit
 
 # Initialize pycurl
@@ -41,6 +41,6 @@ filesize = os.path.getsize(filename)
 c.setopt(pycurl.INFILESIZE, filesize)
 
 # Start transfer
-print 'Uploading file %s to url %s' % (filename, url)
+print('Uploading file %s to url %s' % (filename, url))
 c.perform()
 c.close()

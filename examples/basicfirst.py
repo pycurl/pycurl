@@ -13,7 +13,7 @@ class Test:
     def body_callback(self, buf):
         self.contents = self.contents + buf
 
-print >>sys.stderr, 'Testing', pycurl.version
+sys.stderr.write("Testing %s\n" % pycurl.version)
 
 t = Test()
 c = pycurl.Curl()
@@ -22,4 +22,4 @@ c.setopt(c.WRITEFUNCTION, t.body_callback)
 c.perform()
 c.close()
 
-print t.contents
+print(t.contents)

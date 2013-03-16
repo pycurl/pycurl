@@ -40,7 +40,7 @@ if __name__ == "__main__":
         name, account, password = auth
     except:
         if len(sys.argv) < 4:
-            print "Usage: %s <project id> <username> <password>" % sys.argv[0]
+            print("Usage: %s <project id> <username> <password>" % sys.argv[0])
             raise SystemExit
         name = sys.argv[2]
         password = sys.argv[3]
