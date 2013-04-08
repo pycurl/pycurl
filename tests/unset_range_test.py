@@ -37,3 +37,15 @@ class UnsetRangeTest(unittest.TestCase):
         self.curl.unsetopt(pycurl.RANGE)
         self.curl.perform()
         assert 10 < self.read
+
+        # now set the RANGE again and check that pycurl takes it into account
+        self.read = 0
+        self.curl.setopt(pycurl.RANGE, '0-9')
+        self.curl.perform()
+        assert 10 == self.read
+
+        # now drop the RANGE setting using setopt(..., None)
+        self.read = 0
+        self.curl.setopt(pycurl.RANGE, None)
+        self.curl.perform()
+        assert 10 < self.read
