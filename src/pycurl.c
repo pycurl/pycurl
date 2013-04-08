@@ -1561,6 +1561,7 @@ util_curl_unsetopt(CurlObject *self, int option)
     case CURLOPT_RANDOM_FILE:
     case CURLOPT_SSL_CIPHER_LIST:
     case CURLOPT_USERPWD:
+    case CURLOPT_RANGE:
         SETOPT((char *) 0);
         break;
 
