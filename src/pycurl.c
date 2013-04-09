@@ -1561,6 +1561,7 @@ util_curl_unsetopt(CurlObject *self, int option)
     case CURLOPT_RANDOM_FILE:
     case CURLOPT_SSL_CIPHER_LIST:
     case CURLOPT_USERPWD:
+    case CURLOPT_RANGE:
         SETOPT((char *) 0);
         break;
 
@@ -1630,12 +1631,10 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     if (option % 10000 >= OPTIONS_SIZE)
         goto error;
 
-#if 0 /* XXX - should we ??? */
-    /* Handle the case of None */
+    /* Handle the case of None as the call of unsetopt() */
     if (obj == Py_None) {
         return util_curl_unsetopt(self, option);
     }
-#endif
 
     /* Handle the case of string arguments */
     if (PyString_Check(obj)) {
