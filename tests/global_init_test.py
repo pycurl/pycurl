@@ -4,10 +4,11 @@
 
 import pycurl
 import unittest
+import nose.tools
 
 from . import util
 
-class GlobalInitAckEintrTest(unittest.TestCase):
+class GlobalInitTest(unittest.TestCase):
     def test_global_init_default(self):
         # initialize libcurl with DEFAULT flags
         pycurl.global_init(pycurl.GLOBAL_DEFAULT)
@@ -20,3 +21,8 @@ class GlobalInitAckEintrTest(unittest.TestCase):
             # initialize libcurl with the GLOBAL_ACK_EINTR flag
             pycurl.global_init(pycurl.GLOBAL_ACK_EINTR)
             pycurl.global_cleanup()
+    
+    @nose.tools.raises(ValueError)
+    def test_global_init_bogus(self):
+        # initialize libcurl with bogus flags
+        pycurl.global_init(0xffff)
