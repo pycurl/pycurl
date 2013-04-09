@@ -3210,6 +3210,16 @@ static PyTypeObject CurlMulti_Type = {
      */
 };
 
+static int
+are_global_init_flags_valid(int flags)
+{
+#ifdef CURL_GLOBAL_ACK_EINTR
+    /* CURL_GLOBAL_ACK_EINTR was introduced in libcurl-7.30.0 */
+    return !(flags & ~(CURL_GLOBAL_ALL | CURL_GLOBAL_ACK_EINTR));
+#else
+    return !(flags & ~(CURL_GLOBAL_ALL));
+#endif
+}
 
 /*************************************************************************
 // module level
@@ -3227,10 +3237,7 @@ do_global_init(PyObject *dummy, PyObject *args)
         return NULL;
     }
 
-    if (!(option == CURL_GLOBAL_SSL ||
-          option == CURL_GLOBAL_WIN32 ||
-          option == CURL_GLOBAL_ALL ||
-          option == CURL_GLOBAL_NOTHING)) {
+    if (!are_global_init_flags_valid(option)) {
         PyErr_SetString(PyExc_ValueError, "invalid option to global_init");
         return NULL;
     }
@@ -3866,6 +3873,10 @@ initpycurl(void)
     insint(d, "GLOBAL_ALL", CURL_GLOBAL_ALL);
     insint(d, "GLOBAL_NOTHING", CURL_GLOBAL_NOTHING);
     insint(d, "GLOBAL_DEFAULT", CURL_GLOBAL_DEFAULT);
+#ifdef CURL_GLOBAL_ACK_EINTR
+    /* CURL_GLOBAL_ACK_EINTR was introduced in libcurl-7.30.0 */
+    insint(d, "GLOBAL_ACK_EINTR", CURL_GLOBAL_ACK_EINTR);
+#endif
 
 
     /* constants for curl_multi_socket interface */
