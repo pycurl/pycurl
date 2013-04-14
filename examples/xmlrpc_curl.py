@@ -14,8 +14,15 @@ except ImportError:
 try:
     from cStringIO import StringIO
 except ImportError:
-    from StringIO import StringIO
-import xmlrpclib, pycurl
+    try:
+        from StringIO import StringIO
+    except ImportError:
+        from io import StringIO
+try:
+    import xmlrpclib
+except ImportError:
+    import xmlrpc.client as xmlrpclib
+import pycurl
 
 
 class CURLTransport(xmlrpclib.Transport):

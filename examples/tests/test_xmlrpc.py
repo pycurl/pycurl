@@ -4,7 +4,10 @@
 # $Id$
 
 ## XML-RPC lib included in python2.2
-import xmlrpclib
+try:
+    import xmlrpclib
+except ImportError:
+    import xmlrpc.client as xmlrpclib
 import pycurl
 
 # Header fields passed in request
