@@ -163,6 +163,13 @@ static void pycurl_ssl_cleanup(void);
 #  define PYCURL_END_ALLOW_THREADS
 #endif
 
+#if PY_MAJOR_VERSION >= 3
+  #define PyInt_Type                   PyLong_Type
+  #define PyInt_Check(op)              PyLong_Check(op)
+  #define PyInt_FromLong               PyLong_FromLong
+  #define PyInt_AsLong                 PyLong_AsLong
+#endif
+
 /* Calculate the number of OBJECTPOINT options we need to store */
 #define OPTIONS_SIZE    ((int)CURLOPT_LASTENTRY % 10000)
 #define MOPTIONS_SIZE   ((int)CURLMOPT_LASTENTRY % 10000)
