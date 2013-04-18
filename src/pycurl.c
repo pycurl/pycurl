@@ -2567,7 +2567,7 @@ do_multi_timeout(CurlMultiObject *self)
     }
 
     /* Return number of millisecs until timeout */
-    return Py_BuildValue("i", timeout);
+    return Py_BuildValue("l", timeout);
 }
 
 
