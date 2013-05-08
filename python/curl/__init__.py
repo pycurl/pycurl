@@ -6,11 +6,13 @@
 #
 # By Eric S. Raymond, April 2003.
 
-import os, sys, exceptions, mimetools, pycurl
+import sys, exceptions, mimetools, pycurl
 try:
     import urllib.parse as urllib_parse
+    from urllib.parse import urljoin
 except ImportError:
     import urllib as urllib_parse
+    from urlparse import urljoin
 try:
     from cStringIO import StringIO
 except ImportError:
@@ -81,7 +83,7 @@ class Curl:
         if self.fakeheaders:
             self.set_option(pycurl.HTTPHEADER, self.fakeheaders)
         if relative_url:
-            self.set_option(pycurl.URL,os.path.join(self.base_url,relative_url))
+            self.set_option(pycurl.URL, urljoin(self.base_url, relative_url))
         self.payload = ""
         self.hdr = ""
         self.handle.perform()
