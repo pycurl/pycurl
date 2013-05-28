@@ -3484,6 +3484,117 @@ static PyObject *curlobject_constants = NULL;
 static PyObject *curlmultiobject_constants = NULL;
 static PyObject *curlshareobject_constants = NULL;
 
+
+#if PY_MAJOR_VERSION >= 3
+static PyObject *
+my_getattro(PyObject *co, PyObject *name, PyObject *dict1, PyObject *dict2, PyMethodDef *m)
+{
+    PyObject *v = NULL;
+    if( dict1 != NULL )
+        v = PyDict_GetItem(dict1, name);
+    if( v == NULL && dict2 != NULL )
+        v = PyDict_GetItem(dict2, name);
+    if( v != NULL )
+    {
+        Py_INCREF(v);
+        return v;
+    }
+    PyErr_SetString(PyExc_AttributeError, "trying to obtain a non-existing attribute");
+    return NULL;
+}
+
+static int
+my_setattro(PyObject **dict, PyObject *name, PyObject *v)
+{
+    if( *dict == NULL )
+    {
+        *dict = PyDict_New();
+        if( *dict == NULL )
+            return -1;
+    }
+    return PyDict_SetItem(*dict, name, v);
+}
+
+PyObject *do_curl_getattro(PyObject *o, PyObject *n)
+{
+    PyObject *v = PyObject_GenericGetAttr(o, n);
+    if( !v && PyErr_ExceptionMatches(PyExc_AttributeError) )
+    {
+        PyErr_Clear();
+        v = my_getattro(o, n, ((CurlObject *)o)->dict,
+                        curlobject_constants, curlobject_methods);
+    }
+    return v;
+}
+
+static int
+do_curl_setattro(PyObject *o, PyObject *name, PyObject *v)
+{
+    assert_curl_state((CurlObject *)o);
+    if( v )
+    {
+        return my_setattro(&((CurlObject *)o)->dict, name, v);
+    } else
+    {
+        return PyObject_GenericSetAttr(o, name, 0);
+    }
+}
+
+static PyObject *
+do_multi_getattro(PyObject *o, PyObject *n)
+{
+    assert_multi_state((CurlMultiObject *)o);
+    PyObject *v = PyObject_GenericGetAttr(o, n);
+    if( !v && PyErr_ExceptionMatches(PyExc_AttributeError) )
+    {
+        PyErr_Clear();
+        v = my_getattro(o, n, ((CurlMultiObject *)o)->dict,
+                        curlmultiobject_constants, curlmultiobject_methods);
+    }
+    return v;
+}
+
+static int
+do_multi_setattro(PyObject *o, PyObject *n, PyObject *v)
+{
+    assert_multi_state((CurlMultiObject *)o);
+    if( v )
+    {
+        return my_setattro(&((CurlMultiObject *)o)->dict, n, v);
+    } else
+    {
+        return PyObject_GenericSetAttr(o, n, 0);
+    }
+}
+
+static PyObject *
+do_share_getattro(PyObject *o, PyObject *n)
+{
+    assert_share_state((CurlShareObject *)o);
+    PyObject *v = PyObject_GenericGetAttr(o, n);
+    if( !v && PyErr_ExceptionMatches(PyExc_AttributeError) )
+    {
+        PyErr_Clear();
+        v = my_getattro(o, n, ((CurlShareObject *)o)->dict,
+                        curlshareobject_constants, curlshareobject_methods);
+    }
+    return v;
+}
+
+static int
+do_share_setattro(PyObject *o, PyObject *n, PyObject *v)
+{
+    assert_share_state((CurlShareObject *)o);
+    if( v )
+    {
+        return my_setattro(&((CurlShareObject *)o)->dict, n, v);
+    } else
+    {
+        return PyObject_GenericSetAttr(o, n, 0);
+    }
+}
+
+#else
 static int
 my_setattr(PyObject **dict, char *name, PyObject *v)
 {
@@ -3562,6 +3673,7 @@ do_multi_getattr(CurlMultiObject *co, char *name)
     return my_getattr((PyObject *)co, name, co->dict,
                       curlmultiobject_constants, curlmultiobject_methods);
 }
+#endif
 
 
 /* --------------- actual type definitions --------------- */
