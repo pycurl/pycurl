@@ -349,7 +349,7 @@ static PyObject *convert_slist(struct curl_slist *slist, int free_flags)
         if (slist->data == NULL) {
             v = Py_None; Py_INCREF(v);
         } else {
-            v = PyString_FromString(slist->data);
+            v = PyText_FromString(slist->data);
         }
         if (v == NULL || PyList_Append(ret, v) != 0) {
             Py_XDECREF(v);
@@ -415,8 +415,9 @@ static PyObject *convert_certinfo(struct curl_certinfo *cinfo)
             } else {
                 const char *sep = strchr(field, ':');
                 if (!sep) {
-                    field_tuple = PyString_FromString(field);
+                    field_tuple = PyText_FromString(field);
                 } else {
+                    /* XXX check */
                     field_tuple = Py_BuildValue("s#s", field, (int)(sep - field), sep+1);
                 }
                 if (!field_tuple)
@@ -1241,7 +1242,8 @@ do_curl_errstr(CurlObject *self)
         return NULL;
     }
     self->error[sizeof(self->error) - 1] = 0;
-    return PyString_FromString(self->error);
+
+    return PyText_FromString(self->error);
 }
 
 
@@ -1616,11 +1618,15 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
         goto verbose_error;
 
     /* handle result */
+#if PY_MAJOR_VERSION >= 3
+    if (PyBytes_Check(result)) {
+#else
     if (PyString_Check(result)) {
+#endif
         char *buf = NULL;
         Py_ssize_t obj_size = -1;
         Py_ssize_t r;
-        r = PyString_AsStringAndSize(result, &buf, &obj_size);
+        r = PyByteStr_AsStringAndSize(result, &buf, &obj_size);
         if (r != 0 || obj_size < 0 || obj_size > total_size) {
             PyErr_Format(ErrorObject, "invalid return value for read callback %ld %ld", (long)obj_size, (long)total_size);
             goto verbose_error;
@@ -1977,7 +1983,12 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     }
 
     /* Handle the case of string arguments */
+
+#if PY_MAJOR_VERSION >= 3
+    if (PyUnicode_Check(obj)) {
+#else
     if (PyString_Check(obj)) {
+#endif
         char *str = NULL;
         Py_ssize_t len = -1;
 
@@ -2030,12 +2041,12 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_DNS_SERVERS:
 #endif
 /* FIXME: check if more of these options allow binary data */
-            str = PyString_AsString_NoNUL(obj);
+            str = PyText_AsString_NoNUL(obj);
             if (str == NULL)
                 return NULL;
             break;
         case CURLOPT_POSTFIELDS:
-            if (PyString_AsStringAndSize(obj, &str, &len) != 0)
+            if (PyText_AsStringAndSize(obj, &str, &len) != 0)
                 return NULL;
             /* automatically set POSTFIELDSIZE */
             if (len <= INT_MAX) {
@@ -2229,15 +2240,20 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                     PyErr_SetString(PyExc_TypeError, "tuple must contain two elements (name, value)");
                     return NULL;
                 }
-                if (PyString_AsStringAndSize(PyTuple_GET_ITEM(listitem, 0), &nstr, &nlen) != 0) {
+                if (PyText_AsStringAndSize(PyTuple_GET_ITEM(listitem, 0), &nstr, &nlen) != 0) {
                     curl_formfree(post);
                     Py_XDECREF(ref_params);
                     PyErr_SetString(PyExc_TypeError, "tuple must contain string as first element");
                     return NULL;
                 }
+#if PY_MAJOR_VERSION >= 3
+                if (PyUnicode_Check(PyTuple_GET_ITEM(listitem, 1))) {
+#else
                 if (PyString_Check(PyTuple_GET_ITEM(listitem, 1))) {
+#endif
                     /* Handle strings as second argument for backwards compatibility */
-                    PyString_AsStringAndSize(PyTuple_GET_ITEM(listitem, 1), &cstr, &clen);
+
+                    PyText_AsStringAndSize(PyTuple_GET_ITEM(listitem, 1), &cstr, &clen);
                     /* INFO: curl_formadd() internally does memdup() the data, so
                      * embedded NUL characters _are_ allowed here. */
                     res = curl_formadd(&post, &last,
@@ -2296,7 +2312,11 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                             Py_XDECREF(ref_params);
                             return NULL;
                         }
+#if PY_MAJOR_VERSION >= 3
+                        if (!PyUnicode_Check(PyTuple_GET_ITEM(t, j+1))) {
+#else
                         if (!PyString_Check(PyTuple_GET_ITEM(t, j+1))) {
+#endif
                             PyErr_SetString(PyExc_TypeError, "value must be string");
                             PyMem_Free(forms);
                             curl_formfree(post);
@@ -2318,7 +2338,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                             Py_XDECREF(ref_params);
                             return NULL;
                         }
-                        PyString_AsStringAndSize(PyTuple_GET_ITEM(t, j+1), &ostr, &olen);
+                        PyText_AsStringAndSize(PyTuple_GET_ITEM(t, j+1), &ostr, &olen);
                         forms[k].option = val;
                         forms[k].value = ostr;
                         ++k;
@@ -2402,14 +2422,18 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             struct curl_slist *nlist;
             char *str;
 
+#if PY_MAJOR_VERSION >= 3
+            if (!PyUnicode_Check(listitem)) {
+#else
             if (!PyString_Check(listitem)) {
+#endif
                 curl_slist_free_all(slist);
                 PyErr_SetString(PyExc_TypeError, "list items must be string objects");
                 return NULL;
             }
             /* INFO: curl_slist_append() internally does strdup() the data, so
              * no embedded NUL characters allowed here. */
-            str = PyString_AsString_NoNUL(listitem);
+            str = PyText_AsString_NoNUL(listitem);
             if (str == NULL) {
                 curl_slist_free_all(slist);
                 return NULL;
@@ -2673,9 +2697,11 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
                 CURLERROR_RETVAL();
             }
             /* If the resulting string is NULL, return None */
-            if (s_res == NULL)
+            if (s_res == NULL) {
                 Py_RETURN_NONE;
-            return PyString_FromString(s_res);
+            }
+            return PyText_FromString(s_res);
+
         }
 
     case CURLINFO_CONNECT_TIME:
@@ -4029,7 +4055,7 @@ static PyObject *vi_str(const char *s)
         Py_RETURN_NONE;
     while (*s == ' ' || *s == '\t')
         s++;
-    return PyString_FromString(s);
+    return PyText_FromString(s);
 }
 
 static PyObject *
@@ -4160,7 +4186,9 @@ insobj2(PyObject *dict1, PyObject *dict2, char *name, PyObject *value)
         goto error;
     if (value == NULL)
         goto error;
-    key = PyString_FromString(name);
+
+    key = PyText_FromString(name);
+
     if (key == NULL)
         goto error;
 #if 0
@@ -4187,7 +4215,7 @@ error:
 static void
 insstr(PyObject *d, char *name, char *value)
 {
-    PyObject *v = PyString_FromString(value);
+    PyObject *v = PyText_FromString(value);
     insobj2(d, NULL, name, v);
 }
 
@@ -4290,7 +4318,7 @@ initpycurl(void)
 
     /* Add version strings to the module */
     insobj2(d, NULL, "version",
-            PyString_FromFormat("PycURL/" PYCURL_VERSION " %s", curl_version()));
+            PyText_FromFormat("PycURL/" PYCURL_VERSION " %s", curl_version()));
     insstr(d, "COMPILE_DATE", __DATE__ " " __TIME__);
     insint(d, "COMPILE_PY_VERSION_HEX", PY_VERSION_HEX);
     insint(d, "COMPILE_LIBCURL_VERSION_NUM", LIBCURL_VERSION_NUM);
