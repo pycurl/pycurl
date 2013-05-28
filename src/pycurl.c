@@ -315,6 +315,21 @@ typedef struct {
 // python utility functions
 **************************************************************************/
 
+int PyUnicode_AsStringAndSize(PyObject *obj, char **buffer, Py_ssize_t *length)
+{
+    if (PyBytes_Check(obj)) {
+        return PyBytes_AsStringAndSize(obj, buffer, length);
+    } else {
+        PyObject *encoded_obj = PyUnicode_AsEncodedString(obj, "utf8", "strict");
+        if (encoded_obj == NULL) {
+            return -1;
+        }
+        /* XXX leaking encoded_obj */
+        return PyBytes_AsStringAndSize(encoded_obj, buffer, length);
+    }
+}
+
+
 /* Like PyString_AsString(), but set an exception if the string contains
  * embedded NULs. Actually PyString_AsStringAndSize() already does that for
  * us if the `len' parameter is NULL - see Objects/stringobject.c.
