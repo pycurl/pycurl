@@ -61,6 +61,13 @@
 #  error "Need libcurl version 7.19.0 or greater to compile pycurl."
 #endif
 
+#if LIBCURL_VERSION_MAJOR >= 8 || \
+    LIBCURL_VERSION_MAJOR == 7 && LIBCURL_VERSION_MINOR >= 20 || \
+    LIBCURL_VERSION_MAJOR == 7 && LIBCURL_VERSION_MINOR == 19 && LIBCURL_VERSION_PATCH >= 1
+#define HAVE_CURLOPT_USERNAME
+#define HAVE_CURLOPT_PROXYUSERNAME
+#endif
+
 /* Python < 2.5 compat for Py_ssize_t */
 #if PY_VERSION_HEX < 0x02050000 && !defined(PY_SSIZE_T_MIN)
 typedef int Py_ssize_t;
@@ -1558,9 +1565,17 @@ util_curl_unsetopt(CurlObject *self, int option)
     case CURLOPT_EGDSOCKET:
     case CURLOPT_FTPPORT:
     case CURLOPT_PROXYUSERPWD:
+#ifdef HAVE_CURLOPT_PROXYUSERNAME
+    case CURLOPT_PROXYUSERNAME:
+    case CURLOPT_PROXYPASSWORD:
+#endif
     case CURLOPT_RANDOM_FILE:
     case CURLOPT_SSL_CIPHER_LIST:
     case CURLOPT_USERPWD:
+#ifdef HAVE_CURLOPT_USERNAME
+    case CURLOPT_USERNAME:
+    case CURLOPT_PASSWORD:
+#endif
     case CURLOPT_RANGE:
         SETOPT((char *) 0);
         break;
@@ -1658,6 +1673,10 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_NETRC_FILE:
         case CURLOPT_PROXY:
         case CURLOPT_PROXYUSERPWD:
+#ifdef HAVE_CURLOPT_PROXYUSERNAME
+        case CURLOPT_PROXYUSERNAME:
+        case CURLOPT_PROXYPASSWORD:
+#endif
         case CURLOPT_RANDOM_FILE:
         case CURLOPT_RANGE:
         case CURLOPT_REFERER:
@@ -1671,6 +1690,10 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_URL:
         case CURLOPT_USERAGENT:
         case CURLOPT_USERPWD:
+#ifdef HAVE_CURLOPT_USERNAME
+        case CURLOPT_USERNAME:
+        case CURLOPT_PASSWORD:
+#endif
         case CURLOPT_FTP_ALTERNATIVE_TO_USER:
         case CURLOPT_SSH_PUBLIC_KEYFILE:
         case CURLOPT_SSH_PRIVATE_KEYFILE:
@@ -3654,7 +3677,15 @@ initpycurl(void)
     insint_c(d, "PORT", CURLOPT_PORT);
     insint_c(d, "PROXY", CURLOPT_PROXY);
     insint_c(d, "USERPWD", CURLOPT_USERPWD);
+#ifdef HAVE_CURLOPT_USERNAME
+    insint_c(d, "USERNAME", CURLOPT_USERNAME);
+    insint_c(d, "PASSWORD", CURLOPT_PASSWORD);
+#endif
     insint_c(d, "PROXYUSERPWD", CURLOPT_PROXYUSERPWD);
+#ifdef HAVE_CURLOPT_PROXYUSERNAME
+    insint_c(d, "PROXYUSERNAME", CURLOPT_PROXYUSERNAME);
+    insint_c(d, "PROXYPASSWORD", CURLOPT_PROXYPASSWORD);
+#endif
     insint_c(d, "RANGE", CURLOPT_RANGE);
     insint_c(d, "INFILE", CURLOPT_READDATA);
     /* ERRORBUFFER is not supported */
