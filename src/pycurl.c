@@ -361,7 +361,7 @@ static PyObject *convert_certinfo(struct curl_certinfo *cinfo)
     return certs;
     
  error:
-    Py_XDECREF(certs);
+    Py_DECREF(certs);
     return NULL;
 }
 #endif
