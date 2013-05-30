@@ -66,6 +66,7 @@
     LIBCURL_VERSION_MAJOR == 7 && LIBCURL_VERSION_MINOR == 19 && LIBCURL_VERSION_PATCH >= 1
 #define HAVE_CURLOPT_USERNAME
 #define HAVE_CURLOPT_PROXYUSERNAME
+#define HAVE_CURLOPT_CERTINFO
 #endif
 
 #if LIBCURL_VERSION_NUM >= 0x071503 /* check for 7.21.3 or greater */
@@ -297,6 +298,7 @@ error:
     return NULL;
 }
 
+#ifdef HAVE_CURLOPT_CERTINFO
 /* Convert a struct curl_certinfo into a Python data structure.
  * In case of error return NULL with an exception set.
  */
@@ -362,6 +364,7 @@ static PyObject *convert_certinfo(struct curl_certinfo *cinfo)
     Py_XDECREF(certs);
     return NULL;
 }
+#endif
 
 #ifdef WITH_THREAD
 /*************************************************************************
@@ -1738,9 +1741,11 @@ util_curl_unsetopt(CurlObject *self, int option)
         SETOPT((char *) 0);
         break;
 
+#ifdef HAVE_CURLOPT_CERTINFO
     case CURLOPT_CERTINFO:
         SETOPT((long) 0);
         break;
+#endif
 
     /* info: we explicitly list unsupported options here */
     case CURLOPT_COOKIEFILE:
@@ -2464,6 +2469,7 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
             return convert_slist(slist, 1 | 2);
         }
 
+#ifdef HAVE_CURLOPT_CERTINFO
     case CURLINFO_CERTINFO:
         {
             /* Return a list of lists of 2-tuples */
@@ -2476,6 +2482,7 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
             }
         }
     }
+#endif
 
     /* Got wrong option on the method call */
     PyErr_SetString(PyExc_ValueError, "invalid argument to getinfo");
@@ -3997,7 +4004,9 @@ initpycurl(void)
 #ifdef HAVE_CURLOPT_RESOLVE
     insint_c(d, "RESOLVE", CURLOPT_RESOLVE);
 #endif
+#ifdef HAVE_CURLOPT_CERTINFO
     insint_c(d, "OPT_CERTINFO", CURLOPT_CERTINFO);
+#endif
 
     insint_c(d, "M_TIMERFUNCTION", CURLMOPT_TIMERFUNCTION);
     insint_c(d, "M_SOCKETFUNCTION", CURLMOPT_SOCKETFUNCTION);
@@ -4075,7 +4084,9 @@ initpycurl(void)
     insint_c(d, "INFO_COOKIELIST", CURLINFO_COOKIELIST);
     insint_c(d, "LASTSOCKET", CURLINFO_LASTSOCKET);
     insint_c(d, "FTP_ENTRY_PATH", CURLINFO_FTP_ENTRY_PATH);
+#ifdef HAVE_CURLOPT_CERTINFO
     insint_c(d, "INFO_CERTINFO", CURLINFO_CERTINFO);
+#endif
 
     /* options for global_init() */
     insint(d, "GLOBAL_SSL", CURL_GLOBAL_SSL);
