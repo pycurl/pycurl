@@ -4,6 +4,7 @@ import sys
 import bottle
 import threading
 import socket
+import os.path
 import time as _time
 
 try:
@@ -37,6 +38,21 @@ class Server(bottle.WSGIRefServer):
         else:
             self.srv.serve_forever(poll_interval=0.1)
 
+class SslServer(bottle.CherryPyServer):
+    def run(self, handler):
+        import cherrypy.wsgiserver, cherrypy.wsgiserver.ssl_builtin
+        server = cherrypy.wsgiserver.CherryPyWSGIServer((self.host, self.port), handler)
+        cert_dir = os.path.join(os.path.dirname(__file__), 'certs')
+        ssl_adapter = cherrypy.wsgiserver.ssl_builtin.BuiltinSSLAdapter(
+            os.path.join(cert_dir, 'server.crt'),
+            os.path.join(cert_dir, 'server.key'),
+        )
+        server.ssl_adapter = ssl_adapter
+        try:
+            server.start()
+        finally:
+            server.stop()
+
 def wait_for_network_service(netloc, check_interval, num_attempts):
     ok = False
     for i in range(num_attempts):
@@ -51,8 +67,8 @@ def wait_for_network_service(netloc, check_interval, num_attempts):
             break
     return ok
 
-def start_bottle_server(app, port, **kwargs):
-    server_thread = ServerThread(app, port, kwargs)
+def start_bottle_server(app, port, server, **kwargs):
+    server_thread = ServerThread(app, port, server, kwargs)
     server_thread.daemon = True
     server_thread.start()
     
@@ -64,12 +80,12 @@ def start_bottle_server(app, port, **kwargs):
     return server_thread.server
 
 class ServerThread(threading.Thread):
-    def __init__(self, app, port, server_kwargs):
+    def __init__(self, app, port, server, server_kwargs):
         threading.Thread.__init__(self)
         self.app = app
         self.port = port
         self.server_kwargs = server_kwargs
-        self.server = Server(host='localhost', port=self.port, **self.server_kwargs)
+        self.server = server(host='localhost', port=self.port, **self.server_kwargs)
     
     def run(self):
         bottle.run(self.app, server=self.server, quiet=True)
@@ -104,7 +120,15 @@ def app_runner_setup(*specs):
             if port in started_servers:
                 assert started_servers[port] == (app, kwargs)
             else:
-                self.servers.append(start_bottle_server(app, port, **kwargs))
+                server = Server
+                if 'server' in kwargs:
+                    server = kwargs['server']
+                    del kwargs['server']
+                elif 'ssl' in kwargs:
+                    if kwargs['ssl']:
+                        server = SslServer
+                    del kwargs['ssl']
+                self.servers.append(start_bottle_server(app, port, server, **kwargs))
             started_servers[port] = (app, kwargs)
     
     def teardown(self):
