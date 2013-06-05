@@ -105,6 +105,9 @@ static void pycurl_ssl_cleanup(void);
 #define OPTIONS_SIZE    ((int)CURLOPT_LASTENTRY % 10000)
 #define MOPTIONS_SIZE   ((int)CURLMOPT_LASTENTRY % 10000)
 
+/* Keep some default variables around */
+static char *g_pycurl_useragent = "PycURL/" LIBCURL_VERSION;
+
 /* Type objects */
 static PyObject *ErrorObject = NULL;
 static PyTypeObject *p_Curl_Type = NULL;
@@ -787,13 +790,7 @@ util_curl_init(CurlObject *self)
     }
 
     /* Set default USERAGENT */
-    s = (char *) malloc(7 + strlen(LIBCURL_VERSION) + 1);
-    if (s == NULL) {
-        return (-1);
-    }
-    strcpy(s, "PycURL/"); strcpy(s+7, LIBCURL_VERSION);
-    res = curl_easy_setopt(self->handle, CURLOPT_USERAGENT, (char *) s);
-    free(s);
+    res = curl_easy_setopt(self->handle, CURLOPT_USERAGENT, (char *) g_pycurl_useragent);
     if (res != CURLE_OK) {
         return (-1);
     }
