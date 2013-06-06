@@ -119,6 +119,8 @@ else:
                 define_macros.append(('HAVE_CURL_OPENSSL', 1))
             if e[2:] == 'gnutls':
                 define_macros.append(('HAVE_CURL_GNUTLS', 1))
+            if e[2:] == 'ssl3':
+                define_macros.append(('HAVE_CURL_NSS', 1))
         elif e[:2] == "-L":
             library_dirs.append(e[2:])
         else:
