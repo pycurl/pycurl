@@ -12,6 +12,7 @@ class ProcessManager(object):
     
     def start(self):
         self.process = subprocess.Popen(self.cmd)
+        self.running = True
         
         self.thread = threading.Thread(target=self.run)
         self.thread.daemon = True
@@ -19,11 +20,18 @@ class ProcessManager(object):
     
     def run(self):
         self.process.communicate()
+    
+    def stop(self):
+        try:
+            os.kill(self.process.pid, signal.SIGTERM)
+        except OSError:
+            pass
+        self.running = False
 
 managers = {}
 
 def start(cmd):
-    if str(cmd) in managers:
+    if str(cmd) in managers and managers[str(cmd)].running:
         # already started
         return
     
@@ -75,9 +83,6 @@ def vsftpd_setup():
         except KeyError:
             pass
         else:
-            try:
-                os.kill(manager.process.pid, signal.SIGTERM)
-            except OSError:
-                pass
+            manager.stop()
     
     return do_setup_module, teardown_module
