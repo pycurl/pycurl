@@ -16,6 +16,7 @@ build-7.10.8:
 	$(PYTHON) setup.py build --curl-config=/home/hosts/localhost/packages/curl-7.10.8/bin/curl-config
 
 test: build
+	mkdir -p tests/tmp
 	PYTHONPATH=$$(ls -d build/lib.*):$$PYTHONPATH \
 	$(NOSETESTS)
 

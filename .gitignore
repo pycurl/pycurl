@@ -3,6 +3,7 @@
 /MANIFEST
 /build
 /dist
+/tests/tmp
 /www/htdocs/download/*.bz2
 /www/htdocs/download/*.exe
 /www/htdocs/download/*.gz
