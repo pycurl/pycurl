@@ -3,6 +3,7 @@ import subprocess
 import os
 import sys
 import signal
+import nose.plugins.skip
 
 from . import runwsgi
 
@@ -50,7 +51,16 @@ def start_setup(cmd):
 if 'PYCURL_VSFTPD_PATH' in os.environ:
     vsftpd_path = os.environ['PYCURL_VSFTPD_PATH']
 else:
-    vsftpd_path = 'vsftpd'
+    vsftpd_path = None
+
+try:
+    # python 2
+    exception_base = StandardError
+except NameError:
+    # python 3
+    exception_base = Exception
+class VsftpdNotConfigured(exception_base):
+    pass
 
 def vsftpd_setup():
     config_file_path = os.path.join(os.path.dirname(__file__), 'vsftpd.conf')
@@ -62,6 +72,8 @@ def vsftpd_setup():
     ]
     setup_module = start_setup(cmd)
     def do_setup_module():
+        if vsftpd_path is None:
+            raise nose.plugins.skip.SkipTest('PYCURL_VSFTPD_PATH environment variable not set')
         try:
             setup_module()
         except OSError:

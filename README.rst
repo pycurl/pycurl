@@ -49,6 +49,24 @@ or `pip`_::
 .. _easy_install: http://peak.telecommunity.com/DevCenter/EasyInstall
 .. _pip: http://pypi.python.org/pypi/pip
 
+Automated Tests
+---------------
+
+PycURL comes with an automated test suite. To run the tests, execute::
+
+    make test
+
+Some tests use vsftpd configured to accept anonymous uploads. These tests
+are not run by default. As configured, vsftpd will allow reads and writes to
+anything the user running the tests has read and write access. To run
+vsftpd tests you must explicitly set PYCURL_VSFTPD_PATH variable like so::
+
+    # use vsftpd in PATH
+    export PYCURL_VSFTPD_PATH=vsftpd
+
+    # specify full path to vsftpd
+    export PYCURL_VSFTPD_PATH=/usr/local/libexec/vsftpd
+
 Contribute
 ----------
 
