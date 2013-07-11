@@ -104,6 +104,30 @@ static void pycurl_ssl_init(void);
 static void pycurl_ssl_cleanup(void);
 #endif
 
+#ifdef WITH_THREAD
+#  define PYCURL_DECLARE_THREAD_STATE PyThreadState *tmp_state
+#  define PYCURL_ACQUIRE_THREAD() acquire_thread(self, &tmp_state)
+#  define PYCURL_ACQUIRE_THREAD_MULTI() acquire_thread_multi(self, &tmp_state)
+#  define PYCURL_RELEASE_THREAD() release_thread(tmp_state)
+/* Replacement for Py_BEGIN_ALLOW_THREADS/Py_END_ALLOW_THREADS when python
+   callbacks are expected during blocking i/o operations: self->state will hold
+   the handle to current thread to be used as context */
+#  define PYCURL_BEGIN_ALLOW_THREADS \
+       self->state = PyThreadState_Get(); \
+       assert(self->state != NULL); \
+       Py_BEGIN_ALLOW_THREADS
+#  define PYCURL_END_ALLOW_THREADS \
+       Py_END_ALLOW_THREADS \
+       self->state = NULL;
+#else
+#  define PYCURL_DECLARE_THREAD_STATE
+#  define PYCURL_ACQUIRE_THREAD() (1)
+#  define PYCURL_ACQUIRE_THREAD_MULTI() (1)
+#  define PYCURL_RELEASE_THREAD()
+#  define PYCURL_BEGIN_ALLOW_THREADS
+#  define PYCURL_END_ALLOW_THREADS
+#endif
+
 /* Calculate the number of OBJECTPOINT options we need to store */
 #define OPTIONS_SIZE    ((int)CURLOPT_LASTENTRY % 10000)
 #define MOPTIONS_SIZE   ((int)CURLMOPT_LASTENTRY % 10000)
@@ -126,14 +150,18 @@ typedef struct {
     PyObject_HEAD
     PyObject *dict;                 /* Python attributes dictionary */
     CURLSH *share_handle;
+#ifdef WITH_THREAD
     ShareLock *lock;                /* lock object to implement CURLSHOPT_LOCKFUNC */
+#endif
 } CurlShareObject;
 
 typedef struct {
     PyObject_HEAD
     PyObject *dict;                 /* Python attributes dictionary */
     CURLM *multi_handle;
+#ifdef WITH_THREAD
     PyThreadState *state;
+#endif
     fd_set read_fd_set;
     fd_set write_fd_set;
     fd_set exc_fd_set;
@@ -146,7 +174,9 @@ typedef struct {
     PyObject_HEAD
     PyObject *dict;                 /* Python attributes dictionary */
     CURL *handle;
+#ifdef WITH_THREAD
     PyThreadState *state;
+#endif
     CurlMultiObject *multi_stack;
     CurlShareObject *share;
     struct curl_httppost *httppost;
@@ -261,6 +291,7 @@ error:
 }
 
 
+#ifdef WITH_THREAD
 /*************************************************************************
 // static utility functions
 **************************************************************************/
@@ -317,13 +348,42 @@ get_thread_state_multi(const CurlMultiObject *self)
 }
 
 
+static int acquire_thread(const CurlObject *self, PyThreadState **state)
+{
+    *state = get_thread_state(self);
+    if (*state == NULL)
+        return 0;
+    PyEval_AcquireThread(*state);
+    return 1;
+}
+
+
+static int acquire_thread_multi(const CurlMultiObject *self, PyThreadState **state)
+{
+    *state = get_thread_state_multi(self);
+    if (*state == NULL)
+        return 0;
+    PyEval_AcquireThread(*state);
+    return 1;
+}
+
+
+static void release_thread(PyThreadState *state)
+{
+    PyEval_ReleaseThread(state);
+}
+#endif
+
+
 /* assert some CurlShareObject invariants */
 static void
 assert_share_state(const CurlShareObject *self)
 {
     assert(self != NULL);
     assert(self->ob_type == p_CurlShare_Type);
+#ifdef WITH_THREAD
     assert(self->lock != NULL);
+#endif
 }
 
 
@@ -333,7 +393,9 @@ assert_curl_state(const CurlObject *self)
 {
     assert(self != NULL);
     assert(self->ob_type == p_Curl_Type);
+#ifdef WITH_THREAD
     (void) get_thread_state(self);
+#endif
 }
 
 
@@ -343,9 +405,11 @@ assert_multi_state(const CurlMultiObject *self)
 {
     assert(self != NULL);
     assert(self->ob_type == p_CurlMulti_Type);
+#ifdef WITH_THREAD
     if (self->state != NULL) {
         assert(self->multi_handle != NULL);
     }
+#endif
 }
 
 
@@ -358,10 +422,12 @@ check_curl_state(const CurlObject *self, int flags, const char *name)
         PyErr_Format(ErrorObject, "cannot invoke %s() - no curl handle", name);
         return -1;
     }
+#ifdef WITH_THREAD
     if ((flags & 2) && get_thread_state(self) != NULL) {
         PyErr_Format(ErrorObject, "cannot invoke %s() - perform() is currently running", name);
         return -1;
     }
+#endif
     return 0;
 }
 
@@ -373,10 +439,12 @@ check_multi_state(const CurlMultiObject *self, int flags, const char *name)
         PyErr_Format(ErrorObject, "cannot invoke %s() - no multi handle", name);
         return -1;
     }
+#ifdef WITH_THREAD
     if ((flags & 2) && self->state != NULL) {
         PyErr_Format(ErrorObject, "cannot invoke %s() - multi_perform() is currently running", name);
         return -1;
     }
+#endif
     return 0;
 }
 
@@ -391,6 +459,7 @@ check_share_state(const CurlShareObject *self, int flags, const char *name)
 // SSL TSL
 **************************************************************************/
 
+#ifdef WITH_THREAD
 #ifdef PYCURL_NEED_OPENSSL_TSL
 
 static PyThread_type_lock *pycurl_openssl_tsl = NULL;
@@ -560,6 +629,19 @@ share_unlock_callback(CURL *handle, curl_lock_data data, void *userptr)
     share_lock_unlock(share->lock, data);
 }
 
+#else /* WITH_THREAD */
+
+static void pycurl_ssl_init(void)
+{
+    return;
+}
+
+static void pycurl_ssl_cleanup(void)
+{
+    return;
+}
+
+#endif /* WITH_THREAD */
 
 /* constructor - this is a module-level function returning a new instance */
 static CurlShareObject *
@@ -567,8 +649,10 @@ do_share_new(PyObject *dummy)
 {
     int res;
     CurlShareObject *self;
+#ifdef WITH_THREAD
     const curl_lock_function lock_cb = share_lock_callback;
     const curl_unlock_function unlock_cb = share_unlock_callback;
+#endif
 
     UNUSED(dummy);
 
@@ -583,8 +667,10 @@ do_share_new(PyObject *dummy)
 
     /* Initialize object attributes */
     self->dict = NULL;
+#ifdef WITH_THREAD
     self->lock = share_lock_new();
     assert(self->lock != NULL);
+#endif
 
     /* Allocate libcurl share handle */
     self->share_handle = curl_share_init();
@@ -594,6 +680,7 @@ do_share_new(PyObject *dummy)
         return NULL;
     }
 
+#ifdef WITH_THREAD
     /* Set locking functions and data  */
     res = curl_share_setopt(self->share_handle, CURLSHOPT_LOCKFUNC, lock_cb);
     assert(res == CURLE_OK);
@@ -601,6 +688,7 @@ do_share_new(PyObject *dummy)
     assert(res == CURLE_OK);
     res = curl_share_setopt(self->share_handle, CURLSHOPT_UNLOCKFUNC, unlock_cb);
     assert(res == CURLE_OK);
+#endif
 
     return self;
 }
@@ -632,7 +720,9 @@ do_share_clear(CurlShareObject *self)
 static void
 util_share_close(CurlShareObject *self){
     curl_share_cleanup(self->share_handle);
+#ifdef WITH_THREAD
     share_lock_destroy(self->lock);
+#endif
 }
 
 
@@ -723,7 +813,9 @@ util_curl_new(void)
     /* Set python curl object initial values */
     self->dict = NULL;
     self->handle = NULL;
+#ifdef WITH_THREAD
     self->state = NULL;
+#endif
     self->share = NULL;
     self->multi_stack = NULL;
     self->httppost = NULL;
@@ -898,12 +990,16 @@ util_curl_close(CurlObject *self)
     if (handle == NULL) {
         /* Some paranoia assertions just to make sure the object
          * deallocation problem is finally really fixed... */
+#ifdef WITH_THREAD
         assert(self->state == NULL);
+#endif
         assert(self->multi_stack == NULL);
         assert(self->share == NULL);
         return;             /* already closed */
     }
+#ifdef WITH_THREAD
     self->state = NULL;
+#endif
 
     /* Decref multi stuff which uses this handle */
     util_curl_xdecref(self, 2, handle);
@@ -977,7 +1073,9 @@ do_curl_errstr(CurlObject *self)
 static int
 do_curl_clear(CurlObject *self)
 {
+#ifdef WITH_THREAD
     assert(get_thread_state(self) == NULL);
+#endif
     util_curl_xdecref(self, 1 | 2 | 4 | 8 | 16, self->handle);
     return 0;
 }
@@ -1020,17 +1118,9 @@ do_curl_perform(CurlObject *self)
         return NULL;
     }
 
-    /* Save handle to current thread (used as context for python callbacks) */
-    self->state = PyThreadState_Get();
-    assert(self->state != NULL);
-
-    /* Release global lock and start */
-    Py_BEGIN_ALLOW_THREADS
+    PYCURL_BEGIN_ALLOW_THREADS
     res = curl_easy_perform(self->handle);
-    Py_END_ALLOW_THREADS
-
-    /* Zero thread-state to disallow callbacks to be run from now on */
-    self->state = NULL;
+    PYCURL_END_ALLOW_THREADS
 
     if (res != CURLE_OK) {
         CURLERROR_RETVAL();
@@ -1050,7 +1140,7 @@ static size_t
 util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *stream)
 {
     CurlObject *self;
-    PyThreadState *tmp_state;
+    PYCURL_DECLARE_THREAD_STATE;
     PyObject *arglist;
     PyObject *result = NULL;
     size_t ret = 0;     /* assume error */
@@ -1059,10 +1149,8 @@ util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *strea
 
     /* acquire thread */
     self = (CurlObject *)stream;
-    tmp_state = get_thread_state(self);
-    if (tmp_state == NULL)
+    if (!PYCURL_ACQUIRE_THREAD())
         return ret;
-    PyEval_AcquireThread(tmp_state);
 
     /* check args */
     cb = flags ? self->h_cb : self->w_cb;
@@ -1101,7 +1189,7 @@ util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *strea
 done:
 silent_error:
     Py_XDECREF(result);
-    PyEval_ReleaseThread(tmp_state);
+    PYCURL_RELEASE_THREAD();
     return ret;
 verbose_error:
     PyErr_Print();
@@ -1131,13 +1219,12 @@ opensocket_callback(void *clientp, curlsocktype purpose,
     PyObject *result = NULL;
     PyObject *fileno_result = NULL;
     CurlObject *self;
-    PyThreadState *tmp_state;
+    PYCURL_DECLARE_THREAD_STATE;
     int ret = CURL_SOCKET_BAD;
 
     self = (CurlObject *)clientp;
-    tmp_state = get_thread_state(self);
+    PYCURL_ACQUIRE_THREAD();
     
-    PyEval_AcquireThread(tmp_state);
     arglist = Py_BuildValue("(iii)", address->family, address->socktype, address->protocol);
     if (arglist == NULL)
         goto verbose_error;
@@ -1171,7 +1258,7 @@ silent_error:
 done:
     Py_XDECREF(result);
     Py_XDECREF(fileno_result);
-    PyEval_ReleaseThread(tmp_state);
+    PYCURL_RELEASE_THREAD();
     return ret;
 verbose_error:
     PyErr_Print();
@@ -1182,7 +1269,7 @@ static int
 seek_callback(void *stream, curl_off_t offset, int origin)
 {
     CurlObject *self;
-    PyThreadState *tmp_state;
+    PYCURL_DECLARE_THREAD_STATE;
     PyObject *arglist;
     PyObject *result = NULL;
     int ret = 2;     /* assume error 2 (can't seek, libcurl free to work around). */
@@ -1191,10 +1278,8 @@ seek_callback(void *stream, curl_off_t offset, int origin)
 
     /* acquire thread */
     self = (CurlObject *)stream;
-    tmp_state = get_thread_state(self);
-    if (tmp_state == NULL)
+    if (!PYCURL_ACQUIRE_THREAD())
         return ret;
-    PyEval_AcquireThread(tmp_state);
 
     /* check arguments */
     switch (origin)
@@ -1244,7 +1329,7 @@ seek_callback(void *stream, curl_off_t offset, int origin)
 
 silent_error:
     Py_XDECREF(result);
-    PyEval_ReleaseThread(tmp_state);
+    PYCURL_RELEASE_THREAD();
     return ret;
 verbose_error:
     PyErr_Print();
@@ -1258,7 +1343,7 @@ static size_t
 read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
 {
     CurlObject *self;
-    PyThreadState *tmp_state;
+    PYCURL_DECLARE_THREAD_STATE;
     PyObject *arglist;
     PyObject *result = NULL;
 
@@ -1267,10 +1352,8 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
 
     /* acquire thread */
     self = (CurlObject *)stream;
-    tmp_state = get_thread_state(self);
-    if (tmp_state == NULL)
+    if (!PYCURL_ACQUIRE_THREAD())
         return ret;
-    PyEval_AcquireThread(tmp_state);
 
     /* check args */
     if (self->r_cb == NULL)
@@ -1328,7 +1411,7 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
 done:
 silent_error:
     Py_XDECREF(result);
-    PyEval_ReleaseThread(tmp_state);
+    PYCURL_RELEASE_THREAD();
     return ret;
 verbose_error:
     PyErr_Print();
@@ -1341,17 +1424,15 @@ progress_callback(void *stream,
                   double dltotal, double dlnow, double ultotal, double ulnow)
 {
     CurlObject *self;
-    PyThreadState *tmp_state;
+    PYCURL_DECLARE_THREAD_STATE;
     PyObject *arglist;
     PyObject *result = NULL;
     int ret = 1;       /* assume error */
 
     /* acquire thread */
     self = (CurlObject *)stream;
-    tmp_state = get_thread_state(self);
-    if (tmp_state == NULL)
+    if (!PYCURL_ACQUIRE_THREAD())
         return ret;
-    PyEval_AcquireThread(tmp_state);
 
     /* check args */
     if (self->pro_cb == NULL)
@@ -1379,7 +1460,7 @@ progress_callback(void *stream,
 
 silent_error:
     Py_XDECREF(result);
-    PyEval_ReleaseThread(tmp_state);
+    PYCURL_RELEASE_THREAD();
     return ret;
 verbose_error:
     PyErr_Print();
@@ -1392,7 +1473,7 @@ debug_callback(CURL *curlobj, curl_infotype type,
                char *buffer, size_t total_size, void *stream)
 {
     CurlObject *self;
-    PyThreadState *tmp_state;
+    PYCURL_DECLARE_THREAD_STATE;
     PyObject *arglist;
     PyObject *result = NULL;
     int ret = 0;       /* always success */
@@ -1401,10 +1482,8 @@ debug_callback(CURL *curlobj, curl_infotype type,
 
     /* acquire thread */
     self = (CurlObject *)stream;
-    tmp_state = get_thread_state(self);
-    if (tmp_state == NULL)
+    if (!PYCURL_ACQUIRE_THREAD())
         return ret;
-    PyEval_AcquireThread(tmp_state);
 
     /* check args */
     if (self->debug_cb == NULL)
@@ -1427,7 +1506,7 @@ debug_callback(CURL *curlobj, curl_infotype type,
 
 silent_error:
     Py_XDECREF(result);
-    PyEval_ReleaseThread(tmp_state);
+    PYCURL_RELEASE_THREAD();
     return ret;
 verbose_error:
     PyErr_Print();
@@ -1439,7 +1518,7 @@ static curlioerr
 ioctl_callback(CURL *curlobj, int cmd, void *stream)
 {
     CurlObject *self;
-    PyThreadState *tmp_state;
+    PYCURL_DECLARE_THREAD_STATE;
     PyObject *arglist;
     PyObject *result = NULL;
     int ret = CURLIOE_FAILRESTART;       /* assume error */
@@ -1448,10 +1527,8 @@ ioctl_callback(CURL *curlobj, int cmd, void *stream)
 
     /* acquire thread */
     self = (CurlObject *)stream;
-    tmp_state = get_thread_state(self);
-    if (tmp_state == NULL)
+    if (!PYCURL_ACQUIRE_THREAD())
         return (curlioerr) ret;
-    PyEval_AcquireThread(tmp_state);
 
     /* check args */
     if (self->ioctl_cb == NULL)
@@ -1480,7 +1557,7 @@ ioctl_callback(CURL *curlobj, int cmd, void *stream)
 
 silent_error:
     Py_XDECREF(result);
-    PyEval_ReleaseThread(tmp_state);
+    PYCURL_RELEASE_THREAD();
     return (curlioerr) ret;
 verbose_error:
     PyErr_Print();
@@ -2324,7 +2401,9 @@ do_multi_new(PyObject *dummy)
 
     /* Initialize object attributes */
     self->dict = NULL;
+#ifdef WITH_THREAD
     self->state = NULL;
+#endif
     self->t_cb = NULL;
     self->s_cb = NULL;
 
@@ -2342,7 +2421,9 @@ static void
 util_multi_close(CurlMultiObject *self)
 {
     assert(self != NULL);
+#ifdef WITH_THREAD
     self->state = NULL;
+#endif
     if (self->multi_handle != NULL) {
         CURLM *multi_handle = self->multi_handle;
         self->multi_handle = NULL;
@@ -2411,7 +2492,7 @@ int multi_socket_callback(CURL *easy,
 {
     CurlMultiObject *self;
     CurlObject *easy_self;
-    PyThreadState *tmp_state;
+    PYCURL_DECLARE_THREAD_STATE;
     PyObject *arglist;
     PyObject *result = NULL;
     int ret;
@@ -2419,10 +2500,8 @@ int multi_socket_callback(CURL *easy,
     /* acquire thread */
     self = (CurlMultiObject *)userp;
     ret = curl_easy_getinfo(easy, CURLINFO_PRIVATE, &easy_self);
-    tmp_state = get_thread_state_multi(self);
-    if (tmp_state == NULL)
+    if (!PYCURL_ACQUIRE_THREAD_MULTI())
         return 0;
-    PyEval_AcquireThread(tmp_state);
 
     /* check args */
     if (self->s_cb == NULL)
@@ -2446,7 +2525,7 @@ int multi_socket_callback(CURL *easy,
 
 silent_error:
     Py_XDECREF(result);
-    PyEval_ReleaseThread(tmp_state);
+    PYCURL_RELEASE_THREAD();
     return 0;
 verbose_error:
     PyErr_Print();
@@ -2460,7 +2539,7 @@ int multi_timer_callback(CURLM *multi,
                          void *userp)
 {
     CurlMultiObject *self;
-    PyThreadState *tmp_state;
+    PYCURL_DECLARE_THREAD_STATE;
     PyObject *arglist;
     PyObject *result = NULL;
     int ret = 0;       /* always success */
@@ -2469,10 +2548,8 @@ int multi_timer_callback(CURLM *multi,
 
     /* acquire thread */
     self = (CurlMultiObject *)userp;
-    tmp_state = get_thread_state_multi(self);
-    if (tmp_state == NULL)
+    if (!PYCURL_ACQUIRE_THREAD_MULTI())
         return ret;
-    PyEval_AcquireThread(tmp_state);
 
     /* check args */
     if (self->t_cb == NULL)
@@ -2491,7 +2568,7 @@ int multi_timer_callback(CURLM *multi,
 
 silent_error:
     Py_XDECREF(result);
-    PyEval_ReleaseThread(tmp_state);
+    PYCURL_RELEASE_THREAD();
     return ret;
 verbose_error:
     PyErr_Print();
@@ -2634,14 +2711,10 @@ do_multi_socket_action(CurlMultiObject *self, PyObject *args)
     if (check_multi_state(self, 1 | 2, "socket_action") != 0) {
         return NULL;
     }
-    /* Release global lock and start */
-    self->state = PyThreadState_Get();
-    assert(self->state != NULL);
-    Py_BEGIN_ALLOW_THREADS
 
+    PYCURL_BEGIN_ALLOW_THREADS
     res = curl_multi_socket_action(self->multi_handle, socket, ev_bitmask, &running);
-    Py_END_ALLOW_THREADS
-    self->state = NULL;
+    PYCURL_END_ALLOW_THREADS
 
     if (res != CURLM_OK) {
         CURLERROR_MSG("multi_socket_action failed");
@@ -2662,13 +2735,9 @@ do_multi_socket_all(CurlMultiObject *self)
         return NULL;
     }
 
-    /* Release global lock and start */
-    self->state = PyThreadState_Get();
-    assert(self->state != NULL);
-    Py_BEGIN_ALLOW_THREADS
+    PYCURL_BEGIN_ALLOW_THREADS
     res = curl_multi_socket_all(self->multi_handle, &running);
-    Py_END_ALLOW_THREADS
-    self->state = NULL;
+    PYCURL_END_ALLOW_THREADS
 
     /* We assume these errors are ok, otherwise throw exception */
     if (res != CURLM_OK && res != CURLM_CALL_MULTI_PERFORM) {
@@ -2692,13 +2761,9 @@ do_multi_perform(CurlMultiObject *self)
         return NULL;
     }
 
-    /* Release global lock and start */
-    self->state = PyThreadState_Get();
-    assert(self->state != NULL);
-    Py_BEGIN_ALLOW_THREADS
+    PYCURL_BEGIN_ALLOW_THREADS
     res = curl_multi_perform(self->multi_handle, &running);
-    Py_END_ALLOW_THREADS
-    self->state = NULL;
+    PYCURL_END_ALLOW_THREADS
 
     /* We assume these errors are ok, otherwise throw exception */
     if (res != CURLM_OK && res != CURLM_CALL_MULTI_PERFORM) {
@@ -2722,16 +2787,20 @@ check_multi_add_remove(const CurlMultiObject *self, const CurlObject *obj)
         PyErr_SetString(ErrorObject, "cannot add/remove handle - multi-stack is closed");
         return -1;
     }
+#ifdef WITH_THREAD
     if (self->state != NULL) {
         PyErr_SetString(ErrorObject, "cannot add/remove handle - multi_perform() already running");
         return -1;
     }
+#endif
     /* check CurlObject status */
     assert_curl_state(obj);
+#ifdef WITH_THREAD
     if (obj->state != NULL) {
         PyErr_SetString(ErrorObject, "cannot add/remove handle - perform() of curl object already running");
         return -1;
     }
+#endif
     if (obj->multi_stack != NULL && obj->multi_stack != self) {
         PyErr_SetString(ErrorObject, "cannot add/remove handle - curl object already on another multi-stack");
         return -1;
@@ -3989,8 +4058,10 @@ initpycurl(void)
     pycurl_ssl_init();
 #endif
 
+#ifdef WITH_THREAD
     /* Finally initialize global interpreter lock */
     PyEval_InitThreads();
+#endif
 
 }
 
