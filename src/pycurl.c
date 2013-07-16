@@ -851,7 +851,6 @@ static int
 util_curl_init(CurlObject *self)
 {
     int res;
-    char *s = NULL;
 
     /* Set curl error buffer and zero it */
     res = curl_easy_setopt(self->handle, CURLOPT_ERRORBUFFER, self->error);
@@ -2495,11 +2494,10 @@ int multi_socket_callback(CURL *easy,
     PYCURL_DECLARE_THREAD_STATE;
     PyObject *arglist;
     PyObject *result = NULL;
-    int ret;
 
     /* acquire thread */
     self = (CurlMultiObject *)userp;
-    ret = curl_easy_getinfo(easy, CURLINFO_PRIVATE, &easy_self);
+    curl_easy_getinfo(easy, CURLINFO_PRIVATE, &easy_self);
     if (!PYCURL_ACQUIRE_THREAD_MULTI())
         return 0;
 
