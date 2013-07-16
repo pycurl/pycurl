@@ -68,6 +68,10 @@
 #define HAVE_CURLOPT_PROXYUSERNAME
 #endif
 
+#if LIBCURL_VERSION_NUM >= 0x071503 /* check for 7.21.3 or greater */
+#define HAVE_CURLOPT_RESOLVE
+#endif
+
 /* Python < 2.5 compat for Py_ssize_t */
 #if PY_VERSION_HEX < 0x02050000 && !defined(PY_SSIZE_T_MIN)
 typedef int Py_ssize_t;
@@ -185,6 +189,9 @@ typedef struct {
     struct curl_slist *quote;
     struct curl_slist *postquote;
     struct curl_slist *prequote;
+#ifdef HAVE_CURLOPT_RESOLVE
+    struct curl_slist *resolve;
+#endif
     /* callbacks */
     PyObject *w_cb;
     PyObject *h_cb;
@@ -824,6 +831,9 @@ util_curl_new(void)
     self->quote = NULL;
     self->postquote = NULL;
     self->prequote = NULL;
+#ifdef HAVE_CURLOPT_RESOLVE
+    self->resolve = NULL;
+#endif
 
     /* Set callback pointers to NULL by default */
     self->w_cb = NULL;
@@ -1026,6 +1036,9 @@ util_curl_close(CurlObject *self)
     SFREE(self->quote);
     SFREE(self->postquote);
     SFREE(self->prequote);
+#ifdef HAVE_CURLOPT_RESOLVE
+    SFREE(self->resolve);
+#endif
 #undef SFREE
 }
 
@@ -1588,6 +1601,9 @@ do_curl_reset(CurlObject *self)
     SFREE(self->quote);
     SFREE(self->postquote);
     SFREE(self->prequote);
+#ifdef HAVE_CURLOPT_RESOLVE
+    SFREE(self->resolve);
+#endif
 #undef SFREE
     res = util_curl_init(self);
     if (res < 0) {
@@ -1933,6 +1949,11 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_PREQUOTE:
             old_slist = &self->prequote;
             break;
+#ifdef HAVE_CURLOPT_RESOLVE
+        case CURLOPT_RESOLVE:
+            old_slist = &self->resolve;
+            break;
+#endif
         case CURLOPT_HTTPPOST:
             break;
         default:
@@ -1944,10 +1965,14 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         len = PyList_Size(obj);
         if (len == 0) {
             /* Empty list - do nothing */
-            if (!(option == CURLOPT_HTTPHEADER ||
-                  option == CURLOPT_QUOTE ||
-                  option == CURLOPT_POSTQUOTE ||
-                  option == CURLOPT_PREQUOTE)) {
+            if (!(option == CURLOPT_HTTPHEADER
+                  || option == CURLOPT_QUOTE
+                  || option == CURLOPT_POSTQUOTE
+                  || option == CURLOPT_PREQUOTE
+#ifdef HAVE_CURLOPT_RESOLVE
+                  || option == CURLOPT_RESOLVE
+#endif
+                  )) {
                 /* Empty list - do nothing */
                 Py_INCREF(Py_None);
                 return Py_None;
@@ -3889,6 +3914,9 @@ initpycurl(void)
     insint_c(d, "CRLFILE", CURLOPT_CRLFILE);
     insint_c(d, "ISSUERCERT", CURLOPT_ISSUERCERT);
     insint_c(d, "ADDRESS_SCOPE", CURLOPT_ADDRESS_SCOPE);
+#ifdef HAVE_CURLOPT_RESOLVE
+    insint_c(d, "RESOLVE", CURLOPT_RESOLVE);
+#endif
 
     insint_c(d, "M_TIMERFUNCTION", CURLMOPT_TIMERFUNCTION);
     insint_c(d, "M_SOCKETFUNCTION", CURLMOPT_SOCKETFUNCTION);
