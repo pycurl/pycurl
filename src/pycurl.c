@@ -1139,12 +1139,12 @@ static size_t
 util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *stream)
 {
     CurlObject *self;
-    PYCURL_DECLARE_THREAD_STATE;
     PyObject *arglist;
     PyObject *result = NULL;
     size_t ret = 0;     /* assume error */
     PyObject *cb;
     int total_size;
+    PYCURL_DECLARE_THREAD_STATE;
 
     /* acquire thread */
     self = (CurlObject *)stream;
@@ -1218,8 +1218,8 @@ opensocket_callback(void *clientp, curlsocktype purpose,
     PyObject *result = NULL;
     PyObject *fileno_result = NULL;
     CurlObject *self;
-    PYCURL_DECLARE_THREAD_STATE;
     int ret = CURL_SOCKET_BAD;
+    PYCURL_DECLARE_THREAD_STATE;
 
     self = (CurlObject *)clientp;
     PYCURL_ACQUIRE_THREAD();
@@ -1268,12 +1268,12 @@ static int
 seek_callback(void *stream, curl_off_t offset, int origin)
 {
     CurlObject *self;
-    PYCURL_DECLARE_THREAD_STATE;
     PyObject *arglist;
     PyObject *result = NULL;
     int ret = 2;     /* assume error 2 (can't seek, libcurl free to work around). */
     PyObject *cb;
     int source = 0;     /* assume beginning */
+    PYCURL_DECLARE_THREAD_STATE;
 
     /* acquire thread */
     self = (CurlObject *)stream;
@@ -1342,13 +1342,14 @@ static size_t
 read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
 {
     CurlObject *self;
-    PYCURL_DECLARE_THREAD_STATE;
     PyObject *arglist;
     PyObject *result = NULL;
 
     size_t ret = CURL_READFUNC_ABORT;     /* assume error, this actually works */
     int total_size;
 
+    PYCURL_DECLARE_THREAD_STATE;
+    
     /* acquire thread */
     self = (CurlObject *)stream;
     if (!PYCURL_ACQUIRE_THREAD())
@@ -1423,10 +1424,10 @@ progress_callback(void *stream,
                   double dltotal, double dlnow, double ultotal, double ulnow)
 {
     CurlObject *self;
-    PYCURL_DECLARE_THREAD_STATE;
     PyObject *arglist;
     PyObject *result = NULL;
     int ret = 1;       /* assume error */
+    PYCURL_DECLARE_THREAD_STATE;
 
     /* acquire thread */
     self = (CurlObject *)stream;
@@ -1472,10 +1473,10 @@ debug_callback(CURL *curlobj, curl_infotype type,
                char *buffer, size_t total_size, void *stream)
 {
     CurlObject *self;
-    PYCURL_DECLARE_THREAD_STATE;
     PyObject *arglist;
     PyObject *result = NULL;
     int ret = 0;       /* always success */
+    PYCURL_DECLARE_THREAD_STATE;
 
     UNUSED(curlobj);
 
@@ -1517,10 +1518,10 @@ static curlioerr
 ioctl_callback(CURL *curlobj, int cmd, void *stream)
 {
     CurlObject *self;
-    PYCURL_DECLARE_THREAD_STATE;
     PyObject *arglist;
     PyObject *result = NULL;
     int ret = CURLIOE_FAILRESTART;       /* assume error */
+    PYCURL_DECLARE_THREAD_STATE;
 
     UNUSED(curlobj);
 
@@ -2491,9 +2492,9 @@ int multi_socket_callback(CURL *easy,
 {
     CurlMultiObject *self;
     CurlObject *easy_self;
-    PYCURL_DECLARE_THREAD_STATE;
     PyObject *arglist;
     PyObject *result = NULL;
+    PYCURL_DECLARE_THREAD_STATE;
 
     /* acquire thread */
     self = (CurlMultiObject *)userp;
@@ -2537,10 +2538,10 @@ int multi_timer_callback(CURLM *multi,
                          void *userp)
 {
     CurlMultiObject *self;
-    PYCURL_DECLARE_THREAD_STATE;
     PyObject *arglist;
     PyObject *result = NULL;
     int ret = 0;       /* always success */
+    PYCURL_DECLARE_THREAD_STATE;
 
     UNUSED(multi);
 
