@@ -6,7 +6,11 @@ import pycurl
 import unittest
 import nose.plugins.skip
 
+from . import app
+from . import runwsgi
 from . import util
+
+setup_module, teardown_module = runwsgi.app_runner_setup((app.app, 8383, dict(ssl=True)))
 
 class CertinfoTest(unittest.TestCase):
     def setUp(self):
@@ -27,11 +31,13 @@ class CertinfoTest(unittest.TestCase):
         if util.pycurl_version_less_than(7, 19, 1):
             raise nose.plugins.skip.SkipTest('libcurl < 7.19.1')
         
-        self.curl.setopt(pycurl.URL, 'https://github.com/')
+        self.curl.setopt(pycurl.URL, 'https://localhost:8383/success')
         sio = util.StringIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
+        # self signed certificate
+        self.curl.setopt(pycurl.SSL_VERIFYPEER, 0)
         self.curl.perform()
-        assert 'GitHub' in sio.getvalue()
+        assert sio.getvalue() == 'success'
         
         certinfo = self.curl.getinfo(pycurl.INFO_CERTINFO)
         self.assertEqual([], certinfo)
@@ -41,12 +47,22 @@ class CertinfoTest(unittest.TestCase):
         if util.pycurl_version_less_than(7, 19, 1):
             raise nose.plugins.skip.SkipTest('libcurl < 7.19.1')
         
-        self.curl.setopt(pycurl.URL, 'https://github.com/')
+        self.curl.setopt(pycurl.URL, 'https://localhost:8383/success')
         sio = util.StringIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.setopt(pycurl.OPT_CERTINFO, 1)
+        # self signed certificate
+        self.curl.setopt(pycurl.SSL_VERIFYPEER, 0)
         self.curl.perform()
-        assert 'GitHub' in sio.getvalue()
+        assert sio.getvalue() == 'success'
         
         certinfo = self.curl.getinfo(pycurl.INFO_CERTINFO)
-        assert len(certinfo) > 0
+        # self signed certificate, one certificate in chain
+        assert len(certinfo) == 1
+        certinfo = certinfo[0]
+        # convert to a dictionary
+        certinfo_dict = {}
+        for entry in certinfo:
+            certinfo_dict[entry[0]] = entry[1]
+        assert 'Subject' in certinfo_dict
+        assert 'pycurl test suite' in certinfo_dict['Subject']
