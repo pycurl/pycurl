@@ -66,6 +66,7 @@
     LIBCURL_VERSION_MAJOR == 7 && LIBCURL_VERSION_MINOR == 19 && LIBCURL_VERSION_PATCH >= 1
 #define HAVE_CURLOPT_USERNAME
 #define HAVE_CURLOPT_PROXYUSERNAME
+#define HAVE_CURLOPT_CERTINFO
 #endif
 
 #if LIBCURL_VERSION_NUM >= 0x071503 /* check for 7.21.3 or greater */
@@ -297,6 +298,73 @@ error:
     return NULL;
 }
 
+#ifdef HAVE_CURLOPT_CERTINFO
+/* Convert a struct curl_certinfo into a Python data structure.
+ * In case of error return NULL with an exception set.
+ */
+static PyObject *convert_certinfo(struct curl_certinfo *cinfo)
+{
+    PyObject *certs;
+    int cert_index;
+
+    if (!cinfo) {
+        certs = Py_None;
+        Py_INCREF(certs);
+        return certs;
+    }
+
+    certs = PyList_New((Py_ssize_t)(cinfo->num_of_certs));
+    if (!certs)
+        return NULL;
+
+    for (cert_index = 0; cert_index < cinfo->num_of_certs; cert_index ++) {
+        struct curl_slist *fields = cinfo->certinfo[cert_index];
+        struct curl_slist *field_cursor;
+        int field_count, field_index;
+        PyObject *cert;
+
+        field_count = 0;
+        field_cursor = fields;
+        while (field_cursor != NULL) {
+            field_cursor = field_cursor->next;
+            field_count ++;
+        }
+
+        
+        cert = PyTuple_New((Py_ssize_t)field_count);
+        if (!cert)
+            goto error;
+        PyList_SetItem(certs, cert_index, cert); /* Eats the ref from New() */
+        
+        for(field_index = 0, field_cursor = fields;
+            field_cursor != NULL;
+            field_index ++, field_cursor = field_cursor->next) {
+            const char *field = field_cursor->data;
+            PyObject *field_tuple;
+
+            if (!field) {
+                field_tuple = Py_None; Py_INCREF(field_tuple);
+            } else {
+                const char *sep = strchr(field, ':');
+                if (!sep) {
+                    field_tuple = PyString_FromString(field);
+                } else {
+                    field_tuple = Py_BuildValue("s#s", field, (int)(sep - field), sep+1);
+                }
+                if (!field_tuple)
+                    goto error;
+            }
+            PyTuple_SET_ITEM(cert, field_index, field_tuple); /* Eats the ref */
+        }
+    }
+
+    return certs;
+    
+ error:
+    Py_DECREF(certs);
+    return NULL;
+}
+#endif
 
 #ifdef WITH_THREAD
 /*************************************************************************
@@ -1673,6 +1741,12 @@ util_curl_unsetopt(CurlObject *self, int option)
         SETOPT((char *) 0);
         break;
 
+#ifdef HAVE_CURLOPT_CERTINFO
+    case CURLOPT_CERTINFO:
+        SETOPT((long) 0);
+        break;
+#endif
+
     /* info: we explicitly list unsupported options here */
     case CURLOPT_COOKIEFILE:
     default:
@@ -2394,7 +2468,21 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
             }
             return convert_slist(slist, 1 | 2);
         }
+
+#ifdef HAVE_CURLOPT_CERTINFO
+    case CURLINFO_CERTINFO:
+        {
+            /* Return a list of lists of 2-tuples */
+            struct curl_certinfo *clist = NULL;
+            res = curl_easy_getinfo(self->handle, CURLINFO_CERTINFO, &clist);
+            if (res != CURLE_OK) {
+                CURLERROR_RETVAL();
+            } else {
+                return convert_certinfo(clist);
+            }
+        }
     }
+#endif
 
     /* Got wrong option on the method call */
     PyErr_SetString(PyExc_ValueError, "invalid argument to getinfo");
@@ -3916,6 +4004,9 @@ initpycurl(void)
 #ifdef HAVE_CURLOPT_RESOLVE
     insint_c(d, "RESOLVE", CURLOPT_RESOLVE);
 #endif
+#ifdef HAVE_CURLOPT_CERTINFO
+    insint_c(d, "OPT_CERTINFO", CURLOPT_CERTINFO);
+#endif
 
     insint_c(d, "M_TIMERFUNCTION", CURLMOPT_TIMERFUNCTION);
     insint_c(d, "M_SOCKETFUNCTION", CURLMOPT_SOCKETFUNCTION);
@@ -3993,6 +4084,9 @@ initpycurl(void)
     insint_c(d, "INFO_COOKIELIST", CURLINFO_COOKIELIST);
     insint_c(d, "LASTSOCKET", CURLINFO_LASTSOCKET);
     insint_c(d, "FTP_ENTRY_PATH", CURLINFO_FTP_ENTRY_PATH);
+#ifdef HAVE_CURLOPT_CERTINFO
+    insint_c(d, "INFO_CERTINFO", CURLINFO_CERTINFO);
+#endif
 
     /* options for global_init() */
     insint(d, "GLOBAL_SSL", CURL_GLOBAL_SSL);
