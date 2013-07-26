@@ -307,11 +307,8 @@ static PyObject *convert_certinfo(struct curl_certinfo *cinfo)
     PyObject *certs;
     int cert_index;
 
-    if (!cinfo) {
-        certs = Py_None;
-        Py_INCREF(certs);
-        return certs;
-    }
+    if (!cinfo)
+        Py_RETURN_NONE;
 
     certs = PyList_New((Py_ssize_t)(cinfo->num_of_certs));
     if (!certs)
@@ -858,8 +855,7 @@ do_curlshare_setopt(CurlShareObject *self, PyObject *args)
             PyErr_SetString(PyExc_TypeError, "integers are not supported for this option");
             return NULL;
         }
-        Py_INCREF(Py_None);
-        return Py_None;
+        Py_RETURN_NONE;
     }
     /* Failed to match any of the function signatures -- return error */
 error:
@@ -1131,8 +1127,7 @@ do_curl_close(CurlObject *self)
         return NULL;
     }
     util_curl_close(self);
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 
@@ -1205,8 +1200,7 @@ do_curl_perform(CurlObject *self)
     if (res != CURLE_OK) {
         CURLERROR_RETVAL();
     }
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 
@@ -1680,8 +1674,7 @@ do_curl_reset(CurlObject *self)
         return NULL;
     }
 
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 /* --------------- unsetopt/setopt/getinfo --------------- */
@@ -1754,8 +1747,7 @@ util_curl_unsetopt(CurlObject *self, int option)
         return NULL;
     }
 
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 
 error:
     CURLERROR_RETVAL();
@@ -1898,8 +1890,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         if (res != CURLE_OK) {
             CURLERROR_RETVAL();
         }
-        Py_INCREF(Py_None);
-        return Py_None;
+        Py_RETURN_NONE;
     }
 
 #define IS_LONG_OPTION(o)   (o < CURLOPTTYPE_OBJECTPOINT)
@@ -1920,8 +1911,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         if (res != CURLE_OK) {
             CURLERROR_RETVAL();
         }
-        Py_INCREF(Py_None);
-        return Py_None;
+        Py_RETURN_NONE;
     }
 
     /* Handle the case of long arguments (used by *_LARGE options) */
@@ -1941,8 +1931,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         if (res != CURLE_OK) {
             CURLERROR_RETVAL();
         }
-        Py_INCREF(Py_None);
-        return Py_None;
+        Py_RETURN_NONE;
     }
 
 #undef IS_LONG_OPTION
@@ -1997,8 +1986,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             break;
         }
         /* Return success */
-        Py_INCREF(Py_None);
-        return Py_None;
+        Py_RETURN_NONE;
     }
 
     /* Handle the case of list objects */
@@ -2037,23 +2025,8 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         }
 
         len = PyList_Size(obj);
-        if (len == 0) {
-            /* Empty list - do nothing */
-            if (!(option == CURLOPT_HTTPHEADER
-                  || option == CURLOPT_QUOTE
-                  || option == CURLOPT_POSTQUOTE
-                  || option == CURLOPT_PREQUOTE
-#ifdef HAVE_CURLOPT_RESOLVE
-                  || option == CURLOPT_RESOLVE
-#endif
-                  )) {
-                /* Empty list - do nothing */
-                Py_INCREF(Py_None);
-                return Py_None;
-            }
-            Py_INCREF(Py_None);
-            return Py_None;
-        }
+        if (len == 0)
+            Py_RETURN_NONE;
 
         /* Handle HTTPPOST different since we construct a HttpPost form struct */
         if (option == CURLOPT_HTTPPOST) {
@@ -2193,8 +2166,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             curl_formfree(self->httppost);
             self->httppost = post;
 
-            Py_INCREF(Py_None);
-            return Py_None;
+            Py_RETURN_NONE;
         }
 
         /* Just to be sure we do not bug off here */
@@ -2235,8 +2207,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         curl_slist_free_all(*old_slist);
         *old_slist = slist;
 
-        Py_INCREF(Py_None);
-        return Py_None;
+        Py_RETURN_NONE;
     }
 
     /* Handle the case of function objects for callbacks */
@@ -2323,17 +2294,15 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             PyErr_SetString(PyExc_TypeError, "functions are not supported for this option");
             return NULL;
         }
-        Py_INCREF(Py_None);
-        return Py_None;
+        Py_RETURN_NONE;
     }
     /* handle the SHARE case */
     if (option == CURLOPT_SHARE) {
         CurlShareObject *share;
 
-        if (self->share == NULL && (obj == NULL || obj == Py_None)){
-            Py_INCREF(Py_None);
-            return Py_None;
-        }
+        if (self->share == NULL && (obj == NULL || obj == Py_None))
+            Py_RETURN_NONE;
+
         if (self->share) {
             if (obj != Py_None) {
                 PyErr_SetString(ErrorObject, "Curl object already sharing. Unshare first.");
@@ -2347,8 +2316,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                 }
                 self->share = NULL;
                 Py_DECREF(share);
-                Py_INCREF(Py_None);
-                return Py_None;
+                Py_RETURN_NONE;
             }
         }
         if (obj->ob_type != p_CurlShare_Type) {
@@ -2362,8 +2330,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         }
         self->share = share;
         Py_INCREF(share);
-        Py_INCREF(Py_None);
-        return Py_None;
+        Py_RETURN_NONE;
     }
 
     /* Failed to match any of the function signatures -- return error */
@@ -2425,10 +2392,8 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
                 CURLERROR_RETVAL();
             }
             /* If the resulting string is NULL, return None */
-            if (s_res == NULL) {
-                Py_INCREF(Py_None);
-                return Py_None;
-            }
+            if (s_res == NULL)
+                Py_RETURN_NONE;
             return PyString_FromString(s_res);
         }
 
@@ -2566,8 +2531,7 @@ do_multi_close(CurlMultiObject *self)
         return NULL;
     }
     util_multi_close(self);
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 
@@ -2723,8 +2687,7 @@ do_multi_setopt(CurlMultiObject *self, PyObject *args)
             PyErr_SetString(PyExc_TypeError, "integers are not supported for this option");
             return NULL;
         }
-        Py_INCREF(Py_None);
-        return Py_None;
+        Py_RETURN_NONE;
     }
     if (PyFunction_Check(obj) || PyCFunction_Check(obj) ||
         PyCallable_Check(obj) || PyMethod_Check(obj)) {
@@ -2751,8 +2714,7 @@ do_multi_setopt(CurlMultiObject *self, PyObject *args)
             PyErr_SetString(PyExc_TypeError, "callables are not supported for this option");
             return NULL;
         }
-        Py_INCREF(Py_None);
-        return Py_None;
+        Py_RETURN_NONE;
     }
     /* Failed to match any of the function signatures -- return error */
 error:
@@ -2804,8 +2766,7 @@ do_multi_assign(CurlMultiObject *self, PyObject *args)
         CURLERROR_MSG("assign failed");
     }
 
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 
@@ -2948,8 +2909,7 @@ do_multi_add_handle(CurlMultiObject *self, PyObject *args)
     }
     obj->multi_stack = self;
     Py_INCREF(self);
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 
@@ -2981,8 +2941,7 @@ do_multi_remove_handle(CurlMultiObject *self, PyObject *args)
     obj->multi_stack = NULL;
     Py_DECREF(self);
 done:
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 
@@ -3452,8 +3411,7 @@ do_global_init(PyObject *dummy, PyObject *args)
         return NULL;
     }
 
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 
@@ -3465,17 +3423,14 @@ do_global_cleanup(PyObject *dummy)
 #ifdef PYCURL_NEED_SSL_TSL
     pycurl_ssl_cleanup();
 #endif
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 
 static PyObject *vi_str(const char *s)
 {
-    if (s == NULL) {
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
+    if (s == NULL)
+        Py_RETURN_NONE;
     while (*s == ' ' || *s == '\t')
         s++;
     return PyString_FromString(s);
