@@ -34,11 +34,6 @@ $version_date = "Sep 9 2008"
 
 
 <p>
-&gt;&gt;&gt; import pycurl<br />
-&gt;&gt;&gt; print pycurl.__doc__
-</p>
-
-<p>
 PycURL is a
 <a href="http://www.python.org/">Python</a> interface to
 <a href="http://curl.haxx.se/libcurl/">libcurl</a>.
