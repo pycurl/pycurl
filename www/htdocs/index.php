@@ -32,11 +32,17 @@ $version_date = "Sep 9 2008"
   <?php echo $version_date; ?><br />
 </center>
 
+<h2>Quick Links</h2>
 
-<p>
-&gt;&gt;&gt; import pycurl<br />
-&gt;&gt;&gt; print pycurl.__doc__
-</p>
+<ul>
+  <li><a href="/doc/pycurl.html">PycURL documentation</a></li>
+  <li><a href="http://curl.haxx.se/libcurl/c/">libcurl documentation</a></li>
+  <li><a href="http://cool.haxx.se/mailman/listinfo/curl-and-python">Mailing list</a></li>
+  <li><a href="http://curl.haxx.se/mail/list.cgi?list=curl-and-python">Mailing list archives</a></li>
+</ul>
+
+
+<h2>Overview</h2>
 
 <p>
 PycURL is a
@@ -48,8 +54,6 @@ from a Python program, similar to the
 PycURL is mature, very fast, and supports a lot of features.
 </p>
 
-
-<h2>Overview</h2>
 
 <ul>
   <li>
@@ -81,21 +85,21 @@ PycURL is mature, very fast, and supports a lot of features.
 <h2>Intended Audience</h2>
 
 <p>
-PycURL is targeted at the advanced developer - if you need dozens of
-concurrent fast and reliable connections or any of the sophisticated
-features as listed above then PycURL is for you.
+PycURL is targeted at an advanced developer - if you need dozens of
+concurrent, fast and reliable connections or any of the sophisticated
+features listed above then PycURL is for you.
 </p>
 
 <p>
-The main drawback with PycURL is that it is a relative thin layer over
+The main drawback of PycURL is that it is a relatively thin layer over
 libcurl without any of those nice Pythonic class hierarchies.
 This means it has a somewhat steep learning curve unless you
 are already familiar with libcurl's C API.
 </p>
 
 <p>
-To sum up, PycURL is very fast (esp. for multiple concurrent operations)
-and very feature complete, but has a somewhat complex interface.
+To sum up, PycURL is very fast (especially for multiple concurrent operations)
+and very feature rich, but has a somewhat complex interface.
 If you need something simpler or prefer a pure Python
 module you might want to check out
 <a href="http://www.python.org/doc/current/lib/module-urllib2.html">urllib2</a>
@@ -139,7 +143,7 @@ For a list of changes consult the <a href="ChangeLog">PycURL ChangeLog</a>.
 <a href="download/pycurl-7.19.0.tar.gz">Download</a>
 PycURL sources version <?php echo "$version ($version_date)"; ?> or try
 the code from
-<a href="http://sourceforge.net/cvs/?group_id=28236">the CVS repository</a>.
+<a href="https://github.com/p/pycurl">the Git repository</a>.
 </p>
 
 <p>
@@ -162,16 +166,23 @@ and <a href="http://openbsd.org">OpenBSD</a>.
 If you want to ask questions or discuss PycURL related issues, our
 <a href="http://cool.haxx.se/mailman/listinfo/curl-and-python">mailing list</a>
 is the place to be.
+<a href="http://curl.haxx.se/mail/list.cgi?list=curl-and-python">Mailing list
+archives</a> are available for your perusal.
 </p>
 
 <p>
-The
+<a href="https://github.com/p/pycurl/issues">Bugs</a> and
+<a href="https://github.com/p/pycurl/pulls">patches</a> are tracked
+on GitHub.
+If your patch or proposal is non-trivial, please discuss it on
+the mailing list before submitting code.
+Older bugs and patches are viewable on the
 <a href="http://sourceforge.net/projects/pycurl/">PycURL SourceForge</a>
-project page provides bug- and patch tracking systems.
+project page.
 </p>
 
 <p>
-And the libcurl library also has it's own
+The libcurl library also has it's own
 <a href="http://curl.haxx.se/mail/">mailing lists</a>.
 </p>
 
@@ -208,7 +219,7 @@ according to the terms of either license.
 </div>
 
 <font size="-1"><i>
-  <?php echo 'Last modified ' . date('D M d H:i:s T Y', getlastmod()) . '.'; ?>
+  <?php echo 'Last modified ' . @date('D M d H:i:s T Y', getlastmod()) . '.'; ?>
 </i></font>
 
 </body>
