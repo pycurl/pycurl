@@ -76,21 +76,21 @@ PycURL is mature, very fast, and supports a lot of features.
 <h2>Intended Audience</h2>
 
 <p>
-PycURL is targeted at the advanced developer - if you need dozens of
-concurrent fast and reliable connections or any of the sophisticated
-features as listed above then PycURL is for you.
+PycURL is targeted at an advanced developer - if you need dozens of
+concurrent, fast and reliable connections or any of the sophisticated
+features listed above then PycURL is for you.
 </p>
 
 <p>
-The main drawback with PycURL is that it is a relative thin layer over
+The main drawback of PycURL is that it is a relatively thin layer over
 libcurl without any of those nice Pythonic class hierarchies.
 This means it has a somewhat steep learning curve unless you
 are already familiar with libcurl's C API.
 </p>
 
 <p>
-To sum up, PycURL is very fast (esp. for multiple concurrent operations)
-and very feature complete, but has a somewhat complex interface.
+To sum up, PycURL is very fast (especially for multiple concurrent operations)
+and very feature rich, but has a somewhat complex interface.
 If you need something simpler or prefer a pure Python
 module you might want to check out
 <a href="http://www.python.org/doc/current/lib/module-urllib2.html">urllib2</a>
