@@ -32,6 +32,17 @@ $version_date = "Sep 9 2008"
   <?php echo $version_date; ?><br />
 </center>
 
+<h2>Quick Links</h2>
+
+<ul>
+  <li><a href="/doc/pycurl.html">PycURL documentation</a></li>
+  <li><a href="http://curl.haxx.se/libcurl/c/">libcurl documentation</a></li>
+  <li><a href="http://cool.haxx.se/mailman/listinfo/curl-and-python">Mailing list</a></li>
+  <li><a href="http://curl.haxx.se/mail/list.cgi?list=curl-and-python">Mailing list archives</a></li>
+</ul>
+
+
+<h2>Overview</h2>
 
 <p>
 PycURL is a
@@ -43,8 +54,6 @@ from a Python program, similar to the
 PycURL is mature, very fast, and supports a lot of features.
 </p>
 
-
-<h2>Overview</h2>
 
 <ul>
   <li>
@@ -157,6 +166,8 @@ and <a href="http://openbsd.org">OpenBSD</a>.
 If you want to ask questions or discuss PycURL related issues, our
 <a href="http://cool.haxx.se/mailman/listinfo/curl-and-python">mailing list</a>
 is the place to be.
+<a href="http://curl.haxx.se/mail/list.cgi?list=curl-and-python">Mailing list
+archives</a> are available for your perusal.
 </p>
 
 <p>
