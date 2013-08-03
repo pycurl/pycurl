@@ -139,7 +139,7 @@ For a list of changes consult the <a href="ChangeLog">PycURL ChangeLog</a>.
 <a href="download/pycurl-7.19.0.tar.gz">Download</a>
 PycURL sources version <?php echo "$version ($version_date)"; ?> or try
 the code from
-<a href="http://sourceforge.net/cvs/?group_id=28236">the CVS repository</a>.
+<a href="https://github.com/p/pycurl">the Git repository</a>.
 </p>
 
 <p>
