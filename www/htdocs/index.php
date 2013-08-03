@@ -171,13 +171,18 @@ archives</a> are available for your perusal.
 </p>
 
 <p>
-The
+<a href="https://github.com/p/pycurl/issues">Bugs</a> and
+<a href="https://github.com/p/pycurl/pulls">patches</a> are tracked
+on GitHub.
+If your patch or proposal is non-trivial, please discuss it on
+the mailing list before submitting code.
+Older bugs and patches are viewable on the
 <a href="http://sourceforge.net/projects/pycurl/">PycURL SourceForge</a>
-project page provides bug- and patch tracking systems.
+project page.
 </p>
 
 <p>
-And the libcurl library also has it's own
+The libcurl library also has it's own
 <a href="http://curl.haxx.se/mail/">mailing lists</a>.
 </p>
 
