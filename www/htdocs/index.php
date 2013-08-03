@@ -208,7 +208,7 @@ according to the terms of either license.
 </div>
 
 <font size="-1"><i>
-  <?php echo 'Last modified ' . date('D M d H:i:s T Y', getlastmod()) . '.'; ?>
+  <?php echo 'Last modified ' . @date('D M d H:i:s T Y', getlastmod()) . '.'; ?>
 </i></font>
 
 </body>
