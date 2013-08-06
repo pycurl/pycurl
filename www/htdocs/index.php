@@ -177,8 +177,8 @@ on GitHub.
 If your patch or proposal is non-trivial, please discuss it on
 the mailing list before submitting code.
 Older bugs and patches can be found on the
-<a href="https://github.com/p/pycurl/issues">issues</a> and
-<a href="https://github.com/p/pycurl/pulls">pull requests</a> pages
+<a href="https://github.com/p/pycurl-archived/issues">issues</a> and
+<a href="https://github.com/p/pycurl-archived/pulls">pull requests</a> pages
 for the temporary Git import repository on Github, and on the
 <a href="http://sourceforge.net/projects/pycurl/">PycURL SourceForge</a>
 project page.
