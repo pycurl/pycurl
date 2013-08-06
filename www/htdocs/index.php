@@ -143,7 +143,7 @@ For a list of changes consult the <a href="ChangeLog">PycURL ChangeLog</a>.
 <a href="download/pycurl-7.19.0.tar.gz">Download</a>
 PycURL sources version <?php echo "$version ($version_date)"; ?> or try
 the code from
-<a href="https://github.com/p/pycurl">the Git repository</a>.
+<a href="https://github.com/pycurl-devs/pycurl">the Git repository</a>.
 </p>
 
 <p>
@@ -171,18 +171,21 @@ archives</a> are available for your perusal.
 </p>
 
 <p>
-<a href="https://github.com/p/pycurl/issues">Bugs</a> and
-<a href="https://github.com/p/pycurl/pulls">patches</a> are tracked
+<a href="https://github.com/pycurl-devs/pycurl/issues">Bugs</a> and
+<a href="https://github.com/pycurl-devs/pycurl/pulls">patches</a> are tracked
 on GitHub.
 If your patch or proposal is non-trivial, please discuss it on
 the mailing list before submitting code.
-Older bugs and patches are viewable on the
+Older bugs and patches can be found on the
+<a href="https://github.com/p/pycurl/issues">issues</a> and
+<a href="https://github.com/p/pycurl/pulls">pull requests</a> pages
+for the temporary Git import repository on Github, and on the
 <a href="http://sourceforge.net/projects/pycurl/">PycURL SourceForge</a>
 project page.
 </p>
 
 <p>
-The libcurl library also has it's own
+The libcurl library also has its own
 <a href="http://curl.haxx.se/mail/">mailing lists</a>.
 </p>
 

@@ -91,8 +91,8 @@ For larger changes:
 #. Discuss your proposal on the mailing list.
 #. When consensus is reached, implement it as described above.
 
-.. image:: https://api.travis-ci.org/p/pycurl.png
-	   :target: https://travis-ci.org/p/pycurl
+.. image:: https://api.travis-ci.org/pycurl-devs/pycurl.png
+	   :target: https://travis-ci.org/pycurl-devs/pycurl
 
 License
 -------
@@ -113,5 +113,5 @@ License
 .. _PycURL: http://pycurl.sourceforge.net/
 .. _libcurl: http://curl.haxx.se/libcurl/
 .. _urllib: http://docs.python.org/library/urllib.html
-.. _`the repository`: https://github.com/p/pycurl
+.. _`the repository`: https://github.com/pycurl-devs/pycurl
 .. _`mailing list`: http://cool.haxx.se/mailman/listinfo/curl-and-python
