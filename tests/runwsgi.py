@@ -85,7 +85,7 @@ class ServerThread(threading.Thread):
         self.app = app
         self.port = port
         self.server_kwargs = server_kwargs
-        self.server = server(host='localhost', port=self.port, **self.server_kwargs)
+        self.server = server(host='127.0.0.1', port=self.port, **self.server_kwargs)
     
     def run(self):
         bottle.run(self.app, server=self.server, quiet=True)
