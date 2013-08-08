@@ -379,7 +379,7 @@ get_thread_state(const CurlObject *self)
      */
     if (self == NULL)
         return NULL;
-    assert(self->ob_type == p_Curl_Type);
+    assert(Py_TYPE(self) == p_Curl_Type);
     if (self->state != NULL)
     {
         /* inside perform() */
@@ -409,7 +409,7 @@ get_thread_state_multi(const CurlMultiObject *self)
      */
     if (self == NULL)
         return NULL;
-    assert(self->ob_type == p_CurlMulti_Type);
+    assert(Py_TYPE(self) == p_CurlMulti_Type);
     if (self->state != NULL)
     {
         /* inside multi_perform() */
@@ -452,7 +452,7 @@ static void
 assert_share_state(const CurlShareObject *self)
 {
     assert(self != NULL);
-    assert(self->ob_type == p_CurlShare_Type);
+    assert(Py_TYPE(self) == p_CurlShare_Type);
 #ifdef WITH_THREAD
     assert(self->lock != NULL);
 #endif
@@ -464,7 +464,7 @@ static void
 assert_curl_state(const CurlObject *self)
 {
     assert(self != NULL);
-    assert(self->ob_type == p_Curl_Type);
+    assert(Py_TYPE(self) == p_Curl_Type);
 #ifdef WITH_THREAD
     (void) get_thread_state(self);
 #endif
@@ -476,7 +476,7 @@ static void
 assert_multi_state(const CurlMultiObject *self)
 {
     assert(self != NULL);
-    assert(self->ob_type == p_CurlMulti_Type);
+    assert(Py_TYPE(self) == p_CurlMulti_Type);
 #ifdef WITH_THREAD
     if (self->state != NULL) {
         assert(self->multi_handle != NULL);
@@ -1057,7 +1057,7 @@ util_curl_close(CurlObject *self)
     /* Zero handle and thread-state to disallow any operations to be run
      * from now on */
     assert(self != NULL);
-    assert(self->ob_type == p_Curl_Type);
+    assert(Py_TYPE(self) == p_Curl_Type);
     handle = self->handle;
     self->handle = NULL;
     if (handle == NULL) {
@@ -2319,7 +2319,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                 Py_RETURN_NONE;
             }
         }
-        if (obj->ob_type != p_CurlShare_Type) {
+        if (Py_TYPE(obj) != p_CurlShare_Type) {
             PyErr_SetString(PyExc_TypeError, "invalid arguments to setopt");
             return NULL;
         }
@@ -3052,7 +3052,7 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
             Py_DECREF(ok_list);
             CURLERROR_MSG("Unable to fetch curl handle from curl object");
         }
-        assert(co->ob_type == p_Curl_Type);
+        assert(Py_TYPE(co) == p_Curl_Type);
         if (msg->msg != CURLMSG_DONE) {
             /* FIXME: what does this mean ??? */
         }
@@ -3639,9 +3639,9 @@ initpycurl(void)
     p_Curl_Type = &Curl_Type;
     p_CurlMulti_Type = &CurlMulti_Type;
     p_CurlShare_Type = &CurlShare_Type;
-    Curl_Type.ob_type = &PyType_Type;
-    CurlMulti_Type.ob_type = &PyType_Type;
-    CurlShare_Type.ob_type = &PyType_Type;
+    Py_TYPE(&Curl_Type) = &PyType_Type;
+    Py_TYPE(&CurlMulti_Type) = &PyType_Type;
+    Py_TYPE(&CurlShare_Type) = &PyType_Type;
 
     /* Create the module and add the functions */
     m = Py_InitModule3("pycurl", curl_methods, module_doc);
