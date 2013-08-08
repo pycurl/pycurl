@@ -2446,8 +2446,8 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
                 return convert_certinfo(clist);
             }
         }
-    }
 #endif
+    }
 
     /* Got wrong option on the method call */
     PyErr_SetString(PyExc_ValueError, "invalid argument to getinfo");
