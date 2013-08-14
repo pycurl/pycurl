@@ -54,8 +54,8 @@
 #include <assert.h>
 
 /* Ensure we have updated versions */
-#if !defined(PY_VERSION_HEX) || (PY_VERSION_HEX < 0x02020000)
-#  error "Need Python version 2.2 or greater to compile pycurl."
+#if !defined(PY_VERSION_HEX) || (PY_VERSION_HEX < 0x02040000)
+#  error "Need Python version 2.4 or greater to compile pycurl."
 #endif
 #if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x071300)
 #  error "Need libcurl version 7.19.0 or greater to compile pycurl."
