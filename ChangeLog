@@ -1,16 +1,52 @@
-Version 7.19.2
---------------
+Version 7.19.0.1
+----------------
 
-        * Cleaned up website
+        * Python 2.4 is now the minimum required version.
+
+        * Source code, bugs and patches are now kept on GitHub.
+
+        * Added CURLINFO_CERTINFO and CURLOPT_CERTINFO.
+
+        * Added CURLOPT_RESOLVE.
+
+        * PycURL can now be used with Python binaries without thread
+          support.
+
+        * gcrypt is no longer initialized when a newer version of gnutls
+          is used.
+
+        * Marked NSS as supported.
+
+        * Fixed relative URL request logic.
+
+        * Fixed a memory leak in util_curl_init.
+
+        * Added CURLOPT_USERNAME and CURLOPT_PASSWORD.
+
+        * Fixed handling of big timeout values.
+
+        * Added GLOBAL_ACK_EINTR.
+
+        * setopt(..., None) can be used as unsetopt().
+
+        * CURLOPT_RANGE can now be unset.
+
+        * Write callback can return -1 to signal user abort.
+
+        * Reorganized tests into an automated test suite.
+
+        * Added CURLOPT_SEEKFUNCTION and CURLOPT_SEEKDATA.
+
+        * Cleaned up website.
 
         * Fix pycurl.reset() (patch by <johansen at sun.com>).
 
         * Fix install routine in setup.py where
           certain platforms (Solaris, Mac OSX, etc)
-          would search for a static copy of libcurl (dbp)
+          would search for a static copy of libcurl (dbp).
 
-Version 7.19.1 [requires libcurl-7.19.0 or better]
---------------
+        * Fixed build on OpenSolaris 0906 and other platforms on which
+          curl-config does not have a --static-libs option.
 
         * No longer keep string options copies in the
           Curl Python objects, since string options are
