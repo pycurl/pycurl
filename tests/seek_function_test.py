@@ -4,6 +4,8 @@
 
 # Note: this test is meant to be run from pycurl project root.
 
+from __future__ import with_statement
+
 import pycurl
 import unittest
 import os.path
