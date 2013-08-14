@@ -80,6 +80,11 @@ typedef int Py_ssize_t;
 #define PY_SSIZE_T_MIN INT_MIN
 #endif
 
+/* Py_TYPE is defined by Python 2.6+ */
+#if !defined(Py_TYPE)
+#  define Py_TYPE(x) (x)->ob_type
+#endif
+
 #undef UNUSED
 #define UNUSED(var)     ((void)&var)
 
