@@ -11,7 +11,5 @@ install: >
   fi &&
   sudo apt-get install vsftpd
 script: >
-  make &&
-  export PYTHONPATH=$(ls -d build/lib.*) &&
   export PYCURL_VSFTPD_PATH=/usr/sbin/vsftpd &&
-  nosetests
+  make test
