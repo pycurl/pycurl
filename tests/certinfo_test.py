@@ -46,6 +46,9 @@ class CertinfoTest(unittest.TestCase):
         # CURLOPT_CERTINFO was introduced in libcurl-7.19.1
         if util.pycurl_version_less_than(7, 19, 1):
             raise nose.plugins.skip.SkipTest('libcurl < 7.19.1')
+        # CURLOPT_CERTINFO only works with OpenSSL
+        if 'openssl' not in pycurl.version.lower():
+            raise nose.plugins.skip.SkipTest('libcurl does not use openssl')
         
         self.curl.setopt(pycurl.URL, 'https://localhost:8383/success')
         sio = util.StringIO()
