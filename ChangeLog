@@ -1,4 +1,4 @@
-Version 7.19.0.1
+Version 7.19.0.1 [requires libcurl-7.19.0 or better]
 ----------------
 
         * Python 2.4 is now the minimum required version.
@@ -53,7 +53,7 @@ Version 7.19.0.1
           now managed by libcurl.
 
 
-Version 7.19.0
+Version 7.19.0 [requires libcurl-7.19.0 or better]
 --------------
 
         * Added CURLFILE, ADDRESS_SCOPE and ISSUERCERT options,
