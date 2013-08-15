@@ -17,12 +17,15 @@ from . import util
 setup_module, teardown_module = runwsgi.app_runner_setup((app.app, 8380))
 
 socket_open_called = False
+socket_open_address = None
 
-def socket_open(family, socktype, protocol):
+def socket_open(family, socktype, protocol, address):
     global socket_open_called
+    global socket_open_address
     socket_open_called = True
+    socket_open_address = address
     
-    #print(family, socktype, protocol)
+    #print(family, socktype, protocol, address)
     s = socket.socket(family, socktype, protocol)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
     return s
@@ -42,4 +45,5 @@ class SocketOpenTest(unittest.TestCase):
         self.curl.perform()
         
         assert socket_open_called
+        self.assertEqual(("127.0.0.1", 8380), socket_open_address)
         self.assertEqual('success', sio.getvalue())
