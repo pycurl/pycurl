@@ -137,8 +137,6 @@ else:
 
 ###############################################################################
 
-def get_kw(**kw): return kw
-
 ext = Extension(
     name=PACKAGE,
     sources=[
@@ -193,7 +191,7 @@ def get_data_files():
 
 ###############################################################################
 
-setup_args = get_kw(
+setup_args = dict(
     name=PACKAGE,
     version=VERSION,
     description="PycURL -- cURL library module for Python",
