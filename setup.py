@@ -203,12 +203,11 @@ setup_args = dict(
     license="LGPL/MIT",
     data_files=get_data_files(),
     ext_modules=[ext],
+    packages=[PY_PACKAGE],
+    package_dir={ PY_PACKAGE: os.path.join('python', 'curl') },
     long_description="""
 This module provides Python bindings for the cURL library.""",
 )
-
-setup_args["packages"] = [PY_PACKAGE]
-setup_args["package_dir"] = { PY_PACKAGE: os.path.join('python', 'curl') }
 
 
 ##print distutils.__version__
