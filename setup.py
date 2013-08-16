@@ -81,13 +81,13 @@ else:
     OPENSSL_DIR = scan_argv("--openssl-dir=", "")
     if OPENSSL_DIR != "":
         include_dirs.append(os.path.join(OPENSSL_DIR, "include"))
-    CURL_CONFIG = "curl-config"
+    CURL_CONFIG = ENV.get('PYCURL_CURL_CONFIG', "curl-config")
     CURL_CONFIG = scan_argv("--curl-config=", CURL_CONFIG)
     d = os.popen("'%s' --version" % CURL_CONFIG).read()
     if d:
         d = str.strip(d)
     if not d:
-        raise Exception("`%s' not found -- please install the libcurl development files" % CURL_CONFIG)
+        raise Exception("`%s' not found -- please install the libcurl development files or specify --curl-config=/path/to/curl-config" % CURL_CONFIG)
     print("Using %s (%s)" % (CURL_CONFIG, d))
     for e in split_quoted(os.popen("'%s' --cflags" % CURL_CONFIG).read()):
         if e[:2] == "-I":
@@ -108,8 +108,8 @@ else:
         if p.wait() == 0:
             optbuf += stdout.decode()
     if optbuf == "":
-        raise Exception("Neither of curl-config --libs or --static-libs" +
-            "produced output")
+        raise Exception("Neither curl-config --libs nor curl-config --static-libs" +
+            " produced output")
     libs = split_quoted(optbuf)
 
     for e in libs:
@@ -136,8 +136,6 @@ else:
 
 
 ###############################################################################
-
-def get_kw(**kw): return kw
 
 ext = Extension(
     name=PACKAGE,
@@ -193,7 +191,7 @@ def get_data_files():
 
 ###############################################################################
 
-setup_args = get_kw(
+setup_args = dict(
     name=PACKAGE,
     version=VERSION,
     description="PycURL -- cURL library module for Python",
@@ -205,13 +203,11 @@ setup_args = get_kw(
     license="LGPL/MIT",
     data_files=get_data_files(),
     ext_modules=[ext],
+    packages=[PY_PACKAGE],
+    package_dir={ PY_PACKAGE: os.path.join('python', 'curl') },
     long_description="""
 This module provides Python bindings for the cURL library.""",
 )
-
-if sys.version >= "2.2":
-    setup_args["packages"] = [PY_PACKAGE]
-    setup_args["package_dir"] = { PY_PACKAGE: os.path.join('python', 'curl') }
 
 
 ##print distutils.__version__
