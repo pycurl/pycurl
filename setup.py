@@ -209,9 +209,8 @@ setup_args = get_kw(
 This module provides Python bindings for the cURL library.""",
 )
 
-if sys.version >= "2.2":
-    setup_args["packages"] = [PY_PACKAGE]
-    setup_args["package_dir"] = { PY_PACKAGE: os.path.join('python', 'curl') }
+setup_args["packages"] = [PY_PACKAGE]
+setup_args["package_dir"] = { PY_PACKAGE: os.path.join('python', 'curl') }
 
 
 ##print distutils.__version__
