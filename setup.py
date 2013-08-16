@@ -87,7 +87,7 @@ else:
     if d:
         d = str.strip(d)
     if not d:
-        raise Exception("`%s' not found -- please install the libcurl development files" % CURL_CONFIG)
+        raise Exception("`%s' not found -- please install the libcurl development files or specify --curl-config=/path/to/curl-config" % CURL_CONFIG)
     print("Using %s (%s)" % (CURL_CONFIG, d))
     for e in split_quoted(os.popen("'%s' --cflags" % CURL_CONFIG).read()):
         if e[:2] == "-I":
