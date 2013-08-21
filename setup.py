@@ -81,7 +81,7 @@ else:
     OPENSSL_DIR = scan_argv("--openssl-dir=", "")
     if OPENSSL_DIR != "":
         include_dirs.append(os.path.join(OPENSSL_DIR, "include"))
-    CURL_CONFIG = ENV.get('PYCURL_CURL_CONFIG', "curl-config")
+    CURL_CONFIG = os.environ.get('PYCURL_CURL_CONFIG', "curl-config")
     CURL_CONFIG = scan_argv("--curl-config=", CURL_CONFIG)
     d = os.popen("'%s' --version" % CURL_CONFIG).read()
     if d:
