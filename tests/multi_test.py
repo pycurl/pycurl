@@ -6,13 +6,12 @@ import pycurl
 import unittest
 import select
 
-from . import app
-from . import runwsgi
+from . import appmanager
 from . import util
 
-setup_module_1, teardown_module_1 = runwsgi.app_runner_setup((app.app, 8380))
-setup_module_2, teardown_module_2 = runwsgi.app_runner_setup((app.app, 8381))
-setup_module_3, teardown_module_3 = runwsgi.app_runner_setup((app.app, 8382))
+setup_module_1, teardown_module_1 = appmanager.setup(('app', 8380))
+setup_module_2, teardown_module_2 = appmanager.setup(('app', 8381))
+setup_module_3, teardown_module_3 = appmanager.setup(('app', 8382))
 
 def setup_module(mod):
     setup_module_1(mod)
