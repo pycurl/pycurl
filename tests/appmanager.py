@@ -36,6 +36,7 @@ def run_standalone():
     funcs.append(setup(('app', 8380)))
     funcs.append(setup(('app', 8381)))
     funcs.append(setup(('app', 8382)))
+    funcs.append(setup(('app', 8383, dict(ssl=True))))
     
     for setup_func, teardown_func in funcs:
         setup_func(sys.modules[__name__])
