@@ -1,6 +1,15 @@
-import sys, time
+import sys, time, os
+
+def noop(*args):
+    pass
 
 def setup(*specs):
+    if os.environ.get('PYCURL_STANDALONE_APP') and os.environ['PYCURL_STANDALONE_APP'].lower() in ['1', 'yes', 'true']:
+        return (noop, noop)
+    else:
+        return perform_setup(*specs)
+
+def perform_setup(*specs):
     from . import runwsgi
     
     app_specs = []
