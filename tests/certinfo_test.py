@@ -6,11 +6,10 @@ import pycurl
 import unittest
 import nose.plugins.skip
 
-from . import app
-from . import runwsgi
+from . import appmanager
 from . import util
 
-setup_module, teardown_module = runwsgi.app_runner_setup((app.app, 8383, dict(ssl=True)))
+setup_module, teardown_module = appmanager.setup(('app', 8383, dict(ssl=True)))
 
 class CertinfoTest(unittest.TestCase):
     def setUp(self):
