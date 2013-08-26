@@ -6,11 +6,10 @@ import pycurl
 import unittest
 import time as _time
 
-from . import app
-from . import runwsgi
+from . import appmanager
 from . import util
 
-setup_module, teardown_module = runwsgi.app_runner_setup((app.app, 8380))
+setup_module, teardown_module = appmanager.setup(('app', 8380))
 
 class HeaderFunctionTest(unittest.TestCase):
     def setUp(self):
