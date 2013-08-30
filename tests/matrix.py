@@ -79,5 +79,6 @@ for python_version in python_versions:
             shutil.rmtree(venv)
         subprocess.check_call(['python', 'virtualenv-1.7.py', venv, '-p', '%s/bin/python' % python_prefix])
         curl_config_path = os.path.join(libcurl_prefix, 'bin/curl-config')
+        curl_lib_path = os.path.join(libcurl_prefix, 'lib')
         with in_dir('pycurl'):
-            subprocess.check_call('make clean && . %s/bin/activate && PYCURL_CURL_CONFIG=%s make test' % (venv, curl_config_path), shell=True)
+            subprocess.check_call('make clean && . %s/bin/activate && LD_LIBRARY_PATH=%s PYCURL_CURL_CONFIG=%s make test' % (venv, curl_lib_path, curl_config_path), shell=True)
