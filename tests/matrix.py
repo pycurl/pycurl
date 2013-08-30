@@ -3,6 +3,14 @@ import os.path, urllib, subprocess, shutil
 python_versions = ['2.4.6', '2.5.6', '2.6.8', '2.7.5']
 libcurl_versions = ['7.19.0', '7.32.0']
 
+python_meta = {
+    '2.5.6': {
+        'patches': ['python25.patch'],
+    },
+}
+
+root = os.path.abspath(os.path.dirname(__file__))
+
 class in_dir:
     def __init__(self, dir):
         self.dir = dir
@@ -26,11 +34,15 @@ def fetch(url, archive):
                 f.write(chunk)
         os.rename('.tmp.%s' % archive, archive)
 
-def build(archive, dir, prefix):
+def build(archive, dir, prefix, meta=None):
     if not os.path.exists(dir):
         print "Building %s" % archive
         subprocess.check_call(['tar', 'xf', archive])
         with in_dir(dir):
+            if meta and 'patches' in meta:
+                for patch in meta['patches']:
+                    patch_path = os.path.join(root, 'matrix', patch)
+                    subprocess.check_call(['patch', '-p1', '-i', patch_path])
             subprocess.check_call(['./configure', '--prefix=%s' % prefix])
             subprocess.check_call(['make'])
             subprocess.check_call(['make', 'install'])
@@ -42,7 +54,7 @@ for python_version in python_versions:
     
     dir = archive.replace('.tgz', '')
     prefix = os.path.abspath('i/%s' % dir)
-    build(archive, dir, prefix)
+    build(archive, dir, prefix, meta=python_meta.get(python_version))
 
 for libcurl_version in libcurl_versions:
     url = 'http://curl.haxx.se/download/curl-%s.tar.gz' % libcurl_version
