@@ -86,25 +86,47 @@ def run_matrix():
         os.mkdir('venv')
 
     for python_version in python_versions:
+        python_version_pieces = python_version.split('.')[:2]
         for libcurl_version in libcurl_versions:
             python_prefix = os.path.abspath('i/Python-%s' % python_version)
             libcurl_prefix = os.path.abspath('i/curl-%s' % libcurl_version)
             venv = os.path.abspath('venv/Python-%s-curl-%s' % (python_version, libcurl_version))
             if os.path.exists(venv):
                 shutil.rmtree(venv)
-            subprocess.check_call(['python', 'virtualenv-1.7.py', venv, '-p', '%s/bin/python' % python_prefix, '--no-site-packages'])
+            if python_version_pieces >= (2, 5):
+                subprocess.check_call(['virtualenv', venv, '-p', '%s/bin/python' % python_prefix, '--no-site-packages'])
+            else:
+                subprocess.check_call(['python', 'virtualenv-1.7.py', venv, '-p', '%s/bin/python' % python_prefix, '--no-site-packages'])
             curl_config_path = os.path.join(libcurl_prefix, 'bin/curl-config')
             curl_lib_path = os.path.join(libcurl_prefix, 'lib')
             with in_dir('pycurl'):
-                patch_pycurl_for_24()
+                extra_patches = []
+                extra_env = []
+                if python_version_pieces >= (2, 6):
+                    deps_cmd = 'pip install -r requirements-dev.txt'
+                elif python_version_pieces >= (2, 5):
+                    deps_cmd = 'pip install -r requirements-dev-2.5.txt'
+                else:
+                    deps_cmd = 'easy_install nose simplejson==2.1.0'
+                    patch_pycurl_for_24()
+                    extra_patches.append('(cd %s/lib/python2.4/site-packages/nose-* && patch -p1) <tests/matrix/nose-1.3.0-python24.patch' % venv)
+                    extra_env.append('PYCURL_STANDALONE_APP=yes')
+                extra_patches = ' && '.join(extra_patches)
+                extra_env = ' '.join(extra_env)
                 cmd = '''
                     make clean &&
-                    . %s/bin/activate &&
-                    easy_install nose simplejson==2.1.0 &&
-                    (cd %s/lib/python2.4/site-packages/nose-* && patch -p1) <tests/matrix/nose-1.3.0-python24.patch &&
+                    . %(venv)s/bin/activate &&
+                    %(deps_cmd)s && %(extra_patches)s
                     python -V &&
-                    LD_LIBRARY_PATH=%s PYCURL_CURL_CONFIG=%s PYCURL_STANDALONE_APP=yes make test
-                ''' % (venv, venv, curl_lib_path, curl_config_path)
+                    LD_LIBRARY_PATH=%(curl_lib_path)s PYCURL_CURL_CONFIG=%(curl_config_path)s %(extra_env)s make test
+                ''' % dict(
+                    venv=venv,
+                    deps_cmd=deps_cmd,
+                    extra_patches=extra_patches,
+                    curl_lib_path=curl_lib_path,
+                    curl_config_path=curl_config_path,
+                    extra_env=extra_env
+                )
                 print(cmd)
                 subprocess.check_call(cmd, shell=True)
 
