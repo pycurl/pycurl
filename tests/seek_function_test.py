@@ -4,8 +4,6 @@
 
 # Note: this test is meant to be run from pycurl project root.
 
-from __future__ import with_statement
-
 import pycurl
 import unittest
 import os.path
@@ -50,8 +48,11 @@ class SeekFunctionTest(unittest.TestCase):
         upload_file.set_maxread(10)
         c.perform()
         
-        with open(os.path.join(os.path.dirname(__file__), 'tmp', 'upload.txt')) as f:
+        f = open(os.path.join(os.path.dirname(__file__), 'tmp', 'upload.txt'))
+        try:
             content = f.read()
+        finally:
+            f.close()
         self.assertEqual('1234567890', content)
 
         c.close()
@@ -69,6 +70,9 @@ class SeekFunctionTest(unittest.TestCase):
         c.perform()
         c.close()
         
-        with open(os.path.join(os.path.dirname(__file__), 'tmp', 'upload.txt')) as f:
+        f = open(os.path.join(os.path.dirname(__file__), 'tmp', 'upload.txt'))
+        try:
             content = f.read()
+        finally:
+            f.close()
         self.assertEqual('1234567890.1234567890', content)

@@ -2,8 +2,6 @@
 # -*- coding: iso-8859-1 -*-
 # vi:ts=4:et
 
-from __future__ import with_statement
-
 import unittest
 import pycurl
 import sys
@@ -51,7 +49,8 @@ class DefaultWriteFunctionTest(unittest.TestCase):
     # I have a really hard time getting this to work with nose output capture
     def skip_perform_get_with_default_write_function(self):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
-        with tempfile.NamedTemporaryFile() as f:
+        f = tempfile.NamedTemporaryFile()
+        try:
         #with open('w', 'w+') as f:
             # nose output capture plugin replaces sys.stdout with a StringIO
             # instance. We want to redirect the underlying file descriptor
@@ -81,4 +80,6 @@ class DefaultWriteFunctionTest(unittest.TestCase):
                 #os.dup2(100, 1)
             f.seek(0)
             body = f.read()
+        finally:
+            f.close()
         self.assertEqual('success', body)
