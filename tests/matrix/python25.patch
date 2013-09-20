@@ -1,0 +1,67 @@
+
+# HG changeset patch
+# User Benjamin Peterson <benjamin@python.org>
+# Date 1243106677 0
+# Node ID 150986ab3db284cfd38d67a1ace2f04c2780bae4
+# Parent  54bbfd41be668dfc23c083510211accda7e54133
+support building with subversion 1.7 #6094
+
+diff --git a/Makefile.pre.in b/Makefile.pre.in
+--- a/Makefile.pre.in
++++ b/Makefile.pre.in
+@@ -505,7 +505,7 @@ Modules/getbuildinfo.o: $(PARSER_OBJS) \
+ 		$(SIGNAL_OBJS) \
+ 		$(MODOBJS) \
+ 		$(srcdir)/Modules/getbuildinfo.c
+-	$(CC) -c $(PY_CFLAGS) -DSVNVERSION=\"`LC_ALL=C $(SVNVERSION)`\" -o $@ $(srcdir)/Modules/getbuildinfo.c
++	$(CC) -c $(PY_CFLAGS) -DSVNVERSION="\"`LC_ALL=C $(SVNVERSION)`\"" -o $@ $(srcdir)/Modules/getbuildinfo.c
+ 
+ Modules/getpath.o: $(srcdir)/Modules/getpath.c Makefile
+ 	$(CC) -c $(PY_CFLAGS) -DPYTHONPATH='"$(PYTHONPATH)"' \
+diff --git a/Modules/getbuildinfo.c b/Modules/getbuildinfo.c
+--- a/Modules/getbuildinfo.c
++++ b/Modules/getbuildinfo.c
+@@ -48,5 +48,5 @@ const char *
+ 	static const char svnversion[] = SVNVERSION;
+ 	if (svnversion[0] != '$')
+ 		return svnversion; /* it was interpolated, or passed on command line */
+-	return "exported";
++	return "Unversioned directory";
+ }
+diff --git a/Python/sysmodule.c b/Python/sysmodule.c
+--- a/Python/sysmodule.c
++++ b/Python/sysmodule.c
+@@ -1158,7 +1158,7 @@ svnversion_init(void)
+ 
+ 
+ 	svnversion = _Py_svnversion();
+-	if (strcmp(svnversion, "exported") != 0)
++	if (strcmp(svnversion, "Unversioned directory") != 0 && strcmp(svnversion, "exported") != 0)
+ 		svn_revision = svnversion;
+ 	else if (istag) {
+ 		len = strlen(_patchlevel_revision);
+diff --git a/configure b/configure
+--- a/configure
++++ b/configure
+@@ -4385,7 +4385,7 @@ if test $SVNVERSION = found
+ then
+ 	SVNVERSION="svnversion \$(srcdir)"
+ else
+-	SVNVERSION="echo exported"
++	SVNVERSION="echo Unversioned directory"
+ fi
+ 
+ case $MACHDEP in
+diff --git a/configure.in b/configure.in
+--- a/configure.in
++++ b/configure.in
+@@ -802,7 +802,7 @@ if test $SVNVERSION = found
+ then
+ 	SVNVERSION="svnversion \$(srcdir)"
+ else
+-	SVNVERSION="echo exported"
++	SVNVERSION="echo Unversioned directory"
+ fi
+ 
+ case $MACHDEP in
+
