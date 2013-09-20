@@ -86,14 +86,14 @@ def run_matrix():
         os.mkdir('venv')
 
     for python_version in python_versions:
-        python_version_pieces = python_version.split('.')[:2]
+        python_version_pieces = map(int, python_version.split('.')[:2])
         for libcurl_version in libcurl_versions:
             python_prefix = os.path.abspath('i/Python-%s' % python_version)
             libcurl_prefix = os.path.abspath('i/curl-%s' % libcurl_version)
             venv = os.path.abspath('venv/Python-%s-curl-%s' % (python_version, libcurl_version))
             if os.path.exists(venv):
                 shutil.rmtree(venv)
-            if python_version_pieces >= (2, 5):
+            if python_version_pieces >= [2, 5]:
                 subprocess.check_call(['virtualenv', venv, '-p', '%s/bin/python' % python_prefix, '--no-site-packages'])
             else:
                 subprocess.check_call(['python', 'virtualenv-1.7.py', venv, '-p', '%s/bin/python' % python_prefix, '--no-site-packages'])
@@ -102,9 +102,9 @@ def run_matrix():
             with in_dir('pycurl'):
                 extra_patches = []
                 extra_env = []
-                if python_version_pieces >= (2, 6):
+                if python_version_pieces >= [2, 6]:
                     deps_cmd = 'pip install -r requirements-dev.txt'
-                elif python_version_pieces >= (2, 5):
+                elif python_version_pieces >= [2, 5]:
                     deps_cmd = 'pip install -r requirements-dev-2.5.txt'
                 else:
                     deps_cmd = 'easy_install nose simplejson==2.1.0'
