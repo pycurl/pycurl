@@ -47,60 +47,64 @@ def build(archive, dir, prefix, meta=None):
             subprocess.check_call(['make'])
             subprocess.check_call(['make', 'install'])
 
-for python_version in python_versions:
-    url = 'http://www.python.org/ftp/python/%s/Python-%s.tgz' % (python_version, python_version)
-    archive = os.path.basename(url)
-    fetch(url, archive)
-    
-    dir = archive.replace('.tgz', '')
-    prefix = os.path.abspath('i/%s' % dir)
-    build(archive, dir, prefix, meta=python_meta.get(python_version))
+def run_matrix():
+    for python_version in python_versions:
+        url = 'http://www.python.org/ftp/python/%s/Python-%s.tgz' % (python_version, python_version)
+        archive = os.path.basename(url)
+        fetch(url, archive)
+        
+        dir = archive.replace('.tgz', '')
+        prefix = os.path.abspath('i/%s' % dir)
+        build(archive, dir, prefix, meta=python_meta.get(python_version))
 
-for libcurl_version in libcurl_versions:
-    url = 'http://curl.haxx.se/download/curl-%s.tar.gz' % libcurl_version
-    archive = os.path.basename(url)
-    fetch(url, archive)
-    
-    dir = archive.replace('.tar.gz', '')
-    prefix = os.path.abspath('i/%s' % dir)
-    build(archive, dir, prefix)
-
-fetch('https://raw.github.com/pypa/virtualenv/1.7/virtualenv.py', 'virtualenv-1.7.py')
-
-if not os.path.exists('venv'):
-    os.mkdir('venv')
-
-for python_version in python_versions:
     for libcurl_version in libcurl_versions:
-        python_prefix = os.path.abspath('i/Python-%s' % python_version)
-        libcurl_prefix = os.path.abspath('i/curl-%s' % libcurl_version)
-        venv = os.path.abspath('venv/Python-%s-curl-%s' % (python_version, libcurl_version))
-        if os.path.exists(venv):
-            shutil.rmtree(venv)
-        subprocess.check_call(['python', 'virtualenv-1.7.py', venv, '-p', '%s/bin/python' % python_prefix, '--no-site-packages'])
-        curl_config_path = os.path.join(libcurl_prefix, 'bin/curl-config')
-        curl_lib_path = os.path.join(libcurl_prefix, 'lib')
-        with in_dir('pycurl'):
-            # change relative imports to old syntax as python 2.4 does not
-            # support relative imports
-            for root, dirs, files in os.walk('tests'):
-                for file in files:
-                    if file.endswith('.py'):
-                        path = os.path.join(root, file)
-                        print path
-                        with open(path, 'rb') as f:
-                            contents = f.read()
-                        contents = re.compile(r'^(\s*)from \. import', re.M).sub(r'\1import', contents)
-                        contents = re.compile(r'^(\s*)from \.(\w+) import', re.M).sub(r'\1from \2 import', contents)
-                        with open(path, 'wb') as f:
-                            f.write(contents)
-            cmd = '''
-                make clean &&
-                . %s/bin/activate &&
-                easy_install nose simplejson==2.1.0 &&
-                (cd %s/lib/python2.4/site-packages/nose-* && patch -p1) <tests/matrix/nose-1.3.0-python24.patch &&
-                python -V &&
-                LD_LIBRARY_PATH=%s PYCURL_CURL_CONFIG=%s PYCURL_STANDALONE_APP=yes make test
-            ''' % (venv, venv, curl_lib_path, curl_config_path)
-            print(cmd)
-            subprocess.check_call(cmd, shell=True)
+        url = 'http://curl.haxx.se/download/curl-%s.tar.gz' % libcurl_version
+        archive = os.path.basename(url)
+        fetch(url, archive)
+        
+        dir = archive.replace('.tar.gz', '')
+        prefix = os.path.abspath('i/%s' % dir)
+        build(archive, dir, prefix)
+
+    fetch('https://raw.github.com/pypa/virtualenv/1.7/virtualenv.py', 'virtualenv-1.7.py')
+
+    if not os.path.exists('venv'):
+        os.mkdir('venv')
+
+    for python_version in python_versions:
+        for libcurl_version in libcurl_versions:
+            python_prefix = os.path.abspath('i/Python-%s' % python_version)
+            libcurl_prefix = os.path.abspath('i/curl-%s' % libcurl_version)
+            venv = os.path.abspath('venv/Python-%s-curl-%s' % (python_version, libcurl_version))
+            if os.path.exists(venv):
+                shutil.rmtree(venv)
+            subprocess.check_call(['python', 'virtualenv-1.7.py', venv, '-p', '%s/bin/python' % python_prefix, '--no-site-packages'])
+            curl_config_path = os.path.join(libcurl_prefix, 'bin/curl-config')
+            curl_lib_path = os.path.join(libcurl_prefix, 'lib')
+            with in_dir('pycurl'):
+                # change relative imports to old syntax as python 2.4 does not
+                # support relative imports
+                for root, dirs, files in os.walk('tests'):
+                    for file in files:
+                        if file.endswith('.py'):
+                            path = os.path.join(root, file)
+                            print path
+                            with open(path, 'rb') as f:
+                                contents = f.read()
+                            contents = re.compile(r'^(\s*)from \. import', re.M).sub(r'\1import', contents)
+                            contents = re.compile(r'^(\s*)from \.(\w+) import', re.M).sub(r'\1from \2 import', contents)
+                            with open(path, 'wb') as f:
+                                f.write(contents)
+                cmd = '''
+                    make clean &&
+                    . %s/bin/activate &&
+                    easy_install nose simplejson==2.1.0 &&
+                    (cd %s/lib/python2.4/site-packages/nose-* && patch -p1) <tests/matrix/nose-1.3.0-python24.patch &&
+                    python -V &&
+                    LD_LIBRARY_PATH=%s PYCURL_CURL_CONFIG=%s PYCURL_STANDALONE_APP=yes make test
+                ''' % (venv, venv, curl_lib_path, curl_config_path)
+                print(cmd)
+                subprocess.check_call(cmd, shell=True)
+
+if __name__ == '__main__':
+    run_matrix()
