@@ -2,7 +2,8 @@
 # vi:ts=4:et
 # $Id$
 
-import os, sys
+import os, sys, socket
+import time as _time
 import pycurl
 
 try:
@@ -26,6 +27,32 @@ def version_less_than_spec(version_tuple, spec_tuple):
 def pycurl_version_less_than(*spec):
     version = [int(part) for part in pycurl.version_info()[1].split('.')]
     return version_less_than_spec(version, spec)
+
+try:
+    create_connection = socket.create_connection
+except AttributeError:
+    # python 2.5
+    def create_connection(netloc, timeout=None):
+        # XXX ipv4 only
+        s = socket.socket()
+        if timeout is not None:
+            s.settimeout(timeout)
+        s.connect(netloc)
+        return s
+
+def wait_for_network_service(netloc, check_interval, num_attempts):
+    ok = False
+    for i in range(num_attempts):
+        try:
+            conn = create_connection(netloc, check_interval)
+        except socket.error:
+            e = sys.exc_info()[1]
+            _time.sleep(check_interval)
+        else:
+            conn.close()
+            ok = True
+            break
+    return ok
 
 #
 # prepare sys.path in case we are still in the build directory
