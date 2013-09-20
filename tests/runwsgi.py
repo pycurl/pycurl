@@ -3,21 +3,9 @@
 import sys
 import bottle
 import threading
-import socket
 import os.path
-import time as _time
 
-try:
-    create_connection = socket.create_connection
-except AttributeError:
-    # python 2.5
-    def create_connection(netloc, timeout=None):
-        # XXX ipv4 only
-        s = socket.socket()
-        if timeout is not None:
-            s.settimeout(timeout)
-        s.connect(netloc)
-        return s
+from . import util
 
 global_stop = False
 
@@ -53,26 +41,12 @@ class SslServer(bottle.CherryPyServer):
         finally:
             server.stop()
 
-def wait_for_network_service(netloc, check_interval, num_attempts):
-    ok = False
-    for i in range(num_attempts):
-        try:
-            conn = create_connection(netloc, check_interval)
-        except socket.error:
-            e = sys.exc_info()[1]
-            _time.sleep(check_interval)
-        else:
-            conn.close()
-            ok = True
-            break
-    return ok
-
 def start_bottle_server(app, port, server, **kwargs):
     server_thread = ServerThread(app, port, server, kwargs)
     server_thread.daemon = True
     server_thread.start()
     
-    ok = wait_for_network_service(('127.0.0.1', port), 0.1, 10)
+    ok = util.wait_for_network_service(('127.0.0.1', port), 0.1, 10)
     if not ok:
         import warnings
         warnings.warn('Server did not start after 1 second')
