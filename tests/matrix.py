@@ -54,7 +54,6 @@ def patch_pycurl_for_24():
         for file in files:
             if file.endswith('.py'):
                 path = os.path.join(root, file)
-                print path
                 with open(path, 'rb') as f:
                     contents = f.read()
                 contents = re.compile(r'^(\s*)from \. import', re.M).sub(r'\1import', contents)
