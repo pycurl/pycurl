@@ -2,8 +2,6 @@
 # -*- coding: iso-8859-1 -*-
 # vi:ts=4:et
 
-from __future__ import with_statement
-
 import os.path
 import pycurl
 import unittest
@@ -85,8 +83,11 @@ class PostTest(unittest.TestCase):
     
     def test_post_file(self):
         path = os.path.join(os.path.dirname(__file__), '..', 'README.rst')
-        with open(path) as f:
+        f = open(path)
+        try:
             contents = f.read()
+        finally:
+            f.close()
         send = [
             #('field2', (pycurl.FORM_FILE, 'test_post.py', pycurl.FORM_FILE, 'test_post2.py')),
             ('field2', (pycurl.FORM_FILE, path)),
