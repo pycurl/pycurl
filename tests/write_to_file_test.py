@@ -2,8 +2,6 @@
 # -*- coding: iso-8859-1 -*-
 # vi:ts=4:et
 
-from __future__ import with_statement
-
 import unittest
 import pycurl
 import tempfile
@@ -22,9 +20,12 @@ class WriteToFileTest(unittest.TestCase):
     
     def test_get_to_file(self):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
-        with tempfile.NamedTemporaryFile() as f:
+        f = tempfile.NamedTemporaryFile()
+        try:
             self.curl.setopt(pycurl.WRITEFUNCTION, f.write)
             self.curl.perform()
             f.seek(0)
             body = f.read()
+        finally:
+            f.close()
         self.assertEqual('success', body)
