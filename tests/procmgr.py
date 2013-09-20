@@ -10,6 +10,7 @@ from . import util
 class ProcessManager(object):
     def __init__(self, cmd):
         self.cmd = cmd
+        self.running = False
     
     def start(self):
         self.process = subprocess.Popen(self.cmd)
