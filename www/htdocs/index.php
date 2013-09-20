@@ -112,8 +112,8 @@ and
 
 <p>
 PycURL now includes API documentation in the <i><a href="doc/pycurl.html">doc</a></i> directory of the distribution,
-as well as a number of test and example scripts in the <i><a href="https://github.com/pycurl-devs/pycurl/tree/master/tests">tests</a></i>
-and <i><a href="https://github.com/pycurl-devs/pycurl/tree/master/examples">examples</a></i>
+as well as a number of test and example scripts in the <i><a href="https://github.com/pycurl/pycurl/tree/master/tests">tests</a></i>
+and <i><a href="https://github.com/pycurl/pycurl/tree/master/examples">examples</a></i>
 directories of the distribution.
 </p>
 
@@ -129,7 +129,7 @@ also provides a lot of useful information.
 
 <p>
 For a quick start have a look at the high-performance URL downloader
-<a href="https://github.com/pycurl-devs/pycurl/blob/master/examples/retriever-multi.py">retriever-multi.py</a>.
+<a href="https://github.com/pycurl/pycurl/blob/master/examples/retriever-multi.py">retriever-multi.py</a>.
 </p>
 
 <p>
@@ -143,7 +143,7 @@ For a list of changes consult the <a href="ChangeLog">PycURL ChangeLog</a>.
 <a href="download/pycurl-7.19.0.tar.gz">Download</a>
 PycURL sources version <?php echo "$version ($version_date)"; ?> or try
 the code from
-<a href="https://github.com/pycurl-devs/pycurl">the Git repository</a>.
+<a href="https://github.com/pycurl/pycurl">the Git repository</a>.
 </p>
 
 <p>
@@ -171,8 +171,8 @@ archives</a> are available for your perusal.
 </p>
 
 <p>
-<a href="https://github.com/pycurl-devs/pycurl/issues">Bugs</a> and
-<a href="https://github.com/pycurl-devs/pycurl/pulls">patches</a> are tracked
+<a href="https://github.com/pycurl/pycurl/issues">Bugs</a> and
+<a href="https://github.com/pycurl/pycurl/pulls">patches</a> are tracked
 on GitHub.
 If your patch or proposal is non-trivial, please discuss it on
 the mailing list before submitting code.
