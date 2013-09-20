@@ -1,6 +1,9 @@
 Version 7.19.0.1 [requires libcurl-7.19.0 or better]
 ----------------
 
+	* Test matrix tool added to test against all supported Python and
+	  libcurl versions.
+
         * Python 2.4 is now the minimum required version.
 
         * Source code, bugs and patches are now kept on GitHub.
