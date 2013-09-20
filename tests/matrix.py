@@ -47,6 +47,21 @@ def build(archive, dir, prefix, meta=None):
             subprocess.check_call(['make'])
             subprocess.check_call(['make', 'install'])
 
+def patch_pycurl_for_24():
+    # change relative imports to old syntax as python 2.4 does not
+    # support relative imports
+    for root, dirs, files in os.walk('tests'):
+        for file in files:
+            if file.endswith('.py'):
+                path = os.path.join(root, file)
+                print path
+                with open(path, 'rb') as f:
+                    contents = f.read()
+                contents = re.compile(r'^(\s*)from \. import', re.M).sub(r'\1import', contents)
+                contents = re.compile(r'^(\s*)from \.(\w+) import', re.M).sub(r'\1from \2 import', contents)
+                with open(path, 'wb') as f:
+                    f.write(contents)
+
 def run_matrix():
     for python_version in python_versions:
         url = 'http://www.python.org/ftp/python/%s/Python-%s.tgz' % (python_version, python_version)
@@ -82,19 +97,7 @@ def run_matrix():
             curl_config_path = os.path.join(libcurl_prefix, 'bin/curl-config')
             curl_lib_path = os.path.join(libcurl_prefix, 'lib')
             with in_dir('pycurl'):
-                # change relative imports to old syntax as python 2.4 does not
-                # support relative imports
-                for root, dirs, files in os.walk('tests'):
-                    for file in files:
-                        if file.endswith('.py'):
-                            path = os.path.join(root, file)
-                            print path
-                            with open(path, 'rb') as f:
-                                contents = f.read()
-                            contents = re.compile(r'^(\s*)from \. import', re.M).sub(r'\1import', contents)
-                            contents = re.compile(r'^(\s*)from \.(\w+) import', re.M).sub(r'\1from \2 import', contents)
-                            with open(path, 'wb') as f:
-                                f.write(contents)
+                patch_pycurl_for_24()
                 cmd = '''
                     make clean &&
                     . %s/bin/activate &&
@@ -107,4 +110,9 @@ def run_matrix():
                 subprocess.check_call(cmd, shell=True)
 
 if __name__ == '__main__':
-    run_matrix()
+    import sys
+    
+    if len(sys.argv) > 1 and sys.argv[1] == 'patch-24':
+        patch_pycurl_for_24()
+    else:
+        run_matrix()
