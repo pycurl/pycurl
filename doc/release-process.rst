@@ -2,12 +2,10 @@ Release Process
 ===============
 
 1. Ensure changelog is up to date with commits in master.
-2. Check that test suite passes on the following configurations:
-  - Python 2.5, 2.6, 2.7.
+2. Check via tests/matrix.py that test suite passes on the following configurations:
+  - Python 2.4, 2.5, 2.6, 2.7.
   - Minimum supported libcurl (currently 7.19.0).
   - Most recent available libcurl (currently 7.32.0).
-3. Test suite does not work with Python 2.4; check that pycurl builds
-   and examples/basicfirst.py works.
 4. Update version numbers in:
   - Changelog
   - setup.py
