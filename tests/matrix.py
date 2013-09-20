@@ -77,8 +77,10 @@ for python_version in python_versions:
         venv = os.path.abspath('venv/Python-%s-curl-%s' % (python_version, libcurl_version))
         if os.path.exists(venv):
             shutil.rmtree(venv)
-        subprocess.check_call(['python', 'virtualenv-1.7.py', venv, '-p', '%s/bin/python' % python_prefix])
+        subprocess.check_call(['python', 'virtualenv-1.7.py', venv, '-p', '%s/bin/python' % python_prefix, '--no-site-packages'])
         curl_config_path = os.path.join(libcurl_prefix, 'bin/curl-config')
         curl_lib_path = os.path.join(libcurl_prefix, 'lib')
         with in_dir('pycurl'):
-            subprocess.check_call('make clean && . %s/bin/activate && LD_LIBRARY_PATH=%s PYCURL_CURL_CONFIG=%s make test' % (venv, curl_lib_path, curl_config_path), shell=True)
+            cmd = 'make clean && . %s/bin/activate && easy_install nose simplejson==2.1.0 && python -V && LD_LIBRARY_PATH=%s PYCURL_CURL_CONFIG=%s make test' % (venv, curl_lib_path, curl_config_path)
+            print(cmd)
+            subprocess.check_call(cmd, shell=True)
