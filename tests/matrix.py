@@ -1,4 +1,4 @@
-import os.path, urllib, subprocess, shutil
+import os, os.path, urllib, subprocess, shutil, re
 
 python_versions = ['2.4.6', '2.5.6', '2.6.8', '2.7.5']
 libcurl_versions = ['7.19.0', '7.32.0']
@@ -81,6 +81,26 @@ for python_version in python_versions:
         curl_config_path = os.path.join(libcurl_prefix, 'bin/curl-config')
         curl_lib_path = os.path.join(libcurl_prefix, 'lib')
         with in_dir('pycurl'):
-            cmd = 'make clean && . %s/bin/activate && easy_install nose simplejson==2.1.0 && python -V && LD_LIBRARY_PATH=%s PYCURL_CURL_CONFIG=%s make test' % (venv, curl_lib_path, curl_config_path)
+            # change relative imports to old syntax as python 2.4 does not
+            # support relative imports
+            for root, dirs, files in os.walk('tests'):
+                for file in files:
+                    if file.endswith('.py'):
+                        path = os.path.join(root, file)
+                        print path
+                        with open(path, 'rb') as f:
+                            contents = f.read()
+                        contents = re.compile(r'^(\s*)from \. import', re.M).sub(r'\1import', contents)
+                        contents = re.compile(r'^(\s*)from \.(\w+) import', re.M).sub(r'\1from \2 import', contents)
+                        with open(path, 'wb') as f:
+                            f.write(contents)
+            cmd = '''
+                make clean &&
+                . %s/bin/activate &&
+                easy_install nose simplejson==2.1.0 &&
+                (cd %s/lib/python2.4/site-packages/nose-* && patch -p1) <tests/matrix/nose-1.3.0-python24.patch &&
+                python -V &&
+                LD_LIBRARY_PATH=%s PYCURL_CURL_CONFIG=%s PYCURL_STANDALONE_APP=yes make test
+            ''' % (venv, venv, curl_lib_path, curl_config_path)
             print(cmd)
             subprocess.check_call(cmd, shell=True)
