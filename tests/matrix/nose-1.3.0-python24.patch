@@ -1,0 +1,68 @@
+diff --git a/nose/failure.py b/nose/failure.py
+index d24401c..c5fabfd 100644
+--- a/nose/failure.py
++++ b/nose/failure.py
+@@ -1,6 +1,7 @@
+ import logging
+ import unittest
+ from traceback import format_tb
++from nose.pyversion import is_base_exception
+ 
+ log = logging.getLogger(__name__)
+ 
+@@ -34,7 +35,7 @@ def address(self):
+     
+     def runTest(self):
+         if self.tb is not None:
+-            if isinstance(self.exc_val, BaseException):
++            if is_base_exception(self.exc_val):
+                 raise self.exc_val, None, self.tb
+             raise self.exc_class, self.exc_val, self.tb
+         else:
+diff --git a/nose/plugins/capture.py b/nose/plugins/capture.py
+index 224f0a5..d9041d8 100644
+--- a/nose/plugins/capture.py
++++ b/nose/plugins/capture.py
+@@ -13,6 +13,7 @@
+ import os
+ import sys
+ from nose.plugins.base import Plugin
++from nose.pyversion import is_base_exception
+ from nose.util import ln
+ from StringIO import StringIO
+ 
+@@ -86,7 +87,7 @@ def formatFailure(self, test, err):
+         return self.formatError(test, err)
+ 
+     def addCaptureToErr(self, ev, output):
+-        if isinstance(ev, BaseException):
++        if is_base_exception(ev):
+             if hasattr(ev, '__unicode__'):
+                 # 2.6+
+                 try:
+diff --git a/nose/pyversion.py b/nose/pyversion.py
+index a6ec3f7..14a133e 100644
+--- a/nose/pyversion.py
++++ b/nose/pyversion.py
+@@ -9,7 +9,7 @@
+ 
+ __all__ = ['make_instancemethod', 'cmp_to_key', 'sort_list', 'ClassType',
+            'TypeType', 'UNICODE_STRINGS', 'unbound_method', 'ismethod',
+-           'bytes_']
++           'bytes_', 'is_base_exception']
+ 
+ # In Python 3.x, all strings are unicode (the call to 'unicode()' in the 2.x
+ # source will be replaced with 'str()' when running 2to3, so this test will
+@@ -147,3 +147,12 @@ def isgenerator(func):
+             return func.func_code.co_flags & CO_GENERATOR != 0
+         except AttributeError:
+             return False
++
++# Make a function to help check if an exception is derived from BaseException.
++# In Python 2.4, we just use Exception instead.
++if sys.version_info[:2] < (2, 5):
++    def is_base_exception(exc):
++        return isinstance(exc, Exception)
++else:
++    def is_base_exception(exc):
++        return isinstance(exc, BaseException)
