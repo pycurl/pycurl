@@ -1,5 +1,5 @@
-Version 7.19.0.1 [requires libcurl-7.19.0 or better]
-----------------------------------------------------
+Version 7.19.0.1 [requires libcurl-7.19.0 or better] - 2013-09-23
+-----------------------------------------------------------------
 
 	* Test matrix tool added to test against all supported Python and
 	  libcurl versions.
