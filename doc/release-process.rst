@@ -21,4 +21,5 @@ Release Process
 12. Copy built source distribution to downloads repo on github.
 13. Rsync downloads repo to sourceforge.
 14. Rsync www/htdocs to sourceforge.
-15. Announce release on mailing list.
+15. Upload source distribution to pypi.
+16. Announce release on mailing list.
