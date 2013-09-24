@@ -14,10 +14,11 @@ Release Process
 5. TODO: update setup_win32_ssl.py.
 6. Copy Changelog to www/htdocs.
 7. Rsync doc directory to www/htdocs.
-8. Tag the new version.
-9. python setup.py sdist
+8. python setup.py sdist
+9. Manually test install the built package.
 10. TODO: build windows packages.
-11. Copy sdist to downloads repo on github.
-12. Rsync downloads repo to sourceforge.
-13. Rsync www/htdocs to sourceforge.
-14. Announce release on mailing list.
+11. Tag the new version.
+12. Copy built source distribution to downloads repo on github.
+13. Rsync downloads repo to sourceforge.
+14. Rsync www/htdocs to sourceforge.
+15. Announce release on mailing list.
