@@ -3,21 +3,23 @@
 # Manifest template for creating the source distribution.
 #
 
-include ChangeLog
 include COPYING
 include COPYING2
+include ChangeLog
 include INSTALL
+include MANIFEST.in
 include Makefile
 include README.rst
 include TODO
-include MANIFEST.in
+include doc/*.html
+include doc/*.rst
+include examples/*.py
+include examples/tests/*.py
 include src/Makefile
 include src/pycurl.c
 include python/curl/*.py
-include examples/*.py
 include tests/*.py
-include doc/*.html
+include tests/certs/*.crt
+include tests/certs/*.key
+include tests/matrix/*.patch
 include setup_win32_ssl.py
-
-# exclude unfinished test scripts
-#exclude tests/test_multi_vs_thread.py
