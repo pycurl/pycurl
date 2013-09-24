@@ -43,9 +43,11 @@ href="http://curl.haxx.se/libcurl/c/curl_easy_reset.html"><code>curl_easy_reset<
 <p>Corresponds to
 <a href="http://curl.haxx.se/libcurl/c/curl_easy_setopt.html"><code>curl_easy_setopt</code></a> in libcurl, where
 <em>option</em> is specified with the CURLOPT_* constants in libcurl,
-except that the CURLOPT_ prefix has been removed. The type for
+except that the CURLOPT_ prefix has been removed.
+(See below for exceptions.)
+The type for
 <em>value</em> depends on the option, and can be either a string,
-integer, long integer, file objects, lists, or functions.</p>
+integer, long integer, file object, list, or function.</p>
 
 <p>Example usage:</p>
 
@@ -72,6 +74,7 @@ print b.getvalue()
 <a href="http://curl.haxx.se/libcurl/c/curl_easy_getinfo.html"><code>curl_easy_getinfo</code></a> in libcurl, where
 <em>option</em> is the same as the CURLINFO_* constants in libcurl,
 except that the CURLINFO_ prefix has been removed.
+(See below for exceptions.)
 <em>Result</em> contains an integer, float or string, depending on
 which option is given. The <code>getinfo</code> method should
 not be called unless <code>perform</code> has been called and
@@ -97,6 +100,18 @@ print c.getinfo(pycurl.HTTP_CODE), c.getinfo(pycurl.EFFECTIVE_URL)
 </dd>
 </dl>
 
+<p>In order to distinguish between similarly-named CURLOPT and
+CURLINFO constants, some have <code>OPT_</code>
+and <code>INFO_</code> prefixes. These are
+<code>INFO_FILETIME</code>, <code>OPT_FILETIME</code>,
+<code>INFO_COOKIELIST</code> (but <code>setopt</code> uses <code>COOKIELIST</code>!),
+<code>INFO_CERTINFO</code>, and <code>OPT_CERTINFO</code>.</p>
+
+<p>The value returned by <code>getinfo(INFO_CERTINFO)</code> is a list
+with one element per certificate in the chain, starting with the leaf;
+each element is a sequence
+of <code>(</code><em>key</em><code>, </code><em>value</em><code>)</code>
+tuples.</p>
 
 <hr />
 <p>
