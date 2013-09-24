@@ -12,10 +12,11 @@ Release Process
   - www/htdocs/index.php
 5. TODO: update setup_win32_ssl.py.
 6. Copy Changelog to www/htdocs.
-7. Tag the new version.
-8. python setup.py sdist
-9. TODO: build windows packages.
-10. Copy sdist to downloads repo on github.
-11. Rsync downloads repo to sourceforge.
-12. Rsync www/htdocs to sourceforge.
-13. Announce release on mailing list.
+7. Rsync doc directory to www/htdocs.
+8. Tag the new version.
+9. python setup.py sdist
+10. TODO: build windows packages.
+11. Copy sdist to downloads repo on github.
+12. Rsync downloads repo to sourceforge.
+13. Rsync www/htdocs to sourceforge.
+14. Announce release on mailing list.
