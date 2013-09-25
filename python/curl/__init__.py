@@ -157,7 +157,8 @@ class Curl:
 
     def close(self):
         "Close a session, freeing resources."
-        if self.handle:  self.handle.close()
+        if self.handle:
+            self.handle.close()
         self.handle = None
         self.hdr = ""
         self.payload = ""
