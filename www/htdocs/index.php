@@ -140,7 +140,7 @@ For a list of changes consult the <a href="ChangeLog">PycURL ChangeLog</a>.
 <h2>Download</h2>
 
 <p>
-<a href="download/pycurl-7.19.0.tar.gz">Download</a>
+<a href="download/pycurl-7.19.0.1.tar.gz">Download</a>
 PycURL sources version <?php echo "$version ($version_date)"; ?> or try
 the code from
 <a href="https://github.com/pycurl/pycurl">the Git repository</a>.
