@@ -1,3 +1,10 @@
+master
+------
+
+	* Added support for libcurl pause/unpause functionality,
+	  via curl_easy_pause call and returning READFUNC_PAUSE from
+	  read callback function.
+
 Version 7.19.0.1 [requires libcurl-7.19.0 or better] - 2013-09-23
 -----------------------------------------------------------------
 
