@@ -216,7 +216,7 @@ typedef struct {
     char error[CURL_ERROR_SIZE+1];
 } CurlObject;
 
-/* Throw exception based on return value `res' and `self->error' */
+/* Raise exception based on return value `res' and `self->error' */
 #define CURLERROR_RETVAL() do {\
     PyObject *v; \
     self->error[sizeof(self->error) - 1] = 0; \
@@ -225,7 +225,7 @@ typedef struct {
     return NULL; \
 } while (0)
 
-/* Throw exception based on return value `res' and custom message */
+/* Raise exception based on return value `res' and custom message */
 #define CURLERROR_MSG(msg) do {\
     PyObject *v; const char *m = (msg); \
     v = Py_BuildValue("(is)", (int) (res), (m)); \
@@ -2033,7 +2033,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_HTTPPOST:
             break;
         default:
-            /* None of the list options were recognized, throw exception */
+            /* None of the list options were recognized, raise exception */
             PyErr_SetString(PyExc_TypeError, "lists are not supported for this option");
             return NULL;
         }
@@ -2304,7 +2304,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             break;
 
         default:
-            /* None of the function options were recognized, throw exception */
+            /* None of the function options were recognized, raise exception */
             PyErr_SetString(PyExc_TypeError, "functions are not supported for this option");
             return NULL;
         }
@@ -2878,7 +2878,7 @@ do_multi_socket_all(CurlMultiObject *self)
     res = curl_multi_socket_all(self->multi_handle, &running);
     PYCURL_END_ALLOW_THREADS
 
-    /* We assume these errors are ok, otherwise throw exception */
+    /* We assume these errors are ok, otherwise raise exception */
     if (res != CURLM_OK && res != CURLM_CALL_MULTI_PERFORM) {
         CURLERROR_MSG("perform failed");
     }
@@ -2904,7 +2904,7 @@ do_multi_perform(CurlMultiObject *self)
     res = curl_multi_perform(self->multi_handle, &running);
     PYCURL_END_ALLOW_THREADS
 
-    /* We assume these errors are ok, otherwise throw exception */
+    /* We assume these errors are ok, otherwise raise exception */
     if (res != CURLM_OK && res != CURLM_CALL_MULTI_PERFORM) {
         CURLERROR_MSG("perform failed");
     }
@@ -3210,13 +3210,13 @@ do_multi_select(CurlMultiObject *self, PyObject *args)
 
 /* --------------- methods --------------- */
 
-static char cso_setopt_doc [] = "setopt(option, parameter) -> None.  Set curl share option.  Throws pycurl.error exception upon failure.\n";
+static char cso_setopt_doc [] = "setopt(option, parameter) -> None.  Set curl share option.  Raises pycurl.error exception upon failure.\n";
 static char co_close_doc [] = "close() -> None.  Close handle and end curl session.\n";
 static char co_errstr_doc [] = "errstr() -> String.  Return the internal libcurl error buffer string.\n";
-static char co_getinfo_doc [] = "getinfo(info) -> Res.  Extract and return information from a curl session.  Throws pycurl.error exception upon failure.\n";
-static char co_perform_doc [] = "perform() -> None.  Perform a file transfer.  Throws pycurl.error exception upon failure.\n";
-static char co_setopt_doc [] = "setopt(option, parameter) -> None.  Set curl session option.  Throws pycurl.error exception upon failure.\n";
-static char co_unsetopt_doc [] = "unsetopt(option) -> None.  Reset curl session option to default value.  Throws pycurl.error exception upon failure.\n";
+static char co_getinfo_doc [] = "getinfo(info) -> Res.  Extract and return information from a curl session.  Raises pycurl.error exception upon failure.\n";
+static char co_perform_doc [] = "perform() -> None.  Perform a file transfer.  Raises pycurl.error exception upon failure.\n";
+static char co_setopt_doc [] = "setopt(option, parameter) -> None.  Set curl session option.  Raises pycurl.error exception upon failure.\n";
+static char co_unsetopt_doc [] = "unsetopt(option) -> None.  Reset curl session option to default value.  Raises pycurl.error exception upon failure.\n";
 static char co_reset_doc [] = "reset() -> None. Reset all options set on curl handle to default values, but preserves live connections, session ID cache, DNS cache, cookies, and shares.\n";
 
 static char co_multi_fdset_doc [] = "fdset() -> Tuple.  Returns a tuple of three lists that can be passed to the select.select() method .\n";
