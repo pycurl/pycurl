@@ -18,17 +18,34 @@ class PauseTest(unittest.TestCase):
     def tearDown(self):
         self.curl.close()
     
-    def test_pause(self):
+    def test_pause_via_call(self):
+        self.check_pause(True)
+    
+    def test_pause_via_return(self):
+        self.check_pause(False)
+    
+    def check_pause(self, call):
         # the app sleeps for 0.5 seconds
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/pause')
         sio = util.StringIO()
         state = dict(paused=False, resumed=False)
-        def writefunc(data):
-            rv = sio.write(data)
-            if not state['paused']:
-                self.curl.pause(pycurl.PAUSE_ALL)
-                state['paused'] = True
-            return rv
+        if call:
+            def writefunc(data):
+                rv = sio.write(data)
+                if not state['paused']:
+                    self.curl.pause(pycurl.PAUSE_ALL)
+                    state['paused'] = True
+                return rv
+        else:
+            def writefunc(data):
+                if not state['paused']:
+                    # cannot write to sio here, because
+                    # curl takes pause return value to mean that
+                    # nothing was written
+                    state['paused'] = True
+                    return pycurl.READFUNC_PAUSE
+                else:
+                    return sio.write(data)
         def resume(*args):
             state['resumed'] = True
             self.curl.pause(pycurl.PAUSE_CONT)
