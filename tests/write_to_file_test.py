@@ -7,7 +7,6 @@ import pycurl
 import tempfile
 
 from . import appmanager
-from . import util
 
 setup_module, teardown_module = appmanager.setup(('app', 8380))
 

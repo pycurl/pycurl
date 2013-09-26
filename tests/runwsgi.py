@@ -15,7 +15,8 @@ class Server(bottle.WSGIRefServer):
         if self.quiet:
             base = self.options.get('handler_class', WSGIRequestHandler)
             class QuietHandler(base):
-                def log_request(*args, **kw): pass
+                def log_request(*args, **kw):
+                    pass
             self.options['handler_class'] = QuietHandler
         self.srv = make_server(self.host, self.port, handler, **self.options)
         if sys.version_info[0] == 2 and sys.version_info[1] < 6:
