@@ -8,7 +8,6 @@ import pycurl
 import unittest
 import os.path
 
-from . import util
 from . import procmgr
 
 setup_module, teardown_module = procmgr.vsftpd_setup()
