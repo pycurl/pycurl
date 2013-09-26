@@ -4,7 +4,6 @@
 
 import pycurl
 import unittest
-import select
 
 from . import appmanager
 from . import util
