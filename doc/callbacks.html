@@ -52,6 +52,14 @@ string</em><br/>
 <code>IOCTLFUNCTION(</code><em>ioctl cmd</em><code>)</code>
 <em>-&gt; status<br/></em>
 <br/>
+
+<p>In addition, <code>READFUNCTION</code> may return
+<code>READFUNC_ABORT</code> or <code>READFUNC_PAUSE</code>. See the libcurl
+documentation for an explanation of these values.
+The <code>WRITEFUNCTION</code> and <code>HEADERFUNCTION</code> callbacks
+may return <code>None</code>, which is an alternate way of indicating that
+the callback has consumed all of the string passed to it.</p>
+
 <hr/>
 
 <h2>Example: Callbacks for document header and body</h2>

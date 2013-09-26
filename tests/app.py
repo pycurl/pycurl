@@ -1,3 +1,4 @@
+import time as _time
 import bottle
 try:
     import json
@@ -5,6 +6,7 @@ except ImportError:
     import simplejson as json
 
 app = bottle.Bottle()
+app.debug = True
 
 @app.route('/success')
 def ok():
@@ -45,3 +47,12 @@ def convert_file(key, file):
 def files():
     files = [convert_file(key, bottle.request.files[key]) for key in bottle.request.files]
     return json.dumps(files)
+
+def pause_writer():
+    yield 'part1'
+    _time.sleep(0.5)
+    yield 'part2'
+
+@app.route('/pause')
+def pause():
+    return pause_writer()
