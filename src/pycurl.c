@@ -1708,7 +1708,7 @@ util_curl_unsetopt(CurlObject *self, int option)
     switch (option)
     {
     case CURLOPT_SHARE:
-        SETOPT((long)0);
+        SETOPT((CURLSH *)0);
         Py_XDECREF(self->share);
         self->share = NULL;
         break;
