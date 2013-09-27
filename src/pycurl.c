@@ -1302,7 +1302,7 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
         {
             /* an IPv4 address string can't be longer than 15 bytes */
             struct sockaddr_in* sin = (struct sockaddr_in*)saddr;
-            char *addr_str = (char *)PyMem_Malloc(16);
+            char *addr_str = (char *)PyMem_Malloc(INET_ADDRSTRLEN);
             
             if (addr_str == NULL) {
                 PyErr_SetString(ErrorObject, "Out of memory");
@@ -1310,7 +1310,7 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
                 goto error;
             }
             
-            if (inet_ntop(saddr->sa_family, &sin->sin_addr, addr_str, 16) == NULL) {
+            if (inet_ntop(saddr->sa_family, &sin->sin_addr, addr_str, INET_ADDRSTRLEN) == NULL) {
                 PyErr_SetFromErrno(ErrorObject);
                 PyMem_Free(addr_str);
                 goto error;
@@ -1321,9 +1321,9 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
         break;
     case AF_INET6:
         {
-            /* an IPv6 address string can't be longer than 39 bytes */
+            /* an IPv6 address string can't be longer than 45 bytes */
             struct sockaddr_in6* sin6 = (struct sockaddr_in6*)saddr;
-            char *addr_str = (char *)PyMem_Malloc(40);
+            char *addr_str = (char *)PyMem_Malloc(INET6_ADDRSTRLEN);
             
             if (addr_str == NULL) {
                 PyErr_SetString(ErrorObject, "Out of memory");
@@ -1331,7 +1331,7 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
                 goto error;
             }
             
-            if (inet_ntop(saddr->sa_family, &sin6->sin6_addr, addr_str, 40) == NULL) {
+            if (inet_ntop(saddr->sa_family, &sin6->sin6_addr, addr_str, INET6_ADDRSTRLEN) == NULL) {
                 PyErr_SetFromErrno(ErrorObject);
                 PyMem_Free(addr_str);
                 goto error;
