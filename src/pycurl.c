@@ -212,6 +212,8 @@ typedef struct {
     PyObject *readdata_fp;
     PyObject *writedata_fp;
     PyObject *writeheader_fp;
+    /* reference to the object used for CURLOPT_POSTFIELDS */
+    PyObject *postfields_obj;
     /* misc */
     char error[CURL_ERROR_SIZE+1];
 } CurlObject;
@@ -919,6 +921,7 @@ util_curl_new(void)
     self->readdata_fp = NULL;
     self->writedata_fp = NULL;
     self->writeheader_fp = NULL;
+    self->postfields_obj = NULL;
 
     /* Zero string pointer memory buffer used by setopt */
     memset(self->error, 0, sizeof(self->error));
@@ -1039,6 +1042,7 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
         ZAP(self->readdata_fp);
         ZAP(self->writedata_fp);
         ZAP(self->writeheader_fp);
+        ZAP(self->postfields_obj);
     }
 
     if (flags & 16) {
@@ -1902,6 +1906,12 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         /* Check for errors */
         if (res != CURLE_OK) {
             CURLERROR_RETVAL();
+        }
+        /* libcurl does not copy the value of CURLOPT_POSTFIELDS */
+        if (option == CURLOPT_POSTFIELDS) {
+            Py_INCREF(obj);
+            Py_XDECREF(self->postfields_obj);
+            self->postfields_obj = obj;
         }
         Py_RETURN_NONE;
     }
