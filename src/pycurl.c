@@ -1896,7 +1896,6 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             PyErr_SetString(PyExc_TypeError, "strings are not supported for this option");
             return NULL;
         }
-        /* Allocate memory to hold the string */
         assert(str != NULL);
         /* Call setopt */
         res = curl_easy_setopt(self->handle, (CURLoption)option, str);
