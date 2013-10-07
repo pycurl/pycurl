@@ -943,6 +943,8 @@ util_curl_new(void)
     self->readdata_fp = NULL;
     self->writedata_fp = NULL;
     self->writeheader_fp = NULL;
+    
+    /* Set postfields object pointer to NULL by default */
     self->postfields_obj = NULL;
 
     /* Zero string pointer memory buffer used by setopt */
@@ -1936,7 +1938,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         /* libcurl does not copy the value of CURLOPT_POSTFIELDS */
         if (option == CURLOPT_POSTFIELDS) {
             Py_INCREF(obj);
-            ZAP(self->postfields_obj);
+            util_curl_xdecref(self, PYCURL_MEMGROUP_POSTFIELDS, self->handle);
             self->postfields_obj = obj;
         }
         Py_RETURN_NONE;
