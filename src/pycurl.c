@@ -212,6 +212,8 @@ typedef struct {
     PyObject *readdata_fp;
     PyObject *writedata_fp;
     PyObject *writeheader_fp;
+    /* reference to the object used for CURLOPT_POSTFIELDS */
+    PyObject *postfields_obj;
     /* misc */
     char error[CURL_ERROR_SIZE+1];
 } CurlObject;
@@ -919,6 +921,7 @@ util_curl_new(void)
     self->readdata_fp = NULL;
     self->writedata_fp = NULL;
     self->writeheader_fp = NULL;
+    self->postfields_obj = NULL;
 
     /* Zero string pointer memory buffer used by setopt */
     memset(self->error, 0, sizeof(self->error));
@@ -1041,6 +1044,11 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
         ZAP(self->writeheader_fp);
     }
 
+    if (flags & 64) {
+        /* Decrement refcount for postfields object */
+        ZAP(self->postfields_obj);
+    }
+    
     if (flags & 16) {
         /* Decrement refcount for share objects. */
         if (self->share != NULL) {
@@ -1091,8 +1099,8 @@ util_curl_close(CurlObject *self)
     Py_END_ALLOW_THREADS
     handle = NULL;
 
-    /* Decref callbacks and file handles */
-    util_curl_xdecref(self, 4 | 8, handle);
+    /* Decref callbacks, file handles and postfields object */
+    util_curl_xdecref(self, 4 | 8 | 64, handle);
 
     /* Free all variables allocated by setopt */
 #undef SFREE
@@ -1157,7 +1165,7 @@ do_curl_clear(CurlObject *self)
 #ifdef WITH_THREAD
     assert(get_thread_state(self) == NULL);
 #endif
-    util_curl_xdecref(self, 1 | 2 | 4 | 8 | 16, self->handle);
+    util_curl_xdecref(self, 1 | 2 | 4 | 8 | 16 | 64, self->handle);
     return 0;
 }
 
@@ -1663,8 +1671,8 @@ do_curl_reset(CurlObject *self)
 
     curl_easy_reset(self->handle);
 
-    /* Decref callbacks and file handles */
-    util_curl_xdecref(self, 4 | 8, self->handle);
+    /* Decref callbacks, file handles and postfields object */
+    util_curl_xdecref(self, 4 | 8 | 64, self->handle);
 
     /* Free all variables allocated by setopt */
 #undef SFREE
@@ -1896,13 +1904,18 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             PyErr_SetString(PyExc_TypeError, "strings are not supported for this option");
             return NULL;
         }
-        /* Allocate memory to hold the string */
         assert(str != NULL);
         /* Call setopt */
         res = curl_easy_setopt(self->handle, (CURLoption)option, str);
         /* Check for errors */
         if (res != CURLE_OK) {
             CURLERROR_RETVAL();
+        }
+        /* libcurl does not copy the value of CURLOPT_POSTFIELDS */
+        if (option == CURLOPT_POSTFIELDS) {
+            Py_INCREF(obj);
+            ZAP(self->postfields_obj);
+            self->postfields_obj = obj;
         }
         Py_RETURN_NONE;
     }
