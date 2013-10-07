@@ -1,6 +1,11 @@
 master
 ------
 
+	* Fixed a bug in a commit made in 2008 but not released until 7.19.0.1
+	  which caused CURLOPT_POSTFIELDS to not correctly increment reference
+	  count of the object being given as its argument, despite libcurl not
+	  copying the data provided by said object.
+
 	* Added support for libcurl pause/unpause functionality,
 	  via curl_easy_pause call and returning READFUNC_PAUSE from
 	  read callback function.
