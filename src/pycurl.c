@@ -143,6 +143,28 @@ static void pycurl_ssl_cleanup(void);
 #define OPTIONS_SIZE    ((int)CURLOPT_LASTENTRY % 10000)
 #define MOPTIONS_SIZE   ((int)CURLMOPT_LASTENTRY % 10000)
 
+/* Memory groups */
+/* Attributes dictionary */
+#define PYCURL_MEMGROUP_ATTRDICT        1
+/* multi_stack */
+#define PYCURL_MEMGROUP_MULTI           2
+/* Python callbacks */
+#define PYCURL_MEMGROUP_CALLBACK        4
+/* Python file objects */
+#define PYCURL_MEMGROUP_FILE            8
+/* Share objects */
+#define PYCURL_MEMGROUP_SHARE           16
+/* Postfields object */
+#define PYCURL_MEMGROUP_POSTFIELDS      64
+
+#define PYCURL_MEMGROUP_EASY \
+    (PYCURL_MEMGROUP_CALLBACK | \
+    PYCURL_MEMGROUP_FILE | PYCURL_MEMGROUP_POSTFIELDS)
+
+#define PYCURL_MEMGROUP_ALL \
+    (PYCURL_MEMGROUP_ATTRDICT | PYCURL_MEMGROUP_EASY | \
+    PYCURL_MEMGROUP_MULTI | PYCURL_MEMGROUP_SHARE)
+
 /* Keep some default variables around */
 static char *g_pycurl_useragent = "PycURL/" LIBCURL_VERSION;
 
@@ -1010,12 +1032,12 @@ error:
 static void
 util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
 {
-    if (flags & 1) {
+    if (flags & PYCURL_MEMGROUP_ATTRDICT) {
         /* Decrement refcount for attributes dictionary. */
         ZAP(self->dict);
     }
 
-    if (flags & 2) {
+    if (flags & PYCURL_MEMGROUP_MULTI) {
         /* Decrement refcount for multi_stack. */
         if (self->multi_stack != NULL) {
             CurlMultiObject *multi_stack = self->multi_stack;
@@ -1027,7 +1049,7 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
         }
     }
 
-    if (flags & 4) {
+    if (flags & PYCURL_MEMGROUP_CALLBACK) {
         /* Decrement refcount for python callbacks. */
         ZAP(self->w_cb);
         ZAP(self->h_cb);
@@ -1037,19 +1059,19 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
         ZAP(self->ioctl_cb);
     }
 
-    if (flags & 8) {
+    if (flags & PYCURL_MEMGROUP_FILE) {
         /* Decrement refcount for python file objects. */
         ZAP(self->readdata_fp);
         ZAP(self->writedata_fp);
         ZAP(self->writeheader_fp);
     }
 
-    if (flags & 64) {
+    if (flags & PYCURL_MEMGROUP_POSTFIELDS) {
         /* Decrement refcount for postfields object */
         ZAP(self->postfields_obj);
     }
     
-    if (flags & 16) {
+    if (flags & PYCURL_MEMGROUP_SHARE) {
         /* Decrement refcount for share objects. */
         if (self->share != NULL) {
             CurlShareObject *share = self->share;
@@ -1089,9 +1111,9 @@ util_curl_close(CurlObject *self)
 #endif
 
     /* Decref multi stuff which uses this handle */
-    util_curl_xdecref(self, 2, handle);
+    util_curl_xdecref(self, PYCURL_MEMGROUP_MULTI, handle);
     /* Decref share which uses this handle */
-    util_curl_xdecref(self, 16, handle);
+    util_curl_xdecref(self, PYCURL_MEMGROUP_SHARE, handle);
 
     /* Cleanup curl handle - must be done without the gil */
     Py_BEGIN_ALLOW_THREADS
@@ -1099,8 +1121,8 @@ util_curl_close(CurlObject *self)
     Py_END_ALLOW_THREADS
     handle = NULL;
 
-    /* Decref callbacks, file handles and postfields object */
-    util_curl_xdecref(self, 4 | 8 | 64, handle);
+    /* Decref easy related objects */
+    util_curl_xdecref(self, PYCURL_MEMGROUP_EASY, handle);
 
     /* Free all variables allocated by setopt */
 #undef SFREE
@@ -1165,7 +1187,7 @@ do_curl_clear(CurlObject *self)
 #ifdef WITH_THREAD
     assert(get_thread_state(self) == NULL);
 #endif
-    util_curl_xdecref(self, 1 | 2 | 4 | 8 | 16 | 64, self->handle);
+    util_curl_xdecref(self, PYCURL_MEMGROUP_ALL, self->handle);
     return 0;
 }
 
@@ -1671,8 +1693,8 @@ do_curl_reset(CurlObject *self)
 
     curl_easy_reset(self->handle);
 
-    /* Decref callbacks, file handles and postfields object */
-    util_curl_xdecref(self, 4 | 8 | 64, self->handle);
+    /* Decref easy interface related objects */
+    util_curl_xdecref(self, PYCURL_MEMGROUP_EASY, self->handle);
 
     /* Free all variables allocated by setopt */
 #undef SFREE
