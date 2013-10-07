@@ -1042,9 +1042,13 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
         ZAP(self->readdata_fp);
         ZAP(self->writedata_fp);
         ZAP(self->writeheader_fp);
-        ZAP(self->postfields_obj);
     }
 
+    if (flags & 64) {
+        /* Decrement refcount for postfields object */
+        ZAP(self->postfields_obj);
+    }
+    
     if (flags & 16) {
         /* Decrement refcount for share objects. */
         if (self->share != NULL) {
@@ -1095,8 +1099,8 @@ util_curl_close(CurlObject *self)
     Py_END_ALLOW_THREADS
     handle = NULL;
 
-    /* Decref callbacks and file handles */
-    util_curl_xdecref(self, 4 | 8, handle);
+    /* Decref callbacks, file handles and postfields object */
+    util_curl_xdecref(self, 4 | 8 | 64, handle);
 
     /* Free all variables allocated by setopt */
 #undef SFREE
@@ -1161,7 +1165,7 @@ do_curl_clear(CurlObject *self)
 #ifdef WITH_THREAD
     assert(get_thread_state(self) == NULL);
 #endif
-    util_curl_xdecref(self, 1 | 2 | 4 | 8 | 16, self->handle);
+    util_curl_xdecref(self, 1 | 2 | 4 | 8 | 16 | 64, self->handle);
     return 0;
 }
 
@@ -1667,8 +1671,8 @@ do_curl_reset(CurlObject *self)
 
     curl_easy_reset(self->handle);
 
-    /* Decref callbacks and file handles */
-    util_curl_xdecref(self, 4 | 8, self->handle);
+    /* Decref callbacks, file handles and postfields object */
+    util_curl_xdecref(self, 4 | 8 | 64, self->handle);
 
     /* Free all variables allocated by setopt */
 #undef SFREE
