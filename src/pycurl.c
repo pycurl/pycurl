@@ -1914,7 +1914,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         /* libcurl does not copy the value of CURLOPT_POSTFIELDS */
         if (option == CURLOPT_POSTFIELDS) {
             Py_INCREF(obj);
-            Py_XDECREF(self->postfields_obj);
+            ZAP(self->postfields_obj);
             self->postfields_obj = obj;
         }
         Py_RETURN_NONE;
