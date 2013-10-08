@@ -13,14 +13,32 @@ Release Process
   - www/htdocs/index.php
 5. TODO: update setup_win32_ssl.py.
 6. Copy Changelog to www/htdocs.
-7. Rsync doc directory to www/htdocs: `rsync doc/*html www/htdocs/doc`
-8. python setup.py sdist
+7. Rsync doc directory to www/htdocs::
+
+        rsync doc/*html www/htdocs/doc
+
+8. Build the source distribution::
+
+        python setup.py sdist
+
 9. Manually test install the built package.
 10. TODO: build windows packages.
 11. Tag the new version.
-12. Create new version on pypi: `python setup.py register`
-13. Upload source distribution to pypi: `python setup.py sdist upload`
+12. Create new version on pypi::
+
+        python setup.py register
+
+13. Upload source distribution to pypi::
+
+        python setup.py sdist upload
+
 14. Copy built source distribution to downloads repo on github.
-15. Rsync downloads repo to sourceforge: `rsync -av * user@web.sourceforge.net:/home/project-web/pycurl/htdocs/download`
-16. Rsync www/htdocs to sourceforge: `rsync -av www/htdocs/ user@web.sourceforge.net:/home/project-web/pycurl/htdocs`
+15. Rsync downloads repo to sourceforge::
+
+        rsync -av * user@web.sourceforge.net:/home/project-web/pycurl/htdocs/download
+
+16. Rsync www/htdocs to sourceforge::
+
+        rsync -av www/htdocs/ user@web.sourceforge.net:/home/project-web/pycurl/htdocs
+
 17. Announce release on mailing list.
