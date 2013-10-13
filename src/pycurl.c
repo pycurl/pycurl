@@ -716,7 +716,7 @@ share_lock_destroy(ShareLock *lock)
 }
 
 
-void
+static void
 share_lock_callback(CURL *handle, curl_lock_data data, curl_lock_access locktype, void *userptr)
 {
     CurlShareObject *share = (CurlShareObject*)userptr;
@@ -724,7 +724,7 @@ share_lock_callback(CURL *handle, curl_lock_data data, curl_lock_access locktype
 }
 
 
-void
+static void
 share_unlock_callback(CURL *handle, curl_lock_data data, void *userptr)
 {
     CurlShareObject *share = (CurlShareObject*)userptr;
@@ -2665,11 +2665,12 @@ do_multi_traverse(CurlMultiObject *self, visitproc visit, void *arg)
 
 /* --------------- setopt --------------- */
 
-int multi_socket_callback(CURL *easy,
-                          curl_socket_t s,
-                          int what,
-                          void *userp,
-                          void *socketp)
+static int
+multi_socket_callback(CURL *easy,
+                      curl_socket_t s,
+                      int what,
+                      void *userp,
+                      void *socketp)
 {
     CurlMultiObject *self;
     CurlObject *easy_self;
@@ -2714,9 +2715,10 @@ verbose_error:
 }
 
 
-int multi_timer_callback(CURLM *multi,
-                         long timeout_ms,
-                         void *userp)
+static int
+multi_timer_callback(CURLM *multi,
+                     long timeout_ms,
+                     void *userp)
 {
     CurlMultiObject *self;
     PyObject *arglist;
