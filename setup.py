@@ -15,6 +15,10 @@ from distutils.core import setup
 from distutils.extension import Extension
 from distutils.util import split_quoted
 from distutils.version import LooseVersion
+try:
+    import ctypes
+except ImportError:
+    ctypes = None
 
 include_dirs = []
 define_macros = []
@@ -133,6 +137,18 @@ else:
     # Add extra compile flag for MacOS X
     if sys.platform[:-1] == "darwin":
         extra_link_args.append("-flat_namespace")
+
+    # check ssl library form curl version string
+    if ctypes:
+        curl_version = ctypes.cdll.LoadLibrary('libcurl.so').curl_version
+        curl_version.restype = ctypes.c_char_p
+        curl_verstr = curl_version()
+        if ' NSS/' in curl_verstr:
+            define_macros.append(('HAVE_CURL_NSS', 1))
+        elif ' GnuTLS/' in curl_verstr:
+            define_macros.append(('HAVE_CURL_GNUTLS', 1))
+        elif ' OpenSSL/' in curl_verstr:
+            define_macros.append(('HAVE_CURL_OPENSSL', 1))
 
 
 ###############################################################################
