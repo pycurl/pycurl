@@ -2673,14 +2673,12 @@ multi_socket_callback(CURL *easy,
                       void *socketp)
 {
     CurlMultiObject *self;
-    CurlObject *easy_self;
     PyObject *arglist;
     PyObject *result = NULL;
     PYCURL_DECLARE_THREAD_STATE;
 
     /* acquire thread */
     self = (CurlMultiObject *)userp;
-    curl_easy_getinfo(easy, CURLINFO_PRIVATE, &easy_self);
     if (!PYCURL_ACQUIRE_THREAD_MULTI())
         return 0;
 
@@ -3144,7 +3142,8 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
     /* Loop through all messages */
     while ((msg = curl_multi_info_read(self->multi_handle, &in_queue)) != NULL) {
         CURLcode res;
-        CurlObject *co = NULL;
+        CurlObject *co;
+        char *curl_ctx_p;
 
         /* Check for termination as specified by the user */
         if (num_results-- <= 0) {
@@ -3152,12 +3151,13 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
         }
 
         /* Fetch the curl object that corresponds to the curl handle in the message */
-        res = curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, &co);
-        if (res != CURLE_OK || co == NULL) {
+        res = curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, &curl_ctx_p);
+        if (res != CURLE_OK || curl_ctx_p == NULL) {
             Py_DECREF(err_list);
             Py_DECREF(ok_list);
             CURLERROR_MSG("Unable to fetch curl handle from curl object");
         }
+        co = (CurlObject *) curl_ctx_p;
         assert(Py_TYPE(co) == p_Curl_Type);
         if (msg->msg != CURLMSG_DONE) {
             /* FIXME: what does this mean ??? */
