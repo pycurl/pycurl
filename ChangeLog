@@ -1,3 +1,11 @@
+master
+------
+
+	* Breaking change: opensocket callback now takes an additional
+	  (address, port) tuple argument. Existing callbacks will need to
+	  be modified to accept this new argument.
+	  https://github.com/pycurl/pycurl/pull/18
+
 Version 7.19.0.2 [requires libcurl-7.19.0 or better] - 2013-10-08
 -----------------------------------------------------------------
 
