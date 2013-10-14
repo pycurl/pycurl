@@ -37,7 +37,7 @@
 #if (defined(_WIN32) || defined(__WIN32__)) && !defined(WIN32)
 #  define WIN32 1
 #endif
-#if defined(WIN32)
+#if defined(WIN32) && !defined(PYCURL_USE_LIBCURL_DLL)
 #  define CURL_STATICLIB 1
 #endif
 #include <Python.h>
