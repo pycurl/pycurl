@@ -1329,7 +1329,7 @@ header_callback(char *ptr, size_t size, size_t nmemb, void *stream)
 static PyObject *
 convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
 {
-    PyObject *resObj = NULL;
+    PyObject *res_obj = NULL;
     
     switch (saddr->sa_family)
     {
@@ -1348,7 +1348,7 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
                 PyMem_Free(addr_str);
                 goto error;
             }
-            resObj = Py_BuildValue("(si)", addr_str, ntohs(sin->sin_port));
+            res_obj = Py_BuildValue("(si)", addr_str, ntohs(sin->sin_port));
             PyMem_Free(addr_str);
        }
         break;
@@ -1367,7 +1367,7 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
                 PyMem_Free(addr_str);
                 goto error;
             }
-            resObj = Py_BuildValue("(si)", addr_str, ntohs(sin6->sin6_port));
+            res_obj = Py_BuildValue("(si)", addr_str, ntohs(sin6->sin6_port));
             PyMem_Free(addr_str);
         }
         break;
@@ -1378,7 +1378,7 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
     }
     
 error:
-    return resObj;
+    return res_obj;
 }
 
 /* curl_socket_t is just an int on unix/windows (with limitations that
