@@ -1966,6 +1966,9 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_SSH_HOST_PUBLIC_KEY_MD5:
         case CURLOPT_CRLFILE:
         case CURLOPT_ISSUERCERT:
+#if LIBCURL_VERSION_NUM >= 0x071800
+        case CURLOPT_DNS_SERVERS:
+#endif
 /* FIXME: check if more of these options allow binary data */
             str = PyString_AsString_NoNUL(obj);
             if (str == NULL)
@@ -4249,6 +4252,10 @@ initpycurl(void)
     insint_c(d, "PAUSE_SEND", CURLPAUSE_SEND);
     insint_c(d, "PAUSE_ALL",  CURLPAUSE_ALL);
     insint_c(d, "PAUSE_CONT", CURLPAUSE_CONT);
+#endif
+
+#if LIBCURL_VERSION_NUM >= 0x071800
+    insint_c(d, "DNS_SERVERS", CURLOPT_DNS_SERVERS);
 #endif
 
     /* options for global_init() */
