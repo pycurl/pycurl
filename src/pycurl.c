@@ -1335,7 +1335,6 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
     {
     case AF_INET:
         {
-            /* an IPv4 address string can't be longer than 15 bytes */
             struct sockaddr_in* sin = (struct sockaddr_in*)saddr;
             char *addr_str = (char *)PyMem_Malloc(INET_ADDRSTRLEN);
             
@@ -1356,7 +1355,6 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
         break;
     case AF_INET6:
         {
-            /* an IPv6 address string can't be longer than 45 bytes */
             struct sockaddr_in6* sin6 = (struct sockaddr_in6*)saddr;
             char *addr_str = (char *)PyMem_Malloc(INET6_ADDRSTRLEN);
             
