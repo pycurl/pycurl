@@ -2739,14 +2739,12 @@ multi_socket_callback(CURL *easy,
                       void *socketp)
 {
     CurlMultiObject *self;
-    CurlObject *easy_self;
     PyObject *arglist;
     PyObject *result = NULL;
     PYCURL_DECLARE_THREAD_STATE;
 
     /* acquire thread */
     self = (CurlMultiObject *)userp;
-    curl_easy_getinfo(easy, CURLINFO_PRIVATE, &easy_self);
     if (!PYCURL_ACQUIRE_THREAD_MULTI())
         return 0;
 
