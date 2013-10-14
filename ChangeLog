@@ -1,6 +1,9 @@
 master
 ------
 
+	* PycURL can now be dynamically linked against libcurl on Windows
+	  if PYCURL_USE_LIBCURL_DLL is #defined during compilation.
+
 	* Breaking change: opensocket callback now takes an additional
 	  (address, port) tuple argument. Existing callbacks will need to
 	  be modified to accept this new argument.
