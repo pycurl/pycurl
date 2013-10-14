@@ -42,12 +42,14 @@
 #endif
 #include <Python.h>
 #include <pythread.h>
-#include <sys/types.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <arpa/inet.h>
 #include <curl/curl.h>
 #include <curl/easy.h>
