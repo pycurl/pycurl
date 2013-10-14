@@ -42,12 +42,15 @@
 #endif
 #include <Python.h>
 #include <pythread.h>
-#include <sys/types.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <curl/curl.h>
 #include <curl/easy.h>
 #include <curl/multi.h>
@@ -1321,6 +1324,69 @@ header_callback(char *ptr, size_t size, size_t nmemb, void *stream)
     return util_write_callback(1, ptr, size, nmemb, stream);
 }
 
+/* convert protocol address from C to python, returns a tuple of protocol
+   specific values */
+static PyObject *
+convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
+{
+    PyObject *resObj;
+    
+    switch (saddr->sa_family)
+    {
+    case AF_INET:
+        {
+            struct sockaddr_in* sin = (struct sockaddr_in*)saddr;
+            char *addr_str = (char *)PyMem_Malloc(INET_ADDRSTRLEN);
+            
+            if (addr_str == NULL) {
+                PyErr_SetString(ErrorObject, "Out of memory");
+                resObj = NULL;
+                goto error;
+            }
+            
+            if (inet_ntop(saddr->sa_family, &sin->sin_addr, addr_str, INET_ADDRSTRLEN) == NULL) {
+                PyErr_SetFromErrno(ErrorObject);
+                PyMem_Free(addr_str);
+                goto error;
+            }
+            resObj = Py_BuildValue("(si)", addr_str, ntohs(sin->sin_port));
+            PyMem_Free(addr_str);
+       }
+        break;
+    case AF_INET6:
+        {
+            struct sockaddr_in6* sin6 = (struct sockaddr_in6*)saddr;
+            char *addr_str = (char *)PyMem_Malloc(INET6_ADDRSTRLEN);
+            
+            if (addr_str == NULL) {
+                PyErr_SetString(ErrorObject, "Out of memory");
+                resObj = NULL;
+                goto error;
+            }
+            
+            if (inet_ntop(saddr->sa_family, &sin6->sin6_addr, addr_str, INET6_ADDRSTRLEN) == NULL) {
+                PyErr_SetFromErrno(ErrorObject);
+                PyMem_Free(addr_str);
+                goto error;
+            }
+            resObj = Py_BuildValue("(si)", addr_str, ntohs(sin6->sin6_port));
+            PyMem_Free(addr_str);
+        }
+        break;
+    default:
+        /* We (currently) only support IPv4/6 addresses.  Can curl even be used
+           with anything else? */
+	PyErr_SetString(ErrorObject, "Unsupported address family.");
+        resObj = NULL;
+    }
+    
+    if (resObj == NULL)
+        goto error;
+    
+error:
+    return resObj;
+}
+
 /* curl_socket_t is just an int on unix/windows (with limitations that
  * are not important here) */
 static curl_socket_t
@@ -1337,7 +1403,7 @@ opensocket_callback(void *clientp, curlsocktype purpose,
     self = (CurlObject *)clientp;
     PYCURL_ACQUIRE_THREAD();
     
-    arglist = Py_BuildValue("(iii)", address->family, address->socktype, address->protocol);
+    arglist = Py_BuildValue("(iiiN)", address->family, address->socktype, address->protocol, convert_protocol_address(&address->addr, address->addrlen));
     if (arglist == NULL)
         goto verbose_error;
 
