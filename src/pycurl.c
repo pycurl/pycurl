@@ -1329,7 +1329,7 @@ header_callback(char *ptr, size_t size, size_t nmemb, void *stream)
 static PyObject *
 convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
 {
-    PyObject *resObj;
+    PyObject *resObj = NULL;
     
     switch (saddr->sa_family)
     {
@@ -1340,7 +1340,6 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
             
             if (addr_str == NULL) {
                 PyErr_SetString(ErrorObject, "Out of memory");
-                resObj = NULL;
                 goto error;
             }
             
@@ -1360,7 +1359,6 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
             
             if (addr_str == NULL) {
                 PyErr_SetString(ErrorObject, "Out of memory");
-                resObj = NULL;
                 goto error;
             }
             
@@ -1377,11 +1375,7 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
         /* We (currently) only support IPv4/6 addresses.  Can curl even be used
            with anything else? */
 	PyErr_SetString(ErrorObject, "Unsupported address family.");
-        resObj = NULL;
     }
-    
-    if (resObj == NULL)
-        goto error;
     
 error:
     return resObj;
