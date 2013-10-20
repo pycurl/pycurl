@@ -2160,10 +2160,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             struct curl_httppost *last = NULL;
             /* List of all references that have been INCed as a result of
              * this operation */
-            PyObject *ref_params = PyList_New((Py_ssize_t)0);
-            if (ref_params == NULL) {
-                return NULL;
-            }
+            PyObject *ref_params = NULL;
 
             for (i = 0; i < len; i++) {
                 char *nstr = NULL, *cstr = NULL;
@@ -2172,19 +2169,19 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
                 if (!PyTuple_Check(listitem)) {
                     curl_formfree(post);
-                    Py_DECREF(ref_params);
+                    Py_XDECREF(ref_params);
                     PyErr_SetString(PyExc_TypeError, "list items must be tuple objects");
                     return NULL;
                 }
                 if (PyTuple_GET_SIZE(listitem) != 2) {
                     curl_formfree(post);
-                    Py_DECREF(ref_params);
+                    Py_XDECREF(ref_params);
                     PyErr_SetString(PyExc_TypeError, "tuple must contain two elements (name, value)");
                     return NULL;
                 }
                 if (PyString_AsStringAndSize(PyTuple_GET_ITEM(listitem, 0), &nstr, &nlen) != 0) {
                     curl_formfree(post);
-                    Py_DECREF(ref_params);
+                    Py_XDECREF(ref_params);
                     PyErr_SetString(PyExc_TypeError, "tuple must contain string as first element");
                     return NULL;
                 }
@@ -2201,7 +2198,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                                        CURLFORM_END);
                     if (res != CURLE_OK) {
                         curl_formfree(post);
-                        Py_DECREF(ref_params);
+                        Py_XDECREF(ref_params);
                         CURLERROR_RETVAL();
                     }
                 }
@@ -2215,7 +2212,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                     /* Sanity check that there are at least two tuple items */
                     if (tlen < 2) {
                         curl_formfree(post);
-                        Py_DECREF(ref_params);
+                        Py_XDECREF(ref_params);
                         PyErr_SetString(PyExc_TypeError, "tuple must contain at least one option and one value");
                         return NULL;
                     }
@@ -2224,7 +2221,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                     forms = PyMem_Malloc(sizeof(struct curl_forms) * ((tlen*2) + 1));
                     if (forms == NULL) {
                         curl_formfree(post);
-                        Py_DECREF(ref_params);
+                        Py_XDECREF(ref_params);
                         PyErr_NoMemory();
                         return NULL;
                     }
@@ -2239,21 +2236,21 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                             PyErr_SetString(PyExc_TypeError, "expected value");
                             PyMem_Free(forms);
                             curl_formfree(post);
-                            Py_DECREF(ref_params);
+                            Py_XDECREF(ref_params);
                             return NULL;
                         }
                         if (!PyInt_Check(PyTuple_GET_ITEM(t, j))) {
                             PyErr_SetString(PyExc_TypeError, "option must be long");
                             PyMem_Free(forms);
                             curl_formfree(post);
-                            Py_DECREF(ref_params);
+                            Py_XDECREF(ref_params);
                             return NULL;
                         }
                         if (!PyString_Check(PyTuple_GET_ITEM(t, j+1))) {
                             PyErr_SetString(PyExc_TypeError, "value must be string");
                             PyMem_Free(forms);
                             curl_formfree(post);
-                            Py_DECREF(ref_params);
+                            Py_XDECREF(ref_params);
                             return NULL;
                         }
 
@@ -2268,7 +2265,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                             PyErr_SetString(PyExc_TypeError, "unsupported option");
                             PyMem_Free(forms);
                             curl_formfree(post);
-                            Py_DECREF(ref_params);
+                            Py_XDECREF(ref_params);
                             return NULL;
                         }
                         PyString_AsStringAndSize(PyTuple_GET_ITEM(t, j+1), &ostr, &olen);
@@ -2284,11 +2281,13 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                         else if (val == CURLFORM_BUFFERPTR) {
                             PyObject *obj = PyTuple_GET_ITEM(t, j+1);
 
-                            /* As with CURLFORM_COPYCONTENTS, specify the length. */
-                            forms[k].option = CURLFORM_BUFFERLENGTH;
-                            forms[k].value = (const char *)olen;
-                            ++k;
-
+                            ref_params = PyList_New((Py_ssize_t)0);
+                            if (ref_params == NULL) {
+                                PyMem_Free(forms);
+                                curl_formfree(post);
+                                return NULL;
+                            }
+                            
                             /* Ensure that the buffer remains alive until curl_easy_cleanup() */
                             if (PyList_Append(ref_params, obj) != 0) {
                                 PyMem_Free(forms);
@@ -2296,6 +2295,11 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                                 Py_DECREF(ref_params);
                                 return NULL;
                             }
+
+                            /* As with CURLFORM_COPYCONTENTS, specify the length. */
+                            forms[k].option = CURLFORM_BUFFERLENGTH;
+                            forms[k].value = (const char *)olen;
+                            ++k;
                         }
                     }
                     forms[k].option = CURLFORM_END;
@@ -2307,13 +2311,13 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                     PyMem_Free(forms);
                     if (res != CURLE_OK) {
                         curl_formfree(post);
-                        Py_DECREF(ref_params);
+                        Py_XDECREF(ref_params);
                         CURLERROR_RETVAL();
                     }
                 } else {
                     /* Some other type was given, ignore */
                     curl_formfree(post);
-                    Py_DECREF(ref_params);
+                    Py_XDECREF(ref_params);
                     PyErr_SetString(PyExc_TypeError, "unsupported second type in tuple");
                     return NULL;
                 }
@@ -2322,7 +2326,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             /* Check for errors */
             if (res != CURLE_OK) {
                 curl_formfree(post);
-                Py_DECREF(ref_params);
+                Py_XDECREF(ref_params);
                 CURLERROR_RETVAL();
             }
             /* Finally, free previously allocated httppost, ZAP any
