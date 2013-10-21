@@ -48,6 +48,10 @@ def files():
     files = [convert_file(key, bottle.request.files[key]) for key in bottle.request.files]
     return json.dumps(files)
 
+@app.route('/header')
+def header():
+    return bottle.request.headers[bottle.request.query['h']]
+
 def pause_writer():
     yield 'part1'
     _time.sleep(0.5)

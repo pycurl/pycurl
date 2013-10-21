@@ -169,7 +169,8 @@ static void pycurl_ssl_cleanup(void);
     PYCURL_MEMGROUP_MULTI | PYCURL_MEMGROUP_SHARE)
 
 /* Keep some default variables around */
-static const char g_pycurl_useragent [] = "PycURL/" LIBCURL_VERSION;
+static const char g_pycurl_useragent [] =
+    "PycURL/" PYCURL_VERSION " libcurl/" LIBCURL_VERSION;
 
 /* Type objects */
 static PyObject *ErrorObject = NULL;
@@ -3858,7 +3859,8 @@ initpycurl(void)
     assert(curlobject_constants != NULL);
 
     /* Add version strings to the module */
-    insstr(d, "version", curl_version());
+    insobj2(d, NULL, "version",
+            PyString_FromFormat("PycURL/" PYCURL_VERSION " %s", curl_version()));
     insstr(d, "COMPILE_DATE", __DATE__ " " __TIME__);
     insint(d, "COMPILE_PY_VERSION_HEX", PY_VERSION_HEX);
     insint(d, "COMPILE_LIBCURL_VERSION_NUM", LIBCURL_VERSION_NUM);
