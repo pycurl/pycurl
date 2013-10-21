@@ -3,6 +3,9 @@ master
 
 	* Added CURLFORM_BUFFER and CURLFORM_BUFFERPTR.
 
+	* pycurl.version and user agent string now include both
+	  PycURL version and libcurl version as separate items.
+
 	* Added CURLOPT_DNS_SERVERS.
 
 	* PycURL can now be dynamically linked against libcurl on Windows
