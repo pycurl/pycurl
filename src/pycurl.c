@@ -170,7 +170,7 @@ static void pycurl_ssl_cleanup(void);
 
 /* Keep some default variables around */
 static const char g_pycurl_useragent [] =
-    "pycurl/" PYCURL_VERSION " libcurl/" LIBCURL_VERSION;
+    "PycURL/" PYCURL_VERSION " libcurl/" LIBCURL_VERSION;
 
 /* Type objects */
 static PyObject *ErrorObject = NULL;
@@ -3860,7 +3860,7 @@ initpycurl(void)
 
     /* Add version strings to the module */
     insobj2(d, NULL, "version",
-            PyString_FromFormat("pycurl/" PYCURL_VERSION " %s", curl_version()));
+            PyString_FromFormat("PycURL/" PYCURL_VERSION " %s", curl_version()));
     insstr(d, "COMPILE_DATE", __DATE__ " " __TIME__);
     insint(d, "COMPILE_PY_VERSION_HEX", PY_VERSION_HEX);
     insint(d, "COMPILE_LIBCURL_VERSION_NUM", LIBCURL_VERSION_NUM);
