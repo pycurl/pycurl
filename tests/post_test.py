@@ -99,6 +99,18 @@ class PostTest(unittest.TestCase):
         }]
         self.check_post(send, expect, 'http://localhost:8380/files')
     
+    def test_post_buffer(self):
+        contents = 'hello, world!'
+        send = [
+            ('field2', (pycurl.FORM_BUFFER, 'uploaded.file', pycurl.FORM_BUFFERPTR, contents)),
+        ]
+        expect = [{
+            'name': 'field2',
+            'filename': 'uploaded.file',
+            'data': contents,
+        }]
+        self.check_post(send, expect, 'http://localhost:8380/files')
+    
     # XXX this test takes about a second to run, check keep-alives?
     def check_post(self, send, expect, endpoint):
         self.curl.setopt(pycurl.URL, endpoint)

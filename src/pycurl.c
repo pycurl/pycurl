@@ -157,12 +157,14 @@ static void pycurl_ssl_cleanup(void);
 #define PYCURL_MEMGROUP_FILE            8
 /* Share objects */
 #define PYCURL_MEMGROUP_SHARE           16
+/* httppost buffer references */
+#define PYCURL_MEMGROUP_HTTPPOST        32
 /* Postfields object */
 #define PYCURL_MEMGROUP_POSTFIELDS      64
 
 #define PYCURL_MEMGROUP_EASY \
-    (PYCURL_MEMGROUP_CALLBACK | \
-    PYCURL_MEMGROUP_FILE | PYCURL_MEMGROUP_POSTFIELDS)
+    (PYCURL_MEMGROUP_CALLBACK | PYCURL_MEMGROUP_FILE | \
+    PYCURL_MEMGROUP_HTTPPOST | PYCURL_MEMGROUP_POSTFIELDS)
 
 #define PYCURL_MEMGROUP_ALL \
     (PYCURL_MEMGROUP_ATTRDICT | PYCURL_MEMGROUP_EASY | \
@@ -217,6 +219,8 @@ typedef struct {
     CurlMultiObject *multi_stack;
     CurlShareObject *share;
     struct curl_httppost *httppost;
+    /* List of INC'ed references associated with httppost. */
+    PyObject *httppost_ref_list;
     struct curl_slist *httpheader;
     struct curl_slist *http200aliases;
     struct curl_slist *quote;
@@ -924,6 +928,7 @@ util_curl_new(void)
     self->share = NULL;
     self->multi_stack = NULL;
     self->httppost = NULL;
+    self->httppost_ref_list = NULL;
     self->httpheader = NULL;
     self->http200aliases = NULL;
     self->quote = NULL;
@@ -1087,6 +1092,11 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
             }
             Py_DECREF(share);
         }
+    }
+
+    if (flags & PYCURL_MEMGROUP_HTTPPOST) {
+        /* Decrement refcounts for httppost related references. */
+        ZAP(self->httppost_ref_list);
     }
 }
 
@@ -1808,6 +1818,7 @@ util_curl_unsetopt(CurlObject *self, int option)
     case CURLOPT_HTTPPOST:
         SETOPT((void *) 0);
         curl_formfree(self->httppost);
+        util_curl_xdecref(self, PYCURL_MEMGROUP_HTTPPOST, self->handle);
         self->httppost = NULL;
         /* FIXME: what about data->set.httpreq ?? */
         break;
@@ -2147,6 +2158,9 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         if (option == CURLOPT_HTTPPOST) {
             struct curl_httppost *post = NULL;
             struct curl_httppost *last = NULL;
+            /* List of all references that have been INCed as a result of
+             * this operation */
+            PyObject *ref_params = NULL;
 
             for (i = 0; i < len; i++) {
                 char *nstr = NULL, *cstr = NULL;
@@ -2155,16 +2169,19 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
                 if (!PyTuple_Check(listitem)) {
                     curl_formfree(post);
+                    Py_XDECREF(ref_params);
                     PyErr_SetString(PyExc_TypeError, "list items must be tuple objects");
                     return NULL;
                 }
                 if (PyTuple_GET_SIZE(listitem) != 2) {
                     curl_formfree(post);
+                    Py_XDECREF(ref_params);
                     PyErr_SetString(PyExc_TypeError, "tuple must contain two elements (name, value)");
                     return NULL;
                 }
                 if (PyString_AsStringAndSize(PyTuple_GET_ITEM(listitem, 0), &nstr, &nlen) != 0) {
                     curl_formfree(post);
+                    Py_XDECREF(ref_params);
                     PyErr_SetString(PyExc_TypeError, "tuple must contain string as first element");
                     return NULL;
                 }
@@ -2181,6 +2198,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                                        CURLFORM_END);
                     if (res != CURLE_OK) {
                         curl_formfree(post);
+                        Py_XDECREF(ref_params);
                         CURLERROR_RETVAL();
                     }
                 }
@@ -2194,14 +2212,16 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                     /* Sanity check that there are at least two tuple items */
                     if (tlen < 2) {
                         curl_formfree(post);
+                        Py_XDECREF(ref_params);
                         PyErr_SetString(PyExc_TypeError, "tuple must contain at least one option and one value");
                         return NULL;
                     }
 
-                    /* Allocate enough space to accommodate length options for content */
+                    /* Allocate enough space to accommodate length options for content or buffers, plus a terminator. */
                     forms = PyMem_Malloc(sizeof(struct curl_forms) * ((tlen*2) + 1));
                     if (forms == NULL) {
                         curl_formfree(post);
+                        Py_XDECREF(ref_params);
                         PyErr_NoMemory();
                         return NULL;
                     }
@@ -2216,18 +2236,21 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                             PyErr_SetString(PyExc_TypeError, "expected value");
                             PyMem_Free(forms);
                             curl_formfree(post);
+                            Py_XDECREF(ref_params);
                             return NULL;
                         }
                         if (!PyInt_Check(PyTuple_GET_ITEM(t, j))) {
                             PyErr_SetString(PyExc_TypeError, "option must be long");
                             PyMem_Free(forms);
                             curl_formfree(post);
+                            Py_XDECREF(ref_params);
                             return NULL;
                         }
                         if (!PyString_Check(PyTuple_GET_ITEM(t, j+1))) {
                             PyErr_SetString(PyExc_TypeError, "value must be string");
                             PyMem_Free(forms);
                             curl_formfree(post);
+                            Py_XDECREF(ref_params);
                             return NULL;
                         }
 
@@ -2235,11 +2258,14 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                         if (val != CURLFORM_COPYCONTENTS &&
                             val != CURLFORM_FILE &&
                             val != CURLFORM_FILENAME &&
-                            val != CURLFORM_CONTENTTYPE)
+                            val != CURLFORM_CONTENTTYPE &&
+                            val != CURLFORM_BUFFER &&
+                            val != CURLFORM_BUFFERPTR)
                         {
                             PyErr_SetString(PyExc_TypeError, "unsupported option");
                             PyMem_Free(forms);
                             curl_formfree(post);
+                            Py_XDECREF(ref_params);
                             return NULL;
                         }
                         PyString_AsStringAndSize(PyTuple_GET_ITEM(t, j+1), &ostr, &olen);
@@ -2249,6 +2275,29 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                         if (val == CURLFORM_COPYCONTENTS) {
                             /* Contents can contain \0 bytes so we specify the length */
                             forms[k].option = CURLFORM_CONTENTSLENGTH;
+                            forms[k].value = (const char *)olen;
+                            ++k;
+                        }
+                        else if (val == CURLFORM_BUFFERPTR) {
+                            PyObject *obj = PyTuple_GET_ITEM(t, j+1);
+
+                            ref_params = PyList_New((Py_ssize_t)0);
+                            if (ref_params == NULL) {
+                                PyMem_Free(forms);
+                                curl_formfree(post);
+                                return NULL;
+                            }
+                            
+                            /* Ensure that the buffer remains alive until curl_easy_cleanup() */
+                            if (PyList_Append(ref_params, obj) != 0) {
+                                PyMem_Free(forms);
+                                curl_formfree(post);
+                                Py_DECREF(ref_params);
+                                return NULL;
+                            }
+
+                            /* As with CURLFORM_COPYCONTENTS, specify the length. */
+                            forms[k].option = CURLFORM_BUFFERLENGTH;
                             forms[k].value = (const char *)olen;
                             ++k;
                         }
@@ -2262,11 +2311,13 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                     PyMem_Free(forms);
                     if (res != CURLE_OK) {
                         curl_formfree(post);
+                        Py_XDECREF(ref_params);
                         CURLERROR_RETVAL();
                     }
                 } else {
                     /* Some other type was given, ignore */
                     curl_formfree(post);
+                    Py_XDECREF(ref_params);
                     PyErr_SetString(PyExc_TypeError, "unsupported second type in tuple");
                     return NULL;
                 }
@@ -2275,11 +2326,19 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             /* Check for errors */
             if (res != CURLE_OK) {
                 curl_formfree(post);
+                Py_XDECREF(ref_params);
                 CURLERROR_RETVAL();
             }
-            /* Finally, free previously allocated httppost and update */
+            /* Finally, free previously allocated httppost, ZAP any
+             * buffer references, and update */
             curl_formfree(self->httppost);
+            util_curl_xdecref(self, PYCURL_MEMGROUP_HTTPPOST, self->handle);
             self->httppost = post;
+
+            /* The previous list of INCed references was ZAPed above; save
+             * the new one so that we can clean it up on the next
+             * self->httppost free. */
+            self->httppost_ref_list = ref_params;
 
             Py_RETURN_NONE;
         }
@@ -4000,6 +4059,8 @@ initpycurl(void)
     insint_c(d, "FTPAUTH_TLS", CURLFTPAUTH_TLS);
 
     /* curl_ftpauth: constants for setopt(FTPSSLAUTH, x) */
+    insint_c(d, "FORM_BUFFER", CURLFORM_BUFFER);
+    insint_c(d, "FORM_BUFFERPTR", CURLFORM_BUFFERPTR);
     insint_c(d, "FORM_CONTENTS", CURLFORM_COPYCONTENTS);
     insint_c(d, "FORM_FILE", CURLFORM_FILE);
     insint_c(d, "FORM_CONTENTTYPE", CURLFORM_CONTENTTYPE);
