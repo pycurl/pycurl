@@ -117,7 +117,7 @@ else:
     for option in ["--libs", "--static-libs"]:
         p = subprocess.Popen((CURL_CONFIG, option),
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (stdout, stderr) = p.communicate()
+        stdout, stderr = p.communicate()
         if p.wait() == 0:
             optbuf = stdout.decode()
             break
