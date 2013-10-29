@@ -156,7 +156,15 @@ else:
             library_dirs.append(arg[2:])
         else:
             extra_link_args.append(arg)
-    for feature in split_quoted(os.popen("'%s' --features" % CURL_CONFIG).read()):
+    p = subprocess.Popen((CURL_CONFIG, '--features'),
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = p.communicate()
+    if p.wait() != 0:
+        msg = "Problem running `%s' --features" % CURL_CONFIG
+        if stderr:
+            msg += ":\n" + stderr.decode()
+        raise ConfigurationError(msg)
+    for feature in split_quoted(stdout.decode()):
         if feature == 'SSL':
             define_macros.append(('HAVE_CURL_SSL', 1))
     if not libraries:
