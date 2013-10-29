@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 # vi:ts=4:et
-# $Id$
 
 ## XML-RPC lib included in python2.2
 try:
