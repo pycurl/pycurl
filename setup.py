@@ -101,7 +101,15 @@ else:
         raise ConfigurationError(msg)
     d = stdout.decode().strip()
     print("Using %s (%s)" % (CURL_CONFIG, d))
-    for e in split_quoted(os.popen("'%s' --cflags" % CURL_CONFIG).read()):
+    p = subprocess.Popen((CURL_CONFIG, '--cflags'),
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = p.communicate()
+    if p.wait() != 0:
+        msg = "Problem running `%s' --cflags" % CURL_CONFIG
+        if stderr:
+            msg += ":\n" + stderr.decode()
+        raise ConfigurationError(msg)
+    for e in split_quoted(stdout.decode()):
         if e[:2] == "-I":
             # do not add /usr/include
             if not re.search(r"^\/+usr\/+include\/*$", e[2:]):
