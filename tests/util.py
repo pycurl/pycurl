@@ -1,6 +1,5 @@
 # -*- coding: iso-8859-1 -*-
 # vi:ts=4:et
-# $Id$
 
 import os, sys, socket
 import time as _time

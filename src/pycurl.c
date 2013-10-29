@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /* PycURL -- cURL Python module
  *
  * Authors:
