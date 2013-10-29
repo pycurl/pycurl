@@ -91,11 +91,15 @@ else:
         include_dirs.append(os.path.join(OPENSSL_DIR, "include"))
     CURL_CONFIG = os.environ.get('PYCURL_CURL_CONFIG', "curl-config")
     CURL_CONFIG = scan_argv("--curl-config=", CURL_CONFIG)
-    d = os.popen("'%s' --version" % CURL_CONFIG).read()
-    if d:
-        d = str.strip(d)
-    if not d:
-        raise Exception("`%s' not found -- please install the libcurl development files or specify --curl-config=/path/to/curl-config" % CURL_CONFIG)
+    p = subprocess.Popen((CURL_CONFIG, '--version'),
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = p.communicate()
+    if p.wait() != 0:
+        msg = "`%s' not found -- please install the libcurl development files or specify --curl-config=/path/to/curl-config" % CURL_CONFIG
+        if stderr:
+            msg += ":\n" + stderr.decode()
+        raise ConfigurationError(msg)
+    d = stdout.decode().strip()
     print("Using %s (%s)" % (CURL_CONFIG, d))
     for e in split_quoted(os.popen("'%s' --cflags" % CURL_CONFIG).read()):
         if e[:2] == "-I":
