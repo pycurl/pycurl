@@ -115,7 +115,7 @@ else:
     optbuf = ""
     errtext = ''
     for option in ["--libs", "--static-libs"]:
-        p = subprocess.Popen("'%s' %s" % (CURL_CONFIG, option), shell=True,
+        p = subprocess.Popen((CURL_CONFIG, option),
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (stdout, stderr) = p.communicate()
         if p.wait() == 0:
