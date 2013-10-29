@@ -99,8 +99,8 @@ else:
         if stderr:
             msg += ":\n" + stderr.decode()
         raise ConfigurationError(msg)
-    d = stdout.decode().strip()
-    print("Using %s (%s)" % (CURL_CONFIG, d))
+    libcurl_version = stdout.decode().strip()
+    print("Using %s (%s)" % (CURL_CONFIG, libcurl_version))
     p = subprocess.Popen((CURL_CONFIG, '--cflags'),
         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
@@ -109,13 +109,13 @@ else:
         if stderr:
             msg += ":\n" + stderr.decode()
         raise ConfigurationError(msg)
-    for e in split_quoted(stdout.decode()):
-        if e[:2] == "-I":
+    for arg in split_quoted(stdout.decode()):
+        if arg[:2] == "-I":
             # do not add /usr/include
-            if not re.search(r"^\/+usr\/+include\/*$", e[2:]):
-                include_dirs.append(e[2:])
+            if not re.search(r"^\/+usr\/+include\/*$", arg[2:]):
+                include_dirs.append(arg[2:])
         else:
-            extra_compile_args.append(e)
+            extra_compile_args.append(arg)
 
     # Obtain linker flags/libraries to link against.
     # In theory, all we should need is `curl-config --libs`.
@@ -143,21 +143,21 @@ else:
         raise ConfigurationError(msg)
     libs = split_quoted(optbuf)
 
-    for e in libs:
-        if e[:2] == "-l":
-            libraries.append(e[2:])
-            if e[2:] == 'ssl':
+    for arg in libs:
+        if arg[:2] == "-l":
+            libraries.append(arg[2:])
+            if arg[2:] == 'ssl':
                 define_macros.append(('HAVE_CURL_OPENSSL', 1))
-            if e[2:] == 'gnutls':
+            if arg[2:] == 'gnutls':
                 define_macros.append(('HAVE_CURL_GNUTLS', 1))
-            if e[2:] == 'ssl3':
+            if arg[2:] == 'ssl3':
                 define_macros.append(('HAVE_CURL_NSS', 1))
-        elif e[:2] == "-L":
-            library_dirs.append(e[2:])
+        elif arg[:2] == "-L":
+            library_dirs.append(arg[2:])
         else:
-            extra_link_args.append(e)
-    for e in split_quoted(os.popen("'%s' --features" % CURL_CONFIG).read()):
-        if e == 'SSL':
+            extra_link_args.append(arg)
+    for feature in split_quoted(os.popen("'%s' --features" % CURL_CONFIG).read()):
+        if feature == 'SSL':
             define_macros.append(('HAVE_CURL_SSL', 1))
     if not libraries:
         libraries.append("curl")
