@@ -1,6 +1,13 @@
 master
 ------
 
+	* PycURL will no longer call `curl-config --static-libs` if
+	  `curl-config --libs` succeeds and returns output.
+	  Systems on which neither `curl-config --libs` nor
+	  `curl-config --static-libs` do the right thing should provide
+	  a `curl-config` wrapper that is sane.
+	  
+
 	* Added CURLFORM_BUFFER and CURLFORM_BUFFERPTR.
 
 	* pycurl.version and user agent string now include both

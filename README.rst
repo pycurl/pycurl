@@ -45,6 +45,29 @@ or `pip`_::
 
     pip install pycurl
 
+Installing from source is performed via ``setup.py``::
+
+    python setup.py install
+
+You will need libcurl headers and libraries installed to install PycURL
+from source. PycURL uses ``curl-config`` to determine correct flags/libraries
+to use during compilation; you can override the location of ``curl-config``
+if it is not in PATH or you want to use a custom libcurl installation::
+
+    python setup.py --curl-config=/path/to/curl-config install
+
+Sometimes it is more convenient to use an environment variable, if
+you are not directly invoking ``setup.py``::
+
+    PYCURL_CURL_CONFIG=/path/to/curl-config python setup.py install
+
+``curl-config`` is expected to support the following options:
+
+- ``--version``
+- ``--cflags``
+- ``--libs``
+- ``--static-libs`` (if ``--libs`` does not work)
+
 
 .. _easy_install: http://peak.telecommunity.com/DevCenter/EasyInstall
 .. _pip: http://pypi.python.org/pypi/pip

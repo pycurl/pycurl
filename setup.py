@@ -15,6 +15,15 @@ from distutils.extension import Extension
 from distutils.util import split_quoted
 from distutils.version import LooseVersion
 
+try:
+    # python 2
+    exception_base = StandardError
+except NameError:
+    # python 3
+    exception_base = Exception
+class ConfigurationError(exception_base):
+    pass
+
 include_dirs = []
 define_macros = [("PYCURL_VERSION", '"%s"' % VERSION)]
 library_dirs = []
@@ -82,50 +91,81 @@ else:
         include_dirs.append(os.path.join(OPENSSL_DIR, "include"))
     CURL_CONFIG = os.environ.get('PYCURL_CURL_CONFIG', "curl-config")
     CURL_CONFIG = scan_argv("--curl-config=", CURL_CONFIG)
-    d = os.popen("'%s' --version" % CURL_CONFIG).read()
-    if d:
-        d = str.strip(d)
-    if not d:
-        raise Exception("`%s' not found -- please install the libcurl development files or specify --curl-config=/path/to/curl-config" % CURL_CONFIG)
-    print("Using %s (%s)" % (CURL_CONFIG, d))
-    for e in split_quoted(os.popen("'%s' --cflags" % CURL_CONFIG).read()):
-        if e[:2] == "-I":
+    p = subprocess.Popen((CURL_CONFIG, '--version'),
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = p.communicate()
+    if p.wait() != 0:
+        msg = "`%s' not found -- please install the libcurl development files or specify --curl-config=/path/to/curl-config" % CURL_CONFIG
+        if stderr:
+            msg += ":\n" + stderr.decode()
+        raise ConfigurationError(msg)
+    libcurl_version = stdout.decode().strip()
+    print("Using %s (%s)" % (CURL_CONFIG, libcurl_version))
+    p = subprocess.Popen((CURL_CONFIG, '--cflags'),
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = p.communicate()
+    if p.wait() != 0:
+        msg = "Problem running `%s' --cflags" % CURL_CONFIG
+        if stderr:
+            msg += ":\n" + stderr.decode()
+        raise ConfigurationError(msg)
+    for arg in split_quoted(stdout.decode()):
+        if arg[:2] == "-I":
             # do not add /usr/include
-            if not re.search(r"^\/+usr\/+include\/*$", e[2:]):
-                include_dirs.append(e[2:])
+            if not re.search(r"^\/+usr\/+include\/*$", arg[2:]):
+                include_dirs.append(arg[2:])
         else:
-            extra_compile_args.append(e)
+            extra_compile_args.append(arg)
 
-    # Run curl-config --libs and --static-libs.  Some platforms may not
-    # support one or the other of these curl-config options, so gracefully
-    # tolerate failure of either, but not both.
+    # Obtain linker flags/libraries to link against.
+    # In theory, all we should need is `curl-config --libs`.
+    # Apparently on some platforms --libs fails and --static-libs works,
+    # so try that.
+    # If --libs succeeds do not try --static libs; see
+    # https://github.com/pycurl/pycurl/issues/52 for more details.
+    # If neither --libs nor --static-libs work, fail.
     optbuf = ""
+    errtext = ''
     for option in ["--libs", "--static-libs"]:
-        p = subprocess.Popen("'%s' %s" % (CURL_CONFIG, option), shell=True,
-            stdout=subprocess.PIPE)
-        (stdout, stderr) = p.communicate()
+        p = subprocess.Popen((CURL_CONFIG, option),
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate()
         if p.wait() == 0:
-            optbuf += stdout.decode()
+            optbuf = stdout.decode()
+            break
+        else:
+            errtext += stderr.decode()
     if optbuf == "":
-        raise Exception("Neither curl-config --libs nor curl-config --static-libs" +
-            " produced output")
+        msg = "Neither curl-config --libs nor curl-config --static-libs" +\
+            " succeeded and produced output"
+        if errtext:
+            msg += ":\n" + errtext
+        raise ConfigurationError(msg)
     libs = split_quoted(optbuf)
 
-    for e in libs:
-        if e[:2] == "-l":
-            libraries.append(e[2:])
-            if e[2:] == 'ssl':
+    for arg in libs:
+        if arg[:2] == "-l":
+            libraries.append(arg[2:])
+            if arg[2:] == 'ssl':
                 define_macros.append(('HAVE_CURL_OPENSSL', 1))
-            if e[2:] == 'gnutls':
+            if arg[2:] == 'gnutls':
                 define_macros.append(('HAVE_CURL_GNUTLS', 1))
-            if e[2:] == 'ssl3':
+            if arg[2:] == 'ssl3':
                 define_macros.append(('HAVE_CURL_NSS', 1))
-        elif e[:2] == "-L":
-            library_dirs.append(e[2:])
+        elif arg[:2] == "-L":
+            library_dirs.append(arg[2:])
         else:
-            extra_link_args.append(e)
-    for e in split_quoted(os.popen("'%s' --features" % CURL_CONFIG).read()):
-        if e == 'SSL':
+            extra_link_args.append(arg)
+    p = subprocess.Popen((CURL_CONFIG, '--features'),
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = p.communicate()
+    if p.wait() != 0:
+        msg = "Problem running `%s' --features" % CURL_CONFIG
+        if stderr:
+            msg += ":\n" + stderr.decode()
+        raise ConfigurationError(msg)
+    for feature in split_quoted(stdout.decode()):
+        if feature == 'SSL':
             define_macros.append(('HAVE_CURL_SSL', 1))
     if not libraries:
         libraries.append("curl")
