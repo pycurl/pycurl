@@ -200,7 +200,7 @@ class InternalsTest(unittest.TestCase):
             #flags |= gc.DEBUG_OBJECTS
         #if opts.verbose >= 1:
             #flags = flags | gc.DEBUG_STATS
-        gc.set_debug(flags)
+        #gc.set_debug(flags)
         gc.collect()
         ##print gc.get_referrers(c)
         ##print gc.get_objects()
