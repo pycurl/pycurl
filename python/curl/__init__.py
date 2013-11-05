@@ -6,7 +6,7 @@
 #
 # By Eric S. Raymond, April 2003.
 
-import sys, exceptions, mimetools, pycurl
+import sys, pycurl
 try:
     import urllib.parse as urllib_parse
     from urllib.parse import urljoin
