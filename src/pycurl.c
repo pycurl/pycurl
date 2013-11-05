@@ -2094,6 +2094,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 #undef IS_LONG_OPTION
 #undef IS_OFF_T_OPTION
 
+#if PY_MAJOR_VERSION < 3
     /* Handle the case of file objects */
     if (PyFile_Check(obj)) {
         FILE *fp;
@@ -2145,6 +2146,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         /* Return success */
         Py_RETURN_NONE;
     }
+#endif
 
     /* Handle the case of list objects */
     if (PyList_Check(obj)) {
