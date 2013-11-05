@@ -44,8 +44,11 @@ class ErrorTest(unittest.TestCase):
         try:
             # invalid option combination
             self.curl.setopt(pycurl.WRITEFUNCTION, lambda x: x)
-            with open(__file__) as f:
+            f = open(__file__)
+            try:
                 self.curl.setopt(pycurl.WRITEHEADER, f)
+            finally:
+                f.close()
         except pycurl.error:
             exc_type, exc = sys.exc_info()[:2]
             assert exc_type == pycurl.error
