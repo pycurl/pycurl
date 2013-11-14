@@ -1,6 +1,9 @@
 PycURL: Python interface to libcurl
 ====================================
 
+.. image:: https://api.travis-ci.org/pycurl/pycurl.png
+	   :target: https://travis-ci.org/pycurl/pycurl
+
 PycURL is a Python interface to `libcurl`_. PycURL can be used to fetch objects
 identified by a URL from a Python program, similar to the `urllib`_ Python module.
 PycURL is mature, very fast, and supports a lot of features.
@@ -33,6 +36,12 @@ Overview
 .. _`thoroughly documented`: http://curl.haxx.se/libcurl/features.html#docs
 .. _companies: http://curl.haxx.se/docs/companies.html
 .. _applications: http://curl.haxx.se/libcurl/using/apps.html
+
+Requirements
+------------
+
+- Python 2.4 through 2.7.
+- libcurl 7.19.0 or better.
 
 Installation
 ------------
@@ -147,9 +156,6 @@ For larger changes:
 #. Join the `mailing list`_.
 #. Discuss your proposal on the mailing list.
 #. When consensus is reached, implement it as described above.
-
-.. image:: https://api.travis-ci.org/pycurl/pycurl.png
-	   :target: https://travis-ci.org/pycurl/pycurl
 
 License
 -------
