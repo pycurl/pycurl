@@ -92,9 +92,43 @@ vsftpd tests you must explicitly set PYCURL_VSFTPD_PATH variable like so::
     # specify full path to vsftpd
     export PYCURL_VSFTPD_PATH=/usr/local/libexec/vsftpd
 
+These instructions work for Python 2.5, 2.6 and 2.7.
+
 .. _nose: https://nose.readthedocs.org/
 .. _bottle: http://bottlepy.org/
 .. _cherrypy: http://www.cherrypy.org/
+
+Test Matrix
+-----------
+
+The test matrix is a separate framework that runs tests on more esoteric
+configurations. It supports:
+
+- Testing against Python 2.4, which bottle does not support.
+- Testing against Python compiled without threads, which requires an out of
+  process test server.
+- Testing against locally compiled libcurl with arbitrary options.
+
+To use the test matrix, first you need to start the test server from
+Python 2.5+ by running:::
+
+    python -m tests.appmanager
+
+Then in a different shell, and preferably in a separate user account,
+run the test matrix:::
+
+    # run ftp tests, etc.
+    export PYCURL_VSFTPD_PATH=vsftpd
+    # create a new work directory, preferably not under pycurl tree
+    mkdir testmatrix
+    cd testmatrix
+    # run the matrix specifying absolute path
+    python /path/to/pycurl/tests/matrix.py
+
+The test matrix will download, build and install supported Python versions
+and supported libcurl versions, then run pycurl tests against each combination.
+To see what the combinations are, look in
+`tests/matrix.py <tests/matrix.py>`_.
 
 Contribute
 ----------
