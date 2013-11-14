@@ -34,6 +34,12 @@ Overview
 .. _companies: http://curl.haxx.se/docs/companies.html
 .. _applications: http://curl.haxx.se/libcurl/using/apps.html
 
+Requirements
+------------
+
+- Python 2.4 through 2.7.
+- libcurl 7.19.0 or better.
+
 Installation
 ------------
 
