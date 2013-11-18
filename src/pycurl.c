@@ -67,8 +67,8 @@
  * [1] http://msdn.microsoft.com/en-us/library/windows/desktop/cc805843(v=vs.85).aspx
  */
 #if defined(WIN32) && ((_WIN32_WINNT <= 0x0600) || (NTDDI_VERSION < NTDDI_VISTA))
-  static const char * pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
-  #define inet_ntop(fam,addr,string,size) pycurl_inet_ntop(fam,addr,string,size)
+    static const char * pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
+    #define inet_ntop(fam,addr,string,size) pycurl_inet_ntop(fam,addr,string,size)
 #endif
 
 /* Ensure we have updated versions */
@@ -4439,28 +4439,27 @@ initpycurl(void)
  */
 static const char * pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size)
 {
-  SOCKADDR *sa;
-  int       sa_len;
+    SOCKADDR *sa;
+    int       sa_len;
 
-  if (family == AF_INET6) {
-    struct sockaddr_in6 sa6;
-    memset(&sa6, 0, sizeof sa6);
-    sa6.sa_family = AF_INET6;
-    memcpy (&sa6.sin6_addr, addr, sizeof(sa6.sin6_addr));
-    sa = (SOCKADDR*)&sa6;
-    sa_len = sizeof(sa6);
-  }
-  else {
-    struct sockaddr_in sa4;
-    memset(&sa4, 0, sizeof sa4);
-    sa4.sa_family = AF_INET;
-    memcpy (&sa4.sin_addr, addr, sizeof(sa4.sin_addr));
-    sa = (SOCKADDR*)&sa4;
-    sa_len = sizeof(sa4);
-  }
-  if (WSAAddressToString(sa, sa_len, NULL, string, &string_size))
-     return (NULL);
-  return (string);
+    if (family == AF_INET6) {
+        struct sockaddr_in6 sa6;
+        memset(&sa6, 0, sizeof(sa6));
+        sa6.sa_family = AF_INET6;
+        memcpy(&sa6.sin6_addr, addr, sizeof(sa6.sin6_addr));
+        sa = (SOCKADDR*) &sa6;
+        sa_len = sizeof(sa6);
+    } else {
+        struct sockaddr_in sa4;
+        memset(&sa4, 0, sizeof(sa4));
+        sa4.sa_family = AF_INET;
+        memcpy(&sa4.sin_addr, addr, sizeof(sa4.sin_addr));
+        sa = (SOCKADDR*) &sa4;
+        sa_len = sizeof(sa4);
+    }
+    if (WSAAddressToString(sa, sa_len, NULL, string, &string_size))
+        return NULL;
+    return string;
 }
 #endif
 
