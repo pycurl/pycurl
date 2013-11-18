@@ -46,14 +46,30 @@
 #include <string.h>
 #include <limits.h>
 #include <sys/types.h>
+
+#if !defined(WIN32)
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#endif
+
 #include <curl/curl.h>
 #include <curl/easy.h>
 #include <curl/multi.h>
 #undef NDEBUG
 #include <assert.h>
+
+/* The inet_ntop() was added in ws2_32.dll on Windows Vista [1]. Hence the
+ * Windows SDK targeting lesser OS'es doesn't provide that prototype.
+ * Maybe we should use the local hidden inet_ntop() for all OS'es thus
+ * making a pycurl.pyd work across OS'es w/o rebuilding?
+ *
+ * [1] http://msdn.microsoft.com/en-us/library/windows/desktop/cc805843(v=vs.85).aspx
+ */
+#if defined(WIN32) && ((_WIN32_WINNT <= 0x0600) || (NTDDI_VERSION < NTDDI_VISTA))
+  static const char * pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
+  #define inet_ntop(fam,addr,string,size) pycurl_inet_ntop(fam,addr,string,size)
+#endif
 
 /* Ensure we have updated versions */
 #if !defined(PY_VERSION_HEX) || (PY_VERSION_HEX < 0x02040000)
@@ -4416,6 +4432,33 @@ initpycurl(void)
 #endif
 
 }
+
+#if defined(WIN32) && ((_WIN32_WINNT <= 0x0600) || (NTDDI_VERSION < NTDDI_VISTA))
+/*
+ * Only Winsock on Vista+ has inet_ntop().
+ */
+static const char * pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size)
+{
+  SOCKADDR *sa;
+  int       sa_len;
+
+  if (family == AF_INET6) {
+    struct sockaddr_in6 sa6;
+    memcpy (&sa6.sin6_addr, addr, sizeof(sa6.sin6_addr));
+    sa = (SOCKADDR*)&sa6;
+    sa_len = sizeof(sa6);
+  }
+  else {
+    struct sockaddr_in sa4;
+    memcpy (&sa4.sin_addr, addr, sizeof(sa4.sin_addr));
+    sa = (SOCKADDR*)&sa4;
+    sa_len = sizeof(sa4);
+  }
+  if (WSAAddressToString(sa, sa_len, NULL, string, &string_size))
+     return (NULL);
+  return (string);
+}
+#endif
 
 /* vi:ts=4:et:nowrap
  */
