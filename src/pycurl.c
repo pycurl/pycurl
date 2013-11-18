@@ -59,6 +59,13 @@
 #undef NDEBUG
 #include <assert.h>
 
+#if defined(WIN32)
+/* supposedly not present in errno.h provided with VC */
+# if !defined(EAFNOSUPPORT)
+#  define EAFNOSUPPORT 97
+# endif
+#endif
+
 /* The inet_ntop() was added in ws2_32.dll on Windows Vista [1]. Hence the
  * Windows SDK targeting lesser OS'es doesn't provide that prototype.
  * Maybe we should use the local hidden inet_ntop() for all OS'es thus
@@ -4449,13 +4456,16 @@ static const char * pycurl_inet_ntop (int family, void *addr, char *string, size
         memcpy(&sa6.sin6_addr, addr, sizeof(sa6.sin6_addr));
         sa = (SOCKADDR*) &sa6;
         sa_len = sizeof(sa6);
-    } else {
+    } else if (family == AF_INET) {
         struct sockaddr_in sa4;
         memset(&sa4, 0, sizeof(sa4));
         sa4.sa_family = AF_INET;
         memcpy(&sa4.sin_addr, addr, sizeof(sa4.sin_addr));
         sa = (SOCKADDR*) &sa4;
         sa_len = sizeof(sa4);
+    } else {
+        errno = EAFNOSUPPORT;
+        return NULL;
     }
     if (WSAAddressToString(sa, sa_len, NULL, string, &string_size))
         return NULL;
