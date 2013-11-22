@@ -73,7 +73,7 @@
  *
  * [1] http://msdn.microsoft.com/en-us/library/windows/desktop/cc805843(v=vs.85).aspx
  */
-#if defined(WIN32) && ((_WIN32_WINNT <= 0x0600) || (NTDDI_VERSION < NTDDI_VISTA))
+#if defined(WIN32) && ((_WIN32_WINNT < 0x0600) || (NTDDI_VERSION < NTDDI_VISTA))
     static const char * pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
     #define inet_ntop(fam,addr,string,size) pycurl_inet_ntop(fam,addr,string,size)
 #endif
@@ -4440,7 +4440,7 @@ initpycurl(void)
 
 }
 
-#if defined(WIN32) && ((_WIN32_WINNT <= 0x0600) || (NTDDI_VERSION < NTDDI_VISTA))
+#if defined(WIN32) && ((_WIN32_WINNT < 0x0600) || (NTDDI_VERSION < NTDDI_VISTA))
 /*
  * Only Winsock on Vista+ has inet_ntop().
  */
