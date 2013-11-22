@@ -42,7 +42,6 @@ class MultiSocketTest(unittest.TestCase):
 
         # init
         m = pycurl.CurlMulti()
-        m.setopt(pycurl.M_PIPELINING, 1)
         m.setopt(pycurl.M_SOCKETFUNCTION, socket)
         m.handles = []
         for url in urls:
