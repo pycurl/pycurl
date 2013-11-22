@@ -39,7 +39,6 @@ class MultiSocketTest(unittest.TestCase):
 
         # init
         m = pycurl.CurlMulti()
-        m.setopt(pycurl.M_PIPELINING, 1)
         m.setopt(pycurl.M_TIMERFUNCTION, timer)
         m.handles = []
         for url in urls:

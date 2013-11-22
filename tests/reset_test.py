@@ -20,9 +20,6 @@ class ResetTest(unittest.TestCase):
         outf = util.StringIO()
         cm = pycurl.CurlMulti()
 
-        # Set multi handle's options
-        cm.setopt(pycurl.M_PIPELINING, 1)
-
         eh = pycurl.Curl()
 
         for x in range(1, 20):
