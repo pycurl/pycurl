@@ -25,9 +25,12 @@ def teardown_module(mod):
 class MultiSocketTest(unittest.TestCase):
     def test_multi_socket(self):
         urls = [
-            'http://localhost:8380/success',
-            'http://localhost:8381/success',
-            'http://localhost:8382/success',
+            # not sure why requesting /success produces no events.
+            # see multi_socket_select_test.py for a longer explanation
+            # why short wait is used there.
+            'http://localhost:8380/short_wait',
+            'http://localhost:8381/short_wait',
+            'http://localhost:8382/short_wait',
         ]
 
         socket_events = []
