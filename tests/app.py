@@ -12,6 +12,11 @@ app.debug = True
 def ok():
     return 'success'
 
+@app.route('/short_wait')
+def ok():
+    _time.sleep(0.1)
+    return 'success'
+
 @app.route('/status/403')
 def forbidden():
     return bottle.HTTPResponse('forbidden', 403)
