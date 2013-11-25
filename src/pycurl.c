@@ -86,9 +86,7 @@
 #  error "Need libcurl version 7.19.0 or greater to compile pycurl."
 #endif
 
-#if LIBCURL_VERSION_MAJOR >= 8 || \
-    LIBCURL_VERSION_MAJOR == 7 && LIBCURL_VERSION_MINOR >= 20 || \
-    LIBCURL_VERSION_MAJOR == 7 && LIBCURL_VERSION_MINOR == 19 && LIBCURL_VERSION_PATCH >= 1
+#if LIBCURL_VERSION_NUM >= 0x071301 /* check for 7.19.1 or greater */
 #define HAVE_CURLOPT_USERNAME
 #define HAVE_CURLOPT_PROXYUSERNAME
 #define HAVE_CURLOPT_CERTINFO
