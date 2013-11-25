@@ -283,14 +283,6 @@ typedef struct {
 } while (0)
 
 
-/* Safe XDECREF for object states that handles nested deallocations */
-#define ZAP(v) do {\
-    PyObject *tmp = (PyObject *)(v); \
-    (v) = NULL; \
-    Py_XDECREF(tmp); \
-} while (0)
-
-
 /*************************************************************************
 // python utility functions
 **************************************************************************/
@@ -835,7 +827,7 @@ do_share_traverse(CurlShareObject *self, visitproc visit, void *arg)
 static int
 do_share_clear(CurlShareObject *self)
 {
-    ZAP(self->dict);
+    Py_CLEAR(self->dict);
     return 0;
 }
 
@@ -854,7 +846,7 @@ do_share_dealloc(CurlShareObject *self){
     PyObject_GC_UnTrack(self);
     Py_TRASHCAN_SAFE_BEGIN(self);
 
-    ZAP(self->dict);
+    Py_CLEAR(self->dict);
     util_share_close(self);
 
     PyObject_GC_Del(self);
@@ -1058,7 +1050,7 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
 {
     if (flags & PYCURL_MEMGROUP_ATTRDICT) {
         /* Decrement refcount for attributes dictionary. */
-        ZAP(self->dict);
+        Py_CLEAR(self->dict);
     }
 
     if (flags & PYCURL_MEMGROUP_MULTI) {
@@ -1075,24 +1067,24 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
 
     if (flags & PYCURL_MEMGROUP_CALLBACK) {
         /* Decrement refcount for python callbacks. */
-        ZAP(self->w_cb);
-        ZAP(self->h_cb);
-        ZAP(self->r_cb);
-        ZAP(self->pro_cb);
-        ZAP(self->debug_cb);
-        ZAP(self->ioctl_cb);
+        Py_CLEAR(self->w_cb);
+        Py_CLEAR(self->h_cb);
+        Py_CLEAR(self->r_cb);
+        Py_CLEAR(self->pro_cb);
+        Py_CLEAR(self->debug_cb);
+        Py_CLEAR(self->ioctl_cb);
     }
 
     if (flags & PYCURL_MEMGROUP_FILE) {
         /* Decrement refcount for python file objects. */
-        ZAP(self->readdata_fp);
-        ZAP(self->writedata_fp);
-        ZAP(self->writeheader_fp);
+        Py_CLEAR(self->readdata_fp);
+        Py_CLEAR(self->writedata_fp);
+        Py_CLEAR(self->writeheader_fp);
     }
 
     if (flags & PYCURL_MEMGROUP_POSTFIELDS) {
         /* Decrement refcount for postfields object */
-        ZAP(self->postfields_obj);
+        Py_CLEAR(self->postfields_obj);
     }
     
     if (flags & PYCURL_MEMGROUP_SHARE) {
@@ -1109,7 +1101,7 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
 
     if (flags & PYCURL_MEMGROUP_HTTPPOST) {
         /* Decrement refcounts for httppost related references. */
-        ZAP(self->httppost_ref_list);
+        Py_CLEAR(self->httppost_ref_list);
     }
 }
 
@@ -1177,7 +1169,7 @@ do_curl_dealloc(CurlObject *self)
     PyObject_GC_UnTrack(self);
     Py_TRASHCAN_SAFE_BEGIN(self)
 
-    ZAP(self->dict);
+    Py_CLEAR(self->dict);
     util_curl_close(self);
 
     PyObject_GC_Del(self);
@@ -1840,7 +1832,7 @@ util_curl_unsetopt(CurlObject *self, int option)
         break;
     case CURLOPT_WRITEHEADER:
         SETOPT((void *) 0);
-        ZAP(self->writeheader_fp);
+        Py_CLEAR(self->writeheader_fp);
         break;
     case CURLOPT_CAINFO:
     case CURLOPT_CAPATH:
@@ -2109,15 +2101,15 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
         switch (option) {
         case CURLOPT_READDATA:
-            ZAP(self->readdata_fp);
+            Py_CLEAR(self->readdata_fp);
             self->readdata_fp = obj;
             break;
         case CURLOPT_WRITEDATA:
-            ZAP(self->writedata_fp);
+            Py_CLEAR(self->writedata_fp);
             self->writedata_fp = obj;
             break;
         case CURLOPT_WRITEHEADER:
-            ZAP(self->writeheader_fp);
+            Py_CLEAR(self->writeheader_fp);
             self->writeheader_fp = obj;
             break;
         default:
@@ -2419,58 +2411,58 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                 return NULL;
             }
             Py_INCREF(obj);
-            ZAP(self->writedata_fp);
-            ZAP(self->w_cb);
+            Py_CLEAR(self->writedata_fp);
+            Py_CLEAR(self->w_cb);
             self->w_cb = obj;
             curl_easy_setopt(self->handle, CURLOPT_WRITEFUNCTION, w_cb);
             curl_easy_setopt(self->handle, CURLOPT_WRITEDATA, self);
             break;
         case CURLOPT_HEADERFUNCTION:
             Py_INCREF(obj);
-            ZAP(self->h_cb);
+            Py_CLEAR(self->h_cb);
             self->h_cb = obj;
             curl_easy_setopt(self->handle, CURLOPT_HEADERFUNCTION, h_cb);
             curl_easy_setopt(self->handle, CURLOPT_WRITEHEADER, self);
             break;
         case CURLOPT_READFUNCTION:
             Py_INCREF(obj);
-            ZAP(self->readdata_fp);
-            ZAP(self->r_cb);
+            Py_CLEAR(self->readdata_fp);
+            Py_CLEAR(self->r_cb);
             self->r_cb = obj;
             curl_easy_setopt(self->handle, CURLOPT_READFUNCTION, r_cb);
             curl_easy_setopt(self->handle, CURLOPT_READDATA, self);
             break;
         case CURLOPT_PROGRESSFUNCTION:
             Py_INCREF(obj);
-            ZAP(self->pro_cb);
+            Py_CLEAR(self->pro_cb);
             self->pro_cb = obj;
             curl_easy_setopt(self->handle, CURLOPT_PROGRESSFUNCTION, pro_cb);
             curl_easy_setopt(self->handle, CURLOPT_PROGRESSDATA, self);
             break;
         case CURLOPT_DEBUGFUNCTION:
             Py_INCREF(obj);
-            ZAP(self->debug_cb);
+            Py_CLEAR(self->debug_cb);
             self->debug_cb = obj;
             curl_easy_setopt(self->handle, CURLOPT_DEBUGFUNCTION, debug_cb);
             curl_easy_setopt(self->handle, CURLOPT_DEBUGDATA, self);
             break;
         case CURLOPT_IOCTLFUNCTION:
             Py_INCREF(obj);
-            ZAP(self->ioctl_cb);
+            Py_CLEAR(self->ioctl_cb);
             self->ioctl_cb = obj;
             curl_easy_setopt(self->handle, CURLOPT_IOCTLFUNCTION, ioctl_cb);
             curl_easy_setopt(self->handle, CURLOPT_IOCTLDATA, self);
             break;
         case CURLOPT_OPENSOCKETFUNCTION:
             Py_INCREF(obj);
-            ZAP(self->opensocket_cb);
+            Py_CLEAR(self->opensocket_cb);
             self->opensocket_cb = obj;
             curl_easy_setopt(self->handle, CURLOPT_OPENSOCKETFUNCTION, opensocket_cb);
             curl_easy_setopt(self->handle, CURLOPT_OPENSOCKETDATA, self);
             break;
         case CURLOPT_SEEKFUNCTION:
             Py_INCREF(obj);
-            ZAP(self->seek_cb);
+            Py_CLEAR(self->seek_cb);
             self->seek_cb = obj;
             curl_easy_setopt(self->handle, CURLOPT_SEEKFUNCTION, seek_cb);
             curl_easy_setopt(self->handle, CURLOPT_SEEKDATA, self);
@@ -2756,7 +2748,7 @@ do_multi_dealloc(CurlMultiObject *self)
     PyObject_GC_UnTrack(self);
     Py_TRASHCAN_SAFE_BEGIN(self)
 
-    ZAP(self->dict);
+    Py_CLEAR(self->dict);
     util_multi_close(self);
 
     PyObject_GC_Del(self);
@@ -2781,7 +2773,7 @@ do_multi_close(CurlMultiObject *self)
 static int
 do_multi_clear(CurlMultiObject *self)
 {
-    ZAP(self->dict);
+    Py_CLEAR(self->dict);
     return 0;
 }
 
