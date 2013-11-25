@@ -104,7 +104,7 @@ typedef int Py_ssize_t;
 #endif
 
 /* Py_TYPE is defined by Python 2.6+ */
-#if !defined(Py_TYPE)
+#if PY_VERSION_HEX < 0x02060000 && !defined(Py_TYPE)
 #  define Py_TYPE(x) (x)->ob_type
 #endif
 
