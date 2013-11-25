@@ -762,6 +762,7 @@ share_unlock_callback(CURL *handle, curl_lock_data data, void *userptr)
 
 #else /* WITH_THREAD */
 
+#if defined(PYCURL_NEED_SSL_TSL)
 static void pycurl_ssl_init(void)
 {
     return;
@@ -771,6 +772,7 @@ static void pycurl_ssl_cleanup(void)
 {
     return;
 }
+#endif
 
 #endif /* WITH_THREAD */
 
