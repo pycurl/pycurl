@@ -86,9 +86,7 @@
 #  error "Need libcurl version 7.19.0 or greater to compile pycurl."
 #endif
 
-#if LIBCURL_VERSION_MAJOR >= 8 || \
-    LIBCURL_VERSION_MAJOR == 7 && LIBCURL_VERSION_MINOR >= 20 || \
-    LIBCURL_VERSION_MAJOR == 7 && LIBCURL_VERSION_MINOR == 19 && LIBCURL_VERSION_PATCH >= 1
+#if LIBCURL_VERSION_NUM >= 0x071301 /* check for 7.19.1 or greater */
 #define HAVE_CURLOPT_USERNAME
 #define HAVE_CURLOPT_PROXYUSERNAME
 #define HAVE_CURLOPT_CERTINFO
@@ -99,14 +97,12 @@
 #endif
 
 /* Python < 2.5 compat for Py_ssize_t */
-#if PY_VERSION_HEX < 0x02050000 && !defined(PY_SSIZE_T_MIN)
+#if PY_VERSION_HEX < 0x02050000
 typedef int Py_ssize_t;
-#define PY_SSIZE_T_MAX INT_MAX
-#define PY_SSIZE_T_MIN INT_MIN
 #endif
 
 /* Py_TYPE is defined by Python 2.6+ */
-#if !defined(Py_TYPE)
+#if PY_VERSION_HEX < 0x02060000 && !defined(Py_TYPE)
 #  define Py_TYPE(x) (x)->ob_type
 #endif
 
@@ -298,10 +294,6 @@ typedef struct {
 /*************************************************************************
 // python utility functions
 **************************************************************************/
-
-#if (PY_VERSION_HEX < 0x02030000) && !defined(PY_LONG_LONG)
-#  define PY_LONG_LONG LONG_LONG
-#endif
 
 /* Like PyString_AsString(), but set an exception if the string contains
  * embedded NULs. Actually PyString_AsStringAndSize() already does that for
