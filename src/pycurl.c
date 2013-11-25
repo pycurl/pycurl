@@ -97,10 +97,8 @@
 #endif
 
 /* Python < 2.5 compat for Py_ssize_t */
-#if PY_VERSION_HEX < 0x02050000 && !defined(PY_SSIZE_T_MIN)
+#if PY_VERSION_HEX < 0x02050000
 typedef int Py_ssize_t;
-#define PY_SSIZE_T_MAX INT_MAX
-#define PY_SSIZE_T_MIN INT_MIN
 #endif
 
 /* Py_TYPE is defined by Python 2.6+ */
