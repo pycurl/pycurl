@@ -96,6 +96,10 @@
 #define HAVE_CURLOPT_RESOLVE
 #endif
 
+#if LIBCURL_VERSION_NUM >= 0x071800 /* check for 7.24.0 or greater */
+#define HAVE_CURLOPT_DNS_SERVERS
+#endif
+
 /* Python < 2.5 compat for Py_ssize_t */
 #if PY_VERSION_HEX < 0x02050000
 typedef int Py_ssize_t;
@@ -1975,7 +1979,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_SSH_HOST_PUBLIC_KEY_MD5:
         case CURLOPT_CRLFILE:
         case CURLOPT_ISSUERCERT:
-#if LIBCURL_VERSION_NUM >= 0x071800
+#ifdef HAVE_CURLOPT_DNS_SERVERS
         case CURLOPT_DNS_SERVERS:
 #endif
 /* FIXME: check if more of these options allow binary data */
@@ -4304,7 +4308,7 @@ initpycurl(void)
     insint_c(d, "PAUSE_ALL",  CURLPAUSE_ALL);
     insint_c(d, "PAUSE_CONT", CURLPAUSE_CONT);
 
-#if LIBCURL_VERSION_NUM >= 0x071800
+#ifdef HAVE_CURLOPT_DNS_SERVERS
     insint_c(d, "DNS_SERVERS", CURLOPT_DNS_SERVERS);
 #endif
 
