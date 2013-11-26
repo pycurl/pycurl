@@ -1581,24 +1581,14 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
     }
     else if (PyInt_Check(result)) {
         long r = PyInt_AsLong(result);
-        if (r != CURL_READFUNC_ABORT
-#if LIBCURL_VERSION_NUM >= 0x071200  /* CURL_READFUNC_PAUSE appeared in libcurl 7.18.0 */
-            && r != CURL_READFUNC_PAUSE
-#endif
-            ) {
+        if (r != CURL_READFUNC_ABORT && r != CURL_READFUNC_PAUSE)
             goto type_error;
-        }
         ret = r; /* either CURL_READFUNC_ABORT or CURL_READFUNC_PAUSE */
     }
     else if (PyLong_Check(result)) {
         long r = PyLong_AsLong(result);
-        if (r != CURL_READFUNC_ABORT
-#if LIBCURL_VERSION_NUM >= 0x071200  /* CURL_READFUNC_PAUSE appeared in libcurl 7.18.0 */
-            && r != CURL_READFUNC_PAUSE
-#endif
-            ) {
+        if (r != CURL_READFUNC_ABORT && r != CURL_READFUNC_PAUSE)
             goto type_error;
-        }
         ret = r; /* either CURL_READFUNC_ABORT or CURL_READFUNC_PAUSE */
     }
     else {
@@ -2635,8 +2625,6 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
     return NULL;
 }
 
-#if LIBCURL_VERSION_NUM >= 0x071200  /* curl_easy_pause() appeared in libcurl 7.18.0 */
-
 /* curl_easy_pause() can be called from inside a callback or outside */
 static PyObject *
 do_curl_pause(CurlObject *self, PyObject *args)
@@ -2685,8 +2673,6 @@ static const char co_pause_doc [] =
     "pause(bitmask) -> None.  "
     "Pauses or unpauses a curl handle. Bitmask should be a value such as PAUSE_RECV or PAUSE_CONT.  "
     "Raises pycurl.error exception upon failure.\n";
-
-#endif
 
 /*************************************************************************
 // CurlMultiObject
@@ -3428,9 +3414,7 @@ static PyMethodDef curlobject_methods[] = {
     {"close", (PyCFunction)do_curl_close, METH_NOARGS, co_close_doc},
     {"errstr", (PyCFunction)do_curl_errstr, METH_NOARGS, co_errstr_doc},
     {"getinfo", (PyCFunction)do_curl_getinfo, METH_VARARGS, co_getinfo_doc},
-#if LIBCURL_VERSION_NUM >= 0x071200  /* curl_easy_pause() appeared in libcurl 7.18.0 */
     {"pause", (PyCFunction)do_curl_pause, METH_VARARGS, co_pause_doc},
-#endif
     {"perform", (PyCFunction)do_curl_perform, METH_NOARGS, co_perform_doc},
     {"setopt", (PyCFunction)do_curl_setopt, METH_VARARGS, co_setopt_doc},
     {"unsetopt", (PyCFunction)do_curl_unsetopt, METH_VARARGS, co_unsetopt_doc},
@@ -3937,9 +3921,7 @@ initpycurl(void)
 
     /* Abort curl_read_callback(). */
     insint_c(d, "READFUNC_ABORT", CURL_READFUNC_ABORT);
-#if LIBCURL_VERSION_NUM >= 0x071200  /* CURL_READFUNC_PAUSE appeared in libcurl 7.18.0 */
     insint_c(d, "READFUNC_PAUSE", CURL_READFUNC_PAUSE);
-#endif
 
     /* Pause curl_write_callback(). */
     insint_c(d, "WRITEFUNC_PAUSE", CURL_WRITEFUNC_PAUSE);
@@ -4316,13 +4298,11 @@ initpycurl(void)
     insint_c(d, "INFO_CERTINFO", CURLINFO_CERTINFO);
 #endif
 
-#if LIBCURL_VERSION_NUM >= 0x071200  /* curl_easy_pause() appeared in libcurl 7.18.0 */
     /* CURLPAUSE: symbolic constants for pause(bitmask) */
     insint_c(d, "PAUSE_RECV", CURLPAUSE_RECV);
     insint_c(d, "PAUSE_SEND", CURLPAUSE_SEND);
     insint_c(d, "PAUSE_ALL",  CURLPAUSE_ALL);
     insint_c(d, "PAUSE_CONT", CURLPAUSE_CONT);
-#endif
 
 #if LIBCURL_VERSION_NUM >= 0x071800
     insint_c(d, "DNS_SERVERS", CURLOPT_DNS_SERVERS);
