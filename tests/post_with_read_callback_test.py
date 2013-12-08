@@ -26,14 +26,15 @@ POSTFIELDS = {
 POSTSTRING = urllib_parse.urlencode(POSTFIELDS)
 
 class DataProvider(object):
-    def __init__(self):
+    def __init__(self, data):
+        self.data = data
         self.finished = False
 
     def read_cb(self, size):
-        assert len(POSTSTRING) <= size
+        assert len(self.data) <= size
         if not self.finished:
             self.finished = True
-            return POSTSTRING
+            return self.data
         else:
             # Nothing more to read
             return ""
@@ -46,7 +47,7 @@ class PostWithReadCallbackTest(unittest.TestCase):
         self.curl.close()
     
     def test_post_with_read_callback(self):
-        d = DataProvider()
+        d = DataProvider(POSTSTRING)
         self.curl.setopt(self.curl.URL, 'http://localhost:8380/postfields')
         self.curl.setopt(self.curl.POST, 1)
         self.curl.setopt(self.curl.POSTFIELDSIZE, len(POSTSTRING))
@@ -58,3 +59,23 @@ class PostWithReadCallbackTest(unittest.TestCase):
         
         actual = json.loads(sio.getvalue().decode())
         self.assertEqual(POSTFIELDS, actual)
+    
+    @util.only_python3
+    def test_post_with_read_callback_returning_bytes(self):
+        poststring = 'hello=world'
+        
+        data = poststring.encode()
+        assert type(data) == bytes
+        d = DataProvider(data)
+        
+        self.curl.setopt(self.curl.URL, 'http://localhost:8380/postfields')
+        self.curl.setopt(self.curl.POST, 1)
+        self.curl.setopt(self.curl.POSTFIELDSIZE, len(poststring))
+        self.curl.setopt(self.curl.READFUNCTION, d.read_cb)
+        #self.curl.setopt(self.curl.VERBOSE, 1)
+        sio = util.StringIO()
+        self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
+        self.curl.perform()
+        
+        actual = json.loads(sio.getvalue())
+        self.assertEqual(dict(hello='world'), actual)
