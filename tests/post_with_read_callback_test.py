@@ -79,3 +79,23 @@ class PostWithReadCallbackTest(unittest.TestCase):
         
         actual = json.loads(sio.getvalue())
         self.assertEqual(dict(hello='world'), actual)
+    
+    @util.only_python3
+    def test_post_with_read_callback_returning_bytes_with_nulls(self):
+        poststring = "hello=wor\0ld"
+        
+        data = poststring.encode()
+        assert type(data) == bytes
+        d = DataProvider(data)
+        
+        self.curl.setopt(self.curl.URL, 'http://localhost:8380/postfields')
+        self.curl.setopt(self.curl.POST, 1)
+        self.curl.setopt(self.curl.POSTFIELDSIZE, len(poststring))
+        self.curl.setopt(self.curl.READFUNCTION, d.read_cb)
+        #self.curl.setopt(self.curl.VERBOSE, 1)
+        sio = util.StringIO()
+        self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
+        self.curl.perform()
+        
+        actual = json.loads(sio.getvalue())
+        self.assertEqual(dict(hello="wor\0ld"), actual)
