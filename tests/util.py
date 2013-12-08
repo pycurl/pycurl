@@ -45,7 +45,7 @@ def wait_for_network_service(netloc, check_interval, num_attempts):
         try:
             conn = create_connection(netloc, check_interval)
         except socket.error:
-            e = sys.exc_info()[1]
+            #e = sys.exc_info()[1]
             _time.sleep(check_interval)
         else:
             conn.close()
