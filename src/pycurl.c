@@ -1611,12 +1611,14 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
         memcpy(ptr, buf, obj_size);
         ret = obj_size;             /* success */
     }
+#if PY_MAJOR_VERSION < 3
     else if (PyInt_Check(result)) {
         long r = PyInt_AsLong(result);
         if (r != CURL_READFUNC_ABORT && r != CURL_READFUNC_PAUSE)
             goto type_error;
         ret = r; /* either CURL_READFUNC_ABORT or CURL_READFUNC_PAUSE */
     }
+#endif
     else if (PyLong_Check(result)) {
         long r = PyLong_AsLong(result);
         if (r != CURL_READFUNC_ABORT && r != CURL_READFUNC_PAUSE)
