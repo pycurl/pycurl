@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# -*- coding: iso-8859-1 -*-
+# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 import pycurl
@@ -68,6 +68,10 @@ class PostWithReadCallbackTest(unittest.TestCase):
     def test_post_with_read_callback_returning_bytes_with_nulls(self):
         self.check_bytes("hello=wor\0ld", dict(hello="wor\0ld"))
     
+    @util.only_python3
+    def test_post_with_read_callback_returning_bytes_with_multibyte(self):
+        self.check_bytes("hello=Пушкин", dict(hello="Пушкин"))
+    
     def check_bytes(self, poststring, expected):
         data = poststring.encode()
         assert type(data) == bytes
@@ -75,7 +79,8 @@ class PostWithReadCallbackTest(unittest.TestCase):
         
         self.curl.setopt(self.curl.URL, 'http://localhost:8380/postfields')
         self.curl.setopt(self.curl.POST, 1)
-        self.curl.setopt(self.curl.POSTFIELDSIZE, len(poststring))
+        # length of bytes
+        self.curl.setopt(self.curl.POSTFIELDSIZE, len(data))
         self.curl.setopt(self.curl.READFUNCTION, d.read_cb)
         #self.curl.setopt(self.curl.VERBOSE, 1)
         sio = util.StringIO()
