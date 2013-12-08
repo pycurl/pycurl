@@ -1680,7 +1680,25 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
         char *buf = NULL;
         Py_ssize_t obj_size = -1;
         Py_ssize_t r;
-        PyObject *encoded = PyUnicode_AsEncodedString(result, "utf8", "strict");
+        /*
+        Encode with ascii codec.
+        
+        HTTP requires sending content-length for request body to the server
+        before the request body is sent, therefore typically content length
+        is given via POSTFIELDSIZE before read function is invoked to
+        provide the data.
+        
+        However, if we encode the string using any encoding other than ascii,
+        the length of encoded string may not match the length of unicode
+        string we are encoding. Therefore, if client code does a simple
+        len(source_string) to determine the value to supply in content-length,
+        the length of bytes read may be different.
+        
+        To avoid this situation, we only accept ascii bytes in the string here.
+        
+        Encode data yourself to bytes when dealing with non-ascii data.
+        */
+        PyObject *encoded = PyUnicode_AsEncodedString(result, "ascii", "strict");
         if (encoded == NULL) {
             goto verbose_error;
         }
