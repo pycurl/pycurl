@@ -27,6 +27,19 @@ def pycurl_version_less_than(*spec):
     version = [int(part) for part in pycurl.version_info()[1].split('.')]
     return version_less_than_spec(version, spec)
 
+def only_python3(fn):
+    import nose.plugins.skip
+    import functools
+    
+    @functools.wraps(fn)
+    def decorated(*args, **kwargs):
+        if sys.version_info[0] < 3:
+            raise nose.plugins.skip.SkipTest('python < 3')
+        
+        return fn(*args, **kwargs)
+    
+    return decorated
+
 try:
     create_connection = socket.create_connection
 except AttributeError:
