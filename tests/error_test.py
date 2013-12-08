@@ -26,7 +26,7 @@ class ErrorTest(unittest.TestCase):
             self.assertEqual(int, type(exc.args[0]))
             self.assertEqual(str, type(exc.args[1]))
             # unpack
-            err, msg = exc
+            err, msg = exc.args
             self.assertEqual(pycurl.E_URL_MALFORMAT, err)
             # possibly fragile
             self.assertEqual('No URL set!', msg)

@@ -32,7 +32,7 @@ class WriteAbortTest(unittest.TestCase):
         try:
             self.curl.perform()
         except pycurl.error:
-            err, msg = sys.exc_info()[1]
+            err, msg = sys.exc_info()[1].args
             # we expect pycurl.E_WRITE_ERROR as the response
             assert pycurl.E_WRITE_ERROR == err
 
