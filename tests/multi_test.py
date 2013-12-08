@@ -28,7 +28,7 @@ class MultiTest(unittest.TestCase):
         io1 = util.StringIO()
         io2 = util.StringIO()
         m = pycurl.CurlMulti()
-        m.handles = []
+        handles = []
         c1 = pycurl.Curl()
         c2 = pycurl.Curl()
         c1.setopt(c1.URL, 'http://localhost:8380/success')
@@ -37,10 +37,10 @@ class MultiTest(unittest.TestCase):
         c2.setopt(c1.WRITEFUNCTION, io2.write)
         m.add_handle(c1)
         m.add_handle(c2)
-        m.handles.append(c1)
-        m.handles.append(c2)
+        handles.append(c1)
+        handles.append(c2)
 
-        num_handles = len(m.handles)
+        num_handles = len(handles)
         while num_handles:
             while 1:
                 ret, num_handles = m.perform()
@@ -50,7 +50,6 @@ class MultiTest(unittest.TestCase):
 
         m.remove_handle(c2)
         m.remove_handle(c1)
-        del m.handles
         m.close()
         c1.close()
         c2.close()
