@@ -4,6 +4,7 @@
 
 import pycurl
 import unittest
+import sys
 try:
     import json
 except ImportError:
@@ -97,6 +98,18 @@ class PostWithReadCallbackTest(unittest.TestCase):
     @util.only_python3
     def test_post_with_read_callback_returning_unicode_with_nulls(self):
         self.check_unicode("hello=wor\0ld", dict(hello="wor\0ld"))
+    
+    @util.only_python3
+    def test_post_with_read_callback_returning_unicode_with_multibyte(self):
+        try:
+            self.check_unicode("hello=Пушкин", dict(hello="Пушкин"))
+            # prints:
+            # UnicodeEncodeError: 'ascii' codec can't encode characters in position 6-11: ordinal not in range(128)
+        except pycurl.error:
+            err, msg = sys.exc_info()[1].args
+            # we expect pycurl.E_WRITE_ERROR as the response
+            self.assertEqual(pycurl.E_ABORTED_BY_CALLBACK, err)
+            self.assertEqual('operation aborted by callback', msg)
     
     def check_unicode(self, poststring, expected):
         assert type(poststring) == str
