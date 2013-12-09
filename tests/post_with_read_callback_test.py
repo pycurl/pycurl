@@ -63,23 +63,24 @@ class PostWithReadCallbackTest(unittest.TestCase):
     
     @util.only_python3
     def test_post_with_read_callback_returning_bytes(self):
-        self.check_bytes('hello=world', dict(hello='world'))
+        self.check_bytes('world')
     
     @util.only_python3
     def test_post_with_read_callback_returning_bytes_with_nulls(self):
-        self.check_bytes("hello=wor\0ld", dict(hello="wor\0ld"))
+        self.check_bytes("wor\0ld")
     
     @util.only_python3
     def test_post_with_read_callback_returning_bytes_with_multibyte(self):
-        self.check_bytes("hello=Пушкин", dict(hello="Пушкин"))
+        self.check_bytes("Пушкин")
     
-    def check_bytes(self, poststring, expected):
-        data = poststring.encode()
+    def check_bytes(self, poststring):
+        data = poststring.encode('utf8')
         assert type(data) == bytes
         d = DataProvider(data)
         
-        self.curl.setopt(self.curl.URL, 'http://localhost:8380/postfields')
+        self.curl.setopt(self.curl.URL, 'http://localhost:8380/raw_utf8')
         self.curl.setopt(self.curl.POST, 1)
+        self.curl.setopt(self.curl.HTTPHEADER, ['Content-Type: application/octet-stream'])
         # length of bytes
         self.curl.setopt(self.curl.POSTFIELDSIZE, len(data))
         self.curl.setopt(self.curl.READFUNCTION, d.read_cb)
@@ -88,21 +89,22 @@ class PostWithReadCallbackTest(unittest.TestCase):
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
         
-        actual = json.loads(sio.getvalue().decode())
-        self.assertEqual(expected, actual)
+        # json should be ascii
+        actual = json.loads(sio.getvalue().decode('ascii'))
+        self.assertEqual(poststring, actual)
     
     @util.only_python3
     def test_post_with_read_callback_returning_unicode(self):
-        self.check_unicode('hello=world', dict(hello='world'))
+        self.check_unicode('world')
     
     @util.only_python3
     def test_post_with_read_callback_returning_unicode_with_nulls(self):
-        self.check_unicode("hello=wor\0ld", dict(hello="wor\0ld"))
+        self.check_unicode("wor\0ld")
     
     @util.only_python3
     def test_post_with_read_callback_returning_unicode_with_multibyte(self):
         try:
-            self.check_unicode("hello=Пушкин", dict(hello="Пушкин"))
+            self.check_unicode("Пушкин")
             # prints:
             # UnicodeEncodeError: 'ascii' codec can't encode characters in position 6-11: ordinal not in range(128)
         except pycurl.error:
@@ -111,12 +113,13 @@ class PostWithReadCallbackTest(unittest.TestCase):
             self.assertEqual(pycurl.E_ABORTED_BY_CALLBACK, err)
             self.assertEqual('operation aborted by callback', msg)
     
-    def check_unicode(self, poststring, expected):
+    def check_unicode(self, poststring):
         assert type(poststring) == str
         d = DataProvider(poststring)
         
-        self.curl.setopt(self.curl.URL, 'http://localhost:8380/postfields')
+        self.curl.setopt(self.curl.URL, 'http://localhost:8380/raw_utf8')
         self.curl.setopt(self.curl.POST, 1)
+        self.curl.setopt(self.curl.HTTPHEADER, ['Content-Type: application/octet-stream'])
         self.curl.setopt(self.curl.POSTFIELDSIZE, len(poststring))
         self.curl.setopt(self.curl.READFUNCTION, d.read_cb)
         #self.curl.setopt(self.curl.VERBOSE, 1)
@@ -124,5 +127,6 @@ class PostWithReadCallbackTest(unittest.TestCase):
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
         
-        actual = json.loads(sio.getvalue().decode())
-        self.assertEqual(expected, actual)
+        # json should be ascii
+        actual = json.loads(sio.getvalue().decode('ascii'))
+        self.assertEqual(poststring, actual)

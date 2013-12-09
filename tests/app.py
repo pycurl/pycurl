@@ -29,6 +29,11 @@ def not_found():
 def postfields():
     return json.dumps(dict(bottle.request.forms))
 
+@app.route('/raw_utf8', method='post')
+def raw_utf8_repr():
+    data = bottle.request.body.getvalue().decode('utf8')
+    return json.dumps(data)
+
 # XXX file is not a bottle FileUpload instance, but FieldStorage?
 def convert_file(key, file):
     return {
