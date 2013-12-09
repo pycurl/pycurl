@@ -7,19 +7,21 @@
 # By Eric S. Raymond, April 2003.
 
 import sys, pycurl
-try:
+
+py3 = sys.version_info[0] == 3
+
+# python 2/3 compatibility
+if py3:
     import urllib.parse as urllib_parse
     from urllib.parse import urljoin
-except ImportError:
+    from io import BytesIO
+else:
     import urllib as urllib_parse
     from urlparse import urljoin
-try:
-    from cStringIO import StringIO
-except ImportError:
     try:
-        from StringIO import StringIO
+        from cStringIO import StringIO as BytesIO
     except ImportError:
-        from io import StringIO
+        from StringIO import StringIO as BytesIO
 
 try:
     import signal
@@ -38,7 +40,8 @@ class Curl:
         self.verbosity = 0
         self.fakeheaders = fakeheaders
         # Nothing past here should be modified by the caller.
-        self.payload = ""
+        self.payload = None
+        self.payload_io = BytesIO()
         self.hrd = ""
         # Verify that we've got the right site; harmless on a non-SSL connect.
         self.set_option(pycurl.SSL_VERIFYHOST, 2)
@@ -53,12 +56,9 @@ class Curl:
         self.set_timeout(30)
         # Use password identification from .netrc automatically
         self.set_option(pycurl.NETRC, 1)
-        # Set up a callback to capture the payload
-        def payload_callback(x):
-            self.payload += x
-        self.set_option(pycurl.WRITEFUNCTION, payload_callback)
+        self.set_option(pycurl.WRITEFUNCTION, self.payload_io.write)
         def header_callback(x):
-            self.hdr += x
+            self.hdr += x.decode('ascii')
         self.set_option(pycurl.HEADERFUNCTION, header_callback)
 
     def set_timeout(self, timeout):
@@ -84,9 +84,10 @@ class Curl:
             self.set_option(pycurl.HTTPHEADER, self.fakeheaders)
         if relative_url:
             self.set_option(pycurl.URL, urljoin(self.base_url, relative_url))
-        self.payload = ""
+        self.payload = None
         self.hdr = ""
         self.handle.perform()
+        self.payload = self.payload_io.getvalue()
         return self.payload
 
     def get(self, url="", params=None):
