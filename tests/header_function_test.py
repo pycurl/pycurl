@@ -20,7 +20,7 @@ class HeaderFunctionTest(unittest.TestCase):
         self.curl.close()
     
     def header_function(self, line):
-        self.header_lines.append(line)
+        self.header_lines.append(line.decode())
     
     def test_get(self):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')

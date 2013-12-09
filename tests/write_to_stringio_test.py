@@ -17,9 +17,9 @@ class WriteToStringioTest(unittest.TestCase):
     def tearDown(self):
         self.curl.close()
     
-    def test_get(self):
+    def test_write_to_bytesio(self):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
-        sio = util.StringIO()
+        sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
-        self.assertEqual('success', sio.getvalue())
+        self.assertEqual('success', sio.getvalue().decode())

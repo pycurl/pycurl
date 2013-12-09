@@ -52,9 +52,9 @@ class PostWithReadCallbackTest(unittest.TestCase):
         self.curl.setopt(self.curl.POSTFIELDSIZE, len(POSTSTRING))
         self.curl.setopt(self.curl.READFUNCTION, d.read_cb)
         #self.curl.setopt(self.curl.VERBOSE, 1)
-        sio = util.StringIO()
+        sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
         
-        actual = json.loads(sio.getvalue())
+        actual = json.loads(sio.getvalue().decode())
         self.assertEqual(POSTFIELDS, actual)
