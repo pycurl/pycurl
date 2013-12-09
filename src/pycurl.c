@@ -1390,7 +1390,11 @@ util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *strea
     }
 
     /* run callback */
+#if PY_MAJOR_VERSION >= 3
+    arglist = Py_BuildValue("(y#)", ptr, total_size);
+#else
     arglist = Py_BuildValue("(s#)", ptr, total_size);
+#endif
     if (arglist == NULL)
         goto verbose_error;
     result = PyEval_CallObject(cb, arglist);
