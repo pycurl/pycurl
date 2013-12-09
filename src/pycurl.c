@@ -2540,6 +2540,63 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         Py_RETURN_NONE;
     }
 
+    /*
+    Handle the case of file-like objects for Python 3.
+    
+    Given an object with a write method, we will call the write method
+    from the appropriate callback.
+    
+    Files in Python 3 are no longer FILE * instances and therefore cannot
+    be directly given to curl.
+    
+    For consistency, ability to use any file-like object is also available
+    on Python 2.
+    */
+    if (option == CURLOPT_READDATA ||
+        option == CURLOPT_WRITEDATA ||
+        option == CURLOPT_WRITEHEADER)
+    {
+        PyObject *write_method = PyObject_GetAttrString(obj, "write");
+        if (write_method) {
+            PyObject *arglist;
+            PyObject *rv;
+            
+            switch (option) {
+                case CURLOPT_READDATA:
+                    option = CURLOPT_READFUNCTION;
+                    break;
+                case CURLOPT_WRITEDATA:
+                    option = CURLOPT_WRITEFUNCTION;
+                    break;
+                case CURLOPT_WRITEHEADER:
+                    if (self->w_cb != NULL) {
+                        PyErr_SetString(ErrorObject, "cannot combine WRITEHEADER with WRITEFUNCTION.");
+                        Py_DECREF(write_method);
+                        return NULL;
+                    }
+                    option = CURLOPT_HEADERFUNCTION;
+                    break;
+                default:
+                    PyErr_SetString(PyExc_TypeError, "objects are not supported for this option");
+                    Py_DECREF(write_method);
+                    return NULL;
+            }
+            
+            arglist = Py_BuildValue("(iO)", option, write_method);
+            /* reference is now in arglist */
+            Py_DECREF(write_method);
+            if (arglist == NULL) {
+                return NULL;
+            }
+            rv = do_curl_setopt(self, arglist);
+            Py_DECREF(arglist);
+            return rv;
+        } else {
+            PyErr_SetString(ErrorObject, "object given without a write method");
+            return NULL;
+        }
+    }
+
     /* Failed to match any of the function signatures -- return error */
 error:
     PyErr_SetString(PyExc_TypeError, "invalid arguments to setopt");
