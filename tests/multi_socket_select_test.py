@@ -58,7 +58,7 @@ class MultiSocketSelectTest(unittest.TestCase):
             c = pycurl.Curl()
             # save info in standard Python attributes
             c.url = url
-            c.body = util.StringIO()
+            c.body = util.BytesIO()
             c.http_code = -1
             m.handles.append(c)
             # pycurl API calls
@@ -99,7 +99,7 @@ class MultiSocketSelectTest(unittest.TestCase):
 
         # print result
         for c in m.handles:
-            self.assertEqual('success', c.body.getvalue())
+            self.assertEqual('success', c.body.getvalue().decode())
             self.assertEqual(200, c.http_code)
             
             # multi, not curl handle

@@ -39,10 +39,10 @@ class SocketOpenTest(unittest.TestCase):
     def test_socket_open(self):
         self.curl.setopt(pycurl.OPENSOCKETFUNCTION, socket_open)
         self.curl.setopt(self.curl.URL, 'http://localhost:8380/success')
-        sio = util.StringIO()
+        sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
         
         assert socket_open_called
         self.assertEqual(("127.0.0.1", 8380), socket_open_address)
-        self.assertEqual('success', sio.getvalue())
+        self.assertEqual('success', sio.getvalue().decode())

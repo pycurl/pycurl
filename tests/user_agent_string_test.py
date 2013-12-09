@@ -19,9 +19,9 @@ class UserAgentStringTest(unittest.TestCase):
     
     def test_pycurl_user_agent_string(self):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/header?h=user-agent')
-        sio = util.StringIO()
+        sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
-        user_agent = sio.getvalue()
+        user_agent = sio.getvalue().decode()
         assert user_agent.startswith('PycURL/')
         assert 'libcurl/' in user_agent

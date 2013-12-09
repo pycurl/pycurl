@@ -27,4 +27,4 @@ class WriteToFileTest(unittest.TestCase):
             body = f.read()
         finally:
             f.close()
-        self.assertEqual('success', body)
+        self.assertEqual('success', body.decode())

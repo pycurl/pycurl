@@ -31,12 +31,12 @@ class CertinfoTest(unittest.TestCase):
             raise nose.plugins.skip.SkipTest('libcurl < 7.19.1')
         
         self.curl.setopt(pycurl.URL, 'https://localhost:8383/success')
-        sio = util.StringIO()
+        sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         # self signed certificate
         self.curl.setopt(pycurl.SSL_VERIFYPEER, 0)
         self.curl.perform()
-        assert sio.getvalue() == 'success'
+        assert sio.getvalue().decode() == 'success'
         
         certinfo = self.curl.getinfo(pycurl.INFO_CERTINFO)
         self.assertEqual([], certinfo)
@@ -50,13 +50,13 @@ class CertinfoTest(unittest.TestCase):
             raise nose.plugins.skip.SkipTest('libcurl does not use openssl')
         
         self.curl.setopt(pycurl.URL, 'https://localhost:8383/success')
-        sio = util.StringIO()
+        sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.setopt(pycurl.OPT_CERTINFO, 1)
         # self signed certificate
         self.curl.setopt(pycurl.SSL_VERIFYPEER, 0)
         self.curl.perform()
-        assert sio.getvalue() == 'success'
+        assert sio.getvalue().decode() == 'success'
         
         certinfo = self.curl.getinfo(pycurl.INFO_CERTINFO)
         # self signed certificate, one certificate in chain

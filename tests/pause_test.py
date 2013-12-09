@@ -27,7 +27,7 @@ class PauseTest(unittest.TestCase):
     def check_pause(self, call):
         # the app sleeps for 0.5 seconds
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/pause')
-        sio = util.StringIO()
+        sio = util.BytesIO()
         state = dict(paused=False, resumed=False)
         if call:
             def writefunc(data):
@@ -85,7 +85,7 @@ class PauseTest(unittest.TestCase):
         m.remove_handle(self.curl)
         m.close()
         
-        self.assertEqual('part1part2', sio.getvalue())
+        self.assertEqual('part1part2', sio.getvalue().decode())
         end = _time.time()
         # check that client side waited
         self.assertTrue(end-start > 1)

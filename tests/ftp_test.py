@@ -21,33 +21,33 @@ class FtpTest(unittest.TestCase):
     
     def test_get_ftp(self):
         self.curl.setopt(pycurl.URL, 'ftp://localhost:8321')
-        sio = util.StringIO()
+        sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
         
-        result = sio.getvalue()
+        result = sio.getvalue().decode()
         assert 'README.rst' in result
         assert 'INSTALL' in result
     
     # XXX this test needs to be fixed
     def test_quote(self):
         self.curl.setopt(pycurl.URL, 'ftp://localhost:8321')
-        sio = util.StringIO()
+        sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.setopt(pycurl.QUOTE, ['CWD tests'])
         self.curl.perform()
         
-        result = sio.getvalue()
+        result = sio.getvalue().decode()
         assert 'README.rst' not in result
         assert 'ftp_test.py' in result
     
     def test_epsv(self):
         self.curl.setopt(pycurl.URL, 'ftp://localhost:8321')
-        sio = util.StringIO()
+        sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.setopt(pycurl.FTP_USE_EPSV, 1)
         self.curl.perform()
         
-        result = sio.getvalue()
+        result = sio.getvalue().decode()
         assert 'README.rst' in result
         assert 'INSTALL' in result

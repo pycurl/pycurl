@@ -25,7 +25,7 @@ class DebugTest(unittest.TestCase):
         self.curl.setopt(pycurl.VERBOSE, 1)
         self.curl.setopt(pycurl.DEBUGFUNCTION, self.debug_function)
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
-        sio = util.StringIO()
+        sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
         

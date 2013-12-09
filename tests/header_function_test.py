@@ -24,11 +24,11 @@ class HeaderFunctionTest(unittest.TestCase):
     
     def test_get(self):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
-        sio = util.StringIO()
+        sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.setopt(pycurl.HEADERFUNCTION, self.header_function)
         self.curl.perform()
-        self.assertEqual('success', sio.getvalue())
+        self.assertEqual('success', sio.getvalue().decode())
         
         assert len(self.header_lines) > 0
         self.assertEqual("HTTP/1.0 200 OK\r\n", self.header_lines[0])
