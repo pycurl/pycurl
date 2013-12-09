@@ -45,7 +45,7 @@ def convert_file(key, file):
     return {
         'name': file.name,
         'filename': file.filename,
-        'data': file.file.read(),
+        'data': file.file.read().decode(),
     }
 
 @app.route('/files', method='post')
