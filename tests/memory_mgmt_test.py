@@ -194,14 +194,7 @@ class MemoryMgmtTest(unittest.TestCase):
         c.m.c = c
         # delete
         gc.collect()
-        flags = gc.DEBUG_COLLECTABLE | gc.DEBUG_UNCOLLECTABLE
-        # python 3 has no DEBUG_OBJECTS
-        #if hasattr(gc, 'DEBUG_OBJECTS'):
-            #flags |= gc.DEBUG_OBJECTS
-        #if opts.verbose >= 1:
-            #flags = flags | gc.DEBUG_STATS
-        #gc.set_debug(flags)
-        gc.collect()
+        self.maybe_enable_debug()
         ##print gc.get_referrers(c)
         ##print gc.get_objects()
         #if opts.verbose >= 1:
