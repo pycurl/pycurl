@@ -6,19 +6,21 @@ import pycurl
 import unittest
 import gc
 
+debug = False
+
 class MemleakTest(unittest.TestCase):
     def test_collection(self):
         gc.collect()
-        flags = gc.DEBUG_COLLECTABLE | gc.DEBUG_UNCOLLECTABLE
-        # python 3 has no DEBUG_OBJECTS
-        #if hasattr(gc, 'DEBUG_OBJECTS'):
-            #flags |= gc.DEBUG_OBJECTS
-        #if 1:
-            #flags = flags | gc.DEBUG_STATS
-        #gc.set_debug(flags)
-        gc.collect()
+        if debug:
+            flags = gc.DEBUG_COLLECTABLE | gc.DEBUG_UNCOLLECTABLE
+            # python 3 has no DEBUG_OBJECTS
+            if hasattr(gc, 'DEBUG_OBJECTS'):
+                flags |= gc.DEBUG_OBJECTS
+                flags |= gc.DEBUG_STATS
+            gc.set_debug(flags)
+            gc.collect()
 
-        #print("Tracked objects:", len(gc.get_objects()))
+            print("Tracked objects:", len(gc.get_objects()))
 
         multi = pycurl.CurlMulti()
         t = []
@@ -33,21 +35,25 @@ class MemleakTest(unittest.TestCase):
         m_id = id(multi)
         searches.append(m_id)
 
-        #print("Tracked objects:", len(gc.get_objects()))
+        if debug:
+            print("Tracked objects:", len(gc.get_objects()))
 
         for curl in t:
             curl.close()
             multi.remove_handle(curl)
 
-        #print("Tracked objects:", len(gc.get_objects()))
+        if debug:
+            print("Tracked objects:", len(gc.get_objects()))
 
         del curl
         del t
         del multi
 
-        #print("Tracked objects:", len(gc.get_objects()))
+        if debug:
+            print("Tracked objects:", len(gc.get_objects()))
         gc.collect()
-        #print("Tracked objects:", len(gc.get_objects()))
+        if debug:
+            print("Tracked objects:", len(gc.get_objects()))
         
         objects = gc.get_objects()
         for search in searches:
