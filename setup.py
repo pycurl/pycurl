@@ -50,7 +50,7 @@ def scan_argv(s, default):
 
 
 # append contents of an environment variable to library_dirs[]
-def add_libdirs(envvar, sep, fatal=0):
+def add_libdirs(envvar, sep, fatal=False):
     v = os.environ.get(envvar)
     if not v:
         return
