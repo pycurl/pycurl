@@ -72,15 +72,22 @@ def add_libdirs(envvar, sep, fatal=False):
 
 
 if sys.platform == "win32":
-    # Windows users have to configure the CURL_DIR path parameter to match
+    # Windows users have to configure the curl_dir path parameter to match
     # their cURL source installation.  The path set here is just an example
     # and thus unlikely to match your installation.
-    CURL_DIR = r"c:\src\build\pycurl\curl-7.16.2.1"
-    CURL_DIR = scan_argv("--curl-dir=", CURL_DIR)
-    print("Using curl directory:", CURL_DIR)
-    assert os.path.isdir(CURL_DIR), "please check CURL_DIR in setup.py"
-    include_dirs.append(os.path.join(CURL_DIR, "include"))
-    extra_objects.append(os.path.join(CURL_DIR, "lib", "libcurl.lib"))
+    curl_dir = scan_argv("--curl-dir=", None)
+    if curl_dir is None:
+        fail("Please specify --curl-dir=/path/to/built/libcurl")
+    if not os.path.exists(curl_dir):
+        fail("Curl directory does not exist: %s" % curl_dir)
+    if not os.path.isdir(curl_dir):
+        fail("Curl directory is not a directory: %s" % curl_dir)
+    print("Using curl directory: %s" % curl_dir)
+    include_dirs.append(os.path.join(curl_dir, "include"))
+    libcurl_lib_path = os.path.join(curl_dir, "lib", "libcurl.lib")
+    if not os.path.exists(libcurl_lib_path):
+        fail("libcurl.lib does not exist at %s.\nCurl directory must point to compiled libcurl (bin/include/lib subdirectories): %s" %(libcurl_lib_path, curl_dir))
+    extra_objects.append(libcurl_lib_path)
     extra_link_args.extend(["gdi32.lib", "wldap32.lib", "winmm.lib", "ws2_32.lib",])
     add_libdirs("LIB", ";")
     if str.find(sys.version, "MSC") >= 0:
