@@ -8,7 +8,7 @@ import gc
 
 debug = False
 
-class MemleakTest(unittest.TestCase):
+class MemoryMgmtTest(unittest.TestCase):
     def maybe_enable_debug(self):
         if debug:
             flags = gc.DEBUG_COLLECTABLE | gc.DEBUG_UNCOLLECTABLE
