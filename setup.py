@@ -94,7 +94,13 @@ if sys.platform == "win32":
         extra_compile_args.append("-O2")
         extra_compile_args.append("-GF")        # enable read-only string pooling
         extra_compile_args.append("-WX")        # treat warnings as errors
-        extra_link_args.append("/opt:nowin98")  # use small section alignment
+        p = subprocess.Popen(['cl.exe'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = p.communicate()
+        match = re.search(r'Version (\d+)', err.split("\n")[0])
+        if match and int(match.group(1)) < 16:
+            # option removed in vs 2010:
+            # connect.microsoft.com/VisualStudio/feedback/details/475896/link-fatal-error-lnk1117-syntax-error-in-option-opt-nowin98/
+            extra_link_args.append("/opt:nowin98")  # use small section alignment
 else:
     # Find out the rest the hard way
     OPENSSL_DIR = scan_argv("--openssl-dir=", "")
