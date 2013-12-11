@@ -7,7 +7,7 @@ Release Process
 
    - Python 2.4, 2.5, 2.6, 2.7.
    - Minimum supported libcurl (currently 7.19.0).
-   - Most recent available libcurl (currently 7.32.0).
+   - Most recent available libcurl (currently 7.33.0).
 
 3. Update version numbers in:
 

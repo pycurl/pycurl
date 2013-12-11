@@ -1,7 +1,7 @@
 import os, os.path, urllib, subprocess, shutil, re
 
 python_versions = ['2.4.6', '2.5.6', '2.6.8', '2.7.5']
-libcurl_versions = ['7.19.0', '7.32.0']
+libcurl_versions = ['7.19.0', '7.33.0']
 
 python_meta = {
     '2.5.6': {
