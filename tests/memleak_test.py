@@ -28,7 +28,7 @@ class MemleakTest(unittest.TestCase):
     def tearDown(self):
         gc.set_debug(0)
     
-    def test_collection(self):
+    def test_multi_collection(self):
         gc.collect()
         self.maybe_enable_debug()
 
@@ -56,6 +56,44 @@ class MemleakTest(unittest.TestCase):
         del curl
         del t
         del multi
+
+        self.maybe_print_objects()
+        gc.collect()
+        self.maybe_print_objects()
+        
+        objects = gc.get_objects()
+        for search in searches:
+            for object in objects:
+                assert search != id(object)
+    
+    def test_share_collection(self):
+        gc.collect()
+        self.maybe_enable_debug()
+
+        share = pycurl.CurlShare()
+        t = []
+        searches = []
+        for a in range(100):
+            curl = pycurl.Curl()
+            curl.setopt(curl.SHARE, share)
+            t.append(curl)
+            
+            c_id = id(curl)
+            searches.append(c_id)
+        m_id = id(share)
+        searches.append(m_id)
+
+        self.maybe_print_objects()
+
+        for curl in t:
+            curl.unsetopt(curl.SHARE)
+            curl.close()
+
+        self.maybe_print_objects()
+
+        del curl
+        del t
+        del share
 
         self.maybe_print_objects()
         gc.collect()
