@@ -25,6 +25,9 @@ class MemleakTest(unittest.TestCase):
         if debug:
             print("Tracked objects:", len(gc.get_objects()))
     
+    def tearDown(self):
+        gc.set_debug(0)
+    
     def test_collection(self):
         gc.collect()
         self.maybe_enable_debug()
