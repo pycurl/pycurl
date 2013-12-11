@@ -33,9 +33,17 @@ e.g. one in /usr/lib and one in /usr/local/lib.
 Windows
 -------
 
-When installing on Windows, you need to manually configure the path to
-the curl source tree, specified with the CURL_DIR variable in the file
-'setup.py'.  The CURL_DIR variable can also be set using the
-commandline option '--curl-dir' when invoking setup.py:
+First, you will need to obtain dependencies. These can be precompiled binaries
+or source packages that you are going to compile yourself.
 
-    python setup.py install --curl-dir=c:\curl-7.10.5
+For a minimum build you will just need libcurl source. Follow its Windows
+build instructions to build either a static or a DLL version of the library,
+then configure PycURL as follows to use it:
+
+    python setup.py --curl-dir=c:\dev\curl-7.33.0\builds\libcurl-vc-x86-release-dll-ipv6-sspi-spnego-winssl
+
+Note that --curl-dir does not point to libcurl source but rather to headers
+and compiled libraries.
+
+A good setup.py target to use is bdist_wininst which produces an executable
+installer that you can run to install PycURL.
