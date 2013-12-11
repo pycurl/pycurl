@@ -9,8 +9,7 @@ import gc
 debug = False
 
 class MemleakTest(unittest.TestCase):
-    def test_collection(self):
-        gc.collect()
+    def maybe_enable_debug(self):
         if debug:
             flags = gc.DEBUG_COLLECTABLE | gc.DEBUG_UNCOLLECTABLE
             # python 3 has no DEBUG_OBJECTS
@@ -21,6 +20,14 @@ class MemleakTest(unittest.TestCase):
             gc.collect()
 
             print("Tracked objects:", len(gc.get_objects()))
+    
+    def maybe_print_objects(self):
+        if debug:
+            print("Tracked objects:", len(gc.get_objects()))
+    
+    def test_collection(self):
+        gc.collect()
+        self.maybe_enable_debug()
 
         multi = pycurl.CurlMulti()
         t = []
@@ -35,25 +42,21 @@ class MemleakTest(unittest.TestCase):
         m_id = id(multi)
         searches.append(m_id)
 
-        if debug:
-            print("Tracked objects:", len(gc.get_objects()))
+        self.maybe_print_objects()
 
         for curl in t:
             curl.close()
             multi.remove_handle(curl)
 
-        if debug:
-            print("Tracked objects:", len(gc.get_objects()))
+        self.maybe_print_objects()
 
         del curl
         del t
         del multi
 
-        if debug:
-            print("Tracked objects:", len(gc.get_objects()))
+        self.maybe_print_objects()
         gc.collect()
-        if debug:
-            print("Tracked objects:", len(gc.get_objects()))
+        self.maybe_print_objects()
         
         objects = gc.get_objects()
         for search in searches:
