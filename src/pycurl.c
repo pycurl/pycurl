@@ -295,6 +295,23 @@ typedef struct {
 
 
 /*************************************************************************
+// python 2/3 compatibility
+**************************************************************************/
+
+#if PY_MAJOR_VERSION >= 3
+# define PyText_FromFormat(format, str) PyUnicode_FromFormat((format), (str))
+# define PyText_FromString(str) PyUnicode_FromString(str)
+# define PyText_AsStringAndSize(obj, buffer, length) PyUnicode_AsStringAndSize((obj), (buffer), (length))
+# define PyByteStr_AsStringAndSize(obj, buffer, length) PyBytes_AsStringAndSize((obj), (buffer), (length))
+#else
+# define PyText_FromFormat(format, str) PyString_FromFormat((format), (str))
+# define PyText_FromString(str) PyString_FromString(str)
+# define PyText_AsStringAndSize(obj, buffer, length) PyString_AsStringAndSize((obj), (buffer), (length))
+# define PyByteStr_AsStringAndSize(obj, buffer, length) PyString_AsStringAndSize((obj), (buffer), (length))
+#endif
+
+
+/*************************************************************************
 // python utility functions
 **************************************************************************/
 
