@@ -341,6 +341,18 @@ int PyUnicode_AsStringAndSize(PyObject *obj, char **buffer, Py_ssize_t *length, 
  * us if the `len' parameter is NULL - see Objects/stringobject.c.
  */
 
+#if PY_MAJOR_VERSION >= 3
+static char *PyUnicode_AsString_NoNUL(PyObject *obj, PyObject **encoded_obj)
+{
+    char *s = NULL;
+    Py_ssize_t r;
+    r = PyUnicode_AsStringAndSize(obj, &s, NULL, encoded_obj);
+    if (r != 0)
+        return NULL;    /* exception already set */
+    assert(s != NULL);
+    return s;
+}
+#else
 static char *PyString_AsString_NoNUL(PyObject *obj)
 {
     char *s = NULL;
@@ -351,6 +363,7 @@ static char *PyString_AsString_NoNUL(PyObject *obj)
     assert(s != NULL);
     return s;
 }
+#endif
 
 
 /* Convert a curl slist (a list of strings) to a Python list.
