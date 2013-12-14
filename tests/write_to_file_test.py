@@ -48,7 +48,7 @@ class WriteToFileTest(unittest.TestCase):
         dir = tempfile.mkdtemp()
         try:
             path = os.path.join(dir, 'pycurltest')
-            f = open(path, 'w+')
+            f = open(path, 'wb+')
             try:
                 self.curl.setopt(pycurl.WRITEFUNCTION, f.write)
                 self.curl.perform()
@@ -65,7 +65,7 @@ class WriteToFileTest(unittest.TestCase):
         dir = tempfile.mkdtemp()
         try:
             path = os.path.join(dir, 'pycurltest')
-            f = open(path, 'w+')
+            f = open(path, 'wb+')
             try:
                 self.curl.setopt(pycurl.WRITEDATA, f)
                 self.curl.perform()
