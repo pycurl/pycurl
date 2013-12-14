@@ -3514,8 +3514,16 @@ my_setattro(PyObject **dict, PyObject *name, PyObject *v)
     }
     if (v != NULL)
         return PyDict_SetItem(*dict, name, v);
-    else
-        return PyDict_DelItem(*dict, name);
+    else {
+        int v = PyDict_DelItem(*dict, name);
+        if (v != 0) {
+            /* need to convert KeyError to AttributeError */
+            if (PyErr_ExceptionMatches(PyExc_KeyError)) {
+                PyErr_SetString(PyExc_AttributeError, "trying to delete a non-existing attribute");
+            }
+        }
+        return v;
+    }
 }
 
 PyObject *do_curl_getattro(PyObject *o, PyObject *n)
