@@ -1,6 +1,10 @@
 master
 ------
 
+	* PycURL multi objects now have the multi constants defined on them.
+	  Previously the constants were only available on pycurl module.
+	  The new behavior matches that of curl and share objects.
+
 	* PycURL share objects can now be closed via the close() method.
 
 	* PycURL will no longer call `curl-config --static-libs` if
