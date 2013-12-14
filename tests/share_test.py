@@ -48,3 +48,7 @@ class ShareTest(unittest.TestCase):
         
         self.assertEqual('success', t1.sio.getvalue())
         self.assertEqual('success', t2.sio.getvalue())
+    
+    def test_share_close(self):
+        s = pycurl.CurlShare()
+        s.close()
