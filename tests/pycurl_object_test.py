@@ -19,6 +19,9 @@ class PycurlObjectTest(unittest.TestCase):
     def test_get_attribute_curl(self):
         self.instantiate_and_check(self.check_get_attribute, 'Curl')
     
+    def test_get_missing_attribute_curl(self):
+        self.instantiate_and_check(self.check_get_missing_attribute, 'Curl')
+    
     def test_delete_attribute_curl(self):
         self.instantiate_and_check(self.check_delete_attribute, 'Curl')
     
@@ -28,6 +31,9 @@ class PycurlObjectTest(unittest.TestCase):
     def test_get_attribute_multi(self):
         self.instantiate_and_check(self.check_get_attribute, 'CurlMulti')
     
+    def test_get_missing_attribute_curl(self):
+        self.instantiate_and_check(self.check_get_missing_attribute, 'CurlMulti')
+    
     def test_delete_attribute_multi(self):
         self.instantiate_and_check(self.check_delete_attribute, 'CurlMulti')
     
@@ -36,6 +42,9 @@ class PycurlObjectTest(unittest.TestCase):
     
     def test_get_attribute_share(self):
         self.instantiate_and_check(self.check_get_attribute, 'CurlShare')
+    
+    def test_get_missing_attribute_curl(self):
+        self.instantiate_and_check(self.check_get_missing_attribute, 'CurlShare')
     
     def test_delete_attribute_share(self):
         self.instantiate_and_check(self.check_delete_attribute, 'CurlShare')
@@ -57,6 +66,13 @@ class PycurlObjectTest(unittest.TestCase):
         assert not hasattr(pycurl_obj, 'attr')
         pycurl_obj.attr = 1
         self.assertEqual(1, pycurl_obj.attr)
+    
+    def check_get_missing_attribute(self, pycurl_obj):
+        try:
+            getattr(pycurl_obj, 'doesnotexist')
+            self.fail('Expected an AttributeError exception to be raised')
+        except AttributeError:
+            pass
     
     def check_delete_attribute(self, pycurl_obj):
         assert not hasattr(pycurl_obj, 'attr')
