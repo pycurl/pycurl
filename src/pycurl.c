@@ -1417,7 +1417,7 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
     default:
         /* We (currently) only support IPv4/6 addresses.  Can curl even be used
            with anything else? */
-	PyErr_SetString(ErrorObject, "Unsupported address family.");
+        PyErr_SetString(ErrorObject, "Unsupported address family.");
     }
     
 error:
@@ -1428,7 +1428,7 @@ error:
  * are not important here) */
 static curl_socket_t
 opensocket_callback(void *clientp, curlsocktype purpose,
-		    struct curl_sockaddr *address)
+                    struct curl_sockaddr *address)
 {
     PyObject *arglist;
     PyObject *result = NULL;
@@ -1452,21 +1452,21 @@ opensocket_callback(void *clientp, curlsocktype purpose,
     }
 
     if (PyObject_HasAttrString(result, "fileno")) {
-	fileno_result = PyObject_CallMethod(result, "fileno", NULL);
+        fileno_result = PyObject_CallMethod(result, "fileno", NULL);
 
-	if (fileno_result == NULL) {
-	    ret = CURL_SOCKET_BAD;
-	    goto verbose_error;
-	}
-	// normal operation:
-	if (PyInt_Check(fileno_result)) {
-	    ret = dup(PyInt_AsLong(fileno_result));
-	    goto done;
-	}
+        if (fileno_result == NULL) {
+            ret = CURL_SOCKET_BAD;
+            goto verbose_error;
+        }
+        // normal operation:
+        if (PyInt_Check(fileno_result)) {
+            ret = dup(PyInt_AsLong(fileno_result));
+            goto done;
+        }
     } else {
-	PyErr_SetString(ErrorObject, "Return value must be a socket.");
-	ret = CURL_SOCKET_BAD;
-	goto verbose_error;
+        PyErr_SetString(ErrorObject, "Return value must be a socket.");
+        ret = CURL_SOCKET_BAD;
+        goto verbose_error;
     }
 
 silent_error:
