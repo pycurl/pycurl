@@ -20,3 +20,10 @@ For consistency with Python 3 behavior these options also accept file-like
 objects implementing a write method as arguments, in which case the
 Python 3 code path is used converting these options to CURLOPT_*FUNCTION
 option calls.
+
+Files given to PycURL as arguments to CURLOPT_READDATA, CURLOPT_WRITEDATA or
+CURLOPT_WRITEHEADER must be opened for writing in binary mode. Files opened
+in text mode (without "b" flag to open()) expect string objects and writing
+to them from PycURL will fail. Similarly when passing f.write method of
+an open file to CURLOPT_WRITEFUNCTION or CURLOPT_HEADERFUNCTION, or f.read
+to CURLOPT_READFUNCTION, the file must have been be opened in binary mode.

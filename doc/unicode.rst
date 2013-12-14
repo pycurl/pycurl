@@ -34,3 +34,9 @@ information on exception that occurred during encoding in this case.
 PycURL will return all data read from the network as bytes. In particular,
 this means that BytesIO should be used rather than StringIO for writing the
 response to memory. Header function will also receive bytes.
+
+Because PycURL does not perform encoding or decoding, other than to ASCII,
+any file objects that PycURL is meant to interact with via CURLOPT_READDATA,
+CURLOPT_WRITEDATA, CURLOPT_WRITEHEADER, CURLOPT_READFUNCTION,
+CURLOPT_WRITEFUNCTION or CURLOPT_HEADERFUNCTION must be opened in binary
+mode ("b" flag to open() call).
