@@ -1,6 +1,8 @@
 master
 ------
 
+	* PycURL share objects can now be closed via the close() method.
+
 	* PycURL will no longer call `curl-config --static-libs` if
 	  `curl-config --libs` succeeds and returns output.
 	  Systems on which neither `curl-config --libs` nor
