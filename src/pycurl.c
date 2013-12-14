@@ -2004,6 +2004,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     int option;
     PyObject *obj;
     int res;
+    PyObject *encoded_obj;
 
     if (!PyArg_ParseTuple(args, "iO:setopt", &option, &obj))
         return NULL;
@@ -2082,12 +2083,12 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_DNS_SERVERS:
 #endif
 /* FIXME: check if more of these options allow binary data */
-            str = PyText_AsString_NoNUL(obj);
+            str = PyText_AsString_NoNUL(obj, encoded_obj);
             if (str == NULL)
                 return NULL;
             break;
         case CURLOPT_POSTFIELDS:
-            if (PyText_AsStringAndSize(obj, &str, &len) != 0)
+            if (PyText_AsStringAndSize(obj, &str, &len, encoded_obj) != 0)
                 return NULL;
             /* automatically set POSTFIELDSIZE */
             if (len <= INT_MAX) {
@@ -2108,13 +2109,32 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         res = curl_easy_setopt(self->handle, (CURLoption)option, str);
         /* Check for errors */
         if (res != CURLE_OK) {
+            PyText_EncodedDecref(encoded_obj);
             CURLERROR_RETVAL();
         }
         /* libcurl does not copy the value of CURLOPT_POSTFIELDS */
         if (option == CURLOPT_POSTFIELDS) {
-            Py_INCREF(obj);
+            PyObject *store_obj;
+#if PY_MAJOR_VERSION >= 3
+            /* if obj was bytes, it was not encoded, and we need to incref obj.
+             * if obj was unicode, it was encoded, and we need to incref
+             * encoded_obj - except we can simply transfer ownership.
+             */
+            if (encoded_obj) {
+                store_obj = encoded_obj;
+            } else {
+                store_obj = obj;
+                Py_INCREF(store_obj);
+            }
+#else
+            /* no encoding is performed, incref the original object. */
+            store_obj = obj;
+            Py_INCREF(store_obj);
+#endif
             util_curl_xdecref(self, PYCURL_MEMGROUP_POSTFIELDS, self->handle);
-            self->postfields_obj = obj;
+            self->postfields_obj = store_obj;
+        } else {
+            PyText_EncodedDecref(encoded_obj);
         }
         Py_RETURN_NONE;
     }
@@ -2263,6 +2283,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             /* List of all references that have been INCed as a result of
              * this operation */
             PyObject *ref_params = NULL;
+            PyObject *nencoded_obj, *cencoded_obj, *oencoded_obj;
 
             for (i = 0; i < len; i++) {
                 char *nstr = NULL, *cstr = NULL;
@@ -2281,7 +2302,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                     PyErr_SetString(PyExc_TypeError, "tuple must contain two elements (name, value)");
                     return NULL;
                 }
-                if (PyText_AsStringAndSize(PyTuple_GET_ITEM(listitem, 0), &nstr, &nlen) != 0) {
+                if (PyText_AsStringAndSize(PyTuple_GET_ITEM(listitem, 0), &nstr, &nlen, nencoded_obj) != 0) {
                     curl_formfree(post);
                     Py_XDECREF(ref_params);
                     PyErr_SetString(PyExc_TypeError, "tuple must contain string as first element");
@@ -2294,7 +2315,11 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 #endif
                     /* Handle strings as second argument for backwards compatibility */
 
-                    PyText_AsStringAndSize(PyTuple_GET_ITEM(listitem, 1), &cstr, &clen);
+                    if (PyText_AsStringAndSize(PyTuple_GET_ITEM(listitem, 1), &cstr, &clen, cencoded_obj)) {
+                        curl_formfree(post);
+                        Py_XDECREF(ref_params);
+                        CURLERROR_RETVAL();
+                    }
                     /* INFO: curl_formadd() internally does memdup() the data, so
                      * embedded NUL characters _are_ allowed here. */
                     res = curl_formadd(&post, &last,
@@ -2303,6 +2328,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                                        CURLFORM_COPYCONTENTS, cstr,
                                        CURLFORM_CONTENTSLENGTH, (long) clen,
                                        CURLFORM_END);
+                    PyText_EncodedDecref(cencoded_obj);
                     if (res != CURLE_OK) {
                         curl_formfree(post);
                         Py_XDECREF(ref_params);
@@ -2379,7 +2405,13 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                             Py_XDECREF(ref_params);
                             return NULL;
                         }
-                        PyText_AsStringAndSize(PyTuple_GET_ITEM(t, j+1), &ostr, &olen);
+                        if (PyText_AsStringAndSize(PyTuple_GET_ITEM(t, j+1), &ostr, &olen, oencoded_obj)) {
+                            /* exception should be already set */
+                            PyMem_Free(forms);
+                            curl_formfree(post);
+                            Py_XDECREF(ref_params);
+                            return NULL;
+                        }
                         forms[k].option = val;
                         forms[k].value = ostr;
                         ++k;
@@ -2394,6 +2426,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
                             ref_params = PyList_New((Py_ssize_t)0);
                             if (ref_params == NULL) {
+                                PyText_EncodedDecref(oencoded_obj);
                                 PyMem_Free(forms);
                                 curl_formfree(post);
                                 return NULL;
@@ -2401,6 +2434,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                             
                             /* Ensure that the buffer remains alive until curl_easy_cleanup() */
                             if (PyList_Append(ref_params, obj) != 0) {
+                                PyText_EncodedDecref(oencoded_obj);
                                 PyMem_Free(forms);
                                 curl_formfree(post);
                                 Py_DECREF(ref_params);
@@ -2419,6 +2453,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                                        CURLFORM_NAMELENGTH, (long) nlen,
                                        CURLFORM_ARRAY, forms,
                                        CURLFORM_END);
+                    PyText_EncodedDecref(oencoded_obj);
                     PyMem_Free(forms);
                     if (res != CURLE_OK) {
                         curl_formfree(post);
@@ -2462,6 +2497,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             PyObject *listitem = PyList_GetItem(obj, i);
             struct curl_slist *nlist;
             char *str;
+            PyObject *sencoded_obj;
 
 #if PY_MAJOR_VERSION >= 3
             if (!PyUnicode_Check(listitem)) {
@@ -2474,12 +2510,13 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             }
             /* INFO: curl_slist_append() internally does strdup() the data, so
              * no embedded NUL characters allowed here. */
-            str = PyText_AsString_NoNUL(listitem);
+            str = PyText_AsString_NoNUL(listitem, sencoded_obj);
             if (str == NULL) {
                 curl_slist_free_all(slist);
                 return NULL;
             }
             nlist = curl_slist_append(slist, str);
+            PyText_EncodedDecref(sencoded_obj);
             if (nlist == NULL || nlist->data == NULL) {
                 curl_slist_free_all(slist);
                 return PyErr_NoMemory();
