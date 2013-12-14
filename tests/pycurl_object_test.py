@@ -65,3 +65,29 @@ class PycurlObjectTest(unittest.TestCase):
         assert hasattr(pycurl_obj, 'attr')
         del pycurl_obj.attr
         assert not hasattr(pycurl_obj, 'attr')
+    
+    def test_modify_attribute_curl(self):
+        self.check_modify_attribute(pycurl.Curl, 'READFUNC_PAUSE')
+    
+    def test_modify_attribute_multi(self):
+        self.check_modify_attribute(pycurl.CurlMulti, 'E_MULTI_OK')
+    
+    def test_modify_attribute_share(self):
+        self.check_modify_attribute(pycurl.CurlShare, 'SH_SHARE')
+    
+    def check_modify_attribute(self, cls, name):
+        obj1 = cls()
+        obj2 = cls()
+        old_value = getattr(obj1, name)
+        self.assertNotEqual('helloworld', old_value)
+        # value should be identical to pycurl global
+        self.assertEqual(old_value, getattr(pycurl, name))
+        setattr(obj1, name, 'helloworld')
+        self.assertEqual('helloworld', getattr(obj1, name))
+        
+        # change does not affect other existing objects
+        self.assertEqual(old_value, getattr(obj2, name))
+        
+        # change does not affect objects created later
+        obj3 = cls()
+        self.assertEqual(old_value, getattr(obj3, name))
