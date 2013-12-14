@@ -301,12 +301,19 @@ typedef struct {
 #if PY_MAJOR_VERSION >= 3
 # define PyText_FromFormat(format, str) PyUnicode_FromFormat((format), (str))
 # define PyText_FromString(str) PyUnicode_FromString(str)
-# define PyText_AsStringAndSize(obj, buffer, length) PyUnicode_AsStringAndSize((obj), (buffer), (length))
+# define PyText_AsStringAndSize(obj, buffer, length, encoded_obj) PyUnicode_AsStringAndSize((obj), (buffer), (length), &(encoded_obj))
+# define PyText_AsString_NoNUL(obj, encoded_obj) PyUnicode_AsString_NoNUL((obj), &(encoded_obj))
+# define PyText_EncodedDecref(encoded) Py_XDECREF(encoded)
 # define PyByteStr_AsStringAndSize(obj, buffer, length) PyBytes_AsStringAndSize((obj), (buffer), (length))
 #else
 # define PyText_FromFormat(format, str) PyString_FromFormat((format), (str))
 # define PyText_FromString(str) PyString_FromString(str)
-# define PyText_AsStringAndSize(obj, buffer, length) PyString_AsStringAndSize((obj), (buffer), (length))
+/* encoded_obj is not used in python 2 and is uninitialized,
+ * use the free macro to avoid calling Py_DECREF on it.
+ */
+# define PyText_AsStringAndSize(obj, buffer, length, encoded_obj) PyString_AsStringAndSize((obj), (buffer), (length))
+# define PyText_AsString_NoNUL(obj, encoded_obj) PyString_AsString_NoNUL(obj)
+# define PyText_EncodedDecref(encoded) ((void) 0)
 # define PyByteStr_AsStringAndSize(obj, buffer, length) PyString_AsStringAndSize((obj), (buffer), (length))
 #endif
 
