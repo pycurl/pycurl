@@ -3512,7 +3512,10 @@ my_setattro(PyObject **dict, PyObject *name, PyObject *v)
         if( *dict == NULL )
             return -1;
     }
-    return PyDict_SetItem(*dict, name, v);
+    if (v != NULL)
+        return PyDict_SetItem(*dict, name, v);
+    else
+        return PyDict_DelItem(*dict, name);
 }
 
 PyObject *do_curl_getattro(PyObject *o, PyObject *n)
@@ -3531,13 +3534,7 @@ static int
 do_curl_setattro(PyObject *o, PyObject *name, PyObject *v)
 {
     assert_curl_state((CurlObject *)o);
-    if( v )
-    {
-        return my_setattro(&((CurlObject *)o)->dict, name, v);
-    } else
-    {
-        return PyObject_GenericSetAttr(o, name, 0);
-    }
+    return my_setattro(&((CurlObject *)o)->dict, name, v);
 }
 
 static PyObject *
@@ -3558,13 +3555,7 @@ static int
 do_multi_setattro(PyObject *o, PyObject *n, PyObject *v)
 {
     assert_multi_state((CurlMultiObject *)o);
-    if( v )
-    {
-        return my_setattro(&((CurlMultiObject *)o)->dict, n, v);
-    } else
-    {
-        return PyObject_GenericSetAttr(o, n, 0);
-    }
+    return my_setattro(&((CurlMultiObject *)o)->dict, n, v);
 }
 
 static PyObject *
@@ -3585,13 +3576,7 @@ static int
 do_share_setattro(PyObject *o, PyObject *n, PyObject *v)
 {
     assert_share_state((CurlShareObject *)o);
-    if( v )
-    {
-        return my_setattro(&((CurlShareObject *)o)->dict, n, v);
-    } else
-    {
-        return PyObject_GenericSetAttr(o, n, 0);
-    }
+    return my_setattro(&((CurlShareObject *)o)->dict, n, v);
 }
 
 #else
