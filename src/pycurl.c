@@ -840,10 +840,11 @@ do_share_clear(CurlShareObject *self)
 
 static void
 util_share_close(CurlShareObject *self){
-    curl_share_cleanup(self->share_handle);
-#ifdef WITH_THREAD
-    share_lock_destroy(self->lock);
-#endif
+    if (self->share_handle != NULL) {
+        CURLSH *share_handle = self->share_handle;
+        self->share_handle = NULL;
+        curl_share_cleanup(share_handle);
+    }
 }
 
 
@@ -855,8 +856,23 @@ do_share_dealloc(CurlShareObject *self){
     Py_CLEAR(self->dict);
     util_share_close(self);
 
+#ifdef WITH_THREAD
+    share_lock_destroy(self->lock);
+#endif
+
     PyObject_GC_Del(self);
     Py_TRASHCAN_SAFE_END(self)
+}
+
+
+static PyObject *
+do_share_close(CurlShareObject *self)
+{
+    if (check_share_state(self, 2, "close") != 0) {
+        return NULL;
+    }
+    util_share_close(self);
+    Py_RETURN_NONE;
 }
 
 
@@ -3373,9 +3389,13 @@ do_multi_select(CurlMultiObject *self, PyObject *args)
 
 /* --------------- methods --------------- */
 
+static const char cso_close_doc [] =
+    "close() -> None.  "
+    "Close shared handle.\n";
 static const char cso_setopt_doc [] =
     "setopt(option, parameter) -> None.  "
     "Set curl share option.  Raises pycurl.error exception upon failure.\n";
+
 static const char co_close_doc [] =
     "close() -> None.  "
     "Close handle and end curl session.\n";
@@ -3415,6 +3435,7 @@ static const char co_multi_socket_all_doc [] =
     "Returns result from doing a socket_all() on the curl multi file descriptor with the given timeout.\n";
 
 static PyMethodDef curlshareobject_methods[] = {
+    {"close", (PyCFunction)do_share_close, METH_NOARGS, cso_close_doc},
     {"setopt", (PyCFunction)do_curlshare_setopt, METH_VARARGS, cso_setopt_doc},
     {NULL, NULL, 0, 0}
 };
