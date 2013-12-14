@@ -52,3 +52,8 @@ class ShareTest(unittest.TestCase):
     def test_share_close(self):
         s = pycurl.CurlShare()
         s.close()
+    
+    def test_share_close_twice(self):
+        s = pycurl.CurlShare()
+        s.close()
+        s.close()

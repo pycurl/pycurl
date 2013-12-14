@@ -362,3 +362,8 @@ class MultiTest(unittest.TestCase):
     def test_multi_close(self):
         m = pycurl.CurlMulti()
         m.close()
+    
+    def test_multi_close_twice(self):
+        m = pycurl.CurlMulti()
+        m.close()
+        m.close()
