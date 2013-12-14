@@ -9,6 +9,7 @@ import shutil
 import os.path
 
 from . import appmanager
+from . import util
 
 setup_module, teardown_module = appmanager.setup(('app', 8380))
 
@@ -31,6 +32,7 @@ class WriteToFileTest(unittest.TestCase):
             f.close()
         self.assertEqual('success', body.decode())
     
+    @util.only_python3
     def test_write_to_tempfile_via_object(self):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
         f = tempfile.NamedTemporaryFile()
