@@ -1,6 +1,10 @@
 master
 ------
 
+	* PycURL now supports Python 3.1 through 3.3. Python 3.0 might
+	  work but it appears to ship with broken distutils, making virtualenv
+	  not function on it.
+
 	* PycURL multi objects now have the multi constants defined on them.
 	  Previously the constants were only available on pycurl module.
 	  The new behavior matches that of curl and share objects.
