@@ -18,18 +18,14 @@ class CertinfoTest(unittest.TestCase):
     def tearDown(self):
         self.curl.close()
     
+    # CURLOPT_CERTINFO was introduced in libcurl-7.19.1
+    @util.min_libcurl(7, 19, 1)
     def test_certinfo_option(self):
-        # CURLOPT_CERTINFO was introduced in libcurl-7.19.1
-        if util.pycurl_version_less_than(7, 19, 1):
-            raise nose.plugins.skip.SkipTest('libcurl < 7.19.1')
-        
         assert hasattr(pycurl, 'OPT_CERTINFO')
     
+    # CURLOPT_CERTINFO was introduced in libcurl-7.19.1
+    @util.min_libcurl(7, 19, 1)
     def test_request_without_certinfo(self):
-        # CURLOPT_CERTINFO was introduced in libcurl-7.19.1
-        if util.pycurl_version_less_than(7, 19, 1):
-            raise nose.plugins.skip.SkipTest('libcurl < 7.19.1')
-        
         self.curl.setopt(pycurl.URL, 'https://localhost:8383/success')
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
@@ -41,10 +37,9 @@ class CertinfoTest(unittest.TestCase):
         certinfo = self.curl.getinfo(pycurl.INFO_CERTINFO)
         self.assertEqual([], certinfo)
     
+    # CURLOPT_CERTINFO was introduced in libcurl-7.19.1
+    @util.min_libcurl(7, 19, 1)
     def test_request_with_certinfo(self):
-        # CURLOPT_CERTINFO was introduced in libcurl-7.19.1
-        if util.pycurl_version_less_than(7, 19, 1):
-            raise nose.plugins.skip.SkipTest('libcurl < 7.19.1')
         # CURLOPT_CERTINFO only works with OpenSSL
         if 'openssl' not in pycurl.version.lower():
             raise nose.plugins.skip.SkipTest('libcurl does not use openssl')

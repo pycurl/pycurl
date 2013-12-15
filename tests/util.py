@@ -44,6 +44,22 @@ def only_python3(fn):
     
     return decorated
 
+def min_libcurl(major, minor, patch):
+    import nose.plugins.skip
+    import functools
+    
+    def decorator(fn):
+        @functools.wraps(fn)
+        def decorated(*args, **kwargs):
+            if pycurl_version_less_than(major, minor, patch):
+                raise nose.plugins.skip.SkipTest('libcurl < %d.%d.%d' % (major, minor, patch))
+            
+            return fn(*args, **kwargs)
+        
+        return decorated
+    
+    return decorator
+
 try:
     create_connection = socket.create_connection
 except AttributeError:
