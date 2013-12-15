@@ -62,11 +62,11 @@ def patch_pycurl_for_24():
         for file in files:
             if file.endswith('.py'):
                 path = os.path.join(root, file)
-                with open(path, 'rb') as f:
+                with open(path, 'r') as f:
                     contents = f.read()
                 contents = re.compile(r'^(\s*)from \. import', re.M).sub(r'\1import', contents)
                 contents = re.compile(r'^(\s*)from \.(\w+) import', re.M).sub(r'\1from \2 import', contents)
-                with open(path, 'wb') as f:
+                with open(path, 'w') as f:
                     f.write(contents)
 
 def run_matrix():
@@ -94,7 +94,7 @@ def run_matrix():
         os.mkdir('venv')
 
     for python_version in python_versions:
-        python_version_pieces = map(int, python_version.split('.')[:2])
+        python_version_pieces = [int(piece) for piece in python_version.split('.')[:2]]
         for libcurl_version in libcurl_versions:
             python_prefix = os.path.abspath('i/Python-%s' % python_version)
             libcurl_prefix = os.path.abspath('i/curl-%s' % libcurl_version)
