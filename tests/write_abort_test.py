@@ -19,13 +19,20 @@ class WriteAbortTest(unittest.TestCase):
             # this should cause pycurl.WRITEFUNCTION (without any range errors)
             return -1
 
+        try:
+            # set when running full test suite if any earlier tests
+            # failed in Python code called from C
+            del sys.last_value
+        except AttributeError:
+            pass
+
         # download the script itself through the file:// protocol into write_cb
         self.curl.setopt(pycurl.URL, 'file://' + os.path.abspath(sys.argv[0]))
         self.curl.setopt(pycurl.WRITEFUNCTION, write_cb)
         try:
             self.curl.perform()
         except pycurl.error:
-            err, msg = sys.exc_info()[1]
+            err, msg = sys.exc_info()[1].args
             # we expect pycurl.E_WRITE_ERROR as the response
             assert pycurl.E_WRITE_ERROR == err
 

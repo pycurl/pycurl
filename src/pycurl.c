@@ -4397,6 +4397,8 @@ initpycurl(void)
      **/
 
     /* CURLMcode: multi error codes */
+    curlmultiobject_constants = PyDict_New();
+    assert(curlmultiobject_constants != NULL);
     insint_m(d, "E_CALL_MULTI_PERFORM", CURLM_CALL_MULTI_PERFORM);
     insint_m(d, "E_MULTI_OK", CURLM_OK);
     insint_m(d, "E_MULTI_BAD_HANDLE", CURLM_BAD_HANDLE);

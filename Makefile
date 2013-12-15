@@ -17,7 +17,8 @@ build-7.10.8:
 
 test: build
 	mkdir -p tests/tmp
-	PYTHONPATH=$$(ls -d build/lib.*):$$PYTHONPATH \
+	PYTHONSUFFIX=$$(python -V 2>&1 |awk '{print $$2}' |awk -F. '{print $$1 "." $$2}') && \
+	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONSUFFIX):$$PYTHONPATH \
 	$(NOSETESTS)
 
 # (needs GNU binutils)
