@@ -315,17 +315,23 @@ typedef struct {
 // python utility functions
 **************************************************************************/
 
-int PyUnicode_AsStringAndSize(PyObject *obj, char **buffer, Py_ssize_t *length)
+int PyUnicode_AsStringAndSize(PyObject *obj, char **buffer, Py_ssize_t *length, PyObject **encoded_obj)
 {
     if (PyBytes_Check(obj)) {
+        *encoded_obj = NULL;
         return PyBytes_AsStringAndSize(obj, buffer, length);
     } else {
-        PyObject *encoded_obj = PyUnicode_AsEncodedString(obj, "utf8", "strict");
-        if (encoded_obj == NULL) {
+        int rv;
+        *encoded_obj = PyUnicode_AsEncodedString(obj, "utf8", "strict");
+        if (*encoded_obj == NULL) {
             return -1;
         }
-        /* XXX leaking encoded_obj */
-        return PyBytes_AsStringAndSize(encoded_obj, buffer, length);
+        rv = PyBytes_AsStringAndSize(*encoded_obj, buffer, length);
+        if (rv != 0) {
+            /* If we free the object, pointer must be reset to NULL */
+            Py_CLEAR(*encoded_obj);
+        }
+        return rv;
     }
 }
 
