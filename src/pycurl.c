@@ -90,6 +90,7 @@
 #define HAVE_CURLOPT_USERNAME
 #define HAVE_CURLOPT_PROXYUSERNAME
 #define HAVE_CURLOPT_CERTINFO
+#define HAVE_CURLOPT_POSTREDIR
 #endif
 
 #if LIBCURL_VERSION_NUM >= 0x071503 /* check for 7.21.3 or greater */
@@ -98,6 +99,10 @@
 
 #if LIBCURL_VERSION_NUM >= 0x071800 /* check for 7.24.0 or greater */
 #define HAVE_CURLOPT_DNS_SERVERS
+#endif
+
+#if LIBCURL_VERSION_NUM >= 0x071A00 /* check for 7.26.0 or greater */
+#define HAVE_CURL_REDIR_POST_303
 #endif
 
 /* Python < 2.5 compat for Py_ssize_t */
@@ -4745,6 +4750,9 @@ initpycurl(void)
 #ifdef HAVE_CURLOPT_CERTINFO
     insint_c(d, "OPT_CERTINFO", CURLOPT_CERTINFO);
 #endif
+#ifdef HAVE_CURLOPT_POSTREDIR
+    insint_c(d, "POSTREDIR", CURLOPT_POSTREDIR);
+#endif
 
     insint_c(d, "M_TIMERFUNCTION", CURLMOPT_TIMERFUNCTION);
     insint_c(d, "M_SOCKETFUNCTION", CURLMOPT_SOCKETFUNCTION);
@@ -4834,6 +4842,15 @@ initpycurl(void)
 
 #ifdef HAVE_CURLOPT_DNS_SERVERS
     insint_c(d, "DNS_SERVERS", CURLOPT_DNS_SERVERS);
+#endif
+
+#ifdef HAVE_CURLOPT_POSTREDIR
+    insint_c(d, "REDIR_POST_301", CURL_REDIR_POST_301);
+    insint_c(d, "REDIR_POST_302", CURL_REDIR_POST_302);
+# ifdef HAVE_CURL_REDIR_POST_303
+    insint_c(d, "REDIR_POST_303", CURL_REDIR_POST_303);
+# endif
+    insint_c(d, "REDIR_POST_ALL", CURL_REDIR_POST_ALL);
 #endif
 
     /* options for global_init() */

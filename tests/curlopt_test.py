@@ -26,3 +26,27 @@ class CurloptTest(unittest.TestCase):
         #c = pycurl.Curl()
         #c.setopt(c.DNS_SERVERS, '1.2.3.4')
         #c.close()
+
+    # CURLOPT_POSTREDIR was introduced in libcurl-7.19.1
+    @util.min_libcurl(7, 19, 1)
+    def test_postredir(self):
+        assert hasattr(pycurl, 'POSTREDIR')
+        assert hasattr(pycurl, 'REDIR_POST_301')
+        assert hasattr(pycurl, 'REDIR_POST_302')
+        assert hasattr(pycurl, 'REDIR_POST_ALL')
+    
+    # CURL_REDIR_POST_303 was introduced in libcurl-7.26.0
+    @util.min_libcurl(7, 26, 0)
+    def test_redir_post_303(self):
+        assert hasattr(pycurl, 'REDIR_POST_303')
+
+    # CURLOPT_POSTREDIR was introduced in libcurl-7.19.1
+    @util.min_libcurl(7, 19, 1)
+    def test_postredir_flags(self):
+        self.assertEqual(pycurl.REDIR_POST_301, pycurl.REDIR_POST_ALL & pycurl.REDIR_POST_301)
+        self.assertEqual(pycurl.REDIR_POST_302, pycurl.REDIR_POST_ALL & pycurl.REDIR_POST_302)
+
+    # CURL_REDIR_POST_303 was introduced in libcurl-7.26.0
+    @util.min_libcurl(7, 26, 0)
+    def test_postredir_flags(self):
+        self.assertEqual(pycurl.REDIR_POST_303, pycurl.REDIR_POST_ALL & pycurl.REDIR_POST_303)
