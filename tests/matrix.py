@@ -91,6 +91,7 @@ def run_matrix(python_versions, libcurl_versions):
         build(archive, dir, prefix)
 
     fetch('https://raw.github.com/pypa/virtualenv/1.7/virtualenv.py', 'virtualenv-1.7.py')
+    fetch('https://raw.github.com/pypa/virtualenv/1.9.1/virtualenv.py', 'virtualenv-1.9.1.py')
 
     if not os.path.exists('venv'):
         os.mkdir('venv')
@@ -107,7 +108,13 @@ def run_matrix(python_versions, libcurl_versions):
                 fetch('https://pypi.python.org/packages/2.5/s/setuptools/setuptools-0.6c11-py2.5.egg')
                 fetch('https://pypi.python.org/packages/2.6/s/setuptools/setuptools-0.6c11-py2.6.egg')
                 fetch('https://pypi.python.org/packages/2.7/s/setuptools/setuptools-0.6c11-py2.7.egg')
-                subprocess.check_call(['virtualenv', venv, '-p', '%s/bin/python%d.%d' % (python_prefix, python_version_pieces[0], python_version_pieces[1]), '--no-site-packages', '--never-download'])
+                # I had virtualenv 1.8.2 installed systemwide which
+                # did not work with python 3.0:
+                # http://stackoverflow.com/questions/14224361/why-am-i-getting-this-error-related-to-pip-and-easy-install-when-trying-to-set
+                # so, use known versions everywhere
+                # md5=89e68df89faf1966bcbd99a0033fbf8e
+                fetch('https://pypi.python.org/packages/source/d/distribute/distribute-0.6.49.tar.gz')
+                subprocess.check_call(['python', 'virtualenv-1.9.1.py', venv, '-p', '%s/bin/python%d.%d' % (python_prefix, python_version_pieces[0], python_version_pieces[1]), '--no-site-packages', '--never-download'])
             else:
                 # md5=bd639f9b0eac4c42497034dec2ec0c2b
                 fetch('https://pypi.python.org/packages/2.4/s/setuptools/setuptools-0.6c11-py2.4.egg')
