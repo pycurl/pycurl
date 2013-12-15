@@ -13,7 +13,7 @@ python_meta = {
         'patches': ['python25.patch'],
     },
     '3.0.1': {
-        'patches': ['python25.patch'],
+        'patches': ['python25.patch', 'python30.patch'],
     },
 }
 
