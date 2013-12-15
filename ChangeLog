@@ -1,6 +1,8 @@
 master
 ------
 
+	* Added CURLAUTH_DIGEST_IE as pycurl.HTTPAUTH_DIGEST_IE.
+
 	* Added CURLOPT_POSTREDIR option and CURL_REDIR_POST_301,
 	  CURL_REDIR_POST_302, CURL_REDIR_POST_303 and CURL_REDIR_POST_ALL
 	  constants. CURL_REDIR_POST_303 requires libcurl 7.26.0 or higher,

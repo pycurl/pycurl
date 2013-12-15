@@ -93,6 +93,10 @@
 #define HAVE_CURLOPT_POSTREDIR
 #endif
 
+#if LIBCURL_VERSION_NUM >= 0x071303 /* check for 7.19.3 or greater */
+#define HAVE_CURLAUTH_DIGEST_IE
+#endif
+
 #if LIBCURL_VERSION_NUM >= 0x071503 /* check for 7.21.3 or greater */
 #define HAVE_CURLOPT_RESOLVE
 #endif
@@ -4564,6 +4568,9 @@ initpycurl(void)
     insint_c(d, "HTTPAUTH_NONE", CURLAUTH_NONE);
     insint_c(d, "HTTPAUTH_BASIC", CURLAUTH_BASIC);
     insint_c(d, "HTTPAUTH_DIGEST", CURLAUTH_DIGEST);
+#ifdef HAVE_CURLAUTH_DIGEST_IE
+    insint_c(d, "HTTPAUTH_DIGEST_IE", CURLAUTH_DIGEST_IE);
+#endif
     insint_c(d, "HTTPAUTH_GSSNEGOTIATE", CURLAUTH_GSSNEGOTIATE);
     insint_c(d, "HTTPAUTH_NTLM", CURLAUTH_NTLM);
     insint_c(d, "HTTPAUTH_ANY", CURLAUTH_ANY);
