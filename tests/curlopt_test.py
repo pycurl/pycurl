@@ -57,3 +57,8 @@ class CurloptTest(unittest.TestCase):
     @util.min_libcurl(7, 26, 0)
     def test_postredir_flags(self):
         self.assertEqual(pycurl.REDIR_POST_303, pycurl.REDIR_POST_ALL & pycurl.REDIR_POST_303)
+
+    # HTTPAUTH_DIGEST_IE was introduced in libcurl-7.19.3
+    @util.min_libcurl(7, 19, 3)
+    def test_httpauth_digest_ie(self):
+        assert hasattr(pycurl, 'HTTPAUTH_DIGEST_IE')
