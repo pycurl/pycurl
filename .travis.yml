@@ -4,10 +4,6 @@ python:
   - "2.7"
   - "3.2"
   - "3.3"
-matrix:
-  allow_failures:
-    - python: "3.2"
-    - python: "3.3"
 install: >
   if test -e requirements-dev-$TRAVIS_PYTHON_VERSION.txt; then
     pip install -r requirements-dev-$TRAVIS_PYTHON_VERSION.txt --use-mirrors
