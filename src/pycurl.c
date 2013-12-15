@@ -331,6 +331,7 @@ typedef struct {
 // python utility functions
 **************************************************************************/
 
+#if PY_MAJOR_VERSION >= 3
 int PyUnicode_AsStringAndSize(PyObject *obj, char **buffer, Py_ssize_t *length, PyObject **encoded_obj)
 {
     if (PyBytes_Check(obj)) {
@@ -350,6 +351,7 @@ int PyUnicode_AsStringAndSize(PyObject *obj, char **buffer, Py_ssize_t *length, 
         return rv;
     }
 }
+#endif
 
 
 /* Like PyString_AsString(), but set an exception if the string contains
