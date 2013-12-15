@@ -71,7 +71,7 @@ def patch_pycurl_for_24():
                 with open(path, 'w') as f:
                     f.write(contents)
 
-def run_matrix():
+def run_matrix(python_versions, libcurl_versions):
     for python_version in python_versions:
         url = 'http://www.python.org/ftp/python/%s/Python-%s.tgz' % (python_version, python_version)
         archive = os.path.basename(url)
@@ -147,7 +147,24 @@ def run_matrix():
 if __name__ == '__main__':
     import sys
     
+    def main():
+        import optparse
+        
+        parser = optparse.OptionParser()
+        parser.add_option('-p', '--python', help='Specify python version to test against')
+        parser.add_option('-c', '--curl', help='Specify libcurl version to test against')
+        options, args = parser.parse_args()
+        if options.python:
+            chosen_python_versions = [options.python]
+        else:
+            chosen_python_versions = python_versions
+        if options.curl:
+            chosen_libcurl_versions = [options.curl]
+        else:
+            chosen_libcurl_versions = libcurl_versions
+        run_matrix(chosen_python_versions, chosen_libcurl_versions)
+    
     if len(sys.argv) > 1 and sys.argv[1] == 'patch-24':
         patch_pycurl_for_24()
     else:
-        run_matrix()
+        main()
