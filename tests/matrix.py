@@ -1,4 +1,9 @@
-import os, os.path, urllib, subprocess, shutil, re
+import os, os.path, subprocess, shutil, re
+
+try:
+    from urllib.request import urlopen
+except ImportError:
+    from urllib import urlopen
 
 python_versions = ['2.4.6', '2.5.6', '2.6.8', '2.7.5']
 libcurl_versions = ['7.19.0', '7.33.0']
@@ -24,9 +29,9 @@ class in_dir:
 
 def fetch(url, archive):
     if not os.path.exists(archive):
-        print "Fetching %s" % url
-        io = urllib.urlopen(url)
-        with open('.tmp.%s' % archive, 'w') as f:
+        sys.stdout.write("Fetching %s\n" % url)
+        io = urlopen(url)
+        with open('.tmp.%s' % archive, 'wb') as f:
             while True:
                 chunk = io.read(65536)
                 if len(chunk) == 0:
@@ -36,7 +41,7 @@ def fetch(url, archive):
 
 def build(archive, dir, prefix, meta=None):
     if not os.path.exists(dir):
-        print "Building %s" % archive
+        sys.stdout.write("Building %s\n" % archive)
         subprocess.check_call(['tar', 'xf', archive])
         with in_dir(dir):
             if meta and 'patches' in meta:
