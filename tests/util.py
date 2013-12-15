@@ -3,7 +3,6 @@
 
 import os, sys, socket
 import time as _time
-import pycurl
 
 py3 = sys.version_info[0] == 3
 
@@ -28,6 +27,8 @@ def version_less_than_spec(version_tuple, spec_tuple):
     return False
 
 def pycurl_version_less_than(*spec):
+    import pycurl
+    
     version = [int(part) for part in pycurl.version_info()[1].split('.')]
     return version_less_than_spec(version, spec)
 
