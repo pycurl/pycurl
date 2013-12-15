@@ -35,6 +35,13 @@ class CurloptTest(unittest.TestCase):
         assert hasattr(pycurl, 'REDIR_POST_302')
         assert hasattr(pycurl, 'REDIR_POST_ALL')
     
+    # CURLOPT_POSTREDIR was introduced in libcurl-7.19.1
+    @util.min_libcurl(7, 19, 1)
+    def test_postredir_setopt(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.POSTREDIR, curl.REDIR_POST_301)
+        curl.close()
+    
     # CURL_REDIR_POST_303 was introduced in libcurl-7.26.0
     @util.min_libcurl(7, 26, 0)
     def test_redir_post_303(self):
