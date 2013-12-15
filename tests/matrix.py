@@ -12,6 +12,9 @@ python_meta = {
     '2.5.6': {
         'patches': ['python25.patch'],
     },
+    '3.0.1': {
+        'patches': ['python25.patch'],
+    },
 }
 
 root = os.path.abspath(os.path.dirname(__file__))
