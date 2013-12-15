@@ -1,0 +1,19 @@
+Python 3.0's version.py uses cmp which is not defined by the interpreter.
+The only difference between version.py in 3.0 and 3.1 is this fix.
+
+--- Python-3.0.1/Lib/distutils/version.py	2013-12-14 21:06:23.000000000 -0500
++++ Python-3.1.5/Lib/distutils/version.py	2013-12-14 21:01:10.000000000 -0500
+@@ -338,7 +338,12 @@
+         if isinstance(other, str):
+             other = LooseVersion(other)
+ 
+-        return cmp(self.version, other.version)
++        if self.version == other.version:
++            return 0
++        if self.version < other.version:
++            return -1
++        if self.version > other.version:
++            return 1
+ 
+ 
+ # end class LooseVersion
