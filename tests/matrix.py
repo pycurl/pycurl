@@ -30,7 +30,9 @@ class in_dir:
     def __exit__(self, type, value, traceback):
         os.chdir(self.oldwd)
 
-def fetch(url, archive):
+def fetch(url, archive=None):
+    if archive is None:
+        archive = os.path.basename(url)
     if not os.path.exists(archive):
         sys.stdout.write("Fetching %s\n" % url)
         io = urlopen(url)
@@ -104,7 +106,11 @@ def run_matrix():
             if python_version_pieces >= [2, 5]:
                 subprocess.check_call(['virtualenv', venv, '-p', '%s/bin/python' % python_prefix, '--no-site-packages'])
             else:
-                subprocess.check_call(['python', 'virtualenv-1.7.py', venv, '-p', '%s/bin/python' % python_prefix, '--no-site-packages'])
+                # md5=bd639f9b0eac4c42497034dec2ec0c2b
+                fetch('https://pypi.python.org/packages/2.4/s/setuptools/setuptools-0.6c11-py2.4.egg')
+                # md5=6afbb46aeb48abac658d4df742bff714
+                fetch('https://pypi.python.org/packages/source/p/pip/pip-1.4.1.tar.gz')
+                subprocess.check_call(['python', 'virtualenv-1.7.py', venv, '-p', '%s/bin/python' % python_prefix, '--no-site-packages', '--never-download'])
             curl_config_path = os.path.join(libcurl_prefix, 'bin/curl-config')
             curl_lib_path = os.path.join(libcurl_prefix, 'lib')
             with in_dir('pycurl'):
