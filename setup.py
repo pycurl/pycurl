@@ -34,6 +34,11 @@ extra_compile_args = []
 extra_link_args = []
 
 
+def fail(msg):
+    sys.stderr.write(msg + "\n")
+    exit(10)
+
+
 def scan_argv(s, default):
     p = default
     i = 1
@@ -50,7 +55,7 @@ def scan_argv(s, default):
 
 
 # append contents of an environment variable to library_dirs[]
-def add_libdirs(envvar, sep, fatal=0):
+def add_libdirs(envvar, sep, fatal=False):
     v = os.environ.get(envvar)
     if not v:
         return
@@ -63,8 +68,7 @@ def add_libdirs(envvar, sep, fatal=0):
             if not dir in library_dirs:
                 library_dirs.append(dir)
         elif fatal:
-            print("FATAL: bad directory %s in environment variable %s" % (dir, envvar))
-            sys.exit(1)
+            fail("FATAL: bad directory %s in environment variable %s" % (dir, envvar))
 
 
 if sys.platform == "win32":
