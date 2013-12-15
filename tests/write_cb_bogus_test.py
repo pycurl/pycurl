@@ -33,6 +33,8 @@ class WriteAbortTest(unittest.TestCase):
         self.curl.setopt(pycurl.WRITEFUNCTION, write_cb)
         try:
             self.curl.perform()
+            
+            self.fail('Should not get here')
         except pycurl.error:
             err, msg = sys.exc_info()[1].args
             # we expect pycurl.E_WRITE_ERROR as the response

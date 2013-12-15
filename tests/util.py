@@ -5,13 +5,17 @@ import os, sys, socket
 import time as _time
 import pycurl
 
-try:
-    from cStringIO import StringIO
-except ImportError:
+py3 = sys.version_info[0] == 3
+
+# python 2/3 compatibility
+if py3:
+    from io import StringIO, BytesIO
+else:
     try:
-        from StringIO import StringIO
+        from cStringIO import StringIO
     except ImportError:
-        from io import StringIO
+        from StringIO import StringIO
+    BytesIO = StringIO
 
 def version_less_than_spec(version_tuple, spec_tuple):
     # spec_tuple may have 2 elements, expect version_tuple to have 3 elements
@@ -26,6 +30,19 @@ def version_less_than_spec(version_tuple, spec_tuple):
 def pycurl_version_less_than(*spec):
     version = [int(part) for part in pycurl.version_info()[1].split('.')]
     return version_less_than_spec(version, spec)
+
+def only_python3(fn):
+    import nose.plugins.skip
+    import functools
+    
+    @functools.wraps(fn)
+    def decorated(*args, **kwargs):
+        if sys.version_info[0] < 3:
+            raise nose.plugins.skip.SkipTest('python < 3')
+        
+        return fn(*args, **kwargs)
+    
+    return decorated
 
 try:
     create_connection = socket.create_connection

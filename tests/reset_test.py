@@ -17,7 +17,7 @@ setup_module, teardown_module = appmanager.setup(('app', 8380))
 class ResetTest(unittest.TestCase):
     # XXX this test was broken when it was test_reset.py
     def skip_reset(self):
-        outf = util.StringIO()
+        outf = util.BytesIO()
         cm = pycurl.CurlMulti()
 
         eh = pycurl.Curl()

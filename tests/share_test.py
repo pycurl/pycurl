@@ -22,7 +22,7 @@ class WorkerThread(threading.Thread):
         self.curl = pycurl.Curl()
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
         self.curl.setopt(pycurl.SHARE, share)
-        self.sio = util.StringIO()
+        self.sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, self.sio.write)
 
     def run(self):
@@ -46,8 +46,8 @@ class ShareTest(unittest.TestCase):
         
         del s
         
-        self.assertEqual('success', t1.sio.getvalue())
-        self.assertEqual('success', t2.sio.getvalue())
+        self.assertEqual('success', t1.sio.getvalue().decode())
+        self.assertEqual('success', t2.sio.getvalue().decode())
     
     def test_share_close(self):
         s = pycurl.CurlShare()

@@ -19,10 +19,10 @@ class GetinfoTest(unittest.TestCase):
     
     def test_getinfo(self):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
-        sio = util.StringIO()
+        sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
-        self.assertEqual('success', sio.getvalue())
+        self.assertEqual('success', sio.getvalue().decode())
         
         self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
         assert type(self.curl.getinfo(pycurl.TOTAL_TIME)) is float

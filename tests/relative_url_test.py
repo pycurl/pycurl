@@ -19,4 +19,4 @@ class RelativeUrlTest(unittest.TestCase):
     
     def test_get_relative(self):
         self.curl.get('/success')
-        self.assertEqual('success', self.curl.body())
+        self.assertEqual('success', self.curl.body().decode())

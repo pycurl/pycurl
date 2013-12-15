@@ -64,11 +64,11 @@ class PostTest(unittest.TestCase):
         # UnicodeDecodeError: 'utf8' codec can't decode byte 0x80 in position 4: invalid start byte
         
         #self.curl.setopt(pycurl.VERBOSE, 1)
-        sio = util.StringIO()
+        sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
         self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
-        body = sio.getvalue()
+        body = sio.getvalue().decode()
         returned_fields = json.loads(body)
         self.assertEqual(pf, returned_fields)
     
@@ -116,9 +116,9 @@ class PostTest(unittest.TestCase):
         self.curl.setopt(pycurl.URL, endpoint)
         self.curl.setopt(pycurl.HTTPPOST, send)
         #self.curl.setopt(pycurl.VERBOSE, 1)
-        sio = util.StringIO()
+        sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
-        body = sio.getvalue()
+        body = sio.getvalue().decode()
         returned_fields = json.loads(body)
         self.assertEqual(expect, returned_fields)
