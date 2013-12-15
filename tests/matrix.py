@@ -107,7 +107,7 @@ def run_matrix(python_versions, libcurl_versions):
                 fetch('https://pypi.python.org/packages/2.5/s/setuptools/setuptools-0.6c11-py2.5.egg')
                 fetch('https://pypi.python.org/packages/2.6/s/setuptools/setuptools-0.6c11-py2.6.egg')
                 fetch('https://pypi.python.org/packages/2.7/s/setuptools/setuptools-0.6c11-py2.7.egg')
-                subprocess.check_call(['virtualenv', venv, '-p', '%s/bin/python' % python_prefix, '--no-site-packages', '--never-download'])
+                subprocess.check_call(['virtualenv', venv, '-p', '%s/bin/python%d.%d' % (python_prefix, python_version_pieces[0], python_version_pieces[1]), '--no-site-packages', '--never-download'])
             else:
                 # md5=bd639f9b0eac4c42497034dec2ec0c2b
                 fetch('https://pypi.python.org/packages/2.4/s/setuptools/setuptools-0.6c11-py2.4.egg')
