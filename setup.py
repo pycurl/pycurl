@@ -209,7 +209,7 @@ def get_data_files():
     else:
         datadir = os.path.join("share", "doc", PACKAGE)
     #
-    files = ["ChangeLog", "COPYING", "COPYING2", "INSTALL", "README.rst", "TODO",]
+    files = ["ChangeLog", "COPYING-LGPL", "COPYING-MIT", "INSTALL", "README.rst", "TODO",]
     if files:
         data_files.append((os.path.join(datadir), files))
     files = glob.glob(os.path.join("doc", "*.html"))

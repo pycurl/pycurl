@@ -3,8 +3,8 @@
 # Manifest template for creating the source distribution.
 #
 
-include COPYING
-include COPYING2
+include COPYING-LGPL
+include COPYING-MIT
 include ChangeLog
 include INSTALL
 include MANIFEST.in
