@@ -101,7 +101,7 @@ vsftpd tests you must explicitly set PYCURL_VSFTPD_PATH variable like so::
     # specify full path to vsftpd
     export PYCURL_VSFTPD_PATH=/usr/local/libexec/vsftpd
 
-These instructions work for Python 2.5, 2.6 and 2.7.
+These instructions work for Python 2.5 through 2.7 and 3.1 through 3.3.
 
 .. _nose: https://nose.readthedocs.org/
 .. _bottle: http://bottlepy.org/
