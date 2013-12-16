@@ -23,7 +23,6 @@ master
 	  Systems on which neither `curl-config --libs` nor
 	  `curl-config --static-libs` do the right thing should provide
 	  a `curl-config` wrapper that is sane.
-	  
 
 	* Added CURLFORM_BUFFER and CURLFORM_BUFFERPTR.
 
