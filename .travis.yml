@@ -4,13 +4,15 @@ python:
   - "2.7"
   - "3.2"
   - "3.3"
+matrix:
+  include:
+    - python: 2.7
+      env: USEPY=2.4
+    - python: 2.7
+      env: USEPY=2.5
 install: >
-  if test -e requirements-dev-$TRAVIS_PYTHON_VERSION.txt; then
-    pip install -r requirements-dev-$TRAVIS_PYTHON_VERSION.txt --use-mirrors
-  else
-    pip install -r requirements-dev.txt --use-mirrors
-  fi &&
-  sudo apt-get install vsftpd
+  ./tests/travis/setup.sh
+before_script: >
+  ./tests/travis/hack.sh
 script: >
-  export PYCURL_VSFTPD_PATH=/usr/sbin/vsftpd &&
-  make test
+  ./tests/travis/run.sh
