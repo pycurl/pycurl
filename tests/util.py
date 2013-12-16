@@ -3,6 +3,10 @@
 
 import os, sys, socket
 import time as _time
+try:
+    import functools
+except ImportError:
+    import functools_backport as functools
 
 py3 = sys.version_info[0] == 3
 
@@ -34,7 +38,6 @@ def pycurl_version_less_than(*spec):
 
 def only_python3(fn):
     import nose.plugins.skip
-    import functools
     
     @functools.wraps(fn)
     def decorated(*args, **kwargs):
@@ -47,7 +50,6 @@ def only_python3(fn):
 
 def min_libcurl(major, minor, patch):
     import nose.plugins.skip
-    import functools
     
     def decorator(fn):
         @functools.wraps(fn)
