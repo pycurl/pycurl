@@ -4,13 +4,14 @@
 
 import pycurl
 import unittest
-from .util import StringIO
 try:
     import cPickle
 except ImportError:
     cPickle = None
 import pickle
 import copy
+
+from . import util
 
 class InternalsTest(unittest.TestCase):
     def setUp(self):
@@ -116,7 +117,7 @@ class InternalsTest(unittest.TestCase):
             assert False, "No exception when trying to copy a CurlMulti handle"
     
     def test_pickle_curl(self):
-        fp = StringIO()
+        fp = util.StringIO()
         p = pickle.Pickler(fp, 1)
         try:
             p.dump(self.curl)
@@ -129,7 +130,7 @@ class InternalsTest(unittest.TestCase):
     
     def test_pickle_multi(self):
         m = pycurl.CurlMulti()
-        fp = StringIO()
+        fp = util.StringIO()
         p = pickle.Pickler(fp, 1)
         try:
             p.dump(m)
@@ -141,7 +142,7 @@ class InternalsTest(unittest.TestCase):
     
     if cPickle is not None:
         def test_cpickle_curl(self):
-            fp = StringIO()
+            fp = util.StringIO()
             p = cPickle.Pickler(fp, 1)
             try:
                 p.dump(self.curl)
@@ -153,7 +154,7 @@ class InternalsTest(unittest.TestCase):
         
         def test_cpickle_multi(self):
             m = pycurl.CurlMulti()
-            fp = StringIO()
+            fp = util.StringIO()
             p = cPickle.Pickler(fp, 1)
             try:
                 p.dump(m)
