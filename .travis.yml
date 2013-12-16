@@ -8,6 +8,8 @@ matrix:
   include:
     - python: 2.7
       env: USEPY=2.4
+    - python: 2.7
+      env: USEPY=2.5
 install: >
   ./tests/travis/setup.sh
 before_script: >

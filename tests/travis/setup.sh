@@ -4,10 +4,9 @@ set -e
 set -x
 
 if test -n "$USEPY"; then
-  if test "$USEPY" = 2.4; then
-    # need to launch tests.appmanager with a more modern python
-    pip install -r requirements-dev.txt --use-mirrors
-  fi
+  # need to launch tests.appmanager with a more modern python.
+  # doing this for 2.4 and 2.5 now.
+  pip install -r requirements-dev.txt --use-mirrors
   
   # https://launchpad.net/~fkrull/+archive/deadsnakes
   # http://askubuntu.com/questions/304178/how-do-i-add-a-ppa-in-a-shell-script-without-user-input
@@ -19,7 +18,7 @@ if test -n "$USEPY"; then
     wget https://pypi.python.org/packages/source/v/virtualenv/virtualenv-1.7.1.2.tar.gz &&
     tar zxf virtualenv-1.7.1.2.tar.gz &&
     cd virtualenv-1.7.1.2 &&
-    sudo python2.4 setup.py install
+    sudo python$USEPY setup.py install
   )
   virtualenv --version
   which virtualenv
