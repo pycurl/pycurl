@@ -330,7 +330,10 @@ typedef struct {
  */
 # define PyText_AsStringAndSize(obj, buffer, length, encoded_obj) PyString_AsStringAndSize((obj), (buffer), (length))
 # define PyText_AsString_NoNUL(obj, encoded_obj) PyString_AsString_NoNUL(obj)
-# define PyText_EncodedDecref(encoded) ((void) 0)
+/* unused variable warning on the encoded object means you did not call
+ * PyText_EncodedDecref on it and it will leak in python 3.
+ */
+# define PyText_EncodedDecref(encoded) ((void) (encoded))
 # define PyByteStr_AsStringAndSize(obj, buffer, length) PyString_AsStringAndSize((obj), (buffer), (length))
 #endif
 
