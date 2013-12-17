@@ -2523,11 +2523,13 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                     }
                 } else {
                     /* Some other type was given, ignore */
+                    PyText_EncodedDecref(nencoded_obj);
                     curl_formfree(post);
                     Py_XDECREF(ref_params);
                     PyErr_SetString(PyExc_TypeError, "unsupported second type in tuple");
                     return NULL;
                 }
+                PyText_EncodedDecref(nencoded_obj);
             }
             res = curl_easy_setopt(self->handle, CURLOPT_HTTPPOST, post);
             /* Check for errors */
