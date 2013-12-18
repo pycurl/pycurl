@@ -4990,14 +4990,14 @@ static const char * pycurl_inet_ntop (int family, void *addr, char *string, size
     if (family == AF_INET6) {
         struct sockaddr_in6 sa6;
         memset(&sa6, 0, sizeof(sa6));
-        sa6.sa_family = AF_INET6;
+        sa6.sin6_family = AF_INET6;
         memcpy(&sa6.sin6_addr, addr, sizeof(sa6.sin6_addr));
         sa = (SOCKADDR*) &sa6;
         sa_len = sizeof(sa6);
     } else if (family == AF_INET) {
         struct sockaddr_in sa4;
         memset(&sa4, 0, sizeof(sa4));
-        sa4.sa_family = AF_INET;
+        sa4.sin_family = AF_INET;
         memcpy(&sa4.sin_addr, addr, sizeof(sa4.sin_addr));
         sa = (SOCKADDR*) &sa4;
         sa_len = sizeof(sa4);

@@ -90,6 +90,14 @@ if sys.platform == "win32":
     extra_objects.append(libcurl_lib_path)
     extra_link_args.extend(["gdi32.lib", "wldap32.lib", "winmm.lib", "ws2_32.lib",])
     add_libdirs("LIB", ";")
+    
+    # make pycurl binary work on windows xp.
+    # we use inet_ntop which was added in vista and implement a fallback.
+    # our implementation will not be compiled with _WIN32_WINNT targeting
+    # vista or above, thus said binary won't work on xp.
+    # http://curl.haxx.se/mail/curlpython-2013-12/0007.html
+    extra_compile_args.append("-D_WIN32_WINNT=0x0501")
+
     if str.find(sys.version, "MSC") >= 0:
         extra_compile_args.append("-O2")
         extra_compile_args.append("-GF")        # enable read-only string pooling
