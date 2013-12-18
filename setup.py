@@ -268,7 +268,7 @@ This module provides Python bindings for the cURL library.""",
 )
 
 if sys.platform == "win32":
-	setup_args['cmdclass'] = {'bdist_msi': bdist_msi_version_hack}
+        setup_args['cmdclass'] = {'bdist_msi': bdist_msi_version_hack}
 
 ##print distutils.__version__
 if LooseVersion(distutils.__version__) > LooseVersion("1.0.1"):
