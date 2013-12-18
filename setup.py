@@ -72,22 +72,65 @@ def add_libdirs(envvar, sep, fatal=False):
 
 
 if sys.platform == "win32":
-    # Windows users have to configure the CURL_DIR path parameter to match
+    # Windows users have to configure the curl_dir path parameter to match
     # their cURL source installation.  The path set here is just an example
     # and thus unlikely to match your installation.
-    CURL_DIR = r"c:\src\build\pycurl\curl-7.16.2.1"
-    CURL_DIR = scan_argv("--curl-dir=", CURL_DIR)
-    print("Using curl directory:", CURL_DIR)
-    assert os.path.isdir(CURL_DIR), "please check CURL_DIR in setup.py"
-    include_dirs.append(os.path.join(CURL_DIR, "include"))
-    extra_objects.append(os.path.join(CURL_DIR, "lib", "libcurl.lib"))
+    curl_dir = scan_argv("--curl-dir=", None)
+    if curl_dir is None:
+        fail("Please specify --curl-dir=/path/to/built/libcurl")
+    if not os.path.exists(curl_dir):
+        fail("Curl directory does not exist: %s" % curl_dir)
+    if not os.path.isdir(curl_dir):
+        fail("Curl directory is not a directory: %s" % curl_dir)
+    print("Using curl directory: %s" % curl_dir)
+    include_dirs.append(os.path.join(curl_dir, "include"))
+    libcurl_lib_path = os.path.join(curl_dir, "lib", "libcurl.lib")
+    if not os.path.exists(libcurl_lib_path):
+        fail("libcurl.lib does not exist at %s.\nCurl directory must point to compiled libcurl (bin/include/lib subdirectories): %s" %(libcurl_lib_path, curl_dir))
+    extra_objects.append(libcurl_lib_path)
     extra_link_args.extend(["gdi32.lib", "wldap32.lib", "winmm.lib", "ws2_32.lib",])
     add_libdirs("LIB", ";")
     if str.find(sys.version, "MSC") >= 0:
         extra_compile_args.append("-O2")
         extra_compile_args.append("-GF")        # enable read-only string pooling
         extra_compile_args.append("-WX")        # treat warnings as errors
-        extra_link_args.append("/opt:nowin98")  # use small section alignment
+        p = subprocess.Popen(['cl.exe'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = p.communicate()
+        match = re.search(r'Version (\d+)', err.split("\n")[0])
+        if match and int(match.group(1)) < 16:
+            # option removed in vs 2010:
+            # connect.microsoft.com/VisualStudio/feedback/details/475896/link-fatal-error-lnk1117-syntax-error-in-option-opt-nowin98/
+            extra_link_args.append("/opt:nowin98")  # use small section alignment
+
+        # workaround for distutils/msi version requirement per
+        # epydoc.sourceforge.net/stdlib/distutils.version.StrictVersion-class.html -
+        # only x.y.z version numbers are supported, whereas our versions might be x.y.z.p.
+        # bugs.python.org/issue6040#msg133094
+        from distutils.command.bdist_msi import bdist_msi
+        import inspect
+        import types
+        import re
+        
+        class bdist_msi_version_hack(bdist_msi):
+            """ MSI builder requires version to be in the x.x.x format """
+            def run(self):
+                def monkey_get_version(self):
+                    """ monkey patch replacement for metadata.get_version() that
+                            returns MSI compatible version string for bdist_msi
+                    """
+                    # get filename of the calling function
+                    if inspect.stack()[1][1].endswith('bdist_msi.py'):
+                        # strip revision from version (if any), e.g. 11.0.0-r31546
+                        match = re.match(r'(\d+\.\d+\.\d+)', self.version)
+                        assert match
+                        return match.group(1)
+                    else:
+                        return self.version
+
+                # monkeypatching get_version() call for DistributionMetadata
+                self.distribution.metadata.get_version = \
+                    types.MethodType(monkey_get_version, self.distribution.metadata)
+                bdist_msi.run(self)
 else:
     # Find out the rest the hard way
     OPENSSL_DIR = scan_argv("--openssl-dir=", "")
@@ -268,6 +311,8 @@ setup_args = dict(
 This module provides Python bindings for the cURL library.""",
 )
 
+if sys.platform == "win32":
+        setup_args['cmdclass'] = {'bdist_msi': bdist_msi_version_hack}
 
 ##print distutils.__version__
 if LooseVersion(distutils.__version__) > LooseVersion("1.0.1"):
