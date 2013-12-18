@@ -207,9 +207,17 @@ static void pycurl_ssl_cleanup(void);
     (PYCURL_MEMGROUP_ATTRDICT | PYCURL_MEMGROUP_EASY | \
     PYCURL_MEMGROUP_MULTI | PYCURL_MEMGROUP_SHARE)
 
+#if defined(WIN32)
+# define PYCURL_STRINGIZE_IMP(x) #x
+# define PYCURL_STRINGIZE(x) PYCURL_STRINGIZE_IMP(x)
+# define PYCURL_VERSION_STRING PYCURL_STRINGIZE(PYCURL_VERSION)
+#else
+# define PYCURL_VERSION_STRING PYCURL_VERSION
+#endif
+
 /* Keep some default variables around */
 static const char g_pycurl_useragent [] =
-    "PycURL/" PYCURL_VERSION " libcurl/" LIBCURL_VERSION;
+    "PycURL/" PYCURL_VERSION_STRING " libcurl/" LIBCURL_VERSION;
 
 /* Type objects */
 static PyObject *ErrorObject = NULL;
@@ -322,7 +330,10 @@ typedef struct {
  */
 # define PyText_AsStringAndSize(obj, buffer, length, encoded_obj) PyString_AsStringAndSize((obj), (buffer), (length))
 # define PyText_AsString_NoNUL(obj, encoded_obj) PyString_AsString_NoNUL(obj)
-# define PyText_EncodedDecref(encoded) ((void) 0)
+/* unused variable warning on the encoded object means you did not call
+ * PyText_EncodedDecref on it and it will leak in python 3.
+ */
+# define PyText_EncodedDecref(encoded) ((void) (encoded))
 # define PyByteStr_AsStringAndSize(obj, buffer, length) PyString_AsStringAndSize((obj), (buffer), (length))
 #endif
 
@@ -2515,11 +2526,13 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                     }
                 } else {
                     /* Some other type was given, ignore */
+                    PyText_EncodedDecref(nencoded_obj);
                     curl_formfree(post);
                     Py_XDECREF(ref_params);
                     PyErr_SetString(PyExc_TypeError, "unsupported second type in tuple");
                     return NULL;
                 }
+                PyText_EncodedDecref(nencoded_obj);
             }
             res = curl_easy_setopt(self->handle, CURLOPT_HTTPPOST, post);
             /* Check for errors */
@@ -4449,7 +4462,7 @@ initpycurl(void)
 
     /* Add version strings to the module */
     insobj2(d, NULL, "version",
-            PyText_FromFormat("PycURL/" PYCURL_VERSION " %s", curl_version()));
+            PyText_FromFormat("PycURL/" PYCURL_VERSION_STRING " %s", curl_version()));
     insstr(d, "COMPILE_DATE", __DATE__ " " __TIME__);
     insint(d, "COMPILE_PY_VERSION_HEX", PY_VERSION_HEX);
     insint(d, "COMPILE_LIBCURL_VERSION_NUM", LIBCURL_VERSION_NUM);
