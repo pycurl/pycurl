@@ -98,7 +98,7 @@ def work():
         
         prepare_pycurl()
         for python_version in python_versions:
-            for target in ['bdist', 'bdist_wininst']:
+            for target in ['bdist', 'bdist_wininst', 'bdist_msi']:
                 build_pycurl(python_version, target)
 
 work()
