@@ -111,7 +111,6 @@ if sys.platform == "win32":
     if not os.path.exists(libcurl_lib_path):
         fail("libcurl.lib does not exist at %s.\nCurl directory must point to compiled libcurl (bin/include/lib subdirectories): %s" %(libcurl_lib_path, curl_dir))
     extra_objects.append(libcurl_lib_path)
-    add_libdirs("LIB", ";")
     
     # make pycurl binary work on windows xp.
     # we use inet_ntop which was added in vista and implement a fallback.
