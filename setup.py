@@ -94,10 +94,10 @@ if sys.platform == "win32":
     # libcurl windows documentation states that for linking against libcurl
     # dll, the import library name is libcurl_imp.lib.
     # in practice, the library name sometimes is libcurl.lib.
-    # override with: --curl-lib-name=libcurl_imp.lib
-    curl_lib_name = scan_argv('--curl-lib-name=', 'libcurl.lib')
+    # override with: --libcurl-lib-name=libcurl_imp.lib
+    curl_lib_name = scan_argv('--libcurl-lib-name=', 'libcurl.lib')
 
-    if scan_argv("--use-curl-dll") is not None:
+    if scan_argv("--use-libcurl-dll") is not None:
         libcurl_lib_path = os.path.join(curl_dir, "lib", curl_lib_name)
         extra_link_args.extend(["ws2_32.lib"])
         if str.find(sys.version, "MSC") >= 0:

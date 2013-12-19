@@ -40,20 +40,20 @@ For a minimum build you will just need libcurl source. Follow its Windows
 build instructions to build either a static or a DLL version of the library,
 then configure PycURL as follows to use it:
 
-    python setup.py --curl-dir=c:\dev\curl-7.33.0\builds\libcurl-vc-x86-release-dll-ipv6-sspi-spnego-winssl --use-curl-dll
+    python setup.py --curl-dir=c:\dev\curl-7.33.0\builds\libcurl-vc-x86-release-dll-ipv6-sspi-spnego-winssl --use-libcurl-dll
 
 Note that --curl-dir does not point to libcurl source but rather to headers
 and compiled libraries.
 
 Additional Windows setup.py options:
 
---use-curl-dll - build against libcurl DLL, if not given PycURL will be built
+--use-libcurl-dll - build against libcurl DLL, if not given PycURL will be built
 against libcurl statically.
 
---curl-lib-name=libcurl_imp.lib - specify a different name for libcurl import
-library. The default is libcurl.lib which is appropriate for static linking
-and is sometimes the correct choice for dynamic linking as well. The other
-possibility for dynamic linking is libcurl_imp.lib.
+--libcurl-lib-name=libcurl_imp.lib - specify a different name for libcurl
+import library. The default is libcurl.lib which is appropriate for static
+linking and is sometimes the correct choice for dynamic linking as well. The
+other possibility for dynamic linking is libcurl_imp.lib.
 
 A good setup.py target to use is bdist_wininst which produces an executable
 installer that you can run to install PycURL.
