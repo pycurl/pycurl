@@ -98,13 +98,13 @@ if sys.platform == "win32":
     curl_lib_name = scan_argv('--curl-lib-name=', 'libcurl.lib')
 
     if scan_argv("--use-curl-dll") is not None:
-        extra_compile_args.append("-DPYCURL_USE_LIBCURL_DLL")
         libcurl_lib_path = os.path.join(curl_dir, "lib", curl_lib_name)
         extra_link_args.extend(["ws2_32.lib"])
         if str.find(sys.version, "MSC") >= 0:
             # build a dll
             extra_compile_args.append("-MD")
     else:
+        extra_compile_args.append("-DCURL_STATICLIB")
         libcurl_lib_path = os.path.join(curl_dir, "lib", curl_lib_name)
         extra_link_args.extend(["gdi32.lib", "wldap32.lib", "winmm.lib", "ws2_32.lib",])
 
