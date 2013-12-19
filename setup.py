@@ -90,11 +90,21 @@ if sys.platform == "win32":
         fail("Curl directory is not a directory: %s" % curl_dir)
     print("Using curl directory: %s" % curl_dir)
     include_dirs.append(os.path.join(curl_dir, "include"))
-    libcurl_lib_path = os.path.join(curl_dir, "lib", "libcurl.lib")
+
+    if scan_argv("--use-curl-dll") is not None:
+        extra_compile_args.append("-DPYCURL_USE_LIBCURL_DLL")
+        libcurl_lib_path = os.path.join(curl_dir, "lib", "libcurl.lib")
+        extra_link_args.extend(["ws2_32.lib"])
+        if str.find(sys.version, "MSC") >= 0:
+            # build a dll
+            extra_compile_args.append("-MD")
+    else:
+        libcurl_lib_path = os.path.join(curl_dir, "lib", "libcurl.lib")
+        extra_link_args.extend(["gdi32.lib", "wldap32.lib", "winmm.lib", "ws2_32.lib",])
+
     if not os.path.exists(libcurl_lib_path):
         fail("libcurl.lib does not exist at %s.\nCurl directory must point to compiled libcurl (bin/include/lib subdirectories): %s" %(libcurl_lib_path, curl_dir))
     extra_objects.append(libcurl_lib_path)
-    extra_link_args.extend(["gdi32.lib", "wldap32.lib", "winmm.lib", "ws2_32.lib",])
     add_libdirs("LIB", ";")
     
     # make pycurl binary work on windows xp.
