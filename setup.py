@@ -45,8 +45,14 @@ def scan_argv(s, default):
     while i < len(sys.argv):
         arg = sys.argv[i]
         if str.find(arg, s) == 0:
-            p = arg[len(s):]
-            assert p, arg
+            if s.endswith('='):
+                # --option=value
+                p = arg[len(s):]
+                assert p, arg
+            else:
+                # --option
+                # set value to True
+                p = True
             del sys.argv[i]
         else:
             i = i + 1
