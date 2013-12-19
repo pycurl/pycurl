@@ -39,7 +39,7 @@ def fail(msg):
     exit(10)
 
 
-def scan_argv(s, default):
+def scan_argv(s, default=None):
     p = default
     i = 1
     while i < len(sys.argv):
@@ -81,7 +81,7 @@ if sys.platform == "win32":
     # Windows users have to configure the curl_dir path parameter to match
     # their cURL source installation.  The path set here is just an example
     # and thus unlikely to match your installation.
-    curl_dir = scan_argv("--curl-dir=", None)
+    curl_dir = scan_argv("--curl-dir=")
     if curl_dir is None:
         fail("Please specify --curl-dir=/path/to/built/libcurl")
     if not os.path.exists(curl_dir):
@@ -147,8 +147,8 @@ if sys.platform == "win32":
                 bdist_msi.run(self)
 else:
     # Find out the rest the hard way
-    OPENSSL_DIR = scan_argv("--openssl-dir=", "")
-    if OPENSSL_DIR != "":
+    OPENSSL_DIR = scan_argv("--openssl-dir=")
+    if OPENSSL_DIR is not None:
         include_dirs.append(os.path.join(OPENSSL_DIR, "include"))
     CURL_CONFIG = os.environ.get('PYCURL_CURL_CONFIG', "curl-config")
     CURL_CONFIG = scan_argv("--curl-config=", CURL_CONFIG)
