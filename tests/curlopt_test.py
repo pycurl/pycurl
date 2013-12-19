@@ -65,6 +65,5 @@ class CurloptTest(unittest.TestCase):
 
     # CURLE_OPERATION_TIMEDOUT was introduced in libcurl-7.10.2
     # to replace CURLE_OPERATION_TIMEOUTED
-    @util.min_libcurl(7, 10, 2)
     def test_operation_timedout_constant(self):
         self.assertEqual(pycurl.E_OPERATION_TIMEDOUT, pycurl.E_OPERATION_TIMEOUTED)
