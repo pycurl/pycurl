@@ -350,6 +350,23 @@ if LooseVersion(distutils.__version__) < LooseVersion("1.0.3"):
     setup_args["licence"] = setup_args["license"]
 
 if __name__ == "__main__":
+    if '--help' in sys.argv:
+        # unfortunately this help precedes distutils help
+        if sys.platform == "win32":
+            print('''\
+PycURL Windows options:
+ --curl-dir=/path/to/compiled/libcurl  path to libcurl headers and libraries
+ --use-libcurl-dll                     link against libcurl DLL, if not given
+                                       link against libcurl statically
+ --libcurl-lib-name=libcurl_imp.lib    override libcurl import library name
+''')
+        else:
+            print('''\
+PycURL Unix options:
+ --curl-config=/path/to/curl-config  use specified curl-config binary
+ --openssl-dir=/path/to/openssl/dir  path to OpenSSL headers and libraries
+''')
+    
     for o in ext.extra_objects:
         assert os.path.isfile(o), o
     setup(**setup_args)
