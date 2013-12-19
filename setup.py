@@ -39,14 +39,20 @@ def fail(msg):
     exit(10)
 
 
-def scan_argv(s, default):
+def scan_argv(s, default=None):
     p = default
     i = 1
     while i < len(sys.argv):
         arg = sys.argv[i]
         if str.find(arg, s) == 0:
-            p = arg[len(s):]
-            assert p, arg
+            if s.endswith('='):
+                # --option=value
+                p = arg[len(s):]
+                assert p, arg
+            else:
+                # --option
+                # set value to True
+                p = True
             del sys.argv[i]
         else:
             i = i + 1
@@ -75,7 +81,7 @@ if sys.platform == "win32":
     # Windows users have to configure the curl_dir path parameter to match
     # their cURL source installation.  The path set here is just an example
     # and thus unlikely to match your installation.
-    curl_dir = scan_argv("--curl-dir=", None)
+    curl_dir = scan_argv("--curl-dir=")
     if curl_dir is None:
         fail("Please specify --curl-dir=/path/to/built/libcurl")
     if not os.path.exists(curl_dir):
@@ -84,12 +90,27 @@ if sys.platform == "win32":
         fail("Curl directory is not a directory: %s" % curl_dir)
     print("Using curl directory: %s" % curl_dir)
     include_dirs.append(os.path.join(curl_dir, "include"))
-    libcurl_lib_path = os.path.join(curl_dir, "lib", "libcurl.lib")
+
+    # libcurl windows documentation states that for linking against libcurl
+    # dll, the import library name is libcurl_imp.lib.
+    # in practice, the library name sometimes is libcurl.lib.
+    # override with: --libcurl-lib-name=libcurl_imp.lib
+    curl_lib_name = scan_argv('--libcurl-lib-name=', 'libcurl.lib')
+
+    if scan_argv("--use-libcurl-dll") is not None:
+        libcurl_lib_path = os.path.join(curl_dir, "lib", curl_lib_name)
+        extra_link_args.extend(["ws2_32.lib"])
+        if str.find(sys.version, "MSC") >= 0:
+            # build a dll
+            extra_compile_args.append("-MD")
+    else:
+        extra_compile_args.append("-DCURL_STATICLIB")
+        libcurl_lib_path = os.path.join(curl_dir, "lib", curl_lib_name)
+        extra_link_args.extend(["gdi32.lib", "wldap32.lib", "winmm.lib", "ws2_32.lib",])
+
     if not os.path.exists(libcurl_lib_path):
         fail("libcurl.lib does not exist at %s.\nCurl directory must point to compiled libcurl (bin/include/lib subdirectories): %s" %(libcurl_lib_path, curl_dir))
     extra_objects.append(libcurl_lib_path)
-    extra_link_args.extend(["gdi32.lib", "wldap32.lib", "winmm.lib", "ws2_32.lib",])
-    add_libdirs("LIB", ";")
     
     # make pycurl binary work on windows xp.
     # we use inet_ntop which was added in vista and implement a fallback.
@@ -141,8 +162,8 @@ if sys.platform == "win32":
                 bdist_msi.run(self)
 else:
     # Find out the rest the hard way
-    OPENSSL_DIR = scan_argv("--openssl-dir=", "")
-    if OPENSSL_DIR != "":
+    OPENSSL_DIR = scan_argv("--openssl-dir=")
+    if OPENSSL_DIR is not None:
         include_dirs.append(os.path.join(OPENSSL_DIR, "include"))
     CURL_CONFIG = os.environ.get('PYCURL_CURL_CONFIG', "curl-config")
     CURL_CONFIG = scan_argv("--curl-config=", CURL_CONFIG)
@@ -329,6 +350,23 @@ if LooseVersion(distutils.__version__) < LooseVersion("1.0.3"):
     setup_args["licence"] = setup_args["license"]
 
 if __name__ == "__main__":
+    if '--help' in sys.argv:
+        # unfortunately this help precedes distutils help
+        if sys.platform == "win32":
+            print('''\
+PycURL Windows options:
+ --curl-dir=/path/to/compiled/libcurl  path to libcurl headers and libraries
+ --use-libcurl-dll                     link against libcurl DLL, if not given
+                                       link against libcurl statically
+ --libcurl-lib-name=libcurl_imp.lib    override libcurl import library name
+''')
+        else:
+            print('''\
+PycURL Unix options:
+ --curl-config=/path/to/curl-config  use specified curl-config binary
+ --openssl-dir=/path/to/openssl/dir  path to OpenSSL headers and libraries
+''')
+    
     for o in ext.extra_objects:
         assert os.path.isfile(o), o
     setup(**setup_args)

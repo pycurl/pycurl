@@ -1,6 +1,14 @@
 master
 ------
 
+	* Windows build configuration has been redone:
+	  PYCURL_USE_LIBCURL_DLL #define is gone, use --use-libcurl-dll
+	  argument to setup.py to build against a libcurl DLL.
+	  CURL_STATICLIB is now #defined only when --use-libcurl-dll is not
+	  given to setup.py, and PycURL is built against libcurl statically.
+	  --libcurl-lib-name option can be used to override libcurl import
+	  library name.
+
 	* Added CURLAUTH_DIGEST_IE as pycurl.HTTPAUTH_DIGEST_IE.
 
 	* Added CURLOPT_POSTREDIR option and CURL_REDIR_POST_301,
