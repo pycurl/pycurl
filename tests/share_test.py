@@ -34,6 +34,7 @@ class ShareTest(unittest.TestCase):
         s = pycurl.CurlShare()
         s.setopt(pycurl.SH_SHARE, pycurl.LOCK_DATA_COOKIE)
         s.setopt(pycurl.SH_SHARE, pycurl.LOCK_DATA_DNS)
+        s.setopt(pycurl.SH_SHARE, pycurl.LOCK_DATA_SSL_SESSION)
 
         t1 = WorkerThread(s)
         t2 = WorkerThread(s)
