@@ -1,6 +1,8 @@
 master
 ------
 
+        * Added CURL_LOCK_DATA_SSL_SESSION (patch by Tom Pierce).
+
         * Added E_OPERATION_TIMEDOUT (patch by Romuald Brunet).
 
         * Windows build configuration has been redone:
