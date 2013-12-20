@@ -1,69 +1,69 @@
 master
 ------
 
-	* Windows build configuration has been redone:
-	  PYCURL_USE_LIBCURL_DLL #define is gone, use --use-libcurl-dll
-	  argument to setup.py to build against a libcurl DLL.
-	  CURL_STATICLIB is now #defined only when --use-libcurl-dll is not
-	  given to setup.py, and PycURL is built against libcurl statically.
-	  --libcurl-lib-name option can be used to override libcurl import
-	  library name.
+        * Windows build configuration has been redone:
+          PYCURL_USE_LIBCURL_DLL #define is gone, use --use-libcurl-dll
+          argument to setup.py to build against a libcurl DLL.
+          CURL_STATICLIB is now #defined only when --use-libcurl-dll is not
+          given to setup.py, and PycURL is built against libcurl statically.
+          --libcurl-lib-name option can be used to override libcurl import
+          library name.
 
-	* Added CURLAUTH_DIGEST_IE as pycurl.HTTPAUTH_DIGEST_IE.
+        * Added CURLAUTH_DIGEST_IE as pycurl.HTTPAUTH_DIGEST_IE.
 
-	* Added CURLOPT_POSTREDIR option and CURL_REDIR_POST_301,
-	  CURL_REDIR_POST_302, CURL_REDIR_POST_303 and CURL_REDIR_POST_ALL
-	  constants. CURL_REDIR_POST_303 requires libcurl 7.26.0 or higher,
-	  all others require libcurl 7.19.1 or higher.
+        * Added CURLOPT_POSTREDIR option and CURL_REDIR_POST_301,
+          CURL_REDIR_POST_302, CURL_REDIR_POST_303 and CURL_REDIR_POST_ALL
+          constants. CURL_REDIR_POST_303 requires libcurl 7.26.0 or higher,
+          all others require libcurl 7.19.1 or higher.
 
-	* PycURL now supports Python 3.1 through 3.3. Python 3.0 might
-	  work but it appears to ship with broken distutils, making virtualenv
-	  not function on it.
+        * PycURL now supports Python 3.1 through 3.3. Python 3.0 might
+          work but it appears to ship with broken distutils, making virtualenv
+          not function on it.
 
-	* PycURL multi objects now have the multi constants defined on them.
-	  Previously the constants were only available on pycurl module.
-	  The new behavior matches that of curl and share objects.
+        * PycURL multi objects now have the multi constants defined on them.
+          Previously the constants were only available on pycurl module.
+          The new behavior matches that of curl and share objects.
 
-	* PycURL share objects can now be closed via the close() method.
+        * PycURL share objects can now be closed via the close() method.
 
-	* PycURL will no longer call `curl-config --static-libs` if
-	  `curl-config --libs` succeeds and returns output.
-	  Systems on which neither `curl-config --libs` nor
-	  `curl-config --static-libs` do the right thing should provide
-	  a `curl-config` wrapper that is sane.
+        * PycURL will no longer call `curl-config --static-libs` if
+          `curl-config --libs` succeeds and returns output.
+          Systems on which neither `curl-config --libs` nor
+          `curl-config --static-libs` do the right thing should provide
+          a `curl-config` wrapper that is sane.
 
-	* Added CURLFORM_BUFFER and CURLFORM_BUFFERPTR.
+        * Added CURLFORM_BUFFER and CURLFORM_BUFFERPTR.
 
-	* pycurl.version and user agent string now include both
-	  PycURL version and libcurl version as separate items.
+        * pycurl.version and user agent string now include both
+          PycURL version and libcurl version as separate items.
 
-	* Added CURLOPT_DNS_SERVERS.
+        * Added CURLOPT_DNS_SERVERS.
 
-	* PycURL can now be dynamically linked against libcurl on Windows
-	  if PYCURL_USE_LIBCURL_DLL is #defined during compilation.
+        * PycURL can now be dynamically linked against libcurl on Windows
+          if PYCURL_USE_LIBCURL_DLL is #defined during compilation.
 
-	* Breaking change: opensocket callback now takes an additional
-	  (address, port) tuple argument. Existing callbacks will need to
-	  be modified to accept this new argument.
-	  https://github.com/pycurl/pycurl/pull/18
+        * Breaking change: opensocket callback now takes an additional
+          (address, port) tuple argument. Existing callbacks will need to
+          be modified to accept this new argument.
+          https://github.com/pycurl/pycurl/pull/18
 
 Version 7.19.0.2 [requires libcurl-7.19.0 or better] - 2013-10-08
 -----------------------------------------------------------------
 
-	* Fixed a bug in a commit made in 2008 but not released until 7.19.0.1
-	  which caused CURLOPT_POSTFIELDS to not correctly increment reference
-	  count of the object being given as its argument, despite libcurl not
-	  copying the data provided by said object.
+        * Fixed a bug in a commit made in 2008 but not released until 7.19.0.1
+          which caused CURLOPT_POSTFIELDS to not correctly increment reference
+          count of the object being given as its argument, despite libcurl not
+          copying the data provided by said object.
 
-	* Added support for libcurl pause/unpause functionality,
-	  via curl_easy_pause call and returning READFUNC_PAUSE from
-	  read callback function.
+        * Added support for libcurl pause/unpause functionality,
+          via curl_easy_pause call and returning READFUNC_PAUSE from
+          read callback function.
 
 Version 7.19.0.1 [requires libcurl-7.19.0 or better] - 2013-09-23
 -----------------------------------------------------------------
 
-	* Test matrix tool added to test against all supported Python and
-	  libcurl versions.
+        * Test matrix tool added to test against all supported Python and
+          libcurl versions.
 
         * Python 2.4 is now the minimum required version.
 
