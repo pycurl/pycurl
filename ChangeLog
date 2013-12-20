@@ -1,6 +1,8 @@
 master
 ------
 
+        * Added E_OPERATION_TIMEDOUT (patch by Romuald Brunet).
+
         * Windows build configuration has been redone:
           PYCURL_USE_LIBCURL_DLL #define is gone, use --use-libcurl-dll
           argument to setup.py to build against a libcurl DLL.
