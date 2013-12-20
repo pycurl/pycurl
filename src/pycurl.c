@@ -994,7 +994,7 @@ do_curlshare_setopt(CurlShareObject *self, PyObject *args)
     if (PyInt_Check(obj)) {
         long d = PyInt_AsLong(obj);
         /* Handle CURL_LOCK_DATA_SSL_VERSION here too */
-        if (d != CURL_LOCK_DATA_COOKIE && d != CURL_LOCK_DATA_DNS) {
+        if (d != CURL_LOCK_DATA_COOKIE && d != CURL_LOCK_DATA_DNS && d != CURL_LOCK_DATA_SSL_SESSION) {
             goto error;
         }
         switch(option) {
@@ -4947,9 +4947,10 @@ initpycurl(void)
     assert(curlshareobject_constants != NULL);
     insint_s(d, "SH_SHARE", CURLSHOPT_SHARE);
     insint_s(d, "SH_UNSHARE", CURLSHOPT_UNSHARE);
-    /* add LOCK_DATA_SSL_SESSION here */
+
     insint_s(d, "LOCK_DATA_COOKIE", CURL_LOCK_DATA_COOKIE);
     insint_s(d, "LOCK_DATA_DNS", CURL_LOCK_DATA_DNS);
+    insint_s(d, "LOCK_DATA_SSL_SESSION", CURL_LOCK_DATA_SSL_SESSION);
 
     /* Check the version, as this has caused nasty problems in
      * some cases. */
