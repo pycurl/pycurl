@@ -44,4 +44,14 @@ if test "$USEPY" = 2.4; then
   sed -i -e s/BaseException/Exception/ ~/virtualenv/python2.4/lib/python2.4/site-packages/nose/failure.py
 fi
 
+if test -n "$USECURL"; then
+  wget "http://curl.haxx.se/download/curl-$USECURL.tar.gz"
+  tar zxf "curl-$USECURL.tar.gz"
+  (cd "curl-$USECURL" &&
+    ./configure --prefix="$HOME"/i/curl-"$USECURL" &&
+    make &&
+    make install
+  )
+fi
+
 sudo apt-get install vsftpd
