@@ -1,0 +1,18 @@
+diff --git a/lib/ssluse.c b/lib/ssluse.c
+index cee78bb..967fc57 100644
+--- a/lib/ssluse.c
++++ b/lib/ssluse.c
+@@ -1327,8 +1327,13 @@ ossl_connect_step1(struct connectdata *conn,
+     req_method = TLSv1_client_method();
+     break;
+   case CURL_SSLVERSION_SSLv2:
++#ifdef OPENSSL_NO_SSL2
++    failf(data, "OpenSSL was built without SSLv2 support");
++    return CURLE_UNSUPPORTED_PROTOCOL /* CURLE_NOT_BUILT_IN not defined in 7.19.0 */;
++#else
+     req_method = SSLv2_client_method();
+     break;
++#endif
+   case CURL_SSLVERSION_SSLv3:
+     req_method = SSLv3_client_method();
+     break;

@@ -21,4 +21,9 @@ else
   export USEPY=$TRAVIS_PYTHON_VERSION
 fi
 
+if test -n "$USECURL"; then
+  export PYCURL_CURL_CONFIG="$HOME"/i/curl-"$USECURL"/bin/curl-config
+  export LD_LIBRARY_PATH="$HOME"/i/curl-"$USECURL"/lib
+fi
+
 make test
