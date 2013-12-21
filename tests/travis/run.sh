@@ -26,4 +26,6 @@ if test -n "$USECURL"; then
   export LD_LIBRARY_PATH="$HOME"/i/curl-"$USECURL"/lib
 fi
 
+export VSFTPD_PATH=vsftpd
+
 make test
