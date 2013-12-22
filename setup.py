@@ -125,7 +125,7 @@ if sys.platform == "win32":
         extra_compile_args.append("-WX")        # treat warnings as errors
         p = subprocess.Popen(['cl.exe'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = p.communicate()
-        match = re.search(r'Version (\d+)', err.split("\n")[0])
+        match = re.search(r'Version (\d+)', err.decode().split("\n")[0])
         if match and int(match.group(1)) < 16:
             # option removed in vs 2010:
             # connect.microsoft.com/VisualStudio/feedback/details/475896/link-fatal-error-lnk1117-syntax-error-in-option-opt-nowin98/
