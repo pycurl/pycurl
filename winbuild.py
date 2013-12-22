@@ -3,7 +3,7 @@ root = 'c:/dev/build-pycurl'
 # where msysgit is installed
 git_root = 'c:/program files/git'
 # which versions of python to build against
-python_versions = ['2.6', '2.7']
+python_versions = ['2.6', '2.7', '3.2']
 # where pythons are installed
 python_path_template = 'c:/python%s/python'
 # which version of libcurl to use, will be downloaded from the internet
