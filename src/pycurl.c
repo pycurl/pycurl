@@ -3791,8 +3791,9 @@ do_curl_setattro(PyObject *o, PyObject *name, PyObject *v)
 static PyObject *
 do_multi_getattro(PyObject *o, PyObject *n)
 {
+    PyObject *v;
     assert_multi_state((CurlMultiObject *)o);
-    PyObject *v = PyObject_GenericGetAttr(o, n);
+    v = PyObject_GenericGetAttr(o, n);
     if( !v && PyErr_ExceptionMatches(PyExc_AttributeError) )
     {
         PyErr_Clear();
@@ -3812,8 +3813,9 @@ do_multi_setattro(PyObject *o, PyObject *n, PyObject *v)
 static PyObject *
 do_share_getattro(PyObject *o, PyObject *n)
 {
+    PyObject *v;
     assert_share_state((CurlShareObject *)o);
-    PyObject *v = PyObject_GenericGetAttr(o, n);
+    v = PyObject_GenericGetAttr(o, n);
     if( !v && PyErr_ExceptionMatches(PyExc_AttributeError) )
     {
         PyErr_Clear();
