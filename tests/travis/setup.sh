@@ -56,7 +56,7 @@ if test -n "$USECURL"; then
   tar zxf "curl-$USECURL.tar.gz"
   (cd "curl-$USECURL" &&
     if test "$USECURL" = 7.19.0; then
-      patch -p1 <"$TRAVIS_BUILD_DIR"/tests/matrix/curl-7.19.0-sslv2-patch-c66b0b32fba-modified.diff
+      patch -p1 <"$TRAVIS_BUILD_DIR"/tests/matrix/curl-7.19.0-sslv2-c66b0b32fba-modified.patch
     fi &&
     ./configure --prefix="$HOME"/i/curl-"$USECURL" &&
     make &&
