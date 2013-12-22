@@ -23,10 +23,17 @@ if test -n "$USEPY"; then
   virtualenv --version
   which virtualenv
   # travis places its virtualenv in /usr/local/bin.
-  # virtualenv 1.7 installed above goes in /usr/bin.
+  # virtualenv 1.7 installed above for python 2.x goes in /usr/bin.
   # /usr/local/bin is earlier in path and takes precedence.
-  # manually invoke the 1.7 version here
-  /usr/bin/virtualenv ~/virtualenv/python$USEPY -p python$USEPY
+  # manually invoke the 1.7 version here.
+  # however, when installed for 2.x our virtualenv 1.7 goes in /usr/local/bin.
+  if test "$USEPY" = 3.1; then
+    virtualenv=/usr/local/bin/virtualenv
+  else
+    virtualenv=/usr/bin/virtualenv
+  fi
+  $virtualenv --version
+  $virtualenv ~/virtualenv/python$USEPY -p python$USEPY
   . ~/virtualenv/python$USEPY/bin/activate
   python -V
   which pip
