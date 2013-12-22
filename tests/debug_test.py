@@ -30,7 +30,7 @@ class DebugTest(unittest.TestCase):
         self.curl.perform()
         
         # Some checks with no particular intent
-        self.check(0, 'About to connect')
+        self.check(0, 'Trying')
         if util.pycurl_version_less_than(7, 24):
             self.check(0, 'connected')
         else:
