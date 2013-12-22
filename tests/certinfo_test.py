@@ -62,4 +62,4 @@ class CertinfoTest(unittest.TestCase):
         for entry in certinfo:
             certinfo_dict[entry[0]] = entry[1]
         assert 'Subject' in certinfo_dict
-        assert 'pycurl test suite' in certinfo_dict['Subject']
+        assert 'PycURL test suite' in certinfo_dict['Subject']
