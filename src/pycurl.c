@@ -1514,6 +1514,23 @@ error:
     return res_obj;
 }
 
+#if defined(WIN32)
+static SOCKET
+dup_winsock(SOCKET sock, struct curl_sockaddr *address)
+{
+    int rv;
+    WSAPROTOCOL_INFO pi;
+
+    rv = WSADuplicateSocket(sock, GetCurrentProcessId(), &pi);
+    if (rv) {
+        return CURL_SOCKET_BAD;
+    }
+
+    /* not sure if WSA_FLAG_OVERLAPPED is needed, but it does not seem to hurt */
+    return WSASocket(address->family, address->socktype, address->protocol, &pi, 0, WSA_FLAG_OVERLAPPED);
+}
+#endif
+
 /* curl_socket_t is just an int on unix/windows (with limitations that
  * are not important here) */
 static curl_socket_t
@@ -1550,7 +1567,12 @@ opensocket_callback(void *clientp, curlsocktype purpose,
         }
         // normal operation:
         if (PyInt_Check(fileno_result)) {
-            ret = dup(PyInt_AsLong(fileno_result));
+            int sockfd = PyInt_AsLong(fileno_result);
+#if defined(WIN32)
+            ret = dup_winsock(sockfd, address);
+#else
+            ret = dup(sockfd);
+#endif
             goto done;
         }
     } else {
