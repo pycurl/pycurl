@@ -1516,7 +1516,7 @@ error:
 
 #if defined(WIN32)
 static SOCKET
-dup_winsock(SOCKET sock, struct curl_sockaddr *address)
+dup_winsock(SOCKET sock, const struct curl_sockaddr *address)
 {
     int rv;
     WSAPROTOCOL_INFO pi;
