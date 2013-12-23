@@ -1,6 +1,10 @@
 master
 ------
 
+        * Default PycURL user agent string is now built at runtime, and will
+          include the user agent string of libcurl loaded at runtime rather
+          than the one present at compile time.
+
         * Added CURL_LOCK_DATA_SSL_SESSION (patch by Tom Pierce).
 
         * Added E_OPERATION_TIMEDOUT (patch by Romuald Brunet).

@@ -212,9 +212,10 @@ static void pycurl_ssl_cleanup(void);
 # define PYCURL_VERSION_STRING PYCURL_VERSION
 #endif
 
-/* Keep some default variables around */
-static const char g_pycurl_useragent [] =
-    "PycURL/" PYCURL_VERSION_STRING " libcurl/" LIBCURL_VERSION;
+#define PYCURL_VERSION_PREFIX "PycURL/" PYCURL_VERSION_STRING
+
+/* Initialized during module init */
+static char *g_pycurl_useragent = NULL;
 
 /* Type objects */
 static PyObject *ErrorObject = NULL;
@@ -1112,6 +1113,7 @@ util_curl_init(CurlObject *self)
     }
 
     /* Set default USERAGENT */
+    assert(g_pycurl_useragent);
     res = curl_easy_setopt(self->handle, CURLOPT_USERAGENT, g_pycurl_useragent);
     if (res != CURLE_OK) {
         return (-1);
@@ -4413,13 +4415,26 @@ insint_m(PyObject *d, char *name, long value)
 }
 
 
+/* Used in Python 3 only, and even then this function seems to never get
+ * called. Python 2 has no module cleanup:
+ * http://stackoverflow.com/questions/20741856/run-a-function-when-a-c-extension-module-is-freed-on-python-2
+ */
+void do_curlmod_free(void *unused) {
+    PyMem_Free(g_pycurl_useragent);
+    g_pycurl_useragent = NULL;
+}
+
 #if PY_MAJOR_VERSION >= 3
 static PyModuleDef curlmodule = {
     PyModuleDef_HEAD_INIT,
-    "pycurl",
-    module_doc,
-    -1,
-    curl_methods, NULL, NULL, NULL, NULL
+    "pycurl",           /* m_name */
+    module_doc,         /* m_doc */
+    -1,                 /* m_size */
+    curl_methods,       /* m_methods */
+    NULL,               /* m_reload */
+    NULL,               /* m_traverse */
+    NULL,               /* m_clear */
+    do_curlmod_free     /* m_free */
 };
 #endif
 
@@ -4441,6 +4456,8 @@ initpycurl(void)
 {
     PyObject *m, *d;
     const curl_version_info_data *vi;
+    const char *libcurl_version;
+    int libcurl_version_len, pycurl_version_len;
 
     /* Initialize the type of the new type objects here; doing it here
      * is required for portability to Windows without requiring C++. */
@@ -4482,8 +4499,23 @@ initpycurl(void)
     assert(curlobject_constants != NULL);
 
     /* Add version strings to the module */
-    insobj2(d, NULL, "version",
-            PyText_FromFormat("PycURL/" PYCURL_VERSION_STRING " %s", curl_version()));
+    libcurl_version = curl_version();
+    libcurl_version_len = strlen(libcurl_version);
+#define PYCURL_VERSION_PREFIX_SIZE sizeof(PYCURL_VERSION_PREFIX)
+    /* PYCURL_VERSION_PREFIX_SIZE includes terminating null which will be
+     * replaced with the space; libcurl_version_len does not include
+     * terminating null. */
+    pycurl_version_len = PYCURL_VERSION_PREFIX_SIZE + libcurl_version_len + 1;
+    g_pycurl_useragent = PyMem_Malloc(pycurl_version_len);
+    assert(g_pycurl_useragent != NULL);
+    memcpy(g_pycurl_useragent, PYCURL_VERSION_PREFIX, PYCURL_VERSION_PREFIX_SIZE);
+    g_pycurl_useragent[PYCURL_VERSION_PREFIX_SIZE-1] = ' ';
+    memcpy(g_pycurl_useragent + PYCURL_VERSION_PREFIX_SIZE,
+        libcurl_version, libcurl_version_len);
+    g_pycurl_useragent[pycurl_version_len - 1] = 0;
+#undef PYCURL_VERSION_PREFIX_SIZE
+    
+    insobj2(d, NULL, "version", PyText_FromString(g_pycurl_useragent));
     insstr(d, "COMPILE_DATE", __DATE__ " " __TIME__);
     insint(d, "COMPILE_PY_VERSION_HEX", PY_VERSION_HEX);
     insint(d, "COMPILE_LIBCURL_VERSION_NUM", LIBCURL_VERSION_NUM);
