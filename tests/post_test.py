@@ -119,6 +119,7 @@ class PostTest(unittest.TestCase):
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
+        self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
         body = sio.getvalue().decode()
         returned_fields = json.loads(body)
         self.assertEqual(expect, returned_fields)
