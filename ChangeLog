@@ -5,9 +5,20 @@ master
           include the user agent string of libcurl loaded at runtime rather
           than the one present at compile time.
 
+        * PycURL will now use WSAduplicateSocket rather than dup on Windows
+          to duplicate sockets obtained from OPENSOCKETFUNCTION.
+          Using dup may have caused crashes, OPENSOCKETFUNCTION should
+          now be usable on Windows.
+
+        * A new script, winbuild.py, was added to build PycURL on Windows
+          against Python 2.6, 2.7, 3.2 and 3.3.
+
         * Added CURL_LOCK_DATA_SSL_SESSION (patch by Tom Pierce).
 
         * Added E_OPERATION_TIMEDOUT (patch by Romuald Brunet).
+
+        * setup.py now handles --help argument and will print PycURL-specific
+          configuration options in addition to distutils help.
 
         * Windows build configuration has been redone:
           PYCURL_USE_LIBCURL_DLL #define is gone, use --use-libcurl-dll
