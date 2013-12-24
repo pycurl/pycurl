@@ -51,7 +51,7 @@ master
           be modified to accept this new argument.
           https://github.com/pycurl/pycurl/pull/18
 
-Version 7.19.0.3 [requires libcurl-7.19.0 or better] - 2013-12-14
+Version 7.19.0.3 [requires libcurl-7.19.0 or better] - 2013-12-24
 -----------------------------------------------------------------
 
 	* Re-release of 7.19.0.2 with minor changes to build Windows packages
