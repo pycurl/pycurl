@@ -157,6 +157,9 @@ For larger changes:
 #. Discuss your proposal on the mailing list.
 #. When consensus is reached, implement it as described above.
 
+Please contribute binary distributions for your system to the
+`downloads repository`_.
+
 License
 -------
 
@@ -179,3 +182,4 @@ License
 .. _urllib: http://docs.python.org/library/urllib.html
 .. _`the repository`: https://github.com/pycurl/pycurl
 .. _`mailing list`: http://cool.haxx.se/mailman/listinfo/curl-and-python
+.. _`downloads repository`: https://github.com/pycurl/downloads
