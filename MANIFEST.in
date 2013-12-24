@@ -22,4 +22,3 @@ include tests/*.py
 include tests/certs/*.crt
 include tests/certs/*.key
 include tests/matrix/*.patch
-include setup_win32_ssl.py
