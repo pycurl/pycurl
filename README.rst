@@ -40,7 +40,7 @@ Overview
 Requirements
 ------------
 
-- Python 2.4 through 2.7, 3.1 through 3.3.
+- Python 2.4 through 2.7 or 3.1 through 3.3.
 - libcurl 7.19.0 or better.
 
 Installation
