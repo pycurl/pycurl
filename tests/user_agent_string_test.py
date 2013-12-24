@@ -24,4 +24,4 @@ class UserAgentStringTest(unittest.TestCase):
         self.curl.perform()
         user_agent = sio.getvalue().decode()
         assert user_agent.startswith('PycURL/')
-        assert 'libcurl/' in user_agent
+        assert 'libcurl/' in user_agent, 'User agent did not include libcurl/: %s' % user_agent
