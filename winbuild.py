@@ -122,7 +122,7 @@ def work():
                 shutil.copy(os.path.join(curl_dir, 'bin', 'libcurl.dll'), 'build/lib.win32-%s' % python_version)
                 with open('doit.bat', 'w') as f:
                     f.write("call \"%s\"\n" % vc_paths[vc_version]['vsvars'])
-                    f.write("%s setup.py %s --curl-dir=%s\n" % (python_path, target, curl_dir))
+                    f.write("%s setup.py %s --curl-dir=%s --use-libcurl-dll\n" % (python_path, target, curl_dir))
                 subprocess.check_call(['doit.bat'])
                 if target == 'bdist':
                     os.rename('dist/pycurl-%s.win32.zip' % pycurl_version, 'dist/pycurl-%s.win32-py%s.zip' % (pycurl_version, python_version))
