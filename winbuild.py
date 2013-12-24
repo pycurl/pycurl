@@ -9,7 +9,7 @@ python_path_template = 'c:/python%s/python'
 # which version of libcurl to use, will be downloaded from the internet
 libcurl_version = '7.34.0'
 # pycurl version to build, we should know this ourselves
-pycurl_version = '7.19.0.2'
+pycurl_version = '7.19.0.3'
 
 import os, os.path, sys, subprocess, shutil, contextlib
 
