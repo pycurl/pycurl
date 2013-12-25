@@ -167,8 +167,13 @@ else:
         include_dirs.append(os.path.join(OPENSSL_DIR, "include"))
     CURL_CONFIG = os.environ.get('PYCURL_CURL_CONFIG', "curl-config")
     CURL_CONFIG = scan_argv("--curl-config=", CURL_CONFIG)
-    p = subprocess.Popen((CURL_CONFIG, '--version'),
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    try:
+        p = subprocess.Popen((CURL_CONFIG, '--version'),
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except OSError:
+        exc = sys.exc_info()[1]
+        msg = 'Could not run curl-config: %s' % str(exc)
+        raise ConfigurationError(msg)
     stdout, stderr = p.communicate()
     if p.wait() != 0:
         msg = "`%s' not found -- please install the libcurl development files or specify --curl-config=/path/to/curl-config" % CURL_CONFIG
