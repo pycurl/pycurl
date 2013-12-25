@@ -77,7 +77,7 @@ def add_libdirs(envvar, sep, fatal=False):
             fail("FATAL: bad directory %s in environment variable %s" % (dir, envvar))
 
 
-if sys.platform == "win32":
+def configure_windows():
     # Windows users have to pass --curl-dir parameter to specify path
     # to libcurl, because there is no curl-config on windows at all.
     curl_dir = scan_argv("--curl-dir=")
@@ -159,7 +159,9 @@ if sys.platform == "win32":
                 self.distribution.metadata.get_version = \
                     types.MethodType(monkey_get_version, self.distribution.metadata)
                 bdist_msi.run(self)
-else:
+
+
+def configure_unix():
     # Find out the rest the hard way
     OPENSSL_DIR = scan_argv("--openssl-dir=")
     if OPENSSL_DIR is not None:
@@ -254,23 +256,32 @@ else:
         extra_link_args.append("-flat_namespace")
 
 
+def configure():
+    if sys.platform == "win32":
+        configure_windows()
+    else:
+        configure_unix()
+
+
 ###############################################################################
 
-ext = Extension(
-    name=PACKAGE,
-    sources=[
-        os.path.join("src", "pycurl.c"),
-    ],
-    include_dirs=include_dirs,
-    define_macros=define_macros,
-    library_dirs=library_dirs,
-    libraries=libraries,
-    runtime_library_dirs=runtime_library_dirs,
-    extra_objects=extra_objects,
-    extra_compile_args=extra_compile_args,
-    extra_link_args=extra_link_args,
-)
-##print ext.__dict__; sys.exit(1)
+def get_extension():
+    ext = Extension(
+        name=PACKAGE,
+        sources=[
+            os.path.join("src", "pycurl.c"),
+        ],
+        include_dirs=include_dirs,
+        define_macros=define_macros,
+        library_dirs=library_dirs,
+        libraries=libraries,
+        runtime_library_dirs=runtime_library_dirs,
+        extra_objects=extra_objects,
+        extra_compile_args=extra_compile_args,
+        extra_link_args=extra_link_args,
+    )
+    ##print(ext.__dict__); sys.exit(1)
+    return ext
 
 
 ###############################################################################
@@ -336,8 +347,6 @@ setup_args = dict(
         'Topic :: Internet :: File Transfer Protocol (FTP)',
         'Topic :: Internet :: WWW/HTTP',
     ],
-    data_files=get_data_files(),
-    ext_modules=[ext],
     packages=[PY_PACKAGE],
     package_dir={ PY_PACKAGE: os.path.join('python', 'curl') },
     long_description="""
@@ -370,7 +379,16 @@ PycURL Unix options:
  --curl-config=/path/to/curl-config  use specified curl-config binary
  --openssl-dir=/path/to/openssl/dir  path to OpenSSL headers and libraries
 ''')
-    
-    for o in ext.extra_objects:
-        assert os.path.isfile(o), o
-    setup(**setup_args)
+        # invoke setup without configuring pycurl because
+        # configuration might fail, and we want to display help anyway
+        setup(**setup_args)
+    else:
+        configure()
+        
+        setup_args['data_files'] = get_data_files()
+        ext = get_extension()
+        setup_args['ext_modules'] = [ext]
+        
+        for o in ext.extra_objects:
+            assert os.path.isfile(o), o
+        setup(**setup_args)
