@@ -78,9 +78,8 @@ def add_libdirs(envvar, sep, fatal=False):
 
 
 if sys.platform == "win32":
-    # Windows users have to configure the curl_dir path parameter to match
-    # their cURL source installation.  The path set here is just an example
-    # and thus unlikely to match your installation.
+    # Windows users have to pass --curl-dir parameter to specify path
+    # to libcurl, because there is no curl-config on windows at all.
     curl_dir = scan_argv("--curl-dir=")
     if curl_dir is None:
         fail("Please specify --curl-dir=/path/to/built/libcurl")
