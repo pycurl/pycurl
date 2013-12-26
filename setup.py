@@ -77,10 +77,9 @@ def add_libdirs(envvar, sep, fatal=False):
             fail("FATAL: bad directory %s in environment variable %s" % (dir, envvar))
 
 
-if sys.platform == "win32":
-    # Windows users have to configure the curl_dir path parameter to match
-    # their cURL source installation.  The path set here is just an example
-    # and thus unlikely to match your installation.
+def configure_windows():
+    # Windows users have to pass --curl-dir parameter to specify path
+    # to libcurl, because there is no curl-config on windows at all.
     curl_dir = scan_argv("--curl-dir=")
     if curl_dir is None:
         fail("Please specify --curl-dir=/path/to/built/libcurl")
@@ -131,44 +130,54 @@ if sys.platform == "win32":
             # connect.microsoft.com/VisualStudio/feedback/details/475896/link-fatal-error-lnk1117-syntax-error-in-option-opt-nowin98/
             extra_link_args.append("/opt:nowin98")  # use small section alignment
 
-        # workaround for distutils/msi version requirement per
-        # epydoc.sourceforge.net/stdlib/distutils.version.StrictVersion-class.html -
-        # only x.y.z version numbers are supported, whereas our versions might be x.y.z.p.
-        # bugs.python.org/issue6040#msg133094
-        from distutils.command.bdist_msi import bdist_msi
-        import inspect
-        import types
-        import re
-        
-        class bdist_msi_version_hack(bdist_msi):
-            """ MSI builder requires version to be in the x.x.x format """
-            def run(self):
-                def monkey_get_version(self):
-                    """ monkey patch replacement for metadata.get_version() that
-                            returns MSI compatible version string for bdist_msi
-                    """
-                    # get filename of the calling function
-                    if inspect.stack()[1][1].endswith('bdist_msi.py'):
-                        # strip revision from version (if any), e.g. 11.0.0-r31546
-                        match = re.match(r'(\d+\.\d+\.\d+)', self.version)
-                        assert match
-                        return match.group(1)
-                    else:
-                        return self.version
+def get_bdist_msi_version_hack():
+    # workaround for distutils/msi version requirement per
+    # epydoc.sourceforge.net/stdlib/distutils.version.StrictVersion-class.html -
+    # only x.y.z version numbers are supported, whereas our versions might be x.y.z.p.
+    # bugs.python.org/issue6040#msg133094
+    from distutils.command.bdist_msi import bdist_msi
+    import inspect
+    import types
+    import re
+    
+    class bdist_msi_version_hack(bdist_msi):
+        """ MSI builder requires version to be in the x.x.x format """
+        def run(self):
+            def monkey_get_version(self):
+                """ monkey patch replacement for metadata.get_version() that
+                        returns MSI compatible version string for bdist_msi
+                """
+                # get filename of the calling function
+                if inspect.stack()[1][1].endswith('bdist_msi.py'):
+                    # strip revision from version (if any), e.g. 11.0.0-r31546
+                    match = re.match(r'(\d+\.\d+\.\d+)', self.version)
+                    assert match
+                    return match.group(1)
+                else:
+                    return self.version
 
-                # monkeypatching get_version() call for DistributionMetadata
-                self.distribution.metadata.get_version = \
-                    types.MethodType(monkey_get_version, self.distribution.metadata)
-                bdist_msi.run(self)
-else:
+            # monkeypatching get_version() call for DistributionMetadata
+            self.distribution.metadata.get_version = \
+                types.MethodType(monkey_get_version, self.distribution.metadata)
+            bdist_msi.run(self)
+    
+    return bdist_msi_version_hack
+
+
+def configure_unix():
     # Find out the rest the hard way
     OPENSSL_DIR = scan_argv("--openssl-dir=")
     if OPENSSL_DIR is not None:
         include_dirs.append(os.path.join(OPENSSL_DIR, "include"))
     CURL_CONFIG = os.environ.get('PYCURL_CURL_CONFIG', "curl-config")
     CURL_CONFIG = scan_argv("--curl-config=", CURL_CONFIG)
-    p = subprocess.Popen((CURL_CONFIG, '--version'),
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    try:
+        p = subprocess.Popen((CURL_CONFIG, '--version'),
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except OSError:
+        exc = sys.exc_info()[1]
+        msg = 'Could not run curl-config: %s' % str(exc)
+        raise ConfigurationError(msg)
     stdout, stderr = p.communicate()
     if p.wait() != 0:
         msg = "`%s' not found -- please install the libcurl development files or specify --curl-config=/path/to/curl-config" % CURL_CONFIG
@@ -250,23 +259,42 @@ else:
         extra_link_args.append("-flat_namespace")
 
 
+def configure():
+    if sys.platform == "win32":
+        configure_windows()
+    else:
+        configure_unix()
+
+
+
+def strip_pycurl_options():
+    if sys.platform == 'win32':
+        options = ['--curl-dir=', '--curl-lib-name=', '--use-libcurl-dll']
+    else:
+        options = ['--openssl-dir', '--curl-config']
+    for option in options:
+        scan_argv(option)
+
+
 ###############################################################################
 
-ext = Extension(
-    name=PACKAGE,
-    sources=[
-        os.path.join("src", "pycurl.c"),
-    ],
-    include_dirs=include_dirs,
-    define_macros=define_macros,
-    library_dirs=library_dirs,
-    libraries=libraries,
-    runtime_library_dirs=runtime_library_dirs,
-    extra_objects=extra_objects,
-    extra_compile_args=extra_compile_args,
-    extra_link_args=extra_link_args,
-)
-##print ext.__dict__; sys.exit(1)
+def get_extension():
+    ext = Extension(
+        name=PACKAGE,
+        sources=[
+            os.path.join("src", "pycurl.c"),
+        ],
+        include_dirs=include_dirs,
+        define_macros=define_macros,
+        library_dirs=library_dirs,
+        libraries=libraries,
+        runtime_library_dirs=runtime_library_dirs,
+        extra_objects=extra_objects,
+        extra_compile_args=extra_compile_args,
+        extra_link_args=extra_link_args,
+    )
+    ##print(ext.__dict__); sys.exit(1)
+    return ext
 
 
 ###############################################################################
@@ -332,8 +360,6 @@ setup_args = dict(
         'Topic :: Internet :: File Transfer Protocol (FTP)',
         'Topic :: Internet :: WWW/HTTP',
     ],
-    data_files=get_data_files(),
-    ext_modules=[ext],
     packages=[PY_PACKAGE],
     package_dir={ PY_PACKAGE: os.path.join('python', 'curl') },
     long_description="""
@@ -341,7 +367,7 @@ This module provides Python bindings for the cURL library.""",
 )
 
 if sys.platform == "win32":
-        setup_args['cmdclass'] = {'bdist_msi': bdist_msi_version_hack}
+    setup_args['cmdclass'] = {'bdist_msi': get_bdist_msi_version_hack()}
 
 ##print distutils.__version__
 if LooseVersion(distutils.__version__) > LooseVersion("1.0.1"):
@@ -349,24 +375,39 @@ if LooseVersion(distutils.__version__) > LooseVersion("1.0.1"):
 if LooseVersion(distutils.__version__) < LooseVersion("1.0.3"):
     setup_args["licence"] = setup_args["license"]
 
-if __name__ == "__main__":
-    if '--help' in sys.argv:
-        # unfortunately this help precedes distutils help
-        if sys.platform == "win32":
-            print('''\
+unix_help = '''\
+PycURL Unix options:
+ --curl-config=/path/to/curl-config  use specified curl-config binary
+ --openssl-dir=/path/to/openssl/dir  path to OpenSSL headers and libraries
+'''
+
+windows_help = '''\
 PycURL Windows options:
  --curl-dir=/path/to/compiled/libcurl  path to libcurl headers and libraries
  --use-libcurl-dll                     link against libcurl DLL, if not given
                                        link against libcurl statically
  --libcurl-lib-name=libcurl_imp.lib    override libcurl import library name
-''')
+'''
+
+if __name__ == "__main__":
+    if '--help' in sys.argv:
+        # unfortunately this help precedes distutils help
+        if sys.platform == "win32":
+            print(windows_help)
         else:
-            print('''\
-PycURL Unix options:
- --curl-config=/path/to/curl-config  use specified curl-config binary
- --openssl-dir=/path/to/openssl/dir  path to OpenSSL headers and libraries
-''')
-    
-    for o in ext.extra_objects:
-        assert os.path.isfile(o), o
-    setup(**setup_args)
+            print(unix_help)
+        # invoke setup without configuring pycurl because
+        # configuration might fail, and we want to display help anyway.
+        # we need to remove our options because distutils complains about them
+        strip_pycurl_options()
+        setup(**setup_args)
+    else:
+        configure()
+        
+        setup_args['data_files'] = get_data_files()
+        ext = get_extension()
+        setup_args['ext_modules'] = [ext]
+        
+        for o in ext.extra_objects:
+            assert os.path.isfile(o), o
+        setup(**setup_args)

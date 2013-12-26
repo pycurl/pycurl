@@ -64,4 +64,4 @@ if test -n "$USECURL"; then
   )
 fi
 
-sudo apt-get install vsftpd
+sudo apt-get install vsftpd realpath
