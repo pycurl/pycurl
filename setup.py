@@ -362,23 +362,27 @@ if LooseVersion(distutils.__version__) > LooseVersion("1.0.1"):
 if LooseVersion(distutils.__version__) < LooseVersion("1.0.3"):
     setup_args["licence"] = setup_args["license"]
 
-if __name__ == "__main__":
-    if '--help' in sys.argv:
-        # unfortunately this help precedes distutils help
-        if sys.platform == "win32":
-            print('''\
+unix_help = '''\
+PycURL Unix options:
+ --curl-config=/path/to/curl-config  use specified curl-config binary
+ --openssl-dir=/path/to/openssl/dir  path to OpenSSL headers and libraries
+'''
+
+windows_help = '''\
 PycURL Windows options:
  --curl-dir=/path/to/compiled/libcurl  path to libcurl headers and libraries
  --use-libcurl-dll                     link against libcurl DLL, if not given
                                        link against libcurl statically
  --libcurl-lib-name=libcurl_imp.lib    override libcurl import library name
-''')
+'''
+
+if __name__ == "__main__":
+    if '--help' in sys.argv:
+        # unfortunately this help precedes distutils help
+        if sys.platform == "win32":
+            print(windows_help)
         else:
-            print('''\
-PycURL Unix options:
- --curl-config=/path/to/curl-config  use specified curl-config binary
- --openssl-dir=/path/to/openssl/dir  path to OpenSSL headers and libraries
-''')
+            print(unix_help)
         # invoke setup without configuring pycurl because
         # configuration might fail, and we want to display help anyway
         setup(**setup_args)
