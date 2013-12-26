@@ -21,6 +21,7 @@ test: build
 	$(PYTHON) -c 'import pycurl; print(pycurl.version)'
 	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONSUFFIX):$$PYTHONPATH \
 	$(NOSETESTS)
+	./tests/ext/test-suite.sh
 
 # (needs GNU binutils)
 strip: build
