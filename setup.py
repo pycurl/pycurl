@@ -263,6 +263,16 @@ def configure():
         configure_unix()
 
 
+
+def strip_pycurl_options():
+    if sys.platform == 'win32':
+        options = ['--curl-dir=', '--curl-lib-name=', '--use-libcurl-dll']
+    else:
+        options = ['--openssl-dir', '--curl-config']
+    for option in options:
+        scan_argv(option)
+
+
 ###############################################################################
 
 def get_extension():
@@ -384,7 +394,9 @@ if __name__ == "__main__":
         else:
             print(unix_help)
         # invoke setup without configuring pycurl because
-        # configuration might fail, and we want to display help anyway
+        # configuration might fail, and we want to display help anyway.
+        # we need to remove our options because distutils complains about them
+        strip_pycurl_options()
         setup(**setup_args)
     else:
         configure()
