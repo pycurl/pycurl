@@ -130,35 +130,38 @@ def configure_windows():
             # connect.microsoft.com/VisualStudio/feedback/details/475896/link-fatal-error-lnk1117-syntax-error-in-option-opt-nowin98/
             extra_link_args.append("/opt:nowin98")  # use small section alignment
 
-        # workaround for distutils/msi version requirement per
-        # epydoc.sourceforge.net/stdlib/distutils.version.StrictVersion-class.html -
-        # only x.y.z version numbers are supported, whereas our versions might be x.y.z.p.
-        # bugs.python.org/issue6040#msg133094
-        from distutils.command.bdist_msi import bdist_msi
-        import inspect
-        import types
-        import re
-        
-        class bdist_msi_version_hack(bdist_msi):
-            """ MSI builder requires version to be in the x.x.x format """
-            def run(self):
-                def monkey_get_version(self):
-                    """ monkey patch replacement for metadata.get_version() that
-                            returns MSI compatible version string for bdist_msi
-                    """
-                    # get filename of the calling function
-                    if inspect.stack()[1][1].endswith('bdist_msi.py'):
-                        # strip revision from version (if any), e.g. 11.0.0-r31546
-                        match = re.match(r'(\d+\.\d+\.\d+)', self.version)
-                        assert match
-                        return match.group(1)
-                    else:
-                        return self.version
+def get_bdist_msi_version_hack():
+    # workaround for distutils/msi version requirement per
+    # epydoc.sourceforge.net/stdlib/distutils.version.StrictVersion-class.html -
+    # only x.y.z version numbers are supported, whereas our versions might be x.y.z.p.
+    # bugs.python.org/issue6040#msg133094
+    from distutils.command.bdist_msi import bdist_msi
+    import inspect
+    import types
+    import re
+    
+    class bdist_msi_version_hack(bdist_msi):
+        """ MSI builder requires version to be in the x.x.x format """
+        def run(self):
+            def monkey_get_version(self):
+                """ monkey patch replacement for metadata.get_version() that
+                        returns MSI compatible version string for bdist_msi
+                """
+                # get filename of the calling function
+                if inspect.stack()[1][1].endswith('bdist_msi.py'):
+                    # strip revision from version (if any), e.g. 11.0.0-r31546
+                    match = re.match(r'(\d+\.\d+\.\d+)', self.version)
+                    assert match
+                    return match.group(1)
+                else:
+                    return self.version
 
-                # monkeypatching get_version() call for DistributionMetadata
-                self.distribution.metadata.get_version = \
-                    types.MethodType(monkey_get_version, self.distribution.metadata)
-                bdist_msi.run(self)
+            # monkeypatching get_version() call for DistributionMetadata
+            self.distribution.metadata.get_version = \
+                types.MethodType(monkey_get_version, self.distribution.metadata)
+            bdist_msi.run(self)
+    
+    return bdist_msi_version_hack
 
 
 def configure_unix():
@@ -364,7 +367,7 @@ This module provides Python bindings for the cURL library.""",
 )
 
 if sys.platform == "win32":
-    setup_args['cmdclass'] = {'bdist_msi': bdist_msi_version_hack}
+    setup_args['cmdclass'] = {'bdist_msi': get_bdist_msi_version_hack()}
 
 ##print distutils.__version__
 if LooseVersion(distutils.__version__) > LooseVersion("1.0.1"):
