@@ -229,6 +229,13 @@ def configure_unix():
     libs = split_quoted(optbuf)
     
     ssl_lib_detected = False
+    if 'PYCURL_SSL_LIBRARY' in os.environ:
+        ssl_lib = os.environ['PYCURL_SSL_LIBRARY']
+        if ssl_lib in ['openssl', 'gnutls', 'nss']:
+            ssl_lib_detected = True
+            define_macros.append(('HAVE_CURL_%s' % ssl_lib.upper(), 1))
+        else:
+            raise ConfigurationError('Invalid value "%s" for PYCURL_SSL_LIBRARY' % ssl_lib)
     ssl_options = {
         '--with-ssl': 'HAVE_CURL_OPENSSL',
         '--with-gnutls': 'HAVE_CURL_GNUTLS',
