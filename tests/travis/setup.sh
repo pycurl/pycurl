@@ -53,12 +53,35 @@ fi
 
 if test -n "$USECURL"; then
   wget "http://curl.haxx.se/download/curl-$USECURL.tar.gz"
+  if test -n "$USESSL"; then
+    sudo apt-get update
+    case "$USESSL" in
+    openssl)
+      sudo apt-get install libssl-dev
+      configure_flags="--with-ssl --without-gnutls --without-nss"
+      ;;
+    gnutls)
+      sudo apt-get install libgnutls-dev
+      configure_flags="--without-ssl --with-gnutls --without-nss"
+      ;;
+    nss)
+      sudo apt-get install libnss3-dev
+      configure_flags="--without-ssl --without-gnutls --with-nss"
+      ;;
+    *)
+      echo "Bogus USESSL=$USESSL" 1>&2
+      exit 10
+      ;;
+    esac
+  else
+    configure_flags=
+  fi
   tar zxf "curl-$USECURL.tar.gz"
   (cd "curl-$USECURL" &&
     if test "$USECURL" = 7.19.0; then
       patch -p1 <"$TRAVIS_BUILD_DIR"/tests/matrix/curl-7.19.0-sslv2-c66b0b32fba-modified.patch
     fi &&
-    ./configure --prefix="$HOME"/i/curl-"$USECURL" &&
+    ./configure --prefix="$HOME"/i/curl-"$USECURL" $configure_flags &&
     make &&
     make install
   )
