@@ -142,10 +142,12 @@ typedef int Py_ssize_t;
    "libcurl was compiled with SSL support, but configure could not determine which " \
    "library was used; thus no SSL crypto locking callbacks will be set, which may " \
    "cause random crashes on SSL requests"
-#  define COMPILE_SSL_LIB "other"
+   /* since we have no crypto callbacks for other ssl backends,
+    * no reason to require users match those */
+#  define COMPILE_SSL_LIB "none/other"
 # endif /* HAVE_CURL_OPENSSL || HAVE_CURL_GNUTLS || HAVE_CURL_NSS */
 #else
-# define COMPILE_SSL_LIB "none"
+# define COMPILE_SSL_LIB "none/other"
 #endif /* HAVE_CURL_SSL */
 
 #if defined(PYCURL_NEED_SSL_TSL)
@@ -4483,7 +4485,7 @@ initpycurl(void)
     
     /* Our compiled crypto locks should correspond to runtime ssl library. */
     if (vi->ssl_version == NULL) {
-        runtime_ssl_lib = "none";
+        runtime_ssl_lib = "none/other";
     } else if (!strncmp(vi->ssl_version, "OpenSSL/", 8)) {
         runtime_ssl_lib = "openssl";
     } else if (!strncmp(vi->ssl_version, "GnuTLS/", 7)) {
@@ -4491,7 +4493,7 @@ initpycurl(void)
     } else if (!strncmp(vi->ssl_version, "NSS/", 4)) {
         runtime_ssl_lib = "nss";
     } else {
-        runtime_ssl_lib = "other";
+        runtime_ssl_lib = "none/other";
     }
     if (strcmp(runtime_ssl_lib, COMPILE_SSL_LIB)) {
         PyErr_Format(PyExc_ImportError, "pycurl: libcurl link-time ssl backend (%s) is different from compile-time ssl backend (%s)", runtime_ssl_lib, COMPILE_SSL_LIB);
