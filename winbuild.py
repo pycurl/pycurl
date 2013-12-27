@@ -12,6 +12,10 @@ vc_paths = {
     # where msvc 10 is installed, for python 3.3
     'vc10': 'c:/program files/microsoft visual studio 10.0',
 }
+# whether to link libcurl against zlib
+use_zlib = False
+# which version of zlib to use, will be downloaded from internet
+zlib_version = '1.2.8'
 # which version of libcurl to use, will be downloaded from the internet
 libcurl_version = '7.34.0'
 # pycurl version to build, we should know this ourselves
@@ -79,26 +83,51 @@ def step(step_fn, *args):
     with open(state_file_path, 'w') as f:
         pass
 
+def untar(basename):
+    if os.path.exists(basename):
+        shutil.rmtree(basename)
+    subprocess.check_call([tar_path, 'xf', '%s.tar.gz' % basename])
+
+def rename_for_vc(basename, vc_version):
+    suffixed_dir = '%s-%s' % (basename, vc_version)
+    if os.path.exists(suffixed_dir):
+        shutil.rmtree(suffixed_dir)
+    os.rename(basename, suffixed_dir)
+    return suffixed_dir
+
 def work():
     os.environ['PATH'] += ";%s" % git_bin_path
     if not os.path.exists(archives_path):
         os.makedirs(archives_path)
     with in_dir(archives_path):
+        def build_zlib(vc_version):
+            fetch('http://downloads.sourceforge.net/project/libpng/zlib/%s/zlib-%s.tar.gz' % (zlib_version, zlib_version))
+            untar('zlib-%s' % zlib_version)
+            zlib_dir = rename_for_vc('zlib-%s' % zlib_version, vc_version)
+            with in_dir(zlib_dir):
+                with open('doit.bat', 'w') as f:
+                    f.write("call \"%s\"\n" % vc_paths[vc_version]['vsvars'])
+                    f.write("nmake /f win32/Makefile.msc\n")
+                subprocess.check_call(['doit.bat'])
+        
         def build_curl(vc_version):
             fetch('http://curl.haxx.se/download/curl-%s.tar.gz' % libcurl_version)
-            if os.path.exists('curl-%s' % libcurl_version):
-                shutil.rmtree('curl-%s' % libcurl_version)
-            subprocess.check_call([tar_path, 'xf', 'curl-%s.tar.gz' % libcurl_version])
-            curl_dir = 'curl-%s-%s' % (libcurl_version, vc_version)
-            if os.path.exists(curl_dir):
-                shutil.rmtree(curl_dir)
-            os.rename('curl-%s' % libcurl_version, curl_dir)
+            untar('curl-%s' % libcurl_version)
+            curl_dir = rename_for_vc('curl-%s' % libcurl_version, vc_version)
             with in_dir(os.path.join(curl_dir, 'winbuild')):
                 with open('doit.bat', 'w') as f:
                     f.write("call \"%s\"\n" % vc_paths[vc_version]['vsvars'])
+                    f.write("set include=%%include%%;%s\n" % os.path.join(archives_path, 'zlib-%s-%s' % (zlib_version, vc_version)))
+                    f.write("set lib=%%lib%%;%s\n" % os.path.join(archives_path, 'zlib-%s-%s' % (zlib_version, vc_version)))
+                    if use_zlib:
+                        extra_options = ' WITH_ZLIB=dll'
+                    else:
+                        extra_options = ''
                     f.write("nmake /f Makefile.vc mode=dll ENABLE_IDN=no\n")
                 subprocess.check_call(['doit.bat'])
         for vc_version in vc_versions:
+            if use_zlib:
+                step(build_zlib, vc_version)
             step(build_curl, vc_version)
         
         def prepare_pycurl():
@@ -114,7 +143,10 @@ def work():
             vc_version = python_vc_versions[python_version]
             
             with in_dir(os.path.join('pycurl-%s' % pycurl_version)):
-                libcurl_build_name = 'libcurl-vc-x86-release-dll-ipv6-sspi-spnego-winssl'
+                if use_zlib:
+                    libcurl_build_name = 'libcurl-vc-x86-release-dll-zlib-dll-ipv6-sspi-spnego-winssl'
+                else:
+                    libcurl_build_name = 'libcurl-vc-x86-release-dll-ipv6-sspi-spnego-winssl'
                 curl_dir = '../curl-%s-%s/builds/%s' % (libcurl_version, vc_version, libcurl_build_name)
                 if not os.path.exists('build/lib.win32-%s' % python_version):
                     # exists for building additional targets for the same python version
