@@ -277,9 +277,12 @@ def configure_unix():
             raise ConfigurationError(msg)
         for feature in split_quoted(stdout.decode()):
             if feature == 'SSL':
-                # SSL feature does not mean openssl is used!
-                # Could be any ssl library.
+                # this means any ssl library, not just openssl
                 define_macros.append(('HAVE_CURL_SSL', 1))
+    else:
+        # if we are configuring for a particular ssl library,
+        # we can assume that ssl is being used
+        define_macros.append(('HAVE_CURL_SSL', 1))
     if not libraries:
         libraries.append("curl")
     # Add extra compile flag for MacOS X
