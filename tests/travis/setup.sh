@@ -56,12 +56,15 @@ if test -n "$USECURL"; then
   if test -n "$USESSL"; then
     case "$USESSL" in
     openssl)
+      sudo apt-get install libssl-dev
       configure_flags="--with-ssl --without-gnutls --without-nss"
       ;;
     gnutls)
+      sudo apt-get install libgnutls-dev
       configure_flags="--without-ssl --with-gnutls --without-nss"
       ;;
     nss)
+      sudo apt-get install libnss3-dev
       configure_flags="--without-ssl --without-gnutls --with-nss"
       ;;
     *)
