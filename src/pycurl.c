@@ -4470,7 +4470,7 @@ initpycurl(void)
         PYCURL_MODINIT_RETURN_NULL;
     }
     if (vi->version_num < LIBCURL_VERSION_NUM) {
-        PyErr_SetString(PyExc_ImportError, "pycurl: libcurl link-time version is older than compile-time version");
+        PyErr_Format(PyExc_ImportError, "pycurl: libcurl link-time version (%s) is older than compile-time version (%s)", vi->version, LIBCURL_VERSION);
         PYCURL_MODINIT_RETURN_NULL;
     }
 
