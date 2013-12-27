@@ -30,6 +30,41 @@ applies only if there is more than one version of libcurl installed,
 e.g. one in /usr/lib and one in /usr/local/lib.
 
 
+easy_install / pip
+----------------
+
+    easy_install pycurl
+    pip install pycurl
+
+If you need to specify an alternate curl-config, it can be done via an
+environment variable:
+
+    export PYCURL_CURL_CONFIG=/usr/local/bin/curl-config
+    easy_install pycurl
+
+The same applies to the SSL backend, if you need to specify it (see the SSL
+section below):
+
+    export PYCURL_SSL_LIBRARY=openssl
+    easy_install pycurl
+
+
+SSL
+---
+
+PycURL has locks around crypto functions. In order to compile correct locking
+code, it has to know which SSL library is going to be used by libcurl at
+runtime. setup.py will attempt to automatically detect the SSL library that
+libcurl uses, but this does not always work. In the cases when setup.py cannot
+figure out the SSL library, it must be provided via --with-ssl/--with-gnutls/
+--with-nss arguments, just like libcurl's configure script uses, or via
+PYCURL_SSL_LIBRARY=openssl|gnutls|nss environment variable.
+
+Please note the difference in spelling that concerns OpenSSL: the command-line
+argument is --with-ssl, to match libcurl, but the environment variable value is
+"openssl".
+
+
 Windows
 -------
 

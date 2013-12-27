@@ -1,6 +1,15 @@
 master
 ------
 
+        * PycURL now requires that compile time SSL backend used by libcurl
+          is the same as the one used at runtime. setup.py supports
+          --with-ssl, --with-gnutls and --with-nss options like libcurl does,
+          to specify which backend libcurl uses. On some systems PycURL can
+          automatically figure out libcurl's backend.
+          If the backend is not one for which PycURL provides crypto locks
+          (i.e., any of the other backends supported by libcurl),
+          no runtime SSL backend check is performed.
+
         * Default PycURL user agent string is now built at runtime, and will
           include the user agent string of libcurl loaded at runtime rather
           than the one present at compile time.
