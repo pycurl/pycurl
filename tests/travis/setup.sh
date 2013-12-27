@@ -54,6 +54,7 @@ fi
 if test -n "$USECURL"; then
   wget "http://curl.haxx.se/download/curl-$USECURL.tar.gz"
   if test -n "$USESSL"; then
+    sudo apt-get update
     case "$USESSL" in
     openssl)
       sudo apt-get install libssl-dev
