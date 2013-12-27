@@ -88,6 +88,9 @@ if test -n "$USECURL"; then
     make &&
     make install
   )
+  "$HOME"/i/curl-"$USECURL"/bin/curl -V
+else
+  curl -V
 fi
 
 sudo apt-get install vsftpd realpath
