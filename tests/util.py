@@ -63,6 +63,22 @@ def min_libcurl(major, minor, patch):
     
     return decorator
 
+def only_ssl(fn):
+    import nose.plugins.skip
+    import pycurl
+    
+    @functools.wraps(fn)
+    def decorated(*args, **kwargs):
+        # easier to check that pycurl supports https, although
+        # theoretically it is not the same test.
+        # pycurl.version_info()[8] is a tuple of protocols supported by libcurl
+        if 'https' not in pycurl.version_info()[8]:
+            raise nose.plugins.skip.SkipTest('libcurl does not support ssl')
+        
+        return fn(*args, **kwargs)
+    
+    return decorated
+
 try:
     create_connection = socket.create_connection
 except AttributeError:

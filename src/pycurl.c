@@ -126,6 +126,7 @@ typedef int Py_ssize_t;
 #   define PYCURL_NEED_SSL_TSL
 #   define PYCURL_NEED_OPENSSL_TSL
 #   include <openssl/crypto.h>
+#   define COMPILE_SSL_LIB "openssl"
 # elif defined(HAVE_CURL_GNUTLS)
 #   include <gnutls/gnutls.h>
 #   if GNUTLS_VERSION_NUMBER <= 0x020b00
@@ -133,12 +134,20 @@ typedef int Py_ssize_t;
 #     define PYCURL_NEED_GNUTLS_TSL
 #     include <gcrypt.h>
 #   endif
-# elif !defined(HAVE_CURL_NSS)
+#   define COMPILE_SSL_LIB "gnutls"
+# elif defined(HAVE_CURL_NSS)
+#   define COMPILE_SSL_LIB "nss"
+# else
 #  warning \
    "libcurl was compiled with SSL support, but configure could not determine which " \
    "library was used; thus no SSL crypto locking callbacks will be set, which may " \
    "cause random crashes on SSL requests"
+   /* since we have no crypto callbacks for other ssl backends,
+    * no reason to require users match those */
+#  define COMPILE_SSL_LIB "none/other"
 # endif /* HAVE_CURL_OPENSSL || HAVE_CURL_GNUTLS || HAVE_CURL_NSS */
+#else
+# define COMPILE_SSL_LIB "none/other"
 #endif /* HAVE_CURL_SSL */
 
 #if defined(PYCURL_NEED_SSL_TSL)
@@ -4459,7 +4468,7 @@ initpycurl(void)
 {
     PyObject *m, *d;
     const curl_version_info_data *vi;
-    const char *libcurl_version;
+    const char *libcurl_version, *runtime_ssl_lib;
     int libcurl_version_len, pycurl_version_len;
 
     /* Check the version, as this has caused nasty problems in
@@ -4471,6 +4480,23 @@ initpycurl(void)
     }
     if (vi->version_num < LIBCURL_VERSION_NUM) {
         PyErr_Format(PyExc_ImportError, "pycurl: libcurl link-time version (%s) is older than compile-time version (%s)", vi->version, LIBCURL_VERSION);
+        PYCURL_MODINIT_RETURN_NULL;
+    }
+    
+    /* Our compiled crypto locks should correspond to runtime ssl library. */
+    if (vi->ssl_version == NULL) {
+        runtime_ssl_lib = "none/other";
+    } else if (!strncmp(vi->ssl_version, "OpenSSL/", 8)) {
+        runtime_ssl_lib = "openssl";
+    } else if (!strncmp(vi->ssl_version, "GnuTLS/", 7)) {
+        runtime_ssl_lib = "gnutls";
+    } else if (!strncmp(vi->ssl_version, "NSS/", 4)) {
+        runtime_ssl_lib = "nss";
+    } else {
+        runtime_ssl_lib = "none/other";
+    }
+    if (strcmp(runtime_ssl_lib, COMPILE_SSL_LIB)) {
+        PyErr_Format(PyExc_ImportError, "pycurl: libcurl link-time ssl backend (%s) is different from compile-time ssl backend (%s)", runtime_ssl_lib, COMPILE_SSL_LIB);
         PYCURL_MODINIT_RETURN_NULL;
     }
 

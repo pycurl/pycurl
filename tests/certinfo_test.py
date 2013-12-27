@@ -25,6 +25,7 @@ class CertinfoTest(unittest.TestCase):
     
     # CURLOPT_CERTINFO was introduced in libcurl-7.19.1
     @util.min_libcurl(7, 19, 1)
+    @util.only_ssl
     def test_request_without_certinfo(self):
         self.curl.setopt(pycurl.URL, 'https://localhost:8383/success')
         sio = util.BytesIO()
@@ -39,6 +40,7 @@ class CertinfoTest(unittest.TestCase):
     
     # CURLOPT_CERTINFO was introduced in libcurl-7.19.1
     @util.min_libcurl(7, 19, 1)
+    @util.only_ssl
     def test_request_with_certinfo(self):
         # CURLOPT_CERTINFO only works with OpenSSL
         if 'openssl' not in pycurl.version.lower():

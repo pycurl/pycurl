@@ -26,6 +26,10 @@ matrix:
       env:
         - USECURL=7.34.0
         - USESSL=nss
+    - python: 2.7
+      env:
+        - USECURL=7.34.0
+        - USESSL=none
 install: >
   ./tests/travis/setup.sh
 before_script: >

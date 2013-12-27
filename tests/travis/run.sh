@@ -27,7 +27,12 @@ if test -n "$USECURL"; then
 fi
 
 if test -n "$USESSL"; then
-  export PYCURL_SSL_LIBRARY="$USESSL"
+  if test "$USESSL" != none; then
+    export PYCURL_SSL_LIBRARY="$USESSL"
+  fi
+else
+  # default for ubuntu 12 which is what travis currently uses is openssl
+  export PYCURL_SSL_LIBRARY=openssl
 fi
 
 export VSFTPD_PATH=vsftpd
