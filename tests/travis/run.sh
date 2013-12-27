@@ -26,7 +26,7 @@ if test -n "$USECURL"; then
   export LD_LIBRARY_PATH="$HOME"/i/curl-"$USECURL"/lib
 fi
 
-if test -n "$USESSL"; then
+if test -n "$USESSL" && test "$USESSL" != none; then
   export PYCURL_SSL_LIBRARY="$USESSL"
 fi
 

@@ -68,6 +68,9 @@ if test -n "$USECURL"; then
       sudo apt-get install libnss3-dev
       configure_flags="--without-ssl --without-gnutls --with-nss"
       ;;
+    none)
+      configure_flags="--without-ssl --without-gnutls --without-nss"
+      ;;
     *)
       echo "Bogus USESSL=$USESSL" 1>&2
       exit 10
