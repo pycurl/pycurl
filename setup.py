@@ -400,6 +400,9 @@ unix_help = '''\
 PycURL Unix options:
  --curl-config=/path/to/curl-config  use specified curl-config binary
  --openssl-dir=/path/to/openssl/dir  path to OpenSSL headers and libraries
+ --with-ssl                          libcurl is linked against OpenSSL
+ --with-gnutls                       libcurl is linked against GnuTLS
+ --with-nss                          libcurl is linked against NSS
 '''
 
 windows_help = '''\
