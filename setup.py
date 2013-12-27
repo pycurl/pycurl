@@ -227,31 +227,59 @@ def configure_unix():
             msg += ":\n" + errtext
         raise ConfigurationError(msg)
     libs = split_quoted(optbuf)
+    
+    ssl_lib_detected = False
+    if 'PYCURL_SSL_LIBRARY' in os.environ:
+        ssl_lib = os.environ['PYCURL_SSL_LIBRARY']
+        if ssl_lib in ['openssl', 'gnutls', 'nss']:
+            ssl_lib_detected = True
+            define_macros.append(('HAVE_CURL_%s' % ssl_lib.upper(), 1))
+        else:
+            raise ConfigurationError('Invalid value "%s" for PYCURL_SSL_LIBRARY' % ssl_lib)
+    ssl_options = {
+        '--with-ssl': 'HAVE_CURL_OPENSSL',
+        '--with-gnutls': 'HAVE_CURL_GNUTLS',
+        '--with-nss': 'HAVE_CURL_NSS',
+    }
+    for option in ssl_options:
+        if scan_argv(option) is not None:
+            for other_option in ssl_options:
+                if option != other_option:
+                    if scan_argv(other_option) is not None:
+                        raise ConfigurationError('Cannot give both %s and %s' % (option, other_option))
+            ssl_lib_detected = True
+            define_macros.append((ssl_options[option], 1))
 
     for arg in libs:
         if arg[:2] == "-l":
             libraries.append(arg[2:])
-            if arg[2:] == 'ssl':
+            if not ssl_lib_detected and arg[2:] == 'ssl':
                 define_macros.append(('HAVE_CURL_OPENSSL', 1))
-            if arg[2:] == 'gnutls':
+                ssl_lib_detected = True
+            if not ssl_lib_detected and arg[2:] == 'gnutls':
                 define_macros.append(('HAVE_CURL_GNUTLS', 1))
-            if arg[2:] == 'ssl3':
+                ssl_lib_detected = True
+            if not ssl_lib_detected and arg[2:] == 'ssl3':
                 define_macros.append(('HAVE_CURL_NSS', 1))
+                ssl_lib_detected = True
         elif arg[:2] == "-L":
             library_dirs.append(arg[2:])
         else:
             extra_link_args.append(arg)
-    p = subprocess.Popen((CURL_CONFIG, '--features'),
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    if p.wait() != 0:
-        msg = "Problem running `%s' --features" % CURL_CONFIG
-        if stderr:
-            msg += ":\n" + stderr.decode()
-        raise ConfigurationError(msg)
-    for feature in split_quoted(stdout.decode()):
-        if feature == 'SSL':
-            define_macros.append(('HAVE_CURL_SSL', 1))
+    if not ssl_lib_detected:
+        p = subprocess.Popen((CURL_CONFIG, '--features'),
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+        if p.wait() != 0:
+            msg = "Problem running `%s' --features" % CURL_CONFIG
+            if stderr:
+                msg += ":\n" + stderr.decode()
+            raise ConfigurationError(msg)
+        for feature in split_quoted(stdout.decode()):
+            if feature == 'SSL':
+                # SSL feature does not mean openssl is used!
+                # Could be any ssl library.
+                define_macros.append(('HAVE_CURL_SSL', 1))
     if not libraries:
         libraries.append("curl")
     # Add extra compile flag for MacOS X
@@ -379,6 +407,9 @@ unix_help = '''\
 PycURL Unix options:
  --curl-config=/path/to/curl-config  use specified curl-config binary
  --openssl-dir=/path/to/openssl/dir  path to OpenSSL headers and libraries
+ --with-ssl                          libcurl is linked against OpenSSL
+ --with-gnutls                       libcurl is linked against GnuTLS
+ --with-nss                          libcurl is linked against NSS
 '''
 
 windows_help = '''\
