@@ -4441,8 +4441,10 @@ static PyModuleDef curlmodule = {
 
 
 #if PY_MAJOR_VERSION >= 3
+#define PYCURL_MODINIT_RETURN_NULL return NULL
 PyMODINIT_FUNC PyInit_pycurl(void)
 #else
+#define PYCURL_MODINIT_RETURN_NULL return
 /* Initialization function for the module */
 #if defined(PyMODINIT_FUNC)
 PyMODINIT_FUNC
@@ -4459,6 +4461,18 @@ initpycurl(void)
     const curl_version_info_data *vi;
     const char *libcurl_version;
     int libcurl_version_len, pycurl_version_len;
+
+    /* Check the version, as this has caused nasty problems in
+     * some cases. */
+    vi = curl_version_info(CURLVERSION_NOW);
+    if (vi == NULL) {
+        PyErr_SetString(PyExc_ImportError, "pycurl: curl_version_info() failed");
+        PYCURL_MODINIT_RETURN_NULL;
+    }
+    if (vi->version_num < LIBCURL_VERSION_NUM) {
+        PyErr_Format(PyExc_ImportError, "pycurl: libcurl link-time version (%s) is older than compile-time version (%s)", vi->version, LIBCURL_VERSION);
+        PYCURL_MODINIT_RETURN_NULL;
+    }
 
     /* Initialize the type of the new type objects here; doing it here
      * is required for portability to Windows without requiring C++. */
@@ -5007,18 +5021,6 @@ initpycurl(void)
     insint_s(d, "LOCK_DATA_COOKIE", CURL_LOCK_DATA_COOKIE);
     insint_s(d, "LOCK_DATA_DNS", CURL_LOCK_DATA_DNS);
     insint_s(d, "LOCK_DATA_SSL_SESSION", CURL_LOCK_DATA_SSL_SESSION);
-
-    /* Check the version, as this has caused nasty problems in
-     * some cases. */
-    vi = curl_version_info(CURLVERSION_NOW);
-    if (vi == NULL) {
-        Py_FatalError("pycurl: curl_version_info() failed");
-        assert(0);
-    }
-    if (vi->version_num < LIBCURL_VERSION_NUM) {
-        Py_FatalError("pycurl: libcurl link-time version is older than compile-time version");
-        assert(0);
-    }
 
     /* Initialize callback locks if ssl is enabled */
 #if defined(PYCURL_NEED_SSL_TSL)
