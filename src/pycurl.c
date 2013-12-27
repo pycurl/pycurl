@@ -4441,8 +4441,10 @@ static PyModuleDef curlmodule = {
 
 
 #if PY_MAJOR_VERSION >= 3
+#define PYCURL_MODINIT_RETURN_NULL return NULL
 PyMODINIT_FUNC PyInit_pycurl(void)
 #else
+#define PYCURL_MODINIT_RETURN_NULL return
 /* Initialization function for the module */
 #if defined(PyMODINIT_FUNC)
 PyMODINIT_FUNC
@@ -4464,12 +4466,12 @@ initpycurl(void)
      * some cases. */
     vi = curl_version_info(CURLVERSION_NOW);
     if (vi == NULL) {
-        Py_FatalError("pycurl: curl_version_info() failed");
-        assert(0);
+        PyErr_SetString(PyExc_ImportError, "pycurl: curl_version_info() failed");
+        PYCURL_MODINIT_RETURN_NULL;
     }
     if (vi->version_num < LIBCURL_VERSION_NUM) {
-        Py_FatalError("pycurl: libcurl link-time version is older than compile-time version");
-        assert(0);
+        PyErr_SetString(PyExc_ImportError, "pycurl: libcurl link-time version is older than compile-time version");
+        PYCURL_MODINIT_RETURN_NULL;
     }
 
     /* Initialize the type of the new type objects here; doing it here
