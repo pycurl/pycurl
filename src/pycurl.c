@@ -4460,6 +4460,18 @@ initpycurl(void)
     const char *libcurl_version;
     int libcurl_version_len, pycurl_version_len;
 
+    /* Check the version, as this has caused nasty problems in
+     * some cases. */
+    vi = curl_version_info(CURLVERSION_NOW);
+    if (vi == NULL) {
+        Py_FatalError("pycurl: curl_version_info() failed");
+        assert(0);
+    }
+    if (vi->version_num < LIBCURL_VERSION_NUM) {
+        Py_FatalError("pycurl: libcurl link-time version is older than compile-time version");
+        assert(0);
+    }
+
     /* Initialize the type of the new type objects here; doing it here
      * is required for portability to Windows without requiring C++. */
     p_Curl_Type = &Curl_Type;
@@ -5007,18 +5019,6 @@ initpycurl(void)
     insint_s(d, "LOCK_DATA_COOKIE", CURL_LOCK_DATA_COOKIE);
     insint_s(d, "LOCK_DATA_DNS", CURL_LOCK_DATA_DNS);
     insint_s(d, "LOCK_DATA_SSL_SESSION", CURL_LOCK_DATA_SSL_SESSION);
-
-    /* Check the version, as this has caused nasty problems in
-     * some cases. */
-    vi = curl_version_info(CURLVERSION_NOW);
-    if (vi == NULL) {
-        Py_FatalError("pycurl: curl_version_info() failed");
-        assert(0);
-    }
-    if (vi->version_num < LIBCURL_VERSION_NUM) {
-        Py_FatalError("pycurl: libcurl link-time version is older than compile-time version");
-        assert(0);
-    }
 
     /* Initialize callback locks if ssl is enabled */
 #if defined(PYCURL_NEED_SSL_TSL)
