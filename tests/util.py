@@ -13,12 +13,29 @@ py3 = sys.version_info[0] == 3
 # python 2/3 compatibility
 if py3:
     from io import StringIO, BytesIO
+    
+    # borrowed from six
+    def b(s):
+        '''Byte literal'''
+        return s.encode("latin-1")
+    def u(s):
+        '''Text literal'''
+        return s
 else:
     try:
         from cStringIO import StringIO
     except ImportError:
         from StringIO import StringIO
     BytesIO = StringIO
+    
+    # borrowed from six
+    def b(s):
+        '''Byte literal'''
+        return s
+    # Workaround for standalone backslash
+    def u(s):
+        '''Text literal'''
+        return unicode(s.replace(r'\\', r'\\\\'), "unicode_escape")
 
 def version_less_than_spec(version_tuple, spec_tuple):
     # spec_tuple may have 2 elements, expect version_tuple to have 3 elements
