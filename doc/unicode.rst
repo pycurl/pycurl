@@ -1,12 +1,18 @@
 Unicode
 =======
 
+Python 2.x
+----------
+
 Under Python 2, (binary) string and Unicode types are interchangeable.
 PycURL will pass whatever strings it is given verbatim to libcurl.
 When dealing with Unicode data, this typically means things like
 HTTP request bodies should be encoded to utf-8 before passing them to PycURL.
 Similarly it is on the application to decode HTTP response bodies, if
 they are expected to contain non-ASCII characters.
+
+Python 3.x (from PycURL 7.19.3 onward)
+--------------------------------------
 
 Under Python 3, the rules are as follows:
 
@@ -40,3 +46,25 @@ any file objects that PycURL is meant to interact with via CURLOPT_READDATA,
 CURLOPT_WRITEDATA, CURLOPT_WRITEHEADER, CURLOPT_READFUNCTION,
 CURLOPT_WRITEFUNCTION or CURLOPT_HEADERFUNCTION must be opened in binary
 mode ("b" flag to open() call).
+
+Python 3.x before PycURL 7.19.3
+-------------------------------
+
+PycURL did not have official Python 3 support prior to PycURL 7.19.3.
+There were two patches on SourceForge (original_, revised_)
+adding Python 3 support, but they did not handle Unicode strings correctly.
+Instead of using Python encoding functionality, these patches used
+C standard library unicode to multibyte conversion functions, and thus
+they can have the same behavior as Python encoding code or behave
+entirely differently.
+
+Python 3 support as implemented in PycURL 7.19.3 and documented here
+does not, as mentioned, actually perform any encoding other than to convert
+from Unicode strings containing ASCII-only bytes to ASCII byte strings.
+
+Linux distributions that offered Python 3 packages of PycURL prior to 7.19.3
+used SourceForge patches and may behave in ways contradictory to what is
+described in this document.
+
+.. _original: http://sourceforge.net/p/pycurl/patches/5/
+.. _revised: http://sourceforge.net/p/pycurl/patches/12/
