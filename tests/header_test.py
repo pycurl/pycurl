@@ -21,16 +21,16 @@ class HeaderTest(unittest.TestCase):
         self.check('x-test-header: ascii', 'ascii')
     
     def test_ascii_unicode_header(self):
-        self.check(u'x-test-header: ascii', 'ascii')
+        self.check(util.u('x-test-header: ascii'), 'ascii')
     
     def test_unicode_string_header(self):
         self.check('x-test-header: Москва', 'Москва')
     
     def test_unicode_unicode_header(self):
-        self.check(u'x-test-header: Москва', u'Москва')
+        self.check(util.u('x-test-header: Москва'), util.u('Москва'))
     
     def test_encoded_unicode_header(self):
-        self.check(u'x-test-header: Москва'.encode('utf-8'), u'Москва')
+        self.check(util.u('x-test-header: Москва').encode('utf-8'), util.u('Москва'))
     
     def check(self, send, expected):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/header?h=x-test-header')
