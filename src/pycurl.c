@@ -403,6 +403,19 @@ static char *PyString_AsString_NoNUL(PyObject *obj)
 #endif
 
 
+/* Returns true if the object is of a type that can be given to
+ * curl_easy_setopt and such - either a string or a bytestring
+ */
+#if PY_MAJOR_VERSION >= 3
+static int PyText_Check(PyObject *o) {
+    return PyUnicode_Check(o) || PyBytes_Check(o);
+}
+#else
+static int PyText_Check(PyObject *o) {
+    return PyString_Check(o);
+}
+#endif
+
 /* Convert a curl slist (a list of strings) to a Python list.
  * In case of error return NULL with an exception set.
  */
@@ -2121,11 +2134,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
     /* Handle the case of string arguments */
 
-#if PY_MAJOR_VERSION >= 3
-    if (PyUnicode_Check(obj)) {
-#else
-    if (PyString_Check(obj)) {
-#endif
+    if (PyText_Check(obj)) {
         char *str = NULL;
         Py_ssize_t len = -1;
 
@@ -2403,11 +2412,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                     PyErr_SetString(PyExc_TypeError, "tuple must contain string as first element");
                     return NULL;
                 }
-#if PY_MAJOR_VERSION >= 3
-                if (PyUnicode_Check(PyTuple_GET_ITEM(listitem, 1))) {
-#else
-                if (PyString_Check(PyTuple_GET_ITEM(listitem, 1))) {
-#endif
+                if (PyText_Check(PyTuple_GET_ITEM(listitem, 1))) {
                     /* Handle strings as second argument for backwards compatibility */
 
                     if (PyText_AsStringAndSize(PyTuple_GET_ITEM(listitem, 1), &cstr, &clen, cencoded_obj)) {
@@ -2474,11 +2479,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                             Py_XDECREF(ref_params);
                             return NULL;
                         }
-#if PY_MAJOR_VERSION >= 3
-                        if (!PyUnicode_Check(PyTuple_GET_ITEM(t, j+1))) {
-#else
-                        if (!PyString_Check(PyTuple_GET_ITEM(t, j+1))) {
-#endif
+                        if (!PyText_Check(PyTuple_GET_ITEM(t, j+1))) {
                             PyErr_SetString(PyExc_TypeError, "value must be string");
                             PyMem_Free(forms);
                             curl_formfree(post);
@@ -2596,11 +2597,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             char *str;
             PyObject *sencoded_obj;
 
-#if PY_MAJOR_VERSION >= 3
-            if (!PyUnicode_Check(listitem)) {
-#else
-            if (!PyString_Check(listitem)) {
-#endif
+            if (!PyText_Check(listitem)) {
                 curl_slist_free_all(slist);
                 PyErr_SetString(PyExc_TypeError, "list items must be string objects");
                 return NULL;
