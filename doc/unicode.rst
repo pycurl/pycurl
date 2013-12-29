@@ -2,7 +2,7 @@ Unicode
 =======
 
 Under Python 2, (binary) string and Unicode types are interchangeable.
-PycURL will pass whatever strings is given verbatim to libcurl.
+PycURL will pass whatever strings it is given verbatim to libcurl.
 When dealing with Unicode data, this typically means things like
 HTTP request bodies should be encoded to utf-8 before passing them to PycURL.
 Similarly it is on the application to decode HTTP response bodies, if
