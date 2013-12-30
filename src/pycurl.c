@@ -358,7 +358,7 @@ int PyUnicode_AsStringAndSize(PyObject *obj, char **buffer, Py_ssize_t *length, 
         return PyBytes_AsStringAndSize(obj, buffer, length);
     } else {
         int rv;
-        *encoded_obj = PyUnicode_AsEncodedString(obj, "utf8", "strict");
+        *encoded_obj = PyUnicode_AsEncodedString(obj, "ascii", "strict");
         if (*encoded_obj == NULL) {
             return -1;
         }
