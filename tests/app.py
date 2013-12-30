@@ -1,9 +1,11 @@
-import time as _time
+import time as _time, sys
 import bottle
 try:
     import json
 except ImportError:
     import simplejson as json
+
+py3 = sys.version_info[0] == 3
 
 app = bottle.Bottle()
 app.debug = True
@@ -71,7 +73,7 @@ def header():
 @app.route('/header_utf8')
 def header():
     header_value = bottle.request.headers[bottle.request.query['h']]
-    if util.py3:
+    if py3:
         # header_value is a string, headers are decoded in latin1
         header_value = header_value.encode('latin1').decode('utf8')
     else:
