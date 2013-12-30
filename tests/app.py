@@ -70,7 +70,14 @@ def header():
 # Thanks to bdarnell for the idea: https://github.com/pycurl/pycurl/issues/124
 @app.route('/header_utf8')
 def header():
-    return bottle.request.headers[bottle.request.query['h']].encode('latin1').decode('utf8')
+    header_value = bottle.request.headers[bottle.request.query['h']]
+    if util.py3:
+        # header_value is a string, headers are decoded in latin1
+        header_value = header_value.encode('latin1').decode('utf8')
+    else:
+        # header_value is a binary string, decode in utf-8 directly
+        header_value = header_value.decode('utf8')
+    return header_value
 
 def pause_writer():
     yield 'part1'
