@@ -27,6 +27,8 @@ class HeaderTest(unittest.TestCase):
     def test_ascii_unicode_header(self):
         self.check(util.u('x-test-header: ascii'), 'ascii')
     
+    # on python 2 unicode is accepted in strings because strings are byte strings
+    @util.only_python3
     @nose.tools.raises(UnicodeEncodeError)
     def test_unicode_string_header(self):
         self.check('x-test-header: Москва', 'Москва')
