@@ -4,6 +4,7 @@
 
 import pycurl
 import unittest
+import nose.tools
 
 from . import appmanager
 from . import util
@@ -26,9 +27,11 @@ class HeaderTest(unittest.TestCase):
     def test_ascii_unicode_header(self):
         self.check(util.u('x-test-header: ascii'), 'ascii')
     
+    @nose.tools.raises(UnicodeEncodeError)
     def test_unicode_string_header(self):
         self.check('x-test-header: Москва', 'Москва')
     
+    @nose.tools.raises(UnicodeEncodeError)
     def test_unicode_unicode_header(self):
         self.check(util.u('x-test-header: Москва'), util.u('Москва'))
     
