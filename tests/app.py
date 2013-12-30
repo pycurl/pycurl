@@ -62,6 +62,16 @@ def files():
 def header():
     return bottle.request.headers[bottle.request.query['h']]
 
+# This is a hacky endpoint to test non-ascii text being given to libcurl
+# via headers.
+# HTTP RFC requires headers to be latin1-encoded.
+# Any string can be decoded as latin1; here we encode the header value
+# back into latin1 to obtain original bytestring, then decode it in utf-8.
+# Thanks to bdarnell for the idea: https://github.com/pycurl/pycurl/issues/124
+@app.route('/header_utf8')
+def header():
+    return bottle.request.headers[bottle.request.query['h']].encode('latin1').decode('utf8')
+
 def pause_writer():
     yield 'part1'
     _time.sleep(0.5)

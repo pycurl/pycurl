@@ -10,6 +10,9 @@ from . import util
 
 setup_module, teardown_module = appmanager.setup(('app', 8380))
 
+# NB: HTTP RFC requires headers to be latin1 encoded, which we violate.
+# See the comments under /header_utf8 route in app.py.
+
 class HeaderTest(unittest.TestCase):
     def setUp(self):
         self.curl = pycurl.Curl()
@@ -33,7 +36,7 @@ class HeaderTest(unittest.TestCase):
         self.check(util.u('x-test-header: Москва').encode('utf-8'), util.u('Москва'))
     
     def check(self, send, expected):
-        self.curl.setopt(pycurl.URL, 'http://localhost:8380/header?h=x-test-header')
+        self.curl.setopt(pycurl.URL, 'http://localhost:8380/header_utf8?h=x-test-header')
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.setopt(pycurl.HTTPHEADER, [send])
