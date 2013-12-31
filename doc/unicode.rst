@@ -4,12 +4,32 @@ Unicode
 Python 2.x
 ----------
 
-Under Python 2, (binary) string and Unicode types are interchangeable.
-PycURL will pass whatever strings it is given verbatim to libcurl.
-When dealing with Unicode data, this typically means things like
-HTTP request bodies should be encoded to utf-8 before passing them to PycURL.
-Similarly it is on the application to decode HTTP response bodies, if
-they are expected to contain non-ASCII characters.
+Under Python 2, the string type can hold arbitrary encoded byte strings.
+PycURL will pass whatever byte strings it is given verbatim to libcurl.
+
+If your application works with encoded byte strings, you should be able to
+pass them to PycURL. If your application works with Unicode data, you need to
+encode the data to byte strings yourself. Which encoding to use depends on
+the protocol you are working with - HTTP headers should be encoded in latin1,
+HTTP request bodies are commonly encoded in utf-8 and their encoding is
+specified in the Content-Type header value.
+
+Prior to PycURL 7.19.3, PycURL did not accept Unicode data under Python 2.
+Even Unicode strings containing only ASCII code points had to be encoded to
+byte strings.
+
+As of PycURL 7.19.3, for compatibility with Python 3, PycURL will accept
+Unicode strings under Python 2 provided they contain ASCII code points only.
+In other words, PycURL will encode Unicode into ASCII for you. If you supply
+a Unicode string containing characters that are outside of ASCII, the call will
+fail with a UnicodeEncodeError.
+
+PycURL will return data from libcurl, like request bodies and header values,
+as byte strings. If the data is ASCII, you can treat it as string data.
+Otherwise you will need to decode the byte strings usisng the correct encoding.
+What encoding is correct depends on the protocol and potentially returned
+data itself - HTTP response headers are supposed to be latin1 encoded but
+encoding of response body is specified in the Content-Type header.
 
 Python 3.x (from PycURL 7.19.3 onward)
 --------------------------------------
