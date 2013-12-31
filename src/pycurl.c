@@ -391,7 +391,8 @@ static char *PyText_AsString_NoNUL(PyObject *obj, PyObject **encoded_obj)
 
 
 /* Returns true if the object is of a type that can be given to
- * curl_easy_setopt and such - either a string or a bytestring
+ * curl_easy_setopt and such - either a byte string or a Unicode string
+ * with ASCII code points only.
  */
 #if PY_MAJOR_VERSION >= 3
 static int PyText_Check(PyObject *o) {
@@ -1786,7 +1787,7 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
     }
     else {
     type_error:
-        PyErr_SetString(ErrorObject, "read callback must return string");
+        PyErr_SetString(ErrorObject, "read callback must return a byte string or Unicode string with ASCII code points only");
         goto verbose_error;
     }
     
@@ -2396,7 +2397,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                 if (PyText_AsStringAndSize(PyTuple_GET_ITEM(listitem, 0), &nstr, &nlen, &nencoded_obj) != 0) {
                     curl_formfree(post);
                     Py_XDECREF(ref_params);
-                    PyErr_SetString(PyExc_TypeError, "tuple must contain string as first element");
+                    PyErr_SetString(PyExc_TypeError, "tuple must contain a byte string or Unicode string with ASCII code points only as first element");
                     return NULL;
                 }
                 if (PyText_Check(PyTuple_GET_ITEM(listitem, 1))) {
@@ -2467,7 +2468,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                             return NULL;
                         }
                         if (!PyText_Check(PyTuple_GET_ITEM(t, j+1))) {
-                            PyErr_SetString(PyExc_TypeError, "value must be string");
+                            PyErr_SetString(PyExc_TypeError, "value must be a byte string or a Unicode string with ASCII code points only");
                             PyMem_Free(forms);
                             curl_formfree(post);
                             Py_XDECREF(ref_params);
@@ -2586,7 +2587,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
             if (!PyText_Check(listitem)) {
                 curl_slist_free_all(slist);
-                PyErr_SetString(PyExc_TypeError, "list items must be string objects");
+                PyErr_SetString(PyExc_TypeError, "list items must be byte strings or Unicode strings with ASCII code points only");
                 return NULL;
             }
             /* INFO: curl_slist_append() internally does strdup() the data, so
