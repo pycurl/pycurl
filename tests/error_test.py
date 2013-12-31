@@ -32,6 +32,24 @@ class ErrorTest(unittest.TestCase):
             self.assertEqual('No URL set!', msg)
         else:
             self.fail('Expected pycurl.error to be raised')
+    
+    def test_pycurl_errstr_initially_empty(self):
+        self.assertEqual('', self.curl.errstr())
+    
+    def test_pycurl_errstr_type(self):
+        self.assertEqual('', self.curl.errstr())
+        try:
+            # perform without a url
+            self.curl.perform()
+        except pycurl.error:
+            # might be fragile
+            self.assertEqual('No URL set!', self.curl.errstr())
+            # repeated checks do not clear value
+            self.assertEqual('No URL set!', self.curl.errstr())
+            # check the type - on all python versions
+            self.assertEqual(str, type(self.curl.errstr()))
+        else:
+            self.fail('no exception')
 
     # pycurl raises standard library exceptions in some cases
     def test_pycurl_error_stdlib(self):
