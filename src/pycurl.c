@@ -2815,6 +2815,9 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
     case CURLINFO_OS_ERRNO:
     case CURLINFO_NUM_CONNECTS:
     case CURLINFO_LASTSOCKET:
+    case CURLINFO_LOCAL_PORT:
+    case CURLINFO_PRIMARY_PORT:
+
         {
             /* Return PyInt as result */
             long l_res = -1;
@@ -2832,6 +2835,7 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
     case CURLINFO_FTP_ENTRY_PATH:
     case CURLINFO_REDIRECT_URL:
     case CURLINFO_PRIMARY_IP:
+    case CURLINFO_LOCAL_IP:
         {
             /* Return PyString as result */
             char *s_res = NULL;
@@ -4907,6 +4911,9 @@ initpycurl(void)
     insint_c(d, "REDIRECT_COUNT", CURLINFO_REDIRECT_COUNT);
     insint_c(d, "REDIRECT_URL", CURLINFO_REDIRECT_URL);
     insint_c(d, "PRIMARY_IP", CURLINFO_PRIMARY_IP);
+    insint_c(d, "PRIMARY_PORT", CURLINFO_PRIMARY_PORT);
+    insint_c(d, "LOCAL_IP", CURLINFO_LOCAL_IP);
+    insint_c(d, "LOCAL_PORT", CURLINFO_LOCAL_PORT);
     insint_c(d, "HTTP_CONNECTCODE", CURLINFO_HTTP_CONNECTCODE);
     insint_c(d, "HTTPAUTH_AVAIL", CURLINFO_HTTPAUTH_AVAIL);
     insint_c(d, "PROXYAUTH_AVAIL", CURLINFO_PROXYAUTH_AVAIL);
