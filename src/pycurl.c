@@ -326,43 +326,44 @@ typedef struct {
 #if PY_MAJOR_VERSION >= 3
 # define PyText_FromFormat(format, str) PyUnicode_FromFormat((format), (str))
 # define PyText_FromString(str) PyUnicode_FromString(str)
-# define PyText_AsStringAndSize(obj, buffer, length, encoded_obj) PyUnicode_AsStringAndSize((obj), (buffer), (length), &(encoded_obj))
-# define PyText_AsString_NoNUL(obj, encoded_obj) PyUnicode_AsString_NoNUL((obj), &(encoded_obj))
-# define PyText_EncodedDecref(encoded) Py_XDECREF(encoded)
 # define PyByteStr_AsStringAndSize(obj, buffer, length) PyBytes_AsStringAndSize((obj), (buffer), (length))
 #else
 # define PyText_FromFormat(format, str) PyString_FromFormat((format), (str))
 # define PyText_FromString(str) PyString_FromString(str)
-/* encoded_obj is not used in python 2 and is uninitialized,
- * use the free macro to avoid calling Py_DECREF on it.
- */
-# define PyText_AsStringAndSize(obj, buffer, length, encoded_obj) PyString_AsStringAndSize((obj), (buffer), (length))
-# define PyText_AsString_NoNUL(obj, encoded_obj) PyString_AsString_NoNUL(obj)
-/* unused variable warning on the encoded object means you did not call
- * PyText_EncodedDecref on it and it will leak in python 3.
- */
-# define PyText_EncodedDecref(encoded) ((void) (encoded))
 # define PyByteStr_AsStringAndSize(obj, buffer, length) PyString_AsStringAndSize((obj), (buffer), (length))
 #endif
+#define PyText_EncodedDecref(encoded) Py_XDECREF(encoded)
 
 
 /*************************************************************************
 // python utility functions
 **************************************************************************/
 
-#if PY_MAJOR_VERSION >= 3
-int PyUnicode_AsStringAndSize(PyObject *obj, char **buffer, Py_ssize_t *length, PyObject **encoded_obj)
+int PyText_AsStringAndSize(PyObject *obj, char **buffer, Py_ssize_t *length, PyObject **encoded_obj)
 {
+#if PY_MAJOR_VERSION >= 3
     if (PyBytes_Check(obj)) {
+#else
+    if (PyString_Check(obj)) {
+#endif
         *encoded_obj = NULL;
+#if PY_MAJOR_VERSION >= 3
         return PyBytes_AsStringAndSize(obj, buffer, length);
+#else
+        return PyString_AsStringAndSize(obj, buffer, length);
+#endif
     } else {
         int rv;
+        assert(PyUnicode_Check(obj));
         *encoded_obj = PyUnicode_AsEncodedString(obj, "ascii", "strict");
         if (*encoded_obj == NULL) {
             return -1;
         }
+#if PY_MAJOR_VERSION >= 3
         rv = PyBytes_AsStringAndSize(*encoded_obj, buffer, length);
+#else
+        rv = PyString_AsStringAndSize(*encoded_obj, buffer, length);
+#endif
         if (rv != 0) {
             /* If we free the object, pointer must be reset to NULL */
             Py_CLEAR(*encoded_obj);
@@ -370,7 +371,6 @@ int PyUnicode_AsStringAndSize(PyObject *obj, char **buffer, Py_ssize_t *length, 
         return rv;
     }
 }
-#endif
 
 
 /* Like PyString_AsString(), but set an exception if the string contains
@@ -378,30 +378,31 @@ int PyUnicode_AsStringAndSize(PyObject *obj, char **buffer, Py_ssize_t *length, 
  * us if the `len' parameter is NULL - see Objects/stringobject.c.
  */
 
-#if PY_MAJOR_VERSION >= 3
-static char *PyUnicode_AsString_NoNUL(PyObject *obj, PyObject **encoded_obj)
+static char *PyText_AsString_NoNUL(PyObject *obj, PyObject **encoded_obj)
 {
     char *s = NULL;
     Py_ssize_t r;
-    r = PyUnicode_AsStringAndSize(obj, &s, NULL, encoded_obj);
+    r = PyText_AsStringAndSize(obj, &s, NULL, encoded_obj);
     if (r != 0)
         return NULL;    /* exception already set */
     assert(s != NULL);
     return s;
+}
+
+
+/* Returns true if the object is of a type that can be given to
+ * curl_easy_setopt and such - either a byte string or a Unicode string
+ * with ASCII code points only.
+ */
+#if PY_MAJOR_VERSION >= 3
+static int PyText_Check(PyObject *o) {
+    return PyUnicode_Check(o) || PyBytes_Check(o);
 }
 #else
-static char *PyString_AsString_NoNUL(PyObject *obj)
-{
-    char *s = NULL;
-    Py_ssize_t r;
-    r = PyString_AsStringAndSize(obj, &s, NULL);
-    if (r != 0)
-        return NULL;    /* exception already set */
-    assert(s != NULL);
-    return s;
+static int PyText_Check(PyObject *o) {
+    return PyUnicode_Check(o) || PyString_Check(o);
 }
 #endif
-
 
 /* Convert a curl slist (a list of strings) to a Python list.
  * In case of error return NULL with an exception set.
@@ -1786,7 +1787,7 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
     }
     else {
     type_error:
-        PyErr_SetString(ErrorObject, "read callback must return string");
+        PyErr_SetString(ErrorObject, "read callback must return a byte string or Unicode string with ASCII code points only");
         goto verbose_error;
     }
     
@@ -2121,11 +2122,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
     /* Handle the case of string arguments */
 
-#if PY_MAJOR_VERSION >= 3
-    if (PyUnicode_Check(obj)) {
-#else
-    if (PyString_Check(obj)) {
-#endif
+    if (PyText_Check(obj)) {
         char *str = NULL;
         Py_ssize_t len = -1;
 
@@ -2178,12 +2175,12 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_DNS_SERVERS:
 #endif
 /* FIXME: check if more of these options allow binary data */
-            str = PyText_AsString_NoNUL(obj, encoded_obj);
+            str = PyText_AsString_NoNUL(obj, &encoded_obj);
             if (str == NULL)
                 return NULL;
             break;
         case CURLOPT_POSTFIELDS:
-            if (PyText_AsStringAndSize(obj, &str, &len, encoded_obj) != 0)
+            if (PyText_AsStringAndSize(obj, &str, &len, &encoded_obj) != 0)
                 return NULL;
             /* automatically set POSTFIELDSIZE */
             if (len <= INT_MAX) {
@@ -2397,20 +2394,16 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                     PyErr_SetString(PyExc_TypeError, "tuple must contain two elements (name, value)");
                     return NULL;
                 }
-                if (PyText_AsStringAndSize(PyTuple_GET_ITEM(listitem, 0), &nstr, &nlen, nencoded_obj) != 0) {
+                if (PyText_AsStringAndSize(PyTuple_GET_ITEM(listitem, 0), &nstr, &nlen, &nencoded_obj) != 0) {
                     curl_formfree(post);
                     Py_XDECREF(ref_params);
-                    PyErr_SetString(PyExc_TypeError, "tuple must contain string as first element");
+                    PyErr_SetString(PyExc_TypeError, "tuple must contain a byte string or Unicode string with ASCII code points only as first element");
                     return NULL;
                 }
-#if PY_MAJOR_VERSION >= 3
-                if (PyUnicode_Check(PyTuple_GET_ITEM(listitem, 1))) {
-#else
-                if (PyString_Check(PyTuple_GET_ITEM(listitem, 1))) {
-#endif
+                if (PyText_Check(PyTuple_GET_ITEM(listitem, 1))) {
                     /* Handle strings as second argument for backwards compatibility */
 
-                    if (PyText_AsStringAndSize(PyTuple_GET_ITEM(listitem, 1), &cstr, &clen, cencoded_obj)) {
+                    if (PyText_AsStringAndSize(PyTuple_GET_ITEM(listitem, 1), &cstr, &clen, &cencoded_obj)) {
                         curl_formfree(post);
                         Py_XDECREF(ref_params);
                         CURLERROR_RETVAL();
@@ -2474,12 +2467,8 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                             Py_XDECREF(ref_params);
                             return NULL;
                         }
-#if PY_MAJOR_VERSION >= 3
-                        if (!PyUnicode_Check(PyTuple_GET_ITEM(t, j+1))) {
-#else
-                        if (!PyString_Check(PyTuple_GET_ITEM(t, j+1))) {
-#endif
-                            PyErr_SetString(PyExc_TypeError, "value must be string");
+                        if (!PyText_Check(PyTuple_GET_ITEM(t, j+1))) {
+                            PyErr_SetString(PyExc_TypeError, "value must be a byte string or a Unicode string with ASCII code points only");
                             PyMem_Free(forms);
                             curl_formfree(post);
                             Py_XDECREF(ref_params);
@@ -2500,7 +2489,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                             Py_XDECREF(ref_params);
                             return NULL;
                         }
-                        if (PyText_AsStringAndSize(PyTuple_GET_ITEM(t, j+1), &ostr, &olen, oencoded_obj)) {
+                        if (PyText_AsStringAndSize(PyTuple_GET_ITEM(t, j+1), &ostr, &olen, &oencoded_obj)) {
                             /* exception should be already set */
                             PyMem_Free(forms);
                             curl_formfree(post);
@@ -2596,18 +2585,14 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             char *str;
             PyObject *sencoded_obj;
 
-#if PY_MAJOR_VERSION >= 3
-            if (!PyUnicode_Check(listitem)) {
-#else
-            if (!PyString_Check(listitem)) {
-#endif
+            if (!PyText_Check(listitem)) {
                 curl_slist_free_all(slist);
-                PyErr_SetString(PyExc_TypeError, "list items must be string objects");
+                PyErr_SetString(PyExc_TypeError, "list items must be byte strings or Unicode strings with ASCII code points only");
                 return NULL;
             }
             /* INFO: curl_slist_append() internally does strdup() the data, so
              * no embedded NUL characters allowed here. */
-            str = PyText_AsString_NoNUL(listitem, sencoded_obj);
+            str = PyText_AsString_NoNUL(listitem, &sencoded_obj);
             if (str == NULL) {
                 curl_slist_free_all(slist);
                 return NULL;
