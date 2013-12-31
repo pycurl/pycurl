@@ -10,7 +10,6 @@ include INSTALL
 include MANIFEST.in
 include Makefile
 include README.rst
-include TODO
 include doc/*.html
 include doc/*.rst
 include examples/*.py
