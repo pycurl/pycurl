@@ -1,6 +1,10 @@
 master
 ------
 
+        * When running on Python 2.x, for compatibility with Python 3.x,
+          Unicode strings containing ASCII code points only are now accepted
+          in setopt() calls.
+
         * PycURL now requires that compile time SSL backend used by libcurl
           is the same as the one used at runtime. setup.py supports
           --with-ssl, --with-gnutls and --with-nss options like libcurl does,
