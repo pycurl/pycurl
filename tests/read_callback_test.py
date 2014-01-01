@@ -61,17 +61,14 @@ class ReadCallbackTest(unittest.TestCase):
         actual = json.loads(sio.getvalue().decode())
         self.assertEqual(POSTFIELDS, actual)
     
-    @util.only_python3
     def test_post_with_read_callback_returning_bytes(self):
         self.check_bytes('world')
     
-    @util.only_python3
     def test_post_with_read_callback_returning_bytes_with_nulls(self):
         self.check_bytes("wor\0ld")
     
-    @util.only_python3
     def test_post_with_read_callback_returning_bytes_with_multibyte(self):
-        self.check_bytes("Пушкин")
+        self.check_bytes(util.u("Пушкин"))
     
     def check_bytes(self, poststring):
         data = poststring.encode('utf8')
