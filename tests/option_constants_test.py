@@ -8,7 +8,7 @@ import nose.plugins.skip
 
 from . import util
 
-class CurloptTest(unittest.TestCase):
+class OptionConstantsTest(unittest.TestCase):
     # CURLOPT_USERNAME was introduced in libcurl-7.19.1
     @util.min_libcurl(7, 19, 1)
     def test_username(self):

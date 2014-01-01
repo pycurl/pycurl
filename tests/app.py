@@ -32,7 +32,7 @@ def postfields():
     return json.dumps(dict(bottle.request.forms))
 
 @app.route('/raw_utf8', method='post')
-def raw_utf8_repr():
+def raw_utf8():
     data = bottle.request.body.getvalue().decode('utf8')
     return json.dumps(data)
 

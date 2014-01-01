@@ -1733,7 +1733,6 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
         memcpy(ptr, buf, obj_size);
         ret = obj_size;             /* success */
     }
-#if PY_MAJOR_VERSION >= 3
     else if (PyUnicode_Check(result)) {
         char *buf = NULL;
         Py_ssize_t obj_size = -1;
@@ -1770,7 +1769,6 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
         Py_DECREF(encoded);
         ret = obj_size;             /* success */
     }
-#endif
 #if PY_MAJOR_VERSION < 3
     else if (PyInt_Check(result)) {
         long r = PyInt_AsLong(result);
