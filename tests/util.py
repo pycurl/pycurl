@@ -22,6 +22,7 @@ if py3:
         '''Text literal'''
         return s
     text_type = str
+    binary_type = bytes
 else:
     try:
         from cStringIO import StringIO
@@ -38,6 +39,7 @@ else:
         '''Text literal'''
         return unicode(s.replace(r'\\', r'\\\\'), "unicode_escape")
     text_type = unicode
+    binary_type = str
 
 def version_less_than_spec(version_tuple, spec_tuple):
     # spec_tuple may have 2 elements, expect version_tuple to have 3 elements

@@ -72,7 +72,7 @@ class ReadCallbackTest(unittest.TestCase):
     
     def check_bytes(self, poststring):
         data = poststring.encode('utf8')
-        assert type(data) == bytes
+        assert type(data) == util.binary_type
         d = DataProvider(data)
         
         self.curl.setopt(self.curl.URL, 'http://localhost:8380/raw_utf8')
