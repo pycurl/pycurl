@@ -326,10 +326,12 @@ typedef struct {
 #if PY_MAJOR_VERSION >= 3
 # define PyText_FromFormat(format, str) PyUnicode_FromFormat((format), (str))
 # define PyText_FromString(str) PyUnicode_FromString(str)
+# define PyByteStr_Check(obj) PyBytes_Check(obj)
 # define PyByteStr_AsStringAndSize(obj, buffer, length) PyBytes_AsStringAndSize((obj), (buffer), (length))
 #else
 # define PyText_FromFormat(format, str) PyString_FromFormat((format), (str))
 # define PyText_FromString(str) PyString_FromString(str)
+# define PyByteStr_Check(obj) PyString_Check(obj)
 # define PyByteStr_AsStringAndSize(obj, buffer, length) PyString_AsStringAndSize((obj), (buffer), (length))
 #endif
 #define PyText_EncodedDecref(encoded) Py_XDECREF(encoded)
@@ -341,17 +343,9 @@ typedef struct {
 
 int PyText_AsStringAndSize(PyObject *obj, char **buffer, Py_ssize_t *length, PyObject **encoded_obj)
 {
-#if PY_MAJOR_VERSION >= 3
-    if (PyBytes_Check(obj)) {
-#else
-    if (PyString_Check(obj)) {
-#endif
+    if (PyByteStr_Check(obj)) {
         *encoded_obj = NULL;
-#if PY_MAJOR_VERSION >= 3
-        return PyBytes_AsStringAndSize(obj, buffer, length);
-#else
-        return PyString_AsStringAndSize(obj, buffer, length);
-#endif
+        return PyByteStr_AsStringAndSize(obj, buffer, length);
     } else {
         int rv;
         assert(PyUnicode_Check(obj));
@@ -359,11 +353,7 @@ int PyText_AsStringAndSize(PyObject *obj, char **buffer, Py_ssize_t *length, PyO
         if (*encoded_obj == NULL) {
             return -1;
         }
-#if PY_MAJOR_VERSION >= 3
-        rv = PyBytes_AsStringAndSize(*encoded_obj, buffer, length);
-#else
-        rv = PyString_AsStringAndSize(*encoded_obj, buffer, length);
-#endif
+        rv = PyByteStr_AsStringAndSize(*encoded_obj, buffer, length);
         if (rv != 0) {
             /* If we free the object, pointer must be reset to NULL */
             Py_CLEAR(*encoded_obj);
@@ -1717,11 +1707,7 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
         goto verbose_error;
 
     /* handle result */
-#if PY_MAJOR_VERSION >= 3
-    if (PyBytes_Check(result)) {
-#else
-    if (PyString_Check(result)) {
-#endif
+    if (PyByteStr_Check(result)) {
         char *buf = NULL;
         Py_ssize_t obj_size = -1;
         Py_ssize_t r;
@@ -1733,7 +1719,6 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
         memcpy(ptr, buf, obj_size);
         ret = obj_size;             /* success */
     }
-#if PY_MAJOR_VERSION >= 3
     else if (PyUnicode_Check(result)) {
         char *buf = NULL;
         Py_ssize_t obj_size = -1;
@@ -1760,7 +1745,7 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
         if (encoded == NULL) {
             goto verbose_error;
         }
-        r = PyBytes_AsStringAndSize(encoded, &buf, &obj_size);
+        r = PyByteStr_AsStringAndSize(encoded, &buf, &obj_size);
         if (r != 0 || obj_size < 0 || obj_size > total_size) {
             Py_DECREF(encoded);
             PyErr_Format(ErrorObject, "invalid return value for read callback (%ld bytes returned after encoding to utf-8 when at most %ld bytes were wanted)", (long)obj_size, (long)total_size);
@@ -1770,7 +1755,6 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
         Py_DECREF(encoded);
         ret = obj_size;             /* success */
     }
-#endif
 #if PY_MAJOR_VERSION < 3
     else if (PyInt_Check(result)) {
         long r = PyInt_AsLong(result);
