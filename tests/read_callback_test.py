@@ -40,7 +40,7 @@ class DataProvider(object):
             # Nothing more to read
             return ""
 
-class PostWithReadCallbackTest(unittest.TestCase):
+class ReadCallbackTest(unittest.TestCase):
     def setUp(self):
         self.curl = pycurl.Curl()
     
