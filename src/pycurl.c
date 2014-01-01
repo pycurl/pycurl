@@ -326,10 +326,12 @@ typedef struct {
 #if PY_MAJOR_VERSION >= 3
 # define PyText_FromFormat(format, str) PyUnicode_FromFormat((format), (str))
 # define PyText_FromString(str) PyUnicode_FromString(str)
+# define PyByteStr_Check(obj) PyBytes_Check(obj)
 # define PyByteStr_AsStringAndSize(obj, buffer, length) PyBytes_AsStringAndSize((obj), (buffer), (length))
 #else
 # define PyText_FromFormat(format, str) PyString_FromFormat((format), (str))
 # define PyText_FromString(str) PyString_FromString(str)
+# define PyByteStr_Check(obj) PyString_Check(obj)
 # define PyByteStr_AsStringAndSize(obj, buffer, length) PyString_AsStringAndSize((obj), (buffer), (length))
 #endif
 #define PyText_EncodedDecref(encoded) Py_XDECREF(encoded)
@@ -341,11 +343,7 @@ typedef struct {
 
 int PyText_AsStringAndSize(PyObject *obj, char **buffer, Py_ssize_t *length, PyObject **encoded_obj)
 {
-#if PY_MAJOR_VERSION >= 3
-    if (PyBytes_Check(obj)) {
-#else
-    if (PyString_Check(obj)) {
-#endif
+    if (PyByteStr_Check(obj)) {
         *encoded_obj = NULL;
         return PyByteStr_AsStringAndSize(obj, buffer, length);
     } else {
@@ -1709,11 +1707,7 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
         goto verbose_error;
 
     /* handle result */
-#if PY_MAJOR_VERSION >= 3
-    if (PyBytes_Check(result)) {
-#else
-    if (PyString_Check(result)) {
-#endif
+    if (PyByteStr_Check(result)) {
         char *buf = NULL;
         Py_ssize_t obj_size = -1;
         Py_ssize_t r;
