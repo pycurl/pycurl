@@ -347,11 +347,7 @@ int PyText_AsStringAndSize(PyObject *obj, char **buffer, Py_ssize_t *length, PyO
     if (PyString_Check(obj)) {
 #endif
         *encoded_obj = NULL;
-#if PY_MAJOR_VERSION >= 3
-        return PyBytes_AsStringAndSize(obj, buffer, length);
-#else
-        return PyString_AsStringAndSize(obj, buffer, length);
-#endif
+        return PyByteStr_AsStringAndSize(obj, buffer, length);
     } else {
         int rv;
         assert(PyUnicode_Check(obj));
@@ -359,11 +355,7 @@ int PyText_AsStringAndSize(PyObject *obj, char **buffer, Py_ssize_t *length, PyO
         if (*encoded_obj == NULL) {
             return -1;
         }
-#if PY_MAJOR_VERSION >= 3
-        rv = PyBytes_AsStringAndSize(*encoded_obj, buffer, length);
-#else
-        rv = PyString_AsStringAndSize(*encoded_obj, buffer, length);
-#endif
+        rv = PyByteStr_AsStringAndSize(*encoded_obj, buffer, length);
         if (rv != 0) {
             /* If we free the object, pointer must be reset to NULL */
             Py_CLEAR(*encoded_obj);
