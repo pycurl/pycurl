@@ -93,18 +93,15 @@ class ReadCallbackTest(unittest.TestCase):
         actual = json.loads(sio.getvalue().decode('ascii'))
         self.assertEqual(poststring, actual)
     
-    @util.only_python3
     def test_post_with_read_callback_returning_unicode(self):
-        self.check_unicode('world')
+        self.check_unicode(util.u('world'))
     
-    @util.only_python3
     def test_post_with_read_callback_returning_unicode_with_nulls(self):
-        self.check_unicode("wor\0ld")
+        self.check_unicode(util.u("wor\0ld"))
     
-    @util.only_python3
     def test_post_with_read_callback_returning_unicode_with_multibyte(self):
         try:
-            self.check_unicode("Пушкин")
+            self.check_unicode(util.u("Пушкин"))
             # prints:
             # UnicodeEncodeError: 'ascii' codec can't encode characters in position 6-11: ordinal not in range(128)
         except pycurl.error:
@@ -114,7 +111,7 @@ class ReadCallbackTest(unittest.TestCase):
             self.assertEqual('operation aborted by callback', msg)
     
     def check_unicode(self, poststring):
-        assert type(poststring) == str
+        assert type(poststring) == util.text_type
         d = DataProvider(poststring)
         
         self.curl.setopt(self.curl.URL, 'http://localhost:8380/raw_utf8')

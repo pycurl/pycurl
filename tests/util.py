@@ -21,6 +21,7 @@ if py3:
     def u(s):
         '''Text literal'''
         return s
+    text_type = str
 else:
     try:
         from cStringIO import StringIO
@@ -36,6 +37,7 @@ else:
     def u(s):
         '''Text literal'''
         return unicode(s.replace(r'\\', r'\\\\'), "unicode_escape")
+    text_type = unicode
 
 def version_less_than_spec(version_tuple, spec_tuple):
     # spec_tuple may have 2 elements, expect version_tuple to have 3 elements
