@@ -81,6 +81,15 @@ def header():
         header_value = header_value.decode('utf8')
     return header_value
 
+@app.route('/param_utf8_hack', method='post')
+def param_utf8_hack():
+    param = bottle.request.forms['p']
+    if py3:
+        # python 3 decodes bytes as latin1 perhaps?
+        # apply the latin1-utf8 hack
+        param = param.encode('latin').decode('utf8')
+    return param
+
 def pause_writer():
     yield 'part1'
     _time.sleep(0.5)
