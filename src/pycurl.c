@@ -101,6 +101,10 @@
 #define HAVE_CURLINFO_LOCAL_IP
 #endif
 
+#if LIBCURL_VERSION_NUM >= 0x071304 /* check for 7.19.4 or greater */
+#define HAVE_CURLOPT_NOPROXY
+#endif
+
 #if LIBCURL_VERSION_NUM >= 0x071503 /* check for 7.21.3 or greater */
 #define HAVE_CURLOPT_RESOLVE
 #endif
@@ -2163,6 +2167,9 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_ISSUERCERT:
 #ifdef HAVE_CURLOPT_DNS_SERVERS
         case CURLOPT_DNS_SERVERS:
+#endif
+#ifdef HAVE_CURLOPT_NOPROXY
+        case CURLOPT_NOPROXY:
 #endif
 /* FIXME: check if more of these options allow binary data */
             str = PyText_AsString_NoNUL(obj, &encoded_obj);
@@ -4854,6 +4861,9 @@ initpycurl(void)
 #endif
 #ifdef HAVE_CURLOPT_POSTREDIR
     insint_c(d, "POSTREDIR", CURLOPT_POSTREDIR);
+#endif
+#ifdef HAVE_CURLOPT_NOPROXY
+    insint_c(d, "NOPROXY", CURLOPT_NOPROXY);
 #endif
 
     insint_c(d, "M_TIMERFUNCTION", CURLMOPT_TIMERFUNCTION);

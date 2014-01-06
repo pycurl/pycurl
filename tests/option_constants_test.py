@@ -67,3 +67,10 @@ class OptionConstantsTest(unittest.TestCase):
     # to replace CURLE_OPERATION_TIMEOUTED
     def test_operation_timedout_constant(self):
         self.assertEqual(pycurl.E_OPERATION_TIMEDOUT, pycurl.E_OPERATION_TIMEOUTED)
+    
+    # CURLOPT_NOPROXY was introduced in libcurl-7.19.4
+    @util.min_libcurl(7, 19, 4)
+    def test_noproxy_setopt(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.NOPROXY, 'localhost')
+        curl.close()
