@@ -1,6 +1,8 @@
 master
 ------
 
+        * Added CURLOPT_NOPROXY.
+
         * Added CURLINFO_LOCAL_PORT, CURLINFO_PRIMARY_PORT and
           CURLINFO_LOCAL_IP (patch by hor: Adam Jacob Muller).
 
