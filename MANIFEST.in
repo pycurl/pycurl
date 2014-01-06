@@ -20,4 +20,7 @@ include python/curl/*.py
 include tests/*.py
 include tests/certs/*.crt
 include tests/certs/*.key
+include tests/ext/*.sh
 include tests/matrix/*.patch
+include tests/vsftpd.conf
+include winbuild.py

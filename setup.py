@@ -365,6 +365,44 @@ def get_data_files():
 
 ###############################################################################
 
+def check_manifest():
+    import fnmatch
+    
+    f = open('MANIFEST.in')
+    globs = []
+    try:
+        for line in f.readlines():
+            stripped = line.strip()
+            if stripped == '' or stripped.startswith('#'):
+                continue
+            assert stripped.startswith('include ')
+            glob = stripped[8:]
+            globs.append(glob)
+    finally:
+        f.close()
+    
+    paths = []
+    start = os.path.abspath(os.path.dirname(__file__))
+    for root, dirs, files in os.walk(start):
+        if '.git' in dirs:
+            dirs.remove('.git')
+        for file in files:
+            if file.endswith('.pyc'):
+                continue
+            rel = os.path.join(root, file)[len(start)+1:]
+            paths.append(rel)
+    
+    for path in paths:
+        included = False
+        for glob in globs:
+            if fnmatch.fnmatch(path, glob):
+                included = True
+                break
+        if not included:
+            print(path)
+
+###############################################################################
+
 setup_args = dict(
     name=PACKAGE,
     version=VERSION,
@@ -435,6 +473,8 @@ if __name__ == "__main__":
         # we need to remove our options because distutils complains about them
         strip_pycurl_options()
         setup(**setup_args)
+    elif len(sys.argv) > 1 and sys.argv[1] == 'manifest':
+        check_manifest()
     else:
         configure()
         
