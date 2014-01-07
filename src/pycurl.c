@@ -3,7 +3,7 @@
  * Authors:
  *  Copyright (C) 2001-2008 by Kjetil Jacobsen <kjetilja at gmail.com>
  *  Copyright (C) 2001-2008 by Markus F.X.J. Oberhumer <markus at oberhumer.com>
- *  Copyright (C) 2013 by Oleg Pudeyev <oleg at bsdpower.com>
+ *  Copyright (C) 2013-2014 by Oleg Pudeyev <oleg at bsdpower.com>
  *
  *  All rights reserved.
  *
