@@ -104,6 +104,21 @@ Note the difference between ``--with-ssl`` (for compatibility with libcurl) and
 .. _easy_install: http://peak.telecommunity.com/DevCenter/EasyInstall
 .. _pip: http://pypi.python.org/pypi/pip
 
+Support
+-------
+
+For support questions, please use `curl-and-python mailing list`_.
+`Mailing list archives`_ are available for your perusal as well.
+
+Bugs can be reported `via GitHub`_. Please only use GitHub issues when you are
+certain you have found a bug in PycURL. If you do not have a patch to fix
+the bug, or at least a specific code fragment in PycURL that you believe is
+the cause, you should instead post you inquiry to the mailing list.
+
+.. _curl-and-python mailing list: http://cool.haxx.se/mailman/listinfo/curl-and-python
+.. _Mailing list archives: http://curl.haxx.se/mail/list.cgi?list=curl-and-python
+.. _via GitHub: https://github.com/pycurl/pycurl/issues
+
 Automated Tests
 ---------------
 
