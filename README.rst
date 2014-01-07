@@ -188,6 +188,9 @@ For smaller changes:
 #. Write a test which shows that the bug was fixed or that the feature
    works as expected.
 #. Send a pull request.
+#. Check back after 10-15 minutes to see if tests passed on Travis CI.
+   PycURL supports old Python and libcurl releases and their support is tested
+   on Travis.
 
 For larger changes:
 
