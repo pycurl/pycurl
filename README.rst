@@ -77,6 +77,29 @@ you are not directly invoking ``setup.py``::
 - ``--libs``
 - ``--static-libs`` (if ``--libs`` does not work)
 
+PycURL requires that the SSL library that it is built against is the same
+one libcurl, and therefore PycURL, uses at runtime. PycURL's ``setup.py``
+uses ``curl-config`` to attempt to figure out which SSL library libcurl
+was compiled against, however this does not always work. If PycURL is unable
+to determine the SSL library in use it will print a warning similar to
+the following:
+
+    src/pycurl.c:137:4: warning: #warning "libcurl was compiled with SSL support, but configure could not determine which " "library was used; thus no SSL crypto locking callbacks will be set, which may " "cause random crashes on SSL requests" [-Wcpp]
+
+It will then fail at runtime as follows:
+
+    ImportError: pycurl: libcurl link-time ssl backend (openssl) is different from compile-time ssl backend (none/other)
+
+To fix this, you need to tell ``setup.py`` what SSL backend is used:
+
+    python setup.py --with-[ssl|gnutls|nss] install
+
+Or use an environment variable:
+
+    PYCURL_SSL_LIBRARY=openssl|gnutls|nss python setup.py installl
+
+Note the difference between ``--with-ssl`` (for compatibility with libcurl) and
+``PYCURL_SSL_LIBRARY=openssl``.
 
 .. _easy_install: http://peak.telecommunity.com/DevCenter/EasyInstall
 .. _pip: http://pypi.python.org/pypi/pip
