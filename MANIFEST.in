@@ -17,6 +17,7 @@ include examples/tests/*.py
 include src/Makefile
 include src/pycurl.c
 include python/curl/*.py
+include requirements*.txt
 include tests/*.py
 include tests/certs/*.crt
 include tests/certs/*.key
