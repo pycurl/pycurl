@@ -261,7 +261,15 @@ def configure_unix():
         ssl_libs = ['ssl', 'gnutls', 'ssl3']
         ssl_libs_map = {'ssl': 'OPENSSL', 'gnutls': 'GNUTLS', 'ssl3': 'NSS'}
         # Check for SSL in all library linking information (static and shared)
-        libs_all = subprocess.check_output([CURL_CONFIG, '--libs', '--static-libs']).split()
+        libs_all = []
+        try:
+            libs_all.extend(subprocess.check_output([CURL_CONFIG, '--libs']).split())
+        except subprocess.CalledProcessError:
+            pass
+        try:
+            libs_all.extend(subprocess.check_output([CURL_CONFIG, '--static-libs']).split())
+        except subprocess.CalledProcessError:
+            pass
         for ssl_lib in ssl_libs:
             if "-l"+ssl_lib in libs_all:
                 define_macros.append(('HAVE_CURL_%s' % ssl_libs_map[ssl_lib], 1))
