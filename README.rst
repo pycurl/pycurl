@@ -96,7 +96,7 @@ To fix this, you need to tell ``setup.py`` what SSL backend is used::
 
 Or use an environment variable::
 
-    PYCURL_SSL_LIBRARY=openssl|gnutls|nss python setup.py installl
+    PYCURL_SSL_LIBRARY=openssl|gnutls|nss python setup.py install
 
 Note the difference between ``--with-ssl`` (for compatibility with libcurl) and
 ``PYCURL_SSL_LIBRARY=openssl``.
