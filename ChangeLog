@@ -4,7 +4,7 @@ master
         * Added CURLOPT_NOPROXY.
 
         * Added CURLINFO_LOCAL_PORT, CURLINFO_PRIMARY_PORT and
-          CURLINFO_LOCAL_IP (patch by hor: Adam Jacob Muller).
+          CURLINFO_LOCAL_IP (patch by Adam Jacob Muller).
 
         * When running on Python 2.x, for compatibility with Python 3.x,
           Unicode strings containing ASCII code points only are now accepted
