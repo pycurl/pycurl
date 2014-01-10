@@ -19,6 +19,10 @@ RSYNC_FLAGS = -av --relative --delete --delete-after -e ssh
 UNISON = unison
 UNISON_FLAGS = -times -perms 0
 
+# -c on linux
+# freebsd does not understand -c
+CHMOD_VERBOSE=-v
+
 RSYNC_FILES = \
 	htdocs \
 	htdocs/download/.htaccess \
@@ -36,7 +40,12 @@ UNISON_EXCLUDES = \
 	-ignore 'Name favicon.ico' \
 	-ignore 'Name .cvsignore'
 
+RSYNC_USER = armco@web.sourceforge.net
+
+ifeq ($(USER),kjetilja)
 RSYNC_USER = kjetilja@shell.sourceforge.net
+endif
+
 ifeq ($(USER),mfx)
 RSYNC_USER    = mfx@shell.sourceforge.net
 RSYNC_FLAGS  += --itemize-changes
@@ -62,13 +71,13 @@ unison: __rsync-clean
 # NOTE: CVS does not maintain metadata like owners and file permissions,
 #       so we have to care manually
 __rsync-clean:
-	chgrp -c -R pycurl .
-	chmod -c g+r `find . -perm +400 -print`
-	chmod -c g+w `find . -perm +200 -print`
-	chmod -c g+s `find . -type d -print`
-##	chmod -c g+rws `find . -type d -perm -770 -print`
-	chmod -c g+rws `find . -type d -print`
-	chmod -c o-rwx upload
+	chgrp $(CHMOD_VERBOSE) -R pycurl .
+	chmod $(CHMOD_VERBOSE) g+r `find . -perm +400 -print`
+	chmod $(CHMOD_VERBOSE) g+w `find . -perm +200 -print`
+	chmod $(CHMOD_VERBOSE) g+s `find . -type d -print`
+##	chmod $(CHMOD_VERBOSE) g+rws `find . -type d -perm -770 -print`
+	chmod $(CHMOD_VERBOSE) g+rws `find . -type d -print`
+	chmod $(CHMOD_VERBOSE) o-rwx upload
 	-rm -rf `find . -name .xvpics -type d -print`
 
 
