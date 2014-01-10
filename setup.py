@@ -253,32 +253,22 @@ def configure_unix():
     for arg in libs:
         if arg[:2] == "-l":
             libraries.append(arg[2:])
-            if not ssl_lib_detected and arg[2:] == 'ssl':
-                define_macros.append(('HAVE_CURL_OPENSSL', 1))
-                ssl_lib_detected = True
-            if not ssl_lib_detected and arg[2:] == 'gnutls':
-                define_macros.append(('HAVE_CURL_GNUTLS', 1))
-                ssl_lib_detected = True
-            if not ssl_lib_detected and arg[2:] == 'ssl3':
-                define_macros.append(('HAVE_CURL_NSS', 1))
-                ssl_lib_detected = True
         elif arg[:2] == "-L":
             library_dirs.append(arg[2:])
         else:
             extra_link_args.append(arg)
     if not ssl_lib_detected:
-        p = subprocess.Popen((CURL_CONFIG, '--features'),
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = p.communicate()
-        if p.wait() != 0:
-            msg = "Problem running `%s' --features" % CURL_CONFIG
-            if stderr:
-                msg += ":\n" + stderr.decode()
-            raise ConfigurationError(msg)
-        for feature in split_quoted(stdout.decode()):
-            if feature == 'SSL':
-                # this means any ssl library, not just openssl
+        ssl_libs = ['ssl', 'gnutls', 'ssl3']
+        ssl_libs_map = {'ssl': 'OPENSSL', 'gnutls': 'GNUTLS', 'ssl3': 'NSS'}
+        # Check for SSL in all library linking information (static and shared)
+        libs_all = subprocess.check_output([CURL_CONFIG, '--libs', '--static-libs']).split()
+        for ssl_lib in ssl_libs:
+            if "-l"+ssl_lib in libs_all:
+                define_macros.append(('HAVE_CURL_%s' % ssl_libs_map[ssl_lib], 1))
+                # Define HAVE_CURL_SSL only if one of the SSL libraries is detected!
                 define_macros.append(('HAVE_CURL_SSL', 1))
+                ssl_lib_detected = True
+                break
     else:
         # if we are configuring for a particular ssl library,
         # we can assume that ssl is being used
