@@ -1,7 +1,7 @@
 <?php // vi:ts=4:et
 echo "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
-$version = "7.19.0.3";
-$version_date = "Dec 24 2013"
+$version = "7.19.3";
+$version_date = "Jan 09 2014"
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"

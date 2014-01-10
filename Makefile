@@ -61,7 +61,8 @@ windist: distclean
 	rm -rf build
 
 docs:
-	cd doc && for file in *.rst; do rst2html "$$file" `echo "$$file" |sed -e 's/.rst$$/.html/'`; done
+	cd doc && for file in *.rst; do rst2html "$$file" ../www/htdocs/doc/`echo "$$file" |sed -e 's/.rst$$/.html/'`; done
+	rst2html RELEASE-NOTES.rst www/htdocs/release-notes.html
 
 
 .PHONY: all build test strip install install_lib clean distclean maintainer-clean dist sdist windist

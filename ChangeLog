@@ -1,5 +1,5 @@
-master
-------
+Version 7.19.3 [requires libcurl-7.19.0 or better] - 2014-01-09
+---------------------------------------------------------------
 
         * Added CURLOPT_NOPROXY.
 
