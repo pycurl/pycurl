@@ -273,10 +273,11 @@ def configure_unix():
         for ssl_lib in ssl_libs:
             if "-l"+ssl_lib in libs_all:
                 define_macros.append(('HAVE_CURL_%s' % ssl_libs_map[ssl_lib], 1))
-                # Define HAVE_CURL_SSL only if one of the SSL libraries is detected!
                 define_macros.append(('HAVE_CURL_SSL', 1))
                 ssl_lib_detected = True
                 break
+        if not ssl_lib_detected and 'SSL' in subprocess.check_output([CURL_CONFIG, '--features']).split():
+            define_macros.append(('HAVE_CURL_SSL', 1))
     else:
         # if we are configuring for a particular ssl library,
         # we can assume that ssl is being used
