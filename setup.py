@@ -360,8 +360,6 @@ def get_data_files():
             assert os.path.isfile(f), (f, install_dir)
     return data_files
 
-##print get_data_files(); sys.exit(1)
-
 
 ###############################################################################
 
