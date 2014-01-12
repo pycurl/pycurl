@@ -12,8 +12,8 @@ Release Process
    - www/htdocs/index.php
 5. Copy Changelog to www/htdocs.
 6. Draft release notes.
-7. `make docs`.
-8. `python setup.py sdist`.
+7. ``make docs``.
+8. ``python setup.py sdist``.
 9. Manually test install the built package.
 10. Build windows packages using winbuild.py.
 11. Add windows packages to downloads repo on github.
