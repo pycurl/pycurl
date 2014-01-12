@@ -165,7 +165,6 @@ def get_bdist_msi_version_hack():
 
 
 def configure_unix():
-    # Find out the rest the hard way
     OPENSSL_DIR = scan_argv("--openssl-dir=")
     if OPENSSL_DIR is not None:
         include_dirs.append(os.path.join(OPENSSL_DIR, "include"))
