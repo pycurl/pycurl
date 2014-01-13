@@ -12,22 +12,37 @@ try:
 except ImportError:
     import functools_backport as functools
 
-def using_curl_config(path):
+def set_env(key, new_value):
+    old_value = os.environ.get(key)
+    if new_value is not None:
+        os.environ[key] = new_value
+    elif old_value is not None:
+        del os.environ[key]
+    else:
+        # new and old values are None which mean the variable is not set
+        pass
+    return old_value
+
+def reset_env(key, old_value):
+    # empty string means environment variable was empty
+    # None means it was not set
+    if old_value is not None:
+        os.environ[key] = old_value
+    elif key in os.environ:
+        del os.environ[key]
+
+def using_curl_config(path, ssl_library=None):
     path = os.path.join(os.path.dirname(__file__), 'fake-curl', path)
     def decorator(fn):
         @functools.wraps(fn)
         def decorated(*args, **kwargs):
-            old = os.environ.get('PYCURL_CURL_CONFIG')
-            os.environ['PYCURL_CURL_CONFIG'] = path
+            old_path = set_env('PYCURL_CURL_CONFIG', path)
+            old_ssl_library = set_env('PYCURL_SSL_LIBRARY', ssl_library)
             try:
                 return fn(*args, **kwargs)
             finally:
-                # empty string means environment variable was empty
-                # None means it was not set
-                if old is not None:
-                    os.environ['PYCURL_CURL_CONFIG'] = old
-                else:
-                    del os.environ['PYCURL_CURL_CONFIG']
+                reset_env('PYCURL_CURL_CONFIG', old_path)
+                reset_env('PYCURL_SSL_LIBRARY', old_ssl_library)
         return decorated
     return decorator
 
