@@ -383,9 +383,9 @@ def get_data_files():
     files = ["ChangeLog", "COPYING-LGPL", "COPYING-MIT", "INSTALL", "README.rst"]
     if files:
         data_files.append((os.path.join(datadir), files))
-    files = glob.glob(os.path.join("doc", "*.html"))
+    files = glob.glob(os.path.join("doc", "*.rst"))
     if files:
-        data_files.append((os.path.join(datadir, "html"), files))
+        data_files.append((os.path.join(datadir, "rst"), files))
     files = glob.glob(os.path.join("examples", "*.py"))
     if files:
         data_files.append((os.path.join(datadir, "examples"), files))
