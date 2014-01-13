@@ -126,27 +126,54 @@ class ExtensionConfiguration(object):
         # In theory, all we should need is `curl-config --libs`.
         # Apparently on some platforms --libs fails and --static-libs works,
         # so try that.
-        # If --libs succeeds do not try --static libs; see
+        # If --libs succeeds do not try --static-libs; see
         # https://github.com/pycurl/pycurl/issues/52 for more details.
         # If neither --libs nor --static-libs work, fail.
-        optbuf = ""
+        #
+        # --libs/--static-libs are also used for SSL detection.
+        # libcurl may be configured such that --libs only includes -lcurl
+        # without any of libcurl's dependent libraries, but the dependent
+        # libraries would be included in --static-libs (unless libcurl
+        # was built with static libraries disabled).
+        # Therefore we largely ignore (see below) --static-libs output for
+        # libraries and flags if --libs succeeded, but consult both outputs
+        # for hints as to which SSL library libcurl is linked against.
+        # More information: https://github.com/pycurl/pycurl/pull/147
+        #
+        # The final point is we should link agaist the SSL library in use
+        # even if libcurl does not tell us to, because *we* invoke functions
+        # in that SSL library. This means any SSL libraries found in
+        # --static-libs are forwarded to our libraries.
+        optbuf = ''
+        sslhintbuf = ''
         errtext = ''
         for option in ["--libs", "--static-libs"]:
             p = subprocess.Popen((CURL_CONFIG, option),
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             stdout, stderr = p.communicate()
             if p.wait() == 0:
-                optbuf = stdout.decode()
-                break
+                if optbuf == '':
+                    # first successful call
+                    optbuf = stdout.decode()
+                    # optbuf only has output from this call
+                    sslhintbuf += optbuf
+                else:
+                    # second successful call
+                    sslhintbuf += stdout.decode()
             else:
-                errtext += stderr.decode()
+                if optbuf == '':
+                    # no successful call yet
+                    errtext += stderr.decode()
+                else:
+                    # first call succeeded and second call failed
+                    # ignore stderr and the error exit
+                    pass
         if optbuf == "":
             msg = "Neither curl-config --libs nor curl-config --static-libs" +\
                 " succeeded and produced output"
             if errtext:
                 msg += ":\n" + errtext
             raise ConfigurationError(msg)
-        libs = split_quoted(optbuf)
         
         ssl_lib_detected = False
         if 'PYCURL_SSL_LIBRARY' in os.environ:
@@ -170,22 +197,30 @@ class ExtensionConfiguration(object):
                 ssl_lib_detected = True
                 self.define_macros.append((ssl_options[option], 1))
 
-        for arg in libs:
+        # libraries and options - all libraries and options are forwarded
+        # but if --libs succeeded, --static-libs output is ignored
+        for arg in split_quoted(optbuf):
             if arg[:2] == "-l":
                 self.libraries.append(arg[2:])
-                if not ssl_lib_detected and arg[2:] == 'ssl':
-                    self.define_macros.append(('HAVE_CURL_OPENSSL', 1))
-                    ssl_lib_detected = True
-                if not ssl_lib_detected and arg[2:] == 'gnutls':
-                    self.define_macros.append(('HAVE_CURL_GNUTLS', 1))
-                    ssl_lib_detected = True
-                if not ssl_lib_detected and arg[2:] == 'ssl3':
-                    self.define_macros.append(('HAVE_CURL_NSS', 1))
-                    ssl_lib_detected = True
             elif arg[:2] == "-L":
                 self.library_dirs.append(arg[2:])
             else:
                 self.extra_link_args.append(arg)
+        # ssl detection - ssl libraries are forwarded
+        for arg in split_quoted(sslhintbuf):
+            if arg[:2] == "-l":
+                if not ssl_lib_detected and arg[2:] == 'ssl':
+                    self.define_macros.append(('HAVE_CURL_OPENSSL', 1))
+                    ssl_lib_detected = True
+                    self.libraries.append('ssl')
+                if not ssl_lib_detected and arg[2:] == 'gnutls':
+                    self.define_macros.append(('HAVE_CURL_GNUTLS', 1))
+                    ssl_lib_detected = True
+                    self.libraries.append('gnutls')
+                if not ssl_lib_detected and arg[2:] == 'ssl3':
+                    self.define_macros.append(('HAVE_CURL_NSS', 1))
+                    ssl_lib_detected = True
+                    self.libraries.append('ssl3')
         if not ssl_lib_detected:
             p = subprocess.Popen((CURL_CONFIG, '--features'),
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
