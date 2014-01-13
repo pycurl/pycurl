@@ -58,6 +58,14 @@ class SetupTest(unittest.TestCase):
         # do not expect anything to do with ssl
         assert 'ssl' not in config.libraries
     
+    @using_curl_config('curl-config-libs-and-static-libs')
+    def test_does_not_use_static_libs(self):
+        config = pycurl_setup.ExtensionConfiguration()
+        # should not link against any libraries from --static-libs if
+        # --libs succeeded
+        assert 'flurby' in config.libraries
+        assert 'kzzert' not in config.libraries
+    
     @using_curl_config('curl-config-ssl-in-libs')
     def test_ssl_in_libs(self):
         config = pycurl_setup.ExtensionConfiguration()
