@@ -60,6 +60,30 @@ def scan_argv(s, default=None):
     return p
 
 
+def config_check_output(*popenargs, **kwargs):
+    if 'stdout' in kwargs or 'stderr' in kwargs:
+        raise ValueError('stdout and stderr arguments not allowed, they will be overridden.')
+    cmd = kwargs.get("args")
+    if cmd is None:
+        cmd = popenargs[0]
+    try:
+        process = subprocess.Popen(*popenargs, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs)
+    except OSError:
+        exc = sys.exc_info()[1]
+        msg = "Could not run command '%s': %s" % (cmd, str(exc))
+        raise ConfigurationError(msg)
+    output, error = process.communicate()
+    retcode = process.poll()
+    if retcode:
+        msg = "Command '%s' returned non-zero exit status %d" % (cmd, retcode)
+        if output:
+            msg += "; output:\n%s" % output.decode()
+        if error:
+            msg += "; error:\n%s" % error.decode()
+        raise ConfigurationError(msg)
+    return output.decode()
+
+
 # append contents of an environment variable to library_dirs[]
 def add_libdirs(envvar, sep, fatal=False):
     v = os.environ.get(envvar)
@@ -252,32 +276,31 @@ def configure_unix():
     for arg in libs:
         if arg[:2] == "-l":
             libraries.append(arg[2:])
-            if not ssl_lib_detected and arg[2:] == 'ssl':
-                define_macros.append(('HAVE_CURL_OPENSSL', 1))
-                ssl_lib_detected = True
-            if not ssl_lib_detected and arg[2:] == 'gnutls':
-                define_macros.append(('HAVE_CURL_GNUTLS', 1))
-                ssl_lib_detected = True
-            if not ssl_lib_detected and arg[2:] == 'ssl3':
-                define_macros.append(('HAVE_CURL_NSS', 1))
-                ssl_lib_detected = True
         elif arg[:2] == "-L":
             library_dirs.append(arg[2:])
         else:
             extra_link_args.append(arg)
     if not ssl_lib_detected:
-        p = subprocess.Popen((CURL_CONFIG, '--features'),
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = p.communicate()
-        if p.wait() != 0:
-            msg = "Problem running `%s' --features" % CURL_CONFIG
-            if stderr:
-                msg += ":\n" + stderr.decode()
-            raise ConfigurationError(msg)
-        for feature in split_quoted(stdout.decode()):
-            if feature == 'SSL':
-                # this means any ssl library, not just openssl
+        ssl_libs = ['ssl', 'gnutls', 'ssl3']
+        ssl_libs_map = {'ssl': 'OPENSSL', 'gnutls': 'GNUTLS', 'ssl3': 'NSS'}
+        # Check for SSL in all library linking information (static and shared)
+        libs_all = []
+        try:
+            libs_all.extend(config_check_output([CURL_CONFIG, '--libs']).split())
+        except ConfigurationError:
+            pass
+        try:
+            libs_all.extend(config_check_output([CURL_CONFIG, '--static-libs']).split())
+        except ConfigurationError:
+            pass
+        for ssl_lib in ssl_libs:
+            if "-l"+ssl_lib in libs_all:
+                define_macros.append(('HAVE_CURL_%s' % ssl_libs_map[ssl_lib], 1))
                 define_macros.append(('HAVE_CURL_SSL', 1))
+                ssl_lib_detected = True
+                break
+        if not ssl_lib_detected and 'SSL' in config_check_output([CURL_CONFIG, '--features']).split():
+            define_macros.append(('HAVE_CURL_SSL', 1))
     else:
         # if we are configuring for a particular ssl library,
         # we can assume that ssl is being used
