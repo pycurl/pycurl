@@ -341,7 +341,7 @@ def strip_pycurl_options():
     if sys.platform == 'win32':
         options = ['--curl-dir=', '--curl-lib-name=', '--use-libcurl-dll']
     else:
-        options = ['--openssl-dir', '--curl-config']
+        options = ['--openssl-dir=', '--curl-config=']
     for option in options:
         scan_argv(option)
 
