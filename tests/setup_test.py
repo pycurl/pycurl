@@ -17,13 +17,14 @@ def using_curl_config(path):
     def decorator(fn):
         @functools.wraps(fn)
         def decorated(*args, **kwargs):
-            wasset = os.environ.has_key('PYCURL_CURL_CONFIG')
             old = os.environ.get('PYCURL_CURL_CONFIG')
             os.environ['PYCURL_CURL_CONFIG'] = path
             try:
                 return fn(*args, **kwargs)
             finally:
-                if wasset:
+                # empty string means environment variable was empty
+                # None means it was not set
+                if old is not None:
                     os.environ['PYCURL_CURL_CONFIG'] = old
                 else:
                     del os.environ['PYCURL_CURL_CONFIG']
