@@ -74,8 +74,6 @@ class SetupTest(unittest.TestCase):
     
     @using_curl_config('curl-config-ssl-in-static-libs')
     def test_ssl_in_static_libs(self):
-        raise nose.plugins.skip.SkipTest('this test fails')
-        
         config = pycurl_setup.ExtensionConfiguration()
         # should link against openssl
         assert 'ssl' in config.libraries
@@ -94,8 +92,6 @@ class SetupTest(unittest.TestCase):
     
     @using_curl_config('curl-config-ssl-in-static-libs')
     def test_ssl_in_static_libs_sets_ssl_define(self):
-        raise nose.plugins.skip.SkipTest('this test fails')
-        
         config = pycurl_setup.ExtensionConfiguration()
         # ssl define should be on
         assert 'HAVE_CURL_SSL' in config.define_symbols
