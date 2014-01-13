@@ -64,6 +64,10 @@ class ExtensionConfiguration(object):
         
         self.configure()
 
+    @property
+    def define_symbols(self):
+        return [symbol for symbol, expansion in self.define_macros]
+
     # append contents of an environment variable to library_dirs[]
     def add_libdirs(self, envvar, sep, fatal=False):
         v = os.environ.get(envvar)

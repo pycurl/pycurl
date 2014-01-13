@@ -55,3 +55,29 @@ class SetupTest(unittest.TestCase):
         config = pycurl_setup.ExtensionConfiguration()
         # should link against openssl
         assert 'ssl' in config.libraries
+    
+    @using_curl_config('curl-config-empty')
+    def test_no_ssl_define(self):
+        config = pycurl_setup.ExtensionConfiguration()
+        # ssl define should be off
+        assert 'HAVE_CURL_SSL' not in config.define_symbols
+    
+    @using_curl_config('curl-config-ssl-in-libs')
+    def test_ssl_in_libs_sets_ssl_define(self):
+        config = pycurl_setup.ExtensionConfiguration()
+        # ssl define should be on
+        assert 'HAVE_CURL_SSL' in config.define_symbols
+    
+    @using_curl_config('curl-config-ssl-in-static-libs')
+    def test_ssl_in_static_libs_sets_ssl_define(self):
+        raise nose.plugins.skip.SkipTest('this test fails')
+        
+        config = pycurl_setup.ExtensionConfiguration()
+        # ssl define should be on
+        assert 'HAVE_CURL_SSL' in config.define_symbols
+    
+    @using_curl_config('curl-config-ssl-feature-only')
+    def test_ssl_feature_sets_ssl_define(self):
+        config = pycurl_setup.ExtensionConfiguration()
+        # ssl define should be on
+        assert 'HAVE_CURL_SSL' in config.define_symbols
