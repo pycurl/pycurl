@@ -24,15 +24,6 @@ except NameError:
 class ConfigurationError(exception_base):
     pass
 
-include_dirs = []
-define_macros = [("PYCURL_VERSION", '"%s"' % VERSION)]
-library_dirs = []
-libraries = []
-runtime_library_dirs = []
-extra_objects = []
-extra_compile_args = []
-extra_link_args = []
-
 
 def fail(msg):
     sys.stderr.write(msg + "\n")
@@ -60,75 +51,222 @@ def scan_argv(s, default=None):
     return p
 
 
-# append contents of an environment variable to library_dirs[]
-def add_libdirs(envvar, sep, fatal=False):
-    v = os.environ.get(envvar)
-    if not v:
-        return
-    for dir in str.split(v, sep):
-        dir = str.strip(dir)
-        if not dir:
-            continue
-        dir = os.path.normpath(dir)
-        if os.path.isdir(dir):
-            if not dir in library_dirs:
-                library_dirs.append(dir)
-        elif fatal:
-            fail("FATAL: bad directory %s in environment variable %s" % (dir, envvar))
+class ExtensionConfiguration(object):
+    def __init__(self):
+        self.include_dirs = []
+        self.define_macros = [("PYCURL_VERSION", '"%s"' % VERSION)]
+        self.library_dirs = []
+        self.libraries = []
+        self.runtime_library_dirs = []
+        self.extra_objects = []
+        self.extra_compile_args = []
+        self.extra_link_args = []
+        
+        self.configure()
+
+    @property
+    def define_symbols(self):
+        return [symbol for symbol, expansion in self.define_macros]
+
+    # append contents of an environment variable to library_dirs[]
+    def add_libdirs(self, envvar, sep, fatal=False):
+        v = os.environ.get(envvar)
+        if not v:
+            return
+        for dir in str.split(v, sep):
+            dir = str.strip(dir)
+            if not dir:
+                continue
+            dir = os.path.normpath(dir)
+            if os.path.isdir(dir):
+                if not dir in library_dirs:
+                    self.library_dirs.append(dir)
+            elif fatal:
+                fail("FATAL: bad directory %s in environment variable %s" % (dir, envvar))
 
 
-def configure_windows():
-    # Windows users have to pass --curl-dir parameter to specify path
-    # to libcurl, because there is no curl-config on windows at all.
-    curl_dir = scan_argv("--curl-dir=")
-    if curl_dir is None:
-        fail("Please specify --curl-dir=/path/to/built/libcurl")
-    if not os.path.exists(curl_dir):
-        fail("Curl directory does not exist: %s" % curl_dir)
-    if not os.path.isdir(curl_dir):
-        fail("Curl directory is not a directory: %s" % curl_dir)
-    print("Using curl directory: %s" % curl_dir)
-    include_dirs.append(os.path.join(curl_dir, "include"))
+    def configure_unix(self):
+        OPENSSL_DIR = scan_argv("--openssl-dir=")
+        if OPENSSL_DIR is not None:
+            self.include_dirs.append(os.path.join(OPENSSL_DIR, "include"))
+        CURL_CONFIG = os.environ.get('PYCURL_CURL_CONFIG', "curl-config")
+        CURL_CONFIG = scan_argv("--curl-config=", CURL_CONFIG)
+        try:
+            p = subprocess.Popen((CURL_CONFIG, '--version'),
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        except OSError:
+            exc = sys.exc_info()[1]
+            msg = 'Could not run curl-config: %s' % str(exc)
+            raise ConfigurationError(msg)
+        stdout, stderr = p.communicate()
+        if p.wait() != 0:
+            msg = "`%s' not found -- please install the libcurl development files or specify --curl-config=/path/to/curl-config" % CURL_CONFIG
+            if stderr:
+                msg += ":\n" + stderr.decode()
+            raise ConfigurationError(msg)
+        libcurl_version = stdout.decode().strip()
+        print("Using %s (%s)" % (CURL_CONFIG, libcurl_version))
+        p = subprocess.Popen((CURL_CONFIG, '--cflags'),
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+        if p.wait() != 0:
+            msg = "Problem running `%s' --cflags" % CURL_CONFIG
+            if stderr:
+                msg += ":\n" + stderr.decode()
+            raise ConfigurationError(msg)
+        for arg in split_quoted(stdout.decode()):
+            if arg[:2] == "-I":
+                # do not add /usr/include
+                if not re.search(r"^\/+usr\/+include\/*$", arg[2:]):
+                    self.include_dirs.append(arg[2:])
+            else:
+                self.extra_compile_args.append(arg)
 
-    # libcurl windows documentation states that for linking against libcurl
-    # dll, the import library name is libcurl_imp.lib.
-    # in practice, the library name sometimes is libcurl.lib.
-    # override with: --libcurl-lib-name=libcurl_imp.lib
-    curl_lib_name = scan_argv('--libcurl-lib-name=', 'libcurl.lib')
+        # Obtain linker flags/libraries to link against.
+        # In theory, all we should need is `curl-config --libs`.
+        # Apparently on some platforms --libs fails and --static-libs works,
+        # so try that.
+        # If --libs succeeds do not try --static libs; see
+        # https://github.com/pycurl/pycurl/issues/52 for more details.
+        # If neither --libs nor --static-libs work, fail.
+        optbuf = ""
+        errtext = ''
+        for option in ["--libs", "--static-libs"]:
+            p = subprocess.Popen((CURL_CONFIG, option),
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = p.communicate()
+            if p.wait() == 0:
+                optbuf = stdout.decode()
+                break
+            else:
+                errtext += stderr.decode()
+        if optbuf == "":
+            msg = "Neither curl-config --libs nor curl-config --static-libs" +\
+                " succeeded and produced output"
+            if errtext:
+                msg += ":\n" + errtext
+            raise ConfigurationError(msg)
+        libs = split_quoted(optbuf)
+        
+        ssl_lib_detected = False
+        if 'PYCURL_SSL_LIBRARY' in os.environ:
+            ssl_lib = os.environ['PYCURL_SSL_LIBRARY']
+            if ssl_lib in ['openssl', 'gnutls', 'nss']:
+                ssl_lib_detected = True
+                self.define_macros.append(('HAVE_CURL_%s' % ssl_lib.upper(), 1))
+            else:
+                raise ConfigurationError('Invalid value "%s" for PYCURL_SSL_LIBRARY' % ssl_lib)
+        ssl_options = {
+            '--with-ssl': 'HAVE_CURL_OPENSSL',
+            '--with-gnutls': 'HAVE_CURL_GNUTLS',
+            '--with-nss': 'HAVE_CURL_NSS',
+        }
+        for option in ssl_options:
+            if scan_argv(option) is not None:
+                for other_option in ssl_options:
+                    if option != other_option:
+                        if scan_argv(other_option) is not None:
+                            raise ConfigurationError('Cannot give both %s and %s' % (option, other_option))
+                ssl_lib_detected = True
+                self.define_macros.append((ssl_options[option], 1))
 
-    if scan_argv("--use-libcurl-dll") is not None:
-        libcurl_lib_path = os.path.join(curl_dir, "lib", curl_lib_name)
-        extra_link_args.extend(["ws2_32.lib"])
+        for arg in libs:
+            if arg[:2] == "-l":
+                self.libraries.append(arg[2:])
+                if not ssl_lib_detected and arg[2:] == 'ssl':
+                    self.define_macros.append(('HAVE_CURL_OPENSSL', 1))
+                    ssl_lib_detected = True
+                if not ssl_lib_detected and arg[2:] == 'gnutls':
+                    self.define_macros.append(('HAVE_CURL_GNUTLS', 1))
+                    ssl_lib_detected = True
+                if not ssl_lib_detected and arg[2:] == 'ssl3':
+                    self.define_macros.append(('HAVE_CURL_NSS', 1))
+                    ssl_lib_detected = True
+            elif arg[:2] == "-L":
+                self.library_dirs.append(arg[2:])
+            else:
+                self.extra_link_args.append(arg)
+        if not ssl_lib_detected:
+            p = subprocess.Popen((CURL_CONFIG, '--features'),
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = p.communicate()
+            if p.wait() != 0:
+                msg = "Problem running `%s' --features" % CURL_CONFIG
+                if stderr:
+                    msg += ":\n" + stderr.decode()
+                raise ConfigurationError(msg)
+            for feature in split_quoted(stdout.decode()):
+                if feature == 'SSL':
+                    # this means any ssl library, not just openssl
+                    self.define_macros.append(('HAVE_CURL_SSL', 1))
+        else:
+            # if we are configuring for a particular ssl library,
+            # we can assume that ssl is being used
+            self.define_macros.append(('HAVE_CURL_SSL', 1))
+        if not self.libraries:
+            self.libraries.append("curl")
+        # Add extra compile flag for MacOS X
+        if sys.platform[:-1] == "darwin":
+            self.extra_link_args.append("-flat_namespace")
+
+
+    def configure_windows(self):
+        # Windows users have to pass --curl-dir parameter to specify path
+        # to libcurl, because there is no curl-config on windows at all.
+        curl_dir = scan_argv("--curl-dir=")
+        if curl_dir is None:
+            fail("Please specify --curl-dir=/path/to/built/libcurl")
+        if not os.path.exists(curl_dir):
+            fail("Curl directory does not exist: %s" % curl_dir)
+        if not os.path.isdir(curl_dir):
+            fail("Curl directory is not a directory: %s" % curl_dir)
+        print("Using curl directory: %s" % curl_dir)
+        self.include_dirs.append(os.path.join(curl_dir, "include"))
+
+        # libcurl windows documentation states that for linking against libcurl
+        # dll, the import library name is libcurl_imp.lib.
+        # in practice, the library name sometimes is libcurl.lib.
+        # override with: --libcurl-lib-name=libcurl_imp.lib
+        curl_lib_name = scan_argv('--libcurl-lib-name=', 'libcurl.lib')
+
+        if scan_argv("--use-libcurl-dll") is not None:
+            libcurl_lib_path = os.path.join(curl_dir, "lib", curl_lib_name)
+            self.extra_link_args.extend(["ws2_32.lib"])
+            if str.find(sys.version, "MSC") >= 0:
+                # build a dll
+                self.extra_compile_args.append("-MD")
+        else:
+            self.extra_compile_args.append("-DCURL_STATICLIB")
+            libcurl_lib_path = os.path.join(curl_dir, "lib", curl_lib_name)
+            self.extra_link_args.extend(["gdi32.lib", "wldap32.lib", "winmm.lib", "ws2_32.lib",])
+
+        if not os.path.exists(libcurl_lib_path):
+            fail("libcurl.lib does not exist at %s.\nCurl directory must point to compiled libcurl (bin/include/lib subdirectories): %s" %(libcurl_lib_path, curl_dir))
+        self.extra_objects.append(libcurl_lib_path)
+        
+        # make pycurl binary work on windows xp.
+        # we use inet_ntop which was added in vista and implement a fallback.
+        # our implementation will not be compiled with _WIN32_WINNT targeting
+        # vista or above, thus said binary won't work on xp.
+        # http://curl.haxx.se/mail/curlpython-2013-12/0007.html
+        self.extra_compile_args.append("-D_WIN32_WINNT=0x0501")
+
         if str.find(sys.version, "MSC") >= 0:
-            # build a dll
-            extra_compile_args.append("-MD")
+            self.extra_compile_args.append("-O2")
+            self.extra_compile_args.append("-GF")        # enable read-only string pooling
+            self.extra_compile_args.append("-WX")        # treat warnings as errors
+            p = subprocess.Popen(['cl.exe'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            out, err = p.communicate()
+            match = re.search(r'Version (\d+)', err.decode().split("\n")[0])
+            if match and int(match.group(1)) < 16:
+                # option removed in vs 2010:
+                # connect.microsoft.com/VisualStudio/feedback/details/475896/link-fatal-error-lnk1117-syntax-error-in-option-opt-nowin98/
+                self.extra_link_args.append("/opt:nowin98")  # use small section alignment
+
+    if sys.platform == "win32":
+        configure = configure_windows
     else:
-        extra_compile_args.append("-DCURL_STATICLIB")
-        libcurl_lib_path = os.path.join(curl_dir, "lib", curl_lib_name)
-        extra_link_args.extend(["gdi32.lib", "wldap32.lib", "winmm.lib", "ws2_32.lib",])
-
-    if not os.path.exists(libcurl_lib_path):
-        fail("libcurl.lib does not exist at %s.\nCurl directory must point to compiled libcurl (bin/include/lib subdirectories): %s" %(libcurl_lib_path, curl_dir))
-    extra_objects.append(libcurl_lib_path)
-    
-    # make pycurl binary work on windows xp.
-    # we use inet_ntop which was added in vista and implement a fallback.
-    # our implementation will not be compiled with _WIN32_WINNT targeting
-    # vista or above, thus said binary won't work on xp.
-    # http://curl.haxx.se/mail/curlpython-2013-12/0007.html
-    extra_compile_args.append("-D_WIN32_WINNT=0x0501")
-
-    if str.find(sys.version, "MSC") >= 0:
-        extra_compile_args.append("-O2")
-        extra_compile_args.append("-GF")        # enable read-only string pooling
-        extra_compile_args.append("-WX")        # treat warnings as errors
-        p = subprocess.Popen(['cl.exe'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        out, err = p.communicate()
-        match = re.search(r'Version (\d+)', err.decode().split("\n")[0])
-        if match and int(match.group(1)) < 16:
-            # option removed in vs 2010:
-            # connect.microsoft.com/VisualStudio/feedback/details/475896/link-fatal-error-lnk1117-syntax-error-in-option-opt-nowin98/
-            extra_link_args.append("/opt:nowin98")  # use small section alignment
+        configure = configure_unix
 
 def get_bdist_msi_version_hack():
     # workaround for distutils/msi version requirement per
@@ -164,139 +302,6 @@ def get_bdist_msi_version_hack():
     return bdist_msi_version_hack
 
 
-def configure_unix():
-    OPENSSL_DIR = scan_argv("--openssl-dir=")
-    if OPENSSL_DIR is not None:
-        include_dirs.append(os.path.join(OPENSSL_DIR, "include"))
-    CURL_CONFIG = os.environ.get('PYCURL_CURL_CONFIG', "curl-config")
-    CURL_CONFIG = scan_argv("--curl-config=", CURL_CONFIG)
-    try:
-        p = subprocess.Popen((CURL_CONFIG, '--version'),
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    except OSError:
-        exc = sys.exc_info()[1]
-        msg = 'Could not run curl-config: %s' % str(exc)
-        raise ConfigurationError(msg)
-    stdout, stderr = p.communicate()
-    if p.wait() != 0:
-        msg = "`%s' not found -- please install the libcurl development files or specify --curl-config=/path/to/curl-config" % CURL_CONFIG
-        if stderr:
-            msg += ":\n" + stderr.decode()
-        raise ConfigurationError(msg)
-    libcurl_version = stdout.decode().strip()
-    print("Using %s (%s)" % (CURL_CONFIG, libcurl_version))
-    p = subprocess.Popen((CURL_CONFIG, '--cflags'),
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = p.communicate()
-    if p.wait() != 0:
-        msg = "Problem running `%s' --cflags" % CURL_CONFIG
-        if stderr:
-            msg += ":\n" + stderr.decode()
-        raise ConfigurationError(msg)
-    for arg in split_quoted(stdout.decode()):
-        if arg[:2] == "-I":
-            # do not add /usr/include
-            if not re.search(r"^\/+usr\/+include\/*$", arg[2:]):
-                include_dirs.append(arg[2:])
-        else:
-            extra_compile_args.append(arg)
-
-    # Obtain linker flags/libraries to link against.
-    # In theory, all we should need is `curl-config --libs`.
-    # Apparently on some platforms --libs fails and --static-libs works,
-    # so try that.
-    # If --libs succeeds do not try --static libs; see
-    # https://github.com/pycurl/pycurl/issues/52 for more details.
-    # If neither --libs nor --static-libs work, fail.
-    optbuf = ""
-    errtext = ''
-    for option in ["--libs", "--static-libs"]:
-        p = subprocess.Popen((CURL_CONFIG, option),
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = p.communicate()
-        if p.wait() == 0:
-            optbuf = stdout.decode()
-            break
-        else:
-            errtext += stderr.decode()
-    if optbuf == "":
-        msg = "Neither curl-config --libs nor curl-config --static-libs" +\
-            " succeeded and produced output"
-        if errtext:
-            msg += ":\n" + errtext
-        raise ConfigurationError(msg)
-    libs = split_quoted(optbuf)
-    
-    ssl_lib_detected = False
-    if 'PYCURL_SSL_LIBRARY' in os.environ:
-        ssl_lib = os.environ['PYCURL_SSL_LIBRARY']
-        if ssl_lib in ['openssl', 'gnutls', 'nss']:
-            ssl_lib_detected = True
-            define_macros.append(('HAVE_CURL_%s' % ssl_lib.upper(), 1))
-        else:
-            raise ConfigurationError('Invalid value "%s" for PYCURL_SSL_LIBRARY' % ssl_lib)
-    ssl_options = {
-        '--with-ssl': 'HAVE_CURL_OPENSSL',
-        '--with-gnutls': 'HAVE_CURL_GNUTLS',
-        '--with-nss': 'HAVE_CURL_NSS',
-    }
-    for option in ssl_options:
-        if scan_argv(option) is not None:
-            for other_option in ssl_options:
-                if option != other_option:
-                    if scan_argv(other_option) is not None:
-                        raise ConfigurationError('Cannot give both %s and %s' % (option, other_option))
-            ssl_lib_detected = True
-            define_macros.append((ssl_options[option], 1))
-
-    for arg in libs:
-        if arg[:2] == "-l":
-            libraries.append(arg[2:])
-            if not ssl_lib_detected and arg[2:] == 'ssl':
-                define_macros.append(('HAVE_CURL_OPENSSL', 1))
-                ssl_lib_detected = True
-            if not ssl_lib_detected and arg[2:] == 'gnutls':
-                define_macros.append(('HAVE_CURL_GNUTLS', 1))
-                ssl_lib_detected = True
-            if not ssl_lib_detected and arg[2:] == 'ssl3':
-                define_macros.append(('HAVE_CURL_NSS', 1))
-                ssl_lib_detected = True
-        elif arg[:2] == "-L":
-            library_dirs.append(arg[2:])
-        else:
-            extra_link_args.append(arg)
-    if not ssl_lib_detected:
-        p = subprocess.Popen((CURL_CONFIG, '--features'),
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = p.communicate()
-        if p.wait() != 0:
-            msg = "Problem running `%s' --features" % CURL_CONFIG
-            if stderr:
-                msg += ":\n" + stderr.decode()
-            raise ConfigurationError(msg)
-        for feature in split_quoted(stdout.decode()):
-            if feature == 'SSL':
-                # this means any ssl library, not just openssl
-                define_macros.append(('HAVE_CURL_SSL', 1))
-    else:
-        # if we are configuring for a particular ssl library,
-        # we can assume that ssl is being used
-        define_macros.append(('HAVE_CURL_SSL', 1))
-    if not libraries:
-        libraries.append("curl")
-    # Add extra compile flag for MacOS X
-    if sys.platform[:-1] == "darwin":
-        extra_link_args.append("-flat_namespace")
-
-
-def configure():
-    if sys.platform == "win32":
-        configure_windows()
-    else:
-        configure_unix()
-
-
-
 def strip_pycurl_options():
     if sys.platform == 'win32':
         options = ['--curl-dir=', '--curl-lib-name=', '--use-libcurl-dll']
@@ -309,19 +314,20 @@ def strip_pycurl_options():
 ###############################################################################
 
 def get_extension():
+    ext_config = ExtensionConfiguration()
     ext = Extension(
         name=PACKAGE,
         sources=[
             os.path.join("src", "pycurl.c"),
         ],
-        include_dirs=include_dirs,
-        define_macros=define_macros,
-        library_dirs=library_dirs,
-        libraries=libraries,
-        runtime_library_dirs=runtime_library_dirs,
-        extra_objects=extra_objects,
-        extra_compile_args=extra_compile_args,
-        extra_link_args=extra_link_args,
+        include_dirs=ext_config.include_dirs,
+        define_macros=ext_config.define_macros,
+        library_dirs=ext_config.library_dirs,
+        libraries=ext_config.libraries,
+        runtime_library_dirs=ext_config.runtime_library_dirs,
+        extra_objects=ext_config.extra_objects,
+        extra_compile_args=ext_config.extra_compile_args,
+        extra_link_args=ext_config.extra_link_args,
     )
     ##print(ext.__dict__); sys.exit(1)
     return ext
@@ -473,8 +479,6 @@ if __name__ == "__main__":
     elif len(sys.argv) > 1 and sys.argv[1] == 'manifest':
         check_manifest()
     else:
-        configure()
-        
         setup_args['data_files'] = get_data_files()
         ext = get_extension()
         setup_args['ext_modules'] = [ext]
