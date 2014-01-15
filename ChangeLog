@@ -1,6 +1,11 @@
 master
 ------
 
+        * Added CURLMOPT_CHUNK_LENGTH_PENALTY_SIZE,
+          CURLMOPT_CONTENT_LENGTH_PENALTY_SIZE, CURLMOPT_MAX_HOST_CONNECTIONS
+          CURLMOPT_MAX_PIPELINE_LENGTH, CURLMOPT_MAX_TOTAL_CONNECTIONS
+          multi options (patch by Jakob Truelsen).
+
         * SSL detection logic changed to consult `curl-config --static-libs`
           even if `curl-config --libs` succeeded. This should achieve
           pre-7.19.3 behavior with respect to automatic SSL detection.
