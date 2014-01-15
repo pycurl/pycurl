@@ -118,7 +118,7 @@
 #endif
 
 #if LIBCURL_VERSION_NUM >= 0x071E00 /* check for 7.30.0 or greater */
-#define HAVE_CURL_PIPELINEOPTS
+#define HAVE_CURL_7_30_0_PIPELINE_OPTS
 #endif
 
 /* Python < 2.5 compat for Py_ssize_t */
@@ -3206,7 +3206,7 @@ do_multi_setopt(CurlMultiObject *self, PyObject *args)
         switch(option) {
         case CURLMOPT_MAXCONNECTS:
         case CURLMOPT_PIPELINING:
-#ifdef HAVE_CURL_PIPELINEOPTS
+#ifdef HAVE_CURL_7_30_0_PIPELINE_OPTS
         case CURLMOPT_MAX_HOST_CONNECTIONS:
         case CURLMOPT_MAX_TOTAL_CONNECTIONS:
         case CURLMOPT_MAX_PIPELINE_LENGTH:
@@ -4879,7 +4879,7 @@ initpycurl(void)
     insint_c(d, "M_SOCKETFUNCTION", CURLMOPT_SOCKETFUNCTION);
     insint_c(d, "M_PIPELINING", CURLMOPT_PIPELINING);
     insint_c(d, "M_MAXCONNECTS", CURLMOPT_MAXCONNECTS);
-#ifdef HAVE_CURL_PIPELINEOPTS
+#ifdef HAVE_CURL_7_30_0_PIPELINE_OPTS
     insint_c(d, "M_MAX_HOST_CONNECTIONS", CURLMOPT_MAX_HOST_CONNECTIONS);
     insint_c(d, "M_MAX_TOTAL_CONNECTIONS", CURLMOPT_MAX_TOTAL_CONNECTIONS);
     insint_c(d, "M_MAX_PIPELINE_LENGTH", CURLMOPT_MAX_PIPELINE_LENGTH);
