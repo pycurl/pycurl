@@ -21,3 +21,4 @@ class MultiOptionConstantsTest(unittest.TestCase):
         m.setopt(pycurl.M_CONTENT_LENGTH_PENALTY_SIZE, 2)
         m.setopt(pycurl.M_CHUNK_LENGTH_PENALTY_SIZE, 2)
         m.setopt(pycurl.M_MAX_TOTAL_CONNECTIONS, 2)
+        m.close()
