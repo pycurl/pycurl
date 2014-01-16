@@ -3,17 +3,17 @@ CurlMulti Object
 
 CurlMulti objects have the following methods:
 
-``close()`` -> *None*
+**close**\ () -> *None*
 
 Corresponds to `curl_multi_cleanup`_ in libcurl. This method is
 automatically called by pycurl when a CurlMulti object no longer has any
 references to it, but can also be called explicitly.
 
-``perform()`` -> *tuple of status and the number of active Curl objects*
+**perform**\ () -> *tuple of status and the number of active Curl objects*
 
 Corresponds to `curl_multi_perform`_ in libcurl.
 
-``add_handle(``*Curl object*``) `` -> *None*
+**add_handle**\ (*Curl object*)  -> *None*
 
 Corresponds to `curl_multi_add_handle`_ in libcurl. This method adds an
 existing and valid Curl object to the CurlMulti object.
@@ -22,7 +22,7 @@ IMPORTANT NOTE: add_handle does not implicitly add a Python reference to the
 Curl object (and thus does not increase the reference count on the Curl
 object).
 
-``remove_handle(``*Curl object*``)`` -> *None*
+**remove_handle**\ (*Curl object*) -> *None*
 
 Corresponds to `curl_multi_remove_handle`_ in libcurl. This method
 removes an existing and valid Curl object from the CurlMulti object.
@@ -31,7 +31,7 @@ IMPORTANT NOTE: remove_handle does not implicitly remove a Python reference
 from the Curl object (and thus does not decrease the reference count on the
 Curl object).
 
-``fdset()`` -> *triple of lists with active file descriptors, readable,
+**fdset**\ () -> *triple of lists with active file descriptors, readable,
 writeable, exceptions.*
 
 Corresponds to `curl_multi_fdset`_ in libcurl. This method extracts the
@@ -56,7 +56,7 @@ Example usage:
             ret, num_handles = m.perform()
             if ret != pycurl.E_CALL_MULTI_PERFORM: break
 
-``select(``*timeout*``)`` -> *number of ready file descriptors or -1 on timeout*
+**select**\ (*timeout*) -> *number of ready file descriptors or -1 on timeout*
 
 This is a convenience function which simplifies the combined use of
 ``fdset()`` and the ``select`` module.
@@ -80,7 +80,7 @@ Example usage:
             ret, num_handles = m.perform()
             if ret != pycurl.E_CALL_MULTI_PERFORM: break
 
-``info_read(``*[max]*``)`` -> *number of queued messages, a list of
+**info_read**\ (*[max]*) -> *number of queued messages, a list of
 successful objects, a list of failed objects*
 
 Corresponds to the `curl_multi_info_read`_ function in libcurl. This

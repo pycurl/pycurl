@@ -3,21 +3,21 @@ Curl Object
 
 Curl objects have the following methods:
 
-``close()`` -> *None*
+**close**\ () -> *None*
 
 Corresponds to `curl_easy_cleanup`_ in libcurl. This method is
 automatically called by pycurl when a Curl object no longer has any
 references to it, but can also be called explicitly.
 
-``perform()`` -> *None*
+**perform**\ () -> *None*
 
 Corresponds to `curl_easy_perform`_ in libcurl.
 
-``reset()`` -> *None*
+**reset**\ () -> *None*
 
 Corresponds to `curl_easy_reset`_ in libcurl.
 
-``setopt(``*option, value*``)`` -> *None*
+**setopt**\ (*option, value*) -> *None*
 
 Corresponds to `curl_easy_setopt`_ in libcurl, where *option* is
 specified with the ``CURLOPT_*`` constants in libcurl, except that the
@@ -43,7 +43,7 @@ Example usage:
     print b.getvalue()
     ...
 
-``getinfo(``*option*``) `` -> *Result*
+**getinfo**\ (*option*) -> *Result*
 
 Corresponds to `curl_easy_getinfo`_ in libcurl, where *option* is the
 same as the ``CURLINFO_*`` constants in libcurl, except that the ``CURLINFO_``
@@ -65,13 +65,13 @@ Example usage:
     ...
     --> 200 "http://sourceforge.net/"
 
-``pause(``*bitmask*``) `` -> *None*
+**pause**\ (*bitmask*) -> *None*
 
 Corresponds to `curl_easy_pause`_ in libcurl. The argument should be
 derived from the ``PAUSE_RECV``, ``PAUSE_SEND``, ``PAUSE_ALL`` and
 ``PAUSE_CONT`` constants.
 
-``errstr()`` -> *String*
+**errstr**\ () -> *String*
 
 Returns the internal libcurl error buffer of this handle as a string.
 

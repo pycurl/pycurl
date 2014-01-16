@@ -19,17 +19,17 @@ how libcurl works, please consult the `curl library C API`_.
 Module Functionality
 --------------------
 
-``pycurl.global_init(``*option*``)`` ->*None*
+**pycurl.global_init**\ (*option*) -> *None*
 
 *option* is one of the constants pycurl.GLOBAL_SSL, pycurl.GLOBAL_WIN32,
 pycurl.GLOBAL_ALL, pycurl.GLOBAL_NOTHING, pycurl.GLOBAL_DEFAULT. Corresponds
 to `curl_global_init`_ in libcurl.
 
-``pycurl.global_cleanup()`` -> *None*
+**pycurl.global_cleanup**\ () -> *None*
 
 Corresponds to `curl_global_cleanup`_ in libcurl.
 
-``pycurl.version``
+**pycurl.version**
 
 This is a string with version information on libcurl, corresponding to
 `curl_version`_ in libcurl.
@@ -42,7 +42,7 @@ Example usage:
     >>> pycurl.version
     'PycURL/7.19.3 libcurl/7.33.0 OpenSSL/0.9.8x zlib/1.2.7'
 
-``pycurl.version_info()`` -> *Tuple*
+**pycurl.version_info**\ () -> *Tuple*
 
 Corresponds to `curl_version_info`_ in libcurl. Returns a tuple of
 information which is similar to the ``curl_version_info_data`` struct
@@ -59,19 +59,19 @@ Example usage:
     'imap', 'imaps', 'pop3', 'pop3s', 'rtsp', 'smtp', 'smtps', 'telnet',
     'tftp'), None, 0, None)
 
-``pycurl.Curl()`` -> *Curl object*
+**pycurl.Curl**\ () -> *Curl object*
 
 This function creates a new `Curl object`_ which corresponds to a ``CURL``
 handle in libcurl. Curl objects automatically set CURLOPT_VERBOSE to 0,
 CURLOPT_NOPROGRESS to 1, provide a default CURLOPT_USERAGENT and setup
 CURLOPT_ERRORBUFFER to point to a private error buffer.
 
-``pycurl.CurlMulti()`` -> *CurlMulti object*
+**pycurl.CurlMulti**\ () -> *CurlMulti object*
 
 This function creates a new `CurlMulti object`_ which corresponds to a
 ``CURLM`` handle in libcurl.
 
-``pycurl.CurlShare()`` -> *CurlShare object*
+**pycurl.CurlShare**\ () -> *CurlShare object*
 
 This function creates a new `CurlShare object`_ which corresponds to a
 ``CURLSH`` handle in libcurl. CurlShare objects is what you pass as an

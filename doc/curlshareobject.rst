@@ -3,7 +3,7 @@ CurlShare Object
 
 CurlShare objects have the following methods:
 
-``setopt(``*option, value*``)`` -> *None*
+**setopt**\ (*option, value*) -> *None*
 
 Corresponds to `curl_share_setopt`_ in libcurl, where *option* is
 specified with the ``CURLSHOPT_*`` constants in libcurl, except that the

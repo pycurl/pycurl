@@ -23,18 +23,18 @@ callbacks.
 
 The signature of each callback used in pycurl is as follows:
 
-``WRITEFUNCTION(``*string*``) `` -> *number of characters written*
+**WRITEFUNCTION**\ (*string*) -> *number of characters written*
 
-``READFUNCTION(``*number of characters to read*``)`` -> *string*
+**READFUNCTION**\ (*number of characters to read*) -> *string*
 
-``HEADERFUNCTION(``*string*``)`` -> *number of characters written*
+**HEADERFUNCTION**\ (*string*) -> *number of characters written*
 
-``PROGRESSFUNCTION(``*download total, downloaded, upload total,
-uploaded*``) `` -> *status*
+**PROGRESSFUNCTION**\ (*download total, downloaded, upload total,
+uploaded*) -> *status*
 
-``DEBUGFUNCTION(``*debug message type, debug message string*``)`` -> *None*
+**DEBUGFUNCTION**\ (*debug message type, debug message string*) -> *None*
 
-``IOCTLFUNCTION(``*ioctl cmd*``)`` -> *status*
+**IOCTLFUNCTION**\ (*ioctl cmd*) -> *status*
 
 In addition, ``READFUNCTION`` may return ``READFUNC_ABORT`` or
 ``READFUNC_PAUSE``. See the libcurl documentation for an explanation of these
