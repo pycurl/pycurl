@@ -1,36 +1,4 @@
 /* PycURL -- cURL Python module
- *
- * Authors:
- *  Copyright (C) 2001-2008 by Kjetil Jacobsen <kjetilja at gmail.com>
- *  Copyright (C) 2001-2008 by Markus F.X.J. Oberhumer <markus at oberhumer.com>
- *  Copyright (C) 2013-2014 by Oleg Pudeyev <oleg at bsdpower.com>
- *
- *  All rights reserved.
- *
- * Contributions:
- *  Tino Lange <Tino.Lange at gmx.de>
- *  Matt King <matt at gnik.com>
- *  Conrad Steenberg <conrad at hep.caltech.edu>
- *  Amit Mongia <amit_mongia at hotmail.com>
- *  Eric S. Raymond <esr at thyrsus.com>
- *  Martin Muenstermann <mamuema at sourceforge.net>
- *  Domenico Andreoli <cavok at libero.it>
- *  Dominique <curl-and-python at d242.net>
- *  Paul Pacheco
- *  Victor Lascurain <bittor at eleka.net>
- *  K.S.Sreeram <sreeram at tachyontech.net>
- *  Jayne <corvine at gmail.com>
- *  Bastian Kleineidam
- *  Mark Eichin
- *  Aaron Hill <visine19 at hotmail.com>
- *  Daniel Pena Arteaga <dpena at ph.tum.de>
- *  Jim Patterson
- *  Yuhui H <eyecat at gmail.com>
- *  Nick Pilon <npilon at oreilly.com>
- *  Thomas Hunger <teh at camvine.org>
- *  Wim Lewis
- *
- * See file README for license information.
  */
 
 #if (defined(_WIN32) || defined(__WIN32__)) && !defined(WIN32)
