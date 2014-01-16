@@ -6,24 +6,24 @@ Please see README, COPYING-LGPL and COPYING-MIT for license information.
 
 The following individuals contributed code to PycURL:
 
-Tino Lange <Tino.Lange at gmx.de>
-Matt King <matt at gnik.com>
-Conrad Steenberg <conrad at hep.caltech.edu>
+Aaron Hill <visine19 at hotmail.com>
 Amit Mongia <amit_mongia at hotmail.com>
-Eric S. Raymond <esr at thyrsus.com>
-Martin Muenstermann <mamuema at sourceforge.net>
+Bastian Kleineidam
+Conrad Steenberg <conrad at hep.caltech.edu>
+Daniel Pena Arteaga <dpena at ph.tum.de>
 Domenico Andreoli <cavok at libero.it>
 Dominique <curl-and-python at d242.net>
-Paul Pacheco
-Victor Lascurain <bittor at eleka.net>
-K.S.Sreeram <sreeram at tachyontech.net>
+Eric S. Raymond <esr at thyrsus.com>
 Jayne <corvine at gmail.com>
-Bastian Kleineidam
-Mark Eichin
-Aaron Hill <visine19 at hotmail.com>
-Daniel Pena Arteaga <dpena at ph.tum.de>
 Jim Patterson
-Yuhui H <eyecat at gmail.com>
+K.S.Sreeram <sreeram at tachyontech.net>
+Mark Eichin
+Martin Muenstermann <mamuema at sourceforge.net>
+Matt King <matt at gnik.com>
 Nick Pilon <npilon at oreilly.com>
+Paul Pacheco
 Thomas Hunger <teh at camvine.org>
+Tino Lange <Tino.Lange at gmx.de>
+Victor Lascurain <bittor at eleka.net>
 Wim Lewis
+Yuhui H <eyecat at gmail.com>
