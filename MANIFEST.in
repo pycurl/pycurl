@@ -11,7 +11,6 @@ include MANIFEST.in
 include Makefile
 include README.rst
 include RELEASE-NOTES.rst
-include doc/*.html
 include doc/*.rst
 include examples/*.py
 include examples/tests/*.py
