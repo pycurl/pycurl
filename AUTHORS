@@ -1,0 +1,46 @@
+Copyright (C) 2001-2008 by Kjetil Jacobsen <kjetilja at gmail.com>
+Copyright (C) 2001-2008 by Markus F.X.J. Oberhumer <markus at oberhumer.com>
+Copyright (C) 2013-2014 by Oleg Pudeyev <oleg at bsdpower.com>
+
+Please see README, COPYING-LGPL and COPYING-MIT for license information.
+
+The following individuals contributed code to PycURL:
+
+Aaron Hill <visine19 at hotmail.com>
+Adam Guthrie <therigu at users.sourceforge.net>
+Adam Jacob Muller <adam at isprime.com>
+Amit Mongia <amit_mongia at hotmail.com>
+Andjelko Horvat <comel at vingd.com>
+Bastian Kleineidam
+Christopher Warner <cwarner at kernelcode.com>
+Conrad Steenberg <conrad at hep.caltech.edu>
+Daniel Pena Arteaga <dpena at ph.tum.de>
+Domenico Andreoli <cavok at libero.it>
+Dominique <curl-and-python at d242.net>
+Eric S. Raymond <esr at thyrsus.com>
+Gisle Vanem <gvanem at yahoo.no>
+Jakob Truelsen <jakob at scalgo.com>
+Jayne <corvine at gmail.com>
+Jim Patterson
+K.S.Sreeram <sreeram at tachyontech.net>
+Kamil Dudka <kdudka at redhat.com>
+Kevin Ko <kevin.s.ko at gmail.com>
+Marcelo Jorge Vieira <metal at alucinados.com>
+Marien Zwart
+Mark Eichin
+Martin Muenstermann <mamuema at sourceforge.net>
+Matt King <matt at gnik.com>
+Nick Pilon <npilon at oreilly.com>
+Oskari Saarenmaa <os at ohmu.fi>
+Paul Pacheco
+Roland Sommer <rol at ndsommer.de>
+Romuald Brunet <romuald at gandi.net>
+Romulo A. Ceccon <romuloceccon at gmail.com>
+Thomas Hunger <teh at camvine.org>
+Tino Lange <Tino.Lange at gmx.de>
+Tom Pierce <tom.pierce0 at gmail.com>
+Victor Lascurain <bittor at eleka.net>
+Wim Lewis
+Yuhui H <eyecat at gmail.com>
+Yuri Ushakov <yuri.ushakov at gmail.com>
+Zdenek Pavlas <zpavlas at redhat.com>
