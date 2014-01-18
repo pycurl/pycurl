@@ -8,7 +8,8 @@ master
 
         * SSL detection logic changed to consult `curl-config --static-libs`
           even if `curl-config --libs` succeeded. This should achieve
-          pre-7.19.3 behavior with respect to automatic SSL detection.
+          pre-7.19.3 behavior with respect to automatic SSL detection
+          (patch by Andjelko Horvat).
 
 Version 7.19.3 [requires libcurl-7.19.0 or better] - 2014-01-09
 ---------------------------------------------------------------
