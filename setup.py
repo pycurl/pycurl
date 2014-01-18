@@ -439,6 +439,32 @@ def check_manifest():
         if not included:
             print(path)
 
+AUTHORS_PARAGRAPH = 3
+
+def check_authors():
+    f = open('AUTHORS')
+    try:
+        contents = f.read()
+    finally:
+        f.close()
+    
+    paras = contents.split("\n\n")
+    authors_para = paras[AUTHORS_PARAGRAPH]
+    authors = [author for author in authors_para.strip().split("\n")]
+    
+    log = subprocess.check_output(['git', 'log', '--format=%an (%ae)'])
+    for author in log.strip().split("\n"):
+        author = author.replace('@', ' at ').replace('(', '<').replace(')', '>')
+        if author not in authors:
+            authors.append(author)
+    authors.sort()
+    paras[AUTHORS_PARAGRAPH] = "\n".join(authors)
+    f = open('AUTHORS', 'w')
+    try:
+        f.write("\n\n".join(paras))
+    finally:
+        f.close()
+
 ###############################################################################
 
 setup_args = dict(
@@ -513,6 +539,8 @@ if __name__ == "__main__":
         setup(**setup_args)
     elif len(sys.argv) > 1 and sys.argv[1] == 'manifest':
         check_manifest()
+    elif len(sys.argv) > 1 and sys.argv[1] == 'authors':
+        check_authors()
     else:
         setup_args['data_files'] = get_data_files()
         ext = get_extension()
