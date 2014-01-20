@@ -30,6 +30,9 @@ matrix:
       env:
         - USECURL=7.34.0
         - USESSL=none
+    - python: 2.7
+      env:
+        - AVOIDSTDIO=yes
 install: >
   ./tests/travis/setup.sh
 before_script: >

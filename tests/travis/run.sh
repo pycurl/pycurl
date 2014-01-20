@@ -37,4 +37,8 @@ fi
 
 export VSFTPD_PATH=vsftpd
 
+if test -n "$AVOIDSTDIO"; then
+  export PYCURL_SETUP_OPTIONS=--avoid-stdio
+fi
+
 make test

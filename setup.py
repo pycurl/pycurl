@@ -246,8 +246,7 @@ class ExtensionConfiguration(object):
             self.extra_link_args.append("-flat_namespace")
         
         # Recognize --avoid-stdio on Unix so that it can be tested
-        if scan_argv('--avoid-stdio') is not None:
-            self.extra_compile_args.append("-DAVOID_STDIO")
+        self.check_avoid_stdio()
 
 
     def configure_windows(self):
@@ -284,8 +283,7 @@ class ExtensionConfiguration(object):
             fail("libcurl.lib does not exist at %s.\nCurl directory must point to compiled libcurl (bin/include/lib subdirectories): %s" %(libcurl_lib_path, curl_dir))
         self.extra_objects.append(libcurl_lib_path)
         
-        if scan_argv('--avoid-stdio') is not None:
-            self.extra_compile_args.append("-DAVOID_STDIO")
+        self.check_avoid_stdio()
         
         # make pycurl binary work on windows xp.
         # we use inet_ntop which was added in vista and implement a fallback.
@@ -310,6 +308,13 @@ class ExtensionConfiguration(object):
         configure = configure_windows
     else:
         configure = configure_unix
+    
+    
+    def check_avoid_stdio(self):
+        if 'PYCURL_SETUP_OPTIONS' in os.environ and '--avoid-stdio' in os.environ['PYCURL_SETUP_OPTIONS']:
+            self.extra_compile_args.append("-DAVOID_STDIO")
+        if scan_argv('--avoid-stdio') is not None:
+            self.extra_compile_args.append("-DAVOID_STDIO")
 
 def get_bdist_msi_version_hack():
     # workaround for distutils/msi version requirement per

@@ -108,7 +108,10 @@ Additional Windows setup.py options:
   CURLOPT_WRITEHEADER options. This option applies only on Python 2; on
   Python 3, file objects no longer expose C library FILE pointers and the
   C runtime issue does not exist. On Python 3, this option is recognized but
-  does nothing.
+  does nothing. You can also give ``--avoid-stdio`` option in
+  PYCURL_SETUP_OPTIONS environment variable as follows::
+
+    PYCURL_SETUP_OPTIONS=--avoid-stdio pip install pycurl
 
 A good ``setup.py`` target to use is ``bdist_wininst`` which produces an
 executable installer that you can run to install PycURL.
