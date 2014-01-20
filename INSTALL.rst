@@ -92,12 +92,23 @@ and compiled libraries.
 
 Additional Windows setup.py options:
 
-- ``--use-libcurl-dll`` - build against libcurl DLL, if not given PycURL will
+- ``--use-libcurl-dll``: build against libcurl DLL, if not given PycURL will
   be built against libcurl statically.
-- ``--libcurl-lib-name=libcurl_imp.lib`` - specify a different name for libcurl
+- ``--libcurl-lib-name=libcurl_imp.lib``: specify a different name for libcurl
   import library. The default is ``libcurl.lib`` which is appropriate for
   static linking and is sometimes the correct choice for dynamic linking as
   well. The other possibility for dynamic linking is ``libcurl_imp.lib``.
+- ``--avoid-stdio``: on windows, a process and each library it is using
+  may be linked to its own version of the C runtime (msvcrt).
+  FILE pointers from one C runtime may not be passed to another C runtime.
+  This option prevents direct passing of FILE pointers from Python to libcurl,
+  thus permitting Python and libcurl to be linked against different C runtimes.
+  This option may carry a performance penalty when Python file objects are
+  given directly to PycURL in CURLOPT_READDATA, CURLOPT_WRITEDATA or
+  CURLOPT_WRITEHEADER options. This option applies only on Python 2; on
+  Python 3, file objects no longer expose C library FILE pointers and the
+  C runtime issue does not exist. On Python 3, this option is recognized but
+  does nothing.
 
 A good ``setup.py`` target to use is ``bdist_wininst`` which produces an
 executable installer that you can run to install PycURL.
