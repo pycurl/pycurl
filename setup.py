@@ -380,7 +380,7 @@ def get_data_files():
     else:
         datadir = os.path.join("share", "doc", PACKAGE)
     #
-    files = ["ChangeLog", "COPYING-LGPL", "COPYING-MIT", "INSTALL", "README.rst"]
+    files = ["ChangeLog", "COPYING-LGPL", "COPYING-MIT", "INSTALL.rst", "README.rst"]
     if files:
         data_files.append((os.path.join(datadir), files))
     files = glob.glob(os.path.join("doc", "*.rst"))
