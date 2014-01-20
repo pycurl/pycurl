@@ -6,7 +6,7 @@
 include COPYING-LGPL
 include COPYING-MIT
 include ChangeLog
-include INSTALL
+include INSTALL.rst
 include MANIFEST.in
 include Makefile
 include README.rst

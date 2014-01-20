@@ -27,7 +27,7 @@ class FtpTest(unittest.TestCase):
         
         result = sio.getvalue().decode()
         assert 'README.rst' in result
-        assert 'INSTALL' in result
+        assert 'INSTALL.rst' in result
     
     # XXX this test needs to be fixed
     def test_quote(self):
@@ -50,4 +50,4 @@ class FtpTest(unittest.TestCase):
         
         result = sio.getvalue().decode()
         assert 'README.rst' in result
-        assert 'INSTALL' in result
+        assert 'INSTALL.rst' in result
