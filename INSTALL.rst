@@ -32,6 +32,23 @@ LD_LIBRARY_PATH environment variable accordingly.  This normally
 applies only if there is more than one version of libcurl installed,
 e.g. one in /usr/lib and one in /usr/local/lib.
 
+PycURL requires that the SSL library that it is built against is the same
+one libcurl, and therefore PycURL, uses at runtime. PycURL's ``setup.py``
+uses ``curl-config`` to attempt to figure out which SSL library libcurl
+was compiled against, however this does not always work. If PycURL is unable
+to determine the SSL library in use it will print a warning similar to
+the following::
+
+    src/pycurl.c:137:4: warning: #warning "libcurl was compiled with SSL support, but configure could not determine which " "library was used; thus no SSL crypto locking callbacks will be set, which may " "cause random crashes on SSL requests" [-Wcpp]
+
+It will then fail at runtime as follows::
+
+    ImportError: pycurl: libcurl link-time ssl backend (openssl) is different from compile-time ssl backend (none/other)
+
+To fix this, you need to tell ``setup.py`` what SSL backend is used::
+
+    python setup.py --with-[ssl|gnutls|nss] install
+
 
 easy_install / pip
 ------------------
@@ -48,22 +65,10 @@ environment variable::
     easy_install pycurl
 
 The same applies to the SSL backend, if you need to specify it (see the SSL
-section below)::
+note above)::
 
-    export PYCURL_SSL_LIBRARY=openssl
+    export PYCURL_SSL_LIBRARY=[openssl|gnutls|nss]
     easy_install pycurl
-
-
-SSL
----
-
-PycURL has locks around crypto functions. In order to compile correct locking
-code, it has to know which SSL library is going to be used by libcurl at
-runtime. setup.py will attempt to automatically detect the SSL library that
-libcurl uses, but this does not always work. In the cases when setup.py cannot
-figure out the SSL library, it must be provided via --with-ssl/--with-gnutls/
---with-nss arguments, just like libcurl's configure script uses, or via
-PYCURL_SSL_LIBRARY=openssl|gnutls|nss environment variable.
 
 Please note the difference in spelling that concerns OpenSSL: the command-line
 argument is --with-ssl, to match libcurl, but the environment variable value is
