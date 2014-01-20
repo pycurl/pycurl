@@ -312,9 +312,9 @@ class ExtensionConfiguration(object):
     
     def check_avoid_stdio(self):
         if 'PYCURL_SETUP_OPTIONS' in os.environ and '--avoid-stdio' in os.environ['PYCURL_SETUP_OPTIONS']:
-            self.extra_compile_args.append("-DAVOID_STDIO")
+            self.extra_compile_args.append("-DPYCURL_AVOID_STDIO")
         if scan_argv('--avoid-stdio') is not None:
-            self.extra_compile_args.append("-DAVOID_STDIO")
+            self.extra_compile_args.append("-DPYCURL_AVOID_STDIO")
 
 def get_bdist_msi_version_hack():
     # workaround for distutils/msi version requirement per
