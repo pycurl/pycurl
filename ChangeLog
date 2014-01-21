@@ -1,6 +1,9 @@
 master
 ------
 
+        * Added --avoid-stdio setup.py option to avoid passing FILE
+          pointers from Python to libcurl. Applies to Python 2 only.
+
         * Added CURLMOPT_CHUNK_LENGTH_PENALTY_SIZE,
           CURLMOPT_CONTENT_LENGTH_PENALTY_SIZE, CURLMOPT_MAX_HOST_CONNECTIONS
           CURLMOPT_MAX_PIPELINE_LENGTH, CURLMOPT_MAX_TOTAL_CONNECTIONS
