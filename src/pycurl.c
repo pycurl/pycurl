@@ -2244,7 +2244,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 #undef IS_LONG_OPTION
 #undef IS_OFF_T_OPTION
 
-#if PY_MAJOR_VERSION < 3
+#if PY_MAJOR_VERSION < 3 && !defined(PYCURL_AVOID_STDIO)
     /* Handle the case of file objects */
     if (PyFile_Check(obj)) {
         FILE *fp;

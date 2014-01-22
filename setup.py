@@ -240,9 +240,13 @@ class ExtensionConfiguration(object):
             self.define_macros.append(('HAVE_CURL_SSL', 1))
         if not self.libraries:
             self.libraries.append("curl")
+        
         # Add extra compile flag for MacOS X
         if sys.platform[:-1] == "darwin":
             self.extra_link_args.append("-flat_namespace")
+        
+        # Recognize --avoid-stdio on Unix so that it can be tested
+        self.check_avoid_stdio()
 
 
     def configure_windows(self):
@@ -279,6 +283,8 @@ class ExtensionConfiguration(object):
             fail("libcurl.lib does not exist at %s.\nCurl directory must point to compiled libcurl (bin/include/lib subdirectories): %s" %(libcurl_lib_path, curl_dir))
         self.extra_objects.append(libcurl_lib_path)
         
+        self.check_avoid_stdio()
+        
         # make pycurl binary work on windows xp.
         # we use inet_ntop which was added in vista and implement a fallback.
         # our implementation will not be compiled with _WIN32_WINNT targeting
@@ -302,6 +308,13 @@ class ExtensionConfiguration(object):
         configure = configure_windows
     else:
         configure = configure_unix
+    
+    
+    def check_avoid_stdio(self):
+        if 'PYCURL_SETUP_OPTIONS' in os.environ and '--avoid-stdio' in os.environ['PYCURL_SETUP_OPTIONS']:
+            self.extra_compile_args.append("-DPYCURL_AVOID_STDIO")
+        if scan_argv('--avoid-stdio') is not None:
+            self.extra_compile_args.append("-DPYCURL_AVOID_STDIO")
 
 def get_bdist_msi_version_hack():
     # workaround for distutils/msi version requirement per
@@ -339,9 +352,12 @@ def get_bdist_msi_version_hack():
 
 def strip_pycurl_options():
     if sys.platform == 'win32':
-        options = ['--curl-dir=', '--curl-lib-name=', '--use-libcurl-dll']
+        options = [
+            '--curl-dir=', '--curl-lib-name=', '--use-libcurl-dll',
+            '--avoid-stdio',
+        ]
     else:
-        options = ['--openssl-dir=', '--curl-config=']
+        options = ['--openssl-dir=', '--curl-config=', '--avoid-stdio']
     for option in options:
         scan_argv(option)
 
