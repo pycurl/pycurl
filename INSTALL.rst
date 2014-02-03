@@ -90,6 +90,10 @@ then configure PycURL as follows to use it::
 Note that ``--curl-dir`` does not point to libcurl source but rather to headers
 and compiled libraries.
 
+If libcurl and Python are not linked against the same exact C runtime
+(version number, static/dll, single-threaded/multi-threaded) you must use
+``--avoid-stdio`` option (see below).
+
 Additional Windows setup.py options:
 
 - ``--use-libcurl-dll``: build against libcurl DLL, if not given PycURL will
@@ -115,3 +119,30 @@ Additional Windows setup.py options:
 
 A good ``setup.py`` target to use is ``bdist_wininst`` which produces an
 executable installer that you can run to install PycURL.
+
+You may find the following mailing list posts helpful:
+
+- http://curl.haxx.se/mail/curlpython-2009-11/0010.html
+- http://curl.haxx.se/mail/curlpython-2013-11/0002.html
+
+
+winbuild.py
+^^^^^^^^^^^
+
+This script is used to build official PycURL Windows packages. You can
+use it to build a full complement of packages with your own options or modify
+it to build a single package you need.
+
+Prerequisites:
+
+- msysgit_.
+- Appropriate `Python versions`_ installed.
+- MS Visual C++ 9/2008 for Python <= 3.2, MS Visual C++ 10/2010 for
+  Python >= 3.3. Express versions of Visual Studio work fine for this.
+
+.. _msysgit: http://msysgit.github.io/
+.. _Python versions: http://python.org/download/
+
+``winbuild.py`` assumes all programs are installed in their default locations,
+if this is not the case edit it as needed. ``winbuild.py`` can be run
+with Python 2.6, 2.7, 3.2 or 3.3.
