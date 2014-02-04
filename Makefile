@@ -66,7 +66,7 @@ windist: distclean
 # Editing docstrings in Python or C source will not cause the documentation
 # to be rebuilt with this target, use docs-force instead.
 docs: build
-	sphinx-build doc doc/build
+	sphinx-build doc build/doc
 
 # Rebuild all documentation.
 # As sphinx extracts documentation from pycurl modules, docs targets
@@ -74,13 +74,13 @@ docs: build
 docs-force: build
 	# sphinx-docs has an -a option but it does not seem to always
 	# rebuild everything
-	rm -rf doc/build
-	sphinx-build doc doc/build
+	rm -rf build/doc
+	sphinx-build doc build/doc
 
 www: docs
 	mkdir -p build
 	rsync -av www build
-	rsync -av doc/build/ build/www/htdocs/doc
+	rsync -av build/doc/ build/www/htdocs/doc
 	cp ChangeLog build/www/htdocs
 
 
