@@ -1,5 +1,5 @@
-Files
-=====
+File Handling
+=============
 
 In PycURL 7.19.0.3 and below, CURLOPT_READDATA, CURLOPT_WRITEDATA and
 CURLOPT_WRITEHEADER options accepted file objects and directly passed
