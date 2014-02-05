@@ -6,6 +6,8 @@ Contents:
 .. toctree::
    :maxdepth: 2
    
+   release-notes-link
+   install-link
    pycurl
    curlobject
    curlmultiobject
