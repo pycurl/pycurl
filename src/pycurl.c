@@ -4268,12 +4268,18 @@ error:
 
 /* Per function docstrings */
 static const char pycurl_global_init_doc[] =
-    "global_init(option) -> None.  "
-    "Initialize curl environment.\n";
+    "global_init(option) -> None\n\n"
+    "Initialize curl environment.\n\n"
+    "*option* is one of the constants pycurl.GLOBAL_SSL, pycurl.GLOBAL_WIN32, "
+    "pycurl.GLOBAL_ALL, pycurl.GLOBAL_NOTHING, pycurl.GLOBAL_DEFAULT. "
+    "Corresponds to `curl_global_init`_ in libcurl.\n\n"
+    ".. _curl_global_init: http://curl.haxx.se/libcurl/c/curl_global_init.html";
 
 static const char pycurl_global_cleanup_doc[] =
-    "global_cleanup() -> None.  "
-    "Cleanup curl environment.\n";
+    "global_cleanup() -> None\n\n"
+    "Cleanup curl environment.\n\n"
+    "Corresponds to `curl_global_cleanup`_ in libcurl.\n\n"
+    ".. _curl_global_cleanup: http://curl.haxx.se/libcurl/c/curl_global_cleanup.html";
 
 static const char pycurl_version_info_doc[] =
     "version_info() -> tuple.  "

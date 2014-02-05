@@ -19,15 +19,9 @@ how libcurl works, please consult the `curl library C API`_.
 Module Functionality
 --------------------
 
-**pycurl.global_init**\ (*option*) -> *None*
+.. autofunction:: pycurl.global_init
 
-*option* is one of the constants pycurl.GLOBAL_SSL, pycurl.GLOBAL_WIN32,
-pycurl.GLOBAL_ALL, pycurl.GLOBAL_NOTHING, pycurl.GLOBAL_DEFAULT. Corresponds
-to `curl_global_init`_ in libcurl.
-
-**pycurl.global_cleanup**\ () -> *None*
-
-Corresponds to `curl_global_cleanup`_ in libcurl.
+.. autofunction:: pycurl.global_cleanup
 
 **pycurl.version**
 
@@ -80,8 +74,6 @@ argument to the SHARE option on Curl objects.
 
 .. _libcurl: http://curl.haxx.se/libcurl/
 .. _curl library C API: http://curl.haxx.se/libcurl/c/
-.. _curl_global_init: http://curl.haxx.se/libcurl/c/curl_global_init.html
-.. _curl_global_cleanup: http://curl.haxx.se/libcurl/c/curl_global_cleanup.html
 .. _curl_version: http://curl.haxx.se/libcurl/c/curl_version.html
 .. _curl_version_info: http://curl.haxx.se/libcurl/c/curl_version_info.html
 .. _Curl object: curlobject.html
