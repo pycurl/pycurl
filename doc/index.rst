@@ -13,8 +13,6 @@ Contents:
    callbacks
    unicode
    files
-   internals
-   release-process
 
 
 
