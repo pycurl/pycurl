@@ -78,23 +78,6 @@ This function creates a new `CurlShare object`_ which corresponds to a
 argument to the SHARE option on Curl objects.
 
 
-Subsections
------------
-
--   `Curl objects`_
--   `CurlMulti objects`_
--   `CurlShare objects`_
--   `Callbacks`_
--   `Unicode handling`_
--   `File handling`_
-
-
-Documentation For Developers
-============================
-
--   `Notes on PycURL internals`_
--   `Release process`_
-
 .. _libcurl: http://curl.haxx.se/libcurl/
 .. _curl library C API: http://curl.haxx.se/libcurl/c/
 .. _curl_global_init: http://curl.haxx.se/libcurl/c/curl_global_init.html
@@ -102,13 +85,5 @@ Documentation For Developers
 .. _curl_version: http://curl.haxx.se/libcurl/c/curl_version.html
 .. _curl_version_info: http://curl.haxx.se/libcurl/c/curl_version_info.html
 .. _Curl object: curlobject.html
-.. _Curl objects: curlobject.html
 .. _CurlMulti object: curlmultiobject.html
-.. _CurlMulti objects: curlmultiobject.html
 .. _CurlShare object: curlshareobject.html
-.. _CurlShare objects: curlshareobject.html
-.. _Callbacks: callbacks.html
-.. _Unicode handling: unicode.html
-.. _File handling: files.html
-.. _Notes on PycURL internals: internals.html
-.. _Release process: release-process.html
