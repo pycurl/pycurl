@@ -62,8 +62,15 @@ windist: distclean
 	python2.4 setup_win32_ssl.py bdist_wininst
 	rm -rf build
 
+# Rebuild missing or changed documentation.
+# Editing docstrings in Python or C source will not cause the documentation
+# to be rebuilt with this target, use docs-force instead.
 docs:
 	sphinx-build doc doc/build
+
+# Rebuild all documentation.
+docs-force:
+	sphinx-build -a doc doc/build
 
 www: docs
 	mkdir -p build
@@ -72,6 +79,8 @@ www: docs
 	cp ChangeLog build/www/htdocs
 
 
-.PHONY: all build test do-test strip install install_lib clean distclean maintainer-clean dist sdist windist
+.PHONY: all build test do-test strip install install_lib \
+	clean distclean maintainer-clean dist sdist windist \
+	docs docs-force
 
 .NOEXPORT:
