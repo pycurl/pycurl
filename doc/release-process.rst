@@ -9,6 +9,8 @@ Release Process
 4. Make sure travis is green for master.
 5. Update version numbers in:
    - Changelog (also record release date)
+   - Changelog
+   - doc/conf.py
    - setup.py
    - winbuild.py
    - www/htdocs/index.php (also update release date)
