@@ -62,11 +62,13 @@ windist: distclean
 	python2.4 setup_win32_ssl.py bdist_wininst
 	rm -rf build
 
-www docs:
+docs:
+	sphinx-build doc doc/build
+
+www: docs
 	mkdir -p build
 	rsync -av www build
-	cd doc && for file in *.rst; do rst2html "$$file" ../build/www/htdocs/doc/`echo "$$file" |sed -e 's/.rst$$/.html/'`; done
-	rst2html RELEASE-NOTES.rst build/www/htdocs/release-notes.html
+	rsync -av doc/build/ build/www/htdocs/doc
 	cp ChangeLog build/www/htdocs
 
 
