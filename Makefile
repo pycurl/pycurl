@@ -65,11 +65,13 @@ windist: distclean
 # Rebuild missing or changed documentation.
 # Editing docstrings in Python or C source will not cause the documentation
 # to be rebuilt with this target, use docs-force instead.
-docs:
+docs: build
 	sphinx-build doc doc/build
 
 # Rebuild all documentation.
-docs-force:
+# As sphinx extracts documentation from pycurl modules, docs targets
+# depend on build target.
+docs-force: build
 	sphinx-build -a doc doc/build
 
 www: docs
