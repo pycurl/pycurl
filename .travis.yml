@@ -16,19 +16,19 @@ matrix:
       env: USECURL=7.19.0
     - python: 2.7
       env:
-        - USECURL=7.34.0
+        - USECURL=7.35.0
         - USESSL=openssl
     - python: 2.7
       env:
-        - USECURL=7.34.0
+        - USECURL=7.35.0
         - USESSL=gnutls
     - python: 2.7
       env:
-        - USECURL=7.34.0
+        - USECURL=7.35.0
         - USESSL=nss
     - python: 2.7
       env:
-        - USECURL=7.34.0
+        - USECURL=7.35.0
         - USESSL=none
     - python: 2.7
       env:
