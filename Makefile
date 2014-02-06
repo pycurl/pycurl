@@ -67,6 +67,7 @@ www docs:
 	rsync -av www build
 	cd doc && for file in *.rst; do rst2html "$$file" ../build/www/htdocs/doc/`echo "$$file" |sed -e 's/.rst$$/.html/'`; done
 	rst2html RELEASE-NOTES.rst build/www/htdocs/release-notes.html
+	cp ChangeLog build/www/htdocs
 
 
 .PHONY: all build test do-test strip install install_lib clean distclean maintainer-clean dist sdist windist
