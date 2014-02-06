@@ -19,6 +19,8 @@ how libcurl works, please consult the `curl library C API`_.
 Module Functionality
 --------------------
 
+.. module:: pycurl
+
 .. autofunction:: pycurl.global_init
 
 .. autofunction:: pycurl.global_cleanup
