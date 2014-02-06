@@ -1,5 +1,5 @@
-Module Functionality
-====================
+pycurl Module Functionality
+===========================
 
 .. module:: pycurl
 
@@ -38,6 +38,5 @@ Example usage:
 .. autoclass:: pycurl.CurlMulti
 
 .. autoclass:: pycurl.CurlShare
-
 
 .. _curl_version: http://curl.haxx.se/libcurl/c/curl_version.html

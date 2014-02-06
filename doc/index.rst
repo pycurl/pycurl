@@ -31,6 +31,7 @@ Contents:
    curlmultiobject
    curlshareobject
    callbacks
+   curl
    unicode
    files
 
