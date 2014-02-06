@@ -72,7 +72,10 @@ docs: build
 # As sphinx extracts documentation from pycurl modules, docs targets
 # depend on build target.
 docs-force: build
-	sphinx-build -a doc doc/build
+	# sphinx-docs has an -a option but it does not seem to always
+	# rebuild everything
+	rm -rf doc/build
+	sphinx-build doc doc/build
 
 www: docs
 	mkdir -p build
