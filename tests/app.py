@@ -48,12 +48,25 @@ def convert_file(key, file):
         'data': file.read(),
     }
 
-def convert_file(key, file):
-    return {
-        'name': file.name,
-        'filename': file.filename,
-        'data': file.file.read().decode(),
-    }
+if hasattr(bottle, 'FileUpload'):
+    # bottle 0.12
+    def convert_file(key, file):
+        return {
+            'name': file.name,
+            # file.filename lowercases the file name
+            # https://github.com/defnull/bottle/issues/582
+            # raw_filenames is a string on python 3
+            'filename': file.raw_filename,
+            'data': file.file.read().decode(),
+        }
+else:
+    # bottle 0.11
+    def convert_file(key, file):
+        return {
+            'name': file.name,
+            'filename': file.filename,
+            'data': file.file.read().decode(),
+        }
 
 @app.route('/files', method='post')
 def files():
