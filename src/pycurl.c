@@ -4282,8 +4282,12 @@ static const char pycurl_global_cleanup_doc[] =
     ".. _curl_global_cleanup: http://curl.haxx.se/libcurl/c/curl_global_cleanup.html";
 
 static const char pycurl_version_info_doc[] =
-    "version_info() -> tuple.  "
-    "Returns a 12-tuple with the version info.\n";
+    "version_info() -> tuple\n\n"
+    "Returns a 12-tuple with the version info.\n\n"
+    "Corresponds to `curl_version_info`_ in libcurl. Returns a tuple of "
+    "information which is similar to the ``curl_version_info_data`` struct "
+    "returned by ``curl_version_info()`` in libcurl.\n\n"
+    ".. _curl_version_info: http://curl.haxx.se/libcurl/c/curl_version_info.html";
 
 static const char pycurl_share_new_doc[] =
     "CurlShare() -> New CurlShare object.";

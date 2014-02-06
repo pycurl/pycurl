@@ -36,11 +36,7 @@ Example usage:
     >>> pycurl.version
     'PycURL/7.19.3 libcurl/7.33.0 OpenSSL/0.9.8x zlib/1.2.7'
 
-**pycurl.version_info**\ () -> *Tuple*
-
-Corresponds to `curl_version_info`_ in libcurl. Returns a tuple of
-information which is similar to the ``curl_version_info_data`` struct
-returned by ``curl_version_info()`` in libcurl.
+.. autofunction:: pycurl.version_info
 
 Example usage:
 
@@ -75,7 +71,6 @@ argument to the SHARE option on Curl objects.
 .. _libcurl: http://curl.haxx.se/libcurl/
 .. _curl library C API: http://curl.haxx.se/libcurl/c/
 .. _curl_version: http://curl.haxx.se/libcurl/c/curl_version.html
-.. _curl_version_info: http://curl.haxx.se/libcurl/c/curl_version_info.html
 .. _Curl object: curlobject.html
 .. _CurlMulti object: curlmultiobject.html
 .. _CurlShare object: curlshareobject.html
