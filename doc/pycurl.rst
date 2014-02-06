@@ -49,23 +49,11 @@ Example usage:
     'imap', 'imaps', 'pop3', 'pop3s', 'rtsp', 'smtp', 'smtps', 'telnet',
     'tftp'), None, 0, None)
 
-**pycurl.Curl**\ () -> *Curl object*
+.. autoclass:: pycurl.Curl
 
-This function creates a new :ref:`curlobject` which corresponds to a ``CURL``
-handle in libcurl. Curl objects automatically set CURLOPT_VERBOSE to 0,
-CURLOPT_NOPROGRESS to 1, provide a default CURLOPT_USERAGENT and setup
-CURLOPT_ERRORBUFFER to point to a private error buffer.
+.. autoclass:: pycurl.CurlMulti
 
-**pycurl.CurlMulti**\ () -> *CurlMulti object*
-
-This function creates a new :ref:`curlmultiobject` which corresponds to a
-``CURLM`` handle in libcurl.
-
-**pycurl.CurlShare**\ () -> *CurlShare object*
-
-This function creates a new :ref:`curlshareobject` which corresponds to a
-``CURLSH`` handle in libcurl. CurlShare objects is what you pass as an
-argument to the SHARE option on Curl objects.
+.. autoclass:: pycurl.CurlShare
 
 
 .. _libcurl: http://curl.haxx.se/libcurl/

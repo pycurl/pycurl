@@ -4290,14 +4290,24 @@ static const char pycurl_version_info_doc[] =
     ".. _curl_version_info: http://curl.haxx.se/libcurl/c/curl_version_info.html";
 
 static const char pycurl_share_new_doc[] =
-    "CurlShare() -> New CurlShare object.";
+    "CurlShare() -> New CurlShare object\n\n"
+    "Creates a new :ref:`curlshareobject` which corresponds to a "
+    "``CURLSH`` handle in libcurl. CurlShare objects is what you pass as an "
+    "argument to the SHARE option on Curl objects.";
 
 static const char pycurl_curl_new_doc[] =
-    "Curl() -> New curl object.  "
-    "Implicitly calls global_init() if not called.\n";
+    "Curl() -> New Curl object\n\n"
+    "Creates a new :ref:`curlobject` which corresponds to a "
+    "``CURL`` handle in libcurl. Curl objects automatically set "
+    "CURLOPT_VERBOSE to 0, CURLOPT_NOPROGRESS to 1, provide a default "
+    "CURLOPT_USERAGENT and setup CURLOPT_ERRORBUFFER to point to a "
+    "private error buffer.\n\n"
+    "Implicitly calls global_init() if the latter has not yet been called.\n";
 
 static const char pycurl_multi_new_doc[] =
-    "CurlMulti() -> New curl multi-object.\n";
+    "CurlMulti() -> New CurlMulti object\n\n"
+    "This function creates a new :ref:`curlmultiobject` which corresponds to "
+    "a ``CURLM`` handle in libcurl.";
 
 
 /* List of functions defined in this module */
