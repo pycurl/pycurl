@@ -6,7 +6,7 @@
 
 PACKAGE = "pycurl"
 PY_PACKAGE = "curl"
-VERSION = "7.19.3"
+VERSION = "7.19.3.1"
 
 import glob, os, re, sys, string, subprocess
 import distutils
@@ -396,7 +396,8 @@ def get_data_files():
     else:
         datadir = os.path.join("share", "doc", PACKAGE)
     #
-    files = ["ChangeLog", "COPYING-LGPL", "COPYING-MIT", "INSTALL.rst", "README.rst"]
+    files = ["AUTHORS", "ChangeLog", "COPYING-LGPL", "COPYING-MIT",
+        "INSTALL.rst", "README.rst"]
     if files:
         data_files.append((os.path.join(datadir), files))
     files = glob.glob(os.path.join("doc", "*.rst"))

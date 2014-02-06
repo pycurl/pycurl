@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+PycURL 7.19.3.1 - 2014-02-05
+----------------------------
+
+This release restores PycURL's ability to automatically detect SSL library
+in use in most circumstances, thanks to Andjelko Horvat.
+
+
 PycURL 7.19.3 - 2014-01-09
 --------------------------
 

@@ -11,9 +11,9 @@ Release Process
    - Changelog
    - setup.py
    - winbuild.py
-   - www/htdocs/index.php
+   - www/htdocs/index.php (also update release date)
 6. Copy Changelog to www/htdocs.
-7. Draft release notes.
+7. Draft release notes, add to RELEASE-NOTES.rst.
 8. ``make docs``.
 9. ``python setup.py sdist``.
 10. Manually test install the built package.
