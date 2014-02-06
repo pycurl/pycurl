@@ -62,9 +62,11 @@ windist: distclean
 	python2.4 setup_win32_ssl.py bdist_wininst
 	rm -rf build
 
-docs:
-	cd doc && for file in *.rst; do rst2html "$$file" ../www/htdocs/doc/`echo "$$file" |sed -e 's/.rst$$/.html/'`; done
-	rst2html RELEASE-NOTES.rst www/htdocs/release-notes.html
+www docs:
+	mkdir -p build
+	rsync -av www build
+	cd doc && for file in *.rst; do rst2html "$$file" ../build/www/htdocs/doc/`echo "$$file" |sed -e 's/.rst$$/.html/'`; done
+	rst2html RELEASE-NOTES.rst build/www/htdocs/release-notes.html
 
 
 .PHONY: all build test do-test strip install install_lib clean distclean maintainer-clean dist sdist windist
