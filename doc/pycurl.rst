@@ -51,19 +51,19 @@ Example usage:
 
 **pycurl.Curl**\ () -> *Curl object*
 
-This function creates a new `Curl object`_ which corresponds to a ``CURL``
+This function creates a new :ref:`curlobject` which corresponds to a ``CURL``
 handle in libcurl. Curl objects automatically set CURLOPT_VERBOSE to 0,
 CURLOPT_NOPROGRESS to 1, provide a default CURLOPT_USERAGENT and setup
 CURLOPT_ERRORBUFFER to point to a private error buffer.
 
 **pycurl.CurlMulti**\ () -> *CurlMulti object*
 
-This function creates a new `CurlMulti object`_ which corresponds to a
+This function creates a new :ref:`curlmultiobject` which corresponds to a
 ``CURLM`` handle in libcurl.
 
 **pycurl.CurlShare**\ () -> *CurlShare object*
 
-This function creates a new `CurlShare object`_ which corresponds to a
+This function creates a new :ref:`curlshareobject` which corresponds to a
 ``CURLSH`` handle in libcurl. CurlShare objects is what you pass as an
 argument to the SHARE option on Curl objects.
 
@@ -71,6 +71,3 @@ argument to the SHARE option on Curl objects.
 .. _libcurl: http://curl.haxx.se/libcurl/
 .. _curl library C API: http://curl.haxx.se/libcurl/c/
 .. _curl_version: http://curl.haxx.se/libcurl/c/curl_version.html
-.. _Curl object: curlobject.html
-.. _CurlMulti object: curlmultiobject.html
-.. _CurlShare object: curlshareobject.html

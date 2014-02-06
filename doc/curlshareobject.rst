@@ -1,3 +1,5 @@
+.. _curlshareobject:
+
 CurlShare Object
 ================
 

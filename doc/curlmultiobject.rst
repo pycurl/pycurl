@@ -1,3 +1,5 @@
+.. _curlmultiobject:
+
 CurlMulti Object
 ================
 
