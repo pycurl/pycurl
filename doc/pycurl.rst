@@ -22,17 +22,6 @@ pycurl Module Functionality
 
 .. autofunction:: pycurl.version_info
 
-Example usage:
-
-::
-
-    >>> import pycurl
-    >>> pycurl.version_info()
-    (3, '7.33.0', 467200, 'amd64-portbld-freebsd9.1', 33436, 'OpenSSL/0.9.8x',
-    0, '1.2.7', ('dict', 'file', 'ftp', 'ftps', 'gopher', 'http', 'https',
-    'imap', 'imaps', 'pop3', 'pop3s', 'rtsp', 'smtp', 'smtps', 'telnet',
-    'tftp'), None, 0, None)
-
 .. autoclass:: pycurl.Curl
 
 .. autoclass:: pycurl.CurlMulti

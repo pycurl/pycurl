@@ -4281,13 +4281,28 @@ static const char pycurl_global_cleanup_doc[] =
     "Corresponds to `curl_global_cleanup`_ in libcurl.\n\n"
     ".. _curl_global_cleanup: http://curl.haxx.se/libcurl/c/curl_global_cleanup.html";
 
-static const char pycurl_version_info_doc[] =
-    "version_info() -> tuple\n\n"
-    "Returns a 12-tuple with the version info.\n\n"
-    "Corresponds to `curl_version_info`_ in libcurl. Returns a tuple of "
-    "information which is similar to the ``curl_version_info_data`` struct "
-    "returned by ``curl_version_info()`` in libcurl.\n\n"
-    ".. _curl_version_info: http://curl.haxx.se/libcurl/c/curl_version_info.html";
+static const char pycurl_version_info_doc[] = "\
+version_info() -> tuple\n\
+\n\
+Returns a 12-tuple with the version info.\n\
+\n\
+Corresponds to `curl_version_info`_ in libcurl. Returns a tuple of\n\
+information which is similar to the ``curl_version_info_data`` struct\n\
+returned by ``curl_version_info()`` in libcurl.\n\
+\n\
+.. _curl_version_info: http://curl.haxx.se/libcurl/c/curl_version_info.html\n\
+\n\
+Example usage:\n\
+\n\
+::\n\
+\n\
+    >>> import pycurl\n\
+    >>> pycurl.version_info()\n\
+    (3, '7.33.0', 467200, 'amd64-portbld-freebsd9.1', 33436, 'OpenSSL/0.9.8x',\n\
+    0, '1.2.7', ('dict', 'file', 'ftp', 'ftps', 'gopher', 'http', 'https',\n\
+    'imap', 'imaps', 'pop3', 'pop3s', 'rtsp', 'smtp', 'smtps', 'telnet',\n\
+    'tftp'), None, 0, None)\
+";
 
 static const char pycurl_share_new_doc[] =
     "CurlShare() -> New CurlShare object\n\n"
