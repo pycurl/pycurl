@@ -23,9 +23,12 @@ pycurl Module Functionality
 .. autofunction:: pycurl.version_info
 
 .. autoclass:: pycurl.Curl
+    :noindex:
 
 .. autoclass:: pycurl.CurlMulti
+    :noindex:
 
 .. autoclass:: pycurl.CurlShare
+    :noindex:
 
 .. _curl_version: http://curl.haxx.se/libcurl/c/curl_version.html
