@@ -62,14 +62,34 @@ windist: distclean
 	python2.4 setup_win32_ssl.py bdist_wininst
 	rm -rf build
 
-www docs:
+# Rebuild missing or changed documentation.
+# Editing docstrings in Python or C source will not cause the documentation
+# to be rebuilt with this target, use docs-force instead.
+docs: build
+	PYTHONSUFFIX=$$(python -V 2>&1 |awk '{print $$2}' |awk -F. '{print $$1 "." $$2}') && \
+	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONSUFFIX):$$PYTHONPATH \
+	sphinx-build doc build/doc
+
+# Rebuild all documentation.
+# As sphinx extracts documentation from pycurl modules, docs targets
+# depend on build target.
+docs-force: build
+	# sphinx-docs has an -a option but it does not seem to always
+	# rebuild everything
+	rm -rf build/doc
+	PYTHONSUFFIX=$$(python -V 2>&1 |awk '{print $$2}' |awk -F. '{print $$1 "." $$2}') && \
+	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONSUFFIX):$$PYTHONPATH \
+	sphinx-build doc build/doc
+
+www: docs
 	mkdir -p build
 	rsync -av www build
-	cd doc && for file in *.rst; do rst2html "$$file" ../build/www/htdocs/doc/`echo "$$file" |sed -e 's/.rst$$/.html/'`; done
-	rst2html RELEASE-NOTES.rst build/www/htdocs/release-notes.html
+	rsync -av build/doc/ build/www/htdocs/doc
 	cp ChangeLog build/www/htdocs
 
 
-.PHONY: all build test do-test strip install install_lib clean distclean maintainer-clean dist sdist windist
+.PHONY: all build test do-test strip install install_lib \
+	clean distclean maintainer-clean dist sdist windist \
+	docs docs-force
 
 .NOEXPORT:

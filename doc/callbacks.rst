@@ -23,24 +23,29 @@ callbacks.
 
 The signature of each callback used in pycurl is as follows:
 
-**WRITEFUNCTION**\ (*string*) -> *number of characters written*
+.. function:: WRITEFUNCTION(string) -> number of characters written
 
-**READFUNCTION**\ (*number of characters to read*) -> *string*
+    The ``WRITEFUNCTION`` callback may also return
+    ``None``, which is an alternate way of indicating that the callback has
+    consumed all of the string passed to it.
 
-**HEADERFUNCTION**\ (*string*) -> *number of characters written*
+.. function:: READFUNCTION(number of characters to read) -> string
 
-**PROGRESSFUNCTION**\ (*download total, downloaded, upload total,
-uploaded*) -> *status*
+    In addition, ``READFUNCTION`` may return ``READFUNC_ABORT`` or
+    ``READFUNC_PAUSE``. See the libcurl documentation for an explanation
+    of these values.
 
-**DEBUGFUNCTION**\ (*debug message type, debug message string*) -> *None*
+.. function:: HEADERFUNCTION(string) -> number of characters written
 
-**IOCTLFUNCTION**\ (*ioctl cmd*) -> *status*
+    The ``HEADERFUNCTION`` callback may also return
+    ``None``, which is an alternate way of indicating that the callback has
+    consumed all of the string passed to it.
 
-In addition, ``READFUNCTION`` may return ``READFUNC_ABORT`` or
-``READFUNC_PAUSE``. See the libcurl documentation for an explanation of these
-values. The ``WRITEFUNCTION`` and ``HEADERFUNCTION`` callbacks may return
-``None``, which is an alternate way of indicating that the callback has
-consumed all of the string passed to it.
+.. function:: PROGRESSFUNCTION(download total, downloaded, upload total, uploaded) -> status
+
+.. function:: DEBUGFUNCTION(debug message type, debug message string) -> None
+
+.. function:: IOCTLFUNCTION(ioctl cmd) -> status
 
 Example: Callbacks for document header and body
 -----------------------------------------------
@@ -80,14 +85,14 @@ document, the arguments related to uploads are zero, and vice versa.
 
 ::
 
-    ## Callback function invoked when download/upload has
-    progress
+    ## Callback function invoked when download/upload has progress
     def progress(download_t, download_d, upload_t, upload_d):
         print "Total to download", download_t
         print "Total downloaded", download_d
         print "Total to upload", upload_t
         print "Total uploaded", upload_d
 
+    c = pycurl.Curl()
     c.setopt(c.URL, "http://slashdot.org/")
     c.setopt(c.NOPROGRESS, 0)
     c.setopt(c.PROGRESSFUNCTION, progress)

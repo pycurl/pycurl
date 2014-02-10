@@ -37,7 +37,7 @@ $version_date = "Feb 05 2014"
 <h2>Quick Links</h2>
 
 <ul>
-  <li><a href="/doc/pycurl.html">PycURL documentation</a></li>
+  <li><a href="/doc/index.html">PycURL documentation</a></li>
   <li><a href="http://curl.haxx.se/libcurl/c/">libcurl documentation</a></li>
   <li><a href="http://cool.haxx.se/mailman/listinfo/curl-and-python">Mailing list</a></li>
   <li><a href="http://curl.haxx.se/mail/list.cgi?list=curl-and-python">Mailing list archives</a></li>
@@ -113,7 +113,7 @@ and
 <h2>Documentation</h2>
 
 <p>
-PycURL now includes API documentation in the <i><a href="doc/pycurl.html">doc</a></i> directory of the distribution,
+PycURL includes API documentation in the <i><a href="doc/index.html">doc</a></i> directory of the distribution,
 as well as a number of test and example scripts in the <i><a href="https://github.com/pycurl/pycurl/tree/master/tests">tests</a></i>
 and <i><a href="https://github.com/pycurl/pycurl/tree/master/examples">examples</a></i>
 directories of the distribution.
