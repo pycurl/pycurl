@@ -7,7 +7,7 @@ pycurl Module Functionality
 
 .. autofunction:: pycurl.global_cleanup
 
-.. data:: pycurl.version
+.. data:: version
 
     This is a string with version information on libcurl, corresponding to
     `curl_version`_ in libcurl.
