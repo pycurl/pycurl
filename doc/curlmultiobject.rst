@@ -10,8 +10,8 @@ CurlMulti Object
     .. method:: close() -> None
 
         Corresponds to `curl_multi_cleanup`_ in libcurl. This method is
-        automatically called by pycurl when a CurlMulti object no longer has any
-        references to it, but can also be called explicitly.
+        automatically called by pycurl when a CurlMulti object no longer has
+        any references to it, but can also be called explicitly.
 
     .. method:: perform() -> tuple of status and the number of active Curl objects
 
