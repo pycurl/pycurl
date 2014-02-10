@@ -3673,6 +3673,13 @@ static const char co_reset_doc [] =
     "reset() -> None. "
     "Reset all options set on curl handle to default values, but preserves live connections, session ID cache, DNS cache, cookies, and shares.\n";
 
+static const char co_multi_close_doc [] = "\
+close() -> None\n\
+\n\
+Corresponds to `curl_multi_cleanup`_ in libcurl. This method is\n\
+automatically called by pycurl when a CurlMulti object no longer has any\n\
+references to it, but can also be called explicitly.\
+";
 static const char co_multi_fdset_doc [] =
     "fdset() -> Tuple.  "
     "Returns a tuple of three lists that can be passed to the select.select() method .\n";
@@ -3709,7 +3716,7 @@ static PyMethodDef curlobject_methods[] = {
 
 static PyMethodDef curlmultiobject_methods[] = {
     {"add_handle", (PyCFunction)do_multi_add_handle, METH_VARARGS, NULL},
-    {"close", (PyCFunction)do_multi_close, METH_NOARGS, NULL},
+    {"close", (PyCFunction)do_multi_close, METH_NOARGS, co_multi_close_doc},
     {"fdset", (PyCFunction)do_multi_fdset, METH_NOARGS, co_multi_fdset_doc},
     {"info_read", (PyCFunction)do_multi_info_read, METH_VARARGS, co_multi_info_read_doc},
     {"perform", (PyCFunction)do_multi_perform, METH_NOARGS, NULL},
