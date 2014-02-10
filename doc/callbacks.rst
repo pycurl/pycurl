@@ -23,24 +23,29 @@ callbacks.
 
 The signature of each callback used in pycurl is as follows:
 
-**WRITEFUNCTION**\ (*string*) -> *number of characters written*
+.. function:: WRITEFUNCTION(string) -> number of characters written
 
-**READFUNCTION**\ (*number of characters to read*) -> *string*
+    The ``WRITEFUNCTION`` callback may also return
+    ``None``, which is an alternate way of indicating that the callback has
+    consumed all of the string passed to it.
 
-**HEADERFUNCTION**\ (*string*) -> *number of characters written*
+.. function:: READFUNCTION(number of characters to read) -> string
 
-**PROGRESSFUNCTION**\ (*download total, downloaded, upload total,
-uploaded*) -> *status*
+    In addition, ``READFUNCTION`` may return ``READFUNC_ABORT`` or
+    ``READFUNC_PAUSE``. See the libcurl documentation for an explanation
+    of these values.
 
-**DEBUGFUNCTION**\ (*debug message type, debug message string*) -> *None*
+.. function:: HEADERFUNCTION(string) -> number of characters written
 
-**IOCTLFUNCTION**\ (*ioctl cmd*) -> *status*
+    The ``HEADERFUNCTION`` callback may also return
+    ``None``, which is an alternate way of indicating that the callback has
+    consumed all of the string passed to it.
 
-In addition, ``READFUNCTION`` may return ``READFUNC_ABORT`` or
-``READFUNC_PAUSE``. See the libcurl documentation for an explanation of these
-values. The ``WRITEFUNCTION`` and ``HEADERFUNCTION`` callbacks may return
-``None``, which is an alternate way of indicating that the callback has
-consumed all of the string passed to it.
+.. function:: PROGRESSFUNCTION(download total, downloaded, upload total, uploaded) -> status
+
+.. function:: DEBUGFUNCTION(debug message type, debug message string) -> None
+
+.. function:: IOCTLFUNCTION(ioctl cmd) -> status
 
 Example: Callbacks for document header and body
 -----------------------------------------------
