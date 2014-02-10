@@ -66,6 +66,8 @@ windist: distclean
 # Editing docstrings in Python or C source will not cause the documentation
 # to be rebuilt with this target, use docs-force instead.
 docs: build
+	PYTHONSUFFIX=$$(python -V 2>&1 |awk '{print $$2}' |awk -F. '{print $$1 "." $$2}') && \
+	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONSUFFIX):$$PYTHONPATH \
 	sphinx-build doc build/doc
 
 # Rebuild all documentation.
@@ -75,6 +77,8 @@ docs-force: build
 	# sphinx-docs has an -a option but it does not seem to always
 	# rebuild everything
 	rm -rf build/doc
+	PYTHONSUFFIX=$$(python -V 2>&1 |awk '{print $$2}' |awk -F. '{print $$1 "." $$2}') && \
+	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONSUFFIX):$$PYTHONPATH \
 	sphinx-build doc build/doc
 
 www: docs
