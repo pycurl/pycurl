@@ -8,6 +8,29 @@ SHELL = /bin/sh
 PYTHON = python
 NOSETESTS = nosetests
 
+# -c on linux
+# freebsd does not understand -c
+CHMOD_VERBOSE=-v
+
+BUILD_WWW = build/www
+
+RSYNC = rsync
+##RSYNC_FLAGS = -av --relative -e ssh
+RSYNC_FLAGS = -av --delete --delete-after -e ssh
+
+RSYNC_FILES = \
+	$(BUILD_WWW)/htdocs \
+	$(BUILD_WWW)/htdocs/download/.htaccess \
+	$(BUILD_WWW)/upload
+
+RSYNC_EXCLUDES = \
+	'--exclude=htdocs/download/' \
+	'--exclude=upload/Ignore/'
+
+RSYNC_TARGET = /home/groups/p/py/pycurl/
+
+RSYNC_USER = armco@web.sourceforge.net
+
 all build:
 	$(PYTHON) setup.py build
 
@@ -64,14 +87,36 @@ docs-force: build
 
 www: docs
 	mkdir -p build
-	rsync -a www build --exclude Makefile --delete
+	rsync -a www build --delete
 	rsync -a build/doc/ build/www/htdocs/doc --exclude .buildinfo --exclude .doctrees
 	cp doc/static/favicon.ico build/www/htdocs
 	cp ChangeLog build/www/htdocs
 
+rsync: rsync-prepare
+	$(RSYNC) $(RSYNC_FLAGS) $(RSYNC_EXCLUDES) $(RSYNC_FILES) $(RSYNC_USER):$(RSYNC_TARGET)
+
+rsync-dry:
+	$(MAKE) rsync 'RSYNC=rsync --dry-run'
+
+rsync-check:
+	$(MAKE) rsync 'RSYNC=rsync --dry-run -c'
+
+# NOTE: Git does not maintain metadata like owners and file permissions,
+#       so we have to care manually.
+# NOTE: rsync targets depend on www.
+rsync-prepare:
+	chgrp $(CHMOD_VERBOSE) -R pycurl $(BUILD_WWW)
+	chmod $(CHMOD_VERBOSE) g+r `find $(BUILD_WWW) -perm +400 -print`
+	chmod $(CHMOD_VERBOSE) g+w `find $(BUILD_WWW) -perm +200 -print`
+	chmod $(CHMOD_VERBOSE) g+s `find $(BUILD_WWW) -type d -print`
+##	chmod $(CHMOD_VERBOSE) g+rws `find $(BUILD_WWW) -type d -perm -770 -print`
+	chmod $(CHMOD_VERBOSE) g+rws `find $(BUILD_WWW) -type d -print`
+	chmod $(CHMOD_VERBOSE) o-rwx $(BUILD_WWW)/upload
+	#-rm -rf `find $(BUILD_WWW) -name .xvpics -type d -print`
 
 .PHONY: all build test do-test strip install install_lib \
 	clean distclean maintainer-clean dist sdist \
-	docs docs-force
+	docs docs-force \
+	rsync rsync-dry rsync-check rsync-prepare
 
 .NOEXPORT:
