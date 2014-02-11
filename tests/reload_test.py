@@ -7,8 +7,8 @@ import unittest
 import nose.plugins.attrib
 import sys
 
-@nose.plugins.attrib.attr('standalone')
 class ReloadTest(unittest.TestCase):
+    @nose.plugins.attrib.attr('standalone')
     def test_reloading(self):
         try:
             # python 2
