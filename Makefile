@@ -1,6 +1,6 @@
 #
 # to use a specific python version call
-#   `make PYTHON=python2.2'
+#   `make PYTHON=python2.7'
 #
 
 SHELL = /bin/sh
