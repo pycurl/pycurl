@@ -21,6 +21,10 @@
 Options -Indexes -MultiViews
 
 
+# Redirects for paths that no longer exist
+Redirect /release-notes.html /doc/release-notes.html
+
+
 # /***********************************************************************
 # // Module mod_autoindex
 # // permissions needed: AllowOverride Indexes

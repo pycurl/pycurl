@@ -1,6 +1,6 @@
 #
 # to use a specific python version call
-#   `make PYTHON=python2.2'
+#   `make PYTHON=python2.7'
 #
 
 SHELL = /bin/sh
@@ -8,11 +8,31 @@ SHELL = /bin/sh
 PYTHON = python
 NOSETESTS = nosetests
 
+# -c on linux
+# freebsd does not understand -c
+CHMOD_VERBOSE=-v
+
+BUILD_WWW = build/www
+
+RSYNC = rsync
+##RSYNC_FLAGS = -av --relative -e ssh
+RSYNC_FLAGS = -av --relative --delete --delete-after -e ssh
+
+RSYNC_FILES = \
+	htdocs \
+	htdocs/download/.htaccess \
+	upload
+
+RSYNC_EXCLUDES = \
+	'--exclude=htdocs/download/' \
+	'--exclude=upload/Ignore/'
+
+RSYNC_TARGET = /home/groups/p/py/pycurl/
+
+RSYNC_USER = armco@web.sourceforge.net
+
 all build:
 	$(PYTHON) setup.py build
-
-build-7.10.8:
-	$(PYTHON) setup.py build --curl-config=/home/hosts/localhost/packages/curl-7.10.8/bin/curl-config
 
 do-test:
 	mkdir -p tests/tmp
@@ -46,22 +66,6 @@ maintainer-clean: distclean
 dist sdist: distclean
 	$(PYTHON) setup.py sdist
 
-# target for maintainer
-windist: distclean
-	rm -rf build
-	python2.2 setup.py bdist_wininst
-	rm -rf build
-	python2.3 setup.py bdist_wininst
-	rm -rf build
-	python2.4 setup.py bdist_wininst
-	rm -rf build
-	python2.2 setup_win32_ssl.py bdist_wininst
-	rm -rf build
-	python2.3 setup_win32_ssl.py bdist_wininst
-	rm -rf build
-	python2.4 setup_win32_ssl.py bdist_wininst
-	rm -rf build
-
 # Rebuild missing or changed documentation.
 # Editing docstrings in Python or C source will not cause the documentation
 # to be rebuilt with this target, use docs-force instead.
@@ -83,14 +87,37 @@ docs-force: build
 
 www: docs
 	mkdir -p build
-	rsync -a www build
-	rsync -a build/doc/ build/www/htdocs/doc
+	rsync -a www build --delete
+	rsync -a build/doc/ build/www/htdocs/doc --exclude .buildinfo --exclude .doctrees
 	cp doc/static/favicon.ico build/www/htdocs
 	cp ChangeLog build/www/htdocs
 
+rsync: rsync-prepare
+	cd $(BUILD_WWW) && \
+	$(RSYNC) $(RSYNC_FLAGS) $(RSYNC_EXCLUDES) $(RSYNC_FILES) $(RSYNC_USER):$(RSYNC_TARGET)
+
+rsync-dry:
+	$(MAKE) rsync 'RSYNC=rsync --dry-run'
+
+rsync-check:
+	$(MAKE) rsync 'RSYNC=rsync --dry-run -c'
+
+# NOTE: Git does not maintain metadata like owners and file permissions,
+#       so we have to care manually.
+# NOTE: rsync targets depend on www.
+rsync-prepare:
+	chgrp $(CHMOD_VERBOSE) -R pycurl $(BUILD_WWW)
+	chmod $(CHMOD_VERBOSE) g+r `find $(BUILD_WWW) -perm +400 -print`
+	chmod $(CHMOD_VERBOSE) g+w `find $(BUILD_WWW) -perm +200 -print`
+	chmod $(CHMOD_VERBOSE) g+s `find $(BUILD_WWW) -type d -print`
+##	chmod $(CHMOD_VERBOSE) g+rws `find $(BUILD_WWW) -type d -perm -770 -print`
+	chmod $(CHMOD_VERBOSE) g+rws `find $(BUILD_WWW) -type d -print`
+	chmod $(CHMOD_VERBOSE) o-rwx $(BUILD_WWW)/upload
+	#-rm -rf `find $(BUILD_WWW) -name .xvpics -type d -print`
 
 .PHONY: all build test do-test strip install install_lib \
-	clean distclean maintainer-clean dist sdist windist \
-	docs docs-force
+	clean distclean maintainer-clean dist sdist \
+	docs docs-force \
+	rsync rsync-dry rsync-check rsync-prepare
 
 .NOEXPORT:
