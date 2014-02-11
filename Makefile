@@ -64,8 +64,8 @@ docs-force: build
 
 www: docs
 	mkdir -p build
-	rsync -a www build
-	rsync -a build/doc/ build/www/htdocs/doc
+	rsync -a www build --exclude Makefile --delete
+	rsync -a build/doc/ build/www/htdocs/doc --exclude .buildinfo --exclude .doctrees
 	cp doc/static/favicon.ico build/www/htdocs
 	cp ChangeLog build/www/htdocs
 
