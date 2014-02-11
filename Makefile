@@ -40,7 +40,9 @@ do-test:
 	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONSUFFIX):$$PYTHONPATH \
 	$(PYTHON) -c 'import pycurl; print(pycurl.version)'
 	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONSUFFIX):$$PYTHONPATH \
-	$(NOSETESTS)
+	$(NOSETESTS) -a '!standalone'
+	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONSUFFIX):$$PYTHONPATH \
+	$(NOSETESTS) -a standalone
 	./tests/ext/test-suite.sh
 
 test: build do-test
