@@ -16,12 +16,12 @@ BUILD_WWW = build/www
 
 RSYNC = rsync
 ##RSYNC_FLAGS = -av --relative -e ssh
-RSYNC_FLAGS = -av --delete --delete-after -e ssh
+RSYNC_FLAGS = -av --relative --delete --delete-after -e ssh
 
 RSYNC_FILES = \
-	$(BUILD_WWW)/htdocs \
-	$(BUILD_WWW)/htdocs/download/.htaccess \
-	$(BUILD_WWW)/upload
+	htdocs \
+	htdocs/download/.htaccess \
+	upload
 
 RSYNC_EXCLUDES = \
 	'--exclude=htdocs/download/' \
@@ -93,6 +93,7 @@ www: docs
 	cp ChangeLog build/www/htdocs
 
 rsync: rsync-prepare
+	cd $(BUILD_WWW) && \
 	$(RSYNC) $(RSYNC_FLAGS) $(RSYNC_EXCLUDES) $(RSYNC_FILES) $(RSYNC_USER):$(RSYNC_TARGET)
 
 rsync-dry:
