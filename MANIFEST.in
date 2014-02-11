@@ -12,7 +12,9 @@ include MANIFEST.in
 include Makefile
 include README.rst
 include RELEASE-NOTES.rst
+include doc/*.py
 include doc/*.rst
+include doc/static/.gitkeep
 include examples/*.py
 include examples/tests/*.py
 include src/Makefile
