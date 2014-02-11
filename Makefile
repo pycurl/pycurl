@@ -83,8 +83,9 @@ docs-force: build
 
 www: docs
 	mkdir -p build
-	rsync -av www build
-	rsync -av build/doc/ build/www/htdocs/doc
+	rsync -a www build
+	rsync -a build/doc/ build/www/htdocs/doc
+	cp doc/static/favicon.ico build/www/htdocs
 	cp ChangeLog build/www/htdocs
 
 
