@@ -30,7 +30,7 @@ $version_date = "Feb 05 2014"
   <br />
   <b><font size="+3" face="Courier New, Courier, mono">PYCURL <?php echo $version; ?></font></b><br />
   <?php echo $version_date; ?> -
-  <a href='release-notes.html'>Release Notes</a>
+  <a href='doc/release-notes.html'>Release Notes</a>
   <br />
 </center>
 
