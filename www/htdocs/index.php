@@ -156,10 +156,12 @@ convenience only and are completely <b>unsupported</b> - use them
 at your own risk.
 </p>
 
-Also, official PycURL packages are available for <a href="http://ubuntulinux.org">Ubuntu</A>,
+<p>
+Also, official PycURL packages are available for <a href="http://ubuntulinux.org">Ubuntu</a>,
 <a href="http://debian.org">Debian GNU/Linux</a>, <a href="http://freebsd.org">FreeBSD</a>,
 <a href="http://gentoo.org">Gentoo Linux</a>, <a href="http://netbsd.org">NetBSD</a>,
 and <a href="http://openbsd.org">OpenBSD</a>.
+</p>
 
 
 <h2>Community</h2>
