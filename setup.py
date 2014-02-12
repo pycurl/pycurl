@@ -370,6 +370,10 @@ def get_extension():
         name=PACKAGE,
         sources=[
             os.path.join("src", "pycurl.c"),
+            os.path.join("src", "threadsupport.c"),
+        ],
+        depends=[
+            os.path.join("src", "pycurl.h"),
         ],
         include_dirs=ext_config.include_dirs,
         define_macros=ext_config.define_macros,
