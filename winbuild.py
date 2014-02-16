@@ -1,9 +1,16 @@
+# Bootstrap python binary:
+# http://python.org/ftp/python/3.3.4/python-3.3.4.msi
+# msvc9/vs2008 express:
+# http://go.microsoft.com/?linkid=7729279
+# msvc10/vs2010 express:
+# http://go.microsoft.com/?linkid=9709949
+
 # work directory for downloading dependencies and building everything
 root = 'c:/dev/build-pycurl'
 # where msysgit is installed
 git_root = 'c:/program files/git'
 # which versions of python to build against
-python_versions = ['2.6', '2.7', '3.2', '3.3']
+python_versions = ['2.6.6', '2.7.6', '3.2.5', '3.3.4']
 # where pythons are installed
 python_path_template = 'c:/python%s/python'
 vc_paths = {
@@ -95,7 +102,7 @@ def rename_for_vc(basename, vc_version):
     os.rename(basename, suffixed_dir)
     return suffixed_dir
 
-def work():
+def build():
     os.environ['PATH'] += ";%s" % git_bin_path
     if not os.path.exists(archives_path):
         os.makedirs(archives_path)
@@ -160,8 +167,25 @@ def work():
                     os.rename('dist/pycurl-%s.win32.zip' % pycurl_version, 'dist/pycurl-%s.win32-py%s.zip' % (pycurl_version, python_version))
         
         prepare_pycurl()
+        python_releases = ['.'.join(version.split('.')[:2]) for version in python_versions]
         for python_version in python_versions:
             for target in ['bdist', 'bdist_wininst', 'bdist_msi']:
                 build_pycurl(python_version, target)
 
-work()
+def download_pythons():
+    import urllib
+    
+    for version in python_versions:
+        if os.path.exists(os.path.join(archives_path, 'python-%s.msi')):
+            continue
+        print('Downloading %s' % version)
+        url = 'http://python.org/ftp/python/%s/python-%s.msi' % (version, version)
+        io = urllib.urlopen(url)
+        data = io.read()
+        with open(os.path.join(archives_path, 'python-%s.msi' % version), 'wb') as f:
+            f.write(data)
+
+if len(sys.argv) > 1 and sys.argv[1] == 'download':
+    download_pythons()
+else:
+    build()
