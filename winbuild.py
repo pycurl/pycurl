@@ -1,5 +1,6 @@
 # Bootstrap python binary:
-# http://python.org/ftp/python/3.3.4/python-3.3.4.msi
+# http://www.python.org/ftp/python/3.3.4/python-3.3.4.msi
+# http://www.python.org/ftp/python/3.3.4/python-3.3.4.amd64.msi
 # msvc9/vs2008 express:
 # http://go.microsoft.com/?linkid=7729279
 # msvc10/vs2010 express:
@@ -173,14 +174,17 @@ def build():
                 build_pycurl(python_version, target)
 
 def download_pythons():
-    import urllib
+    try:
+        from urllib.request import urlopen
+    except NameError:
+        from urllib import urlopen
     
     for version in python_versions:
         if os.path.exists(os.path.join(archives_path, 'python-%s.msi')):
             continue
         print('Downloading %s' % version)
         url = 'http://python.org/ftp/python/%s/python-%s.msi' % (version, version)
-        io = urllib.urlopen(url)
+        io = urlopen(url)
         data = io.read()
         with open(os.path.join(archives_path, 'python-%s.msi' % version), 'wb') as f:
             f.write(data)
