@@ -31,7 +31,14 @@ RSYNC_TARGET = /home/groups/p/py/pycurl/
 
 RSYNC_USER = armco@web.sourceforge.net
 
-all build:
+all: build
+
+src/everything.c: src/pycurl.h src/pycurl.c src/threadsupport.c
+	cat src/pycurl.h >src/.tmp.everything.c
+	cat src/pycurl.c src/threadsupport.c |sed -e 's/#include "pycurl.h"//' >>src/.tmp.everything.c
+	mv src/.tmp.everything.c src/everything.c
+
+build: src/everything.c
 	$(PYTHON) setup.py build
 
 do-test:

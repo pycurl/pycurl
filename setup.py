@@ -364,17 +364,25 @@ def strip_pycurl_options():
 
 ###############################################################################
 
-def get_extension():
+def get_extension(split_extension_source=False):
+    if split_extension_source:
+        sources = [
+            os.path.join("src", "pycurl.c"),
+            os.path.join("src", "threadsupport.c"),
+        ]
+        depends = [
+            os.path.join("src", "pycurl.h"),
+        ]
+    else:
+        sources = [
+            os.path.join("src", "everything.c"),
+        ]
+        depends = []
     ext_config = ExtensionConfiguration()
     ext = Extension(
         name=PACKAGE,
-        sources=[
-            os.path.join("src", "pycurl.c"),
-            os.path.join("src", "threadsupport.c"),
-        ],
-        depends=[
-            os.path.join("src", "pycurl.h"),
-        ],
+        sources=sources,
+        depends=depends,
         include_dirs=ext_config.include_dirs,
         define_macros=ext_config.define_macros,
         library_dirs=ext_config.library_dirs,
