@@ -33,13 +33,13 @@ RSYNC_USER = armco@web.sourceforge.net
 
 all: build
 
-src/everything.c: src/pycurl.h src/pycurl.c src/threadsupport.c
-	echo '#define PYCURL_SINGLE_FILE' >src/.tmp.everything.c
-	cat src/pycurl.h >>src/.tmp.everything.c
-	cat src/pycurl.c src/threadsupport.c |sed -e 's/#include "pycurl.h"//' >>src/.tmp.everything.c
-	mv src/.tmp.everything.c src/everything.c
+src/allpycurl.c: src/pycurl.h src/pycurl.c src/threadsupport.c
+	echo '#define PYCURL_SINGLE_FILE' >src/.tmp.allpycurl.c
+	cat src/pycurl.h >>src/.tmp.allpycurl.c
+	cat src/pycurl.c src/threadsupport.c |sed -e 's/#include "pycurl.h"//' >>src/.tmp.allpycurl.c
+	mv src/.tmp.allpycurl.c src/allpycurl.c
 
-build: src/everything.c
+build: src/allpycurl.c
 	$(PYTHON) setup.py build
 
 do-test:

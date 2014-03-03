@@ -375,7 +375,7 @@ def get_extension(split_extension_source=False):
         ]
     else:
         sources = [
-            os.path.join("src", "everything.c"),
+            os.path.join("src", "allpycurl.c"),
         ]
         depends = []
     ext_config = ExtensionConfiguration()
