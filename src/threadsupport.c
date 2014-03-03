@@ -2,7 +2,7 @@
 
 #ifdef WITH_THREAD
 
-PyThreadState *
+PYCURL_INTERNAL PyThreadState *
 pycurl_get_thread_state(const CurlObject *self)
 {
     /* Get the thread state for callbacks to run in.
@@ -35,7 +35,7 @@ pycurl_get_thread_state(const CurlObject *self)
 }
 
 
-PyThreadState *
+PYCURL_INTERNAL PyThreadState *
 pycurl_get_thread_state_multi(const CurlMultiObject *self)
 {
     /* Get the thread state for callbacks to run in when given
@@ -54,7 +54,7 @@ pycurl_get_thread_state_multi(const CurlMultiObject *self)
 }
 
 
-int
+PYCURL_INTERNAL int
 pycurl_acquire_thread(const CurlObject *self, PyThreadState **state)
 {
     *state = pycurl_get_thread_state(self);
@@ -65,7 +65,7 @@ pycurl_acquire_thread(const CurlObject *self, PyThreadState **state)
 }
 
 
-int
+PYCURL_INTERNAL int
 pycurl_acquire_thread_multi(const CurlMultiObject *self, PyThreadState **state)
 {
     *state = pycurl_get_thread_state_multi(self);
@@ -76,7 +76,7 @@ pycurl_acquire_thread_multi(const CurlMultiObject *self, PyThreadState **state)
 }
 
 
-void
+PYCURL_INTERNAL void
 pycurl_release_thread(PyThreadState *state)
 {
     PyEval_ReleaseThread(state);
@@ -90,7 +90,8 @@ pycurl_release_thread(PyThreadState *state)
 
 static PyThread_type_lock *pycurl_openssl_tsl = NULL;
 
-static void pycurl_ssl_lock(int mode, int n, const char * file, int line)
+static void
+pycurl_ssl_lock(int mode, int n, const char * file, int line)
 {
     if (mode & CRYPTO_LOCK) {
         PyThread_acquire_lock(pycurl_openssl_tsl[n], 1);
@@ -99,12 +100,14 @@ static void pycurl_ssl_lock(int mode, int n, const char * file, int line)
     }
 }
 
-static unsigned long pycurl_ssl_id(void)
+static unsigned long
+pycurl_ssl_id(void)
 {
     return (unsigned long) PyThread_get_thread_ident();
 }
 
-void pycurl_ssl_init(void)
+PYCURL_INTERNAL void
+pycurl_ssl_init(void)
 {
     int i, c = CRYPTO_num_locks();
 
@@ -118,7 +121,8 @@ void pycurl_ssl_init(void)
     CRYPTO_set_locking_callback(pycurl_ssl_lock);
 }
 
-void pycurl_ssl_cleanup(void)
+PYCURL_INTERNAL void
+pycurl_ssl_cleanup(void)
 {
     if (pycurl_openssl_tsl) {
         int i, c = CRYPTO_num_locks();
@@ -137,7 +141,8 @@ void pycurl_ssl_cleanup(void)
 #endif
 
 #ifdef PYCURL_NEED_GNUTLS_TSL
-static int pycurl_ssl_mutex_create(void **m)
+static int
+pycurl_ssl_mutex_create(void **m)
 {
     if ((*((PyThread_type_lock *) m) = PyThread_allocate_lock()) == NULL) {
         return -1;
@@ -146,18 +151,21 @@ static int pycurl_ssl_mutex_create(void **m)
     }
 }
 
-static int pycurl_ssl_mutex_destroy(void **m)
+static int
+pycurl_ssl_mutex_destroy(void **m)
 {
     PyThread_free_lock(*((PyThread_type_lock *) m));
     return 0;
 }
 
-static int pycurl_ssl_mutex_lock(void **m)
+static int
+pycurl_ssl_mutex_lock(void **m)
 {
     return !PyThread_acquire_lock(*((PyThread_type_lock *) m), 1);
 }
 
-static int pycurl_ssl_mutex_unlock(void **m)
+static int
+pycurl_ssl_mutex_unlock(void **m)
 {
     PyThread_release_lock(*((PyThread_type_lock *) m));
     return 0;
@@ -172,12 +180,14 @@ static struct gcry_thread_cbs pycurl_gnutls_tsl = {
     pycurl_ssl_mutex_unlock
 };
 
-static void pycurl_ssl_init(void)
+static void
+pycurl_ssl_init(void)
 {
     gcry_control(GCRYCTL_SET_THREAD_CBS, &pycurl_gnutls_tsl);
 }
 
-static void pycurl_ssl_cleanup(void)
+static void
+pycurl_ssl_cleanup(void)
 {
     return;
 }
@@ -187,19 +197,19 @@ static void pycurl_ssl_cleanup(void)
 // CurlShareObject
 **************************************************************************/
 
-void
+PYCURL_INTERNAL void
 share_lock_lock(ShareLock *lock, curl_lock_data data)
 {
     PyThread_acquire_lock(lock->locks[data], 1);
 }
 
-void
+PYCURL_INTERNAL void
 share_lock_unlock(ShareLock *lock, curl_lock_data data)
 {
     PyThread_release_lock(lock->locks[data]);
 }
 
-ShareLock *
+PYCURL_INTERNAL ShareLock *
 share_lock_new(void)
 {
     int i;
@@ -222,7 +232,7 @@ share_lock_new(void)
     return NULL;
 }
 
-void
+PYCURL_INTERNAL void
 share_lock_destroy(ShareLock *lock)
 {
     int i;
@@ -236,14 +246,14 @@ share_lock_destroy(ShareLock *lock)
     lock = NULL;
 }
 
-void
+PYCURL_INTERNAL void
 share_lock_callback(CURL *handle, curl_lock_data data, curl_lock_access locktype, void *userptr)
 {
     CurlShareObject *share = (CurlShareObject*)userptr;
     share_lock_lock(share->lock, data);
 }
 
-void
+PYCURL_INTERNAL void
 share_unlock_callback(CURL *handle, curl_lock_data data, void *userptr)
 {
     CurlShareObject *share = (CurlShareObject*)userptr;
@@ -253,13 +263,13 @@ share_unlock_callback(CURL *handle, curl_lock_data data, void *userptr)
 #else /* WITH_THREAD */
 
 #if defined(PYCURL_NEED_SSL_TSL)
-void
+PYCURL_INTERNAL void
 pycurl_ssl_init(void)
 {
     return;
 }
 
-void
+PYCURL_INTERNAL void
 pycurl_ssl_cleanup(void)
 {
     return;

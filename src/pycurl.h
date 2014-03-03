@@ -99,6 +99,12 @@ typedef int Py_ssize_t;
 #undef UNUSED
 #define UNUSED(var)     ((void)&var)
 
+#if defined(PYCURL_SINGLE_FILE)
+# define PYCURL_INTERNAL static
+#else
+# define PYCURL_INTERNAL
+#endif
+
 /* Cruft for thread safe SSL crypto locks, snapped from the PHP curl extension */
 #if defined(HAVE_CURL_SSL)
 # if defined(HAVE_CURL_OPENSSL)
@@ -130,8 +136,8 @@ typedef int Py_ssize_t;
 #endif /* HAVE_CURL_SSL */
 
 #if defined(PYCURL_NEED_SSL_TSL)
-extern void pycurl_ssl_init(void);
-extern void pycurl_ssl_cleanup(void);
+PYCURL_INTERNAL void pycurl_ssl_init(void);
+PYCURL_INTERNAL void pycurl_ssl_cleanup(void);
 #endif
 
 #ifdef WITH_THREAD
@@ -263,36 +269,36 @@ typedef struct {
 
 #ifdef WITH_THREAD
 
-PyThreadState *
+PYCURL_INTERNAL PyThreadState *
 pycurl_get_thread_state(const CurlObject *self);
-PyThreadState *
+PYCURL_INTERNAL PyThreadState *
 pycurl_get_thread_state_multi(const CurlMultiObject *self);
-int
+PYCURL_INTERNAL int
 pycurl_acquire_thread(const CurlObject *self, PyThreadState **state);
-int
+PYCURL_INTERNAL int
 pycurl_acquire_thread_multi(const CurlMultiObject *self, PyThreadState **state);
-void
+PYCURL_INTERNAL void
 pycurl_release_thread(PyThreadState *state);
 
-void
+PYCURL_INTERNAL void
 share_lock_lock(ShareLock *lock, curl_lock_data data);
-void
+PYCURL_INTERNAL void
 share_lock_unlock(ShareLock *lock, curl_lock_data data);
-ShareLock *
+PYCURL_INTERNAL ShareLock *
 share_lock_new(void);
-void
+PYCURL_INTERNAL void
 share_lock_destroy(ShareLock *lock);
-void
+PYCURL_INTERNAL void
 share_lock_callback(CURL *handle, curl_lock_data data, curl_lock_access locktype, void *userptr);
-void
+PYCURL_INTERNAL void
 share_unlock_callback(CURL *handle, curl_lock_data data, void *userptr);
 
 #endif /* WITH_THREAD */
 
 #if defined(PYCURL_NEED_SSL_TSL)
-void
+PYCURL_INTERNAL void
 pycurl_ssl_init(void);
-void
+PYCURL_INTERNAL void
 pycurl_ssl_cleanup(void);
 #endif
 
