@@ -175,6 +175,30 @@ PYCURL_INTERNAL void pycurl_ssl_cleanup(void);
   #define PyInt_AsLong                 PyLong_AsLong
 #endif
 
+/*************************************************************************
+// python 2/3 compatibility
+**************************************************************************/
+
+#if PY_MAJOR_VERSION >= 3
+# define PyText_FromFormat(format, str) PyUnicode_FromFormat((format), (str))
+# define PyText_FromString(str) PyUnicode_FromString(str)
+# define PyByteStr_Check(obj) PyBytes_Check(obj)
+# define PyByteStr_AsStringAndSize(obj, buffer, length) PyBytes_AsStringAndSize((obj), (buffer), (length))
+#else
+# define PyText_FromFormat(format, str) PyString_FromFormat((format), (str))
+# define PyText_FromString(str) PyString_FromString(str)
+# define PyByteStr_Check(obj) PyString_Check(obj)
+# define PyByteStr_AsStringAndSize(obj, buffer, length) PyString_AsStringAndSize((obj), (buffer), (length))
+#endif
+#define PyText_EncodedDecref(encoded) Py_XDECREF(encoded)
+
+PYCURL_INTERNAL int
+PyText_AsStringAndSize(PyObject *obj, char **buffer, Py_ssize_t *length, PyObject **encoded_obj);
+PYCURL_INTERNAL char *
+PyText_AsString_NoNUL(PyObject *obj, PyObject **encoded_obj);
+PYCURL_INTERNAL int
+PyText_Check(PyObject *o);
+
 /* Calculate the number of OBJECTPOINT options we need to store */
 #define OPTIONS_SIZE    ((int)CURLOPT_LASTENTRY % 10000)
 #define MOPTIONS_SIZE   ((int)CURLMOPT_LASTENTRY % 10000)

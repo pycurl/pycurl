@@ -369,6 +369,7 @@ def get_extension(split_extension_source=False):
         sources = [
             os.path.join("src", "oscompat.c"),
             os.path.join("src", "pycurl.c"),
+            os.path.join("src", "stringcompat.c"),
             os.path.join("src", "threadsupport.c"),
         ]
         depends = [

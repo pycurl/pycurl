@@ -31,7 +31,8 @@ RSYNC_TARGET = /home/groups/p/py/pycurl/
 
 RSYNC_USER = armco@web.sourceforge.net
 
-SOURCES = src/pycurl.h src/oscompat.c src/pycurl.c src/threadsupport.c
+SOURCES = src/pycurl.h src/oscompat.c src/pycurl.c src/stringcompat.c \
+	src/threadsupport.c
 
 RELEASE_SOURCES = src/allpycurl.c
 
