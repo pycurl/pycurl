@@ -330,11 +330,63 @@ PYCURL_INTERNAL void
 pycurl_ssl_cleanup(void);
 #endif
 
+PYCURL_INTERNAL CurlShareObject *
+do_share_new(PyObject *dummy);
+PYCURL_INTERNAL int
+do_share_traverse(CurlShareObject *self, visitproc visit, void *arg);
+PYCURL_INTERNAL int
+do_share_clear(CurlShareObject *self);
+PYCURL_INTERNAL void
+do_share_dealloc(CurlShareObject *self);
+PYCURL_INTERNAL int
+do_share_setattr(CurlShareObject *so, char *name, PyObject *v);
+PYCURL_INTERNAL PyObject *
+do_share_getattr(CurlShareObject *cso, char *name);
+
+PYCURL_INTERNAL CurlObject *
+do_curl_new(PyObject *dummy);
+PYCURL_INTERNAL void
+do_curl_dealloc(CurlObject *self);
+PYCURL_INTERNAL int
+do_curl_clear(CurlObject *self);
+PYCURL_INTERNAL int
+do_curl_traverse(CurlObject *self, visitproc visit, void *arg);
+PYCURL_INTERNAL int
+do_curl_setattr(CurlObject *co, char *name, PyObject *v);
+PYCURL_INTERNAL PyObject *
+do_curl_getattr(CurlObject *co, char *name);
+
+PYCURL_INTERNAL CurlMultiObject *
+do_multi_new(PyObject *dummy);
+PYCURL_INTERNAL void
+do_multi_dealloc(CurlMultiObject *self);
+PYCURL_INTERNAL int
+do_multi_clear(CurlMultiObject *self);
+PYCURL_INTERNAL int
+do_multi_traverse(CurlMultiObject *self, visitproc visit, void *arg);
+PYCURL_INTERNAL int
+do_multi_setattr(CurlMultiObject *co, char *name, PyObject *v);
+PYCURL_INTERNAL PyObject *
+do_multi_getattr(CurlMultiObject *co, char *name);
+
+PYCURL_INTERNAL PyObject *
+do_global_init(PyObject *dummy, PyObject *args);
+PYCURL_INTERNAL PyObject *
+do_global_cleanup(PyObject *dummy);
+PYCURL_INTERNAL PyObject *
+do_version_info(PyObject *dummy, PyObject *args);
+
 /* Type objects */
 extern PyObject *ErrorObject;
 extern PyTypeObject *p_Curl_Type;
 extern PyTypeObject *p_CurlMulti_Type;
 extern PyTypeObject *p_CurlShare_Type;
+
+extern PyObject *curlobject_constants;
+extern PyObject *curlmultiobject_constants;
+extern PyObject *curlshareobject_constants;
+
+extern char *g_pycurl_useragent;
 
 /* vi:ts=4:et:nowrap
  */
