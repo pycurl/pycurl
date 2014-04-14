@@ -3888,6 +3888,7 @@ insint_m(PyObject *d, char *name, long value)
 }
 
 
+#if PY_MAJOR_VERSION >= 3
 /* Used in Python 3 only, and even then this function seems to never get
  * called. Python 2 has no module cleanup:
  * http://stackoverflow.com/questions/20741856/run-a-function-when-a-c-extension-module-is-freed-on-python-2
@@ -3897,7 +3898,6 @@ static void do_curlmod_free(void *unused) {
     g_pycurl_useragent = NULL;
 }
 
-#if PY_MAJOR_VERSION >= 3
 static PyModuleDef curlmodule = {
     PyModuleDef_HEAD_INIT,
     "pycurl",           /* m_name */
