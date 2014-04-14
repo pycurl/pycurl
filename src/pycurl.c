@@ -3892,7 +3892,7 @@ insint_m(PyObject *d, char *name, long value)
  * called. Python 2 has no module cleanup:
  * http://stackoverflow.com/questions/20741856/run-a-function-when-a-c-extension-module-is-freed-on-python-2
  */
-void do_curlmod_free(void *unused) {
+static void do_curlmod_free(void *unused) {
     PyMem_Free(g_pycurl_useragent);
     g_pycurl_useragent = NULL;
 }
