@@ -57,7 +57,7 @@ For support questions, please use `curl-and-python mailing list`_.
 Bugs can be reported `via GitHub`_. Please only use GitHub issues when you are
 certain you have found a bug in PycURL. If you do not have a patch to fix
 the bug, or at least a specific code fragment in PycURL that you believe is
-the cause, you should instead post you inquiry to the mailing list.
+the cause, you should instead post your inquiry to the mailing list.
 
 .. _curl-and-python mailing list: http://cool.haxx.se/mailman/listinfo/curl-and-python
 .. _Mailing list archives: http://curl.haxx.se/mail/list.cgi?list=curl-and-python
@@ -101,12 +101,12 @@ configurations. It supports:
 - Testing against locally compiled libcurl with arbitrary options.
 
 To use the test matrix, first you need to start the test server from
-Python 2.5+ by running:::
+Python 2.5+ by running::
 
     python -m tests.appmanager
 
 Then in a different shell, and preferably in a separate user account,
-run the test matrix:::
+run the test matrix::
 
     # run ftp tests, etc.
     export PYCURL_VSFTPD_PATH=vsftpd
