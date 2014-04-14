@@ -573,7 +573,11 @@ if __name__ == "__main__":
         check_authors()
     else:
         setup_args['data_files'] = get_data_files()
-        ext = get_extension()
+        if 'PYCURL_RELEASE' in os.environ and os.environ['PYCURL_RELEASE'].lower() in ['1', 'yes', 'true']:
+            split_extension_source = False
+        else:
+            split_extension_source = True
+        ext = get_extension(split_extension_source=split_extension_source)
         setup_args['ext_modules'] = [ext]
         
         for o in ext.extra_objects:
