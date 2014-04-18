@@ -74,3 +74,17 @@ class OptionConstantsTest(unittest.TestCase):
         curl = pycurl.Curl()
         curl.setopt(curl.NOPROXY, 'localhost')
         curl.close()
+    
+    # CURLOPT_PROTOCOLS was introduced in libcurl-7.19.4
+    @util.min_libcurl(7, 19, 4)
+    def test_protocols_setopt(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.PROTOCOLS, curl.PROTO_ALL & ~curl.PROTO_HTTP)
+        curl.close()
+    
+    # CURLOPT_REDIR_PROTOCOLS was introduced in libcurl-7.19.4
+    @util.min_libcurl(7, 19, 4)
+    def test_redir_protocols_setopt(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.PROTOCOLS, curl.PROTO_ALL & ~curl.PROTO_HTTP)
+        curl.close()

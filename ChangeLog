@@ -1,6 +1,9 @@
 master
 ------
 
+        * Added CURLOPT_PROTOCOLS, CURLOPT_REDIR_PROTOCOLS and associated
+          CURLPROTO_* constants, which require libcurl 7.19.4+.
+
         * Fixed a memory leak of OPENSOCKET and SEEK callbacks.
 
         * C source is now split into several files.

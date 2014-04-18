@@ -983,6 +983,37 @@ initpycurl(void)
 #ifdef HAVE_CURLOPT_NOPROXY
     insint_c(d, "NOPROXY", CURLOPT_NOPROXY);
 #endif
+#ifdef HAVE_CURLOPT_PROTOCOLS
+    insint_c(d, "PROTOCOLS", CURLOPT_PROTOCOLS);
+    insint_c(d, "REDIR_PROTOCOLS", CURLOPT_REDIR_PROTOCOLS);
+    insint_c(d, "PROTO_HTTP", CURLPROTO_HTTP);
+    insint_c(d, "PROTO_HTTPS", CURLPROTO_HTTPS);
+    insint_c(d, "PROTO_FTP", CURLPROTO_FTP);
+    insint_c(d, "PROTO_FTPS", CURLPROTO_FTPS);
+    insint_c(d, "PROTO_SCP", CURLPROTO_SCP);
+    insint_c(d, "PROTO_SFTP", CURLPROTO_SFTP);
+    insint_c(d, "PROTO_TELNET", CURLPROTO_TELNET);
+    insint_c(d, "PROTO_LDAP", CURLPROTO_LDAP);
+    insint_c(d, "PROTO_LDAPS", CURLPROTO_LDAPS);
+    insint_c(d, "PROTO_DICT", CURLPROTO_DICT);
+    insint_c(d, "PROTO_FILE", CURLPROTO_FILE);
+    insint_c(d, "PROTO_TFTP", CURLPROTO_TFTP);
+    insint_c(d, "PROTO_IMAP", CURLPROTO_IMAP);
+    insint_c(d, "PROTO_IMAPS", CURLPROTO_IMAPS);
+    insint_c(d, "PROTO_POP3", CURLPROTO_POP3);
+    insint_c(d, "PROTO_POP3S", CURLPROTO_POP3S);
+    insint_c(d, "PROTO_SMTP", CURLPROTO_SMTP);
+    insint_c(d, "PROTO_SMTPS", CURLPROTO_SMTPS);
+    insint_c(d, "PROTO_RTSP", CURLPROTO_RTSP);
+    insint_c(d, "PROTO_RTMP", CURLPROTO_RTMP);
+    insint_c(d, "PROTO_RTMPT", CURLPROTO_RTMPT);
+    insint_c(d, "PROTO_RTMPE", CURLPROTO_RTMPE);
+    insint_c(d, "PROTO_RTMPTE", CURLPROTO_RTMPTE);
+    insint_c(d, "PROTO_RTMPS", CURLPROTO_RTMPS);
+    insint_c(d, "PROTO_RTMPTS", CURLPROTO_RTMPTS);
+    insint_c(d, "PROTO_GOPHER", CURLPROTO_GOPHER);
+    insint_c(d, "PROTO_ALL", CURLPROTO_ALL);
+#endif
 
     insint_c(d, "M_TIMERFUNCTION", CURLMOPT_TIMERFUNCTION);
     insint_c(d, "M_SOCKETFUNCTION", CURLMOPT_SOCKETFUNCTION);
