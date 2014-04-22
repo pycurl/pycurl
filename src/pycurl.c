@@ -3134,7 +3134,8 @@ my_setattro(PyObject **dict, PyObject *name, PyObject *v)
     }
 }
 
-PyObject *do_curl_getattro(PyObject *o, PyObject *n)
+PYCURL_INTERNAL PyObject *
+do_curl_getattro(PyObject *o, PyObject *n)
 {
     PyObject *v = PyObject_GenericGetAttr(o, n);
     if( !v && PyErr_ExceptionMatches(PyExc_AttributeError) )
@@ -3146,14 +3147,14 @@ PyObject *do_curl_getattro(PyObject *o, PyObject *n)
     return v;
 }
 
-static int
+PYCURL_INTERNAL int
 do_curl_setattro(PyObject *o, PyObject *name, PyObject *v)
 {
     assert_curl_state((CurlObject *)o);
     return my_setattro(&((CurlObject *)o)->dict, name, v);
 }
 
-static PyObject *
+PYCURL_INTERNAL PyObject *
 do_multi_getattro(PyObject *o, PyObject *n)
 {
     PyObject *v;
@@ -3168,14 +3169,14 @@ do_multi_getattro(PyObject *o, PyObject *n)
     return v;
 }
 
-static int
+PYCURL_INTERNAL int
 do_multi_setattro(PyObject *o, PyObject *n, PyObject *v)
 {
     assert_multi_state((CurlMultiObject *)o);
     return my_setattro(&((CurlMultiObject *)o)->dict, n, v);
 }
 
-static PyObject *
+PYCURL_INTERNAL PyObject *
 do_share_getattro(PyObject *o, PyObject *n)
 {
     PyObject *v;
@@ -3190,7 +3191,7 @@ do_share_getattro(PyObject *o, PyObject *n)
     return v;
 }
 
-static int
+PYCURL_INTERNAL int
 do_share_setattro(PyObject *o, PyObject *n, PyObject *v)
 {
     assert_share_state((CurlShareObject *)o);
