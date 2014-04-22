@@ -3055,13 +3055,13 @@ static const char co_multi_socket_all_doc [] =
     "socket_all() -> Tuple.  "
     "Returns result from doing a socket_all() on the curl multi file descriptor with the given timeout.\n";
 
-static PyMethodDef curlshareobject_methods[] = {
+PyMethodDef curlshareobject_methods[] = {
     {"close", (PyCFunction)do_share_close, METH_NOARGS, cso_close_doc},
     {"setopt", (PyCFunction)do_curlshare_setopt, METH_VARARGS, cso_setopt_doc},
     {NULL, NULL, 0, 0}
 };
 
-static PyMethodDef curlobject_methods[] = {
+PyMethodDef curlobject_methods[] = {
     {"close", (PyCFunction)do_curl_close, METH_NOARGS, co_close_doc},
     {"errstr", (PyCFunction)do_curl_errstr, METH_NOARGS, co_errstr_doc},
     {"getinfo", (PyCFunction)do_curl_getinfo, METH_VARARGS, co_getinfo_doc},
@@ -3073,7 +3073,7 @@ static PyMethodDef curlobject_methods[] = {
     {NULL, NULL, 0, NULL}
 };
 
-static PyMethodDef curlmultiobject_methods[] = {
+PyMethodDef curlmultiobject_methods[] = {
     {"add_handle", (PyCFunction)do_multi_add_handle, METH_VARARGS, NULL},
     {"close", (PyCFunction)do_multi_close, METH_NOARGS, co_multi_close_doc},
     {"fdset", (PyCFunction)do_multi_fdset, METH_NOARGS, co_multi_fdset_doc},

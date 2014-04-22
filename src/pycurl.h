@@ -406,5 +406,11 @@ extern PyObject *curlshareobject_constants;
 
 extern char *g_pycurl_useragent;
 
+#if PY_MAJOR_VERSION >= 3
+extern PyMethodDef curlshareobject_methods[];
+extern PyMethodDef curlobject_methods[];
+extern PyMethodDef curlmultiobject_methods[];
+#endif
+
 /* vi:ts=4:et:nowrap
  */
