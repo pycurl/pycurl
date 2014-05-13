@@ -394,6 +394,7 @@ do_global_cleanup(PyObject *dummy);
 PYCURL_INTERNAL PyObject *
 do_version_info(PyObject *dummy, PyObject *args);
 
+#if !defined(PYCURL_SINGLE_FILE)
 /* Type objects */
 extern PyObject *ErrorObject;
 extern PyTypeObject *p_Curl_Type;
@@ -411,6 +412,7 @@ extern PyMethodDef curlshareobject_methods[];
 extern PyMethodDef curlobject_methods[];
 extern PyMethodDef curlmultiobject_methods[];
 #endif
+#endif /* !PYCURL_SINGLE_FILE */
 
 /* vi:ts=4:et:nowrap
  */

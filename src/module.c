@@ -11,17 +11,17 @@
 #define PYCURL_VERSION_PREFIX "PycURL/" PYCURL_VERSION_STRING
 
 /* Initialized during module init */
-char *g_pycurl_useragent = NULL;
+PYCURL_INTERNAL char *g_pycurl_useragent = NULL;
 
 /* Type objects */
-PyObject *ErrorObject = NULL;
-PyTypeObject *p_Curl_Type = NULL;
-PyTypeObject *p_CurlMulti_Type = NULL;
-PyTypeObject *p_CurlShare_Type = NULL;
+PYCURL_INTERNAL PyObject *ErrorObject = NULL;
+PYCURL_INTERNAL PyTypeObject *p_Curl_Type = NULL;
+PYCURL_INTERNAL PyTypeObject *p_CurlMulti_Type = NULL;
+PYCURL_INTERNAL PyTypeObject *p_CurlShare_Type = NULL;
 
-PyObject *curlobject_constants = NULL;
-PyObject *curlmultiobject_constants = NULL;
-PyObject *curlshareobject_constants = NULL;
+PYCURL_INTERNAL PyObject *curlobject_constants = NULL;
+PYCURL_INTERNAL PyObject *curlmultiobject_constants = NULL;
+PYCURL_INTERNAL PyObject *curlshareobject_constants = NULL;
 
 /* Per function docstrings */
 static const char pycurl_global_init_doc[] =
