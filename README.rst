@@ -46,7 +46,7 @@ Requirements
 Installation
 ------------
 
-Please see README.rst for installation instructions.
+Please see [INSTALL.rst](INSTALL.rst) for installation instructions.
 
 Support
 -------
