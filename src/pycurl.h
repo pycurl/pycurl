@@ -22,6 +22,12 @@
 #undef NDEBUG
 #include <assert.h>
 
+#if defined(PYCURL_SINGLE_FILE)
+# define PYCURL_INTERNAL static
+#else
+# define PYCURL_INTERNAL
+#endif
+
 #if defined(WIN32)
 /* supposedly not present in errno.h provided with VC */
 # if !defined(EAFNOSUPPORT)
@@ -102,12 +108,6 @@ typedef int Py_ssize_t;
 
 #undef UNUSED
 #define UNUSED(var)     ((void)&var)
-
-#if defined(PYCURL_SINGLE_FILE)
-# define PYCURL_INTERNAL static
-#else
-# define PYCURL_INTERNAL
-#endif
 
 /* Cruft for thread safe SSL crypto locks, snapped from the PHP curl extension */
 #if defined(HAVE_CURL_SSL)
