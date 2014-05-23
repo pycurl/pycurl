@@ -31,16 +31,27 @@ RSYNC_TARGET = /home/groups/p/py/pycurl/
 
 RSYNC_USER = armco@web.sourceforge.net
 
-all: build
+SOURCES = src/module.c src/oscompat.c src/pycurl.c \
+	src/stringcompat.c src/threadsupport.c
 
-src/allpycurl.c: src/pycurl.h src/oscompat.c src/pycurl.c src/threadsupport.c
+ALL_SOURCES = src/pycurl.h $(SOURCES)
+
+RELEASE_SOURCES = src/allpycurl.c
+
+all: build
+src-release: $(RELEASE_SOURCES)
+
+src/allpycurl.c: $(ALL_SOURCES)
 	echo '#define PYCURL_SINGLE_FILE' >src/.tmp.allpycurl.c
 	cat src/pycurl.h >>src/.tmp.allpycurl.c
-	cat src/oscompat.c src/pycurl.c src/threadsupport.c |sed -e 's/#include "pycurl.h"//' >>src/.tmp.allpycurl.c
+	cat $(SOURCES) |sed -e 's/#include "pycurl.h"//' >>src/.tmp.allpycurl.c
 	mv src/.tmp.allpycurl.c src/allpycurl.c
 
-build: src/allpycurl.c
+build: $(ALL_SOURCES)
 	$(PYTHON) setup.py build
+
+build-release: $(RELEASE_SOURCES)
+	PYCURL_RELEASE=1 $(PYTHON) setup.py build
 
 do-test:
 	mkdir -p tests/tmp
@@ -54,6 +65,7 @@ do-test:
 	./tests/ext/test-suite.sh
 
 test: build do-test
+test-release: build-release do-test
 
 # (needs GNU binutils)
 strip: build
@@ -67,6 +79,7 @@ clean:
 	-rm -rf build dist
 	-rm -f *.pyc *.pyo */*.pyc */*.pyo */*/*.pyc */*/*.pyo
 	-rm -f MANIFEST
+	-rm -f src/allpycurl.c
 	cd src && $(MAKE) clean
 
 distclean: clean

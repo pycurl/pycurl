@@ -367,8 +367,10 @@ def strip_pycurl_options():
 def get_extension(split_extension_source=False):
     if split_extension_source:
         sources = [
+            os.path.join("src", "module.c"),
             os.path.join("src", "oscompat.c"),
             os.path.join("src", "pycurl.c"),
+            os.path.join("src", "stringcompat.c"),
             os.path.join("src", "threadsupport.c"),
         ]
         depends = [
@@ -573,7 +575,11 @@ if __name__ == "__main__":
         check_authors()
     else:
         setup_args['data_files'] = get_data_files()
-        ext = get_extension()
+        if 'PYCURL_RELEASE' in os.environ and os.environ['PYCURL_RELEASE'].lower() in ['1', 'yes', 'true']:
+            split_extension_source = False
+        else:
+            split_extension_source = True
+        ext = get_extension(split_extension_source=split_extension_source)
         setup_args['ext_modules'] = [ext]
         
         for o in ext.extra_objects:

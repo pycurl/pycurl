@@ -22,6 +22,12 @@
 #undef NDEBUG
 #include <assert.h>
 
+#if defined(PYCURL_SINGLE_FILE)
+# define PYCURL_INTERNAL static
+#else
+# define PYCURL_INTERNAL
+#endif
+
 #if defined(WIN32)
 /* supposedly not present in errno.h provided with VC */
 # if !defined(EAFNOSUPPORT)
@@ -103,12 +109,6 @@ typedef int Py_ssize_t;
 #undef UNUSED
 #define UNUSED(var)     ((void)&var)
 
-#if defined(PYCURL_SINGLE_FILE)
-# define PYCURL_INTERNAL static
-#else
-# define PYCURL_INTERNAL
-#endif
-
 /* Cruft for thread safe SSL crypto locks, snapped from the PHP curl extension */
 #if defined(HAVE_CURL_SSL)
 # if defined(HAVE_CURL_OPENSSL)
@@ -174,6 +174,30 @@ PYCURL_INTERNAL void pycurl_ssl_cleanup(void);
   #define PyInt_FromLong               PyLong_FromLong
   #define PyInt_AsLong                 PyLong_AsLong
 #endif
+
+/*************************************************************************
+// python 2/3 compatibility
+**************************************************************************/
+
+#if PY_MAJOR_VERSION >= 3
+# define PyText_FromFormat(format, str) PyUnicode_FromFormat((format), (str))
+# define PyText_FromString(str) PyUnicode_FromString(str)
+# define PyByteStr_Check(obj) PyBytes_Check(obj)
+# define PyByteStr_AsStringAndSize(obj, buffer, length) PyBytes_AsStringAndSize((obj), (buffer), (length))
+#else
+# define PyText_FromFormat(format, str) PyString_FromFormat((format), (str))
+# define PyText_FromString(str) PyString_FromString(str)
+# define PyByteStr_Check(obj) PyString_Check(obj)
+# define PyByteStr_AsStringAndSize(obj, buffer, length) PyString_AsStringAndSize((obj), (buffer), (length))
+#endif
+#define PyText_EncodedDecref(encoded) Py_XDECREF(encoded)
+
+PYCURL_INTERNAL int
+PyText_AsStringAndSize(PyObject *obj, char **buffer, Py_ssize_t *length, PyObject **encoded_obj);
+PYCURL_INTERNAL char *
+PyText_AsString_NoNUL(PyObject *obj, PyObject **encoded_obj);
+PYCURL_INTERNAL int
+PyText_Check(PyObject *o);
 
 /* Calculate the number of OBJECTPOINT options we need to store */
 #define OPTIONS_SIZE    ((int)CURLOPT_LASTENTRY % 10000)
@@ -306,11 +330,89 @@ PYCURL_INTERNAL void
 pycurl_ssl_cleanup(void);
 #endif
 
+PYCURL_INTERNAL CurlShareObject *
+do_share_new(PyObject *dummy);
+PYCURL_INTERNAL int
+do_share_traverse(CurlShareObject *self, visitproc visit, void *arg);
+PYCURL_INTERNAL int
+do_share_clear(CurlShareObject *self);
+PYCURL_INTERNAL void
+do_share_dealloc(CurlShareObject *self);
+PYCURL_INTERNAL int
+do_share_setattr(CurlShareObject *so, char *name, PyObject *v);
+PYCURL_INTERNAL PyObject *
+do_share_getattr(CurlShareObject *cso, char *name);
+#if PY_MAJOR_VERSION >= 3
+PYCURL_INTERNAL int
+do_share_setattro(PyObject *o, PyObject *n, PyObject *v);
+PYCURL_INTERNAL PyObject *
+do_share_getattro(PyObject *o, PyObject *n);
+#endif
+
+PYCURL_INTERNAL CurlObject *
+do_curl_new(PyObject *dummy);
+PYCURL_INTERNAL void
+do_curl_dealloc(CurlObject *self);
+PYCURL_INTERNAL int
+do_curl_clear(CurlObject *self);
+PYCURL_INTERNAL int
+do_curl_traverse(CurlObject *self, visitproc visit, void *arg);
+PYCURL_INTERNAL int
+do_curl_setattr(CurlObject *co, char *name, PyObject *v);
+PYCURL_INTERNAL PyObject *
+do_curl_getattr(CurlObject *co, char *name);
+#if PY_MAJOR_VERSION >= 3
+PYCURL_INTERNAL int
+do_curl_setattro(PyObject *o, PyObject *name, PyObject *v);
+PYCURL_INTERNAL PyObject *
+do_curl_getattro(PyObject *o, PyObject *n);
+#endif
+
+PYCURL_INTERNAL CurlMultiObject *
+do_multi_new(PyObject *dummy);
+PYCURL_INTERNAL void
+do_multi_dealloc(CurlMultiObject *self);
+PYCURL_INTERNAL int
+do_multi_clear(CurlMultiObject *self);
+PYCURL_INTERNAL int
+do_multi_traverse(CurlMultiObject *self, visitproc visit, void *arg);
+PYCURL_INTERNAL int
+do_multi_setattr(CurlMultiObject *co, char *name, PyObject *v);
+PYCURL_INTERNAL PyObject *
+do_multi_getattr(CurlMultiObject *co, char *name);
+#if PY_MAJOR_VERSION >= 3
+PYCURL_INTERNAL int
+do_multi_setattro(PyObject *o, PyObject *n, PyObject *v);
+PYCURL_INTERNAL PyObject *
+do_multi_getattro(PyObject *o, PyObject *n);
+#endif
+
+PYCURL_INTERNAL PyObject *
+do_global_init(PyObject *dummy, PyObject *args);
+PYCURL_INTERNAL PyObject *
+do_global_cleanup(PyObject *dummy);
+PYCURL_INTERNAL PyObject *
+do_version_info(PyObject *dummy, PyObject *args);
+
+#if !defined(PYCURL_SINGLE_FILE)
 /* Type objects */
 extern PyObject *ErrorObject;
 extern PyTypeObject *p_Curl_Type;
 extern PyTypeObject *p_CurlMulti_Type;
 extern PyTypeObject *p_CurlShare_Type;
+
+extern PyObject *curlobject_constants;
+extern PyObject *curlmultiobject_constants;
+extern PyObject *curlshareobject_constants;
+
+extern char *g_pycurl_useragent;
+
+#if PY_MAJOR_VERSION >= 3
+extern PyMethodDef curlshareobject_methods[];
+extern PyMethodDef curlobject_methods[];
+extern PyMethodDef curlmultiobject_methods[];
+#endif
+#endif /* !PYCURL_SINGLE_FILE */
 
 /* vi:ts=4:et:nowrap
  */
