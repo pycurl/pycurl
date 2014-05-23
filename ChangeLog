@@ -1,6 +1,8 @@
 master
 ------
 
+        * Python 3.4 is now officially supported.
+
         * Windows packages now build libcurl against zlib.
 
         * CherryPy is no longer required for the test suite, ssl module from

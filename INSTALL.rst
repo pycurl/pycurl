@@ -99,7 +99,7 @@ versions:
 - 2.6.6
 - 2.7.6
 - 3.2.5
-- 3.3.4
+- 3.3.5
 
 If CRTs used by PycURL and Python do not match, you will receive a message
 like following when trying to import pycurl module::
@@ -184,7 +184,7 @@ Prerequisites:
 .. _Python versions: http://python.org/download/
 
 ``winbuild.py`` assumes all programs are installed in their default locations,
-if this is not the case edit it as needed. ``winbuild.py`` can be run
-with Python 2.6, 2.7, 3.2 or 3.3.
+if this is not the case edit it as needed. ``winbuild.py`` itself can be run
+with any Python it supports - 2.6, 2.7, 3.2, 3.3 or 3.4.
 
 .. _`download area`: http://pycurl.sourceforge.net/download/
