@@ -1,6 +1,8 @@
 master
 ------
 
+        * C source is now split into several files.
+
         * Documentation is now processed by sphinx.
 
 Version 7.19.3.1 [requires libcurl-7.19.0 or better] - 2014-02-05
