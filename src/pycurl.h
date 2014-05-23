@@ -200,6 +200,25 @@ PyText_AsString_NoNUL(PyObject *obj, PyObject **encoded_obj);
 PYCURL_INTERNAL int
 PyText_Check(PyObject *o);
 
+
+/* Raise exception based on return value `res' and `self->error' */
+#define CURLERROR_RETVAL() do {\
+    PyObject *v; \
+    self->error[sizeof(self->error) - 1] = 0; \
+    v = Py_BuildValue("(is)", (int) (res), self->error); \
+    if (v != NULL) { PyErr_SetObject(ErrorObject, v); Py_DECREF(v); } \
+    return NULL; \
+} while (0)
+
+/* Raise exception based on return value `res' and custom message */
+#define CURLERROR_MSG(msg) do {\
+    PyObject *v; const char *m = (msg); \
+    v = Py_BuildValue("(is)", (int) (res), (m)); \
+    if (v != NULL) { PyErr_SetObject(ErrorObject, v); Py_DECREF(v); } \
+    return NULL; \
+} while (0)
+
+
 /* Calculate the number of OBJECTPOINT options we need to store */
 #define OPTIONS_SIZE    ((int)CURLOPT_LASTENTRY % 10000)
 #define MOPTIONS_SIZE   ((int)CURLMOPT_LASTENTRY % 10000)
@@ -330,6 +349,22 @@ pycurl_ssl_init(void);
 PYCURL_INTERNAL void
 pycurl_ssl_cleanup(void);
 #endif
+
+#if PY_MAJOR_VERSION >= 3
+PYCURL_INTERNAL PyObject *
+my_getattro(PyObject *co, PyObject *name, PyObject *dict1, PyObject *dict2, PyMethodDef *m);
+PYCURL_INTERNAL int
+my_setattro(PyObject **dict, PyObject *name, PyObject *v);
+#else /* PY_MAJOR_VERSION >= 3 */
+PYCURL_INTERNAL int
+my_setattr(PyObject **dict, char *name, PyObject *v);
+PYCURL_INTERNAL PyObject *
+my_getattr(PyObject *co, char *name, PyObject *dict1, PyObject *dict2, PyMethodDef *m);
+#endif /* PY_MAJOR_VERSION >= 3 */
+
+/* used by multi object */
+PYCURL_INTERNAL void
+assert_curl_state(const CurlObject *self);
 
 PYCURL_INTERNAL CurlShareObject *
 do_share_new(PyObject *dummy);

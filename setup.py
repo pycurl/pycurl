@@ -367,9 +367,12 @@ def strip_pycurl_options():
 def get_extension(split_extension_source=False):
     if split_extension_source:
         sources = [
+            os.path.join("src", "easy.c"),
             os.path.join("src", "module.c"),
+            os.path.join("src", "multi.c"),
             os.path.join("src", "oscompat.c"),
-            os.path.join("src", "pycurl.c"),
+            os.path.join("src", "pythoncompat.c"),
+            os.path.join("src", "share.c"),
             os.path.join("src", "stringcompat.c"),
             os.path.join("src", "threadsupport.c"),
         ]

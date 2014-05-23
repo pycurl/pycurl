@@ -31,8 +31,10 @@ RSYNC_TARGET = /home/groups/p/py/pycurl/
 
 RSYNC_USER = armco@web.sourceforge.net
 
-SOURCES = src/module.c src/oscompat.c src/pycurl.c \
-	src/stringcompat.c src/threadsupport.c
+# src/module.c is first because it declares global variables
+# which other files reference; important for single source build
+SOURCES = src/module.c src/easy.c src/multi.c src/oscompat.c src/pythoncompat.c \
+	src/share.c src/stringcompat.c src/threadsupport.c
 
 ALL_SOURCES = src/pycurl.h $(SOURCES)
 
