@@ -1,6 +1,8 @@
 master
 ------
 
+        * Fixed a memory leak of OPENSOCKET and SEEK callbacks.
+
         * C source is now split into several files.
 
         * Documentation is now processed by sphinx.

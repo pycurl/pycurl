@@ -541,6 +541,8 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
         Py_CLEAR(self->pro_cb);
         Py_CLEAR(self->debug_cb);
         Py_CLEAR(self->ioctl_cb);
+        Py_CLEAR(self->opensocket_cb);
+        Py_CLEAR(self->seek_cb);
     }
 
     if (flags & PYCURL_MEMGROUP_FILE) {
