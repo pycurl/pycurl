@@ -78,6 +78,32 @@ argument is --with-ssl, to match libcurl, but the environment variable value is
 Windows
 -------
 
+Binary Packages
+...............
+
+Binary packages are available in the `download area`_
+for some Windows and Python version combinations.
+Currently, 32-bit packages are available for Python 2.6, 2.7, 3.2 and 3.3.
+64-bit packages are not presently available.
+
+In order to use the official binary packages, your installation of Python must
+have been compiled against the same MS Visual C++ runtime that the packages
+have been compiled against. Importantly, which version of MSVC is used
+has changed in minor releases of Python, for example between 2.7.3 and 2.7.6.
+As such, you may need to upgrade or downgrade your version of Python to use
+official PycURL packages.
+
+Currently official PycURL packages are built against the following Python
+versions:
+
+- 2.6.6
+- 2.7.6
+- 3.2.5
+- 3.3.4
+
+Installing From Source
+......................
+
 First, you will need to obtain dependencies. These can be precompiled binaries
 or source packages that you are going to compile yourself.
 
@@ -127,7 +153,7 @@ You may find the following mailing list posts helpful:
 
 
 winbuild.py
-^^^^^^^^^^^
+...........
 
 This script is used to build official PycURL Windows packages. You can
 use it to build a full complement of packages with your own options or modify
@@ -146,3 +172,5 @@ Prerequisites:
 ``winbuild.py`` assumes all programs are installed in their default locations,
 if this is not the case edit it as needed. ``winbuild.py`` can be run
 with Python 2.6, 2.7, 3.2 or 3.3.
+
+.. _`download area`: http://pycurl.sourceforge.net/download/
