@@ -1014,6 +1014,9 @@ initpycurl(void)
     insint_c(d, "PROTO_GOPHER", CURLPROTO_GOPHER);
     insint_c(d, "PROTO_ALL", CURLPROTO_ALL);
 #endif
+#ifdef HAVE_CURL_7_19_4_OPTS
+    insint_c(d, "TFTP_BLKSIZE", CURLOPT_TFTP_BLKSIZE);
+#endif
 
     insint_c(d, "M_TIMERFUNCTION", CURLMOPT_TIMERFUNCTION);
     insint_c(d, "M_SOCKETFUNCTION", CURLMOPT_SOCKETFUNCTION);

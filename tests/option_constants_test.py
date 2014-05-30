@@ -88,3 +88,10 @@ class OptionConstantsTest(unittest.TestCase):
         curl = pycurl.Curl()
         curl.setopt(curl.PROTOCOLS, curl.PROTO_ALL & ~curl.PROTO_HTTP)
         curl.close()
+    
+    # CURLOPT_TFTP_BLKSIZE was introduced in libcurl-7.19.4
+    @util.min_libcurl(7, 19, 4)
+    def test_tftp_blksize_setopt(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.TFTP_BLKSIZE, 1024)
+        curl.close()
