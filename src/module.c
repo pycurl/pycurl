@@ -1016,6 +1016,8 @@ initpycurl(void)
 #endif
 #ifdef HAVE_CURL_7_19_4_OPTS
     insint_c(d, "TFTP_BLKSIZE", CURLOPT_TFTP_BLKSIZE);
+    insint_c(d, "SOCKS5_GSSAPI_SERVICE", CURLOPT_SOCKS5_GSSAPI_SERVICE);
+    insint_c(d, "SOCKS5_GSSAPI_NEC", CURLOPT_SOCKS5_GSSAPI_NEC);
 #endif
 
     insint_c(d, "M_TIMERFUNCTION", CURLMOPT_TIMERFUNCTION);

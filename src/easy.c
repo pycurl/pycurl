@@ -1270,6 +1270,9 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 #ifdef HAVE_CURLOPT_NOPROXY
         case CURLOPT_NOPROXY:
 #endif
+#ifdef HAVE_CURL_7_19_4_OPTS
+        case CURLOPT_SOCKS5_GSSAPI_SERVICE:
+#endif
 /* FIXME: check if more of these options allow binary data */
             str = PyText_AsString_NoNUL(obj, &encoded_obj);
             if (str == NULL)

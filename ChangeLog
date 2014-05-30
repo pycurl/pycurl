@@ -1,6 +1,9 @@
 master
 ------
 
+        * Added CURLOPT_SOCKS5_GSSAPI_SERVICE and
+          CURLOPT_SOCKS5_GSSAPI_NEC (libcurl 7.19.4+).
+
         * Added CURLOPT_TFTP_BLKSIZE (libcurl 7.19.4+).
 
         * Added CURLOPT_PROTOCOLS, CURLOPT_REDIR_PROTOCOLS and associated
