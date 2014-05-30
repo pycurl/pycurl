@@ -767,17 +767,17 @@ initpycurl(void)
     insint_c(d, "E_LOGIN_DENIED", CURLE_LOGIN_DENIED);
     insint_c(d, "E_TFTP_NOTFOUND", CURLE_TFTP_NOTFOUND);
     insint_c(d, "E_TFTP_PERM", CURLE_TFTP_PERM);
-    insint_c(d, "E_TFTP_DISKFULL",CURLE_TFTP_DISKFULL );
-    insint_c(d, "E_TFTP_ILLEGAL",CURLE_TFTP_ILLEGAL );
-    insint_c(d, "E_TFTP_UNKNOWNID",CURLE_TFTP_UNKNOWNID );
+    insint_c(d, "E_TFTP_DISKFULL", CURLE_TFTP_DISKFULL);
+    insint_c(d, "E_TFTP_ILLEGAL", CURLE_TFTP_ILLEGAL);
+    insint_c(d, "E_TFTP_UNKNOWNID", CURLE_TFTP_UNKNOWNID);
     insint_c(d, "E_TFTP_EXISTS", CURLE_TFTP_EXISTS);
-    insint_c(d, "E_TFTP_NOSUCHUSER",CURLE_TFTP_NOSUCHUSER );
-    insint_c(d, "E_CONV_FAILED",CURLE_CONV_FAILED );
-    insint_c(d, "E_CONV_REQD",CURLE_CONV_REQD );
+    insint_c(d, "E_TFTP_NOSUCHUSER", CURLE_TFTP_NOSUCHUSER);
+    insint_c(d, "E_CONV_FAILED", CURLE_CONV_FAILED);
+    insint_c(d, "E_CONV_REQD", CURLE_CONV_REQD);
     insint_c(d, "E_SSL_CACERT_BADFILE", CURLE_SSL_CACERT_BADFILE);
-    insint_c(d, "E_REMOTE_FILE_NOT_FOUND",CURLE_REMOTE_FILE_NOT_FOUND );
-    insint_c(d, "E_SSH",CURLE_SSH );
-    insint_c(d, "E_SSL_SHUTDOWN_FAILED",CURLE_SSL_SHUTDOWN_FAILED );
+    insint_c(d, "E_REMOTE_FILE_NOT_FOUND", CURLE_REMOTE_FILE_NOT_FOUND);
+    insint_c(d, "E_SSH", CURLE_SSH);
+    insint_c(d, "E_SSL_SHUTDOWN_FAILED", CURLE_SSL_SHUTDOWN_FAILED);
 
     /* curl_proxytype: constants for setopt(PROXYTYPE, x) */
     insint_c(d, "PROXYTYPE_HTTP", CURLPROXY_HTTP);
