@@ -781,6 +781,9 @@ initpycurl(void)
 
     /* curl_proxytype: constants for setopt(PROXYTYPE, x) */
     insint_c(d, "PROXYTYPE_HTTP", CURLPROXY_HTTP);
+#ifdef HAVE_CURL_7_19_4_OPTS
+    insint_c(d, "PROXYTYPE_HTTP_1_0", CURLPROXY_HTTP_1_0);
+#endif
     insint_c(d, "PROXYTYPE_SOCKS4", CURLPROXY_SOCKS4);
     insint_c(d, "PROXYTYPE_SOCKS5", CURLPROXY_SOCKS5);
 

@@ -109,3 +109,10 @@ class OptionConstantsTest(unittest.TestCase):
         curl = pycurl.Curl()
         curl.setopt(curl.SOCKS5_GSSAPI_NEC, True)
         curl.close()
+    
+    # CURLPROXY_HTTP_1_0 was introduced in libcurl-7.19.4
+    @util.min_libcurl(7, 19, 4)
+    def test_curlproxey_http_1_0_setopt(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.PROXYTYPE, curl.PROXYTYPE_HTTP_1_0)
+        curl.close()
