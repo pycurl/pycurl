@@ -1,6 +1,8 @@
 master
 ------
 
+        * Added CURLINFO_CONDITION_UNMET (libcurl 7.19.4+).
+
         * Added CURLPROXY_HTTP_1_0 (libcurl 7.19.4+).
 
         * Added CURLOPT_SOCKS5_GSSAPI_SERVICE and
