@@ -1,0 +1,54 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+# vi:ts=4:et
+
+import nose
+import unittest
+import pycurl
+
+from . import util
+
+sftp_server = 'sftp://web.sourceforge.net'
+
+@nose.plugins.attrib.attr('online')
+@nose.plugins.attrib.attr('sftp')
+@util.min_libcurl(7, 19, 6)
+class SshKeyfunctionTest(unittest.TestCase):
+    '''This test requires Internet access.'''
+
+    def setUp(self):
+        self.curl = pycurl.Curl()
+        self.curl.setopt(pycurl.URL, sftp_server)
+        self.curl.setopt(pycurl.VERBOSE, True)
+
+    def tearDown(self):
+        self.curl.close()
+
+    def test_keyfunction(self):
+        # with keyfunction returning ok
+
+        def keyfunction(known_key, found_key, match):
+            return pycurl.KHSTAT_FINE
+
+        self.curl.setopt(pycurl.SSH_KNOWNHOSTS, '.known_hosts')
+        self.curl.setopt(pycurl.SSH_KEYFUNCTION, keyfunction)
+
+        try:
+            self.curl.perform()
+            self.fail('should have raised')
+        except pycurl.error as e:
+            self.assertEqual(pycurl.E_LOGIN_DENIED, e.args[0])
+
+        # with keyfunction returning not ok
+
+        def keyfunction(known_key, found_key, match):
+            return pycurl.KHSTAT_REJECT
+
+        self.curl.setopt(pycurl.SSH_KNOWNHOSTS, '.known_hosts')
+        self.curl.setopt(pycurl.SSH_KEYFUNCTION, keyfunction)
+
+        try:
+            self.curl.perform()
+            self.fail('should have raised')
+        except pycurl.error as e:
+            self.assertEqual(pycurl.E_PEER_FAILED_VERIFICATION, e.args[0])

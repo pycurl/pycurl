@@ -21,6 +21,7 @@ PYCURL_INTERNAL PyObject *ErrorObject = NULL;
 PYCURL_INTERNAL PyTypeObject *p_Curl_Type = NULL;
 PYCURL_INTERNAL PyTypeObject *p_CurlMulti_Type = NULL;
 PYCURL_INTERNAL PyTypeObject *p_CurlShare_Type = NULL;
+PYCURL_INTERNAL PyObject *khkey_type = NULL;
 
 PYCURL_INTERNAL PyObject *curlobject_constants = NULL;
 PYCURL_INTERNAL PyObject *curlmultiobject_constants = NULL;
@@ -308,6 +309,9 @@ initpycurl(void)
     const curl_version_info_data *vi;
     const char *libcurl_version, *runtime_ssl_lib;
     size_t libcurl_version_len, pycurl_version_len;
+    PyObject *collections_module = NULL;
+    PyObject *named_tuple = NULL;
+    PyObject *arglist = NULL;
 
     /* Check the version, as this has caused nasty problems in
      * some cases. */
@@ -532,6 +536,7 @@ initpycurl(void)
     insint_c(d, "E_FTP_SSL_FAILED", CURLE_FTP_SSL_FAILED);
     insint_c(d, "E_SEND_FAIL_REWIND", CURLE_SEND_FAIL_REWIND);
     insint_c(d, "E_LOGIN_DENIED", CURLE_LOGIN_DENIED);
+    insint_c(d, "E_PEER_FAILED_VERIFICATION", CURLE_PEER_FAILED_VERIFICATION);
     insint_c(d, "E_TFTP_NOTFOUND", CURLE_TFTP_NOTFOUND);
     insint_c(d, "E_TFTP_PERM", CURLE_TFTP_PERM);
     insint_c(d, "E_TFTP_DISKFULL", CURLE_TFTP_DISKFULL);
@@ -749,6 +754,7 @@ initpycurl(void)
     insint_c(d, "SSH_PRIVATE_KEYFILE", CURLOPT_SSH_PRIVATE_KEYFILE);
 #ifdef HAVE_CURL_7_19_6_OPTS
     insint_c(d, "SSH_KNOWNHOSTS", CURLOPT_SSH_KNOWNHOSTS);
+    insint_c(d, "SSH_KEYFUNCTION", CURLOPT_SSH_KEYFUNCTION);
 #endif
     insint_c(d, "FTP_SSL_CCC", CURLOPT_FTP_SSL_CCC);
     insint_c(d, "TIMEOUT_MS", CURLOPT_TIMEOUT_MS);
@@ -908,6 +914,25 @@ initpycurl(void)
     insint_c(d, "SSH_AUTH_KEYBOARD", CURLSSH_AUTH_KEYBOARD);
     insint_c(d, "SSH_AUTH_DEFAULT", CURLSSH_AUTH_DEFAULT);
 
+#ifdef HAVE_CURL_7_19_6_OPTS
+    /* curl_khtype constants */
+    insint_c(d, "KHTYPE_UNKNOWN", CURLKHTYPE_UNKNOWN);
+    insint_c(d, "KHTYPE_RSA1", CURLKHTYPE_RSA1);
+    insint_c(d, "KHTYPE_RSA", CURLKHTYPE_RSA);
+    insint_c(d, "KHTYPE_DSS", CURLKHTYPE_DSS);
+
+    /* curl_khmatch constants, passed to sshkeycallback */
+    insint_c(d, "KHMATCH_OK", CURLKHMATCH_OK);
+    insint_c(d, "KHMATCH_MISMATCH", CURLKHMATCH_MISMATCH);
+    insint_c(d, "KHMATCH_MISSING", CURLKHMATCH_MISSING);
+
+    /* return values for CURLOPT_SSH_KEYFUNCTION */
+    insint_c(d, "KHSTAT_FINE_ADD_TO_FILE", CURLKHSTAT_FINE_ADD_TO_FILE);
+    insint_c(d, "KHSTAT_FINE", CURLKHSTAT_FINE);
+    insint_c(d, "KHSTAT_REJECT", CURLKHSTAT_REJECT);
+    insint_c(d, "KHSTAT_DEFER", CURLKHSTAT_DEFER);
+#endif
+
     /* CURLINFO: symbolic constants for getinfo(x) */
     insint_c(d, "EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL);
     insint_c(d, "HTTP_CODE", CURLINFO_HTTP_CODE);
@@ -1063,6 +1088,24 @@ initpycurl(void)
     pycurl_ssl_init();
 #endif
 
+    collections_module = PyImport_ImportModule("collections");
+    if (collections_module == NULL) {
+        goto error;
+    }
+    named_tuple = PyObject_GetAttrString(collections_module, "namedtuple");
+    if (named_tuple == NULL) {
+        goto error;
+    }
+    arglist = Py_BuildValue("ss", "KhKey", "key keytype");
+    if (arglist == NULL) {
+        goto error;
+    }
+    khkey_type = PyObject_Call(named_tuple, arglist, NULL);
+    if (khkey_type == NULL) {
+        goto error;
+    }
+    PyDict_SetItemString(d, "KhKey", khkey_type);
+
 #ifdef WITH_THREAD
     /* Finally initialize global interpreter lock */
     PyEval_InitThreads();
@@ -1079,6 +1122,10 @@ error:
     Py_XDECREF(curlmultiobject_constants);
     Py_XDECREF(curlshareobject_constants);
     Py_XDECREF(ErrorObject);
+    Py_XDECREF(collections_module);
+    Py_XDECREF(named_tuple);
+    Py_XDECREF(arglist);
+    Py_XDECREF(khkey_type);
     PyMem_Free(g_pycurl_useragent);
     if (!PyErr_Occurred())
         PyErr_SetString(PyExc_ImportError, "curl module init failed");

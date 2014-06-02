@@ -1,6 +1,9 @@
 master
 ------
 
+        * Added CURLOPT_SSH_KEYFUNCTION (libcurl 7.19.6+).
+          CURLOPT_SSH_KEYDATA is used internally by PycURL.
+
         * Added CURLOPT_SSL_OPTIONS (libcurl 7.25.0+).
 
         * Added CURLOPT_KRBLEVEL.
