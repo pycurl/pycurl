@@ -100,6 +100,27 @@ def only_ssl(fn):
     
     return decorated
 
+def guard_unknown_libcurl_option(fn):
+    '''Converts curl error 48, CURLE_UNKNOWN_OPTION, into a SkipTest
+    exception. This is meant to be used with tests exercising libcurl
+    features that depend on external libraries, such as libssh2/gssapi,
+    where libcurl does not provide a way of detecting whether the
+    required libraries were compiled against.'''
+    
+    import nose.plugins.skip
+    import pycurl
+    
+    @functools.wraps(fn)
+    def decorated(*args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except pycurl.error:
+            exc = sys.exc_info()[1]
+            if exc.args[0] == pycurl.E_UNKNOWN_OPTION:
+                raise nose.plugins.skip.SkipTest('CURLE_UNKNOWN_OPTION, skipping test')
+    
+    return decorated
+
 try:
     create_connection = socket.create_connection
 except AttributeError:
