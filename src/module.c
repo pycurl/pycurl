@@ -1119,7 +1119,7 @@ initpycurl(void)
     insint_c(d, "INFO_CERTINFO", CURLINFO_CERTINFO);
 #endif
 #ifdef HAVE_CURL_7_19_4_OPTS
-    insint_c(d, "CONDITION_UNMET ", CURLINFO_CONDITION_UNMET );
+    insint_c(d, "CONDITION_UNMET", CURLINFO_CONDITION_UNMET);
 #endif
 
     /* CURLPAUSE: symbolic constants for pause(bitmask) */
