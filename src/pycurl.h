@@ -90,8 +90,13 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
 #define HAVE_CURLOPT_RESOLVE
 #endif
 
+#if LIBCURL_VERSION_NUM >= 0x071505 /* check for 7.21.5 or greater */
+#define HAVE_CURL_7_21_5
+#endif
+
 #if LIBCURL_VERSION_NUM >= 0x071800 /* check for 7.24.0 or greater */
 #define HAVE_CURLOPT_DNS_SERVERS
+#define HAVE_CURL_7_24_0
 #endif
 
 #if LIBCURL_VERSION_NUM >= 0x071A00 /* check for 7.26.0 or greater */

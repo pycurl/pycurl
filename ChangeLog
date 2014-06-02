@@ -1,6 +1,10 @@
 master
 ------
 
+        * Added CURLE_FTP_ACCEPT_FAILED (libcurl 7.24.0+).
+
+        * Added CURLE_NOT_BUILT_IN and CURLE_UNKNOWN_OPTION (libcurl 7.21.5+).
+
         * Added CURL_SEEKFUNC_OK, CURL_SEEKFUNC_FAIL and
           CURL_SEEKFUNC_CANTSEEK. CURL_SEEKFUNC_CANTSEEK requires
           libcurl 7.19.5+.
