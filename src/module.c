@@ -1131,7 +1131,7 @@ initpycurl(void)
     /* CURL_SEEKFUNC: return values for seek function */
     insint_c(d, "SEEKFUNC_OK", CURL_SEEKFUNC_OK);
     insint_c(d, "SEEKFUNC_FAIL", CURL_SEEKFUNC_FAIL);
-#ifdef HAVE_CURL_7_19_4_OPTS
+#ifdef HAVE_CURL_7_19_5_OPTS
     insint_c(d, "SEEKFUNC_CANTSEEK", CURL_SEEKFUNC_CANTSEEK);
 #endif
 
