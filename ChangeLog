@@ -1,6 +1,8 @@
 master
 ------
 
+        * Added CURLOPT_SSH_KNOWNHOSTS (libcurl 7.19.6+).
+
         * Added CURLE_FTP_ACCEPT_FAILED (libcurl 7.24.0+).
 
         * Added CURLE_NOT_BUILT_IN and CURLE_UNKNOWN_OPTION (libcurl 7.21.5+).
