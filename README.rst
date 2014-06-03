@@ -74,8 +74,7 @@ PycURL comes with an automated test suite. To run the tests, execute::
 
     make test
 
-The suite depends on packages `nose`_, `bottle`_ and `cherrypy`_,
-as well as `vsftpd`_.
+The suite depends on packages `nose`_ and `bottle`_, as well as `vsftpd`_.
 
 Some tests use vsftpd configured to accept anonymous uploads. These tests
 are not run by default. As configured, vsftpd will allow reads and writes to
@@ -92,7 +91,6 @@ These instructions work for Python 2.5 through 2.7 and 3.1 through 3.3.
 
 .. _nose: https://nose.readthedocs.org/
 .. _bottle: http://bottlepy.org/
-.. _cherrypy: http://www.cherrypy.org/
 .. _vsftpd: http://vsftpd.beasts.org/
 
 Test Matrix
