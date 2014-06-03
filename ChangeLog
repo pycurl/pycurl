@@ -1,6 +1,9 @@
 master
 ------
 
+        * Fixed a reference leak of SOCKET and TIMER callbacks on
+          CurlMulti instances, thanks to Ben Darnell.
+
         * Fixed build against openssl on cygwin, where pycurl needs to link
           against libcrypto rather than libssl.
 
@@ -26,7 +29,8 @@ master
         * Added CURLOPT_PROTOCOLS, CURLOPT_REDIR_PROTOCOLS and associated
           CURLPROTO_* constants, which require libcurl 7.19.4+.
 
-        * Fixed a memory leak of OPENSOCKET and SEEK callbacks.
+        * Fixed a reference leak of OPENSOCKET and SEEK callbacks, thanks to
+          Ben Darnell.
 
         * C source is now split into several files.
 

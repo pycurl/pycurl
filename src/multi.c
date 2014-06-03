@@ -93,13 +93,22 @@ util_multi_close(CurlMultiObject *self)
 }
 
 
+static void
+util_multi_xdecref(CurlMultiObject *self)
+{
+    Py_CLEAR(self->dict);
+    Py_CLEAR(self->t_cb);
+    Py_CLEAR(self->s_cb);
+}
+
+
 PYCURL_INTERNAL void
 do_multi_dealloc(CurlMultiObject *self)
 {
     PyObject_GC_UnTrack(self);
     Py_TRASHCAN_SAFE_BEGIN(self)
 
-    Py_CLEAR(self->dict);
+    util_multi_xdecref(self);
     util_multi_close(self);
 
     PyObject_GC_Del(self);
@@ -124,7 +133,7 @@ do_multi_close(CurlMultiObject *self)
 PYCURL_INTERNAL int
 do_multi_clear(CurlMultiObject *self)
 {
-    Py_CLEAR(self->dict);
+    util_multi_xdecref(self);
     return 0;
 }
 
