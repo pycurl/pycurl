@@ -101,6 +101,20 @@ versions:
 - 3.2.5
 - 3.3.4
 
+If CRTs used by PycURL and Python do not match, you will receive a message
+like following when trying to import pycurl module::
+
+    ImportError: DLL load failed: The specified procedure could not be found.
+
+To troubleshoot this situation use the `application profiling feature`_ of
+`Dependency Walker`_ and look for `msvcrt.dll variants`_ being loaded.
+You may find `the entire thread starting here`_ helpful.
+
+.. _application profiling feature: http://curl.haxx.se/mail/curlpython-2014-05/0007.html
+.. _Dependency Walker: http://www.dependencywalker.com/
+.. _msvcrt.dll variants: http://curl.haxx.se/mail/curlpython-2014-05/0010.html
+.. _the entire thread starting here: http://curl.haxx.se/mail/curlpython-2014-05/0000.html
+
 Installing From Source
 ......................
 
