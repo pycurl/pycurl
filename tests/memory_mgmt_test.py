@@ -220,6 +220,24 @@ class MemoryMgmtTest(unittest.TestCase):
             c = pycurl.Curl()
             c.reset()
     
+    def test_writefunction_collection(self):
+        self.check_callback(pycurl.WRITEFUNCTION)
+    
+    def test_headerfunction_collection(self):
+        self.check_callback(pycurl.HEADERFUNCTION)
+    
+    def test_readfunction_collection(self):
+        self.check_callback(pycurl.READFUNCTION)
+    
+    def test_progressfunction_collection(self):
+        self.check_callback(pycurl.PROGRESSFUNCTION)
+    
+    def test_debugfunction_collection(self):
+        self.check_callback(pycurl.DEBUGFUNCTION)
+    
+    def test_ioctlfunction_collection(self):
+        self.check_callback(pycurl.IOCTLFUNCTION)
+    
     def test_opensocketfunction_collection(self):
         self.check_callback(pycurl.OPENSOCKETFUNCTION)
     
