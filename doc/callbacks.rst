@@ -121,7 +121,7 @@ Other examples
 
 The pycurl distribution also contains a number of test scripts and examples
 which show how to use the various callbacks in libcurl. For instance, the
-file 'examples/file_upload.py' in the distribution contains example code for
-using READFUNCTION, 'tests/test_cb.py' shows WRITEFUNCTION and
-HEADERFUNCTION, 'tests/test_debug.py' shows DEBUGFUNCTION, and
-'tests/test_getinfo.py' shows PROGRESSFUNCTION.
+file ``examples/file_upload.py`` in the distribution contains example code for
+using READFUNCTION, ``tests/test_cb.py`` shows WRITEFUNCTION and
+HEADERFUNCTION, ``tests/test_debug.py`` shows DEBUGFUNCTION, and
+``tests/test_getinfo.py`` shows PROGRESSFUNCTION.
