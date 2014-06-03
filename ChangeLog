@@ -1,6 +1,9 @@
 master
 ------
 
+        * Fixed build against openssl on cygwin, where pycurl needs to link
+          against libcrypto rather than libssl.
+
         * Added CURLOPT_SSH_KNOWNHOSTS (libcurl 7.19.6+).
 
         * Added CURLE_FTP_ACCEPT_FAILED (libcurl 7.24.0+).

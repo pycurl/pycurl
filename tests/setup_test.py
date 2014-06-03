@@ -56,7 +56,7 @@ class SetupTest(unittest.TestCase):
     def test_no_ssl(self):
         config = pycurl_setup.ExtensionConfiguration()
         # do not expect anything to do with ssl
-        assert 'ssl' not in config.libraries
+        assert 'crypto' not in config.libraries
     
     @using_curl_config('curl-config-libs-and-static-libs')
     def test_does_not_use_static_libs(self):
@@ -70,13 +70,13 @@ class SetupTest(unittest.TestCase):
     def test_ssl_in_libs(self):
         config = pycurl_setup.ExtensionConfiguration()
         # should link against openssl
-        assert 'ssl' in config.libraries
+        assert 'crypto' in config.libraries
     
     @using_curl_config('curl-config-ssl-in-static-libs')
     def test_ssl_in_static_libs(self):
         config = pycurl_setup.ExtensionConfiguration()
         # should link against openssl
-        assert 'ssl' in config.libraries
+        assert 'crypto' in config.libraries
     
     @using_curl_config('curl-config-empty')
     def test_no_ssl_define(self):

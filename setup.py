@@ -212,7 +212,11 @@ class ExtensionConfiguration(object):
                 if not ssl_lib_detected and arg[2:] == 'ssl':
                     self.define_macros.append(('HAVE_CURL_OPENSSL', 1))
                     ssl_lib_detected = True
-                    self.libraries.append('ssl')
+                    # the actual library that defines CRYPTO_num_locks etc.
+                    # is crypto, and on cygwin linking against ssl does not
+                    # link against crypto as of May 2014.
+                    # http://stackoverflow.com/questions/23687488/cant-get-pycurl-to-install-on-cygwin-missing-openssl-symbols-crypto-num-locks
+                    self.libraries.append('crypto')
                 if not ssl_lib_detected and arg[2:] == 'gnutls':
                     self.define_macros.append(('HAVE_CURL_GNUTLS', 1))
                     ssl_lib_detected = True
