@@ -1,6 +1,9 @@
 master
 ------
 
+        * CherryPy is no longer required for the test suite, ssl module from
+          the Python standard library is used instead.
+
         * Fixed a reference leak of SOCKET and TIMER callbacks on
           CurlMulti instances, thanks to Ben Darnell.
 
