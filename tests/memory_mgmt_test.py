@@ -221,22 +221,12 @@ class MemoryMgmtTest(unittest.TestCase):
             c.reset()
     
     def test_opensocketfunction_collection(self):
-        # Note: extracting a context manager seems to result in
-        # everything being garbage collected even if the C code
-        # does not clear the callback
-        object_count = 0
-        gc.collect()
-        object_count = len(gc.get_objects())
-        
-        c = pycurl.Curl()
-        c.setopt(c.OPENSOCKETFUNCTION, lambda x: True)
-        del c
-        
-        gc.collect()
-        new_object_count = len(gc.get_objects())
-        self.assertEqual(new_object_count, object_count)
+        self.check_callback(pycurl.OPENSOCKETFUNCTION)
     
     def test_seekfunction_collection(self):
+        self.check_callback(pycurl.SEEKFUNCTION)
+    
+    def check_callback(self, callback):
         # Note: extracting a context manager seems to result in
         # everything being garbage collected even if the C code
         # does not clear the callback
@@ -245,7 +235,7 @@ class MemoryMgmtTest(unittest.TestCase):
         object_count = len(gc.get_objects())
         
         c = pycurl.Curl()
-        c.setopt(c.SEEKFUNCTION, lambda x: True)
+        c.setopt(callback, lambda x: True)
         del c
         
         gc.collect()
