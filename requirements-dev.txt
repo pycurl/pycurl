@@ -1,3 +1,2 @@
 bottle
 nose
-cherrypy
