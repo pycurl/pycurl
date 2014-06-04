@@ -142,10 +142,18 @@ typedef int Py_ssize_t;
 # elif defined(HAVE_CURL_NSS)
 #   define COMPILE_SSL_LIB "nss"
 # else
-#  warning \
-   "libcurl was compiled with SSL support, but configure could not determine which " \
-   "library was used; thus no SSL crypto locking callbacks will be set, which may " \
-   "cause random crashes on SSL requests"
+#  ifdef _MSC_VER
+    /* sigh */
+#   pragma message(\
+     "libcurl was compiled with SSL support, but configure could not determine which " \
+     "library was used; thus no SSL crypto locking callbacks will be set, which may " \
+     "cause random crashes on SSL requests")
+#  else
+#   warning \
+     "libcurl was compiled with SSL support, but configure could not determine which " \
+     "library was used; thus no SSL crypto locking callbacks will be set, which may " \
+     "cause random crashes on SSL requests"
+#  endif
    /* since we have no crypto callbacks for other ssl backends,
     * no reason to require users match those */
 #  define COMPILE_SSL_LIB "none/other"
