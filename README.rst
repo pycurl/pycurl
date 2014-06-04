@@ -48,6 +48,18 @@ Installation
 
 Please see INSTALL.rst for installation instructions.
 
+Documentation
+-------------
+
+Documentation for the most recent PycURL release is available on
+`PycURL website <http://pycurl.sourceforge.net/doc/>`_.
+
+To build documentation from source, run ``make docs``.
+Building documentation requires `Sphinx <http://sphinx-doc.org/>`_ to
+be installed, as well as pycurl extension module built as docstrings are
+extracted from it. Built documentation is stored in ``build/doc``
+subdirectory.
+
 Support
 -------
 
