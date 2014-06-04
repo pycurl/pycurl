@@ -1,4 +1,5 @@
 #include "pycurl.h"
+#include "docstrings.h"
 
 /*************************************************************************
 // static utility functions
@@ -197,16 +198,9 @@ error:
 
 /* --------------- methods --------------- */
 
-static const char cso_close_doc [] =
-    "close() -> None.  "
-    "Close shared handle.\n";
-static const char cso_setopt_doc [] =
-    "setopt(option, parameter) -> None.  "
-    "Set curl share option.  Raises pycurl.error exception upon failure.\n";
-
 PYCURL_INTERNAL PyMethodDef curlshareobject_methods[] = {
-    {"close", (PyCFunction)do_share_close, METH_NOARGS, cso_close_doc},
-    {"setopt", (PyCFunction)do_curlshare_setopt, METH_VARARGS, cso_setopt_doc},
+    {"close", (PyCFunction)do_share_close, METH_NOARGS, share_close_doc},
+    {"setopt", (PyCFunction)do_curlshare_setopt, METH_VARARGS, share_setopt_doc},
     {NULL, NULL, 0, 0}
 };
 
