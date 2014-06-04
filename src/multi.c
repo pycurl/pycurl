@@ -1,4 +1,5 @@
 #include "pycurl.h"
+#include "docstrings.h"
 
 /*************************************************************************
 // static utility functions
@@ -741,42 +742,19 @@ do_multi_select(CurlMultiObject *self, PyObject *args)
 
 /* --------------- methods --------------- */
 
-static const char co_multi_close_doc [] = "\
-close() -> None\n\
-\n\
-Corresponds to `curl_multi_cleanup`_ in libcurl. This method is\n\
-automatically called by pycurl when a CurlMulti object no longer has any\n\
-references to it, but can also be called explicitly.\
-";
-static const char co_multi_fdset_doc [] =
-    "fdset() -> Tuple.  "
-    "Returns a tuple of three lists that can be passed to the select.select() method .\n";
-static const char co_multi_info_read_doc [] =
-    "info_read([max_objects]) -> Tuple. "
-    "Returns a tuple (number of queued handles, [curl objects]).\n";
-static const char co_multi_select_doc [] =
-    "select([timeout]) -> Int.  "
-    "Returns result from doing a select() on the curl multi file descriptor with the given timeout.\n";
-static const char co_multi_socket_action_doc [] =
-    "socket_action(sockfd, ev_bitmask) -> Tuple.  "
-    "Returns result from doing a socket_action() on the curl multi file descriptor with the given timeout.\n";
-static const char co_multi_socket_all_doc [] =
-    "socket_all() -> Tuple.  "
-    "Returns result from doing a socket_all() on the curl multi file descriptor with the given timeout.\n";
-
 PYCURL_INTERNAL PyMethodDef curlmultiobject_methods[] = {
     {"add_handle", (PyCFunction)do_multi_add_handle, METH_VARARGS, NULL},
-    {"close", (PyCFunction)do_multi_close, METH_NOARGS, co_multi_close_doc},
-    {"fdset", (PyCFunction)do_multi_fdset, METH_NOARGS, co_multi_fdset_doc},
-    {"info_read", (PyCFunction)do_multi_info_read, METH_VARARGS, co_multi_info_read_doc},
+    {"close", (PyCFunction)do_multi_close, METH_NOARGS, multi_close_doc},
+    {"fdset", (PyCFunction)do_multi_fdset, METH_NOARGS, multi_fdset_doc},
+    {"info_read", (PyCFunction)do_multi_info_read, METH_VARARGS, multi_info_read_doc},
     {"perform", (PyCFunction)do_multi_perform, METH_NOARGS, NULL},
-    {"socket_action", (PyCFunction)do_multi_socket_action, METH_VARARGS, co_multi_socket_action_doc},
-    {"socket_all", (PyCFunction)do_multi_socket_all, METH_NOARGS, co_multi_socket_all_doc},
+    {"socket_action", (PyCFunction)do_multi_socket_action, METH_VARARGS, multi_socket_action_doc},
+    {"socket_all", (PyCFunction)do_multi_socket_all, METH_NOARGS, multi_socket_all_doc},
     {"setopt", (PyCFunction)do_multi_setopt, METH_VARARGS, NULL},
     {"timeout", (PyCFunction)do_multi_timeout, METH_NOARGS, NULL},
     {"assign", (PyCFunction)do_multi_assign, METH_VARARGS, NULL},
     {"remove_handle", (PyCFunction)do_multi_remove_handle, METH_VARARGS, NULL},
-    {"select", (PyCFunction)do_multi_select, METH_VARARGS, co_multi_select_doc},
+    {"select", (PyCFunction)do_multi_select, METH_VARARGS, multi_select_doc},
     {NULL, NULL, 0, NULL}
 };
 
