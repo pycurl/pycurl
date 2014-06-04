@@ -11,7 +11,9 @@ except ImportError:
 buffer = BytesIO()
 c = pycurl.Curl()
 c.setopt(c.URL, 'http://pycurl.sourceforge.net/')
-c.setopt(c.WRITEFUNCTION, buffer.write)
+c.setopt(c.WRITEDATA, buffer)
+# For older PycURL versions:
+#c.setopt(c.WRITEFUNCTION, buffer.write)
 c.perform()
 c.close()
 

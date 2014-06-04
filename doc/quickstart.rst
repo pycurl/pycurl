@@ -13,7 +13,7 @@ one is retrieving a resource by its URL. Here is how to do it in Python 2::
     buffer = StringIO()
     c = pycurl.Curl()
     c.setopt(c.URL, 'http://pycurl.sourceforge.net/')
-    c.setopt(c.WRITEFUNCTION, buffer.write)
+    c.setopt(c.WRITEDATA, buffer)
     c.perform()
     c.close()
 
@@ -28,6 +28,15 @@ PycURL does not provide storage for the network response - that is the
 application's job. Therefore we must setup a buffer (in the form of a
 StringIO object) and instruct PycURL to write to that buffer.
 
+Most of the existing PycURL code uses WRITEFUNCTION instead of WRITEDATA
+as follows::
+
+    c.setopt(c.WRITEFUNCTION, buffer.write)
+
+While the WRITEFUNCTION idiom continues to work, it is now unnecessary.
+As of PycURL 7.19.3 WRITEDATA accepts any Python object with a ``write``
+method.
+
 Python 3 version is slightly more complicated::
 
     import pycurl
@@ -36,7 +45,7 @@ Python 3 version is slightly more complicated::
     buffer = BytesIO()
     c = pycurl.Curl()
     c.setopt(c.URL, 'http://pycurl.sourceforge.net/')
-    c.setopt(c.WRITEFUNCTION, buffer.write)
+    c.setopt(c.WRITEDATA, buffer)
     c.perform()
     c.close()
 
