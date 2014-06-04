@@ -3,7 +3,8 @@ This module implements an interface to the cURL library.
 Types:
 
 Curl() -> New object.  Create a new curl object.
-CurlMulti() -> New object.  Create a new curl multi-object.
+CurlMulti() -> New object.  Create a new curl multi object.
+CurlShare() -> New object.  Create a new curl share object.
 
 Functions:
 
