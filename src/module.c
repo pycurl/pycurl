@@ -37,23 +37,6 @@ static PyMethodDef curl_methods[] = {
 };
 
 
-/* Module docstring */
-static const char module_doc [] =
-"This module implements an interface to the cURL library.\n"
-"\n"
-"Types:\n"
-"\n"
-"Curl() -> New object.  Create a new curl object.\n"
-"CurlMulti() -> New object.  Create a new curl multi-object.\n"
-"\n"
-"Functions:\n"
-"\n"
-"global_init(option) -> None.  Initialize curl environment.\n"
-"global_cleanup() -> None.  Cleanup curl environment.\n"
-"version_info() -> tuple.  Return version information.\n"
-;
-
-
 /* --------------- actual type definitions --------------- */
 
 #if PY_MAJOR_VERSION >= 3
@@ -491,7 +474,7 @@ static void do_curlmod_free(void *unused) {
 static PyModuleDef curlmodule = {
     PyModuleDef_HEAD_INIT,
     "pycurl",           /* m_name */
-    module_doc,         /* m_doc */
+    pycurl_module_doc,  /* m_doc */
     -1,                 /* m_size */
     curl_methods,       /* m_methods */
     NULL,               /* m_reload */
@@ -578,7 +561,7 @@ initpycurl(void)
     Py_INCREF(&Curl_Type);
 #else
 
-    m = Py_InitModule3("pycurl", curl_methods, module_doc);
+    m = Py_InitModule3("pycurl", curl_methods, pycurl_module_doc);
     assert(m != NULL && PyModule_Check(m));
 #endif
 
