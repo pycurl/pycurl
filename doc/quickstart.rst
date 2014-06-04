@@ -165,3 +165,35 @@ This code is available as ``examples/quickstart/write_file.py``.
 
 The important part is opening the file in binary mode - then response body
 can be written bytewise without decoding or encoding steps.
+
+Following Redirects
+-------------------
+
+By default libcurl, and PycURL, do not follow redirects. Changing this
+behavior involves using ``setopt`` like so::
+
+    import pycurl
+
+    c = pycurl.Curl()
+    # Redirects to https://www.python.org/.
+    c.setopt(c.URL, 'http://www.python.org/')
+    # Follow redirect.
+    c.setopt(c.FOLLOWLOCATION, True)
+    c.perform()
+    c.close()
+
+This code is available as ``examples/quickstart/follow_redirect.py``.
+
+As we did not set a write callback, the default libcurl and PycURL behavior
+to write response body to standard output takes effect.
+
+Setting Options
+---------------
+
+Following redirects is one option that libcurl provides. There are many more
+such options, and they are documented on `curl_easy_setopt`_ page.
+With very few exceptions, PycURL option names are derived from libcurl
+option names by removing the ``CURLOPT_`` prefix. Thus, ``CURLOPT_URL``
+becomes simply ``URL``.
+
+.. _curl_easy_setopt: http://curl.haxx.se/libcurl/c/curl_easy_setopt.html
