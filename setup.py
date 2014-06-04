@@ -513,21 +513,30 @@ def convert_docstrings():
             continue
         
         name = entry.replace('.rst', '')
-        with open('src/docstrings/%s' % entry) as f:
+        f = open('src/docstrings/%s' % entry)
+        try:
             text = f.read().strip()
+        finally:
+            f.close()
         docstrings.append((name, text))
-    with open('src/docstrings.c', 'w') as f:
+    f = open('src/docstrings.c', 'w')
+    try:
         f.write("/* Generated file - do not edit. */\n")
         f.write("/* See src/docstrings/*.rst. */\n\n")
         f.write("#include \"pycurl.h\"\n\n")
         for name, text in docstrings:
             text = text.replace("\"", "\\\"").replace("\n", "\\n\\\n")
             f.write("PYCURL_INTERNAL const char %s_doc[] = \"%s\";\n\n" % (name, text))
-    with open('src/docstrings.h', 'w') as f:
+    finally:
+        f.close()
+    f = open('src/docstrings.h', 'w')
+    try:
         f.write("/* Generated file - do not edit. */\n")
         f.write("/* See src/docstrings/*.rst. */\n\n")
         for name, text in docstrings:
             f.write("extern const char %s_doc[];\n" % name)
+    finally:
+        f.close()
 
 ###############################################################################
 
