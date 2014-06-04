@@ -134,3 +134,25 @@ This code is available as ``examples/quickstart/response_headers.py``.
 That was a lot of code for something very straightforward. Unfortunately,
 as libcurl refrains from allocating memory for response data, it is on our
 application to perform this grunt work.
+
+Writing To A File
+-----------------
+
+Suppose we want to save response body to a file. This is actually easy
+for a change::
+
+    import pycurl
+
+    # As long as the file is opened in binary mode, both Python 2 and Python 3
+    # can write response body to it without decoding.
+    with open('out.html', 'wb') as f:
+        c = pycurl.Curl()
+        c.setopt(c.URL, 'http://pycurl.sourceforge.net/')
+        c.setopt(c.WRITEDATA, f)
+        c.perform()
+        c.close()
+
+This code is available as ``examples/quickstart/write_file.py``.
+
+The important part is opening the file in binary mode - then response body
+can be written bytewise without decoding or encoding steps.
