@@ -40,7 +40,7 @@ Overview
 Requirements
 ------------
 
-- Python 2.4 through 2.7 or 3.1 through 3.3.
+- Python 2.4 through 2.7 or 3.1 through 3.4.
 - libcurl 7.19.0 or better.
 
 Installation
@@ -87,7 +87,7 @@ vsftpd tests you must explicitly set PYCURL_VSFTPD_PATH variable like so::
     # specify full path to vsftpd
     export PYCURL_VSFTPD_PATH=/usr/local/libexec/vsftpd
 
-These instructions work for Python 2.5 through 2.7 and 3.1 through 3.3.
+These instructions work for Python 2.5 through 2.7 and 3.1 through 3.4.
 
 .. _nose: https://nose.readthedocs.org/
 .. _bottle: http://bottlepy.org/

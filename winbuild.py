@@ -11,7 +11,7 @@ root = 'c:/dev/build-pycurl'
 # where msysgit is installed
 git_root = 'c:/program files/git'
 # which versions of python to build against
-python_versions = ['2.6.6', '2.7.6', '3.2.5', '3.3.4']
+python_versions = ['2.6.6', '2.7.6', '3.2.5', '3.3.5', '3.4.1']
 # where pythons are installed
 python_path_template = 'c:/python%s/python'
 vc_paths = {
@@ -47,6 +47,7 @@ python_vc_versions = {
     '2.7': 'vc9',
     '3.2': 'vc9',
     '3.3': 'vc10',
+    '3.4': 'vc10',
 }
 vc_versions = vc_paths.keys()
 

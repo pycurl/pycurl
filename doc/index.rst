@@ -3,7 +3,7 @@
 
 The pycurl package is a Python interface to `libcurl`_.
 pycurl has been successfully built and
-tested with Python versions from 2.4 to 2.7 and 3.1 to 3.3.
+tested with Python versions from 2.4 to 2.7 and 3.1 to 3.4.
 
 libcurl is a client-side URL transfer library supporting FTP, FTPS, HTTP,
 HTTPS, GOPHER, TELNET, DICT, FILE and LDAP. libcurl also supports HTTPS
