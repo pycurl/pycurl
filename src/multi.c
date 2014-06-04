@@ -743,17 +743,17 @@ do_multi_select(CurlMultiObject *self, PyObject *args)
 /* --------------- methods --------------- */
 
 PYCURL_INTERNAL PyMethodDef curlmultiobject_methods[] = {
-    {"add_handle", (PyCFunction)do_multi_add_handle, METH_VARARGS, NULL},
+    {"add_handle", (PyCFunction)do_multi_add_handle, METH_VARARGS, multi_add_handle_doc},
     {"close", (PyCFunction)do_multi_close, METH_NOARGS, multi_close_doc},
     {"fdset", (PyCFunction)do_multi_fdset, METH_NOARGS, multi_fdset_doc},
     {"info_read", (PyCFunction)do_multi_info_read, METH_VARARGS, multi_info_read_doc},
-    {"perform", (PyCFunction)do_multi_perform, METH_NOARGS, NULL},
+    {"perform", (PyCFunction)do_multi_perform, METH_NOARGS, multi_perform_doc},
     {"socket_action", (PyCFunction)do_multi_socket_action, METH_VARARGS, multi_socket_action_doc},
     {"socket_all", (PyCFunction)do_multi_socket_all, METH_NOARGS, multi_socket_all_doc},
     {"setopt", (PyCFunction)do_multi_setopt, METH_VARARGS, NULL},
     {"timeout", (PyCFunction)do_multi_timeout, METH_NOARGS, NULL},
     {"assign", (PyCFunction)do_multi_assign, METH_VARARGS, NULL},
-    {"remove_handle", (PyCFunction)do_multi_remove_handle, METH_VARARGS, NULL},
+    {"remove_handle", (PyCFunction)do_multi_remove_handle, METH_VARARGS, multi_remove_handle_doc},
     {"select", (PyCFunction)do_multi_select, METH_VARARGS, multi_select_doc},
     {NULL, NULL, 0, NULL}
 };

@@ -100,6 +100,8 @@ dist sdist: distclean
 # Editing docstrings in Python or C source will not cause the documentation
 # to be rebuilt with this target, use docs-force instead.
 docs: build
+	mkdir -p build/docstrings
+	for file in src/docstrings/*.rst; do tail -n +3 $$file >build/docstrings/`basename $$file`; done
 	PYTHONSUFFIX=$$(python -V 2>&1 |awk '{print $$2}' |awk -F. '{print $$1 "." $$2}') && \
 	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONSUFFIX):$$PYTHONPATH \
 	sphinx-build doc build/doc
