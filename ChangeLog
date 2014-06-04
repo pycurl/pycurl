@@ -1,6 +1,8 @@
 master
 ------
 
+        * Windows packages now build libcurl against zlib.
+
         * CherryPy is no longer required for the test suite, ssl module from
           the Python standard library is used instead.
 
