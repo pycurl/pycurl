@@ -197,3 +197,41 @@ option names by removing the ``CURLOPT_`` prefix. Thus, ``CURLOPT_URL``
 becomes simply ``URL``.
 
 .. _curl_easy_setopt: http://curl.haxx.se/libcurl/c/curl_easy_setopt.html
+
+Examining Response
+------------------
+
+We already covered examining response headers. Other response information is
+accessible via ``getinfo`` call as follows::
+
+    import pycurl
+    try:
+        from io import BytesIO
+    except ImportError:
+        from StringIO import StringIO as BytesIO
+
+    buffer = BytesIO()
+    c = pycurl.Curl()
+    c.setopt(c.URL, 'http://pycurl.sourceforge.net/')
+    c.setopt(c.WRITEDATA, buffer)
+    c.perform()
+
+    # HTTP response code, e.g. 200.
+    print('Status: %d' % c.getinfo(c.RESPONSE_CODE))
+    # Elapsed time for the transfer.
+    print('Status: %f' % c.getinfo(c.TOTAL_TIME))
+
+    # getinfo must be called before close.
+    c.close()
+
+This code is available as ``examples/quickstart/response_info.py``.
+
+Here we write the body to a buffer to avoid printing uninteresting output
+to standard out.
+
+Response information that libcurl exposes is documented on
+`curl_easy_getinfo`_ page. With very few exceptions, PycURL constants
+are derived from libcurl constants by removing the ``CURLINFO_`` prefix.
+Thus, ``CURLINFO_RESPONSE_CODE`` becomes simply ``RESPONSE_CODE``.
+
+.. _curl_easy_getinfo: http://curl.haxx.se/libcurl/c/curl_easy_getinfo.html
