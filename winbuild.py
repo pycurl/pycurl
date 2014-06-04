@@ -21,7 +21,7 @@ vc_paths = {
     'vc10': 'c:/program files/microsoft visual studio 10.0',
 }
 # whether to link libcurl against zlib
-use_zlib = False
+use_zlib = True
 # which version of zlib to use, will be downloaded from internet
 zlib_version = '1.2.8'
 # which version of libcurl to use, will be downloaded from the internet
@@ -131,7 +131,7 @@ def build():
                         extra_options = ' WITH_ZLIB=dll'
                     else:
                         extra_options = ''
-                    f.write("nmake /f Makefile.vc mode=dll ENABLE_IDN=no\n")
+                    f.write("nmake /f Makefile.vc mode=dll ENABLE_IDN=no%s\n" % extra_options)
                 subprocess.check_call(['doit.bat'])
         for vc_version in vc_versions:
             if use_zlib:
@@ -169,7 +169,7 @@ def build():
         
         prepare_pycurl()
         python_releases = ['.'.join(version.split('.')[:2]) for version in python_versions]
-        for python_version in python_versions:
+        for python_version in python_releases:
             for target in ['bdist', 'bdist_wininst', 'bdist_msi']:
                 build_pycurl(python_version, target)
 
