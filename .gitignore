@@ -4,6 +4,8 @@
 /build
 /dist
 /src/allpycurl.c
+/src/docstrings.c
+/src/docstrings.h
 /tests/tmp
 /www/htdocs/download/*.bz2
 /www/htdocs/download/*.exe

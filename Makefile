@@ -36,17 +36,22 @@ RSYNC_USER = armco@web.sourceforge.net
 SOURCES = src/module.c src/easy.c src/multi.c src/oscompat.c src/pythoncompat.c \
 	src/share.c src/stringcompat.c src/threadsupport.c
 
-ALL_SOURCES = src/pycurl.h $(SOURCES)
+GEN_SOURCES = src/docstrings.c src/docstrings.h
+
+ALL_SOURCES = src/pycurl.h $(GEN_SOURCES) $(SOURCES)
 
 RELEASE_SOURCES = src/allpycurl.c
 
 all: build
 src-release: $(RELEASE_SOURCES)
 
+src/docstrings.c src/docstrings.h:
+	$(PYTHON) setup.py docstrings
+
 src/allpycurl.c: $(ALL_SOURCES)
 	echo '#define PYCURL_SINGLE_FILE' >src/.tmp.allpycurl.c
 	cat src/pycurl.h >>src/.tmp.allpycurl.c
-	cat $(SOURCES) |sed -e 's/#include "pycurl.h"//' >>src/.tmp.allpycurl.c
+	cat src/docstrings.c $(SOURCES) |sed -e 's/#include "pycurl.h"//' -e 's/#include "docstrings.h"//' >>src/.tmp.allpycurl.c
 	mv src/.tmp.allpycurl.c src/allpycurl.c
 
 build: $(ALL_SOURCES)
@@ -81,7 +86,7 @@ clean:
 	-rm -rf build dist
 	-rm -f *.pyc *.pyo */*.pyc */*.pyo */*/*.pyc */*/*.pyo
 	-rm -f MANIFEST
-	-rm -f src/allpycurl.c
+	-rm -f src/allpycurl.c $(GEN_SOURCES)
 	cd src && $(MAKE) clean
 
 distclean: clean

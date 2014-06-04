@@ -371,6 +371,7 @@ def strip_pycurl_options():
 def get_extension(split_extension_source=False):
     if split_extension_source:
         sources = [
+            os.path.join("src", "docstrings.c"),
             os.path.join("src", "easy.c"),
             os.path.join("src", "module.c"),
             os.path.join("src", "multi.c"),
@@ -504,6 +505,30 @@ def check_authors():
     finally:
         f.close()
 
+
+def convert_docstrings():
+    docstrings = []
+    for entry in sorted(os.listdir('src/docstrings')):
+        if not entry.endswith('.rst'):
+            continue
+        
+        name = entry.replace('.rst', '')
+        with open('src/docstrings/%s' % entry) as f:
+            text = f.read().strip()
+        docstrings.append((name, text))
+    with open('src/docstrings.c', 'w') as f:
+        f.write("/* Generated file - do not edit. */\n")
+        f.write("/* See src/docstrings/*.rst. */\n\n")
+        f.write("#include \"pycurl.h\"\n\n")
+        for name, text in docstrings:
+            text = text.replace("\"", "\\\"").replace("\n", "\\n\\\n")
+            f.write("PYCURL_INTERNAL const char %s_doc[] = \"%s\";\n\n" % (name, text))
+    with open('src/docstrings.h', 'w') as f:
+        f.write("/* Generated file - do not edit. */\n")
+        f.write("/* See src/docstrings/*.rst. */\n\n")
+        for name, text in docstrings:
+            f.write("extern const char %s_doc[];\n" % name)
+
 ###############################################################################
 
 setup_args = dict(
@@ -578,6 +603,8 @@ if __name__ == "__main__":
         setup(**setup_args)
     elif len(sys.argv) > 1 and sys.argv[1] == 'manifest':
         check_manifest()
+    elif len(sys.argv) > 1 and sys.argv[1] == 'docstrings':
+        convert_docstrings()
     elif len(sys.argv) > 1 and sys.argv[1] == 'authors':
         check_authors()
     else:

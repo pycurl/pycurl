@@ -1,4 +1,5 @@
 #include "pycurl.h"
+#include "docstrings.h"
 
 #if defined(WIN32)
 # define PYCURL_STRINGIZE_IMP(x) #x
@@ -24,43 +25,6 @@ PYCURL_INTERNAL PyObject *curlmultiobject_constants = NULL;
 PYCURL_INTERNAL PyObject *curlshareobject_constants = NULL;
 
 /* Per function docstrings */
-static const char pycurl_global_init_doc[] =
-    "global_init(option) -> None\n\n"
-    "Initialize curl environment.\n\n"
-    "*option* is one of the constants pycurl.GLOBAL_SSL, pycurl.GLOBAL_WIN32, "
-    "pycurl.GLOBAL_ALL, pycurl.GLOBAL_NOTHING, pycurl.GLOBAL_DEFAULT. "
-    "Corresponds to `curl_global_init`_ in libcurl.\n\n"
-    ".. _curl_global_init: http://curl.haxx.se/libcurl/c/curl_global_init.html";
-
-static const char pycurl_global_cleanup_doc[] =
-    "global_cleanup() -> None\n\n"
-    "Cleanup curl environment.\n\n"
-    "Corresponds to `curl_global_cleanup`_ in libcurl.\n\n"
-    ".. _curl_global_cleanup: http://curl.haxx.se/libcurl/c/curl_global_cleanup.html";
-
-static const char pycurl_version_info_doc[] = "\
-version_info() -> tuple\n\
-\n\
-Returns a 12-tuple with the version info.\n\
-\n\
-Corresponds to `curl_version_info`_ in libcurl. Returns a tuple of\n\
-information which is similar to the ``curl_version_info_data`` struct\n\
-returned by ``curl_version_info()`` in libcurl.\n\
-\n\
-.. _curl_version_info: http://curl.haxx.se/libcurl/c/curl_version_info.html\n\
-\n\
-Example usage:\n\
-\n\
-::\n\
-\n\
-    >>> import pycurl\n\
-    >>> pycurl.version_info()\n\
-    (3, '7.33.0', 467200, 'amd64-portbld-freebsd9.1', 33436, 'OpenSSL/0.9.8x',\n\
-    0, '1.2.7', ('dict', 'file', 'ftp', 'ftps', 'gopher', 'http', 'https',\n\
-    'imap', 'imaps', 'pop3', 'pop3s', 'rtsp', 'smtp', 'smtps', 'telnet',\n\
-    'tftp'), None, 0, None)\
-";
-
 static const char pycurl_share_new_doc[] =
     "CurlShare() -> New CurlShare object\n\n"
     "Creates a new :ref:`curlshareobject` which corresponds to a "
