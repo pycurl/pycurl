@@ -26,6 +26,7 @@ Contents:
    
    release-notes
    install
+   quickstart
    pycurl
    curlobject
    curlmultiobject
