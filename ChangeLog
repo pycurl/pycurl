@@ -17,8 +17,9 @@ master
         * Added CURLE_NOT_BUILT_IN and CURLE_UNKNOWN_OPTION (libcurl 7.21.5+).
 
         * Added CURL_SEEKFUNC_OK, CURL_SEEKFUNC_FAIL and
-          CURL_SEEKFUNC_CANTSEEK. CURL_SEEKFUNC_CANTSEEK requires
-          libcurl 7.19.5+.
+          CURL_SEEKFUNC_CANTSEEK. All contstants require libcurl 7.19.5+;
+          numeric values of CURL_SEEKFUNC_OK and CURL_SEEKFUNC_FAIL were
+          understood earlier but constants only exist as of libcurl 7.19.5.
 
         * Added CURLINFO_CONDITION_UNMET (libcurl 7.19.4+).
 
