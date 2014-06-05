@@ -10,14 +10,15 @@ libcurl_versions = ['7.19.0', '7.37.0']
 
 # http://bsdpower.com/building-python-24-with-zlib/
 patch_python_for_zlib = "sed -e 's/^#zlib/zlib/g' Modules/Setup >Modules/Setup.patched && mv Modules/Setup.patched Modules/Setup"
+patch_python_for_ssl = "sed -e '/^#SSL/,/^$/s/^#//' -e 's/^#\*shared\*/*shared*/' Modules/Setup >Modules/Setup.patched && mv Modules/Setup.patched Modules/Setup"
 
 python_meta = {
     '2.4.6': {
-        'post-configure': [patch_python_for_zlib],
+        'post-configure': [patch_python_for_zlib, patch_python_for_ssl],
     },
     '2.5.6': {
         'patches': ['python25.patch'],
-        'post-configure': [patch_python_for_zlib],
+        'post-configure': [patch_python_for_zlib, patch_python_for_ssl],
     },
     '3.0.1': {
         'patches': ['python25.patch', 'python30.patch'],
