@@ -17,6 +17,14 @@ python_meta = {
     },
 }
 
+libcurl_meta = {
+    '7.19.0': {
+        'patches': [
+            'curl-7.19.0-sslv2-c66b0b32fba-modified.patch',
+        ],
+    },
+}
+
 root = os.path.abspath(os.path.dirname(__file__))
 
 class in_dir:
@@ -97,7 +105,7 @@ def run_matrix(python_versions, libcurl_versions):
         
         dir = archive.replace('.tar.gz', '')
         prefix = os.path.abspath('i/%s' % dir)
-        build(archive, dir, prefix)
+        build(archive, dir, prefix, meta=libcurl_meta.get(libcurl_version))
 
     fetch('https://raw.github.com/pypa/virtualenv/1.7/virtualenv.py', 'virtualenv-1.7.py')
     fetch('https://raw.github.com/pypa/virtualenv/1.9.1/virtualenv.py', 'virtualenv-1.9.1.py')
