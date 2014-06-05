@@ -30,6 +30,15 @@ class in_dir:
     def __exit__(self, type, value, traceback):
         os.chdir(self.oldwd)
 
+def subprocess_check_call(cmd, **kwargs):
+    try:
+        subprocess.check_call(cmd, **kwargs)
+    except OSError as exc:
+        message = exc.args[0]
+        message = '%s while trying to execute %s' % (message, str(cmd))
+        args = tuple([message] + exc.args[1:])
+        raise type(exc)(args)
+
 def fetch(url, archive=None):
     if archive is None:
         archive = os.path.basename(url)
@@ -47,15 +56,15 @@ def fetch(url, archive=None):
 def build(archive, dir, prefix, meta=None):
     if not os.path.exists(dir):
         sys.stdout.write("Building %s\n" % archive)
-        subprocess.check_call(['tar', 'xf', archive])
+        subprocess_check_call(['tar', 'xf', archive])
         with in_dir(dir):
             if meta and 'patches' in meta:
                 for patch in meta['patches']:
                     patch_path = os.path.join(root, 'matrix', patch)
-                    subprocess.check_call(['patch', '-p1', '-i', patch_path])
-            subprocess.check_call(['./configure', '--prefix=%s' % prefix])
-            subprocess.check_call(['make'])
-            subprocess.check_call(['make', 'install'])
+                    subprocess_check_call(['patch', '-p1', '-i', patch_path])
+            subprocess_check_call(['./configure', '--prefix=%s' % prefix])
+            subprocess_check_call(['make'])
+            subprocess_check_call(['make', 'install'])
 
 def patch_pycurl_for_24():
     # change relative imports to old syntax as python 2.4 does not
@@ -114,13 +123,13 @@ def run_matrix(python_versions, libcurl_versions):
                 # so, use known versions everywhere
                 # md5=89e68df89faf1966bcbd99a0033fbf8e
                 fetch('https://pypi.python.org/packages/source/d/distribute/distribute-0.6.49.tar.gz')
-                subprocess.check_call(['python', 'virtualenv-1.9.1.py', venv, '-p', '%s/bin/python%d.%d' % (python_prefix, python_version_pieces[0], python_version_pieces[1]), '--no-site-packages', '--never-download'])
+                subprocess_check_call(['python', 'virtualenv-1.9.1.py', venv, '-p', '%s/bin/python%d.%d' % (python_prefix, python_version_pieces[0], python_version_pieces[1]), '--no-site-packages', '--never-download'])
             else:
                 # md5=bd639f9b0eac4c42497034dec2ec0c2b
                 fetch('https://pypi.python.org/packages/2.4/s/setuptools/setuptools-0.6c11-py2.4.egg')
                 # md5=6afbb46aeb48abac658d4df742bff714
                 fetch('https://pypi.python.org/packages/source/p/pip/pip-1.4.1.tar.gz')
-                subprocess.check_call(['python', 'virtualenv-1.7.py', venv, '-p', '%s/bin/python' % python_prefix, '--no-site-packages', '--never-download'])
+                subprocess_check_call(['python', 'virtualenv-1.7.py', venv, '-p', '%s/bin/python' % python_prefix, '--no-site-packages', '--never-download'])
             curl_config_path = os.path.join(libcurl_prefix, 'bin/curl-config')
             curl_lib_path = os.path.join(libcurl_prefix, 'lib')
             with in_dir('pycurl'):
@@ -152,7 +161,7 @@ def run_matrix(python_versions, libcurl_versions):
                     extra_env=extra_env
                 )
                 print(cmd)
-                subprocess.check_call(cmd, shell=True)
+                subprocess_check_call(cmd, shell=True)
 
 if __name__ == '__main__':
     import sys
