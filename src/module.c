@@ -39,16 +39,25 @@ static PyMethodDef curl_methods[] = {
 
 /* --------------- actual type definitions --------------- */
 
-#if PY_MAJOR_VERSION >= 3
 static PyTypeObject CurlShare_Type = {
+#if PY_MAJOR_VERSION >= 3
     PyVarObject_HEAD_INIT(NULL, 0)
+#else
+    PyObject_HEAD_INIT(NULL)
+    0,                          /* ob_size */
+#endif
     "pycurl.CurlShare",         /* tp_name */
     sizeof(CurlShareObject),    /* tp_basicsize */
     0,                          /* tp_itemsize */
     (destructor)do_share_dealloc, /* tp_dealloc */
     0,                          /* tp_print */
+#if PY_MAJOR_VERSION >= 3
     0,                          /* tp_getattr */
     0,                          /* tp_setattr */
+#else
+    (getattrfunc)do_share_getattr,  /* tp_getattr */
+    (setattrfunc)do_share_setattr,  /* tp_setattr */
+#endif
     0,                          /* tp_reserved */
     0,                          /* tp_repr */
     0,                          /* tp_as_number */
@@ -57,8 +66,13 @@ static PyTypeObject CurlShare_Type = {
     0,                          /* tp_hash  */
     0,                          /* tp_call */
     0,                          /* tp_str */
+#if PY_MAJOR_VERSION >= 3
     (getattrofunc)do_share_getattro, /* tp_getattro */
     (setattrofunc)do_share_setattro, /* tp_setattro */
+#else
+    0,                          /* tp_getattro */
+    0,                          /* tp_setattro */
+#endif
     0,                          /* tp_as_buffer */
     Py_TPFLAGS_HAVE_GC,         /* tp_flags */
     0,                          /* tp_doc */
@@ -68,7 +82,11 @@ static PyTypeObject CurlShare_Type = {
     0,                          /* tp_weaklistoffset */
     0,                          /* tp_iter */
     0,                          /* tp_iternext */
+#if PY_MAJOR_VERSION >= 3
     curlshareobject_methods,    /* tp_methods */
+#else
+    0,                          /* tp_methods */
+#endif
     0,                          /* tp_members */
     0,                          /* tp_getset */
     0,                          /* tp_base */
@@ -80,49 +98,26 @@ static PyTypeObject CurlShare_Type = {
     0,                          /* tp_alloc */
     0,                          /* tp_new */
 };
+
+static PyTypeObject Curl_Type = {
+#if PY_MAJOR_VERSION >= 3
+    PyVarObject_HEAD_INIT(NULL, 0)
 #else
-static PyTypeObject CurlShare_Type = {
     PyObject_HEAD_INIT(NULL)
     0,                          /* ob_size */
-    "pycurl.CurlShare",         /* tp_name */
-    sizeof(CurlMultiObject),    /* tp_basicsize */
-    0,                          /* tp_itemsize */
-    /* Methods */
-    (destructor)do_share_dealloc,   /* tp_dealloc */
-    0,                          /* tp_print */
-    (getattrfunc)do_share_getattr,  /* tp_getattr */
-    (setattrfunc)do_share_setattr,  /* tp_setattr */
-    0,                          /* tp_compare */
-    0,                          /* tp_repr */
-    0,                          /* tp_as_number */
-    0,                          /* tp_as_sequence */
-    0,                          /* tp_as_mapping */
-    0,                          /* tp_hash */
-    0,                          /* tp_call */
-    0,                          /* tp_str */
-    0,                          /* tp_getattro */
-    0,                          /* tp_setattro */
-    0,                          /* tp_as_buffer */
-    Py_TPFLAGS_HAVE_GC,         /* tp_flags */
-    0,                          /* tp_doc */
-    (traverseproc)do_share_traverse, /* tp_traverse */
-    (inquiry)do_share_clear     /* tp_clear */
-    /* More fields follow here, depending on your Python version. You can
-     * safely ignore any compiler warnings about missing initializers.
-     */
-};
 #endif
-
-#if PY_MAJOR_VERSION >= 3
-static PyTypeObject Curl_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
     "pycurl.Curl",              /* tp_name */
     sizeof(CurlObject),         /* tp_basicsize */
     0,                          /* tp_itemsize */
     (destructor)do_curl_dealloc, /* tp_dealloc */
     0,                          /* tp_print */
+#if PY_MAJOR_VERSION >= 3
     0,                          /* tp_getattr */
     0,                          /* tp_setattr */
+#else
+    (getattrfunc)do_curl_getattr,  /* tp_getattr */
+    (setattrfunc)do_curl_setattr,  /* tp_setattr */
+#endif
     0,                          /* tp_reserved */
     0,                          /* tp_repr */
     0,                          /* tp_as_number */
@@ -131,8 +126,13 @@ static PyTypeObject Curl_Type = {
     0,                          /* tp_hash  */
     0,                          /* tp_call */
     0,                          /* tp_str */
+#if PY_MAJOR_VERSION >= 3
     (getattrofunc)do_curl_getattro, /* tp_getattro */
     (setattrofunc)do_curl_setattro, /* tp_setattro */
+#else
+    0,                          /* tp_getattro */
+    0,                          /* tp_setattro */
+#endif
     0,                          /* tp_as_buffer */
     Py_TPFLAGS_HAVE_GC,         /* tp_flags */
     0,                          /* tp_doc */
@@ -142,7 +142,11 @@ static PyTypeObject Curl_Type = {
     0,                          /* tp_weaklistoffset */
     0,                          /* tp_iter */
     0,                          /* tp_iternext */
+#if PY_MAJOR_VERSION >= 3
     curlobject_methods,         /* tp_methods */
+#else
+    0,                          /* tp_methods */
+#endif
     0,                          /* tp_members */
     0,                          /* tp_getset */
     0,                          /* tp_base */
@@ -154,49 +158,26 @@ static PyTypeObject Curl_Type = {
     0,                          /* tp_alloc */
     0,                          /* tp_new */
 };
+
+static PyTypeObject CurlMulti_Type = {
+#if PY_MAJOR_VERSION >= 3
+    PyVarObject_HEAD_INIT(NULL, 0)
 #else
-static PyTypeObject Curl_Type = {
     PyObject_HEAD_INIT(NULL)
     0,                          /* ob_size */
-    "pycurl.Curl",              /* tp_name */
-    sizeof(CurlObject),         /* tp_basicsize */
-    0,                          /* tp_itemsize */
-    /* Methods */
-    (destructor)do_curl_dealloc,   /* tp_dealloc */
-    0,                          /* tp_print */
-    (getattrfunc)do_curl_getattr,  /* tp_getattr */
-    (setattrfunc)do_curl_setattr,  /* tp_setattr */
-    0,                          /* tp_compare */
-    0,                          /* tp_repr */
-    0,                          /* tp_as_number */
-    0,                          /* tp_as_sequence */
-    0,                          /* tp_as_mapping */
-    0,                          /* tp_hash */
-    0,                          /* tp_call */
-    0,                          /* tp_str */
-    0,                          /* tp_getattro */
-    0,                          /* tp_setattro */
-    0,                          /* tp_as_buffer */
-    Py_TPFLAGS_HAVE_GC,         /* tp_flags */
-    0,                          /* tp_doc */
-    (traverseproc)do_curl_traverse, /* tp_traverse */
-    (inquiry)do_curl_clear      /* tp_clear */
-    /* More fields follow here, depending on your Python version. You can
-     * safely ignore any compiler warnings about missing initializers.
-     */
-};
 #endif
-
-#if PY_MAJOR_VERSION >= 3
-static PyTypeObject CurlMulti_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
     "pycurl.CurlMulti",         /* tp_name */
     sizeof(CurlMultiObject),    /* tp_basicsize */
     0,                          /* tp_itemsize */
     (destructor)do_multi_dealloc, /* tp_dealloc */
     0,                          /* tp_print */
+#if PY_MAJOR_VERSION >= 3
     0, // (getattrfunc)do_curl_getattr,  /* tp_getattr */
     0, //(setattrfunc)do_curl_setattr,  /* tp_setattr */
+#else
+    (getattrfunc)do_multi_getattr,  /* tp_getattr */
+    (setattrfunc)do_multi_setattr,  /* tp_setattr */
+#endif
     0,                          /* tp_reserved */
     0,                          /* tp_repr */
     0,                          /* tp_as_number */
@@ -205,8 +186,13 @@ static PyTypeObject CurlMulti_Type = {
     0,                          /* tp_hash  */
     0,                          /* tp_call */
     0,                          /* tp_str */
-    (getattrofunc)do_multi_getattro, //0,                         /* tp_getattro */
-    (setattrofunc)do_multi_setattro,                         /* tp_setattro */
+#if PY_MAJOR_VERSION >= 3
+    (getattrofunc)do_multi_getattro, /* tp_getattro */
+    (setattrofunc)do_multi_setattro, /* tp_setattro */
+#else
+    0,                          /* tp_getattro */
+    0,                          /* tp_setattro */
+#endif
     0,                          /* tp_as_buffer */
     Py_TPFLAGS_HAVE_GC,         /* tp_flags */
     0,                          /* tp_doc */
@@ -216,7 +202,11 @@ static PyTypeObject CurlMulti_Type = {
     0,                          /* tp_weaklistoffset */
     0,                          /* tp_iter */
     0,                          /* tp_iternext */
+#if PY_MAJOR_VERSION >= 3
     curlmultiobject_methods,    /* tp_methods */
+#else
+    0,                          /* tp_methods */
+#endif
     0,                          /* tp_members */
     0,                          /* tp_getset */
     0,                          /* tp_base */
@@ -228,38 +218,6 @@ static PyTypeObject CurlMulti_Type = {
     0,                          /* tp_alloc */
     0,                          /* tp_new */
 };
-#else
-static PyTypeObject CurlMulti_Type = {
-    PyObject_HEAD_INIT(NULL)
-    0,                          /* ob_size */
-    "pycurl.CurlMulti",         /* tp_name */
-    sizeof(CurlMultiObject),    /* tp_basicsize */
-    0,                          /* tp_itemsize */
-    /* Methods */
-    (destructor)do_multi_dealloc,   /* tp_dealloc */
-    0,                          /* tp_print */
-    (getattrfunc)do_multi_getattr,  /* tp_getattr */
-    (setattrfunc)do_multi_setattr,  /* tp_setattr */
-    0,                          /* tp_compare */
-    0,                          /* tp_repr */
-    0,                          /* tp_as_number */
-    0,                          /* tp_as_sequence */
-    0,                          /* tp_as_mapping */
-    0,                          /* tp_hash */
-    0,                          /* tp_call */
-    0,                          /* tp_str */
-    0,                          /* tp_getattro */
-    0,                          /* tp_setattro */
-    0,                          /* tp_as_buffer */
-    Py_TPFLAGS_HAVE_GC,         /* tp_flags */
-    0,                          /* tp_doc */
-    (traverseproc)do_multi_traverse, /* tp_traverse */
-    (inquiry)do_multi_clear     /* tp_clear */
-    /* More fields follow here, depending on your Python version. You can
-     * safely ignore any compiler warnings about missing initializers.
-     */
-};
-#endif
 
 static int
 are_global_init_flags_valid(int flags)
