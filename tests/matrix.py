@@ -194,7 +194,13 @@ if __name__ == '__main__':
         parser.add_option('-c', '--curl', help='Specify libcurl version to test against')
         options, args = parser.parse_args()
         if options.python:
-            chosen_python_versions = [options.python]
+            python_version = options.python
+            if python_version in python_versions:
+                chosen_python_versions = [python_version]
+            else:
+                chosen_python_versions = [v for v in python_versions if v.startswith(python_version)]
+                if len(chosen_python_versions) != 1:
+                    raise Exception('Bogus python version requested: %s' % python_version)
         else:
             chosen_python_versions = python_versions
         if options.curl:
