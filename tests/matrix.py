@@ -162,7 +162,6 @@ def run_matrix(python_versions, libcurl_versions):
                 else:
                     deps_cmd = 'easy_install nose simplejson==2.1.0'
                     patch_pycurl_for_24()
-                    extra_patches.append('(cd %s/lib/python2.4/site-packages/nose-* && patch -p1) <tests/matrix/nose-1.3.0-python24.patch' % venv)
                     extra_env.append('PYCURL_STANDALONE_APP=yes')
                 extra_patches = ' && '.join(extra_patches)
                 extra_env = ' '.join(extra_env)
