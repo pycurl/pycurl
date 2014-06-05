@@ -1,4 +1,5 @@
 #include "pycurl.h"
+#include "docstrings.h"
 
 /*************************************************************************
 // static utility functions
@@ -2084,41 +2085,15 @@ do_curl_pause(CurlObject *self, PyObject *args)
 
 /* --------------- methods --------------- */
 
-static const char co_close_doc [] =
-    "close() -> None.  "
-    "Close handle and end curl session.\n";
-static const char co_errstr_doc [] =
-    "errstr() -> String.  "
-    "Return the internal libcurl error buffer string.\n";
-static const char co_getinfo_doc [] =
-    "getinfo(info) -> Res.  "
-    "Extract and return information from a curl session.  Raises pycurl.error exception upon failure.\n";
-static const char co_perform_doc [] =
-    "perform() -> None.  "
-    "Perform a file transfer.  Raises pycurl.error exception upon failure.\n";
-static const char co_setopt_doc [] =
-    "setopt(option, parameter) -> None.  "
-    "Set curl session option.  Raises pycurl.error exception upon failure.\n";
-static const char co_unsetopt_doc [] =
-    "unsetopt(option) -> None.  "
-    "Reset curl session option to default value.  Raises pycurl.error exception upon failure.\n";
-static const char co_reset_doc [] =
-    "reset() -> None. "
-    "Reset all options set on curl handle to default values, but preserves live connections, session ID cache, DNS cache, cookies, and shares.\n";
-static const char co_pause_doc [] =
-    "pause(bitmask) -> None.  "
-    "Pauses or unpauses a curl handle. Bitmask should be a value such as PAUSE_RECV or PAUSE_CONT.  "
-    "Raises pycurl.error exception upon failure.\n";
-
 PYCURL_INTERNAL PyMethodDef curlobject_methods[] = {
-    {"close", (PyCFunction)do_curl_close, METH_NOARGS, co_close_doc},
-    {"errstr", (PyCFunction)do_curl_errstr, METH_NOARGS, co_errstr_doc},
-    {"getinfo", (PyCFunction)do_curl_getinfo, METH_VARARGS, co_getinfo_doc},
-    {"pause", (PyCFunction)do_curl_pause, METH_VARARGS, co_pause_doc},
-    {"perform", (PyCFunction)do_curl_perform, METH_NOARGS, co_perform_doc},
-    {"setopt", (PyCFunction)do_curl_setopt, METH_VARARGS, co_setopt_doc},
-    {"unsetopt", (PyCFunction)do_curl_unsetopt, METH_VARARGS, co_unsetopt_doc},
-    {"reset", (PyCFunction)do_curl_reset, METH_NOARGS, co_reset_doc},
+    {"close", (PyCFunction)do_curl_close, METH_NOARGS, curl_close_doc},
+    {"errstr", (PyCFunction)do_curl_errstr, METH_NOARGS, curl_errstr_doc},
+    {"getinfo", (PyCFunction)do_curl_getinfo, METH_VARARGS, curl_getinfo_doc},
+    {"pause", (PyCFunction)do_curl_pause, METH_VARARGS, curl_pause_doc},
+    {"perform", (PyCFunction)do_curl_perform, METH_NOARGS, curl_perform_doc},
+    {"setopt", (PyCFunction)do_curl_setopt, METH_VARARGS, curl_setopt_doc},
+    {"unsetopt", (PyCFunction)do_curl_unsetopt, METH_VARARGS, curl_unsetopt_doc},
+    {"reset", (PyCFunction)do_curl_reset, METH_NOARGS, curl_reset_doc},
     {NULL, NULL, 0, NULL}
 };
 

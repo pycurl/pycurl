@@ -1,4 +1,5 @@
 #include "pycurl.h"
+#include "docstrings.h"
 
 #if defined(WIN32)
 # define PYCURL_STRINGIZE_IMP(x) #x
@@ -23,64 +24,6 @@ PYCURL_INTERNAL PyObject *curlobject_constants = NULL;
 PYCURL_INTERNAL PyObject *curlmultiobject_constants = NULL;
 PYCURL_INTERNAL PyObject *curlshareobject_constants = NULL;
 
-/* Per function docstrings */
-static const char pycurl_global_init_doc[] =
-    "global_init(option) -> None\n\n"
-    "Initialize curl environment.\n\n"
-    "*option* is one of the constants pycurl.GLOBAL_SSL, pycurl.GLOBAL_WIN32, "
-    "pycurl.GLOBAL_ALL, pycurl.GLOBAL_NOTHING, pycurl.GLOBAL_DEFAULT. "
-    "Corresponds to `curl_global_init`_ in libcurl.\n\n"
-    ".. _curl_global_init: http://curl.haxx.se/libcurl/c/curl_global_init.html";
-
-static const char pycurl_global_cleanup_doc[] =
-    "global_cleanup() -> None\n\n"
-    "Cleanup curl environment.\n\n"
-    "Corresponds to `curl_global_cleanup`_ in libcurl.\n\n"
-    ".. _curl_global_cleanup: http://curl.haxx.se/libcurl/c/curl_global_cleanup.html";
-
-static const char pycurl_version_info_doc[] = "\
-version_info() -> tuple\n\
-\n\
-Returns a 12-tuple with the version info.\n\
-\n\
-Corresponds to `curl_version_info`_ in libcurl. Returns a tuple of\n\
-information which is similar to the ``curl_version_info_data`` struct\n\
-returned by ``curl_version_info()`` in libcurl.\n\
-\n\
-.. _curl_version_info: http://curl.haxx.se/libcurl/c/curl_version_info.html\n\
-\n\
-Example usage:\n\
-\n\
-::\n\
-\n\
-    >>> import pycurl\n\
-    >>> pycurl.version_info()\n\
-    (3, '7.33.0', 467200, 'amd64-portbld-freebsd9.1', 33436, 'OpenSSL/0.9.8x',\n\
-    0, '1.2.7', ('dict', 'file', 'ftp', 'ftps', 'gopher', 'http', 'https',\n\
-    'imap', 'imaps', 'pop3', 'pop3s', 'rtsp', 'smtp', 'smtps', 'telnet',\n\
-    'tftp'), None, 0, None)\
-";
-
-static const char pycurl_share_new_doc[] =
-    "CurlShare() -> New CurlShare object\n\n"
-    "Creates a new :ref:`curlshareobject` which corresponds to a "
-    "``CURLSH`` handle in libcurl. CurlShare objects is what you pass as an "
-    "argument to the SHARE option on Curl objects.";
-
-static const char pycurl_curl_new_doc[] =
-    "Curl() -> New Curl object\n\n"
-    "Creates a new :ref:`curlobject` which corresponds to a "
-    "``CURL`` handle in libcurl. Curl objects automatically set "
-    "CURLOPT_VERBOSE to 0, CURLOPT_NOPROGRESS to 1, provide a default "
-    "CURLOPT_USERAGENT and setup CURLOPT_ERRORBUFFER to point to a "
-    "private error buffer.\n\n"
-    "Implicitly calls global_init() if the latter has not yet been called.\n";
-
-static const char pycurl_multi_new_doc[] =
-    "CurlMulti() -> New CurlMulti object\n\n"
-    "This function creates a new :ref:`curlmultiobject` which corresponds to "
-    "a ``CURLM`` handle in libcurl.";
-
 
 /* List of functions defined in this module */
 static PyMethodDef curl_methods[] = {
@@ -92,23 +35,6 @@ static PyMethodDef curl_methods[] = {
     {"CurlShare", (PyCFunction)do_share_new, METH_NOARGS, pycurl_share_new_doc},
     {NULL, NULL, 0, NULL}
 };
-
-
-/* Module docstring */
-static const char module_doc [] =
-"This module implements an interface to the cURL library.\n"
-"\n"
-"Types:\n"
-"\n"
-"Curl() -> New object.  Create a new curl object.\n"
-"CurlMulti() -> New object.  Create a new curl multi-object.\n"
-"\n"
-"Functions:\n"
-"\n"
-"global_init(option) -> None.  Initialize curl environment.\n"
-"global_cleanup() -> None.  Cleanup curl environment.\n"
-"version_info() -> tuple.  Return version information.\n"
-;
 
 
 /* --------------- actual type definitions --------------- */
@@ -548,7 +474,7 @@ static void do_curlmod_free(void *unused) {
 static PyModuleDef curlmodule = {
     PyModuleDef_HEAD_INIT,
     "pycurl",           /* m_name */
-    module_doc,         /* m_doc */
+    pycurl_module_doc,  /* m_doc */
     -1,                 /* m_size */
     curl_methods,       /* m_methods */
     NULL,               /* m_reload */
@@ -635,7 +561,7 @@ initpycurl(void)
     Py_INCREF(&Curl_Type);
 #else
 
-    m = Py_InitModule3("pycurl", curl_methods, module_doc);
+    m = Py_InitModule3("pycurl", curl_methods, pycurl_module_doc);
     assert(m != NULL && PyModule_Check(m));
 #endif
 
