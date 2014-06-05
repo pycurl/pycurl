@@ -21,6 +21,7 @@ libcurl_meta = {
     '7.19.0': {
         'patches': [
             'curl-7.19.0-sslv2-c66b0b32fba-modified.patch',
+            #'curl-7.19.0-sslv2-2b0e09b0f98.patch',
         ],
     },
 }

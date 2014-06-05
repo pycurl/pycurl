@@ -1,0 +1,40 @@
+commit 2b0e09b0f98e0f67417652dd7f4afd59bf895326
+Author: Daniel Stenberg <daniel@haxx.se>
+Date:   Tue Dec 6 14:22:45 2011 +0100
+
+    OpenSSL: check for the SSLv2 function in configure
+    
+    If no SSLv2 was detected in OpenSSL by configure, then we enforce the
+    OPENSSL_NO_SSL2 define as it seems some people report it not being
+    defined properly in the OpenSSL headers.
+
+diff --git a/configure.ac b/configure.ac
+index 94cdd83..4bf25dc 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -1514,7 +1514,8 @@ if test X"$OPT_SSL" != Xno; then
+                     RAND_egd \
+                     ENGINE_cleanup \
+                     CRYPTO_cleanup_all_ex_data \
+-                    SSL_get_shutdown )
++                    SSL_get_shutdown \
++                    SSLv2_client_method )
+ 
+     dnl Make an attempt to detect if this is actually yassl's headers and
+     dnl OpenSSL emulation layer. We still leave everything else believing
+diff --git a/lib/ssluse.c b/lib/ssluse.c
+index af70fe0..8deea26 100644
+--- a/lib/ssluse.c
++++ b/lib/ssluse.c
+@@ -127,6 +127,11 @@
+ #define HAVE_ERR_REMOVE_THREAD_STATE 1
+ #endif
+ 
++#ifndef HAVE_SSLV2_CLIENT_METHOD
++#undef OPENSSL_NO_SSL2 /* undef first to avoid compiler warnings */
++#define OPENSSL_NO_SSL2
++#endif
++
+ /*
+  * Number of bytes to read from the random number seed file. This must be
+  * a finite value (because some entropy "files" like /dev/urandom have
