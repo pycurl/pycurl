@@ -8,9 +8,16 @@ except ImportError:
 python_versions = ['2.4.6', '2.5.6', '2.6.8', '2.7.5', '3.1.5', '3.2.5', '3.3.5', '3.4.1']
 libcurl_versions = ['7.19.0', '7.37.0']
 
+# http://bsdpower.com/building-python-24-with-zlib/
+patch_python_for_zlib = "sed -e 's/^#zlib/zlib/g' Modules/Setup >Modules/Setup.patched && mv Modules/Setup.patched Modules/Setup"
+
 python_meta = {
+    '2.4.6': {
+        'post-configure': [patch_python_for_zlib],
+    },
     '2.5.6': {
         'patches': ['python25.patch'],
+        'post-configure': [patch_python_for_zlib],
     },
     '3.0.1': {
         'patches': ['python25.patch', 'python30.patch'],
@@ -72,6 +79,9 @@ def build(archive, dir, prefix, meta=None):
                     patch_path = os.path.join(root, 'matrix', patch)
                     subprocess_check_call(['patch', '-p1', '-i', patch_path])
             subprocess_check_call(['./configure', '--prefix=%s' % prefix])
+            if 'post-configure' in meta:
+                for cmd in meta['post-configure']:
+                    subprocess_check_call(cmd, shell=True)
             subprocess_check_call(['make'])
             subprocess_check_call(['make', 'install'])
 
