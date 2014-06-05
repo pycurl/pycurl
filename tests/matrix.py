@@ -5,8 +5,8 @@ try:
 except ImportError:
     from urllib import urlopen
 
-python_versions = ['2.4.6', '2.5.6', '2.6.8', '2.7.5', '3.0.1', '3.1.5', '3.2.5', '3.3.5', '3.4.1']
-libcurl_versions = ['7.19.0', '7.33.0']
+python_versions = ['2.4.6', '2.5.6', '2.6.8', '2.7.5', '3.1.5', '3.2.5', '3.3.5', '3.4.1']
+libcurl_versions = ['7.19.0', '7.37.0']
 
 python_meta = {
     '2.5.6': {
