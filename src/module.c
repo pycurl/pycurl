@@ -517,8 +517,6 @@ initpycurl(void)
     m = PyModule_Create(&curlmodule);
     if (m == NULL)
         return NULL;
-
-    Py_INCREF(&Curl_Type);
 #else
 
     m = Py_InitModule3("pycurl", curl_methods, pycurl_module_doc);
