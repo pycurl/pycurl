@@ -269,44 +269,15 @@ PyText_Check(PyObject *o);
     (PYCURL_MEMGROUP_ATTRDICT | PYCURL_MEMGROUP_EASY | \
     PYCURL_MEMGROUP_MULTI | PYCURL_MEMGROUP_SHARE)
 
-typedef struct {
-    PyThread_type_lock locks[CURL_LOCK_DATA_LAST];
-} ShareLock;
-
-
-typedef struct {
-    PyObject_HEAD
-    PyObject *dict;                 /* Python attributes dictionary */
-    CURLSH *share_handle;
-#ifdef WITH_THREAD
-    ShareLock *lock;                /* lock object to implement CURLSHOPT_LOCKFUNC */
-#endif
-} CurlShareObject;
-
-typedef struct {
-    PyObject_HEAD
-    PyObject *dict;                 /* Python attributes dictionary */
-    CURLM *multi_handle;
-#ifdef WITH_THREAD
-    PyThreadState *state;
-#endif
-    fd_set read_fd_set;
-    fd_set write_fd_set;
-    fd_set exc_fd_set;
-    /* callbacks */
-    PyObject *t_cb;
-    PyObject *s_cb;
-} CurlMultiObject;
-
-typedef struct {
+typedef struct CurlObject {
     PyObject_HEAD
     PyObject *dict;                 /* Python attributes dictionary */
     CURL *handle;
 #ifdef WITH_THREAD
     PyThreadState *state;
 #endif
-    CurlMultiObject *multi_stack;
-    CurlShareObject *share;
+    struct CurlMultiObject *multi_stack;
+    struct CurlShareObject *share;
     struct curl_httppost *httppost;
     /* List of INC'ed references associated with httppost. */
     PyObject *httppost_ref_list;
@@ -336,6 +307,34 @@ typedef struct {
     /* misc */
     char error[CURL_ERROR_SIZE+1];
 } CurlObject;
+
+typedef struct CurlMultiObject {
+    PyObject_HEAD
+    PyObject *dict;                 /* Python attributes dictionary */
+    CURLM *multi_handle;
+#ifdef WITH_THREAD
+    PyThreadState *state;
+#endif
+    fd_set read_fd_set;
+    fd_set write_fd_set;
+    fd_set exc_fd_set;
+    /* callbacks */
+    PyObject *t_cb;
+    PyObject *s_cb;
+} CurlMultiObject;
+
+typedef struct {
+    PyThread_type_lock locks[CURL_LOCK_DATA_LAST];
+} ShareLock;
+
+typedef struct CurlShareObject {
+    PyObject_HEAD
+    PyObject *dict;                 /* Python attributes dictionary */
+    CURLSH *share_handle;
+#ifdef WITH_THREAD
+    ShareLock *lock;                /* lock object to implement CURLSHOPT_LOCKFUNC */
+#endif
+} CurlShareObject;
 
 #ifdef WITH_THREAD
 
