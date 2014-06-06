@@ -511,6 +511,8 @@ initpycurl(void)
     if (PyType_Ready(&CurlMulti_Type) < 0)
         return NULL;
 
+    if (PyType_Ready(&CurlShare_Type) < 0)
+        return NULL;
 
     m = PyModule_Create(&curlmodule);
     if (m == NULL)
