@@ -387,25 +387,6 @@ my_getattr(PyObject *co, char *name, PyObject *dict1, PyObject *dict2, PyMethodD
 PYCURL_INTERNAL void
 assert_curl_state(const CurlObject *self);
 
-PYCURL_INTERNAL CurlShareObject *
-do_share_new(PyObject *dummy);
-PYCURL_INTERNAL int
-do_share_traverse(CurlShareObject *self, visitproc visit, void *arg);
-PYCURL_INTERNAL int
-do_share_clear(CurlShareObject *self);
-PYCURL_INTERNAL void
-do_share_dealloc(CurlShareObject *self);
-PYCURL_INTERNAL int
-do_share_setattr(CurlShareObject *so, char *name, PyObject *v);
-PYCURL_INTERNAL PyObject *
-do_share_getattr(CurlShareObject *cso, char *name);
-#if PY_MAJOR_VERSION >= 3
-PYCURL_INTERNAL int
-do_share_setattro(PyObject *o, PyObject *n, PyObject *v);
-PYCURL_INTERNAL PyObject *
-do_share_getattro(PyObject *o, PyObject *n);
-#endif
-
 PYCURL_INTERNAL CurlObject *
 do_curl_new(PyObject *dummy);
 PYCURL_INTERNAL void
@@ -442,6 +423,25 @@ PYCURL_INTERNAL int
 do_multi_setattro(PyObject *o, PyObject *n, PyObject *v);
 PYCURL_INTERNAL PyObject *
 do_multi_getattro(PyObject *o, PyObject *n);
+#endif
+
+PYCURL_INTERNAL CurlShareObject *
+do_share_new(PyObject *dummy);
+PYCURL_INTERNAL int
+do_share_traverse(CurlShareObject *self, visitproc visit, void *arg);
+PYCURL_INTERNAL int
+do_share_clear(CurlShareObject *self);
+PYCURL_INTERNAL void
+do_share_dealloc(CurlShareObject *self);
+PYCURL_INTERNAL int
+do_share_setattr(CurlShareObject *so, char *name, PyObject *v);
+PYCURL_INTERNAL PyObject *
+do_share_getattr(CurlShareObject *cso, char *name);
+#if PY_MAJOR_VERSION >= 3
+PYCURL_INTERNAL int
+do_share_setattro(PyObject *o, PyObject *n, PyObject *v);
+PYCURL_INTERNAL PyObject *
+do_share_getattro(PyObject *o, PyObject *n);
 #endif
 
 PYCURL_INTERNAL PyObject *
