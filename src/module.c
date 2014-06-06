@@ -322,16 +322,16 @@ initpycurl(void)
     Py_TYPE(&CurlShare_Type) = &PyType_Type;
 
     /* Create the module and add the functions */
-#if PY_MAJOR_VERSION >= 3
     if (PyType_Ready(&Curl_Type) < 0)
-        return NULL;
+        PYCURL_MODINIT_RETURN_NULL;
 
     if (PyType_Ready(&CurlMulti_Type) < 0)
-        return NULL;
+        PYCURL_MODINIT_RETURN_NULL;
 
     if (PyType_Ready(&CurlShare_Type) < 0)
-        return NULL;
+        PYCURL_MODINIT_RETURN_NULL;
 
+#if PY_MAJOR_VERSION >= 3
     m = PyModule_Create(&curlmodule);
     if (m == NULL)
         return NULL;
