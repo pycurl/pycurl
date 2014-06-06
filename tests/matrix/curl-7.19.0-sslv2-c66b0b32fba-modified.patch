@@ -1,5 +1,16 @@
+commit c66b0b32fba175d5f096c944d8ec8f9f06299f4a
+Author: Daniel Stenberg <daniel@haxx.se>
+Date:   Sun Apr 10 19:14:22 2011 +0200
+
+    OpenSSL: no-sslv2 aware
+    
+    Allow openSSL without SSL2 to be used. This fix is inspired by the fix
+    provided by Cristian Rodríguez.
+    
+    Reported by: Cristian Rodríguez
+
 diff --git a/lib/ssluse.c b/lib/ssluse.c
-index cee78bb..967fc57 100644
+index 654ffaa..caffdad 100644
 --- a/lib/ssluse.c
 +++ b/lib/ssluse.c
 @@ -1327,8 +1327,13 @@ ossl_connect_step1(struct connectdata *conn,

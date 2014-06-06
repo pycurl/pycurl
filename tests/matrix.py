@@ -5,15 +5,32 @@ try:
 except ImportError:
     from urllib import urlopen
 
-python_versions = ['2.4.6', '2.5.6', '2.6.8', '2.7.5', '3.0.1', '3.1.5', '3.2.5', '3.3.5', '3.4.1']
-libcurl_versions = ['7.19.0', '7.33.0']
+python_versions = ['2.4.6', '2.5.6', '2.6.8', '2.7.5', '3.1.5', '3.2.5', '3.3.5', '3.4.1']
+libcurl_versions = ['7.19.0', '7.37.0']
+
+# http://bsdpower.com/building-python-24-with-zlib/
+patch_python_for_zlib = "sed -e 's/^#zlib/zlib/g' Modules/Setup >Modules/Setup.patched && mv Modules/Setup.patched Modules/Setup"
+patch_python_for_ssl = "sed -e '/^#SSL/,/^$/s/^#//' -e 's/^#\*shared\*/*shared*/' Modules/Setup >Modules/Setup.patched && mv Modules/Setup.patched Modules/Setup"
 
 python_meta = {
+    '2.4.6': {
+        'post-configure': [patch_python_for_zlib, patch_python_for_ssl],
+    },
     '2.5.6': {
         'patches': ['python25.patch'],
+        'post-configure': [patch_python_for_zlib, patch_python_for_ssl],
     },
     '3.0.1': {
         'patches': ['python25.patch', 'python30.patch'],
+    },
+}
+
+libcurl_meta = {
+    '7.19.0': {
+        'patches': [
+            'curl-7.19.0-sslv2-c66b0b32fba-modified.patch',
+            #'curl-7.19.0-sslv2-2b0e09b0f98.patch',
+        ],
     },
 }
 
@@ -29,6 +46,15 @@ class in_dir:
     
     def __exit__(self, type, value, traceback):
         os.chdir(self.oldwd)
+
+def subprocess_check_call(cmd, **kwargs):
+    try:
+        subprocess.check_call(cmd, **kwargs)
+    except OSError as exc:
+        message = exc.args[0]
+        message = '%s while trying to execute %s' % (message, str(cmd))
+        args = tuple([message] + exc.args[1:])
+        raise type(exc)(args)
 
 def fetch(url, archive=None):
     if archive is None:
@@ -47,15 +73,18 @@ def fetch(url, archive=None):
 def build(archive, dir, prefix, meta=None):
     if not os.path.exists(dir):
         sys.stdout.write("Building %s\n" % archive)
-        subprocess.check_call(['tar', 'xf', archive])
+        subprocess_check_call(['tar', 'xf', archive])
         with in_dir(dir):
             if meta and 'patches' in meta:
                 for patch in meta['patches']:
                     patch_path = os.path.join(root, 'matrix', patch)
-                    subprocess.check_call(['patch', '-p1', '-i', patch_path])
-            subprocess.check_call(['./configure', '--prefix=%s' % prefix])
-            subprocess.check_call(['make'])
-            subprocess.check_call(['make', 'install'])
+                    subprocess_check_call(['patch', '-p1', '-i', patch_path])
+            subprocess_check_call(['./configure', '--prefix=%s' % prefix])
+            if 'post-configure' in meta:
+                for cmd in meta['post-configure']:
+                    subprocess_check_call(cmd, shell=True)
+            subprocess_check_call(['make'])
+            subprocess_check_call(['make', 'install'])
 
 def patch_pycurl_for_24():
     # change relative imports to old syntax as python 2.4 does not
@@ -88,7 +117,7 @@ def run_matrix(python_versions, libcurl_versions):
         
         dir = archive.replace('.tar.gz', '')
         prefix = os.path.abspath('i/%s' % dir)
-        build(archive, dir, prefix)
+        build(archive, dir, prefix, meta=libcurl_meta.get(libcurl_version))
 
     fetch('https://raw.github.com/pypa/virtualenv/1.7/virtualenv.py', 'virtualenv-1.7.py')
     fetch('https://raw.github.com/pypa/virtualenv/1.9.1/virtualenv.py', 'virtualenv-1.9.1.py')
@@ -114,13 +143,13 @@ def run_matrix(python_versions, libcurl_versions):
                 # so, use known versions everywhere
                 # md5=89e68df89faf1966bcbd99a0033fbf8e
                 fetch('https://pypi.python.org/packages/source/d/distribute/distribute-0.6.49.tar.gz')
-                subprocess.check_call(['python', 'virtualenv-1.9.1.py', venv, '-p', '%s/bin/python%d.%d' % (python_prefix, python_version_pieces[0], python_version_pieces[1]), '--no-site-packages', '--never-download'])
+                subprocess_check_call(['python', 'virtualenv-1.9.1.py', venv, '-p', '%s/bin/python%d.%d' % (python_prefix, python_version_pieces[0], python_version_pieces[1]), '--no-site-packages', '--never-download'])
             else:
                 # md5=bd639f9b0eac4c42497034dec2ec0c2b
                 fetch('https://pypi.python.org/packages/2.4/s/setuptools/setuptools-0.6c11-py2.4.egg')
                 # md5=6afbb46aeb48abac658d4df742bff714
                 fetch('https://pypi.python.org/packages/source/p/pip/pip-1.4.1.tar.gz')
-                subprocess.check_call(['python', 'virtualenv-1.7.py', venv, '-p', '%s/bin/python' % python_prefix, '--no-site-packages', '--never-download'])
+                subprocess_check_call(['python', 'virtualenv-1.7.py', venv, '-p', '%s/bin/python' % python_prefix, '--no-site-packages', '--never-download'])
             curl_config_path = os.path.join(libcurl_prefix, 'bin/curl-config')
             curl_lib_path = os.path.join(libcurl_prefix, 'lib')
             with in_dir('pycurl'):
@@ -133,7 +162,6 @@ def run_matrix(python_versions, libcurl_versions):
                 else:
                     deps_cmd = 'easy_install nose simplejson==2.1.0'
                     patch_pycurl_for_24()
-                    extra_patches.append('(cd %s/lib/python2.4/site-packages/nose-* && patch -p1) <tests/matrix/nose-1.3.0-python24.patch' % venv)
                     extra_env.append('PYCURL_STANDALONE_APP=yes')
                 extra_patches = ' && '.join(extra_patches)
                 extra_env = ' '.join(extra_env)
@@ -152,7 +180,7 @@ def run_matrix(python_versions, libcurl_versions):
                     extra_env=extra_env
                 )
                 print(cmd)
-                subprocess.check_call(cmd, shell=True)
+                subprocess_check_call(cmd, shell=True)
 
 if __name__ == '__main__':
     import sys
@@ -165,7 +193,13 @@ if __name__ == '__main__':
         parser.add_option('-c', '--curl', help='Specify libcurl version to test against')
         options, args = parser.parse_args()
         if options.python:
-            chosen_python_versions = [options.python]
+            python_version = options.python
+            if python_version in python_versions:
+                chosen_python_versions = [python_version]
+            else:
+                chosen_python_versions = [v for v in python_versions if v.startswith(python_version)]
+                if len(chosen_python_versions) != 1:
+                    raise Exception('Bogus python version requested: %s' % python_version)
         else:
             chosen_python_versions = python_versions
         if options.curl:
