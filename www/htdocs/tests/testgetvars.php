@@ -12,5 +12,3 @@ if (is_array($HTTP_GET_VARS))
         printf("  '%s': '%s'\n", $k, $v);
     }
 }
-
-?>

@@ -18,5 +18,3 @@ if (is_array($HTTP_POST_VARS))
 }
 
 echo "\n[end of file]\n";
-
-?>
