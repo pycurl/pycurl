@@ -389,60 +389,12 @@ assert_curl_state(const CurlObject *self);
 
 PYCURL_INTERNAL CurlObject *
 do_curl_new(PyObject *dummy);
-PYCURL_INTERNAL void
-do_curl_dealloc(CurlObject *self);
-PYCURL_INTERNAL int
-do_curl_clear(CurlObject *self);
-PYCURL_INTERNAL int
-do_curl_traverse(CurlObject *self, visitproc visit, void *arg);
-PYCURL_INTERNAL int
-do_curl_setattr(CurlObject *co, char *name, PyObject *v);
-PYCURL_INTERNAL PyObject *
-do_curl_getattr(CurlObject *co, char *name);
-#if PY_MAJOR_VERSION >= 3
-PYCURL_INTERNAL int
-do_curl_setattro(PyObject *o, PyObject *name, PyObject *v);
-PYCURL_INTERNAL PyObject *
-do_curl_getattro(PyObject *o, PyObject *n);
-#endif
 
 PYCURL_INTERNAL CurlMultiObject *
 do_multi_new(PyObject *dummy);
-PYCURL_INTERNAL void
-do_multi_dealloc(CurlMultiObject *self);
-PYCURL_INTERNAL int
-do_multi_clear(CurlMultiObject *self);
-PYCURL_INTERNAL int
-do_multi_traverse(CurlMultiObject *self, visitproc visit, void *arg);
-PYCURL_INTERNAL int
-do_multi_setattr(CurlMultiObject *co, char *name, PyObject *v);
-PYCURL_INTERNAL PyObject *
-do_multi_getattr(CurlMultiObject *co, char *name);
-#if PY_MAJOR_VERSION >= 3
-PYCURL_INTERNAL int
-do_multi_setattro(PyObject *o, PyObject *n, PyObject *v);
-PYCURL_INTERNAL PyObject *
-do_multi_getattro(PyObject *o, PyObject *n);
-#endif
 
 PYCURL_INTERNAL CurlShareObject *
 do_share_new(PyObject *dummy);
-PYCURL_INTERNAL int
-do_share_traverse(CurlShareObject *self, visitproc visit, void *arg);
-PYCURL_INTERNAL int
-do_share_clear(CurlShareObject *self);
-PYCURL_INTERNAL void
-do_share_dealloc(CurlShareObject *self);
-PYCURL_INTERNAL int
-do_share_setattr(CurlShareObject *so, char *name, PyObject *v);
-PYCURL_INTERNAL PyObject *
-do_share_getattr(CurlShareObject *cso, char *name);
-#if PY_MAJOR_VERSION >= 3
-PYCURL_INTERNAL int
-do_share_setattro(PyObject *o, PyObject *n, PyObject *v);
-PYCURL_INTERNAL PyObject *
-do_share_getattro(PyObject *o, PyObject *n);
-#endif
 
 PYCURL_INTERNAL PyObject *
 do_global_init(PyObject *dummy, PyObject *args);
@@ -453,6 +405,10 @@ do_version_info(PyObject *dummy, PyObject *args);
 
 #if !defined(PYCURL_SINGLE_FILE)
 /* Type objects */
+extern PyTypeObject Curl_Type;
+extern PyTypeObject CurlMulti_Type;
+extern PyTypeObject CurlShare_Type;
+
 extern PyObject *ErrorObject;
 extern PyTypeObject *p_Curl_Type;
 extern PyTypeObject *p_CurlMulti_Type;
