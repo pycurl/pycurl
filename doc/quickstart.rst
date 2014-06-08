@@ -235,3 +235,38 @@ are derived from libcurl constants by removing the ``CURLINFO_`` prefix.
 Thus, ``CURLINFO_RESPONSE_CODE`` becomes simply ``RESPONSE_CODE``.
 
 .. _curl_easy_getinfo: http://curl.haxx.se/libcurl/c/curl_easy_getinfo.html
+
+Sending Form Data
+-----------------
+
+To send form data, use ``POSTFIELDS`` option. Form data must be URL-encoded
+beforehand::
+
+    import pycurl
+    try:
+        # python 3
+        from urllib.parse import urlencode
+    except ImportError:
+        # python 2
+        from urllib import urlencode
+
+    c = pycurl.Curl()
+    c.setopt(c.URL, 'http://pycurl.sourceforge.net/tests/testpostvars.php')
+
+    post_data = {'field': 'value'}
+    # Form data must be provided already urlencoded.
+    postfields = urlencode(post_data)
+    # Sets request method to POST,
+    # Content-Type header to application/x-www-form-urlencoded
+    # and data to send in request body.
+    c.setopt(c.POSTFIELDS, postfields)
+
+    c.perform()
+    c.close()
+
+This code is available as ``examples/quickstart/form_post.py``.
+
+``POSTFIELDS`` automatically sets HTTP request method to POST. Other request
+methods can be specified via ``CUSTOMREQUEST`` option::
+
+    c.setopt(c.CUSTOMREQUEST, 'PATCH')
