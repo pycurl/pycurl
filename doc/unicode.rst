@@ -1,100 +1,268 @@
-Unicode Handling
-================
+String And Unicode Handling
+===========================
 
-Python 2.x
-----------
+Generally speaking, libcurl does not perform data encoding or decoding.
+In particular, libcurl is not Unicode-aware, but operates on byte streams.
+libcurl leaves it up to the application - PycURL library or an application
+using PycURL in this case - to encode and decode Unicode data into byte streams.
 
-Under Python 2, the string type can hold arbitrary encoded byte strings.
+PycURL, being a thin wrapper around libcurl, generally does not perform
+this encoding and decoding either, leaving it up to the application.
+Specifically:
+
+- Data that PycURL passes to an application, such as via callback functions,
+  is normally byte strings. The application must decode them to obtain text
+  (Unicode) data.
+- Data that an application passes to PycURL, such as via ``setopt`` calls,
+  must normally be byte strings appropriately encoded. For convenience and
+  compatibility with existing code, PycURL will accept Unicode strings that
+  contain ASCII code points only [#ascii]_, and transparently encode these to
+  byte strings.
+
+
+Setting Options - Python 2.x
+----------------------------
+
+Under Python 2, the ``str`` type can hold arbitrary encoded byte strings.
 PycURL will pass whatever byte strings it is given verbatim to libcurl.
+The following code will work::
 
-If your application works with encoded byte strings, you should be able to
-pass them to PycURL. If your application works with Unicode data, you need to
-encode the data to byte strings yourself. Which encoding to use depends on
-the protocol you are working with - HTTP headers should be encoded in latin1,
-HTTP request bodies are commonly encoded in utf-8 and their encoding is
-specified in the Content-Type header value.
+    >>> import pycurl
+    >>> c = pycurl.Curl()
+    >>> c.setopt(c.USERAGENT, 'Foo\xa9')
+    # ok
 
-Prior to PycURL 7.19.3, PycURL did not accept Unicode data under Python 2.
-Even Unicode strings containing only ASCII code points had to be encoded to
-byte strings.
+Unicode strings can be used but must contain ASCII code points only::
 
-As of PycURL 7.19.3, for compatibility with Python 3, PycURL will accept
-Unicode strings under Python 2 provided they contain ASCII code points only.
-In other words, PycURL will encode Unicode into ASCII for you. If you supply
-a Unicode string containing characters that are outside of ASCII, the call will
-fail with a UnicodeEncodeError.
+    >>> c.setopt(c.USERAGENT, u'Foo')
+    # ok
 
-PycURL will return data from libcurl, like request bodies and header values,
-as byte strings. If the data is ASCII, you can treat it as string data.
-Otherwise you will need to decode the byte strings usisng the correct encoding.
-What encoding is correct depends on the protocol and potentially returned
-data itself - HTTP response headers are supposed to be latin1 encoded but
-encoding of response body is specified in the Content-Type header.
+    >>> c.setopt(c.USERAGENT, u'Foo\xa9')
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+    UnicodeEncodeError: 'ascii' codec can't encode character u'\xa9' in position 3: ordinal not in range(128)
 
-Python 3.x (from PycURL 7.19.3 onward)
---------------------------------------
+    >>> c.setopt(c.USERAGENT, u'Foo\xa9'.encode('iso-8859-1'))
+    # ok
 
-Under Python 3, the rules are as follows:
 
-PycURL will accept bytes for any string data passed to libcurl (e.g.
-arguments to curl_easy_setopt).
+Setting Options - Python 3.x
+----------------------------
 
-PycURL will accept (Unicode) strings for string arguments to curl_easy_setopt.
-libcurl generally expects the options to be already appropriately encoded
-and escaped (e.g. for CURLOPT_URL). Also, Python 2 code dealing with
-Unicode values for string options will typically manually encode such values.
-Therefore PycURL will attempt to encode Unicode strings with the ascii codec
-only, allowing the application to pass ASCII data in a straightforward manner
-but requiring Unicode data to be appropriately encoded.
+Under Python 3, the ``bytes`` type holds arbitrary encoded byte strings.
+PycURL will accept ``bytes`` values for all options where libcurl specifies
+a "string" argument::
 
-It may be helpful to remember that libcurl operates on byte arrays.
-It is a C library and does not do any Unicode encoding or decoding, offloading
-that task on the application using it. PycURL, being a thin wrapper around
-libcurl, passes the Unicode encoding and decoding responsibilities to you
-except for the trivial case of encoding Unicode data containing only ASCII
-characters into ASCII.
+    >>> import pycurl
+    >>> c = pycurl.Curl()
+    >>> c.setopt(c.USERAGENT, b'Foo\xa9')
+    # ok
+
+The ``str`` type holds Unicode data. PycURL will accept ``str`` values
+containing ASCII code points only::
+
+    >>> c.setopt(c.USERAGENT, 'Foo')
+    # ok
+
+    >>> c.setopt(c.USERAGENT, 'Foo\xa9')
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+    UnicodeEncodeError: 'ascii' codec can't encode character '\xa9' in position 3: ordinal not in range(128)
+
+    >>> c.setopt(c.USERAGENT, 'Foo\xa9'.encode('iso-8859-1'))
+    # ok
+
+
+Writing To Files
+----------------
+
+PycURL will return all data read from the network as byte strings. On Python 2,
+this means the write callbacks will receive ``str`` objects, and
+on Python 3, write callbacks will receive ``bytes`` objects.
+
+Under Python 2, when using e.g. ``WRITEDATA`` or ``WRITEFUNCTION`` options,
+files being written to *should* be opened in binary mode. Writing to files
+opened in text mode will not raise exceptions but may corrupt data.
+
+Under Python 3, PycURL passes strings and binary data to the application
+using ``bytes`` instances. When writing to files, the files must be opened
+in binary mode for the writes to work::
+
+    import pycurl
+    c = pycurl.Curl()
+    c.setopt(c.URL,'http://pycurl.sourceforge.net')
+    # File opened in binary mode.
+    with open('/dev/null','wb') as f:
+        c.setopt(c.WRITEDATA, f)
+        # Same result if using WRITEFUNCTION instead:
+        #c.setopt(c.WRITEFUNCTION, f.write)
+        c.perform()
+    # ok
+
+If a file is opened in text mode (``w`` instead of ``wb`` mode), an error
+similar to the following will result::
+
+    TypeError: must be str, not bytes
+    Traceback (most recent call last):
+      File "/tmp/test.py", line 8, in <module>
+        c.perform()
+    pycurl.error: (23, 'Failed writing body (0 != 168)')
+
+The TypeError is actually an exception raised by Python which will be printed,
+but not propagated, by PycURL. PycURL will raise a ``pycurl.error`` to
+signify operation failure.
+
+
+Writing To StringIO/BytesIO
+---------------------------
+
+Under Python 2, response can be saved in memory by using a ``StringIO``
+object::
+
+    import pycurl
+    from StringIO import StringIO
+    c = pycurl.Curl()
+    c.setopt(c.URL,'http://pycurl.sourceforge.net')
+    buffer = StringIO()
+    c.setopt(c.WRITEDATA, buffer)
+    # Same result if using WRITEFUNCTION instead:
+    #c.setopt(c.WRITEFUNCTION, buffer.write)
+    c.perform()
+    # ok
+
+Under Python 3, as PycURL invokes the write callback with ``bytes`` argument,
+the response must be written to a ``BytesIO`` object::
+
+    import pycurl
+    from io import BytesIO
+    c = pycurl.Curl()
+    c.setopt(c.URL,'http://pycurl.sourceforge.net')
+    buffer = BytesIO()
+    c.setopt(c.WRITEDATA, buffer)
+    # Same result if using WRITEFUNCTION instead:
+    #c.setopt(c.WRITEFUNCTION, buffer.write)
+    c.perform()
+    # ok
+
+Attempting to use a ``StringIO`` object will produce an error::
+
+    import pycurl
+    from io import StringIO
+    c = pycurl.Curl()
+    c.setopt(c.URL,'http://pycurl.sourceforge.net')
+    buffer = StringIO()
+    c.setopt(c.WRITEDATA, buffer)
+    c.perform()
+
+    TypeError: string argument expected, got 'bytes'
+    Traceback (most recent call last):
+      File "/tmp/test.py", line 9, in <module>
+        c.perform()
+    pycurl.error: (23, 'Failed writing body (0 != 168)')
+
+The following idiom can be used for code that needs to be compatible with both
+Python 2 and Python 3::
+
+    import pycurl
+    try:
+        # Python 3
+        from io import BytesIO
+    except ImportError:
+        # Python 2
+        from StringIO import StringIO as BytesIO
+    c = pycurl.Curl()
+    c.setopt(c.URL,'http://pycurl.sourceforge.net')
+    buffer = BytesIO()
+    c.setopt(c.WRITEDATA, buffer)
+    c.perform()
+    # ok
+    # Decode the response body:
+    string_body = buffer.getvalue().decode('utf-8')
+
+
+Header Functions
+----------------
+
+Although headers are often ASCII text, they are still returned as
+``bytes`` instances on Python 3 and thus require appropriate decoding.
+HTTP headers are encoded in ISO/IEC 8859-1 according to the standards.
+
+When using ``WRITEHEADER`` option to write headers to files, the files
+should be opened in binary mode in Python 2 and must be opened in binary
+mode in Python 3, same as with ``WRITEDATA``.
+
+
+Read Functions
+--------------
+
+Read functions are expected to provide data in the same fashion as
+string options expect it:
+
+- On Python 2, the data can be given as ``str`` instances, appropriately
+  encoded.
+- On Python 2, the data can be given as ``unicode`` instances containing
+  ASCII code points only.
+- On Python 3, the data can be given as ``bytes`` instances.
+- On Python 3. the data can be given as ``str`` instances containing
+  ASCII code points only.
 
 Caution: when using CURLOPT_READFUNCTION in tandem with CURLOPT_POSTFIELDSIZE,
 as would be done for HTTP for example, take care to pass the length of
-encoded data to CURLOPT_POSTFIELDSIZE if you are doing the encoding from
-Unicode strings. If you pass the number of Unicode characters rather than
+*encoded* data to CURLOPT_POSTFIELDSIZE if you are performing the encoding.
+If you pass the number of Unicode characters rather than
 encoded bytes to libcurl, the server will receive wrong Content-Length.
 Alternatively you can return Unicode strings from a CURLOPT_READFUNCTION
-function, if you are certain they will only contain ASCII code points.
+function, if your data contains only ASCII code points,
+and let PycURL encode them for you.
 
-If encoding to ASCII fails, PycURL will return an error to libcurl, and
-libcurl in turn will fail the request with an exception like
-"read function error/data error". You may examine sys.last_value for
-information on exception that occurred during encoding in this case.
 
-PycURL will return all data read from the network as bytes. In particular,
-this means that BytesIO should be used rather than StringIO for writing the
-response to memory. Header function will also receive bytes.
+How PycURL Handles Unicode Strings
+----------------------------------
 
-Because PycURL does not perform encoding or decoding, other than to ASCII,
-any file objects that PycURL is meant to interact with via CURLOPT_READDATA,
-CURLOPT_WRITEDATA, CURLOPT_WRITEHEADER, CURLOPT_READFUNCTION,
-CURLOPT_WRITEFUNCTION or CURLOPT_HEADERFUNCTION must be opened in binary
-mode ("b" flag to open() call).
+If PycURL is given a Unicode string which contains non-ASCII code points,
+and as such cannot be encoded to ASCII,PycURL will return an error to libcurl,
+and libcurl in turn will fail the request with an error like
+"read function error/data error". PycURL will then raise ``pycurl.error``
+with this latter message. The encoding exception that was the
+underlying cause of the problem is stored as ``sys.last_value``.
 
-Python 3.x before PycURL 7.19.3
--------------------------------
 
-PycURL did not have official Python 3 support prior to PycURL 7.19.3.
-There were two patches on SourceForge (original_, revised_)
-adding Python 3 support, but they did not handle Unicode strings correctly.
-Instead of using Python encoding functionality, these patches used
-C standard library unicode to multibyte conversion functions, and thus
-they can have the same behavior as Python encoding code or behave
-entirely differently.
+Figuring Out Correct Encoding
+-----------------------------
 
-Python 3 support as implemented in PycURL 7.19.3 and documented here
-does not, as mentioned, actually perform any encoding other than to convert
-from Unicode strings containing ASCII-only bytes to ASCII byte strings.
+What encoding should be used when is a complicated question. For example,
+when working with HTTP:
 
-Linux distributions that offered Python 3 packages of PycURL prior to 7.19.3
-used SourceForge patches and may behave in ways contradictory to what is
-described in this document.
+- URLs and POSTFIELDS data must be URL-encoded. A URL-encoded string has
+  only ASCII code points.
+- Headers must be ISO/IEC 8859-1 encoded.
+- Encoding for bodies is specified in Content-Type and Content-Encoding headers.
 
-.. _original: http://sourceforge.net/p/pycurl/patches/5/
-.. _revised: http://sourceforge.net/p/pycurl/patches/12/
+
+Legacy PycURL Versions
+----------------------
+
+The Unicode handling documented here was implemented in PycURL 7.19.3
+along with Python 3 support. Prior to PycURL 7.19.3 Unicode data was not
+accepted at all::
+
+    >>> import pycurl
+    >>> c = pycurl.Curl()
+    >>> c.setopt(c.USERAGENT, u'Foo\xa9')
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+    TypeError: invalid arguments to setopt
+
+Some GNU/Linux distributions provided Python 3 packages of PycURL prior to
+PycURL 7.19.3. These packages included unofficial patches
+([#patch1]_, [#patch2]_) which did not handle Unicode correctly, and did not behave
+as described in this document. Such unofficial versions of PycURL should
+be avoided.
+
+
+.. rubric:: Footnotes
+
+.. [#ascii] Only ASCII is accepted; ISO-8859-1/Latin 1, for example, will be
+    rejected.
+.. [#patch1] http://sourceforge.net/p/pycurl/patches/5/
+.. [#patch2] http://sourceforge.net/p/pycurl/patches/12/
