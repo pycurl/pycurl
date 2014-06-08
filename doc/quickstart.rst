@@ -5,7 +5,14 @@ Retrieving A Network Resource
 -----------------------------
 
 Once PycURL is installed we can perform network operations. The simplest
-one is retrieving a resource by its URL. Here is how to do it in Python 2::
+one is retrieving a resource by its URL. To issue a network request with
+PycURL, the following steps are required:
+
+    1. Create a ``pycurl.Curl`` instance.
+    2. Use ``setopt`` to set options.
+    3. Call ``perform`` to perform the operation.
+
+Here is how we can retrieve a network resource in Python 2::
 
     import pycurl
     from StringIO import StringIO
