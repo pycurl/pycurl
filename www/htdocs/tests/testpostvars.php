@@ -9,9 +9,9 @@ echo "[info: this is Content-type: text/plain, so you should get\n";
 echo "       back exactly what I have received]\n\n";
 echo "POST vars from HTTP request:\n\n";
 
-if (is_array($HTTP_POST_VARS))
+if (is_array($_POST))
 {
-    while (list($k, $v) = each($HTTP_POST_VARS))
+    while (list($k, $v) = each($_POST))
     {
         printf("  '%s': '%s'\n", $k, $v);
     }
