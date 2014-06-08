@@ -805,5 +805,65 @@ do_multi_setattr(CurlMultiObject *co, char *name, PyObject *v)
 
 #endif /* PY_MAJOR_VERSION >= 3 */
 
+PYCURL_INTERNAL PyTypeObject CurlMulti_Type = {
+#if PY_MAJOR_VERSION >= 3
+    PyVarObject_HEAD_INIT(NULL, 0)
+#else
+    PyObject_HEAD_INIT(NULL)
+    0,                          /* ob_size */
+#endif
+    "pycurl.CurlMulti",         /* tp_name */
+    sizeof(CurlMultiObject),    /* tp_basicsize */
+    0,                          /* tp_itemsize */
+    (destructor)do_multi_dealloc, /* tp_dealloc */
+    0,                          /* tp_print */
+#if PY_MAJOR_VERSION >= 3
+    0, // (getattrfunc)do_curl_getattr,  /* tp_getattr */
+    0, //(setattrfunc)do_curl_setattr,  /* tp_setattr */
+#else
+    (getattrfunc)do_multi_getattr,  /* tp_getattr */
+    (setattrfunc)do_multi_setattr,  /* tp_setattr */
+#endif
+    0,                          /* tp_reserved */
+    0,                          /* tp_repr */
+    0,                          /* tp_as_number */
+    0,                          /* tp_as_sequence */
+    0,                          /* tp_as_mapping */
+    0,                          /* tp_hash  */
+    0,                          /* tp_call */
+    0,                          /* tp_str */
+#if PY_MAJOR_VERSION >= 3
+    (getattrofunc)do_multi_getattro, /* tp_getattro */
+    (setattrofunc)do_multi_setattro, /* tp_setattro */
+#else
+    0,                          /* tp_getattro */
+    0,                          /* tp_setattro */
+#endif
+    0,                          /* tp_as_buffer */
+    Py_TPFLAGS_HAVE_GC,         /* tp_flags */
+    0,                          /* tp_doc */
+    (traverseproc)do_multi_traverse, /* tp_traverse */
+    (inquiry)do_multi_clear,    /* tp_clear */
+    0,                          /* tp_richcompare */
+    0,                          /* tp_weaklistoffset */
+    0,                          /* tp_iter */
+    0,                          /* tp_iternext */
+#if PY_MAJOR_VERSION >= 3
+    curlmultiobject_methods,    /* tp_methods */
+#else
+    0,                          /* tp_methods */
+#endif
+    0,                          /* tp_members */
+    0,                          /* tp_getset */
+    0,                          /* tp_base */
+    0,                          /* tp_dict */
+    0,                          /* tp_descr_get */
+    0,                          /* tp_descr_set */
+    0,                          /* tp_dictoffset */
+    0,                          /* tp_init */
+    0,                          /* tp_alloc */
+    0,                          /* tp_new */
+};
+
 /* vi:ts=4:et:nowrap
  */

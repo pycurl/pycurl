@@ -269,44 +269,15 @@ PyText_Check(PyObject *o);
     (PYCURL_MEMGROUP_ATTRDICT | PYCURL_MEMGROUP_EASY | \
     PYCURL_MEMGROUP_MULTI | PYCURL_MEMGROUP_SHARE)
 
-typedef struct {
-    PyThread_type_lock locks[CURL_LOCK_DATA_LAST];
-} ShareLock;
-
-
-typedef struct {
-    PyObject_HEAD
-    PyObject *dict;                 /* Python attributes dictionary */
-    CURLSH *share_handle;
-#ifdef WITH_THREAD
-    ShareLock *lock;                /* lock object to implement CURLSHOPT_LOCKFUNC */
-#endif
-} CurlShareObject;
-
-typedef struct {
-    PyObject_HEAD
-    PyObject *dict;                 /* Python attributes dictionary */
-    CURLM *multi_handle;
-#ifdef WITH_THREAD
-    PyThreadState *state;
-#endif
-    fd_set read_fd_set;
-    fd_set write_fd_set;
-    fd_set exc_fd_set;
-    /* callbacks */
-    PyObject *t_cb;
-    PyObject *s_cb;
-} CurlMultiObject;
-
-typedef struct {
+typedef struct CurlObject {
     PyObject_HEAD
     PyObject *dict;                 /* Python attributes dictionary */
     CURL *handle;
 #ifdef WITH_THREAD
     PyThreadState *state;
 #endif
-    CurlMultiObject *multi_stack;
-    CurlShareObject *share;
+    struct CurlMultiObject *multi_stack;
+    struct CurlShareObject *share;
     struct curl_httppost *httppost;
     /* List of INC'ed references associated with httppost. */
     PyObject *httppost_ref_list;
@@ -336,6 +307,34 @@ typedef struct {
     /* misc */
     char error[CURL_ERROR_SIZE+1];
 } CurlObject;
+
+typedef struct CurlMultiObject {
+    PyObject_HEAD
+    PyObject *dict;                 /* Python attributes dictionary */
+    CURLM *multi_handle;
+#ifdef WITH_THREAD
+    PyThreadState *state;
+#endif
+    fd_set read_fd_set;
+    fd_set write_fd_set;
+    fd_set exc_fd_set;
+    /* callbacks */
+    PyObject *t_cb;
+    PyObject *s_cb;
+} CurlMultiObject;
+
+typedef struct {
+    PyThread_type_lock locks[CURL_LOCK_DATA_LAST];
+} ShareLock;
+
+typedef struct CurlShareObject {
+    PyObject_HEAD
+    PyObject *dict;                 /* Python attributes dictionary */
+    CURLSH *share_handle;
+#ifdef WITH_THREAD
+    ShareLock *lock;                /* lock object to implement CURLSHOPT_LOCKFUNC */
+#endif
+} CurlShareObject;
 
 #ifdef WITH_THREAD
 
@@ -388,62 +387,14 @@ my_getattr(PyObject *co, char *name, PyObject *dict1, PyObject *dict2, PyMethodD
 PYCURL_INTERNAL void
 assert_curl_state(const CurlObject *self);
 
-PYCURL_INTERNAL CurlShareObject *
-do_share_new(PyObject *dummy);
-PYCURL_INTERNAL int
-do_share_traverse(CurlShareObject *self, visitproc visit, void *arg);
-PYCURL_INTERNAL int
-do_share_clear(CurlShareObject *self);
-PYCURL_INTERNAL void
-do_share_dealloc(CurlShareObject *self);
-PYCURL_INTERNAL int
-do_share_setattr(CurlShareObject *so, char *name, PyObject *v);
-PYCURL_INTERNAL PyObject *
-do_share_getattr(CurlShareObject *cso, char *name);
-#if PY_MAJOR_VERSION >= 3
-PYCURL_INTERNAL int
-do_share_setattro(PyObject *o, PyObject *n, PyObject *v);
-PYCURL_INTERNAL PyObject *
-do_share_getattro(PyObject *o, PyObject *n);
-#endif
-
 PYCURL_INTERNAL CurlObject *
 do_curl_new(PyObject *dummy);
-PYCURL_INTERNAL void
-do_curl_dealloc(CurlObject *self);
-PYCURL_INTERNAL int
-do_curl_clear(CurlObject *self);
-PYCURL_INTERNAL int
-do_curl_traverse(CurlObject *self, visitproc visit, void *arg);
-PYCURL_INTERNAL int
-do_curl_setattr(CurlObject *co, char *name, PyObject *v);
-PYCURL_INTERNAL PyObject *
-do_curl_getattr(CurlObject *co, char *name);
-#if PY_MAJOR_VERSION >= 3
-PYCURL_INTERNAL int
-do_curl_setattro(PyObject *o, PyObject *name, PyObject *v);
-PYCURL_INTERNAL PyObject *
-do_curl_getattro(PyObject *o, PyObject *n);
-#endif
 
 PYCURL_INTERNAL CurlMultiObject *
 do_multi_new(PyObject *dummy);
-PYCURL_INTERNAL void
-do_multi_dealloc(CurlMultiObject *self);
-PYCURL_INTERNAL int
-do_multi_clear(CurlMultiObject *self);
-PYCURL_INTERNAL int
-do_multi_traverse(CurlMultiObject *self, visitproc visit, void *arg);
-PYCURL_INTERNAL int
-do_multi_setattr(CurlMultiObject *co, char *name, PyObject *v);
-PYCURL_INTERNAL PyObject *
-do_multi_getattr(CurlMultiObject *co, char *name);
-#if PY_MAJOR_VERSION >= 3
-PYCURL_INTERNAL int
-do_multi_setattro(PyObject *o, PyObject *n, PyObject *v);
-PYCURL_INTERNAL PyObject *
-do_multi_getattro(PyObject *o, PyObject *n);
-#endif
+
+PYCURL_INTERNAL CurlShareObject *
+do_share_new(PyObject *dummy);
 
 PYCURL_INTERNAL PyObject *
 do_global_init(PyObject *dummy, PyObject *args);
@@ -454,6 +405,10 @@ do_version_info(PyObject *dummy, PyObject *args);
 
 #if !defined(PYCURL_SINGLE_FILE)
 /* Type objects */
+extern PyTypeObject Curl_Type;
+extern PyTypeObject CurlMulti_Type;
+extern PyTypeObject CurlShare_Type;
+
 extern PyObject *ErrorObject;
 extern PyTypeObject *p_Curl_Type;
 extern PyTypeObject *p_CurlMulti_Type;
@@ -466,8 +421,8 @@ extern PyObject *curlshareobject_constants;
 extern char *g_pycurl_useragent;
 
 #if PY_MAJOR_VERSION >= 3
-extern PyMethodDef curlshareobject_methods[];
 extern PyMethodDef curlobject_methods[];
+extern PyMethodDef curlshareobject_methods[];
 extern PyMethodDef curlmultiobject_methods[];
 #endif
 #endif /* !PYCURL_SINGLE_FILE */
