@@ -153,10 +153,9 @@ util_curl_new(void)
 {
     CurlObject *self;
 
-    self = (CurlObject *) PyObject_GC_New(CurlObject, p_Curl_Type);
+    self = (CurlObject *) PyType_GenericAlloc(p_Curl_Type, 0);
     if (self == NULL)
         return NULL;
-    PyObject_GC_Track(self);
 
     /* Set python curl object initial values */
     self->dict = NULL;

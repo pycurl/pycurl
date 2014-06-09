@@ -53,11 +53,8 @@ do_multi_new(PyObject *dummy)
     UNUSED(dummy);
 
     /* Allocate python curl-multi object */
-    self = (CurlMultiObject *) PyObject_GC_New(CurlMultiObject, p_CurlMulti_Type);
-    if (self) {
-        PyObject_GC_Track(self);
-    }
-    else {
+    self = (CurlMultiObject *) PyType_GenericAlloc(p_CurlMulti_Type, 0);
+    if (!self) {
         return NULL;
     }
 

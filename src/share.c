@@ -40,11 +40,8 @@ do_share_new(PyObject *dummy)
     UNUSED(dummy);
 
     /* Allocate python curl-share object */
-    self = (CurlShareObject *) PyObject_GC_New(CurlShareObject, p_CurlShare_Type);
-    if (self) {
-        PyObject_GC_Track(self);
-    }
-    else {
+    self = (CurlShareObject *) PyType_GenericAlloc(p_CurlShare_Type, 0);
+    if (!self) {
         return NULL;
     }
 
