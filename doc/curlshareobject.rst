@@ -7,10 +7,6 @@ CurlShare Object
 
     CurlShare objects have the following methods:
 
-    .. method:: close() -> None
+    .. automethod:: pycurl.CurlShare.close
 
-        .. include:: ../build/docstrings/share_close.rst
-
-    .. method:: setopt(option, value) -> None
-
-        .. include:: ../build/docstrings/share_setopt.rst
+    .. automethod:: pycurl.CurlShare.setopt
