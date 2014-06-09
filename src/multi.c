@@ -53,7 +53,7 @@ do_multi_new(PyObject *dummy)
     UNUSED(dummy);
 
     /* Allocate python curl-multi object */
-    self = (CurlMultiObject *) PyType_GenericAlloc(p_CurlMulti_Type, 0);
+    self = (CurlMultiObject *) p_CurlMulti_Type->tp_alloc(p_CurlMulti_Type, 0);
     if (!self) {
         return NULL;
     }
@@ -858,7 +858,7 @@ PYCURL_INTERNAL PyTypeObject CurlMulti_Type = {
     0,                          /* tp_descr_set */
     0,                          /* tp_dictoffset */
     0,                          /* tp_init */
-    0,                          /* tp_alloc */
+    PyType_GenericAlloc,        /* tp_alloc */
     0,                          /* tp_new */
 };
 

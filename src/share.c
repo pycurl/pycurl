@@ -40,7 +40,7 @@ do_share_new(PyObject *dummy)
     UNUSED(dummy);
 
     /* Allocate python curl-share object */
-    self = (CurlShareObject *) PyType_GenericAlloc(p_CurlShare_Type, 0);
+    self = (CurlShareObject *) p_CurlShare_Type->tp_alloc(p_CurlShare_Type, 0);
     if (!self) {
         return NULL;
     }
@@ -304,7 +304,7 @@ PYCURL_INTERNAL PyTypeObject CurlShare_Type = {
     0,                          /* tp_descr_set */
     0,                          /* tp_dictoffset */
     0,                          /* tp_init */
-    0,                          /* tp_alloc */
+    PyType_GenericAlloc,        /* tp_alloc */
     0,                          /* tp_new */
 };
 

@@ -153,7 +153,7 @@ util_curl_new(void)
 {
     CurlObject *self;
 
-    self = (CurlObject *) PyType_GenericAlloc(p_Curl_Type, 0);
+    self = (CurlObject *) p_Curl_Type->tp_alloc(p_Curl_Type, 0);
     if (self == NULL)
         return NULL;
 
@@ -2205,7 +2205,7 @@ PYCURL_INTERNAL PyTypeObject Curl_Type = {
     0,                          /* tp_descr_set */
     0,                          /* tp_dictoffset */
     0,                          /* tp_init */
-    0,                          /* tp_alloc */
+    PyType_GenericAlloc,        /* tp_alloc */
     0,                          /* tp_new */
 };
 
