@@ -44,13 +44,11 @@ check_multi_state(const CurlMultiObject *self, int flags, const char *name)
 
 /* --------------- construct/destruct (i.e. open/close) --------------- */
 
-/* constructor - this is a module-level function returning a new instance */
+/* constructor */
 PYCURL_INTERNAL CurlMultiObject *
-do_multi_new(PyObject *dummy)
+do_multi_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
 {
     CurlMultiObject *self;
-
-    UNUSED(dummy);
 
     /* Allocate python curl-multi object */
     self = (CurlMultiObject *) p_CurlMulti_Type->tp_alloc(p_CurlMulti_Type, 0);
@@ -845,11 +843,7 @@ PYCURL_INTERNAL PyTypeObject CurlMulti_Type = {
     0,                          /* tp_weaklistoffset */
     0,                          /* tp_iter */
     0,                          /* tp_iternext */
-#if PY_MAJOR_VERSION >= 3
     curlmultiobject_methods,    /* tp_methods */
-#else
-    0,                          /* tp_methods */
-#endif
     0,                          /* tp_members */
     0,                          /* tp_getset */
     0,                          /* tp_base */
@@ -859,7 +853,7 @@ PYCURL_INTERNAL PyTypeObject CurlMulti_Type = {
     0,                          /* tp_dictoffset */
     0,                          /* tp_init */
     PyType_GenericAlloc,        /* tp_alloc */
-    0,                          /* tp_new */
+    (newfunc)do_multi_new,      /* tp_new */
 };
 
 /* vi:ts=4:et:nowrap

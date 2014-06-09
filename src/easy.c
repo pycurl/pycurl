@@ -246,14 +246,12 @@ util_curl_init(CurlObject *self)
     return (0);
 }
 
-/* constructor - this is a module-level function returning a new instance */
+/* constructor */
 PYCURL_INTERNAL CurlObject *
-do_curl_new(PyObject *dummy)
+do_curl_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
 {
     CurlObject *self = NULL;
     int res;
-
-    UNUSED(dummy);
 
     /* Allocate python curl object */
     self = util_curl_new();
@@ -2192,11 +2190,7 @@ PYCURL_INTERNAL PyTypeObject Curl_Type = {
     0,                          /* tp_weaklistoffset */
     0,                          /* tp_iter */
     0,                          /* tp_iternext */
-#if PY_MAJOR_VERSION >= 3
     curlobject_methods,         /* tp_methods */
-#else
-    0,                          /* tp_methods */
-#endif
     0,                          /* tp_members */
     0,                          /* tp_getset */
     0,                          /* tp_base */
@@ -2206,7 +2200,7 @@ PYCURL_INTERNAL PyTypeObject Curl_Type = {
     0,                          /* tp_dictoffset */
     0,                          /* tp_init */
     PyType_GenericAlloc,        /* tp_alloc */
-    0,                          /* tp_new */
+    (newfunc)do_curl_new,       /* tp_new */
 };
 
 /* vi:ts=4:et:nowrap

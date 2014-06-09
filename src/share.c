@@ -26,9 +26,9 @@ check_share_state(const CurlShareObject *self, int flags, const char *name)
 }
 
 
-/* constructor - this is a module-level function returning a new instance */
+/* constructor */
 PYCURL_INTERNAL CurlShareObject *
-do_share_new(PyObject *dummy)
+do_share_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
 {
     int res;
     CurlShareObject *self;
@@ -37,10 +37,8 @@ do_share_new(PyObject *dummy)
     const curl_unlock_function unlock_cb = share_unlock_callback;
 #endif
 
-    UNUSED(dummy);
-
     /* Allocate python curl-share object */
-    self = (CurlShareObject *) p_CurlShare_Type->tp_alloc(p_CurlShare_Type, 0);
+    self = (CurlShareObject *) subtype->tp_alloc(subtype, 0);
     if (!self) {
         return NULL;
     }
@@ -291,11 +289,7 @@ PYCURL_INTERNAL PyTypeObject CurlShare_Type = {
     0,                          /* tp_weaklistoffset */
     0,                          /* tp_iter */
     0,                          /* tp_iternext */
-#if PY_MAJOR_VERSION >= 3
     curlshareobject_methods,    /* tp_methods */
-#else
-    0,                          /* tp_methods */
-#endif
     0,                          /* tp_members */
     0,                          /* tp_getset */
     0,                          /* tp_base */
@@ -305,7 +299,7 @@ PYCURL_INTERNAL PyTypeObject CurlShare_Type = {
     0,                          /* tp_dictoffset */
     0,                          /* tp_init */
     PyType_GenericAlloc,        /* tp_alloc */
-    0,                          /* tp_new */
+    (newfunc)do_share_new,      /* tp_new */
 };
 
 /* vi:ts=4:et:nowrap

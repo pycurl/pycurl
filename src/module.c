@@ -30,9 +30,6 @@ static PyMethodDef curl_methods[] = {
     {"global_init", (PyCFunction)do_global_init, METH_VARARGS, pycurl_global_init_doc},
     {"global_cleanup", (PyCFunction)do_global_cleanup, METH_NOARGS, pycurl_global_cleanup_doc},
     {"version_info", (PyCFunction)do_version_info, METH_VARARGS, pycurl_version_info_doc},
-    {"Curl", (PyCFunction)do_curl_new, METH_NOARGS, pycurl_curl_new_doc},
-    {"CurlMulti", (PyCFunction)do_multi_new, METH_NOARGS, pycurl_multi_new_doc},
-    {"CurlShare", (PyCFunction)do_share_new, METH_NOARGS, pycurl_share_new_doc},
     {NULL, NULL, 0, NULL}
 };
 
@@ -367,12 +364,17 @@ initpycurl(void)
         libcurl_version, libcurl_version_len);
     g_pycurl_useragent[pycurl_version_len - 1] = 0;
 #undef PYCURL_VERSION_PREFIX_SIZE
-    
+
     insobj2(d, NULL, "version", PyText_FromString(g_pycurl_useragent));
     insstr(d, "COMPILE_DATE", __DATE__ " " __TIME__);
     insint(d, "COMPILE_PY_VERSION_HEX", PY_VERSION_HEX);
     insint(d, "COMPILE_LIBCURL_VERSION_NUM", LIBCURL_VERSION_NUM);
 
+    /* Types */
+    insobj2(d, NULL, "Curl", (PyObject *) p_Curl_Type);
+    insobj2(d, NULL, "CurlMulti", (PyObject *) p_CurlMulti_Type);
+    insobj2(d, NULL, "CurlShare", (PyObject *) p_CurlShare_Type);
+    
     /**
      ** the order of these constants mostly follows <curl/curl.h>
      **/
