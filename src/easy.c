@@ -364,8 +364,8 @@ do_curl_dealloc(CurlObject *self)
     Py_CLEAR(self->dict);
     util_curl_close(self);
 
-    PyObject_GC_Del(self);
     Py_TRASHCAN_SAFE_END(self)
+    PyObject_GC_Del(self);
 }
 
 

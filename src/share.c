@@ -127,8 +127,8 @@ do_share_dealloc(CurlShareObject *self)
     share_lock_destroy(self->lock);
 #endif
 
-    PyObject_GC_Del(self);
     Py_TRASHCAN_SAFE_END(self)
+    PyObject_GC_Del(self);
 }
 
 

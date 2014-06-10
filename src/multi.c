@@ -110,8 +110,8 @@ do_multi_dealloc(CurlMultiObject *self)
     util_multi_xdecref(self);
     util_multi_close(self);
 
-    PyObject_GC_Del(self);
     Py_TRASHCAN_SAFE_END(self)
+    PyObject_GC_Del(self);
 }
 
 
