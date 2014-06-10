@@ -522,7 +522,8 @@ def convert_docstrings():
     f = open('src/docstrings.c', 'w')
     try:
         f.write("/* Generated file - do not edit. */\n")
-        f.write("/* See src/docstrings/*.rst. */\n\n")
+        # space to avoid having /* inside a C comment
+        f.write("/* See src/docstrings/ *.rst. */\n\n")
         f.write("#include \"pycurl.h\"\n\n")
         for name, text in docstrings:
             text = text.replace("\"", "\\\"").replace("\n", "\\n\\\n")
@@ -532,7 +533,8 @@ def convert_docstrings():
     f = open('src/docstrings.h', 'w')
     try:
         f.write("/* Generated file - do not edit. */\n")
-        f.write("/* See src/docstrings/*.rst. */\n\n")
+        # space to avoid having /* inside a C comment
+        f.write("/* See src/docstrings/ *.rst. */\n\n")
         for name, text in docstrings:
             f.write("extern const char %s_doc[];\n" % name)
     finally:
