@@ -411,6 +411,8 @@ extern PyObject *curlshareobject_constants;
 
 extern char *g_pycurl_useragent;
 
+extern PYCURL_INTERNAL char *empty_keywords[];
+
 #if PY_MAJOR_VERSION >= 3
 extern PyMethodDef curlobject_methods[];
 extern PyMethodDef curlshareobject_methods[];

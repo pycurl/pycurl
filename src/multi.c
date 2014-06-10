@@ -50,6 +50,10 @@ do_multi_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
 {
     CurlMultiObject *self;
 
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "", empty_keywords)) {
+        return NULL;
+    }
+
     /* Allocate python curl-multi object */
     self = (CurlMultiObject *) p_CurlMulti_Type->tp_alloc(p_CurlMulti_Type, 0);
     if (!self) {

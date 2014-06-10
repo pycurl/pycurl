@@ -36,6 +36,10 @@ do_share_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
     const curl_lock_function lock_cb = share_lock_callback;
     const curl_unlock_function unlock_cb = share_unlock_callback;
 #endif
+    
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "", empty_keywords)) {
+        return NULL;
+    }
 
     /* Allocate python curl-share object */
     self = (CurlShareObject *) subtype->tp_alloc(subtype, 0);

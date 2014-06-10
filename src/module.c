@@ -11,6 +11,8 @@
 
 #define PYCURL_VERSION_PREFIX "PycURL/" PYCURL_VERSION_STRING
 
+PYCURL_INTERNAL char *empty_keywords[] = { NULL };
+
 /* Initialized during module init */
 PYCURL_INTERNAL char *g_pycurl_useragent = NULL;
 

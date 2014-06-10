@@ -253,6 +253,10 @@ do_curl_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
     CurlObject *self = NULL;
     int res;
 
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "", empty_keywords)) {
+        return NULL;
+    }
+
     /* Allocate python curl object */
     self = util_curl_new();
     if (self == NULL)
