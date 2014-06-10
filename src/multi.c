@@ -836,7 +836,7 @@ PYCURL_INTERNAL PyTypeObject CurlMulti_Type = {
 #endif
     0,                          /* tp_as_buffer */
     Py_TPFLAGS_HAVE_GC,         /* tp_flags */
-    0,                          /* tp_doc */
+    multi_doc,                   /* tp_doc */
     (traverseproc)do_multi_traverse, /* tp_traverse */
     (inquiry)do_multi_clear,    /* tp_clear */
     0,                          /* tp_richcompare */

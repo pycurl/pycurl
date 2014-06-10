@@ -282,7 +282,7 @@ PYCURL_INTERNAL PyTypeObject CurlShare_Type = {
 #endif
     0,                          /* tp_as_buffer */
     Py_TPFLAGS_HAVE_GC,         /* tp_flags */
-    0,                          /* tp_doc */
+    share_doc,                  /* tp_doc */
     (traverseproc)do_share_traverse, /* tp_traverse */
     (inquiry)do_share_clear,    /* tp_clear */
     0,                          /* tp_richcompare */

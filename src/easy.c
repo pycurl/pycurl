@@ -2183,7 +2183,7 @@ PYCURL_INTERNAL PyTypeObject Curl_Type = {
 #endif
     0,                          /* tp_as_buffer */
     Py_TPFLAGS_HAVE_GC,         /* tp_flags */
-    0,                          /* tp_doc */
+    curl_doc,                   /* tp_doc */
     (traverseproc)do_curl_traverse, /* tp_traverse */
     (inquiry)do_curl_clear,     /* tp_clear */
     0,                          /* tp_richcompare */
