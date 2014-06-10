@@ -74,6 +74,13 @@ do-test:
 test: build do-test
 test-release: build-release do-test
 
+# rails-style alias
+c: console
+console:
+	PYTHONSUFFIX=$$(python -V 2>&1 |awk '{print $$2}' |awk -F. '{print $$1 "." $$2}') && \
+	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONSUFFIX):$$PYTHONPATH \
+	$(PYTHON)
+
 # (needs GNU binutils)
 strip: build
 	strip -p --strip-unneeded build/lib*/*.so
