@@ -49,6 +49,7 @@ PYCURL_INTERNAL CurlMultiObject *
 do_multi_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
 {
     CurlMultiObject *self;
+    int *ptr;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "", empty_keywords)) {
         return NULL;
@@ -60,13 +61,11 @@ do_multi_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
         return NULL;
     }
 
-    /* Initialize object attributes */
-    self->dict = NULL;
-#ifdef WITH_THREAD
-    self->state = NULL;
-#endif
-    self->t_cb = NULL;
-    self->s_cb = NULL;
+    /* tp_alloc is expected to return zeroed memory */
+    for (ptr = (int *) &self->dict;
+        ptr < (int *) (((char *) self) + sizeof(CurlMultiObject));
+        ++ptr)
+            assert(*ptr == 0);
 
     /* Allocate libcurl multi handle */
     self->multi_handle = curl_multi_init();

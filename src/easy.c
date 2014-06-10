@@ -152,50 +152,17 @@ static CurlObject *
 util_curl_new(void)
 {
     CurlObject *self;
+    int *ptr;
 
     self = (CurlObject *) p_Curl_Type->tp_alloc(p_Curl_Type, 0);
     if (self == NULL)
         return NULL;
 
-    /* Set python curl object initial values */
-    self->dict = NULL;
-    self->handle = NULL;
-#ifdef WITH_THREAD
-    self->state = NULL;
-#endif
-    self->share = NULL;
-    self->multi_stack = NULL;
-    self->httppost = NULL;
-    self->httppost_ref_list = NULL;
-    self->httpheader = NULL;
-    self->http200aliases = NULL;
-    self->quote = NULL;
-    self->postquote = NULL;
-    self->prequote = NULL;
-#ifdef HAVE_CURLOPT_RESOLVE
-    self->resolve = NULL;
-#endif
-
-    /* Set callback pointers to NULL by default */
-    self->w_cb = NULL;
-    self->h_cb = NULL;
-    self->r_cb = NULL;
-    self->pro_cb = NULL;
-    self->debug_cb = NULL;
-    self->ioctl_cb = NULL;
-    self->opensocket_cb = NULL;
-    self->seek_cb = NULL;
-
-    /* Set file object pointers to NULL by default */
-    self->readdata_fp = NULL;
-    self->writedata_fp = NULL;
-    self->writeheader_fp = NULL;
-    
-    /* Set postfields object pointer to NULL by default */
-    self->postfields_obj = NULL;
-
-    /* Zero string pointer memory buffer used by setopt */
-    memset(self->error, 0, sizeof(self->error));
+    /* tp_alloc is expected to return zeroed memory */
+    for (ptr = (int *) &self->dict;
+        ptr < (int *) (((char *) self) + sizeof(CurlObject));
+        ++ptr)
+            assert(*ptr == 0);
 
     return self;
 }

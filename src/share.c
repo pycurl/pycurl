@@ -36,6 +36,7 @@ do_share_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
     const curl_lock_function lock_cb = share_lock_callback;
     const curl_unlock_function unlock_cb = share_unlock_callback;
 #endif
+    int *ptr;
     
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "", empty_keywords)) {
         return NULL;
@@ -47,8 +48,12 @@ do_share_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
         return NULL;
     }
 
-    /* Initialize object attributes */
-    self->dict = NULL;
+    /* tp_alloc is expected to return zeroed memory */
+    for (ptr = (int *) &self->dict;
+        ptr < (int *) (((char *) self) + sizeof(CurlShareObject));
+        ++ptr)
+            assert(*ptr == 0);
+
 #ifdef WITH_THREAD
     self->lock = share_lock_new();
     assert(self->lock != NULL);
