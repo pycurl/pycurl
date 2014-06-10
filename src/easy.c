@@ -1445,14 +1445,14 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_HTTPHEADER:
             old_slist = &self->httpheader;
             break;
-        case CURLOPT_QUOTE:
-            old_slist = &self->quote;
-            break;
         case CURLOPT_POSTQUOTE:
             old_slist = &self->postquote;
             break;
         case CURLOPT_PREQUOTE:
             old_slist = &self->prequote;
+            break;
+        case CURLOPT_QUOTE:
+            old_slist = &self->quote;
             break;
 #ifdef HAVE_CURLOPT_RESOLVE
         case CURLOPT_RESOLVE:
