@@ -4,6 +4,7 @@
 
 import pycurl
 import unittest
+import sys
 try:
     import urllib.parse as urllib_parse
 except ImportError:
@@ -15,8 +16,27 @@ from . import util
 setup_module, teardown_module = appmanager.setup(('app', 8380))
 
 class ResetTest(unittest.TestCase):
+    def test_reset(self):
+        c = pycurl.Curl()
+        c.setopt(pycurl.URL, 'http://localhost:8380/success')
+        c.reset()
+        try:
+            c.perform()
+            self.fail('Perform worked when it should not have')
+        except pycurl.error:
+            exc = sys.exc_info()[1]
+            code = exc.args[0]
+            self.assertEqual(pycurl.E_URL_MALFORMAT, code)
+        
+        # check that Curl object is usable
+        c.setopt(pycurl.URL, 'http://localhost:8380/success')
+        sio = util.BytesIO()
+        c.setopt(pycurl.WRITEFUNCTION, sio.write)
+        c.perform()
+        self.assertEqual('success', sio.getvalue().decode())
+    
     # XXX this test was broken when it was test_reset.py
-    def skip_reset(self):
+    def skip_reset_with_multi(self):
         outf = util.BytesIO()
         cm = pycurl.CurlMulti()
 
