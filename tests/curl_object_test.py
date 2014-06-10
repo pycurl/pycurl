@@ -4,6 +4,7 @@
 
 import pycurl
 import unittest
+import nose.tools
 
 class CurlObjectTest(unittest.TestCase):
     def test_close(self):
@@ -14,3 +15,13 @@ class CurlObjectTest(unittest.TestCase):
         c = pycurl.Curl()
         c.close()
         c.close()
+    
+    # positional arguments are rejected
+    @nose.tools.raises(TypeError)
+    def test_positional_arguments(self):
+        c = pycurl.Curl(1)
+    
+    # keyword arguments are rejected
+    @nose.tools.raises(TypeError)
+    def test_keyword_arguments(self):
+        c = pycurl.Curl(a=1)

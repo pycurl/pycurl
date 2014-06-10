@@ -5,6 +5,7 @@
 import threading
 import pycurl
 import unittest
+import nose.tools
 try:
     import urllib.parse as urllib_parse
 except ImportError:
@@ -58,3 +59,13 @@ class ShareTest(unittest.TestCase):
         s = pycurl.CurlShare()
         s.close()
         s.close()
+    
+    # positional arguments are rejected
+    @nose.tools.raises(TypeError)
+    def test_positional_arguments(self):
+        c = pycurl.CurlShare(1)
+    
+    # keyword arguments are rejected
+    @nose.tools.raises(TypeError)
+    def test_keyword_arguments(self):
+        c = pycurl.CurlShare(a=1)
