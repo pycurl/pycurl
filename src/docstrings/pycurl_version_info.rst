@@ -6,11 +6,7 @@ Corresponds to `curl_version_info`_ in libcurl. Returns a tuple of
 information which is similar to the ``curl_version_info_data`` struct
 returned by ``curl_version_info()`` in libcurl.
 
-.. _curl_version_info: http://curl.haxx.se/libcurl/c/curl_version_info.html
-
-Example usage:
-
-::
+Example usage::
 
     >>> import pycurl
     >>> pycurl.version_info()
@@ -18,3 +14,5 @@ Example usage:
     0, '1.2.7', ('dict', 'file', 'ftp', 'ftps', 'gopher', 'http', 'https',
     'imap', 'imaps', 'pop3', 'pop3s', 'rtsp', 'smtp', 'smtps', 'telnet',
     'tftp'), None, 0, None)
+
+.. _curl_version_info: http://curl.haxx.se/libcurl/c/curl_version_info.html
