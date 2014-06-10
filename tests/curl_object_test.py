@@ -5,12 +5,12 @@
 import pycurl
 import unittest
 
-class EasyTest(unittest.TestCase):
-    def test_easy_close(self):
+class CurlObjectTest(unittest.TestCase):
+    def test_close(self):
         c = pycurl.Curl()
         c.close()
     
-    def test_easy_close_twice(self):
+    def test_close_twice(self):
         c = pycurl.Curl()
         c.close()
         c.close()
