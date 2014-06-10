@@ -147,26 +147,6 @@ check_curl_state(const CurlObject *self, int flags, const char *name)
 
 /* --------------- construct/destruct (i.e. open/close) --------------- */
 
-/* Allocate a new python curl object */
-static CurlObject *
-util_curl_new(void)
-{
-    CurlObject *self;
-    int *ptr;
-
-    self = (CurlObject *) p_Curl_Type->tp_alloc(p_Curl_Type, 0);
-    if (self == NULL)
-        return NULL;
-
-    /* tp_alloc is expected to return zeroed memory */
-    for (ptr = (int *) &self->dict;
-        ptr < (int *) (((char *) self) + sizeof(CurlObject));
-        ++ptr)
-            assert(*ptr == 0);
-
-    return self;
-}
-
 /* initializer - used to intialize curl easy handles for use with pycurl */
 static int
 util_curl_init(CurlObject *self)
@@ -217,17 +197,24 @@ util_curl_init(CurlObject *self)
 PYCURL_INTERNAL CurlObject *
 do_curl_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
 {
-    CurlObject *self = NULL;
+    CurlObject *self;
     int res;
+    int *ptr;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "", empty_keywords)) {
         return NULL;
     }
 
     /* Allocate python curl object */
-    self = util_curl_new();
+    self = (CurlObject *) p_Curl_Type->tp_alloc(p_Curl_Type, 0);
     if (self == NULL)
         return NULL;
+
+    /* tp_alloc is expected to return zeroed memory */
+    for (ptr = (int *) &self->dict;
+        ptr < (int *) (((char *) self) + sizeof(CurlObject));
+        ++ptr)
+            assert(*ptr == 0);
 
     /* Initialize curl handle */
     self->handle = curl_easy_init();
