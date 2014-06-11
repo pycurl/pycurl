@@ -86,7 +86,12 @@ For example, ``pycurl.VERBOSE`` has the value 42, and may be set as follows:
 
     c.setopt(42, 1)
 
-This technique only works for integer options.
+*setopt* can reset an option to its default value, performing the job of
+:py:meth:`pycurl.Curl.unsetopt`, if ``None`` is passed
+for the option value. The following two calls are equivalent:
+
+    c.setopt(c.URL, None)
+    c.unsetopt(c.URL)
 
 Raises TypeError when the option value is not of a type accepted by the
 respective option, and pycurl.error exception when libcurl rejects the
