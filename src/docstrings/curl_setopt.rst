@@ -80,6 +80,14 @@ values of different types:
 
 - ``SHARE`` option accepts a :ref:`curlshareobject`.
 
+It is possible to set integer options - and only them - that PycURL does
+not know about by using the numeric value of the option constant directly.
+For example, ``pycurl.VERBOSE`` has the value 42, and may be set as follows:
+
+    c.setopt(42, 1)
+
+This technique only works for integer options.
+
 Raises TypeError when the option value is not of a type accepted by the
 respective option, and pycurl.error exception when libcurl rejects the
 option or its value.
