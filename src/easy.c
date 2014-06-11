@@ -365,7 +365,7 @@ do_curl_dealloc(CurlObject *self)
     util_curl_close(self);
 
     Py_TRASHCAN_SAFE_END(self);
-    PyObject_GC_Del(self);
+    Curl_Type.tp_free(self);
 }
 
 
@@ -2159,6 +2159,7 @@ PYCURL_INTERNAL PyTypeObject Curl_Type = {
     0,                          /* tp_init */
     PyType_GenericAlloc,        /* tp_alloc */
     (newfunc)do_curl_new,       /* tp_new */
+    PyObject_GC_Del,            /* tp_free */
 };
 
 /* vi:ts=4:et:nowrap

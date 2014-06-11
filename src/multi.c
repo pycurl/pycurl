@@ -111,7 +111,7 @@ do_multi_dealloc(CurlMultiObject *self)
     util_multi_close(self);
 
     Py_TRASHCAN_SAFE_END(self);
-    PyObject_GC_Del(self);
+    CurlMulti_Type.tp_free(self);
 }
 
 
@@ -857,6 +857,7 @@ PYCURL_INTERNAL PyTypeObject CurlMulti_Type = {
     0,                          /* tp_init */
     PyType_GenericAlloc,        /* tp_alloc */
     (newfunc)do_multi_new,      /* tp_new */
+    PyObject_GC_Del,            /* tp_free */
 };
 
 /* vi:ts=4:et:nowrap

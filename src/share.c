@@ -128,7 +128,7 @@ do_share_dealloc(CurlShareObject *self)
 #endif
 
     Py_TRASHCAN_SAFE_END(self);
-    PyObject_GC_Del(self);
+    CurlShare_Type.tp_free(self);
 }
 
 
@@ -309,6 +309,7 @@ PYCURL_INTERNAL PyTypeObject CurlShare_Type = {
     0,                          /* tp_init */
     PyType_GenericAlloc,        /* tp_alloc */
     (newfunc)do_share_new,      /* tp_new */
+    PyObject_GC_Del,            /* tp_free */
 };
 
 /* vi:ts=4:et:nowrap
