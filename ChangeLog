@@ -1,6 +1,10 @@
 master
 ------
 
+        * When passing a file-like object to READDATA option, PycURL was
+          mistakenly looking for write method on this object. Now read method
+          is looked up, as would be expected.
+
         * Python 3.4 is now officially supported.
 
         * Windows packages now build libcurl against zlib.

@@ -1860,8 +1860,16 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         option == CURLOPT_WRITEDATA ||
         option == CURLOPT_WRITEHEADER)
     {
-        PyObject *write_method = PyObject_GetAttrString(obj, "write");
-        if (write_method) {
+        const char *method_name;
+        PyObject *method;
+        
+        if (option == CURLOPT_READDATA) {
+            method_name = "read";
+        } else {
+            method_name = "write";
+        }
+        method = PyObject_GetAttrString(obj, method_name);
+        if (method) {
             PyObject *arglist;
             PyObject *rv;
             
@@ -1875,20 +1883,20 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                 case CURLOPT_WRITEHEADER:
                     if (self->w_cb != NULL) {
                         PyErr_SetString(ErrorObject, "cannot combine WRITEHEADER with WRITEFUNCTION.");
-                        Py_DECREF(write_method);
+                        Py_DECREF(method);
                         return NULL;
                     }
                     option = CURLOPT_HEADERFUNCTION;
                     break;
                 default:
                     PyErr_SetString(PyExc_TypeError, "objects are not supported for this option");
-                    Py_DECREF(write_method);
+                    Py_DECREF(method);
                     return NULL;
             }
             
-            arglist = Py_BuildValue("(iO)", option, write_method);
+            arglist = Py_BuildValue("(iO)", option, method);
             /* reference is now in arglist */
-            Py_DECREF(write_method);
+            Py_DECREF(method);
             if (arglist == NULL) {
                 return NULL;
             }
