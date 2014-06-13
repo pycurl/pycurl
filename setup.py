@@ -540,6 +540,14 @@ def convert_docstrings():
     finally:
         f.close()
 
+
+def gen_docstrings_sources():
+    sources = 'DOCSTRINGS_SOURCES ='
+    for entry in sorted(os.listdir('src/docstrings')):
+        if entry.endswith('.rst'):
+            sources += " \\\n\tsrc/docstrings/%s" % entry
+    print(sources)
+
 ###############################################################################
 
 setup_args = dict(
@@ -618,6 +626,8 @@ if __name__ == "__main__":
         convert_docstrings()
     elif len(sys.argv) > 1 and sys.argv[1] == 'authors':
         check_authors()
+    elif len(sys.argv) > 1 and sys.argv[1] == 'docstrings-sources':
+        gen_docstrings_sources()
     else:
         setup_args['data_files'] = get_data_files()
         if 'PYCURL_RELEASE' in os.environ and os.environ['PYCURL_RELEASE'].lower() in ['1', 'yes', 'true']:
