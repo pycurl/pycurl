@@ -1,3 +1,5 @@
+.. _unicode:
+
 String And Unicode Handling
 ===========================
 
