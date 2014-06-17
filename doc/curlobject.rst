@@ -17,6 +17,8 @@ Curl Object
 
     .. automethod:: pycurl.Curl.reset
 
+    .. automethod:: pycurl.Curl.unsetopt
+
     .. automethod:: pycurl.Curl.pause
 
     .. automethod:: pycurl.Curl.errstr
