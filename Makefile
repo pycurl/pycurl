@@ -43,32 +43,32 @@ ALL_SOURCES = src/pycurl.h $(GEN_SOURCES) $(SOURCES)
 RELEASE_SOURCES = src/allpycurl.c
 
 DOCSTRINGS_SOURCES = \
-	src/docstrings/curl.rst \
-	src/docstrings/curl_close.rst \
-	src/docstrings/curl_errstr.rst \
-	src/docstrings/curl_getinfo.rst \
-	src/docstrings/curl_pause.rst \
-	src/docstrings/curl_perform.rst \
-	src/docstrings/curl_reset.rst \
-	src/docstrings/curl_setopt.rst \
-	src/docstrings/curl_unsetopt.rst \
-	src/docstrings/multi.rst \
-	src/docstrings/multi_add_handle.rst \
-	src/docstrings/multi_close.rst \
-	src/docstrings/multi_fdset.rst \
-	src/docstrings/multi_info_read.rst \
-	src/docstrings/multi_perform.rst \
-	src/docstrings/multi_remove_handle.rst \
-	src/docstrings/multi_select.rst \
-	src/docstrings/multi_socket_action.rst \
-	src/docstrings/multi_socket_all.rst \
-	src/docstrings/pycurl_global_cleanup.rst \
-	src/docstrings/pycurl_global_init.rst \
-	src/docstrings/pycurl_module.rst \
-	src/docstrings/pycurl_version_info.rst \
-	src/docstrings/share.rst \
-	src/docstrings/share_close.rst \
-	src/docstrings/share_setopt.rst
+	doc/docstrings/curl.rst \
+	doc/docstrings/curl_close.rst \
+	doc/docstrings/curl_errstr.rst \
+	doc/docstrings/curl_getinfo.rst \
+	doc/docstrings/curl_pause.rst \
+	doc/docstrings/curl_perform.rst \
+	doc/docstrings/curl_reset.rst \
+	doc/docstrings/curl_setopt.rst \
+	doc/docstrings/curl_unsetopt.rst \
+	doc/docstrings/multi.rst \
+	doc/docstrings/multi_add_handle.rst \
+	doc/docstrings/multi_close.rst \
+	doc/docstrings/multi_fdset.rst \
+	doc/docstrings/multi_info_read.rst \
+	doc/docstrings/multi_perform.rst \
+	doc/docstrings/multi_remove_handle.rst \
+	doc/docstrings/multi_select.rst \
+	doc/docstrings/multi_socket_action.rst \
+	doc/docstrings/multi_socket_all.rst \
+	doc/docstrings/pycurl_global_cleanup.rst \
+	doc/docstrings/pycurl_global_init.rst \
+	doc/docstrings/pycurl_module.rst \
+	doc/docstrings/pycurl_version_info.rst \
+	doc/docstrings/share.rst \
+	doc/docstrings/share_close.rst \
+	doc/docstrings/share_setopt.rst
 
 all: build
 src-release: $(RELEASE_SOURCES)
@@ -136,7 +136,7 @@ dist sdist: distclean
 # to be rebuilt with this target, use docs-force instead.
 docs: build
 	mkdir -p build/docstrings
-	for file in src/docstrings/*.rst; do tail -n +3 $$file >build/docstrings/`basename $$file`; done
+	for file in doc/docstrings/*.rst; do tail -n +3 $$file >build/docstrings/`basename $$file`; done
 	PYTHONSUFFIX=$$(python -V 2>&1 |awk '{print $$2}' |awk -F. '{print $$1 "." $$2}') && \
 	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONSUFFIX):$$PYTHONPATH \
 	sphinx-build doc build/doc

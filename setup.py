@@ -508,12 +508,12 @@ def check_authors():
 
 def convert_docstrings():
     docstrings = []
-    for entry in sorted(os.listdir('src/docstrings')):
+    for entry in sorted(os.listdir('doc/docstrings')):
         if not entry.endswith('.rst'):
             continue
         
         name = entry.replace('.rst', '')
-        f = open('src/docstrings/%s' % entry)
+        f = open('doc/docstrings/%s' % entry)
         try:
             text = f.read().strip()
         finally:
@@ -523,7 +523,7 @@ def convert_docstrings():
     try:
         f.write("/* Generated file - do not edit. */\n")
         # space to avoid having /* inside a C comment
-        f.write("/* See src/docstrings/ *.rst. */\n\n")
+        f.write("/* See doc/docstrings/ *.rst. */\n\n")
         f.write("#include \"pycurl.h\"\n\n")
         for name, text in docstrings:
             text = text.replace("\"", "\\\"").replace("\n", "\\n\\\n")
@@ -534,7 +534,7 @@ def convert_docstrings():
     try:
         f.write("/* Generated file - do not edit. */\n")
         # space to avoid having /* inside a C comment
-        f.write("/* See src/docstrings/ *.rst. */\n\n")
+        f.write("/* See doc/docstrings/ *.rst. */\n\n")
         for name, text in docstrings:
             f.write("extern const char %s_doc[];\n" % name)
     finally:
@@ -543,9 +543,9 @@ def convert_docstrings():
 
 def gen_docstrings_sources():
     sources = 'DOCSTRINGS_SOURCES ='
-    for entry in sorted(os.listdir('src/docstrings')):
+    for entry in sorted(os.listdir('doc/docstrings')):
         if entry.endswith('.rst'):
-            sources += " \\\n\tsrc/docstrings/%s" % entry
+            sources += " \\\n\tdoc/docstrings/%s" % entry
     print(sources)
 
 ###############################################################################
