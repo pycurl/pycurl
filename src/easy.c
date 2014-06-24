@@ -2042,6 +2042,20 @@ do_curl_pause(CurlObject *self, PyObject *args)
 }
 
 
+static PyObject *do_curl_getstate(CurlObject *self)
+{
+    PyErr_SetString(PyExc_TypeError, "Curl objects do not support serialization");
+    return NULL;
+}
+
+
+static PyObject *do_curl_setstate(CurlObject *self, PyObject *args)
+{
+    PyErr_SetString(PyExc_TypeError, "Curl objects do not support deserialization");
+    return NULL;
+}
+
+
 /*************************************************************************
 // type definitions
 **************************************************************************/
@@ -2057,6 +2071,8 @@ PYCURL_INTERNAL PyMethodDef curlobject_methods[] = {
     {"setopt", (PyCFunction)do_curl_setopt, METH_VARARGS, curl_setopt_doc},
     {"unsetopt", (PyCFunction)do_curl_unsetopt, METH_VARARGS, curl_unsetopt_doc},
     {"reset", (PyCFunction)do_curl_reset, METH_NOARGS, curl_reset_doc},
+    {"__getstate__", (PyCFunction)do_curl_getstate, METH_NOARGS, NULL},
+    {"__setstate__", (PyCFunction)do_curl_setstate, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}
 };
 

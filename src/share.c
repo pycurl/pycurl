@@ -196,6 +196,20 @@ error:
 }
 
 
+static PyObject *do_curlshare_getstate(CurlShareObject *self)
+{
+    PyErr_SetString(PyExc_TypeError, "CurlShare objects do not support serialization");
+    return NULL;
+}
+
+
+static PyObject *do_curlshare_setstate(CurlShareObject *self, PyObject *args)
+{
+    PyErr_SetString(PyExc_TypeError, "CurlShare objects do not support deserialization");
+    return NULL;
+}
+
+
 /*************************************************************************
 // type definitions
 **************************************************************************/
@@ -205,6 +219,8 @@ error:
 PYCURL_INTERNAL PyMethodDef curlshareobject_methods[] = {
     {"close", (PyCFunction)do_share_close, METH_NOARGS, share_close_doc},
     {"setopt", (PyCFunction)do_curlshare_setopt, METH_VARARGS, share_setopt_doc},
+    {"__getstate__", (PyCFunction)do_curlshare_getstate, METH_NOARGS, NULL},
+    {"__setstate__", (PyCFunction)do_curlshare_setstate, METH_VARARGS, NULL},
     {NULL, NULL, 0, 0}
 };
 

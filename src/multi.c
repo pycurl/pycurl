@@ -734,6 +734,20 @@ do_multi_select(CurlMultiObject *self, PyObject *args)
 }
 
 
+static PyObject *do_curlmulti_getstate(CurlMultiObject *self)
+{
+    PyErr_SetString(PyExc_TypeError, "CurlMulti objects do not support serialization");
+    return NULL;
+}
+
+
+static PyObject *do_curlmulti_setstate(CurlMultiObject *self, PyObject *args)
+{
+    PyErr_SetString(PyExc_TypeError, "CurlMulti objects do not support deserialization");
+    return NULL;
+}
+
+
 /*************************************************************************
 // type definitions
 **************************************************************************/
@@ -753,6 +767,8 @@ PYCURL_INTERNAL PyMethodDef curlmultiobject_methods[] = {
     {"assign", (PyCFunction)do_multi_assign, METH_VARARGS, NULL},
     {"remove_handle", (PyCFunction)do_multi_remove_handle, METH_VARARGS, multi_remove_handle_doc},
     {"select", (PyCFunction)do_multi_select, METH_VARARGS, multi_select_doc},
+    {"__getstate__", (PyCFunction)do_curlmulti_getstate, METH_NOARGS, NULL},
+    {"__setstate__", (PyCFunction)do_curlmulti_setstate, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}
 };
 
