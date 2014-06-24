@@ -161,6 +161,33 @@ class InternalsTest(unittest.TestCase):
             assert 0, "No exception when trying to pickle a CurlShare handle"
         del s, fp, p
     
+    def test_pickle_dumps_curl(self):
+        try:
+            pickle.dumps(self.curl)
+        # python 2 raises pickle.PicklingError, python 3 raises TypeError
+        except (pickle.PicklingError, TypeError):
+            pass
+        else:
+            self.fail("No exception when trying to pickle a Curl handle")
+    
+    def test_pickle_dumps_multi(self):
+        m = pycurl.CurlMulti()
+        try:
+            pickle.dumps(m)
+        except (pickle.PicklingError, TypeError):
+            pass
+        else:
+            self.fail("No exception when trying to pickle a CurlMulti handle")
+    
+    def test_pickle_dumps_share(self):
+        s = pycurl.CurlShare()
+        try:
+            pickle.dumps(s)
+        except (pickle.PicklingError, TypeError):
+            pass
+        else:
+            self.fail("No exception when trying to pickle a CurlShare handle")
+    
     if cPickle is not None:
         def test_cpickle_curl(self):
             fp = util.StringIO()
