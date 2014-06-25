@@ -26,9 +26,9 @@ check_share_state(const CurlShareObject *self, int flags, const char *name)
 }
 
 
-/* constructor - this is a module-level function returning a new instance */
+/* constructor */
 PYCURL_INTERNAL CurlShareObject *
-do_share_new(PyObject *dummy)
+do_share_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
 {
     int res;
     CurlShareObject *self;
@@ -36,20 +36,24 @@ do_share_new(PyObject *dummy)
     const curl_lock_function lock_cb = share_lock_callback;
     const curl_unlock_function unlock_cb = share_unlock_callback;
 #endif
-
-    UNUSED(dummy);
-
-    /* Allocate python curl-share object */
-    self = (CurlShareObject *) PyObject_GC_New(CurlShareObject, p_CurlShare_Type);
-    if (self) {
-        PyObject_GC_Track(self);
-    }
-    else {
+    int *ptr;
+    
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "", empty_keywords)) {
         return NULL;
     }
 
-    /* Initialize object attributes */
-    self->dict = NULL;
+    /* Allocate python curl-share object */
+    self = (CurlShareObject *) subtype->tp_alloc(subtype, 0);
+    if (!self) {
+        return NULL;
+    }
+
+    /* tp_alloc is expected to return zeroed memory */
+    for (ptr = (int *) &self->dict;
+        ptr < (int *) (((char *) self) + sizeof(CurlShareObject));
+        ++ptr)
+            assert(*ptr == 0);
+
 #ifdef WITH_THREAD
     self->lock = share_lock_new();
     assert(self->lock != NULL);
@@ -123,8 +127,8 @@ do_share_dealloc(CurlShareObject *self)
     share_lock_destroy(self->lock);
 #endif
 
-    PyObject_GC_Del(self);
-    Py_TRASHCAN_SAFE_END(self)
+    Py_TRASHCAN_SAFE_END(self);
+    CurlShare_Type.tp_free(self);
 }
 
 
@@ -192,6 +196,20 @@ error:
 }
 
 
+static PyObject *do_curlshare_getstate(CurlShareObject *self)
+{
+    PyErr_SetString(PyExc_TypeError, "CurlShare objects do not support serialization");
+    return NULL;
+}
+
+
+static PyObject *do_curlshare_setstate(CurlShareObject *self, PyObject *args)
+{
+    PyErr_SetString(PyExc_TypeError, "CurlShare objects do not support deserialization");
+    return NULL;
+}
+
+
 /*************************************************************************
 // type definitions
 **************************************************************************/
@@ -201,6 +219,8 @@ error:
 PYCURL_INTERNAL PyMethodDef curlshareobject_methods[] = {
     {"close", (PyCFunction)do_share_close, METH_NOARGS, share_close_doc},
     {"setopt", (PyCFunction)do_curlshare_setopt, METH_VARARGS, share_setopt_doc},
+    {"__getstate__", (PyCFunction)do_curlshare_getstate, METH_NOARGS, NULL},
+    {"__setstate__", (PyCFunction)do_curlshare_setstate, METH_VARARGS, NULL},
     {NULL, NULL, 0, 0}
 };
 
@@ -287,18 +307,14 @@ PYCURL_INTERNAL PyTypeObject CurlShare_Type = {
 #endif
     0,                          /* tp_as_buffer */
     Py_TPFLAGS_HAVE_GC,         /* tp_flags */
-    0,                          /* tp_doc */
+    share_doc,                  /* tp_doc */
     (traverseproc)do_share_traverse, /* tp_traverse */
     (inquiry)do_share_clear,    /* tp_clear */
     0,                          /* tp_richcompare */
     0,                          /* tp_weaklistoffset */
     0,                          /* tp_iter */
     0,                          /* tp_iternext */
-#if PY_MAJOR_VERSION >= 3
     curlshareobject_methods,    /* tp_methods */
-#else
-    0,                          /* tp_methods */
-#endif
     0,                          /* tp_members */
     0,                          /* tp_getset */
     0,                          /* tp_base */
@@ -307,8 +323,9 @@ PYCURL_INTERNAL PyTypeObject CurlShare_Type = {
     0,                          /* tp_descr_set */
     0,                          /* tp_dictoffset */
     0,                          /* tp_init */
-    0,                          /* tp_alloc */
-    0,                          /* tp_new */
+    PyType_GenericAlloc,        /* tp_alloc */
+    (newfunc)do_share_new,      /* tp_new */
+    PyObject_GC_Del,            /* tp_free */
 };
 
 /* vi:ts=4:et:nowrap

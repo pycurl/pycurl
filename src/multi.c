@@ -44,30 +44,28 @@ check_multi_state(const CurlMultiObject *self, int flags, const char *name)
 
 /* --------------- construct/destruct (i.e. open/close) --------------- */
 
-/* constructor - this is a module-level function returning a new instance */
+/* constructor */
 PYCURL_INTERNAL CurlMultiObject *
-do_multi_new(PyObject *dummy)
+do_multi_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
 {
     CurlMultiObject *self;
+    int *ptr;
 
-    UNUSED(dummy);
-
-    /* Allocate python curl-multi object */
-    self = (CurlMultiObject *) PyObject_GC_New(CurlMultiObject, p_CurlMulti_Type);
-    if (self) {
-        PyObject_GC_Track(self);
-    }
-    else {
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "", empty_keywords)) {
         return NULL;
     }
 
-    /* Initialize object attributes */
-    self->dict = NULL;
-#ifdef WITH_THREAD
-    self->state = NULL;
-#endif
-    self->t_cb = NULL;
-    self->s_cb = NULL;
+    /* Allocate python curl-multi object */
+    self = (CurlMultiObject *) p_CurlMulti_Type->tp_alloc(p_CurlMulti_Type, 0);
+    if (!self) {
+        return NULL;
+    }
+
+    /* tp_alloc is expected to return zeroed memory */
+    for (ptr = (int *) &self->dict;
+        ptr < (int *) (((char *) self) + sizeof(CurlMultiObject));
+        ++ptr)
+            assert(*ptr == 0);
 
     /* Allocate libcurl multi handle */
     self->multi_handle = curl_multi_init();
@@ -107,13 +105,13 @@ PYCURL_INTERNAL void
 do_multi_dealloc(CurlMultiObject *self)
 {
     PyObject_GC_UnTrack(self);
-    Py_TRASHCAN_SAFE_BEGIN(self)
+    Py_TRASHCAN_SAFE_BEGIN(self);
 
     util_multi_xdecref(self);
     util_multi_close(self);
 
-    PyObject_GC_Del(self);
-    Py_TRASHCAN_SAFE_END(self)
+    Py_TRASHCAN_SAFE_END(self);
+    CurlMulti_Type.tp_free(self);
 }
 
 
@@ -736,6 +734,20 @@ do_multi_select(CurlMultiObject *self, PyObject *args)
 }
 
 
+static PyObject *do_curlmulti_getstate(CurlMultiObject *self)
+{
+    PyErr_SetString(PyExc_TypeError, "CurlMulti objects do not support serialization");
+    return NULL;
+}
+
+
+static PyObject *do_curlmulti_setstate(CurlMultiObject *self, PyObject *args)
+{
+    PyErr_SetString(PyExc_TypeError, "CurlMulti objects do not support deserialization");
+    return NULL;
+}
+
+
 /*************************************************************************
 // type definitions
 **************************************************************************/
@@ -755,6 +767,8 @@ PYCURL_INTERNAL PyMethodDef curlmultiobject_methods[] = {
     {"assign", (PyCFunction)do_multi_assign, METH_VARARGS, NULL},
     {"remove_handle", (PyCFunction)do_multi_remove_handle, METH_VARARGS, multi_remove_handle_doc},
     {"select", (PyCFunction)do_multi_select, METH_VARARGS, multi_select_doc},
+    {"__getstate__", (PyCFunction)do_curlmulti_getstate, METH_NOARGS, NULL},
+    {"__setstate__", (PyCFunction)do_curlmulti_setstate, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}
 };
 
@@ -841,18 +855,14 @@ PYCURL_INTERNAL PyTypeObject CurlMulti_Type = {
 #endif
     0,                          /* tp_as_buffer */
     Py_TPFLAGS_HAVE_GC,         /* tp_flags */
-    0,                          /* tp_doc */
+    multi_doc,                   /* tp_doc */
     (traverseproc)do_multi_traverse, /* tp_traverse */
     (inquiry)do_multi_clear,    /* tp_clear */
     0,                          /* tp_richcompare */
     0,                          /* tp_weaklistoffset */
     0,                          /* tp_iter */
     0,                          /* tp_iternext */
-#if PY_MAJOR_VERSION >= 3
     curlmultiobject_methods,    /* tp_methods */
-#else
-    0,                          /* tp_methods */
-#endif
     0,                          /* tp_members */
     0,                          /* tp_getset */
     0,                          /* tp_base */
@@ -861,8 +871,9 @@ PYCURL_INTERNAL PyTypeObject CurlMulti_Type = {
     0,                          /* tp_descr_set */
     0,                          /* tp_dictoffset */
     0,                          /* tp_init */
-    0,                          /* tp_alloc */
-    0,                          /* tp_new */
+    PyType_GenericAlloc,        /* tp_alloc */
+    (newfunc)do_multi_new,      /* tp_new */
+    PyObject_GC_Del,            /* tp_free */
 };
 
 /* vi:ts=4:et:nowrap

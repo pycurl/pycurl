@@ -7,30 +7,16 @@ Curl Object
 
     Curl objects have the following methods:
 
-    .. method:: close() -> None
-    
-        .. include:: ../build/docstrings/curl_close.rst
+    .. automethod:: pycurl.Curl.close
 
-    .. method:: perform() -> None
+    .. automethod:: pycurl.Curl.perform
 
-        .. include:: ../build/docstrings/curl_perform.rst
+    .. automethod:: pycurl.Curl.reset
 
-    .. method:: reset() -> None
+    .. automethod:: pycurl.Curl.setopt
 
-        .. include:: ../build/docstrings/curl_reset.rst
+    .. automethod:: pycurl.Curl.getinfo
 
-    .. method:: setopt(option, value) -> None
+    .. automethod:: pycurl.Curl.pause
 
-        .. include:: ../build/docstrings/curl_setopt.rst
-
-    .. method:: getinfo(option) -> Result
-
-        .. include:: ../build/docstrings/curl_getinfo.rst
-
-    .. method:: pause(bitmask) -> None
-
-        .. include:: ../build/docstrings/curl_pause.rst
-
-    .. method:: errstr() -> string
-
-        .. include:: ../build/docstrings/curl_errstr.rst
+    .. automethod:: pycurl.Curl.errstr

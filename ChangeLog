@@ -1,6 +1,13 @@
 master
 ------
 
+        * pycurl.Curl, pycurl.CurlMulti and pycurl.CurlShare are now classes
+          rather than factory functions. Previously, the classes were "hidden"
+          (they were accessible as e.g. type(pycurl.Curl()), but could not be
+          instantiated, nor could class methods be obtained from the classes.
+          Please see this mailing list post for further information:
+          http://curl.haxx.se/mail/curlpython-2014-06/0004.html
+
         * When passing a file-like object to READDATA option, PycURL was
           mistakenly looking for write method on this object. Now read method
           is looked up, as would be expected.

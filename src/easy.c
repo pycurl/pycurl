@@ -147,60 +147,6 @@ check_curl_state(const CurlObject *self, int flags, const char *name)
 
 /* --------------- construct/destruct (i.e. open/close) --------------- */
 
-/* Allocate a new python curl object */
-static CurlObject *
-util_curl_new(void)
-{
-    CurlObject *self;
-
-    self = (CurlObject *) PyObject_GC_New(CurlObject, p_Curl_Type);
-    if (self == NULL)
-        return NULL;
-    PyObject_GC_Track(self);
-
-    /* Set python curl object initial values */
-    self->dict = NULL;
-    self->handle = NULL;
-#ifdef WITH_THREAD
-    self->state = NULL;
-#endif
-    self->share = NULL;
-    self->multi_stack = NULL;
-    self->httppost = NULL;
-    self->httppost_ref_list = NULL;
-    self->httpheader = NULL;
-    self->http200aliases = NULL;
-    self->quote = NULL;
-    self->postquote = NULL;
-    self->prequote = NULL;
-#ifdef HAVE_CURLOPT_RESOLVE
-    self->resolve = NULL;
-#endif
-
-    /* Set callback pointers to NULL by default */
-    self->w_cb = NULL;
-    self->h_cb = NULL;
-    self->r_cb = NULL;
-    self->pro_cb = NULL;
-    self->debug_cb = NULL;
-    self->ioctl_cb = NULL;
-    self->opensocket_cb = NULL;
-    self->seek_cb = NULL;
-
-    /* Set file object pointers to NULL by default */
-    self->readdata_fp = NULL;
-    self->writedata_fp = NULL;
-    self->writeheader_fp = NULL;
-    
-    /* Set postfields object pointer to NULL by default */
-    self->postfields_obj = NULL;
-
-    /* Zero string pointer memory buffer used by setopt */
-    memset(self->error, 0, sizeof(self->error));
-
-    return self;
-}
-
 /* initializer - used to intialize curl easy handles for use with pycurl */
 static int
 util_curl_init(CurlObject *self)
@@ -247,19 +193,28 @@ util_curl_init(CurlObject *self)
     return (0);
 }
 
-/* constructor - this is a module-level function returning a new instance */
+/* constructor */
 PYCURL_INTERNAL CurlObject *
-do_curl_new(PyObject *dummy)
+do_curl_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
 {
-    CurlObject *self = NULL;
+    CurlObject *self;
     int res;
+    int *ptr;
 
-    UNUSED(dummy);
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "", empty_keywords)) {
+        return NULL;
+    }
 
     /* Allocate python curl object */
-    self = util_curl_new();
+    self = (CurlObject *) p_Curl_Type->tp_alloc(p_Curl_Type, 0);
     if (self == NULL)
         return NULL;
+
+    /* tp_alloc is expected to return zeroed memory */
+    for (ptr = (int *) &self->dict;
+        ptr < (int *) (((char *) self) + sizeof(CurlObject));
+        ++ptr)
+            assert(*ptr == 0);
 
     /* Initialize curl handle */
     self->handle = curl_easy_init();
@@ -404,13 +359,13 @@ PYCURL_INTERNAL void
 do_curl_dealloc(CurlObject *self)
 {
     PyObject_GC_UnTrack(self);
-    Py_TRASHCAN_SAFE_BEGIN(self)
+    Py_TRASHCAN_SAFE_BEGIN(self);
 
     Py_CLEAR(self->dict);
     util_curl_close(self);
 
-    PyObject_GC_Del(self);
-    Py_TRASHCAN_SAFE_END(self)
+    Py_TRASHCAN_SAFE_END(self);
+    Curl_Type.tp_free(self);
 }
 
 
@@ -2087,6 +2042,20 @@ do_curl_pause(CurlObject *self, PyObject *args)
 }
 
 
+static PyObject *do_curl_getstate(CurlObject *self)
+{
+    PyErr_SetString(PyExc_TypeError, "Curl objects do not support serialization");
+    return NULL;
+}
+
+
+static PyObject *do_curl_setstate(CurlObject *self, PyObject *args)
+{
+    PyErr_SetString(PyExc_TypeError, "Curl objects do not support deserialization");
+    return NULL;
+}
+
+
 /*************************************************************************
 // type definitions
 **************************************************************************/
@@ -2102,6 +2071,8 @@ PYCURL_INTERNAL PyMethodDef curlobject_methods[] = {
     {"setopt", (PyCFunction)do_curl_setopt, METH_VARARGS, curl_setopt_doc},
     {"unsetopt", (PyCFunction)do_curl_unsetopt, METH_VARARGS, curl_unsetopt_doc},
     {"reset", (PyCFunction)do_curl_reset, METH_NOARGS, curl_reset_doc},
+    {"__getstate__", (PyCFunction)do_curl_getstate, METH_NOARGS, NULL},
+    {"__setstate__", (PyCFunction)do_curl_setstate, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}
 };
 
@@ -2186,18 +2157,14 @@ PYCURL_INTERNAL PyTypeObject Curl_Type = {
 #endif
     0,                          /* tp_as_buffer */
     Py_TPFLAGS_HAVE_GC,         /* tp_flags */
-    0,                          /* tp_doc */
+    curl_doc,                   /* tp_doc */
     (traverseproc)do_curl_traverse, /* tp_traverse */
     (inquiry)do_curl_clear,     /* tp_clear */
     0,                          /* tp_richcompare */
     0,                          /* tp_weaklistoffset */
     0,                          /* tp_iter */
     0,                          /* tp_iternext */
-#if PY_MAJOR_VERSION >= 3
     curlobject_methods,         /* tp_methods */
-#else
-    0,                          /* tp_methods */
-#endif
     0,                          /* tp_members */
     0,                          /* tp_getset */
     0,                          /* tp_base */
@@ -2206,8 +2173,9 @@ PYCURL_INTERNAL PyTypeObject Curl_Type = {
     0,                          /* tp_descr_set */
     0,                          /* tp_dictoffset */
     0,                          /* tp_init */
-    0,                          /* tp_alloc */
-    0,                          /* tp_new */
+    PyType_GenericAlloc,        /* tp_alloc */
+    (newfunc)do_curl_new,       /* tp_new */
+    PyObject_GC_Del,            /* tp_free */
 };
 
 /* vi:ts=4:et:nowrap

@@ -387,15 +387,6 @@ my_getattr(PyObject *co, char *name, PyObject *dict1, PyObject *dict2, PyMethodD
 PYCURL_INTERNAL void
 assert_curl_state(const CurlObject *self);
 
-PYCURL_INTERNAL CurlObject *
-do_curl_new(PyObject *dummy);
-
-PYCURL_INTERNAL CurlMultiObject *
-do_multi_new(PyObject *dummy);
-
-PYCURL_INTERNAL CurlShareObject *
-do_share_new(PyObject *dummy);
-
 PYCURL_INTERNAL PyObject *
 do_global_init(PyObject *dummy, PyObject *args);
 PYCURL_INTERNAL PyObject *
@@ -419,6 +410,8 @@ extern PyObject *curlmultiobject_constants;
 extern PyObject *curlshareobject_constants;
 
 extern char *g_pycurl_useragent;
+
+extern PYCURL_INTERNAL char *empty_keywords[];
 
 #if PY_MAJOR_VERSION >= 3
 extern PyMethodDef curlobject_methods[];
