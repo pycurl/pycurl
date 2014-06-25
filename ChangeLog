@@ -126,6 +126,11 @@ Version 7.19.3 [requires libcurl-7.19.0 or better] - 2014-01-09
           constants. CURL_REDIR_POST_303 requires libcurl 7.26.0 or higher,
           all others require libcurl 7.19.1 or higher.
 
+        * As part of Python 3 support, WRITEDATA option now accepts
+          any object with a write method on Python 2 and Python 3.
+          For non-file objects, c.setopt(c.WRITEDATA, buf) is equivalent to
+          c.setopt(c.WRITEFUNCTION, buf.write).
+
         * PycURL now supports Python 3.1 through 3.3. Python 3.0 might
           work but it appears to ship with broken distutils, making virtualenv
           not function on it.
