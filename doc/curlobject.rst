@@ -9,13 +9,15 @@ Curl Object
 
     .. automethod:: pycurl.Curl.close
 
+    .. automethod:: pycurl.Curl.setopt
+
     .. automethod:: pycurl.Curl.perform
+
+    .. automethod:: pycurl.Curl.getinfo
 
     .. automethod:: pycurl.Curl.reset
 
-    .. automethod:: pycurl.Curl.setopt
-
-    .. automethod:: pycurl.Curl.getinfo
+    .. automethod:: pycurl.Curl.unsetopt
 
     .. automethod:: pycurl.Curl.pause
 

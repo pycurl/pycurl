@@ -1,3 +1,5 @@
+.. _callbacks:
+
 Callbacks
 =========
 

@@ -9,11 +9,11 @@ CurlMulti Object
     
     .. automethod:: pycurl.CurlMulti.close
 
-    .. automethod:: pycurl.CurlMulti.perform
-
     .. automethod:: pycurl.CurlMulti.add_handle
 
     .. automethod:: pycurl.CurlMulti.remove_handle
+
+    .. automethod:: pycurl.CurlMulti.perform
 
     .. automethod:: pycurl.CurlMulti.fdset
 
