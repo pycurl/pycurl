@@ -188,3 +188,31 @@ if this is not the case edit it as needed. ``winbuild.py`` itself can be run
 with any Python it supports - 2.6, 2.7, 3.2, 3.3 or 3.4.
 
 .. _`download area`: http://pycurl.sourceforge.net/download/
+
+
+Git Checkout
+------------
+
+In order to build PycURL from a Git checkout, some files need to be
+generated. On Unix systems it is easiest to build PycURL with ``make``::
+
+    make
+
+To specify which curl or SSL backend to compile against, use the same
+environment variables as easy_install/pip, namely ``PYCURL_CURL_CONFIG``
+and ``PYCURL_SSL_LIBRARY``.
+
+To generate generated files only you may run::
+
+    make gen
+
+This might be handy if you are on Windows. Remember to run ``make gen``
+whenever you change sources.
+
+To generate documentation, run::
+
+    make docs
+
+Generating documentation requires `Sphinx`_ to be installed.
+
+.. _Sphinx: http://sphinx-doc.org/

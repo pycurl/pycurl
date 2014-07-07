@@ -46,7 +46,9 @@ Requirements
 Installation
 ------------
 
-Please see INSTALL.rst for installation instructions.
+Please see INSTALL.rst for installation instructions. If installing from
+a Git checkout, please follow instruction in the "Git Checkout" section
+in INSTALL.rst.
 
 Documentation
 -------------

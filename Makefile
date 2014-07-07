@@ -82,6 +82,8 @@ src/allpycurl.c: $(ALL_SOURCES)
 	cat src/docstrings.c $(SOURCES) |sed -e 's/#include "pycurl.h"//' -e 's/#include "docstrings.h"//' >>src/.tmp.allpycurl.c
 	mv src/.tmp.allpycurl.c src/allpycurl.c
 
+gen: $(ALL_SOURCES)
+
 build: $(ALL_SOURCES)
 	$(PYTHON) setup.py build
 
