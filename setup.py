@@ -6,7 +6,7 @@
 
 PACKAGE = "pycurl"
 PY_PACKAGE = "curl"
-VERSION = "7.19.3.1"
+VERSION = "7.19.5"
 
 import glob, os, re, sys, string, subprocess
 import distutils
@@ -420,18 +420,15 @@ def get_data_files():
         datadir = os.path.join("share", "doc", PACKAGE)
     #
     files = ["AUTHORS", "ChangeLog", "COPYING-LGPL", "COPYING-MIT",
-        "INSTALL.rst", "README.rst"]
+        "INSTALL.rst", "README.rst", "RELEASE-NOTES.rst"]
     if files:
         data_files.append((os.path.join(datadir), files))
-    files = glob.glob(os.path.join("doc", "*.rst"))
-    if files:
-        data_files.append((os.path.join(datadir, "rst"), files))
     files = glob.glob(os.path.join("examples", "*.py"))
     if files:
         data_files.append((os.path.join(datadir, "examples"), files))
-    files = glob.glob(os.path.join("tests", "*.py"))
+    files = glob.glob(os.path.join("examples", "quickstart", "*.py"))
     if files:
-        data_files.append((os.path.join(datadir, "tests"), files))
+        data_files.append((os.path.join(datadir, "examples", "quickstart"), files))
     #
     assert data_files
     for install_dir, files in data_files:

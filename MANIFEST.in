@@ -14,8 +14,10 @@ include README.rst
 include RELEASE-NOTES.rst
 include doc/*.py
 include doc/*.rst
+include doc/docstrings/*.rst
 include doc/static/favicon.ico
 include examples/*.py
+include examples/quickstart/*.py
 include examples/tests/*.py
 include src/Makefile
 include src/docstrings.c

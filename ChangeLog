@@ -1,5 +1,7 @@
-master
-------
+Version 7.19.5 [requires libcurl-7.19.0 or better] - 2014-07-12
+---------------------------------------------------------------
+
+        * Documentation greatly improved. Quickstart guide added.
 
         * pycurl.Curl, pycurl.CurlMulti and pycurl.CurlShare are now classes
           rather than factory functions. Previously, the classes were "hidden"
