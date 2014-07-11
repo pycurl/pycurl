@@ -20,7 +20,7 @@ class Acceptor(object):
     def write(self, chunk):
         self.buffer += chunk.decode()
 
-class WriteToFileTest(unittest.TestCase):
+class WriteTest(unittest.TestCase):
     def setUp(self):
         self.curl = pycurl.Curl()
     
