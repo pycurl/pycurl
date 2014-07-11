@@ -14,7 +14,7 @@ include README.rst
 include RELEASE-NOTES.rst
 include doc/*.py
 include doc/*.rst
-include doc/static/.gitkeep
+include doc/static/favicon.ico
 include examples/*.py
 include examples/tests/*.py
 include src/Makefile
