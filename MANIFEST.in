@@ -18,6 +18,16 @@ include doc/static/.gitkeep
 include examples/*.py
 include examples/tests/*.py
 include src/Makefile
-include src/pycurl.c
+include src/docstrings.c
+include src/docstrings.h
+include src/easy.c
+include src/module.c
+include src/multi.c
+include src/oscompat.c
+include src/pycurl.h
+include src/pythoncompat.c
+include src/share.c
+include src/stringcompat.c
+include src/threadsupport.c
 include python/curl/*.py
 include winbuild.py
