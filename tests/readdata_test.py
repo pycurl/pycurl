@@ -5,6 +5,7 @@
 import pycurl
 import unittest
 import sys
+import os.path
 try:
     import json
 except ImportError:
@@ -121,3 +122,39 @@ class ReaddataTest(unittest.TestCase):
         # json should be ascii
         actual = json.loads(sio.getvalue().decode('ascii'))
         self.assertEqual(poststring, actual)
+    
+    def test_readdata_file_binary(self):
+        path = os.path.join(os.path.dirname(__file__), 'fixtures', 'form_submission.txt')
+        # file opened in binary mode
+        f = open(path, 'rb')
+        try:
+            self.curl.setopt(self.curl.URL, 'http://localhost:8380/postfields')
+            self.curl.setopt(self.curl.POST, 1)
+            self.curl.setopt(self.curl.POSTFIELDSIZE, os.stat(path).st_size)
+            self.curl.setopt(self.curl.READDATA, f)
+            sio = util.BytesIO()
+            self.curl.setopt(pycurl.WRITEDATA, sio)
+            self.curl.perform()
+            
+            actual = json.loads(sio.getvalue().decode())
+            self.assertEqual({'foo': 'bar'}, actual)
+        finally:
+            f.close()
+    
+    def test_readdata_file_text(self):
+        path = os.path.join(os.path.dirname(__file__), 'fixtures', 'form_submission.txt')
+        # file opened in text mode
+        f = open(path, 'rt')
+        try:
+            self.curl.setopt(self.curl.URL, 'http://localhost:8380/postfields')
+            self.curl.setopt(self.curl.POST, 1)
+            self.curl.setopt(self.curl.POSTFIELDSIZE, os.stat(path).st_size)
+            self.curl.setopt(self.curl.READDATA, f)
+            sio = util.BytesIO()
+            self.curl.setopt(pycurl.WRITEDATA, sio)
+            self.curl.perform()
+            
+            actual = json.loads(sio.getvalue().decode())
+            self.assertEqual({'foo': 'bar'}, actual)
+        finally:
+            f.close()
