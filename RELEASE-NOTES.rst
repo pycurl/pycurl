@@ -1,6 +1,25 @@
 Release Notes
 =============
 
+PycURL 7.19.5 - 2014-07-12
+--------------------------
+
+PycURL C code has been significantly reorganized. Curl, CurlMulti and
+CurlShare classes are now properly exported, instead of factory functions for
+the respective objects. PycURL API has not changed.
+
+Documentation has been transitioned to Sphinx and reorganized as well.
+Both docstrings and standalone documentation are now more informative.
+
+Documentation is no longer included in released distributions. It can be
+generated from source by running `make docs`.
+
+Tests are no longer included in released distributions. Instead the
+documentation and quickstart examples should be consulted for sample code.
+
+Official Windows builds now are linked against zlib.
+
+
 PycURL 7.19.3.1 - 2014-02-05
 ----------------------------
 

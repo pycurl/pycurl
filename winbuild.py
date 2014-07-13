@@ -27,7 +27,7 @@ zlib_version = '1.2.8'
 # which version of libcurl to use, will be downloaded from the internet
 libcurl_version = '7.37.0'
 # pycurl version to build, we should know this ourselves
-pycurl_version = '7.19.3.1'
+pycurl_version = '7.19.5'
 
 import os, os.path, sys, subprocess, shutil, contextlib
 
@@ -163,6 +163,7 @@ def build():
                 shutil.copy(os.path.join(curl_dir, 'bin', 'libcurl.dll'), 'build/lib.win32-%s' % python_version)
                 with open('doit.bat', 'w') as f:
                     f.write("call \"%s\"\n" % vc_paths[vc_version]['vsvars'])
+                    f.write("%s setup.py docstrings\n" % (python_path,))
                     f.write("%s setup.py %s --curl-dir=%s --use-libcurl-dll\n" % (python_path, target, curl_dir))
                 subprocess.check_call(['doit.bat'])
                 if target == 'bdist':
