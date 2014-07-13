@@ -80,14 +80,14 @@ def in_dir(dir):
         os.chdir(old_cwd)
 
 @contextlib.contextmanager
-def step(step_fn, *args):
+def step(step_fn, args, target_dir):
     step = step_fn.__name__
     if args:
         step +=  '-' + '-'.join(args)
     if not os.path.exists(state_path):
         os.makedirs(state_path)
     state_file_path = os.path.join(state_path, step)
-    if not os.path.exists(state_file_path):
+    if not os.path.exists(state_file_path) or not os.path.exists(target_dir):
         step_fn(*args)
     with open(state_file_path, 'w') as f:
         pass
@@ -136,8 +136,8 @@ def build():
                 subprocess.check_call(['doit.bat'])
         for vc_version in vc_versions:
             if use_zlib:
-                step(build_zlib, vc_version)
-            step(build_curl, vc_version)
+                step(build_zlib, (vc_version,), 'zlib-%s-%s' % (zlib_version, vc_version))
+            step(build_curl, (vc_version,), 'curl-%s-%s' % (libcurl_version, vc_version))
         
         def prepare_pycurl():
             #fetch('http://pycurl.sourceforge.net/download/pycurl-%s.tar.gz' % pycurl_version)
