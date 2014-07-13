@@ -3,6 +3,9 @@
 set -e
 set -x
 
+# for building documentation
+pip install sphinx
+
 if test -n "$USEPY"; then
   # need to launch tests.appmanager with a more modern python.
   # doing this for 2.4 and 2.5 now.
