@@ -33,3 +33,4 @@ include src/stringcompat.c
 include src/threadsupport.c
 include python/curl/*.py
 include winbuild.py
+include tests/*
