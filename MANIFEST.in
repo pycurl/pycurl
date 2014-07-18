@@ -32,4 +32,13 @@ include src/share.c
 include src/stringcompat.c
 include src/threadsupport.c
 include python/curl/*.py
+include requirements*.txt
+include tests/*.py
+include tests/certs/*.crt
+include tests/certs/*.key
+include tests/ext/*.sh
+include tests/fake-curl/*
+include tests/fixtures/form_submission.txt
+include tests/matrix/*.patch
+include tests/vsftpd.conf
 include winbuild.py
