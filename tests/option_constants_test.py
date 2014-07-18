@@ -126,3 +126,24 @@ class OptionConstantsTest(unittest.TestCase):
         curl = pycurl.Curl()
         curl.setopt(curl.SSH_KNOWNHOSTS, '/hello/world')
         curl.close()
+    
+    # CURLOPT_MAIL_FROM was introduced in libcurl-7.20.0
+    @util.min_libcurl(7, 20, 0)
+    def test_mail_from(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.MAIL_FROM, 'hello@world.com')
+        curl.close()
+    
+    # CURLOPT_MAIL_RCPT was introduced in libcurl-7.20.0
+    @util.min_libcurl(7, 20, 0)
+    def test_mail_rcpt(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.MAIL_RCPT, ['hello@world.com', 'foo@bar.com'])
+        curl.close()
+    
+    # CURLOPT_MAIL_AUTH was introduced in libcurl-7.25.0
+    @util.min_libcurl(7, 25, 0)
+    def test_mail_auth(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.MAIL_AUTH, 'hello@world.com')
+        curl.close()

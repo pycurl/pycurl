@@ -741,6 +741,13 @@ initpycurl(void)
     insint_c(d, "SOCKS5_GSSAPI_SERVICE", CURLOPT_SOCKS5_GSSAPI_SERVICE);
     insint_c(d, "SOCKS5_GSSAPI_NEC", CURLOPT_SOCKS5_GSSAPI_NEC);
 #endif
+#ifdef HAVE_CURL_7_20_0_OPTS
+    insint_c(d, "MAIL_FROM", CURLOPT_MAIL_FROM);
+    insint_c(d, "MAIL_RCPT", CURLOPT_MAIL_RCPT);
+#endif
+#ifdef HAVE_CURL_7_25_0_OPTS
+    insint_c(d, "MAIL_AUTH", CURLOPT_MAIL_AUTH);
+#endif
 
     insint_c(d, "M_TIMERFUNCTION", CURLMOPT_TIMERFUNCTION);
     insint_c(d, "M_SOCKETFUNCTION", CURLMOPT_SOCKETFUNCTION);

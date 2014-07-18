@@ -1,6 +1,9 @@
 master
 ------
 
+        * Added CURLOPT_MAIL_FROM and CURLOPT_MAIL_RCPT (libcurl 7.20.0+)
+          and CURLOPT_MAIL_AUTH (libcurl 7.25.0+).
+
 Version 7.19.5 [requires libcurl-7.19.0 or better] - 2014-07-12
 ---------------------------------------------------------------
 

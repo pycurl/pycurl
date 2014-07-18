@@ -351,6 +351,9 @@ util_curl_close(CurlObject *self)
 #ifdef HAVE_CURLOPT_RESOLVE
     SFREE(self->resolve);
 #endif
+#ifdef HAVE_CURL_7_20_0_OPTS
+    SFREE(self->mail_rcpt);
+#endif
 #undef SFREE
 }
 
@@ -1023,6 +1026,9 @@ do_curl_reset(CurlObject *self)
 #ifdef HAVE_CURLOPT_RESOLVE
     SFREE(self->resolve);
 #endif
+#ifdef HAVE_CURL_7_20_0_OPTS
+    SFREE(self->mail_rcpt);
+#endif
 #undef SFREE
     res = util_curl_init(self);
     if (res < 0) {
@@ -1232,6 +1238,12 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 #ifdef HAVE_CURL_7_19_6_OPTS
         case CURLOPT_SSH_KNOWNHOSTS:
 #endif
+#ifdef HAVE_CURL_7_20_0_OPTS
+        case CURLOPT_MAIL_FROM:
+#endif
+#ifdef HAVE_CURL_7_25_0_OPTS
+        case CURLOPT_MAIL_AUTH:
+#endif
 /* FIXME: check if more of these options allow binary data */
             str = PyText_AsString_NoNUL(obj, &encoded_obj);
             if (str == NULL)
@@ -1412,6 +1424,11 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 #ifdef HAVE_CURLOPT_RESOLVE
         case CURLOPT_RESOLVE:
             old_slist = &self->resolve;
+            break;
+#endif
+#ifdef HAVE_CURL_7_20_0_OPTS
+        case CURLOPT_MAIL_RCPT:
+            old_slist = &self->mail_rcpt;
             break;
 #endif
         case CURLOPT_HTTPPOST:
