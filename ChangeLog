@@ -1,11 +1,16 @@
 master
 ------
 
+        * Tests are now included in source distributions again, thanks to
+          Kamil Dudka and Johan Bergstroem.
+
         * Added CURLOPT_MAIL_FROM and CURLOPT_MAIL_RCPT (libcurl 7.20.0+)
           and CURLOPT_MAIL_AUTH (libcurl 7.25.0+).
 
 Version 7.19.5 [requires libcurl-7.19.0 or better] - 2014-07-12
 ---------------------------------------------------------------
+
+        * Tests removed from source and binary distributions.
 
         * Documentation greatly improved. Quickstart guide added.
 
