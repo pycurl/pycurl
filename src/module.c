@@ -720,12 +720,15 @@ initpycurl(void)
     insint_c(d, "PROTO_DICT", CURLPROTO_DICT);
     insint_c(d, "PROTO_FILE", CURLPROTO_FILE);
     insint_c(d, "PROTO_TFTP", CURLPROTO_TFTP);
+#ifdef HAVE_CURL_7_20_0_OPTS
     insint_c(d, "PROTO_IMAP", CURLPROTO_IMAP);
     insint_c(d, "PROTO_IMAPS", CURLPROTO_IMAPS);
     insint_c(d, "PROTO_POP3", CURLPROTO_POP3);
     insint_c(d, "PROTO_POP3S", CURLPROTO_POP3S);
     insint_c(d, "PROTO_SMTP", CURLPROTO_SMTP);
     insint_c(d, "PROTO_SMTPS", CURLPROTO_SMTPS);
+#endif
+#ifdef HAVE_CURL_7_21_0_OPTS
     insint_c(d, "PROTO_RTSP", CURLPROTO_RTSP);
     insint_c(d, "PROTO_RTMP", CURLPROTO_RTMP);
     insint_c(d, "PROTO_RTMPT", CURLPROTO_RTMPT);
@@ -733,7 +736,10 @@ initpycurl(void)
     insint_c(d, "PROTO_RTMPTE", CURLPROTO_RTMPTE);
     insint_c(d, "PROTO_RTMPS", CURLPROTO_RTMPS);
     insint_c(d, "PROTO_RTMPTS", CURLPROTO_RTMPTS);
+#endif
+#ifdef HAVE_CURL_7_21_2_OPTS
     insint_c(d, "PROTO_GOPHER", CURLPROTO_GOPHER);
+#endif
     insint_c(d, "PROTO_ALL", CURLPROTO_ALL);
 #endif
 #ifdef HAVE_CURL_7_19_4_OPTS

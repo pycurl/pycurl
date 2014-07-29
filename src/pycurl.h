@@ -92,6 +92,11 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
 #define HAVE_CURLINFO_LOCAL_PORT
 #define HAVE_CURLINFO_PRIMARY_PORT
 #define HAVE_CURLINFO_LOCAL_IP
+#define HAVE_CURL_7_21_0_OPTS
+#endif
+
+#if LIBCURL_VERSION_NUM >= 0x071502 /* check for 7.21.2 or greater */
+#define HAVE_CURL_7_21_2_OPTS
 #endif
 
 #if LIBCURL_VERSION_NUM >= 0x071503 /* check for 7.21.3 or greater */
