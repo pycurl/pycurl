@@ -101,6 +101,13 @@ class SetupTest(unittest.TestCase):
         # ssl define should be off
         assert 'HAVE_CURL_SSL' not in config.define_symbols
 
+    @using_curl_config('curl-config-empty')
+    @using_curl('curl-with-ssl')
+    def test_ssl_define_using_curl_version_info(self):
+        config = pycurl_setup.ExtensionConfiguration()
+        # ssl define should be off
+        assert 'HAVE_CURL_SSL' in config.define_symbols
+
     @using_curl_config('curl-config-ssl-in-libs')
     def test_ssl_in_libs_sets_ssl_define(self):
         config = pycurl_setup.ExtensionConfiguration()

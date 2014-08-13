@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# a curl-config that returns -lssl in --libs but not in --static-libs
+
+output=
+
+while test -n "$1"; do
+  case "$1" in
+  -V)
+    echo 'curl 7.19.7 (x86_64-redhat-linux-gnu) libcurl/7.19.7 NSS/3.15.3 zlib/1.2.3 libidn/1.18 libssh2/1.4.2'
+    echo 'Protocols: tftp ftp telnet dict ldap ldaps http file https ftps scp sftp'
+    echo 'Features: GSS-Negotiate IDN IPv6 Largefile NTLM SSL libz'
+    ;;
+  esac
+  shift
+done
+
