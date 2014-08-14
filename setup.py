@@ -91,8 +91,6 @@ class ExtensionConfiguration(object):
             self.include_dirs.append(os.path.join(OPENSSL_DIR, "include"))
         CURL_CONFIG = os.environ.get('PYCURL_CURL_CONFIG', "curl-config")
         CURL_CONFIG = scan_argv("--curl-config=", CURL_CONFIG)
-        CURL = os.environ.get('PYCURL_CURL', "curl")
-        CURL = scan_argv("--curl=", CURL)
         try:
             p = subprocess.Popen((CURL_CONFIG, '--version'),
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -235,26 +233,20 @@ class ExtensionConfiguration(object):
             # static libraries disabled and 'curl-config --libs'
             # returns nothing. 'curl -V' shows information
             # about the ssl libraries.
-            p = subprocess.Popen((CURL, '-V'),
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE)
-            stdout, stderr = p.communicate()
+            libs = self.get_libs_from_curl_version_info()
 
-            if p.wait() == 0:
-                curl_version_info = stdout.decode()
-
-                if 'OpenSSL' in curl_version_info:
-                    self.define_macros.append(('HAVE_CURL_OPENSSL', 1))
-                    ssl_lib_detected = True
-                    self.libraries.append('crypto')
-                if not ssl_lib_detected and 'GnuTLS' in curl_version_info:
-                    self.define_macros.append(('HAVE_CURL_GNUTLS', 1))
-                    ssl_lib_detected = True
-                    self.libraries.append('gnutls')
-                if not ssl_lib_detected and 'NSS' in curl_version_info:
-                    self.define_macros.append(('HAVE_CURL_NSS', 1))
-                    ssl_lib_detected = True
-                    self.libraries.append('ssl3')
+            if 'OpenSSL' in libs:
+                self.define_macros.append(('HAVE_CURL_OPENSSL', 1))
+                ssl_lib_detected = True
+                self.libraries.append('crypto')
+            if not ssl_lib_detected and 'GnuTLS' in libs:
+                self.define_macros.append(('HAVE_CURL_GNUTLS', 1))
+                ssl_lib_detected = True
+                self.libraries.append('gnutls')
+            if not ssl_lib_detected and 'NSS' in libs:
+                self.define_macros.append(('HAVE_CURL_NSS', 1))
+                ssl_lib_detected = True
+                self.libraries.append('ssl3')
 
         if not ssl_lib_detected:
             p = subprocess.Popen((CURL_CONFIG, '--features'),
@@ -283,6 +275,26 @@ class ExtensionConfiguration(object):
         # Recognize --avoid-stdio on Unix so that it can be tested
         self.check_avoid_stdio()
 
+    def get_libs_from_curl_version_info(self):
+        # get the libraries from curl -V.
+        # The first line includes the full version of curl,
+        # libcurl and other 3rd party libraries linked with
+        # the executable.
+        CURL = os.environ.get('PYCURL_CURL', "curl")
+        CURL = scan_argv("--curl=", CURL)
+
+        p = subprocess.Popen((CURL, '-V'),
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+
+        if p.wait() == 0:
+            curl_version_info = stdout.decode()
+            first_line = curl_version_info.splitlines()[0]
+            regex = re.compile('(\w+)\/[^ ]+')
+            return regex.findall(first_line)
+        else:
+            return []
 
     def configure_windows(self):
         # Windows users have to pass --curl-dir parameter to specify path
