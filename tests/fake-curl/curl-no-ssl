@@ -1,9 +1,12 @@
 #!/bin/sh
 
-# a curl-config that returns -lssl in --libs but not in --static-libs
+# curl -V output without ssl libraries listed.
+# The first line includes the full version of curl,
+# libcurl and other 3rd party libraries linked with the executable.
+# see: http://curl.haxx.se/docs/manpage.html#-V
+# output from Cent OS 6.5.
 
 output=
-
 
 while test -n "$1"; do
   case "$1" in

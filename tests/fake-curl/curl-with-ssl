@@ -1,6 +1,10 @@
 #!/bin/sh
 
-# a curl-config that returns -lssl in --libs but not in --static-libs
+# curl -V showing NSS as one of the linked libraries.
+# The first line includes the full version of curl,
+# libcurl and other 3rd party libraries linked with the executable.
+# see: http://curl.haxx.se/docs/manpage.html#-V
+# output from Cent OS 6.5.
 
 output=
 
@@ -14,4 +18,3 @@ while test -n "$1"; do
   esac
   shift
 done
-
