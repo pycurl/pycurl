@@ -299,6 +299,8 @@ initpycurl(void)
         runtime_ssl_lib = "none/other";
     } else if (!strncmp(vi->ssl_version, "OpenSSL/", 8)) {
         runtime_ssl_lib = "openssl";
+    } else if (!strncmp(vi->ssl_version, "LibreSSL/", 9)) {
+        runtime_ssl_lib = "openssl";
     } else if (!strncmp(vi->ssl_version, "GnuTLS/", 7)) {
         runtime_ssl_lib = "gnutls";
     } else if (!strncmp(vi->ssl_version, "NSS/", 4)) {
