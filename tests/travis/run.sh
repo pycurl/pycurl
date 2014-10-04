@@ -27,7 +27,9 @@ if test -n "$USECURL"; then
 fi
 
 if test -n "$USESSL"; then
-  if test "$USESSL" != none; then
+  if test "$USESSL" = libressl; then
+    export PYCURL_SSL_LIBRARY=openssl
+  elif test "$USESSL" != none; then
     export PYCURL_SSL_LIBRARY="$USESSL"
   fi
 else
