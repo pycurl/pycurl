@@ -929,7 +929,11 @@ debug_callback(CURL *curlobj, curl_infotype type,
     }
 
     /* run callback */
+#if PY_MAJOR_VERSION >= 3
+    arglist = Py_BuildValue("(iy#)", (int)type, buffer, (int)total_size);
+#else
     arglist = Py_BuildValue("(is#)", (int)type, buffer, (int)total_size);
+#endif
     if (arglist == NULL)
         goto verbose_error;
     result = PyEval_CallObject(self->debug_cb, arglist);
