@@ -1,6 +1,8 @@
 master
 ------
 
+        * setup.py now prints PycURL-specific option help when -h is used.
+
         * LibreSSL is now supported (patch by JiCiT.)
 
         * Fixed an oversight that broke PycURL building against libcurl 7.19.4

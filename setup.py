@@ -606,7 +606,7 @@ PycURL Windows options:
 '''
 
 if __name__ == "__main__":
-    if '--help' in sys.argv:
+    if '--help' in sys.argv or '-h' in sys.argv:
         # unfortunately this help precedes distutils help
         if sys.platform == "win32":
             print(windows_help)
