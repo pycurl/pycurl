@@ -22,6 +22,11 @@ matrix:
     - python: 2.7
       env:
         - USECURL=7.37.0
+        - USESSL=libressl
+        - USELIBRESSL=2.0.5
+    - python: 2.7
+      env:
+        - USECURL=7.37.0
         - USESSL=gnutls
     - python: 2.7
       env:

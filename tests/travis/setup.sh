@@ -63,6 +63,15 @@ if test -n "$USECURL"; then
       sudo apt-get install libssl-dev
       configure_flags="--with-ssl --without-gnutls --without-nss"
       ;;
+    libressl)
+      wget http://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-$USELIBRESSL.tar.gz
+      tar xfz libressl-$USELIBRESSL.tar.gz
+      (cd libressl-$USELIBRESSL &&
+        ./configure --prefix=/opt/libressl-$USELIBRESSL &&
+        make &&
+        sudo make install)
+      configure_flags="--with-ssl=/opt/libressl-$USELIBRESSL --without-gnutls --without-nss"
+      ;;
     gnutls)
       sudo apt-get install libgnutls-dev
       configure_flags="--without-ssl --with-gnutls --without-nss"
