@@ -206,29 +206,39 @@ class ExtensionConfiguration(object):
                 self.library_dirs.append(arg[2:])
             else:
                 self.extra_link_args.append(arg)
-        # ssl detection - ssl libraries are forwarded
+        
+        # ssl detection - ssl libraries are added
+        if not ssl_lib_detected:
+            LIBCURL_DLL = scan_argv("--libcurl-dll=")
+            if LIBCURL_DLL is not None:
+                curl_version_info = self.get_curl_version_info(LIBCURL_DLL)
+                ssl_version = curl_version_info.ssl_version
+                if ssl_version.startswith('OpenSSL/'):
+                    self.using_openssl()
+                    ssl_lib_detected = True
+                elif ssl_version.startswith('GnuTLS/'):
+                    self.using_gnutls()
+                    ssl_lib_detected = True
+                elif ssl_version.startswith('NSS/'):
+                    self.using_nss()
+                    ssl_lib_detected = True
+            
         if not ssl_lib_detected:
             for arg in split_quoted(sslhintbuf):
                 if arg[:2] == "-l":
                     if arg[2:] == 'ssl':
-                        self.define_macros.append(('HAVE_CURL_OPENSSL', 1))
+                        self.using_openssl()
                         ssl_lib_detected = True
-                        # the actual library that defines CRYPTO_num_locks etc.
-                        # is crypto, and on cygwin linking against ssl does not
-                        # link against crypto as of May 2014.
-                        # http://stackoverflow.com/questions/23687488/cant-get-pycurl-to-install-on-cygwin-missing-openssl-symbols-crypto-num-locks
-                        self.libraries.append('crypto')
                         break
                     if arg[2:] == 'gnutls':
-                        self.define_macros.append(('HAVE_CURL_GNUTLS', 1))
+                        self.using_gnutls()
                         ssl_lib_detected = True
-                        self.libraries.append('gnutls')
                         break
                     if arg[2:] == 'ssl3':
-                        self.define_macros.append(('HAVE_CURL_NSS', 1))
+                        self.using_nss()
                         ssl_lib_detected = True
-                        self.libraries.append('ssl3')
                         break
+        
         if not ssl_lib_detected:
             p = subprocess.Popen((CURL_CONFIG, '--features'),
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -323,6 +333,51 @@ class ExtensionConfiguration(object):
             self.extra_compile_args.append("-DPYCURL_AVOID_STDIO")
         if scan_argv('--avoid-stdio') is not None:
             self.extra_compile_args.append("-DPYCURL_AVOID_STDIO")
+    
+    def get_curl_version_info(self, dll_path):
+        import ctypes
+        
+        class curl_version_info_struct(ctypes.Structure):
+            _fields_ = [
+                ('age', ctypes.c_int),
+                ('version', ctypes.c_char_p),
+                ('version_num', ctypes.c_uint),
+                ('host', ctypes.c_char_p),
+                ('features', ctypes.c_int),
+                ('ssl_version', ctypes.c_char_p),
+                ('ssl_version_num', ctypes.c_long),
+                ('libz_version', ctypes.c_char_p),
+                ('protocols', ctypes.c_void_p),
+                ('ares', ctypes.c_char_p),
+                ('ares_num', ctypes.c_int),
+                ('libidn', ctypes.c_char_p),
+                ('iconv_ver_num', ctypes.c_int),
+                ('libssh_version', ctypes.c_char_p),
+            ]
+        
+        dll = ctypes.CDLL(dll_path)
+        fn = dll.curl_version_info
+        fn.argtypes = [ctypes.c_int]
+        fn.restype = ctypes.POINTER(curl_version_info_struct)
+        
+        # current version is 3
+        return fn(3)[0]
+    
+    def using_openssl(self):
+        self.define_macros.append(('HAVE_CURL_OPENSSL', 1))
+        # the actual library that defines CRYPTO_num_locks etc.
+        # is crypto, and on cygwin linking against ssl does not
+        # link against crypto as of May 2014.
+        # http://stackoverflow.com/questions/23687488/cant-get-pycurl-to-install-on-cygwin-missing-openssl-symbols-crypto-num-locks
+        self.libraries.append('crypto')
+    
+    def using_gnutls(self):
+        self.define_macros.append(('HAVE_CURL_GNUTLS', 1))
+        self.libraries.append('gnutls')
+    
+    def using_nss(self):
+        self.define_macros.append(('HAVE_CURL_NSS', 1))
+        self.libraries.append('ssl3')
 
 def get_bdist_msi_version_hack():
     # workaround for distutils/msi version requirement per
@@ -595,6 +650,7 @@ if LooseVersion(distutils.__version__) < LooseVersion("1.0.3"):
 unix_help = '''\
 PycURL Unix options:
  --curl-config=/path/to/curl-config  use specified curl-config binary
+ --libcurl-dll=[/path/to/]libcurl.so obtain SSL library from libcurl.so
  --openssl-dir=/path/to/openssl/dir  path to OpenSSL headers and libraries
  --with-ssl                          libcurl is linked against OpenSSL
  --with-gnutls                       libcurl is linked against GnuTLS

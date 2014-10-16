@@ -49,6 +49,14 @@ To fix this, you need to tell ``setup.py`` what SSL backend is used::
 
     python setup.py --with-[ssl|gnutls|nss] install
 
+You can also ask ``setup.py`` to obtain SSL backend information from installed
+libcurl shared library, as follows:
+
+    python setup.py --libcurl-dll=libcurl.so
+
+An unqualified ``libcurl.so`` would use the system libcurl, or you can
+specify a full path.
+
 
 easy_install / pip
 ------------------

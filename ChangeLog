@@ -1,6 +1,10 @@
 master
 ------
 
+        * Added --libcurl-dll option to setup.py to take SSL library
+          information out of libcurl shared library (patch by
+          Francisco Alves and Oleg Pudeyev).
+
         * Fixed build on GCC 4.4.5 (patch by Travis Jensen).
 
         * Added CURLOPT_GSSAPI_DELEGATION, CURLGSSAPI_DELEGATION_FLAG,
