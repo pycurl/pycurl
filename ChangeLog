@@ -1,6 +1,8 @@
 master
 ------
 
+        * LibreSSL is now supported (patch by JiCiT.)
+
         * Fixed an oversight that broke PycURL building against libcurl 7.19.4
           through 7.21.1. The bug was introduced in PycURL 7.19.5.
 
