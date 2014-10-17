@@ -101,3 +101,27 @@ class SetupTest(unittest.TestCase):
         config = pycurl_setup.ExtensionConfiguration()
         # ssl define should be on
         assert 'HAVE_CURL_SSL' in config.define_symbols
+    
+    @using_curl_config('curl-config-empty')
+    def test_with_ssl_library(self):
+        config = pycurl_setup.ExtensionConfiguration(['',
+            '--with-ssl'])
+        assert 'HAVE_CURL_SSL' in config.define_symbols
+        assert 'HAVE_CURL_OPENSSL' in config.define_symbols
+        assert 'crypto' in config.libraries
+    
+    @using_curl_config('curl-config-empty')
+    def test_with_gnutls_library(self):
+        config = pycurl_setup.ExtensionConfiguration(['',
+            '--with-gnutls'])
+        assert 'HAVE_CURL_SSL' in config.define_symbols
+        assert 'HAVE_CURL_GNUTLS' in config.define_symbols
+        assert 'gnutls' in config.libraries
+    
+    @using_curl_config('curl-config-empty')
+    def test_with_nss_library(self):
+        config = pycurl_setup.ExtensionConfiguration(['',
+            '--with-nss'])
+        assert 'HAVE_CURL_SSL' in config.define_symbols
+        assert 'HAVE_CURL_NSS' in config.define_symbols
+        assert 'ssl3' in config.libraries

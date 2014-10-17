@@ -185,9 +185,9 @@ class ExtensionConfiguration(object):
             else:
                 raise ConfigurationError('Invalid value "%s" for PYCURL_SSL_LIBRARY' % ssl_lib)
         ssl_options = {
-            '--with-ssl': 'HAVE_CURL_OPENSSL',
-            '--with-gnutls': 'HAVE_CURL_GNUTLS',
-            '--with-nss': 'HAVE_CURL_NSS',
+            '--with-ssl': self.using_openssl,
+            '--with-gnutls': self.using_gnutls,
+            '--with-nss': self.using_nss,
         }
         for option in ssl_options:
             if scan_argv(self.argv, option) is not None:
@@ -196,7 +196,8 @@ class ExtensionConfiguration(object):
                         if scan_argv(self.argv, other_option) is not None:
                             raise ConfigurationError('Cannot give both %s and %s' % (option, other_option))
                 ssl_lib_detected = True
-                self.define_macros.append((ssl_options[option], 1))
+                ssl_options[option]()
+                break
 
         # libraries and options - all libraries and options are forwarded
         # but if --libs succeeded, --static-libs output is ignored
