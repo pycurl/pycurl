@@ -30,11 +30,11 @@ def fail(msg):
     exit(10)
 
 
-def scan_argv(s, default=None):
+def scan_argv(argv, s, default=None):
     p = default
     i = 1
-    while i < len(sys.argv):
-        arg = sys.argv[i]
+    while i < len(argv):
+        arg = argv[i]
         if str.find(arg, s) == 0:
             if s.endswith('='):
                 # --option=value
@@ -44,15 +44,16 @@ def scan_argv(s, default=None):
                 # --option
                 # set value to True
                 p = True
-            del sys.argv[i]
+            del argv[i]
         else:
             i = i + 1
-    ##print sys.argv
+    ##print argv
     return p
 
 
 class ExtensionConfiguration(object):
-    def __init__(self):
+    def __init__(self, argv=[]):
+        self.argv = argv
         self.include_dirs = []
         self.define_macros = [("PYCURL_VERSION", '"%s"' % VERSION)]
         self.library_dirs = []
@@ -86,11 +87,11 @@ class ExtensionConfiguration(object):
 
 
     def configure_unix(self):
-        OPENSSL_DIR = scan_argv("--openssl-dir=")
+        OPENSSL_DIR = scan_argv(self.argv, "--openssl-dir=")
         if OPENSSL_DIR is not None:
             self.include_dirs.append(os.path.join(OPENSSL_DIR, "include"))
         CURL_CONFIG = os.environ.get('PYCURL_CURL_CONFIG', "curl-config")
-        CURL_CONFIG = scan_argv("--curl-config=", CURL_CONFIG)
+        CURL_CONFIG = scan_argv(self.argv, "--curl-config=", CURL_CONFIG)
         try:
             p = subprocess.Popen((CURL_CONFIG, '--version'),
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -189,10 +190,10 @@ class ExtensionConfiguration(object):
             '--with-nss': 'HAVE_CURL_NSS',
         }
         for option in ssl_options:
-            if scan_argv(option) is not None:
+            if scan_argv(self.argv, option) is not None:
                 for other_option in ssl_options:
                     if option != other_option:
-                        if scan_argv(other_option) is not None:
+                        if scan_argv(self.argv, other_option) is not None:
                             raise ConfigurationError('Cannot give both %s and %s' % (option, other_option))
                 ssl_lib_detected = True
                 self.define_macros.append((ssl_options[option], 1))
@@ -255,7 +256,7 @@ class ExtensionConfiguration(object):
     def configure_windows(self):
         # Windows users have to pass --curl-dir parameter to specify path
         # to libcurl, because there is no curl-config on windows at all.
-        curl_dir = scan_argv("--curl-dir=")
+        curl_dir = scan_argv(self.argv, "--curl-dir=")
         if curl_dir is None:
             fail("Please specify --curl-dir=/path/to/built/libcurl")
         if not os.path.exists(curl_dir):
@@ -269,9 +270,9 @@ class ExtensionConfiguration(object):
         # dll, the import library name is libcurl_imp.lib.
         # in practice, the library name sometimes is libcurl.lib.
         # override with: --libcurl-lib-name=libcurl_imp.lib
-        curl_lib_name = scan_argv('--libcurl-lib-name=', 'libcurl.lib')
+        curl_lib_name = scan_argv(self.argv, '--libcurl-lib-name=', 'libcurl.lib')
 
-        if scan_argv("--use-libcurl-dll") is not None:
+        if scan_argv(self.argv, "--use-libcurl-dll") is not None:
             libcurl_lib_path = os.path.join(curl_dir, "lib", curl_lib_name)
             self.extra_link_args.extend(["ws2_32.lib"])
             if str.find(sys.version, "MSC") >= 0:
@@ -316,7 +317,7 @@ class ExtensionConfiguration(object):
     def check_avoid_stdio(self):
         if 'PYCURL_SETUP_OPTIONS' in os.environ and '--avoid-stdio' in os.environ['PYCURL_SETUP_OPTIONS']:
             self.extra_compile_args.append("-DPYCURL_AVOID_STDIO")
-        if scan_argv('--avoid-stdio') is not None:
+        if scan_argv(self.argv, '--avoid-stdio') is not None:
             self.extra_compile_args.append("-DPYCURL_AVOID_STDIO")
     
     def using_openssl(self):
@@ -369,7 +370,7 @@ def get_bdist_msi_version_hack():
     return bdist_msi_version_hack
 
 
-def strip_pycurl_options():
+def strip_pycurl_options(argv):
     if sys.platform == 'win32':
         options = [
             '--curl-dir=', '--curl-lib-name=', '--use-libcurl-dll',
@@ -378,12 +379,12 @@ def strip_pycurl_options():
     else:
         options = ['--openssl-dir=', '--curl-config=', '--avoid-stdio']
     for option in options:
-        scan_argv(option)
+        scan_argv(argv, option)
 
 
 ###############################################################################
 
-def get_extension(split_extension_source=False):
+def get_extension(argv, split_extension_source=False):
     if split_extension_source:
         sources = [
             os.path.join("src", "docstrings.c"),
@@ -404,7 +405,7 @@ def get_extension(split_extension_source=False):
             os.path.join("src", "allpycurl.c"),
         ]
         depends = []
-    ext_config = ExtensionConfiguration()
+    ext_config = ExtensionConfiguration(argv)
     ext = Extension(
         name=PACKAGE,
         sources=sources,
@@ -630,7 +631,7 @@ if __name__ == "__main__":
         # invoke setup without configuring pycurl because
         # configuration might fail, and we want to display help anyway.
         # we need to remove our options because distutils complains about them
-        strip_pycurl_options()
+        strip_pycurl_options(sys.argv)
         setup(**setup_args)
     elif len(sys.argv) > 1 and sys.argv[1] == 'manifest':
         check_manifest()
@@ -646,7 +647,7 @@ if __name__ == "__main__":
             split_extension_source = False
         else:
             split_extension_source = True
-        ext = get_extension(split_extension_source=split_extension_source)
+        ext = get_extension(sys.argv, split_extension_source=split_extension_source)
         setup_args['ext_modules'] = [ext]
         
         for o in ext.extra_objects:
