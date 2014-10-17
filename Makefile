@@ -91,6 +91,7 @@ build-release: $(RELEASE_SOURCES)
 	PYCURL_RELEASE=1 $(PYTHON) setup.py build
 
 do-test:
+	cd tests/fake-curl/libcurl && make
 	mkdir -p tests/tmp
 	PYTHONSUFFIX=$$(python -V 2>&1 |awk '{print $$2}' |awk -F. '{print $$1 "." $$2}') && \
 	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONSUFFIX):$$PYTHONPATH \

@@ -7,6 +7,7 @@
 /src/docstrings.c
 /src/docstrings.h
 /tests/tmp
+/tests/fake-curl/libcurl/*.so
 /www/htdocs/download/*.bz2
 /www/htdocs/download/*.exe
 /www/htdocs/download/*.gz
