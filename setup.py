@@ -236,12 +236,10 @@ class ExtensionConfiguration(object):
                 raise ConfigurationError(msg)
             for feature in split_quoted(stdout.decode()):
                 if feature == 'SSL':
-                    # this means any ssl library, not just openssl
+                    # this means any ssl library, not just openssl.
+                    # we set the ssl flag to check for ssl library mismatch
+                    # at link time and run time
                     self.define_macros.append(('HAVE_CURL_SSL', 1))
-        else:
-            # if we are configuring for a particular ssl library,
-            # we can assume that ssl is being used
-            self.define_macros.append(('HAVE_CURL_SSL', 1))
         if not self.libraries:
             self.libraries.append("curl")
         
@@ -327,14 +325,17 @@ class ExtensionConfiguration(object):
         # link against crypto as of May 2014.
         # http://stackoverflow.com/questions/23687488/cant-get-pycurl-to-install-on-cygwin-missing-openssl-symbols-crypto-num-locks
         self.libraries.append('crypto')
+        self.define_macros.append(('HAVE_CURL_SSL', 1))
     
     def using_gnutls(self):
         self.define_macros.append(('HAVE_CURL_GNUTLS', 1))
         self.libraries.append('gnutls')
+        self.define_macros.append(('HAVE_CURL_SSL', 1))
     
     def using_nss(self):
         self.define_macros.append(('HAVE_CURL_NSS', 1))
         self.libraries.append('ssl3')
+        self.define_macros.append(('HAVE_CURL_SSL', 1))
 
 def get_bdist_msi_version_hack():
     # workaround for distutils/msi version requirement per
