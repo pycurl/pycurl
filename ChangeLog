@@ -1,6 +1,8 @@
 master
 ------
 
+        * Added CURLPROXY_SOCKS4A and CURLPROXY_SOCKS5_HOSTNAME.
+
         * setup.py now prints PycURL-specific option help when -h is used.
 
         * LibreSSL is now supported (patch by JiCiT.)
