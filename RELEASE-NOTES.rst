@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+PycURL 7.19.5.1 - 2015-01-06
+----------------------------
+
+This release primarily fixes build breakage against libcurl 7.19.4 through
+7.21.1, such as versions shipped with CentOS.
+
+
 PycURL 7.19.5 - 2014-07-12
 --------------------------
 

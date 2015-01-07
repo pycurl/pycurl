@@ -27,7 +27,7 @@ zlib_version = '1.2.8'
 # which version of libcurl to use, will be downloaded from the internet
 libcurl_version = '7.37.0'
 # pycurl version to build, we should know this ourselves
-pycurl_version = '7.19.5'
+pycurl_version = '7.19.5.1'
 
 import os, os.path, sys, subprocess, shutil, contextlib
 
