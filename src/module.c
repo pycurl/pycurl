@@ -503,7 +503,9 @@ initpycurl(void)
     insint_c(d, "PROXYTYPE_HTTP_1_0", CURLPROXY_HTTP_1_0);
 #endif
     insint_c(d, "PROXYTYPE_SOCKS4", CURLPROXY_SOCKS4);
+    insint_c(d, "PROXYTYPE_SOCKS4A", CURLPROXY_SOCKS4A);
     insint_c(d, "PROXYTYPE_SOCKS5", CURLPROXY_SOCKS5);
+    insint_c(d, "PROXYTYPE_SOCKS5_HOSTNAME", CURLPROXY_SOCKS5_HOSTNAME);
 
     /* curl_httpauth: constants for setopt(HTTPAUTH, x) */
     insint_c(d, "HTTPAUTH_NONE", CURLAUTH_NONE);
