@@ -222,7 +222,7 @@ How PycURL Handles Unicode Strings
 ----------------------------------
 
 If PycURL is given a Unicode string which contains non-ASCII code points,
-and as such cannot be encoded to ASCII,PycURL will return an error to libcurl,
+and as such cannot be encoded to ASCII, PycURL will return an error to libcurl,
 and libcurl in turn will fail the request with an error like
 "read function error/data error". PycURL will then raise ``pycurl.error``
 with this latter message. The encoding exception that was the
