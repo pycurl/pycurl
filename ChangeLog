@@ -5,7 +5,7 @@ Version 7.19.5.1 [requires libcurl-7.19.0 or better] - 2015-01-06
 
         * setup.py now prints PycURL-specific option help when -h is used.
 
-        * LibreSSL is now supported (patch by JiCiT.)
+        * LibreSSL is now supported (patch by JiCiT).
 
         * Fixed an oversight that broke PycURL building against libcurl 7.19.4
           through 7.21.1. The bug was introduced in PycURL 7.19.5.
