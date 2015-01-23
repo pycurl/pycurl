@@ -4,6 +4,7 @@
 
 import pycurl
 import unittest
+import nose.plugins.attrib
 import nose.plugins.skip
 
 from . import util
@@ -146,4 +147,13 @@ class OptionConstantsTest(unittest.TestCase):
     def test_mail_auth(self):
         curl = pycurl.Curl()
         curl.setopt(curl.MAIL_AUTH, 'hello@world.com')
+        curl.close()
+    
+    @util.min_libcurl(7, 22, 0)
+    @nose.plugins.attrib.attr('gssapi')
+    def test_gssapi_delegation_options(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.GSSAPI_DELEGATION, curl.GSSAPI_DELEGATION_FLAG)
+        curl.setopt(curl.GSSAPI_DELEGATION, curl.GSSAPI_DELEGATION_NONE)
+        curl.setopt(curl.GSSAPI_DELEGATION, curl.GSSAPI_DELEGATION_POLICY_FLAG)
         curl.close()
