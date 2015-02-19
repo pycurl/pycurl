@@ -226,6 +226,8 @@ class ExtensionConfiguration(object):
                     ssl_lib_detected = True
                     self.libraries.append('ssl3')
         if not ssl_lib_detected:
+            ssl_lib_detected = self.detect_ssl_lib_on_centos6()
+        if not ssl_lib_detected:
             p = subprocess.Popen((CURL_CONFIG, '--features'),
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             stdout, stderr = p.communicate()
@@ -252,6 +254,65 @@ class ExtensionConfiguration(object):
         # Recognize --avoid-stdio on Unix so that it can be tested
         self.check_avoid_stdio()
 
+    def detect_ssl_lib_on_centos6(self):
+        import platform
+        from ctypes.util import find_library
+        os_name = platform.system()
+        if os_name != 'Linux':
+            return False
+        dist_name, dist_version, _ = platform.dist()
+        dist_version = dist_version.split('.')[0]
+        if dist_name != 'centos' or dist_version != '6':
+            return False
+        dll_path = find_library('curl')
+        curl_version_info = self.get_curl_version_info(dll_path)
+        ssl_version = curl_version_info.ssl_version
+        if ssl_version.startswith('OpenSSL/'):
+            self.define_macros.append(('HAVE_CURL_OPENSSL', 1))
+            self.libraries.append('crypto')
+            return True
+        elif ssl_version.startswith('GnuTLS/'):
+            self.define_macros.append(('HAVE_CURL_GNUTLS', 1))
+            self.libraries.append('gnutls')
+            return True
+        elif ssl_version.startswith('NSS/'):
+            self.define_macros.append(('HAVE_CURL_NSS', 1))
+            self.libraries.append('ssl3')
+            return True
+        else:
+            return False
+
+    def get_curl_version_info(self, dll_path):
+        import ctypes
+
+        class curl_version_info_struct(ctypes.Structure):
+            _fields_ = [
+                ('age', ctypes.c_int),
+                ('version', ctypes.c_char_p),
+                ('version_num', ctypes.c_uint),
+                ('host', ctypes.c_char_p),
+                ('features', ctypes.c_int),
+                ('ssl_version', ctypes.c_char_p),
+                ('ssl_version_num', ctypes.c_long),
+                ('libz_version', ctypes.c_char_p),
+                ('protocols', ctypes.c_void_p),
+                ('ares', ctypes.c_char_p),
+                ('ares_num', ctypes.c_int),
+                ('libidn', ctypes.c_char_p),
+                ('iconv_ver_num', ctypes.c_int),
+                ('libssh_version', ctypes.c_char_p),
+            ]
+
+        dll = ctypes.CDLL(dll_path)
+        fn = dll.curl_version_info
+        fn.argtypes = [ctypes.c_int]
+        fn.restype = ctypes.POINTER(curl_version_info_struct)
+
+        # current
+        # version
+        # is
+        # 3
+        return fn(3)[0]
 
     def configure_windows(self):
         # Windows users have to pass --curl-dir parameter to specify path
