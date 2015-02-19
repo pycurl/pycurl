@@ -180,13 +180,13 @@ static struct gcry_thread_cbs pycurl_gnutls_tsl = {
     pycurl_ssl_mutex_unlock
 };
 
-static void
+PYCURL_INTERNAL void
 pycurl_ssl_init(void)
 {
     gcry_control(GCRYCTL_SET_THREAD_CBS, &pycurl_gnutls_tsl);
 }
 
-static void
+PYCURL_INTERNAL void
 pycurl_ssl_cleanup(void)
 {
     return;

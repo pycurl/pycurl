@@ -1,3 +1,12 @@
+master
+------
+
+        * Fixed build on GCC 4.4.5 (patch by Travis Jensen).
+
+        * Added CURLOPT_GSSAPI_DELEGATION, CURLGSSAPI_DELEGATION_FLAG,
+          CURLGSSAPI_DELEGATION_NONE and CURLGSSAPI_DELEGATION_POLICY_FLAG
+          (libcurl 7.22.0+, patch by Dmitry Ketov).
+
 Version 7.19.5.1 [requires libcurl-7.19.0 or better] - 2015-01-06
 -----------------------------------------------------------------
 
