@@ -109,6 +109,9 @@ class SetupTest(unittest.TestCase):
         assert 'HAVE_CURL_SSL' in config.define_symbols
         assert 'HAVE_CURL_OPENSSL' in config.define_symbols
         assert 'crypto' in config.libraries
+        
+        assert 'HAVE_CURL_GNUTLS' not in config.define_symbols
+        assert 'HAVE_CURL_NSS' not in config.define_symbols
     
     @using_curl_config('curl-config-empty')
     def test_with_gnutls_library(self):
@@ -117,6 +120,9 @@ class SetupTest(unittest.TestCase):
         assert 'HAVE_CURL_SSL' in config.define_symbols
         assert 'HAVE_CURL_GNUTLS' in config.define_symbols
         assert 'gnutls' in config.libraries
+        
+        assert 'HAVE_CURL_OPENSSL' not in config.define_symbols
+        assert 'HAVE_CURL_NSS' not in config.define_symbols
     
     @using_curl_config('curl-config-empty')
     def test_with_nss_library(self):
@@ -125,3 +131,6 @@ class SetupTest(unittest.TestCase):
         assert 'HAVE_CURL_SSL' in config.define_symbols
         assert 'HAVE_CURL_NSS' in config.define_symbols
         assert 'ssl3' in config.libraries
+        
+        assert 'HAVE_CURL_OPENSSL' not in config.define_symbols
+        assert 'HAVE_CURL_GNUTLS' not in config.define_symbols
