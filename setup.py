@@ -181,7 +181,7 @@ class ExtensionConfiguration(object):
             ssl_lib = os.environ['PYCURL_SSL_LIBRARY']
             if ssl_lib in ['openssl', 'gnutls', 'nss']:
                 ssl_lib_detected = True
-                self.define_macros.append(('HAVE_CURL_%s' % ssl_lib.upper(), 1))
+                getattr(self, 'using_%s' % ssl_lib)()
             else:
                 raise ConfigurationError('Invalid value "%s" for PYCURL_SSL_LIBRARY' % ssl_lib)
         ssl_options = {
