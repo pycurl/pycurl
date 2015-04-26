@@ -215,7 +215,7 @@ class ExtensionConfiguration(object):
             if LIBCURL_DLL is not None:
                 curl_version_info = self.get_curl_version_info(LIBCURL_DLL)
                 ssl_version = curl_version_info.ssl_version
-                if ssl_version.startswith('OpenSSL/'):
+                if ssl_version.startswith('OpenSSL/') or ssl_version.startswith('LibreSSL/'):
                     self.using_openssl()
                     ssl_lib_detected = True
                 elif ssl_version.startswith('GnuTLS/'):
