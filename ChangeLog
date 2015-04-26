@@ -3,7 +3,7 @@ master
 
         * --with-ssl, --with-gnutls and --with-nss options to setup.py now
           result in PycURL explicitly linking against the respective SSL
-          library. Previously setup.py relied on curl-config to have the
+          library. Previously setup.py relied on curl-config to supply the
           needed libraries in this case.
 
         * Added --libcurl-dll option to setup.py to take SSL library
