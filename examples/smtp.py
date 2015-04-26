@@ -7,6 +7,9 @@ try:
     from io import BytesIO
 except ImportError:
     from StringIO import StringIO as BytesIO
+import sys
+
+PY3 = sys.version_info[0] > 2
 
 mail_server = 'smtp://localhost'
 mail_from = 'sender@example.org'
@@ -24,6 +27,9 @@ Subject: PycURL SMTP example
 
 SMTP example via PycURL
 ''' % (mail_from, mail_to)
+
+if PY3:
+    message = message.encode('ascii')
 
 # libcurl does not perform buffering, therefore
 # we need to wrap the message string into a BytesIO or StringIO.
