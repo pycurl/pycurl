@@ -15,6 +15,8 @@ from distutils.extension import Extension
 from distutils.util import split_quoted
 from distutils.version import LooseVersion
 
+py3 = sys.version_info[0] == 3
+
 try:
     # python 2
     exception_base = StandardError
@@ -215,6 +217,9 @@ class ExtensionConfiguration(object):
             if LIBCURL_DLL is not None:
                 curl_version_info = self.get_curl_version_info(LIBCURL_DLL)
                 ssl_version = curl_version_info.ssl_version
+                if py3:
+                    # ssl_version is bytes on python 3
+                    ssl_version = ssl_version.decode('ascii')
                 if ssl_version.startswith('OpenSSL/') or ssl_version.startswith('LibreSSL/'):
                     self.using_openssl()
                     ssl_lib_detected = True
