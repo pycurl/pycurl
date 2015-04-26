@@ -8,7 +8,8 @@ master
 
         * Added --libcurl-dll option to setup.py to take SSL library
           information out of libcurl shared library (patch by
-          Francisco Alves and Oleg Pudeyev).
+          Francisco Alves and Oleg Pudeyev). This option is only usable
+          with Python 2.5 or higher.
 
         * Fixed build on GCC 4.4.5 (patch by Travis Jensen).
 

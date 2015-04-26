@@ -4,7 +4,7 @@
 
 import setup as pycurl_setup
 import unittest
-import os, os.path
+import os, os.path, sys
 import nose.plugins.skip
 
 try:
@@ -43,6 +43,17 @@ def using_curl_config(path, ssl_library=None):
             finally:
                 reset_env('PYCURL_CURL_CONFIG', old_path)
                 reset_env('PYCURL_SSL_LIBRARY', old_ssl_library)
+        return decorated
+    return decorator
+
+def min_python_version(*spec):
+    def decorator(fn):
+        @functools.wraps(fn)
+        def decorated(*args, **kwargs):
+            if sys.version_info < spec:
+                raise nose.plugins.skip.SkipTest('Minimum Python version %s required' % spec.join('.'))
+            
+            return fn(*args, **kwargs)
         return decorated
     return decorator
 
@@ -102,6 +113,8 @@ class SetupTest(unittest.TestCase):
         # ssl define should be on
         assert 'HAVE_CURL_SSL' in config.define_symbols
     
+    # ctypes was added in python 2.5
+    @min_python_version(2, 4)
     @using_curl_config('curl-config-empty')
     def test_libcurl_ssl_openssl(self):
         config = pycurl_setup.ExtensionConfiguration(['',
@@ -114,6 +127,8 @@ class SetupTest(unittest.TestCase):
         assert 'HAVE_CURL_GNUTLS' not in config.define_symbols
         assert 'HAVE_CURL_NSS' not in config.define_symbols
     
+    # ctypes was added in python 2.5
+    @min_python_version(2, 4)
     @using_curl_config('curl-config-empty')
     def test_libcurl_ssl_gnutls(self):
         config = pycurl_setup.ExtensionConfiguration(['',
@@ -126,6 +141,8 @@ class SetupTest(unittest.TestCase):
         assert 'HAVE_CURL_OPENSSL' not in config.define_symbols
         assert 'HAVE_CURL_NSS' not in config.define_symbols
     
+    # ctypes was added in python 2.5
+    @min_python_version(2, 4)
     @using_curl_config('curl-config-empty')
     def test_libcurl_ssl_nss(self):
         config = pycurl_setup.ExtensionConfiguration(['',
@@ -138,6 +155,8 @@ class SetupTest(unittest.TestCase):
         assert 'HAVE_CURL_OPENSSL' not in config.define_symbols
         assert 'HAVE_CURL_GNUTLS' not in config.define_symbols
     
+    # ctypes was added in python 2.5
+    @min_python_version(2, 4)
     @using_curl_config('curl-config-empty')
     def test_libcurl_ssl_unrecognized(self):
         config = pycurl_setup.ExtensionConfiguration(['',
