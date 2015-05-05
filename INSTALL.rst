@@ -32,6 +32,10 @@ LD_LIBRARY_PATH environment variable accordingly.  This normally
 applies only if there is more than one version of libcurl installed,
 e.g. one in /usr/lib and one in /usr/local/lib.
 
+
+SSL
+^^^
+
 PycURL requires that the SSL library that it is built against is the same
 one libcurl, and therefore PycURL, uses at runtime. PycURL's ``setup.py``
 uses ``curl-config`` to attempt to figure out which SSL library libcurl
@@ -74,6 +78,30 @@ Please note the difference in spelling that concerns OpenSSL: the command-line
 argument is --with-ssl, to match libcurl, but the environment variable value is
 "openssl".
 
+
+pip and cached pycurl package
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you have already installed pycurl and are trying to reinstall it via
+pip with different SSL options for example, pip may reinstall the package it
+has previously compiled instead of recompiling pycurl with newly specified
+options. More details are given in `this Stack Overflow post`_.
+
+To force pip to recompile pycurl, run::
+
+    # upgrade pip if necessary
+    pip install --upgrade pip
+    
+    # remove current pycurl
+    pip remove pycurl
+    
+    # set PYCURL_SSL_LIBRARY
+    export PYCURL_SSL_LIBRARY=nss
+    
+    # recompile and install pycurl
+    pip install --compile pycurl
+
+.. _this Stack Overflow post: http://stackoverflow.com/questions/21487278/ssl-error-installing-pycurl-after-ssl-is-set
 
 Windows
 -------
