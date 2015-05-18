@@ -45,7 +45,11 @@ The signature of each callback used in pycurl is as follows:
 
 .. function:: PROGRESSFUNCTION(download total, downloaded, upload total, uploaded) -> status
 
-.. function:: DEBUGFUNCTION(debug message type, debug message string) -> None
+.. function:: DEBUGFUNCTION(debug message type, debug message byte string) -> None
+
+    *Changed in version 7.19.5.2:* The second argument to a ``DEBUGFUNCTION``
+    callback is now of type ``bytes`` on Python 3. Previously the argument was
+    of type ``str``.
 
 .. function:: IOCTLFUNCTION(ioctl cmd) -> status
 
