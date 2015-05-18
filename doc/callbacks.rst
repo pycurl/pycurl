@@ -25,7 +25,19 @@ callbacks.
 
 The signature of each callback used in pycurl is as follows:
 
+.. function:: HEADERFUNCTION(string) -> number of characters written
+
+    Callback for writing received headers. Corresponds to
+    `CURLOPT_HEADERFUNCTION`_ in libcurl.
+
+    The ``HEADERFUNCTION`` callback may also return
+    ``None``, which is an alternate way of indicating that the callback has
+    consumed all of the string passed to it.
+
 .. function:: WRITEFUNCTION(string) -> number of characters written
+
+    Callback for writing data. Corresponds to `CURLOPT_WRITEFUNCTION`_
+    in libcurl.
 
     The ``WRITEFUNCTION`` callback may also return
     ``None``, which is an alternate way of indicating that the callback has
@@ -33,25 +45,31 @@ The signature of each callback used in pycurl is as follows:
 
 .. function:: READFUNCTION(number of characters to read) -> string
 
+    Callback for reading data. Corresponds to `CURLOPT_READFUNCTION`_ in
+    libcurl.
+
     In addition, ``READFUNCTION`` may return ``READFUNC_ABORT`` or
     ``READFUNC_PAUSE``. See the libcurl documentation for an explanation
     of these values.
 
-.. function:: HEADERFUNCTION(string) -> number of characters written
-
-    The ``HEADERFUNCTION`` callback may also return
-    ``None``, which is an alternate way of indicating that the callback has
-    consumed all of the string passed to it.
-
 .. function:: PROGRESSFUNCTION(download total, downloaded, upload total, uploaded) -> status
 
+    Callback for progress meter. Corresponds to `CURLOPT_PROGRESSFUNCTION`_
+    in libcurl.
+
 .. function:: DEBUGFUNCTION(debug message type, debug message byte string) -> None
+
+    Callback for debug information. Corresponds to `CURLOPT_DEBUGFUNCTION`_
+    in libcurl.
 
     *Changed in version 7.19.5.2:* The second argument to a ``DEBUGFUNCTION``
     callback is now of type ``bytes`` on Python 3. Previously the argument was
     of type ``str``.
 
 .. function:: IOCTLFUNCTION(ioctl cmd) -> status
+
+    Callback for I/O operations. Corresponds to `CURLOPT_IOCTLFUNCTION`_
+    in libcurl.
 
 Example: Callbacks for document header and body
 -----------------------------------------------
@@ -131,3 +149,10 @@ file ``examples/file_upload.py`` in the distribution contains example code for
 using READFUNCTION, ``tests/test_cb.py`` shows WRITEFUNCTION and
 HEADERFUNCTION, ``tests/test_debug.py`` shows DEBUGFUNCTION, and
 ``tests/test_getinfo.py`` shows PROGRESSFUNCTION.
+
+.. _CURLOPT_HEADERFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_HEADERFUNCTION.html
+.. _CURLOPT_WRITEFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_WRITEFUNCTION.html
+.. _CURLOPT_READFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_READFUNCTION.html
+.. _CURLOPT_PROGRESSFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_PROGRESSFUNCTION.html
+.. _CURLOPT_DEBUGFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_DEBUGFUNCTION.html
+.. _CURLOPT_IOCTLFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_IOCTLFUNCTION.html
