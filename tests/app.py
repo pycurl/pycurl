@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# vi:ts=4:et
+
 import time as _time, sys
 import bottle
 try:
@@ -111,3 +114,8 @@ def pause_writer():
 @app.route('/pause')
 def pause():
     return pause_writer()
+
+@app.route('/utf8_body')
+def utf8_body():
+    # bottle encodes the body
+    return 'Дружба народов'

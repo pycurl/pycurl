@@ -1,6 +1,13 @@
 master
 ------
 
+        * The second argument of DEBUGFUNCTION callback is now of type bytes on
+          Python 3. When response body contains non-ASCII data and
+          DEBUGFUNCTION is enabled, this argument would receive non-ASCII data.
+          Which encoding this data is in is unknown by PycURL, and e.g. in
+          the case of HTTP requires parsing response headers. GitHub issue
+          #210, patch by Barry Warsaw with help from Gregory Petukhov.
+
         * Fixed build on GCC 4.4.5 (patch by Travis Jensen).
 
         * Added CURLOPT_GSSAPI_DELEGATION, CURLGSSAPI_DELEGATION_FLAG,
