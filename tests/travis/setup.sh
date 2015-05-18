@@ -55,7 +55,8 @@ if test "$USEPY" = 2.4; then
 fi
 
 if test -n "$USECURL"; then
-  wget "http://curl.haxx.se/download/curl-$USECURL.tar.gz"
+  wget "http://curl.haxx.se/download/curl-$USECURL.tar.gz" ||
+    wget "http://curl.haxx.se/download/archeology/curl-$USECURL.tar.gz"
   if test -n "$USESSL"; then
     sudo apt-get update
     case "$USESSL" in
