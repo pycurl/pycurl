@@ -77,6 +77,8 @@ The signature of each callback used in pycurl is as follows:
     callback is now of type ``bytes`` on Python 3. Previously the argument was
     of type ``str``.
 
+.. _SEEKFUNCTION:
+
 .. function:: SEEKFUNCTION(offset, origin) -> status
 
     Callback for seek operations. Corresponds to `CURLOPT_SEEKFUNCTION`_
@@ -87,7 +89,7 @@ The signature of each callback used in pycurl is as follows:
     Callback for I/O operations. Corresponds to `CURLOPT_IOCTLFUNCTION`_
     in libcurl.
     
-    *Note:* this callback is deprecated. Use :ref:`SEEKFUNCTION` instead.
+    *Note:* this callback is deprecated. Use :ref:`SEEKFUNCTION <SEEKFUNCTION>` instead.
 
 Example: Callbacks for document header and body
 -----------------------------------------------
