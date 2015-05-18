@@ -25,28 +25,39 @@ callbacks.
 
 The signature of each callback used in pycurl is as follows:
 
-.. function:: HEADERFUNCTION(string) -> number of characters written
+.. function:: HEADERFUNCTION(byte string) -> number of characters written
 
     Callback for writing received headers. Corresponds to
     `CURLOPT_HEADERFUNCTION`_ in libcurl.
+    
+    On Python 3, the argument is of type ``bytes``.
 
-    The ``HEADERFUNCTION`` callback may also return
-    ``None``, which is an alternate way of indicating that the callback has
-    consumed all of the string passed to it.
+    The ``HEADERFUNCTION`` callback may return the number of bytes written.
+    If this number is not equal to the size of the byte string, this signifies
+    an error and libcurl will abort the request. Returning ``None`` is an
+    alternate way of indicating that the callback has consumed all of the
+    string passed to it and, hence, succeeded.
 
-.. function:: WRITEFUNCTION(string) -> number of characters written
+.. function:: WRITEFUNCTION(byte string) -> number of characters written
 
     Callback for writing data. Corresponds to `CURLOPT_WRITEFUNCTION`_
     in libcurl.
 
-    The ``WRITEFUNCTION`` callback may also return
-    ``None``, which is an alternate way of indicating that the callback has
-    consumed all of the string passed to it.
+    On Python 3, the argument is of type ``bytes``.
 
-.. function:: READFUNCTION(number of characters to read) -> string
+    The ``WRITEFUNCTION`` callback may return the number of bytes written.
+    If this number is not equal to the size of the byte string, this signifies
+    an error and libcurl will abort the request. Returning ``None`` is an
+    alternate way of indicating that the callback has consumed all of the
+    string passed to it and, hence, succeeded.
+
+.. function:: READFUNCTION(number of characters to read) -> byte string
 
     Callback for reading data. Corresponds to `CURLOPT_READFUNCTION`_ in
     libcurl.
+    
+    On Python 3, the callback must return either a byte string or a Unicode
+    string consisting of ASCII code points only.
 
     In addition, ``READFUNCTION`` may return ``READFUNC_ABORT`` or
     ``READFUNC_PAUSE``. See the libcurl documentation for an explanation
