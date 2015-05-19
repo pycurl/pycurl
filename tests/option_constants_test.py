@@ -157,3 +157,19 @@ class OptionConstantsTest(unittest.TestCase):
         curl.setopt(curl.GSSAPI_DELEGATION, curl.GSSAPI_DELEGATION_NONE)
         curl.setopt(curl.GSSAPI_DELEGATION, curl.GSSAPI_DELEGATION_POLICY_FLAG)
         curl.close()
+    
+    def test_sslversion_options(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.SSLVERSION, curl.SSLVERSION_DEFAULT)
+        curl.setopt(curl.SSLVERSION, curl.SSLVERSION_SSLv2)
+        curl.setopt(curl.SSLVERSION, curl.SSLVERSION_SSLv3)
+        curl.setopt(curl.SSLVERSION, curl.SSLVERSION_TLSv1)
+        curl.close()
+    
+    @util.min_libcurl(7, 34, 0)
+    def test_sslversion_7_34_0(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.SSLVERSION, curl.SSLVERSION_TLSv1_0)
+        curl.setopt(curl.SSLVERSION, curl.SSLVERSION_TLSv1_1)
+        curl.setopt(curl.SSLVERSION, curl.SSLVERSION_TLSv1_2)
+        curl.close()

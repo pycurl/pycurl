@@ -795,9 +795,14 @@ initpycurl(void)
 
     /* constants for setopt(SSLVERSION, x) */
     insint_c(d, "SSLVERSION_DEFAULT", CURL_SSLVERSION_DEFAULT);
-    insint_c(d, "SSLVERSION_TLSv1", CURL_SSLVERSION_TLSv1);
     insint_c(d, "SSLVERSION_SSLv2", CURL_SSLVERSION_SSLv2);
     insint_c(d, "SSLVERSION_SSLv3", CURL_SSLVERSION_SSLv3);
+    insint_c(d, "SSLVERSION_TLSv1", CURL_SSLVERSION_TLSv1);
+#if LIBCURL_VERSION_NUM >= 0x072200 /* check for 7.34.0 or greater */
+    insint_c(d, "SSLVERSION_TLSv1_0", CURL_SSLVERSION_TLSv1_0);
+    insint_c(d, "SSLVERSION_TLSv1_1", CURL_SSLVERSION_TLSv1_1);
+    insint_c(d, "SSLVERSION_TLSv1_2", CURL_SSLVERSION_TLSv1_2);
+#endif
 
     /* curl_TimeCond: constants for setopt(TIMECONDITION, x) */
     insint_c(d, "TIMECONDITION_NONE", CURL_TIMECOND_NONE);

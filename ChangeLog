@@ -1,6 +1,9 @@
 master
 ------
 
+        * Added CURL_SSLVERSION_TLSv1_0, CURL_SSLVERSION_TLSv1_1
+          and CURL_SSLVERSION_TLSv1_2 (libcurl 7.34.0+).
+
         * The second argument of DEBUGFUNCTION callback is now of type bytes on
           Python 3. When response body contains non-ASCII data and
           DEBUGFUNCTION is enabled, this argument would receive non-ASCII data.
