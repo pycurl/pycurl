@@ -519,11 +519,13 @@ initpycurl(void)
     insint_c(d, "HTTPAUTH_ANY", CURLAUTH_ANY);
     insint_c(d, "HTTPAUTH_ANYSAFE", CURLAUTH_ANYSAFE);
 
+#ifdef HAVE_CURL_7_22_0_OPTS
     insint_c(d, "GSSAPI_DELEGATION_FLAG", CURLGSSAPI_DELEGATION_FLAG);
     insint_c(d, "GSSAPI_DELEGATION_NONE", CURLGSSAPI_DELEGATION_NONE);
     insint_c(d, "GSSAPI_DELEGATION_POLICY_FLAG", CURLGSSAPI_DELEGATION_POLICY_FLAG);
 
     insint_c(d, "GSSAPI_DELEGATION", CURLOPT_GSSAPI_DELEGATION);
+#endif
 
     /* curl_ftpssl: constants for setopt(FTP_SSL, x) */
     insint_c(d, "FTPSSL_NONE", CURLFTPSSL_NONE);
