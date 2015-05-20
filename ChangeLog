@@ -17,6 +17,7 @@ master
           CURLGSSAPI_DELEGATION_NONE and CURLGSSAPI_DELEGATION_POLICY_FLAG
           (libcurl 7.22.0+, patch by Dmitry Ketov).
 
+
 Version 7.19.5.1 [requires libcurl-7.19.0 or better] - 2015-01-06
 -----------------------------------------------------------------
 
@@ -34,6 +35,7 @@ Version 7.19.5.1 [requires libcurl-7.19.0 or better] - 2015-01-06
 
         * Added CURLOPT_MAIL_FROM and CURLOPT_MAIL_RCPT (libcurl 7.20.0+)
           and CURLOPT_MAIL_AUTH (libcurl 7.25.0+).
+
 
 Version 7.19.5 [requires libcurl-7.21.2 or better] - 2014-07-12
 ---------------------------------------------------------------
@@ -96,6 +98,7 @@ Version 7.19.5 [requires libcurl-7.21.2 or better] - 2014-07-12
 
         * Documentation is now processed by sphinx.
 
+
 Version 7.19.3.1 [requires libcurl-7.19.0 or better] - 2014-02-05
 -----------------------------------------------------------------
 
@@ -111,6 +114,7 @@ Version 7.19.3.1 [requires libcurl-7.19.0 or better] - 2014-02-05
           even if `curl-config --libs` succeeded. This should achieve
           pre-7.19.3 behavior with respect to automatic SSL detection
           (patch by Andjelko Horvat).
+
 
 Version 7.19.3 [requires libcurl-7.19.0 or better] - 2014-01-09
 ---------------------------------------------------------------
@@ -203,12 +207,14 @@ Version 7.19.3 [requires libcurl-7.19.0 or better] - 2014-01-09
           be modified to accept this new argument.
           https://github.com/pycurl/pycurl/pull/18
 
+
 Version 7.19.0.3 [requires libcurl-7.19.0 or better] - 2013-12-24
 -----------------------------------------------------------------
 
         * Re-release of 7.19.0.2 with minor changes to build Windows packages
           due to botched 7.19.0.2 files on PyPi.
           http://curl.haxx.se/mail/curlpython-2013-12/0021.html
+
 
 Version 7.19.0.2 [requires libcurl-7.19.0 or better] - 2013-10-08
 -----------------------------------------------------------------
@@ -221,6 +227,7 @@ Version 7.19.0.2 [requires libcurl-7.19.0 or better] - 2013-10-08
         * Added support for libcurl pause/unpause functionality,
           via curl_easy_pause call and returning READFUNC_PAUSE from
           read callback function.
+
 
 Version 7.19.0.1 [requires libcurl-7.19.0 or better] - 2013-09-23
 -----------------------------------------------------------------
