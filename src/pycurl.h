@@ -16,6 +16,16 @@
 #include <arpa/inet.h>
 #endif
 
+/*
+ * Since setup.py uses a '-WX' in the CFLAGS (treat warnings as errors),
+ * the below will turn off some warnings when using MS-SDK 8.1+.
+ * This MUST be defined before including <winsock2.h> via the libcurl
+ * headers.
+ */
+#ifndef _WINSOCK_DEPRECATED_NO_WARNINGS
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
+#endif
+
 #include <curl/curl.h>
 #include <curl/easy.h>
 #include <curl/multi.h>
