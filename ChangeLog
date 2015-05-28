@@ -1,6 +1,10 @@
 master
 ------
 
+        * Added CURLE_SSL_CRL_BADFILE, CURLE_SSL_INVALIDCERTSTATUS
+          (libcurl 7.41.0+), CURLE_SSL_ISSUER_ERROR and
+          CURLE_SSL_PINNEDPUBKEYNOTMATCH (libcurl 7.39.0+).
+
         * Added CURLOPT_SSL_VERIFYSTATUS (libcurl 7.41.0+).
 
         * Added CURL_SSLVERSION_TLSv1_0, CURL_SSLVERSION_TLSv1_1
