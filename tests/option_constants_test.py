@@ -177,3 +177,9 @@ class OptionConstantsTest(unittest.TestCase):
         curl.setopt(curl.SSLVERSION, curl.SSLVERSION_TLSv1_1)
         curl.setopt(curl.SSLVERSION, curl.SSLVERSION_TLSv1_2)
         curl.close()
+    
+    @util.min_libcurl(7, 41, 0)
+    def test_ssl_verifystatus(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.SSL_VERIFYSTATUS, True)
+        curl.close()
