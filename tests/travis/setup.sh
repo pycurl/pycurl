@@ -3,6 +3,20 @@
 set -e
 set -x
 
+wget_once() {
+  url="$1"
+  if ! test -f `basename "$url"`; then
+    wget -O `basename "$url"`.part "$url"
+    rv=$?
+    if test $rv = 0; then
+      mv `basename "$url"`.part `basename "$url"`
+    else
+      rm -f `basename "$url"`.part
+      return $rv
+    fi
+  fi
+}
+
 # for building documentation
 pip install sphinx
 
@@ -18,7 +32,7 @@ if test -n "$USEPY"; then
   sudo apt-get install python$USEPY-dev
   mkdir archives && (
     cd archives &&
-    wget https://pypi.python.org/packages/source/v/virtualenv/virtualenv-1.7.1.2.tar.gz &&
+    wget_once https://pypi.python.org/packages/source/v/virtualenv/virtualenv-1.7.1.2.tar.gz &&
     tar zxf virtualenv-1.7.1.2.tar.gz &&
     cd virtualenv-1.7.1.2 &&
     sudo python$USEPY setup.py install
@@ -55,8 +69,8 @@ if test "$USEPY" = 2.4; then
 fi
 
 if test -n "$USECURL"; then
-  wget "http://curl.haxx.se/download/curl-$USECURL.tar.gz" ||
-    wget "http://curl.haxx.se/download/archeology/curl-$USECURL.tar.gz"
+  wget_once "http://curl.haxx.se/download/curl-$USECURL.tar.gz" ||
+    wget_once "http://curl.haxx.se/download/archeology/curl-$USECURL.tar.gz"
   if test -n "$USESSL"; then
     sudo apt-get update
     case "$USESSL" in
@@ -65,7 +79,7 @@ if test -n "$USECURL"; then
       configure_flags="--with-ssl --without-gnutls --without-nss"
       ;;
     libressl)
-      wget http://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-$USELIBRESSL.tar.gz
+      wget_once http://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-$USELIBRESSL.tar.gz
       tar xfz libressl-$USELIBRESSL.tar.gz
       (cd libressl-$USELIBRESSL &&
         ./configure --prefix=/opt/libressl-$USELIBRESSL &&

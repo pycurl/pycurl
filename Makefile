@@ -96,9 +96,9 @@ do-test:
 	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONSUFFIX):$$PYTHONPATH \
 	$(PYTHON) -c 'import pycurl; print(pycurl.version)'
 	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONSUFFIX):$$PYTHONPATH \
-	$(NOSETESTS) -a '!standalone'
+	$(NOSETESTS) -a \!standalone$$(if test "$$USESSL" = none; then echo ,\!ssl; fi) -s
 	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONSUFFIX):$$PYTHONPATH \
-	$(NOSETESTS) -a standalone
+	$(NOSETESTS) -a standalone$$(if test "$$USESSL" = none; then echo ,\!ssl; fi) -s
 	./tests/ext/test-suite.sh
 
 test: build do-test

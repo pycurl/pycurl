@@ -37,8 +37,6 @@ else
   export PYCURL_SSL_LIBRARY=openssl
 fi
 
-export VSFTPD_PATH=vsftpd
-
 if test -n "$AVOIDSTDIO"; then
   export PYCURL_SETUP_OPTIONS=--avoid-stdio
 fi

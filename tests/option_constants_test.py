@@ -158,6 +158,8 @@ class OptionConstantsTest(unittest.TestCase):
         curl.setopt(curl.GSSAPI_DELEGATION, curl.GSSAPI_DELEGATION_POLICY_FLAG)
         curl.close()
     
+    # SSLVERSION_DEFAULT causes CURLE_UNKNOWN_OPTION without SSL
+    @nose.plugins.attrib.attr('ssl')
     def test_sslversion_options(self):
         curl = pycurl.Curl()
         curl.setopt(curl.SSLVERSION, curl.SSLVERSION_DEFAULT)
@@ -167,6 +169,8 @@ class OptionConstantsTest(unittest.TestCase):
         curl.close()
     
     @util.min_libcurl(7, 34, 0)
+    # SSLVERSION_TLSv1_0 causes CURLE_UNKNOWN_OPTION without SSL
+    @nose.plugins.attrib.attr('ssl')
     def test_sslversion_7_34_0(self):
         curl = pycurl.Curl()
         curl.setopt(curl.SSLVERSION, curl.SSLVERSION_TLSv1_0)
