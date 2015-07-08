@@ -100,6 +100,36 @@ def only_ssl(fn):
     
     return decorated
 
+def only_ssl_backends(*backends):
+    def decorator(fn):
+        import nose.plugins.skip
+        import pycurl
+        
+        @functools.wraps(fn)
+        def decorated(*args, **kwargs):
+            # easier to check that pycurl supports https, although
+            # theoretically it is not the same test.
+            # pycurl.version_info()[8] is a tuple of protocols supported by libcurl
+            if 'https' not in pycurl.version_info()[8]:
+                raise nose.plugins.skip.SkipTest('libcurl does not support ssl')
+            
+            # XXX move to pycurl library
+            if 'OpenSSL/' in pycurl.version:
+                current_backend = 'openssl'
+            elif 'GnuTLS/' in pycurl.version:
+                current_backend = 'gnutls'
+            elif 'NSS/' in pycurl.version:
+                current_backend = 'nss'
+            else:
+                current_backend = 'none'
+            if current_backend not in backends:
+                raise nose.plugins.skip.SkipTest('SSL backend is %s' % current_backend)
+            
+            return fn(*args, **kwargs)
+        
+        return decorated
+    return decorator
+
 def guard_unknown_libcurl_option(fn):
     '''Converts curl error 48, CURLE_UNKNOWN_OPTION, into a SkipTest
     exception. This is meant to be used with tests exercising libcurl

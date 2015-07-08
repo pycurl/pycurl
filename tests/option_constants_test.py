@@ -159,7 +159,7 @@ class OptionConstantsTest(unittest.TestCase):
         curl.close()
     
     # SSLVERSION_DEFAULT causes CURLE_UNKNOWN_OPTION without SSL
-    @nose.plugins.attrib.attr('ssl')
+    @util.only_ssl
     def test_sslversion_options(self):
         curl = pycurl.Curl()
         curl.setopt(curl.SSLVERSION, curl.SSLVERSION_DEFAULT)
@@ -170,7 +170,7 @@ class OptionConstantsTest(unittest.TestCase):
     
     @util.min_libcurl(7, 34, 0)
     # SSLVERSION_TLSv1_0 causes CURLE_UNKNOWN_OPTION without SSL
-    @nose.plugins.attrib.attr('ssl')
+    @util.only_ssl
     def test_sslversion_7_34_0(self):
         curl = pycurl.Curl()
         curl.setopt(curl.SSLVERSION, curl.SSLVERSION_TLSv1_0)
@@ -179,6 +179,7 @@ class OptionConstantsTest(unittest.TestCase):
         curl.close()
     
     @util.min_libcurl(7, 41, 0)
+    @util.only_ssl_backends('openssl', 'nss')
     def test_ssl_verifystatus(self):
         curl = pycurl.Curl()
         curl.setopt(curl.SSL_VERIFYSTATUS, True)
