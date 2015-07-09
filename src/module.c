@@ -711,6 +711,7 @@ initpycurl(void)
     insint_c(d, "POST301", CURLOPT_POST301);
     insint_c(d, "PROXY_TRANSFER_MODE", CURLOPT_PROXY_TRANSFER_MODE);
 #if LIBCURL_VERSION_NUM >= 0x072b00 /* check for 7.43.0 or greater */
+    insint_c(d, "SERVICE_NAME", CURLOPT_SERVICE_NAME);
     insint_c(d, "PROXY_SERVICE_NAME", CURLOPT_PROXY_SERVICE_NAME);
 #endif
     insint_c(d, "COPYPOSTFIELDS", CURLOPT_COPYPOSTFIELDS);

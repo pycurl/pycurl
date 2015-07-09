@@ -190,3 +190,9 @@ class OptionConstantsTest(unittest.TestCase):
         curl = pycurl.Curl()
         curl.setopt(curl.PROXY_SERVICE_NAME, 'fakehttp')
         curl.close()
+    
+    @util.min_libcurl(7, 43, 0)
+    def test_service_name(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.SERVICE_NAME, 'fakehttp')
+        curl.close()
