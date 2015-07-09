@@ -17,9 +17,6 @@ wget_once() {
   fi
 }
 
-# for building documentation
-pip install sphinx
-
 if test -n "$USEPY"; then
   # need to launch tests.appmanager with a more modern python.
   # doing this for 2.4 and 2.5 now.
@@ -121,3 +118,17 @@ else
 fi
 
 sudo apt-get install vsftpd realpath
+
+# for building documentation.
+# this must be done after python is installed so that we install sphinx
+# into the correct python version.
+# sphinx requires python 2.6+ or 3.3+
+case "$USEPY" in
+  2.[45])
+    ;;
+  3.[12])
+    ;;
+  *)
+    pip install sphinx
+    ;;
+esac
