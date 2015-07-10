@@ -99,7 +99,7 @@ class OptionConstantsTest(unittest.TestCase):
     
     # CURLOPT_SOCKS5_GSSAPI_SERVICE was introduced in libcurl-7.19.4
     @util.min_libcurl(7, 19, 4)
-    @util.guard_unknown_libcurl_option
+    @nose.plugins.attrib.attr('gssapi')
     def test_socks5_gssapi_service_setopt(self):
         curl = pycurl.Curl()
         curl.setopt(curl.SOCKS5_GSSAPI_SERVICE, 'helloworld')
@@ -107,7 +107,7 @@ class OptionConstantsTest(unittest.TestCase):
     
     # CURLOPT_SOCKS5_GSSAPI_NEC was introduced in libcurl-7.19.4
     @util.min_libcurl(7, 19, 4)
-    @util.guard_unknown_libcurl_option
+    @nose.plugins.attrib.attr('gssapi')
     def test_socks5_gssapi_nec_setopt(self):
         curl = pycurl.Curl()
         curl.setopt(curl.SOCKS5_GSSAPI_NEC, True)
@@ -186,12 +186,14 @@ class OptionConstantsTest(unittest.TestCase):
         curl.close()
     
     @util.min_libcurl(7, 43, 0)
+    @nose.plugins.attrib.attr('gssapi')
     def test_proxy_service_name(self):
         curl = pycurl.Curl()
         curl.setopt(curl.PROXY_SERVICE_NAME, 'fakehttp')
         curl.close()
     
     @util.min_libcurl(7, 43, 0)
+    @nose.plugins.attrib.attr('gssapi')
     def test_service_name(self):
         curl = pycurl.Curl()
         curl.setopt(curl.SERVICE_NAME, 'fakehttp')
