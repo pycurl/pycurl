@@ -20,7 +20,7 @@ wget_once() {
 if test -n "$USEPY"; then
   # need to launch tests.appmanager with a more modern python.
   # doing this for 2.4 and 2.5 now.
-  pip install -r requirements-dev.txt --use-mirrors
+  pip install -r requirements-dev.txt
   
   # https://launchpad.net/~fkrull/+archive/deadsnakes
   # http://askubuntu.com/questions/304178/how-do-i-add-a-ppa-in-a-shell-script-without-user-input
@@ -55,9 +55,9 @@ if test -n "$USEPY"; then
 fi
 
 if test -e requirements-dev-$USEPY.txt; then
-  pip install -r requirements-dev-$USEPY.txt --use-mirrors
+  pip install -r requirements-dev-$USEPY.txt
 else
-  pip install -r requirements-dev.txt --use-mirrors
+  pip install -r requirements-dev.txt
 fi
 
 if test "$USEPY" = 2.4; then
