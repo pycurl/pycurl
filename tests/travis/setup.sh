@@ -116,7 +116,7 @@ if test -n "$USECURL"; then
     fi &&
     ./configure --prefix="$HOME"/i/curl-"$USECURL" $configure_flags &&
     if test "$curl_flavor" = gssapi; then
-      if ! grep -q 'GSS-?API support:.*enabled' config.log; then
+      if ! egrep -q 'GSS-?API support:.*enabled' config.log; then
         echo 'GSSAPI support not enabled despite being requested' 1>&2
 	exit 11
       fi
