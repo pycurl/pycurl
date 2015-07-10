@@ -91,14 +91,7 @@ build-release: $(RELEASE_SOURCES)
 	PYCURL_RELEASE=1 $(PYTHON) setup.py build
 
 do-test:
-	mkdir -p tests/tmp
-	PYTHONSUFFIX=$$(python -V 2>&1 |awk '{print $$2}' |awk -F. '{print $$1 "." $$2}') && \
-	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONSUFFIX):$$PYTHONPATH \
-	$(PYTHON) -c 'import pycurl; print(pycurl.version)'
-	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONSUFFIX):$$PYTHONPATH \
-	$(NOSETESTS) -a \!standalone
-	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONSUFFIX):$$PYTHONPATH \
-	$(NOSETESTS) -a standalone
+	./tests/run.sh
 	./tests/ext/test-suite.sh
 
 test: build do-test

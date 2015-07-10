@@ -38,6 +38,10 @@ matrix:
         - USESSL=none
     - python: 2.7
       env:
+        - USECURL=7.43.0-gssapi
+        - USESSL=none
+    - python: 2.7
+      env:
         - AVOIDSTDIO=yes
 install: >
   ./tests/travis/setup.sh

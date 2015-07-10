@@ -25,6 +25,8 @@ if test -n "$USEPY"; then
   # https://launchpad.net/~fkrull/+archive/deadsnakes
   # http://askubuntu.com/questions/304178/how-do-i-add-a-ppa-in-a-shell-script-without-user-input
   sudo add-apt-repository -y ppa:fkrull/deadsnakes
+  # not sure why or whether this is necessary
+  sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 2EA8F35793D8809A
   sudo apt-get update
   sudo apt-get install python$USEPY-dev
   mkdir archives && (
@@ -66,8 +68,9 @@ if test "$USEPY" = 2.4; then
 fi
 
 if test -n "$USECURL"; then
-  wget_once "http://curl.haxx.se/download/curl-$USECURL.tar.gz" ||
-    wget_once "http://curl.haxx.se/download/archeology/curl-$USECURL.tar.gz"
+  curl_version=`echo "$USECURL" |awk -F- '{print $1}'`
+  wget_once "http://curl.haxx.se/download/curl-$curl_version.tar.gz" ||
+    wget_once "http://curl.haxx.se/download/archeology/curl-$curl_version.tar.gz"
   if test -n "$USESSL"; then
     sudo apt-get update
     case "$USESSL" in
@@ -103,12 +106,23 @@ if test -n "$USECURL"; then
   else
     configure_flags=
   fi
-  tar zxf "curl-$USECURL.tar.gz"
-  (cd "curl-$USECURL" &&
-    if test "$USECURL" = 7.19.0; then
+  curl_flavor=`echo "$USECURL" |awk -F- '{print $2}'`
+  if test "$curl_flavor" = gssapi; then
+    sudo apt-get install libkrb5-dev
+    configure_flags="$configure_flags --with-gssapi"
+  fi
+  tar zxf "curl-$curl_version.tar.gz"
+  (cd "curl-$curl_version" &&
+    if test "$curl_version" = 7.19.0; then
       patch -p1 <"$TRAVIS_BUILD_DIR"/tests/matrix/curl-7.19.0-sslv2-c66b0b32fba-modified.patch
     fi &&
     ./configure --prefix="$HOME"/i/curl-"$USECURL" $configure_flags &&
+    if test "$curl_flavor" = gssapi; then
+      if ! grep -q 'GSS-API support:.*enabled' config.log; then
+        echo 'GSSAPI support not enabled despite being requested' 1>&2
+	exit 11
+      fi
+    fi &&
     make &&
     make install
   )

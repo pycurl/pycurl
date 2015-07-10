@@ -1,6 +1,10 @@
 master
 ------
 
+        * Added CURLOPT_SERVICE_NAME (libcurl 7.43.0+).
+
+        * Added CURLOPT_PROXY_SERVICE_NAME (libcurl 7.43.0+).
+
         * Added CURLE_SSL_CRL_BADFILE, CURLE_SSL_INVALIDCERTSTATUS
           (libcurl 7.41.0+), CURLE_SSL_ISSUER_ERROR and
           CURLE_SSL_PINNEDPUBKEYNOTMATCH (libcurl 7.39.0+).
