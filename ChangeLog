@@ -1,6 +1,9 @@
 master
 ------
 
+        * C module initialization changed to raise exceptions on failure
+          rather than trigger a fatal error and abort the Python interpreter.
+
         * Added CURLOPT_PINNEDPUBLICKEY (libcurl 7.39.0-7.44.0
           depending on SSL backend and encoding algorithm).
 

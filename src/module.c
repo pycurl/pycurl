@@ -163,7 +163,7 @@ error:
 
 /* Helper functions for inserting constants into the module namespace */
 
-static void
+static int
 insobj2(PyObject *dict1, PyObject *dict2, char *name, PyObject *value)
 {
     /* Insert an object into one or two dicts. Eats a reference to value.
@@ -194,46 +194,73 @@ insobj2(PyObject *dict1, PyObject *dict2, char *name, PyObject *value)
     }
     Py_DECREF(key);
     Py_DECREF(value);
-    return;
+    return 0;
+
 error:
-    Py_FatalError("pycurl: insobj2() failed");
-    assert(0);
+    Py_XDECREF(key);
+    return -1;
 }
 
-static void
+#define insobj2_modinit(dict1, dict2, name, value) \
+    if (insobj2(dict1, dict2, name, value) < 0) \
+        goto error
+
+
+static int
 insstr(PyObject *d, char *name, char *value)
 {
-    PyObject *v = PyText_FromString(value);
-    insobj2(d, NULL, name, v);
+    PyObject *v;
+    int rv;
+    
+    v = PyText_FromString(value);
+    if (v == NULL)
+        return -1;
+    
+    rv = insobj2(d, NULL, name, v);
+    if (rv < 0) {
+        Py_DECREF(v);
+    }
+    return rv;
 }
 
-static void
-insint(PyObject *d, char *name, long value)
+#define insstr_modinit(d, name, value) \
+    do { \
+        if (insstr(d, name, value) < 0) \
+            goto error; \
+    } while(0)
+
+static int
+insint_worker(PyObject *d, PyObject *extra, char *name, long value)
 {
     PyObject *v = PyInt_FromLong(value);
-    insobj2(d, NULL, name, v);
+    if (v == NULL)
+        return -1;
+    return insobj2(d, extra, name, v);
 }
 
-static void
-insint_s(PyObject *d, char *name, long value)
-{
-    PyObject *v = PyInt_FromLong(value);
-    insobj2(d, curlshareobject_constants, name, v);
-}
+#define insint(d, name, value) \
+    do { \
+        if (insint_worker(d, NULL, name, value) < 0) \
+            goto error; \
+    } while(0)
 
-static void
-insint_c(PyObject *d, char *name, long value)
-{
-    PyObject *v = PyInt_FromLong(value);
-    insobj2(d, curlobject_constants, name, v);
-}
+#define insint_c(d, name, value) \
+    do { \
+        if (insint_worker(d, curlobject_constants, name, value) < 0) \
+            goto error; \
+    } while(0)
 
-static void
-insint_m(PyObject *d, char *name, long value)
-{
-    PyObject *v = PyInt_FromLong(value);
-    insobj2(d, curlmultiobject_constants, name, v);
-}
+#define insint_m(d, name, value) \
+    do { \
+        if (insint_worker(d, curlmultiobject_constants, name, value) < 0) \
+            goto error; \
+    } while(0)
+
+#define insint_s(d, name, value) \
+    do { \
+        if (insint_worker(d, curlshareobject_constants, name, value) < 0) \
+            goto error; \
+    } while(0)
 
 
 #if PY_MAJOR_VERSION >= 3
@@ -287,11 +314,11 @@ initpycurl(void)
     vi = curl_version_info(CURLVERSION_NOW);
     if (vi == NULL) {
         PyErr_SetString(PyExc_ImportError, "pycurl: curl_version_info() failed");
-        PYCURL_MODINIT_RETURN_NULL;
+        goto error;
     }
     if (vi->version_num < LIBCURL_VERSION_NUM) {
         PyErr_Format(PyExc_ImportError, "pycurl: libcurl link-time version (%s) is older than compile-time version (%s)", vi->version, LIBCURL_VERSION);
-        PYCURL_MODINIT_RETURN_NULL;
+        goto error;
     }
     
     /* Our compiled crypto locks should correspond to runtime ssl library. */
@@ -308,7 +335,7 @@ initpycurl(void)
     }
     if (strcmp(runtime_ssl_lib, COMPILE_SSL_LIB)) {
         PyErr_Format(PyExc_ImportError, "pycurl: libcurl link-time ssl backend (%s) is different from compile-time ssl backend (%s)", runtime_ssl_lib, COMPILE_SSL_LIB);
-        PYCURL_MODINIT_RETURN_NULL;
+        goto error;
     }
 
     /* Initialize the type of the new type objects here; doing it here
@@ -322,39 +349,46 @@ initpycurl(void)
 
     /* Create the module and add the functions */
     if (PyType_Ready(&Curl_Type) < 0)
-        PYCURL_MODINIT_RETURN_NULL;
+        goto error;
 
     if (PyType_Ready(&CurlMulti_Type) < 0)
-        PYCURL_MODINIT_RETURN_NULL;
+        goto error;
 
     if (PyType_Ready(&CurlShare_Type) < 0)
-        PYCURL_MODINIT_RETURN_NULL;
+        goto error;
 
 #if PY_MAJOR_VERSION >= 3
     m = PyModule_Create(&curlmodule);
     if (m == NULL)
-        return NULL;
+        goto error;
 #else
-
+    /* returns a borrowed reference, XDECREFing it crashes the interpreter */
     m = Py_InitModule3("pycurl", curl_methods, pycurl_module_doc);
-    assert(m != NULL && PyModule_Check(m));
+    if (m == NULL || !PyModule_Check(m))
+        goto error;
 #endif
 
     /* Add error object to the module */
     d = PyModule_GetDict(m);
     assert(d != NULL);
     ErrorObject = PyErr_NewException("pycurl.error", NULL, NULL);
-    assert(ErrorObject != NULL);
-    PyDict_SetItemString(d, "error", ErrorObject);
+    if (ErrorObject == NULL)
+        goto error;
+    if (PyDict_SetItemString(d, "error", ErrorObject) < 0) {
+        goto error;
+    }
 
     curlobject_constants = PyDict_New();
-    assert(curlobject_constants != NULL);
+    if (curlobject_constants == NULL)
+        goto error;
 
     curlmultiobject_constants = PyDict_New();
-    assert(curlmultiobject_constants != NULL);
+    if (curlmultiobject_constants == NULL)
+        goto error;
 
     curlshareobject_constants = PyDict_New();
-    assert(curlshareobject_constants != NULL);
+    if (curlshareobject_constants == NULL)
+        goto error;
     
     /* Add version strings to the module */
     libcurl_version = curl_version();
@@ -365,7 +399,8 @@ initpycurl(void)
      * terminating null. */
     pycurl_version_len = PYCURL_VERSION_PREFIX_SIZE + libcurl_version_len + 1;
     g_pycurl_useragent = PyMem_Malloc(pycurl_version_len);
-    assert(g_pycurl_useragent != NULL);
+    if (g_pycurl_useragent == NULL)
+        goto error;
     memcpy(g_pycurl_useragent, PYCURL_VERSION_PREFIX, PYCURL_VERSION_PREFIX_SIZE);
     g_pycurl_useragent[PYCURL_VERSION_PREFIX_SIZE-1] = ' ';
     memcpy(g_pycurl_useragent + PYCURL_VERSION_PREFIX_SIZE,
@@ -373,15 +408,15 @@ initpycurl(void)
     g_pycurl_useragent[pycurl_version_len - 1] = 0;
 #undef PYCURL_VERSION_PREFIX_SIZE
 
-    insobj2(d, NULL, "version", PyText_FromString(g_pycurl_useragent));
-    insstr(d, "COMPILE_DATE", __DATE__ " " __TIME__);
+    insstr_modinit(d, "version", g_pycurl_useragent);
+    insstr_modinit(d, "COMPILE_DATE", __DATE__ " " __TIME__);
     insint(d, "COMPILE_PY_VERSION_HEX", PY_VERSION_HEX);
     insint(d, "COMPILE_LIBCURL_VERSION_NUM", LIBCURL_VERSION_NUM);
 
     /* Types */
-    insobj2(d, NULL, "Curl", (PyObject *) p_Curl_Type);
-    insobj2(d, NULL, "CurlMulti", (PyObject *) p_CurlMulti_Type);
-    insobj2(d, NULL, "CurlShare", (PyObject *) p_CurlShare_Type);
+    insobj2_modinit(d, NULL, "Curl", (PyObject *) p_Curl_Type);
+    insobj2_modinit(d, NULL, "CurlMulti", (PyObject *) p_CurlMulti_Type);
+    insobj2_modinit(d, NULL, "CurlShare", (PyObject *) p_CurlShare_Type);
     
     /**
      ** the order of these constants mostly follows <curl/curl.h>
@@ -1014,5 +1049,17 @@ initpycurl(void)
 
 #if PY_MAJOR_VERSION >= 3
     return m;
+#else
+    PYCURL_MODINIT_RETURN_NULL;
 #endif
+
+error:
+    Py_XDECREF(curlobject_constants);
+    Py_XDECREF(curlmultiobject_constants);
+    Py_XDECREF(curlshareobject_constants);
+    Py_XDECREF(ErrorObject);
+    PyMem_Free(g_pycurl_useragent);
+    if (!PyErr_Occurred())
+        PyErr_SetString(PyExc_ImportError, "curl module init failed");
+    PYCURL_MODINIT_RETURN_NULL;
 }
