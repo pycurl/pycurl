@@ -25,8 +25,6 @@ if test -n "$USEPY"; then
   # https://launchpad.net/~fkrull/+archive/deadsnakes
   # http://askubuntu.com/questions/304178/how-do-i-add-a-ppa-in-a-shell-script-without-user-input
   sudo add-apt-repository -y ppa:fkrull/deadsnakes
-  # not sure why or whether this is necessary
-  sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 2EA8F35793D8809A
   sudo apt-get update
   sudo apt-get install python$USEPY-dev
   mkdir archives && (
