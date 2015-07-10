@@ -516,16 +516,25 @@ initpycurl(void)
     insint_c(d, "PROXYTYPE_SOCKS5_HOSTNAME", CURLPROXY_SOCKS5_HOSTNAME);
 
     /* curl_httpauth: constants for setopt(HTTPAUTH, x) */
-    insint_c(d, "HTTPAUTH_NONE", CURLAUTH_NONE);
+    insint_c(d, "HTTPAUTH_ANY", CURLAUTH_ANY);
+    insint_c(d, "HTTPAUTH_ANYSAFE", CURLAUTH_ANYSAFE);
     insint_c(d, "HTTPAUTH_BASIC", CURLAUTH_BASIC);
     insint_c(d, "HTTPAUTH_DIGEST", CURLAUTH_DIGEST);
 #ifdef HAVE_CURLAUTH_DIGEST_IE
     insint_c(d, "HTTPAUTH_DIGEST_IE", CURLAUTH_DIGEST_IE);
 #endif
     insint_c(d, "HTTPAUTH_GSSNEGOTIATE", CURLAUTH_GSSNEGOTIATE);
+#if LIBCURL_VERSION_NUM >= 0x072600 /* check for 7.38.0 or greater */
+    insint_c(d, "HTTPAUTH_NEGOTIATE", CURLAUTH_NEGOTIATE);
+#endif
     insint_c(d, "HTTPAUTH_NTLM", CURLAUTH_NTLM);
-    insint_c(d, "HTTPAUTH_ANY", CURLAUTH_ANY);
-    insint_c(d, "HTTPAUTH_ANYSAFE", CURLAUTH_ANYSAFE);
+#if LIBCURL_VERSION_NUM >= 0x071600 /* check for 7.22.0 or greater */
+    insint_c(d, "HTTPAUTH_NTLM_WB", CURLAUTH_NTLM_WB);
+#endif
+    insint_c(d, "HTTPAUTH_NONE", CURLAUTH_NONE);
+#if LIBCURL_VERSION_NUM >= 0x071503 /* check for 7.21.3 or greater */
+    insint_c(d, "HTTPAUTH_ONLY", CURLAUTH_ONLY);
+#endif
 
 #ifdef HAVE_CURL_7_22_0_OPTS
     insint_c(d, "GSSAPI_DELEGATION_FLAG", CURLGSSAPI_DELEGATION_FLAG);

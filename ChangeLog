@@ -1,6 +1,9 @@
 master
 ------
 
+        * Added CURLAUTH_NEGOTIATE (libcurl 7.38.0+), CURLAUTH_NTLM_WB
+          (libcurl 7.22.0+), CURLAUTH_ONLY (libcurl 7.21.3+),
+
         * Added CURLOPT_SERVICE_NAME (libcurl 7.43.0+).
 
         * Added CURLOPT_PROXY_SERVICE_NAME (libcurl 7.43.0+).
