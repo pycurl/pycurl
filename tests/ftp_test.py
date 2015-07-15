@@ -8,7 +8,7 @@ import pycurl
 import unittest
 
 from . import util
-from . import procmgr
+from . import procmgr, localhost
 
 setup_module, teardown_module = procmgr.vsftpd_setup()
 
@@ -20,7 +20,7 @@ class FtpTest(unittest.TestCase):
         self.curl.close()
     
     def test_get_ftp(self):
-        self.curl.setopt(pycurl.URL, 'ftp://localhost:8321')
+        self.curl.setopt(pycurl.URL, 'ftp://%s:8321' % localhost)
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
@@ -31,7 +31,7 @@ class FtpTest(unittest.TestCase):
     
     # XXX this test needs to be fixed
     def test_quote(self):
-        self.curl.setopt(pycurl.URL, 'ftp://localhost:8321')
+        self.curl.setopt(pycurl.URL, 'ftp://%s:8321' % localhost)
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.setopt(pycurl.QUOTE, ['CWD tests'])
@@ -42,7 +42,7 @@ class FtpTest(unittest.TestCase):
         assert 'ftp_test.py' in result
     
     def test_epsv(self):
-        self.curl.setopt(pycurl.URL, 'ftp://localhost:8321')
+        self.curl.setopt(pycurl.URL, 'ftp://%s:8321' % localhost)
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.setopt(pycurl.FTP_USE_EPSV, 1)

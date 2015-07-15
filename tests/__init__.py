@@ -1,3 +1,5 @@
+localhost = '127.0.0.1'
+
 def setup_package():
     # import here, not globally, so that running
     # python -m tests.appmanager

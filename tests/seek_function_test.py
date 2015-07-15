@@ -8,7 +8,7 @@ import pycurl
 import unittest
 import os.path
 
-from . import procmgr
+from . import procmgr, localhost
 
 setup_module, teardown_module = procmgr.vsftpd_setup()
 
@@ -39,7 +39,7 @@ class SeekFunctionTest(unittest.TestCase):
     def test_seek_function(self):
         c = pycurl.Curl()
         c.setopt(pycurl.UPLOAD, 1)
-        c.setopt(pycurl.URL, "ftp://localhost:8321/tests/tmp/upload.txt")
+        c.setopt(pycurl.URL, "ftp://%s:8321/tests/tmp/upload.txt" % localhost)
         c.setopt(pycurl.RESUME_FROM, 0)
         #c.setopt(pycurl.VERBOSE, 1)
         upload_file = PartialFileSource()
@@ -59,7 +59,7 @@ class SeekFunctionTest(unittest.TestCase):
         del upload_file
 
         c = pycurl.Curl()
-        c.setopt(pycurl.URL, "ftp://localhost:8321/tests/tmp/upload.txt")
+        c.setopt(pycurl.URL, "ftp://%s:8321/tests/tmp/upload.txt" % localhost)
         c.setopt(pycurl.RESUME_FROM, -1)
         c.setopt(pycurl.UPLOAD, 1)
         #c.setopt(pycurl.VERBOSE, 1)
