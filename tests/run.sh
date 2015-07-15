@@ -17,5 +17,5 @@ if test "$CI" = true; then
 fi
 
 python -c 'import pycurl; print(pycurl.version)'
-nosetests -a \!standalone"$extra_attrs"
-nosetests -a standalone
+nosetests -a \!standalone"$extra_attrs" "$@"
+nosetests -a standalone "$@"
