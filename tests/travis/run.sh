@@ -29,6 +29,7 @@ fi
 if test -n "$USESSL"; then
   if test "$USESSL" = libressl; then
     export PYCURL_SSL_LIBRARY=openssl
+    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/opt/libressl-$USELIBRESSL/lib"
   elif test "$USESSL" != none; then
     export PYCURL_SSL_LIBRARY="$USESSL"
     if test -n "$USEOPENSSL"; then
