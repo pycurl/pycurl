@@ -21,6 +21,13 @@ Specifically:
   contain ASCII code points only [#ascii]_, and transparently encode these to
   byte strings.
 
+Why doesn't PycURL automatically encode and decode, say, HTTP request or
+response data? The key to remember is that libcurl supports over 20 protocols,
+and PycURL generally has no knowledge of what protocol is being used by
+a particular request as PycURL does not track application state. Having
+to manually encode and decode data is unfortunately the price of libcurl's
+flexibility.
+
 
 Setting Options - Python 2.x
 ----------------------------
