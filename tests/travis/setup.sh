@@ -67,6 +67,15 @@ if test "$USEPY" = 2.4; then
   sed -i -e s/BaseException/Exception/ ~/virtualenv/python2.4/lib/python2.4/site-packages/nose/failure.py
 fi
 
+if test "$USEPY" = 3.1; then
+  # install flaky since pip/tarfile barfs on it
+  wget_once https://pypi.python.org/packages/source/f/flaky/flaky-2.2.0.tar.gz
+  tar xfz flaky-2.2.0.tar.gz
+  cd flaky-2.2.0
+  python setup.py install
+  cd ..
+fi
+
 if test -n "$USECURL"; then
   curl_version=`echo "$USECURL" |awk -F- '{print $1}'`
   wget_once "http://curl.haxx.se/download/curl-$curl_version.tar.gz" ||
