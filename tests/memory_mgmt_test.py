@@ -5,9 +5,11 @@
 import pycurl
 import unittest
 import gc
+import flaky
 
 debug = False
 
+@flaky.flaky(max_runs=3)
 class MemoryMgmtTest(unittest.TestCase):
     def maybe_enable_debug(self):
         if debug:
