@@ -1,6 +1,9 @@
 master
 ------
 
+        * Official support for Python 2.4 and 2.5 dropped. PycURL is no
+          longer tested against these Python versions on Travis.
+
         * Added CURLAUTH_NEGOTIATE (libcurl 7.38.0+), CURLAUTH_NTLM_WB
           (libcurl 7.22.0+), CURLAUTH_ONLY (libcurl 7.21.3+),
 
