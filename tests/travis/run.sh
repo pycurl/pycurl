@@ -44,7 +44,10 @@ if test -n "$AVOIDSTDIO"; then
   export PYCURL_SETUP_OPTIONS=--avoid-stdio
 fi
 
-make test
+make
+
+./tests/run.sh "$@"
+./tests/ext/test-suite.sh "$@"
 
 # sphinx requires python 2.6+ or 3.3+
 case "$USEPY" in

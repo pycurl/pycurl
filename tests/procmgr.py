@@ -5,7 +5,7 @@ import sys
 import signal
 import nose.plugins.skip
 
-from . import util
+from . import util, localhost
 
 class ProcessManager(object):
     def __init__(self, cmd):
@@ -85,7 +85,7 @@ def vsftpd_setup():
                 raise OSError(e.errno, e.strerror + "\n" + msg)
             else:
                 raise
-        ok = util.wait_for_network_service(('127.0.0.1', 8321), 0.1, 10)
+        ok = util.wait_for_network_service((localhost, 8321), 0.1, 10)
         if not ok:
             import warnings
             warnings.warn('vsftpd did not start after 1 second')
