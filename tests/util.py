@@ -146,7 +146,8 @@ def guard_unknown_libcurl_option(fn):
             return fn(*args, **kwargs)
         except pycurl.error:
             exc = sys.exc_info()[1]
-            if exc.args[0] == pycurl.E_UNKNOWN_OPTION:
+            # E_UNKNOWN_OPTION is available as of libcurl 7.21.5
+            if hasattr(pycurl, 'E_UNKNOWN_OPTION') and exc.args[0] == pycurl.E_UNKNOWN_OPTION:
                 raise nose.plugins.skip.SkipTest('CURLE_UNKNOWN_OPTION, skipping test')
     
     return decorated
