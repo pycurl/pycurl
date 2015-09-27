@@ -52,6 +52,8 @@ if test -n "$USEPY"; then
   python -V
   which pip
   pip --version
+else
+  sudo apt-get update
 fi
 
 if test -e requirements-dev-$USEPY.txt; then
@@ -70,11 +72,26 @@ if test -n "$USECURL"; then
   wget_once "http://curl.haxx.se/download/curl-$curl_version.tar.gz" ||
     wget_once "http://curl.haxx.se/download/archeology/curl-$curl_version.tar.gz"
   if test -n "$USESSL"; then
-    sudo apt-get update
     case "$USESSL" in
     openssl)
-      sudo apt-get install libssl-dev
-      configure_flags="--with-ssl --without-gnutls --without-nss"
+      if test -n "$USEOPENSSL"; then
+        dir=`echo "$USEOPENSSL" |tr -d a-z`
+        wget_once http://www.openssl.org/source/old/$dir/openssl-$USEOPENSSL.tar.gz
+        tar xfz openssl-$USEOPENSSL.tar.gz
+        if test "$USEOPENSSL" = 1.0.1e; then
+          # http://forum.nginx.org/read.php?2,244860
+          # https://bugs.archlinux.org/task/35868
+          patch -p0 <tests/matrix/openssl-1.0.1e-fix_pod_syntax-1.patch
+        fi
+        (cd openssl-$USEOPENSSL &&
+          ./config --prefix=/opt/openssl-$USEOPENSSL shared &&
+          make &&
+          sudo make install)
+        configure_flags="--with-ssl=/opt/openssl-$USEOPENSSL --without-gnutls --without-nss"
+      else
+        sudo apt-get install libssl-dev
+        configure_flags="--with-ssl --without-gnutls --without-nss"
+      fi
       ;;
     libressl)
       wget_once http://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-$USELIBRESSL.tar.gz
@@ -116,7 +133,7 @@ if test -n "$USECURL"; then
     fi &&
     ./configure --prefix="$HOME"/i/curl-"$USECURL" $configure_flags &&
     if test "$curl_flavor" = gssapi; then
-      if ! grep -q 'GSS-API support:.*enabled' config.log; then
+      if ! egrep -q 'GSS-?API support:.*enabled' config.log; then
         echo 'GSSAPI support not enabled despite being requested' 1>&2
 	exit 11
       fi

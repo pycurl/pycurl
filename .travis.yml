@@ -39,6 +39,22 @@ matrix:
     - python: 2.7
       env:
         - AVOIDSTDIO=yes
+    # centos 6
+    - python: 2.6
+      env:
+        - USECURL=7.19.7-gssapi
+        - USESSL=openssl
+        - USEOPENSSL=1.0.1e
+    # debian wheezy
+    - python: 2.7
+      env:
+        - USECURL=7.26.0-gssapi
+        - USESSL=gnutls
+    # debian jessie
+    - python: 3.4
+      env:
+        - USECURL=7.38.0-gssapi
+        - USESSL=gnutls
 install: >
   ./tests/travis/setup.sh
 before_script: >
