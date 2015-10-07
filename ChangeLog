@@ -1,6 +1,9 @@
 master
 ------
 
+        * Fixed a memory leak when using POSTFIELDS with unicode objects
+          on Python 2 (patch by Clint Clayton).
+
         * Official support for Python 2.4 and 2.5 dropped. PycURL is no
           longer tested against these Python versions on Travis.
 
