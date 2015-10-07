@@ -1271,6 +1271,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                 res = curl_easy_setopt(self->handle, CURLOPT_POSTFIELDSIZE_LARGE, (curl_off_t)len);
             }
             if (res != CURLE_OK) {
+                PyText_EncodedDecref(encoded_obj);
                 CURLERROR_RETVAL();
             }
             break;
@@ -1289,7 +1290,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         /* libcurl does not copy the value of CURLOPT_POSTFIELDS */
         if (option == CURLOPT_POSTFIELDS) {
             PyObject *store_obj;
-#if PY_MAJOR_VERSION >= 3
+
             /* if obj was bytes, it was not encoded, and we need to incref obj.
              * if obj was unicode, it was encoded, and we need to incref
              * encoded_obj - except we can simply transfer ownership.
@@ -1297,14 +1298,11 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             if (encoded_obj) {
                 store_obj = encoded_obj;
             } else {
+                /* no encoding is performed, incref the original object. */
                 store_obj = obj;
                 Py_INCREF(store_obj);
             }
-#else
-            /* no encoding is performed, incref the original object. */
-            store_obj = obj;
-            Py_INCREF(store_obj);
-#endif
+
             util_curl_xdecref(self, PYCURL_MEMGROUP_POSTFIELDS, self->handle);
             self->postfields_obj = store_obj;
         } else {
