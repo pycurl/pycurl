@@ -1602,14 +1602,15 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                         else if (val == CURLFORM_BUFFERPTR) {
                             PyObject *obj = PyTuple_GET_ITEM(t, j+1);
 
-                            ref_params = PyList_New((Py_ssize_t)0);
                             if (ref_params == NULL) {
-                                PyText_EncodedDecref(oencoded_obj);
-                                PyMem_Free(forms);
-                                curl_formfree(post);
-                                Py_DECREF(ref_params);
-                                PyText_EncodedDecref(nencoded_obj);
-                                return NULL;
+                                ref_params = PyList_New((Py_ssize_t)0);
+                                if (ref_params == NULL) {
+                                    PyText_EncodedDecref(oencoded_obj);
+                                    PyMem_Free(forms);
+                                    curl_formfree(post);
+                                    PyText_EncodedDecref(nencoded_obj);
+                                    return NULL;
+                                }
                             }
                             
                             /* Ensure that the buffer remains alive until curl_easy_cleanup() */
