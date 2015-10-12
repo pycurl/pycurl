@@ -279,3 +279,15 @@ class MemoryMgmtTest(unittest.TestCase):
         gc.collect()
         after_object_count = len(gc.get_objects())
         self.assert_(after_object_count <= before_object_count + 1000, 'Grew from %d to %d objects' % (before_object_count, after_object_count))
+    
+    def test_form_bufferptr_memory_leak_gh267(self):
+        c = pycurl.Curl()
+        gc.collect()
+        before_object_count = len(gc.get_objects())
+
+        for i in range(100000):
+            c.setopt(pycurl.HTTPPOST, [("post1", (pycurl.FORM_BUFFERPTR, "data1")), ("post2", (pycurl.FORM_BUFFERPTR, "data2"))])
+        
+        gc.collect()
+        after_object_count = len(gc.get_objects())
+        self.assert_(after_object_count <= before_object_count + 1000, 'Grew from %d to %d objects' % (before_object_count, after_object_count))
