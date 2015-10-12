@@ -6,6 +6,7 @@ import pycurl
 import unittest
 import gc
 import flaky
+from . import util
 
 debug = False
 
@@ -261,3 +262,18 @@ class MemoryMgmtTest(unittest.TestCase):
         gc.collect()
         new_object_count = len(gc.get_objects())
         self.assertEqual(new_object_count, object_count)
+
+    def test_postfields_unicode_memory_leak_gh252(self):
+        # this test passed even before the memory leak was fixed,
+        # not sure why.
+        
+        c = pycurl.Curl()
+        gc.collect()
+        before_object_count = len(gc.get_objects())
+
+        for i in range(100000):
+            c.setopt(pycurl.POSTFIELDS, util.u('hello world'))
+        
+        gc.collect()
+        after_object_count = len(gc.get_objects())
+        self.assert_(after_object_count <= before_object_count + 1000, 'Grew from %d to %d objects' % (before_object_count, after_object_count))

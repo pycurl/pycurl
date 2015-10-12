@@ -1,6 +1,9 @@
 master
 ------
 
+        * Fixed several memory leaks when setting string options to
+          Unicode values failed.
+
         * Fixed a memory leak when using POSTFIELDS with unicode objects
           on Python 2 (patch by Clint Clayton).
 
