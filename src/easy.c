@@ -1491,6 +1491,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                     if (PyText_AsStringAndSize(PyTuple_GET_ITEM(listitem, 1), &cstr, &clen, &cencoded_obj)) {
                         curl_formfree(post);
                         Py_XDECREF(ref_params);
+                        PyText_EncodedDecref(nencoded_obj);
                         CURLERROR_RETVAL();
                     }
                     /* INFO: curl_formadd() internally does memdup() the data, so
@@ -1505,6 +1506,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                     if (res != CURLE_OK) {
                         curl_formfree(post);
                         Py_XDECREF(ref_params);
+                        PyText_EncodedDecref(nencoded_obj);
                         CURLERROR_RETVAL();
                     }
                 }
@@ -1519,6 +1521,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                     if (tlen < 2) {
                         curl_formfree(post);
                         Py_XDECREF(ref_params);
+                        PyText_EncodedDecref(nencoded_obj);
                         PyErr_SetString(PyExc_TypeError, "tuple must contain at least one option and one value");
                         return NULL;
                     }
@@ -1528,6 +1531,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                     if (forms == NULL) {
                         curl_formfree(post);
                         Py_XDECREF(ref_params);
+                        PyText_EncodedDecref(nencoded_obj);
                         PyErr_NoMemory();
                         return NULL;
                     }
@@ -1543,6 +1547,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                             PyMem_Free(forms);
                             curl_formfree(post);
                             Py_XDECREF(ref_params);
+                            PyText_EncodedDecref(nencoded_obj);
                             return NULL;
                         }
                         if (!PyInt_Check(PyTuple_GET_ITEM(t, j))) {
@@ -1550,6 +1555,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                             PyMem_Free(forms);
                             curl_formfree(post);
                             Py_XDECREF(ref_params);
+                            PyText_EncodedDecref(nencoded_obj);
                             return NULL;
                         }
                         if (!PyText_Check(PyTuple_GET_ITEM(t, j+1))) {
@@ -1557,6 +1563,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                             PyMem_Free(forms);
                             curl_formfree(post);
                             Py_XDECREF(ref_params);
+                            PyText_EncodedDecref(nencoded_obj);
                             return NULL;
                         }
 
@@ -1572,6 +1579,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                             PyMem_Free(forms);
                             curl_formfree(post);
                             Py_XDECREF(ref_params);
+                            PyText_EncodedDecref(nencoded_obj);
                             return NULL;
                         }
                         if (PyText_AsStringAndSize(PyTuple_GET_ITEM(t, j+1), &ostr, &olen, &oencoded_obj)) {
@@ -1579,6 +1587,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                             PyMem_Free(forms);
                             curl_formfree(post);
                             Py_XDECREF(ref_params);
+                            PyText_EncodedDecref(nencoded_obj);
                             return NULL;
                         }
                         forms[k].option = val;
@@ -1598,6 +1607,8 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                                 PyText_EncodedDecref(oencoded_obj);
                                 PyMem_Free(forms);
                                 curl_formfree(post);
+                                Py_DECREF(ref_params);
+                                PyText_EncodedDecref(nencoded_obj);
                                 return NULL;
                             }
                             
@@ -1607,6 +1618,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                                 PyMem_Free(forms);
                                 curl_formfree(post);
                                 Py_DECREF(ref_params);
+                                PyText_EncodedDecref(nencoded_obj);
                                 return NULL;
                             }
 
@@ -1627,13 +1639,14 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                     if (res != CURLE_OK) {
                         curl_formfree(post);
                         Py_XDECREF(ref_params);
+                        PyText_EncodedDecref(nencoded_obj);
                         CURLERROR_RETVAL();
                     }
                 } else {
                     /* Some other type was given, ignore */
-                    PyText_EncodedDecref(nencoded_obj);
                     curl_formfree(post);
                     Py_XDECREF(ref_params);
+                    PyText_EncodedDecref(nencoded_obj);
                     PyErr_SetString(PyExc_TypeError, "unsupported second type in tuple");
                     return NULL;
                 }
