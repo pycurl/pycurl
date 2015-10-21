@@ -832,8 +832,8 @@ PYCURL_INTERNAL PyTypeObject CurlMulti_Type = {
     (destructor)do_multi_dealloc, /* tp_dealloc */
     0,                          /* tp_print */
 #if PY_MAJOR_VERSION >= 3
-    0, // (getattrfunc)do_curl_getattr,  /* tp_getattr */
-    0, //(setattrfunc)do_curl_setattr,  /* tp_setattr */
+    0,                          /* tp_getattr */
+    0,                          /* tp_setattr */
 #else
     (getattrfunc)do_multi_getattr,  /* tp_getattr */
     (setattrfunc)do_multi_setattr,  /* tp_setattr */
