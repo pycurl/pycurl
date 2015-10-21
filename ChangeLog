@@ -1,6 +1,11 @@
 master
 ------
 
+        * CURLMOPT_* option constants were mistakenly defined on Curl
+          instances but not on CurlMulti instances. These option constants
+          are now defined on CurlMulti instances and on pycurl module,
+          but not on Curl instances.
+
         * Fixed several memory leaks when setting string options to
           Unicode values failed.
 

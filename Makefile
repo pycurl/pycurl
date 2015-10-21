@@ -117,7 +117,6 @@ clean:
 	-rm -f *.pyc *.pyo */*.pyc */*.pyo */*/*.pyc */*/*.pyo
 	-rm -f MANIFEST
 	-rm -f src/allpycurl.c $(GEN_SOURCES)
-	cd src && $(MAKE) clean
 
 distclean: clean
 

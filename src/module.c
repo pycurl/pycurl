@@ -352,6 +352,12 @@ initpycurl(void)
     curlobject_constants = PyDict_New();
     assert(curlobject_constants != NULL);
 
+    curlmultiobject_constants = PyDict_New();
+    assert(curlmultiobject_constants != NULL);
+
+    curlshareobject_constants = PyDict_New();
+    assert(curlshareobject_constants != NULL);
+    
     /* Add version strings to the module */
     libcurl_version = curl_version();
     libcurl_version_len = strlen(libcurl_version);
@@ -791,16 +797,16 @@ initpycurl(void)
     insint_c(d, "MAIL_AUTH", CURLOPT_MAIL_AUTH);
 #endif
 
-    insint_c(d, "M_TIMERFUNCTION", CURLMOPT_TIMERFUNCTION);
-    insint_c(d, "M_SOCKETFUNCTION", CURLMOPT_SOCKETFUNCTION);
-    insint_c(d, "M_PIPELINING", CURLMOPT_PIPELINING);
-    insint_c(d, "M_MAXCONNECTS", CURLMOPT_MAXCONNECTS);
+    insint_m(d, "M_TIMERFUNCTION", CURLMOPT_TIMERFUNCTION);
+    insint_m(d, "M_SOCKETFUNCTION", CURLMOPT_SOCKETFUNCTION);
+    insint_m(d, "M_PIPELINING", CURLMOPT_PIPELINING);
+    insint_m(d, "M_MAXCONNECTS", CURLMOPT_MAXCONNECTS);
 #ifdef HAVE_CURL_7_30_0_PIPELINE_OPTS
-    insint_c(d, "M_MAX_HOST_CONNECTIONS", CURLMOPT_MAX_HOST_CONNECTIONS);
-    insint_c(d, "M_MAX_TOTAL_CONNECTIONS", CURLMOPT_MAX_TOTAL_CONNECTIONS);
-    insint_c(d, "M_MAX_PIPELINE_LENGTH", CURLMOPT_MAX_PIPELINE_LENGTH);
-    insint_c(d, "M_CONTENT_LENGTH_PENALTY_SIZE", CURLMOPT_CONTENT_LENGTH_PENALTY_SIZE);
-    insint_c(d, "M_CHUNK_LENGTH_PENALTY_SIZE", CURLMOPT_CHUNK_LENGTH_PENALTY_SIZE);
+    insint_m(d, "M_MAX_HOST_CONNECTIONS", CURLMOPT_MAX_HOST_CONNECTIONS);
+    insint_m(d, "M_MAX_TOTAL_CONNECTIONS", CURLMOPT_MAX_TOTAL_CONNECTIONS);
+    insint_m(d, "M_MAX_PIPELINE_LENGTH", CURLMOPT_MAX_PIPELINE_LENGTH);
+    insint_m(d, "M_CONTENT_LENGTH_PENALTY_SIZE", CURLMOPT_CONTENT_LENGTH_PENALTY_SIZE);
+    insint_m(d, "M_CHUNK_LENGTH_PENALTY_SIZE", CURLMOPT_CHUNK_LENGTH_PENALTY_SIZE);
 #endif
 
     /* constants for setopt(IPRESOLVE, x) */
@@ -980,8 +986,6 @@ initpycurl(void)
      **/
 
     /* CURLMcode: multi error codes */
-    curlmultiobject_constants = PyDict_New();
-    assert(curlmultiobject_constants != NULL);
     insint_m(d, "E_CALL_MULTI_PERFORM", CURLM_CALL_MULTI_PERFORM);
     insint_m(d, "E_MULTI_OK", CURLM_OK);
     insint_m(d, "E_MULTI_BAD_HANDLE", CURLM_BAD_HANDLE);
@@ -990,8 +994,6 @@ initpycurl(void)
     insint_m(d, "E_MULTI_INTERNAL_ERROR", CURLM_INTERNAL_ERROR);
 
     /* curl shared constants */
-    curlshareobject_constants = PyDict_New();
-    assert(curlshareobject_constants != NULL);
     insint_s(d, "SH_SHARE", CURLSHOPT_SHARE);
     insint_s(d, "SH_UNSHARE", CURLSHOPT_UNSHARE);
 

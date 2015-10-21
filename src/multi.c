@@ -762,9 +762,9 @@ PYCURL_INTERNAL PyMethodDef curlmultiobject_methods[] = {
     {"perform", (PyCFunction)do_multi_perform, METH_NOARGS, multi_perform_doc},
     {"socket_action", (PyCFunction)do_multi_socket_action, METH_VARARGS, multi_socket_action_doc},
     {"socket_all", (PyCFunction)do_multi_socket_all, METH_NOARGS, multi_socket_all_doc},
-    {"setopt", (PyCFunction)do_multi_setopt, METH_VARARGS, NULL},
-    {"timeout", (PyCFunction)do_multi_timeout, METH_NOARGS, NULL},
-    {"assign", (PyCFunction)do_multi_assign, METH_VARARGS, NULL},
+    {"setopt", (PyCFunction)do_multi_setopt, METH_VARARGS, multi_setopt_doc},
+    {"timeout", (PyCFunction)do_multi_timeout, METH_NOARGS, multi_timeout_doc},
+    {"assign", (PyCFunction)do_multi_assign, METH_VARARGS, multi_assign_doc},
     {"remove_handle", (PyCFunction)do_multi_remove_handle, METH_VARARGS, multi_remove_handle_doc},
     {"select", (PyCFunction)do_multi_select, METH_VARARGS, multi_select_doc},
     {"__getstate__", (PyCFunction)do_curlmulti_getstate, METH_NOARGS, NULL},
@@ -832,8 +832,8 @@ PYCURL_INTERNAL PyTypeObject CurlMulti_Type = {
     (destructor)do_multi_dealloc, /* tp_dealloc */
     0,                          /* tp_print */
 #if PY_MAJOR_VERSION >= 3
-    0, // (getattrfunc)do_curl_getattr,  /* tp_getattr */
-    0, //(setattrfunc)do_curl_setattr,  /* tp_setattr */
+    0,                          /* tp_getattr */
+    0,                          /* tp_setattr */
 #else
     (getattrfunc)do_multi_getattr,  /* tp_getattr */
     (setattrfunc)do_multi_setattr,  /* tp_setattr */
