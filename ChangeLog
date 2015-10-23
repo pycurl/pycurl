@@ -1,6 +1,9 @@
 master
 ------
 
+        * Tuples are now accepted for options taking list values (e.g.
+          HTTPHEADER).
+
         * Fixed a use after free in HTTPPOST when using FORM_BUFFERPTR with
           a Unicode string (patch by Clint Clayton).
 

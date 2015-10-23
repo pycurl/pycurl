@@ -41,9 +41,14 @@ class HeaderTest(unittest.TestCase):
         self.check(util.u('x-test-header: Москва').encode('utf-8'), util.u('Москва'))
     
     def check(self, send, expected):
+        # check as list and as tuple, because they may be handled differently
+        self.do_check([send], expected)
+        self.do_check((send,), expected)
+    
+    def do_check(self, send, expected):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/header_utf8?h=x-test-header')
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
-        self.curl.setopt(pycurl.HTTPHEADER, [send])
+        self.curl.setopt(pycurl.HTTPHEADER, send)
         self.curl.perform()
         self.assertEqual(expected, sio.getvalue().decode('utf-8'))

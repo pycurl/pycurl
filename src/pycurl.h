@@ -215,6 +215,17 @@ PYCURL_INTERNAL void pycurl_ssl_cleanup(void);
   #define PyInt_AsLong                 PyLong_AsLong
 #endif
 
+#define PYLISTORTUPLE_LIST 1
+#define PYLISTORTUPLE_TUPLE 2
+#define PYLISTORTUPLE_OTHER 0
+
+PYCURL_INTERNAL int
+PyListOrTuple_Check(PyObject *v);
+PYCURL_INTERNAL Py_ssize_t
+PyListOrTuple_Size(PyObject *v, int which);
+PYCURL_INTERNAL PyObject *
+PyListOrTuple_GetItem(PyObject *v, Py_ssize_t i, int which);
+
 /*************************************************************************
 // python 2/3 compatibility
 **************************************************************************/

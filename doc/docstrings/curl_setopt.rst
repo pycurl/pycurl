@@ -43,10 +43,11 @@ values of different types:
     c.setopt(pycurl.URL, b"http://www.python.org/")
 
 - ``HTTP200ALIASES``, ``HTTPHEADER``, ``POSTQUOTE``, ``PREQUOTE`` and
-  ``QUOTE`` accept a list of strings. The same rules apply to the strings
-  as do to string option values. Example::
+  ``QUOTE`` accept a list or tuple of strings. The same rules apply to these
+  strings as do to string option values. Example::
 
     c.setopt(pycurl.HTTPHEADER, ["Accept:"])
+    c.setopt(pycurl.HTTPHEADER, ("Accept:",))
 
 - ``READDATA`` accepts a file object or any Python object which has
   a ``read`` method. On Python 2, a file object will be passed directly
