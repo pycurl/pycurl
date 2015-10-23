@@ -277,3 +277,70 @@ This code is available as ``examples/quickstart/form_post.py``.
 methods can be specified via ``CUSTOMREQUEST`` option::
 
     c.setopt(c.CUSTOMREQUEST, 'PATCH')
+
+File Upload
+-----------
+
+To upload a file, use ``HTTPPOST`` option. To upload a physical file,
+use ``FORM_FILE`` as follows::
+
+    import pycurl
+
+    c = pycurl.Curl()
+    c.setopt(c.URL, 'http://pycurl.sourceforge.net/tests/testfileupload.php')
+
+    c.setopt(c.HTTPPOST, [
+        ('fileupload', (
+            # upload the contents of this file
+            c.FORM_FILE, __file__,
+        )),
+    ])
+
+    c.perform()
+    c.close()
+
+This code is available as ``examples/quickstart/file_upload_real.py``.
+
+``libcurl`` provides a number of options to tweak file uploads and multipart
+form submissions in general. These are documented on `curl_formadd page`_.
+For example, to set a different filename and content type::
+
+    import pycurl
+
+    c = pycurl.Curl()
+    c.setopt(c.URL, 'http://pycurl.sourceforge.net/tests/testfileupload.php')
+
+    c.setopt(c.HTTPPOST, [
+        ('fileupload', (
+            # upload the contents of this file
+            c.FORM_FILE, __file__,
+            # specify a different file name for the upload
+            c.FORM_FILENAME, 'helloworld.py',
+            # specify a different content type
+            c.FORM_CONTENTTYPE, 'application/x-python',
+        )),
+    ])
+
+    c.perform()
+    c.close()
+
+This code is available as ``examples/quickstart/file_upload_real_fancy.py``.
+
+If the file data is in memory, use ``BUFFER``/``BUFFERPTR`` as follows::
+
+    import pycurl
+
+    c = pycurl.Curl()
+    c.setopt(c.URL, 'http://pycurl.sourceforge.net/tests/testfileupload.php')
+
+    c.setopt(c.HTTPPOST, [
+        ('fileupload', (
+            c.FORM_BUFFER, 'readme.txt',
+            c.FORM_BUFFERPTR, 'This is a fancy readme file',
+        )),
+    ])
+
+    c.perform()
+    c.close()
+
+This code is available as ``examples/quickstart/file_upload_buffer.py``.
