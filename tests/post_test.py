@@ -99,15 +99,27 @@ class PostTest(unittest.TestCase):
         }]
         self.check_post(send, expect, 'http://localhost:8380/files')
     
-    def test_post_buffer(self):
-        contents = 'hello, world!'
+    def test_post_byte_buffer(self):
+        contents = util.b('hello, world!')
         send = [
             ('field2', (pycurl.FORM_BUFFER, 'uploaded.file', pycurl.FORM_BUFFERPTR, contents)),
         ]
         expect = [{
             'name': 'field2',
             'filename': 'uploaded.file',
-            'data': contents,
+            'data': 'hello, world!',
+        }]
+        self.check_post(send, expect, 'http://localhost:8380/files')
+    
+    def test_post_unicode_buffer(self):
+        contents = util.u('hello, world!')
+        send = [
+            ('field2', (pycurl.FORM_BUFFER, 'uploaded.file', pycurl.FORM_BUFFERPTR, contents)),
+        ]
+        expect = [{
+            'name': 'field2',
+            'filename': 'uploaded.file',
+            'data': 'hello, world!',
         }]
         self.check_post(send, expect, 'http://localhost:8380/files')
     
