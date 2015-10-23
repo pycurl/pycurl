@@ -344,3 +344,5 @@ If the file data is in memory, use ``BUFFER``/``BUFFERPTR`` as follows::
     c.close()
 
 This code is available as ``examples/quickstart/file_upload_buffer.py``.
+
+.. _curl_formadd page: http://curl.haxx.se/libcurl/c/curl_formadd.html
