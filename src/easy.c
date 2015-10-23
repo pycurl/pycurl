@@ -1600,7 +1600,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                             ++k;
                         }
                         else if (val == CURLFORM_BUFFERPTR) {
-                            PyObject *obj = PyTuple_GET_ITEM(t, j+1);
+                            PyObject *obj = NULL;
 
                             if (ref_params == NULL) {
                                 ref_params = PyList_New((Py_ssize_t)0);
@@ -1612,7 +1612,15 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                                     return NULL;
                                 }
                             }
-                            
+
+                            /* Keep a reference to the object that holds the ostr buffer. */
+                            if (oencoded_obj == NULL) {
+                                obj = PyTuple_GET_ITEM(t, j+1);
+                            }
+                            else {
+                                obj = oencoded_obj;
+                            }
+
                             /* Ensure that the buffer remains alive until curl_easy_cleanup() */
                             if (PyList_Append(ref_params, obj) != 0) {
                                 PyText_EncodedDecref(oencoded_obj);
