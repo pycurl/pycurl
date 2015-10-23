@@ -286,7 +286,14 @@ class MemoryMgmtTest(unittest.TestCase):
         before_object_count = len(gc.get_objects())
 
         for i in range(100000):
-            c.setopt(pycurl.HTTPPOST, [("post1", (pycurl.FORM_BUFFERPTR, "data1")), ("post2", (pycurl.FORM_BUFFERPTR, "data2"))])
+            c.setopt(pycurl.HTTPPOST, [
+                # Newer versions of libcurl accept FORM_BUFFERPTR
+                # without FORM_BUFFER and reproduce the memory leak;
+                # libcurl 7.19.0 requires FORM_BUFFER to be given before
+                # FORM_BUFFERPTR.
+                ("post1", (pycurl.FORM_BUFFER, 'foo.txt', pycurl.FORM_BUFFERPTR, "data1")),
+                ("post2", (pycurl.FORM_BUFFER, 'bar.txt', pycurl.FORM_BUFFERPTR, "data2")),
+            ])
         
         gc.collect()
         after_object_count = len(gc.get_objects())
