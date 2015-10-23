@@ -5,9 +5,11 @@
 import pycurl
 import unittest
 import gc
+import flaky
 
 debug = False
 
+@flaky.flaky(max_runs=3)
 class MultiMemoryMgmtTest(unittest.TestCase):
     def test_opensocketfunction_collection(self):
         self.check_callback(pycurl.M_SOCKETFUNCTION)
