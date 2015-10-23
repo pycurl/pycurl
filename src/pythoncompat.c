@@ -80,5 +80,49 @@ my_getattr(PyObject *co, char *name, PyObject *dict1, PyObject *dict2, PyMethodD
 
 #endif /* PY_MAJOR_VERSION >= 3 */
 
+PYCURL_INTERNAL int
+PyListOrTuple_Check(PyObject *v)
+{
+    int result;
+    
+    if (PyList_Check(v)) {
+        result = PYLISTORTUPLE_LIST;
+    } else if (PyTuple_Check(v)) {
+        result = PYLISTORTUPLE_TUPLE;
+    } else {
+        result = PYLISTORTUPLE_OTHER;
+    }
+    
+    return result;
+}
+
+PYCURL_INTERNAL Py_ssize_t
+PyListOrTuple_Size(PyObject *v, int which)
+{
+    switch (which) {
+    case PYLISTORTUPLE_LIST:
+        return PyList_Size(v);
+    case PYLISTORTUPLE_TUPLE:
+        return PyTuple_Size(v);
+    default:
+        assert(0);
+        return 0;
+    }
+}
+
+PYCURL_INTERNAL PyObject *
+PyListOrTuple_GetItem(PyObject *v, Py_ssize_t i, int which)
+{
+    switch (which) {
+    case PYLISTORTUPLE_LIST:
+        return PyList_GetItem(v, i);
+    case PYLISTORTUPLE_TUPLE:
+        return PyTuple_GetItem(v, i);
+    default:
+        assert(0);
+        return NULL;
+    }
+}
+
 /* vi:ts=4:et:nowrap
  */

@@ -1164,6 +1164,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     PyObject *obj;
     int res;
     PyObject *encoded_obj;
+    int which;
 
     if (!PyArg_ParseTuple(args, "iO:setopt", &option, &obj))
         return NULL;
@@ -1409,8 +1410,9 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     }
 #endif
 
-    /* Handle the case of list objects */
-    if (PyList_Check(obj)) {
+    /* Handle the case of list or tuple objects */
+    which = PyListOrTuple_Check(obj);
+    if (which) {
         struct curl_slist **old_slist = NULL;
         struct curl_slist *slist = NULL;
         Py_ssize_t i, len;
@@ -1449,7 +1451,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             return NULL;
         }
 
-        len = PyList_Size(obj);
+        len = PyListOrTuple_Size(obj, which);
         if (len == 0)
             Py_RETURN_NONE;
 
@@ -1465,7 +1467,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             for (i = 0; i < len; i++) {
                 char *nstr = NULL, *cstr = NULL;
                 Py_ssize_t nlen = -1, clen = -1;
-                PyObject *listitem = PyList_GetItem(obj, i);
+                PyObject *listitem = PyListOrTuple_GetItem(obj, i, which);
 
                 if (!PyTuple_Check(listitem)) {
                     curl_formfree(post);
@@ -1687,7 +1689,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
         /* Handle regular list operations on the other options */
         for (i = 0; i < len; i++) {
-            PyObject *listitem = PyList_GetItem(obj, i);
+            PyObject *listitem = PyListOrTuple_GetItem(obj, i, which);
             struct curl_slist *nlist;
             char *str;
             PyObject *sencoded_obj;
