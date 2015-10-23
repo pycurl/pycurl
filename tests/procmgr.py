@@ -71,6 +71,8 @@ def vsftpd_setup():
         config_file_path,
         '-oanon_root=%s' % root_path,
     ]
+    if os.environ.get('CI') and os.environ.get('TRAVIS'):
+        cmd.append('-oftp_username=travis')
     setup_module = start_setup(cmd)
     def do_setup_module():
         if vsftpd_path is None:
