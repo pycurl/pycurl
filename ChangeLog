@@ -1,6 +1,9 @@
 master
 ------
 
+        * Fixed a use after free in HTTPPOST when using FORM_BUFFERPTR with
+          a Unicode string (patch by Clint Clayton).
+
         * Fixed a memory leak in HTTPPOST for multiple FORM_BUFFERPTR
           (patch by Clint Clayton).
 
