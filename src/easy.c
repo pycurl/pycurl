@@ -1463,34 +1463,39 @@ do_curl_setopt(CurlObject *self, PyObject *args)
              * this operation */
             PyObject *ref_params = NULL;
             PyObject *nencoded_obj, *cencoded_obj, *oencoded_obj;
+            int which_httppost_item, which_httppost_option;
+            PyObject *httppost_option;
 
             for (i = 0; i < len; i++) {
                 char *nstr = NULL, *cstr = NULL;
                 Py_ssize_t nlen = -1, clen = -1;
                 PyObject *listitem = PyListOrTuple_GetItem(obj, i, which);
 
-                if (!PyTuple_Check(listitem)) {
+                which_httppost_item = PyListOrTuple_Check(listitem);
+                if (!which_httppost_item) {
                     curl_formfree(post);
                     Py_XDECREF(ref_params);
-                    PyErr_SetString(PyExc_TypeError, "list items must be tuple objects");
+                    PyErr_SetString(PyExc_TypeError, "list items must be list or tuple objects");
                     return NULL;
                 }
-                if (PyTuple_GET_SIZE(listitem) != 2) {
+                if (PyListOrTuple_Size(listitem, which_httppost_item) != 2) {
                     curl_formfree(post);
                     Py_XDECREF(ref_params);
                     PyErr_SetString(PyExc_TypeError, "tuple must contain two elements (name, value)");
                     return NULL;
                 }
-                if (PyText_AsStringAndSize(PyTuple_GET_ITEM(listitem, 0), &nstr, &nlen, &nencoded_obj) != 0) {
+                if (PyText_AsStringAndSize(PyListOrTuple_GetItem(listitem, 0, which_httppost_item),
+                        &nstr, &nlen, &nencoded_obj) != 0) {
                     curl_formfree(post);
                     Py_XDECREF(ref_params);
                     PyErr_SetString(PyExc_TypeError, "tuple must contain a byte string or Unicode string with ASCII code points only as first element");
                     return NULL;
                 }
-                if (PyText_Check(PyTuple_GET_ITEM(listitem, 1))) {
+                httppost_option = PyListOrTuple_GetItem(listitem, 1, which_httppost_item);
+                if (PyText_Check(httppost_option)) {
                     /* Handle strings as second argument for backwards compatibility */
 
-                    if (PyText_AsStringAndSize(PyTuple_GET_ITEM(listitem, 1), &cstr, &clen, &cencoded_obj)) {
+                    if (PyText_AsStringAndSize(httppost_option, &cstr, &clen, &cencoded_obj)) {
                         curl_formfree(post);
                         Py_XDECREF(ref_params);
                         PyText_EncodedDecref(nencoded_obj);
@@ -1512,10 +1517,10 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                         CURLERROR_RETVAL();
                     }
                 }
-                else if (PyTuple_Check(PyTuple_GET_ITEM(listitem, 1))) {
+                /* assignment is intended */
+                else if ((which_httppost_option = PyListOrTuple_Check(httppost_option))) {
                     /* Supports content, file and content-type */
-                    PyObject *t = PyTuple_GET_ITEM(listitem, 1);
-                    Py_ssize_t tlen = PyTuple_Size(t);
+                    Py_ssize_t tlen = PyListOrTuple_Size(httppost_option, which_httppost_option);
                     int j, k, l;
                     struct curl_forms *forms = NULL;
 
@@ -1552,7 +1557,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                             PyText_EncodedDecref(nencoded_obj);
                             return NULL;
                         }
-                        if (!PyInt_Check(PyTuple_GET_ITEM(t, j))) {
+                        if (!PyInt_Check(PyListOrTuple_GetItem(httppost_option, j, which_httppost_option))) {
                             PyErr_SetString(PyExc_TypeError, "option must be long");
                             PyMem_Free(forms);
                             curl_formfree(post);
@@ -1560,7 +1565,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                             PyText_EncodedDecref(nencoded_obj);
                             return NULL;
                         }
-                        if (!PyText_Check(PyTuple_GET_ITEM(t, j+1))) {
+                        if (!PyText_Check(PyListOrTuple_GetItem(httppost_option, j+1, which_httppost_option))) {
                             PyErr_SetString(PyExc_TypeError, "value must be a byte string or a Unicode string with ASCII code points only");
                             PyMem_Free(forms);
                             curl_formfree(post);
@@ -1569,7 +1574,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                             return NULL;
                         }
 
-                        val = PyLong_AsLong(PyTuple_GET_ITEM(t, j));
+                        val = PyLong_AsLong(PyListOrTuple_GetItem(httppost_option, j, which_httppost_option));
                         if (val != CURLFORM_COPYCONTENTS &&
                             val != CURLFORM_FILE &&
                             val != CURLFORM_FILENAME &&
@@ -1584,7 +1589,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                             PyText_EncodedDecref(nencoded_obj);
                             return NULL;
                         }
-                        if (PyText_AsStringAndSize(PyTuple_GET_ITEM(t, j+1), &ostr, &olen, &oencoded_obj)) {
+                        if (PyText_AsStringAndSize(PyListOrTuple_GetItem(httppost_option, j+1, which_httppost_option), &ostr, &olen, &oencoded_obj)) {
                             /* exception should be already set */
                             PyMem_Free(forms);
                             curl_formfree(post);
@@ -1617,7 +1622,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
                             /* Keep a reference to the object that holds the ostr buffer. */
                             if (oencoded_obj == NULL) {
-                                obj = PyTuple_GET_ITEM(t, j+1);
+                                obj = PyListOrTuple_GetItem(httppost_option, j+1, which_httppost_option);
                             }
                             else {
                                 obj = oencoded_obj;
