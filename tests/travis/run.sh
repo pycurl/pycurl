@@ -48,6 +48,7 @@ if test -n "$AVOIDSTDIO"; then
   export PYCURL_SETUP_OPTIONS=--avoid-stdio
 fi
 
+make gen
 python setup.py build $setup_args
 
 ./tests/run.sh "$@"
