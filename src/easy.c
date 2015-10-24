@@ -1481,14 +1481,14 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                 if (PyListOrTuple_Size(listitem, which_httppost_item) != 2) {
                     curl_formfree(post);
                     Py_XDECREF(ref_params);
-                    PyErr_SetString(PyExc_TypeError, "tuple must contain two elements (name, value)");
+                    PyErr_SetString(PyExc_TypeError, "list or tuple must contain two elements (name, value)");
                     return NULL;
                 }
                 if (PyText_AsStringAndSize(PyListOrTuple_GetItem(listitem, 0, which_httppost_item),
                         &nstr, &nlen, &nencoded_obj) != 0) {
                     curl_formfree(post);
                     Py_XDECREF(ref_params);
-                    PyErr_SetString(PyExc_TypeError, "tuple must contain a byte string or Unicode string with ASCII code points only as first element");
+                    PyErr_SetString(PyExc_TypeError, "list or tuple must contain a byte string or Unicode string with ASCII code points only as first element");
                     return NULL;
                 }
                 httppost_option = PyListOrTuple_GetItem(listitem, 1, which_httppost_item);
@@ -1529,7 +1529,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                         curl_formfree(post);
                         Py_XDECREF(ref_params);
                         PyText_EncodedDecref(nencoded_obj);
-                        PyErr_SetString(PyExc_TypeError, "tuple must contain at least one option and one value");
+                        PyErr_SetString(PyExc_TypeError, "list or tuple must contain at least one option and one value");
                         return NULL;
                     }
 
