@@ -1,6 +1,9 @@
 master
 ------
 
+        * List and tuples are now accepted in all positions of HTTPPOST
+          option values.
+
         * Tuples are now accepted for options taking list values (e.g.
           HTTPHEADER).
 
