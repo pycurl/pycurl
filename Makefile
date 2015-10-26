@@ -91,6 +91,7 @@ build-release: $(RELEASE_SOURCES)
 	PYCURL_RELEASE=1 $(PYTHON) setup.py build
 
 do-test:
+	cd tests/fake-curl/libcurl && make
 	./tests/run.sh
 	./tests/ext/test-suite.sh
 
