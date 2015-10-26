@@ -66,7 +66,7 @@ class ExtensionConfiguration(object):
         self.extra_objects = []
         self.extra_compile_args = []
         self.extra_link_args = []
-        
+
         self.configure()
 
     @property
@@ -84,7 +84,7 @@ class ExtensionConfiguration(object):
                 continue
             dir = os.path.normpath(dir)
             if os.path.isdir(dir):
-                if not dir in library_dirs:
+                if not dir in self.library_dirs:
                     self.library_dirs.append(dir)
             elif fatal:
                 fail("FATAL: bad directory %s in environment variable %s" % (dir, envvar))
@@ -180,7 +180,7 @@ class ExtensionConfiguration(object):
             if errtext:
                 msg += ":\n" + errtext
             raise ConfigurationError(msg)
-        
+
         ssl_lib_detected = False
         if 'PYCURL_SSL_LIBRARY' in os.environ:
             ssl_lib = os.environ['PYCURL_SSL_LIBRARY']
@@ -250,6 +250,8 @@ class ExtensionConfiguration(object):
                         break
         
         if not ssl_lib_detected:
+            ssl_lib_detected = self.detect_ssl_lib_on_centos6()
+        if not ssl_lib_detected:
             p = subprocess.Popen((CURL_CONFIG, '--features'),
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             stdout, stderr = p.communicate()
@@ -266,14 +268,73 @@ class ExtensionConfiguration(object):
                     self.define_macros.append(('HAVE_CURL_SSL', 1))
         if not self.libraries:
             self.libraries.append("curl")
-        
+
         # Add extra compile flag for MacOS X
         if sys.platform[:-1] == "darwin":
             self.extra_link_args.append("-flat_namespace")
-        
+
         # Recognize --avoid-stdio on Unix so that it can be tested
         self.check_avoid_stdio()
 
+    def detect_ssl_lib_on_centos6(self):
+        import platform
+        from ctypes.util import find_library
+        os_name = platform.system()
+        if os_name != 'Linux':
+            return False
+        dist_name, dist_version, _ = platform.dist()
+        dist_version = dist_version.split('.')[0]
+        if dist_name != 'centos' or dist_version != '6':
+            return False
+        dll_path = find_library('curl')
+        curl_version_info = self.get_curl_version_info(dll_path)
+        ssl_version = curl_version_info.ssl_version
+        if ssl_version.startswith('OpenSSL/'):
+            self.define_macros.append(('HAVE_CURL_OPENSSL', 1))
+            self.libraries.append('crypto')
+            return True
+        elif ssl_version.startswith('GnuTLS/'):
+            self.define_macros.append(('HAVE_CURL_GNUTLS', 1))
+            self.libraries.append('gnutls')
+            return True
+        elif ssl_version.startswith('NSS/'):
+            self.define_macros.append(('HAVE_CURL_NSS', 1))
+            self.libraries.append('ssl3')
+            return True
+        else:
+            return False
+
+    def get_curl_version_info(self, dll_path):
+        import ctypes
+
+        class curl_version_info_struct(ctypes.Structure):
+            _fields_ = [
+                ('age', ctypes.c_int),
+                ('version', ctypes.c_char_p),
+                ('version_num', ctypes.c_uint),
+                ('host', ctypes.c_char_p),
+                ('features', ctypes.c_int),
+                ('ssl_version', ctypes.c_char_p),
+                ('ssl_version_num', ctypes.c_long),
+                ('libz_version', ctypes.c_char_p),
+                ('protocols', ctypes.c_void_p),
+                ('ares', ctypes.c_char_p),
+                ('ares_num', ctypes.c_int),
+                ('libidn', ctypes.c_char_p),
+                ('iconv_ver_num', ctypes.c_int),
+                ('libssh_version', ctypes.c_char_p),
+            ]
+
+        dll = ctypes.CDLL(dll_path)
+        fn = dll.curl_version_info
+        fn.argtypes = [ctypes.c_int]
+        fn.restype = ctypes.POINTER(curl_version_info_struct)
+
+        # current
+        # version
+        # is
+        # 3
+        return fn(3)[0]
 
     def configure_windows(self):
         # Windows users have to pass --curl-dir parameter to specify path
@@ -308,9 +369,9 @@ class ExtensionConfiguration(object):
         if not os.path.exists(libcurl_lib_path):
             fail("libcurl.lib does not exist at %s.\nCurl directory must point to compiled libcurl (bin/include/lib subdirectories): %s" %(libcurl_lib_path, curl_dir))
         self.extra_objects.append(libcurl_lib_path)
-        
+
         self.check_avoid_stdio()
-        
+
         # make pycurl binary work on windows xp.
         # we use inet_ntop which was added in vista and implement a fallback.
         # our implementation will not be compiled with _WIN32_WINNT targeting
@@ -334,8 +395,8 @@ class ExtensionConfiguration(object):
         configure = configure_windows
     else:
         configure = configure_unix
-    
-    
+
+
     def check_avoid_stdio(self):
         if 'PYCURL_SETUP_OPTIONS' in os.environ and '--avoid-stdio' in os.environ['PYCURL_SETUP_OPTIONS']:
             self.extra_compile_args.append("-DPYCURL_AVOID_STDIO")
@@ -399,7 +460,7 @@ def get_bdist_msi_version_hack():
     import inspect
     import types
     import re
-    
+
     class bdist_msi_version_hack(bdist_msi):
         """ MSI builder requires version to be in the x.x.x format """
         def run(self):
@@ -420,7 +481,7 @@ def get_bdist_msi_version_hack():
             self.distribution.metadata.get_version = \
                 types.MethodType(monkey_get_version, self.distribution.metadata)
             bdist_msi.run(self)
-    
+
     return bdist_msi_version_hack
 
 
@@ -512,7 +573,7 @@ def get_data_files():
 
 def check_manifest():
     import fnmatch
-    
+
     f = open('MANIFEST.in')
     globs = []
     try:
@@ -525,7 +586,7 @@ def check_manifest():
             globs.append(glob)
     finally:
         f.close()
-    
+
     paths = []
     start = os.path.abspath(os.path.dirname(__file__))
     for root, dirs, files in os.walk(start):
@@ -536,7 +597,7 @@ def check_manifest():
                 continue
             rel = os.path.join(root, file)[len(start)+1:]
             paths.append(rel)
-    
+
     for path in paths:
         included = False
         for glob in globs:
@@ -554,11 +615,11 @@ def check_authors():
         contents = f.read()
     finally:
         f.close()
-    
+
     paras = contents.split("\n\n")
     authors_para = paras[AUTHORS_PARAGRAPH]
     authors = [author for author in authors_para.strip().split("\n")]
-    
+
     log = subprocess.check_output(['git', 'log', '--format=%an (%ae)'])
     for author in log.strip().split("\n"):
         author = author.replace('@', ' at ').replace('(', '<').replace(')', '>')
@@ -578,7 +639,7 @@ def convert_docstrings():
     for entry in sorted(os.listdir('doc/docstrings')):
         if not entry.endswith('.rst'):
             continue
-        
+
         name = entry.replace('.rst', '')
         f = open('doc/docstrings/%s' % entry)
         try:
@@ -704,7 +765,7 @@ if __name__ == "__main__":
             split_extension_source = True
         ext = get_extension(sys.argv, split_extension_source=split_extension_source)
         setup_args['ext_modules'] = [ext]
-        
+
         for o in ext.extra_objects:
             assert os.path.isfile(o), o
         setup(**setup_args)
