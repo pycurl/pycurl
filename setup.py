@@ -92,6 +92,7 @@ class ExtensionConfiguration(object):
         OPENSSL_DIR = scan_argv(self.argv, "--openssl-dir=")
         if OPENSSL_DIR is not None:
             self.include_dirs.append(os.path.join(OPENSSL_DIR, "include"))
+            self.library_dirs.append(os.path.join(OPENSSL_DIR, "lib"))
         CURL_CONFIG = os.environ.get('PYCURL_CURL_CONFIG', "curl-config")
         CURL_CONFIG = scan_argv(self.argv, "--curl-config=", CURL_CONFIG)
         try:
