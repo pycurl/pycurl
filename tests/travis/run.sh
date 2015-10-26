@@ -51,6 +51,8 @@ fi
 make gen
 python setup.py build $setup_args
 
+(cd tests/fake-curl/libcurl && make)
+
 ./tests/run.sh "$@"
 ./tests/ext/test-suite.sh "$@"
 
