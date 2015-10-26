@@ -53,6 +53,8 @@ def scan_argv(argv, s, default=None):
 
 class ExtensionConfiguration(object):
     def __init__(self, argv=[]):
+        # we mutate argv, this is necessary because
+        # setuptools does not recognize pycurl-specific options
         self.argv = argv
         self.include_dirs = []
         self.define_macros = [("PYCURL_VERSION", '"%s"' % VERSION)]
