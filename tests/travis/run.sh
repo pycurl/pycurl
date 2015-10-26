@@ -26,13 +26,17 @@ if test -n "$USECURL"; then
   export LD_LIBRARY_PATH="$HOME"/i/curl-"$USECURL"/lib
 fi
 
+setup_args=
 if test -n "$USESSL"; then
   if test "$USESSL" = libressl; then
     export PYCURL_SSL_LIBRARY=openssl
+    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/opt/libressl-$USELIBRESSL/lib"
+    setup_args="$setup_args --openssl-dir=/opt/libressl-$USELIBRESSL"
   elif test "$USESSL" != none; then
     export PYCURL_SSL_LIBRARY="$USESSL"
     if test -n "$USEOPENSSL"; then
       export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/opt/openssl-$USEOPENSSL/lib"
+      setup_args="$setup_args --openssl-dir=/opt/openssl-$USEOPENSSL"
     fi
   fi
 else
@@ -44,7 +48,8 @@ if test -n "$AVOIDSTDIO"; then
   export PYCURL_SETUP_OPTIONS=--avoid-stdio
 fi
 
-make
+make gen
+python setup.py build $setup_args
 
 ./tests/run.sh "$@"
 ./tests/ext/test-suite.sh "$@"
