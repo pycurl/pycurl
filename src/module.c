@@ -297,9 +297,7 @@ initpycurl(void)
     /* Our compiled crypto locks should correspond to runtime ssl library. */
     if (vi->ssl_version == NULL) {
         runtime_ssl_lib = "none/other";
-    } else if (!strncmp(vi->ssl_version, "OpenSSL/", 8)) {
-        runtime_ssl_lib = "openssl";
-    } else if (!strncmp(vi->ssl_version, "LibreSSL/", 9)) {
+    } else if (!strncmp(vi->ssl_version, "OpenSSL/", 8) || !strncmp(vi->ssl_version, "LibreSSL/", 9)) {
         runtime_ssl_lib = "openssl";
     } else if (!strncmp(vi->ssl_version, "GnuTLS/", 7)) {
         runtime_ssl_lib = "gnutls";

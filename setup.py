@@ -15,6 +15,8 @@ from distutils.extension import Extension
 from distutils.util import split_quoted
 from distutils.version import LooseVersion
 
+py3 = sys.version_info[0] == 3
+
 try:
     # python 2
     exception_base = StandardError
@@ -214,6 +216,24 @@ class ExtensionConfiguration(object):
         
         # ssl detection - ssl libraries are added
         if not ssl_lib_detected:
+            LIBCURL_DLL = scan_argv(self.argv, "--libcurl-dll=")
+            if LIBCURL_DLL is not None:
+                curl_version_info = self.get_curl_version_info(LIBCURL_DLL)
+                ssl_version = curl_version_info.ssl_version
+                if py3:
+                    # ssl_version is bytes on python 3
+                    ssl_version = ssl_version.decode('ascii')
+                if ssl_version.startswith('OpenSSL/') or ssl_version.startswith('LibreSSL/'):
+                    self.using_openssl()
+                    ssl_lib_detected = True
+                elif ssl_version.startswith('GnuTLS/'):
+                    self.using_gnutls()
+                    ssl_lib_detected = True
+                elif ssl_version.startswith('NSS/'):
+                    self.using_nss()
+                    ssl_lib_detected = True
+            
+        if not ssl_lib_detected:
             for arg in split_quoted(sslhintbuf):
                 if arg[:2] == "-l":
                     if arg[2:] == 'ssl':
@@ -321,6 +341,35 @@ class ExtensionConfiguration(object):
             self.extra_compile_args.append("-DPYCURL_AVOID_STDIO")
         if scan_argv(self.argv, '--avoid-stdio') is not None:
             self.extra_compile_args.append("-DPYCURL_AVOID_STDIO")
+    
+    def get_curl_version_info(self, dll_path):
+        import ctypes
+        
+        class curl_version_info_struct(ctypes.Structure):
+            _fields_ = [
+                ('age', ctypes.c_int),
+                ('version', ctypes.c_char_p),
+                ('version_num', ctypes.c_uint),
+                ('host', ctypes.c_char_p),
+                ('features', ctypes.c_int),
+                ('ssl_version', ctypes.c_char_p),
+                ('ssl_version_num', ctypes.c_long),
+                ('libz_version', ctypes.c_char_p),
+                ('protocols', ctypes.c_void_p),
+                ('ares', ctypes.c_char_p),
+                ('ares_num', ctypes.c_int),
+                ('libidn', ctypes.c_char_p),
+                ('iconv_ver_num', ctypes.c_int),
+                ('libssh_version', ctypes.c_char_p),
+            ]
+        
+        dll = ctypes.CDLL(dll_path)
+        fn = dll.curl_version_info
+        fn.argtypes = [ctypes.c_int]
+        fn.restype = ctypes.POINTER(curl_version_info_struct)
+        
+        # current version is 3
+        return fn(3)[0]
     
     def using_openssl(self):
         self.define_macros.append(('HAVE_CURL_OPENSSL', 1))
@@ -612,6 +661,7 @@ if LooseVersion(distutils.__version__) < LooseVersion("1.0.3"):
 unix_help = '''\
 PycURL Unix options:
  --curl-config=/path/to/curl-config  use specified curl-config binary
+ --libcurl-dll=[/path/to/]libcurl.so obtain SSL library from libcurl.so
  --openssl-dir=/path/to/openssl/dir  path to OpenSSL headers and libraries
  --with-ssl                          libcurl is linked against OpenSSL
  --with-gnutls                       libcurl is linked against GnuTLS

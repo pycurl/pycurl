@@ -1,6 +1,11 @@
 master
 ------
 
+        * Added --libcurl-dll option to setup.py to take SSL library
+          information out of libcurl shared library (patch by
+          Francisco Alves and Oleg Pudeyev). This option is only usable
+          with Python 2.5 or higher.
+
         * --with-ssl, --with-gnutls and --with-nss options to setup.py now
           result in PycURL explicitly linking against the respective SSL
           library. Previously setup.py relied on curl-config to supply the
