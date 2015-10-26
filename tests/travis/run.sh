@@ -36,8 +36,8 @@ if test -n "$USESSL"; then
     export PYCURL_SSL_LIBRARY="$USESSL"
     if test -n "$USEOPENSSL"; then
       export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/opt/openssl-$USEOPENSSL/lib"
+      setup_args="$setup_args --openssl-dir=/opt/openssl-$USEOPENSSL"
     fi
-    setup_args="$setup_args --openssl-dir=/opt/openssl-$USEOPENSSL"
   fi
 else
   # default for ubuntu 12 which is what travis currently uses is openssl
