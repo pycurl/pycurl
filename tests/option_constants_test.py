@@ -56,7 +56,7 @@ class OptionConstantsTest(unittest.TestCase):
 
     # CURL_REDIR_POST_303 was introduced in libcurl-7.26.0
     @util.min_libcurl(7, 26, 0)
-    def test_postredir_flags(self):
+    def test_postredir_post_303(self):
         self.assertEqual(pycurl.REDIR_POST_303, pycurl.REDIR_POST_ALL & pycurl.REDIR_POST_303)
 
     # HTTPAUTH_DIGEST_IE was introduced in libcurl-7.19.3

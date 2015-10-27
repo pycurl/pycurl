@@ -5,10 +5,6 @@
 import pycurl
 import unittest
 import nose.tools
-try:
-    import json
-except ImportError:
-    import simplejson as json
 
 from . import appmanager
 from . import util

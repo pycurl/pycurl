@@ -32,7 +32,7 @@
 #
 # By Eric S. Raymond, August April 2003.  All rites reversed.
 
-import sys, re, copy, curl, exceptions
+import sys, re, curl, exceptions
 
 def print_stderr(arg):
     sys.stderr.write(arg)
@@ -99,7 +99,7 @@ class LinksysSession:
         return result
     def get_MAC_address(self, page, prefix):
         return self.screen_scrape("", prefix+r":[^M]*\(MAC Address: *([^)]*)")
-    def set_flag(page, flag, value):
+    def set_flag(self, page, flag, value):
         if value:
             self.actions.append(page, flag, "1")
         else:
@@ -227,7 +227,6 @@ if __name__ == "__main__":
             cmd.Cmd.__init__(self)
             self.session = LinksysSession()
             if os.isatty(0):
-                import readline
                 print("Type ? or `help' for help.")
                 self.prompt = self.session.host + ": "
             else:
@@ -533,7 +532,7 @@ requests should be forwarded to.
 Some ISPs may require you to set host and domain for use with dynamic-address
 allocation.""")
 
-        def help_wireless(self):
+        def help_wireless_desc(self):
             print("""\
 The channel, ssid, ssid_broadcast, wep, and wireless commands control
 wireless routing.""")

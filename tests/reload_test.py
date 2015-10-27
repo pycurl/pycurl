@@ -5,7 +5,6 @@
 import pycurl
 import unittest
 import nose.plugins.attrib
-import sys
 
 class ReloadTest(unittest.TestCase):
     @nose.plugins.attrib.attr('standalone')

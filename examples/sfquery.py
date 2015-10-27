@@ -11,7 +11,7 @@
 #
 # By Eric S. Raymond, August 2002.  All rites reversed.
 
-import os, sys, netrc
+import sys, netrc
 import curl
 
 class SourceForgeUserSession(curl.Curl):

@@ -23,7 +23,6 @@ else:
 
 try:
     import signal
-    from signal import SIGPIPE, SIG_IGN
     signal.signal(signal.SIGPIPE, signal.SIG_IGN)
 except ImportError:
     pass

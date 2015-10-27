@@ -3,7 +3,6 @@
 # vi:ts=4:et
 
 import gc
-import os.path
 import pycurl
 import unittest
 try:

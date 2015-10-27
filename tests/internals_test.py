@@ -116,7 +116,7 @@ class InternalsTest(unittest.TestCase):
         else:
             assert False, "No exception when trying to copy a CurlMulti handle"
     
-    def test_copy_multi(self):
+    def test_copy_share(self):
         s = pycurl.CurlShare()
         try:
             copy.copy(s)

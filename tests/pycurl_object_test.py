@@ -4,7 +4,6 @@
 
 import pycurl
 import unittest
-import sys
 
 class PycurlObjectTest(unittest.TestCase):
     def setUp(self):
@@ -34,13 +33,13 @@ class PycurlObjectTest(unittest.TestCase):
     def test_get_attribute_multi(self):
         self.instantiate_and_check(self.check_get_attribute, 'CurlMulti')
     
-    def test_get_missing_attribute_curl(self):
+    def test_get_missing_attribute_curl_multi(self):
         self.instantiate_and_check(self.check_get_missing_attribute, 'CurlMulti')
     
     def test_delete_attribute_multi(self):
         self.instantiate_and_check(self.check_delete_attribute, 'CurlMulti')
     
-    def test_delete_missing_attribute_curl(self):
+    def test_delete_missing_attribute_curl_multi(self):
         self.instantiate_and_check(self.check_delete_missing_attribute, 'CurlMulti')
     
     def test_set_attribute_share(self):
@@ -49,13 +48,13 @@ class PycurlObjectTest(unittest.TestCase):
     def test_get_attribute_share(self):
         self.instantiate_and_check(self.check_get_attribute, 'CurlShare')
     
-    def test_get_missing_attribute_curl(self):
+    def test_get_missing_attribute_curl_share(self):
         self.instantiate_and_check(self.check_get_missing_attribute, 'CurlShare')
     
     def test_delete_attribute_share(self):
         self.instantiate_and_check(self.check_delete_attribute, 'CurlShare')
     
-    def test_delete_missing_attribute_curl(self):
+    def test_delete_missing_attribute_curl_share(self):
         self.instantiate_and_check(self.check_delete_missing_attribute, 'CurlShare')
     
     def instantiate_and_check(self, fn, cls_name):
