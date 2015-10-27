@@ -558,8 +558,9 @@ wireless routing.""")
         try:
             interpreter.cmdloop()
             fatal = True
-        except LinksysError, (message, fatal):
-            print "linksys:", message
+        except LinksysError:
+            message, fatal = sys.exc_info()[1].args
+            print("linksys: " + message)
 
 # The following sets edit modes for GNU EMACS
 # Local Variables:
