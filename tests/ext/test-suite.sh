@@ -2,6 +2,8 @@
 
 dir=$(dirname "$0")
 
+export PATH="$(pwd)/tests/bin":$PATH
+
 . "$dir"/test-lib.sh
 
 setup

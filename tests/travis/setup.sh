@@ -155,7 +155,7 @@ else
   curl -V
 fi
 
-sudo apt-get install vsftpd realpath
+sudo apt-get install vsftpd
 
 # for building documentation.
 # this must be done after python is installed so that we install sphinx
