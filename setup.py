@@ -58,6 +58,7 @@ class ExtensionConfiguration(object):
         # we mutate argv, this is necessary because
         # setuptools does not recognize pycurl-specific options
         self.argv = argv
+        self.original_argv = argv[:]
         self.include_dirs = []
         self.define_macros = [("PYCURL_VERSION", '"%s"' % VERSION)]
         self.library_dirs = []
@@ -237,8 +238,11 @@ class ExtensionConfiguration(object):
                         ssl_lib_detected = True
                         break
         
-        if not ssl_lib_detected:
+        if not ssl_lib_detected and len(self.argv) == len(self.original_argv):
+            # this path should only be taken when no options are given
+            # to setup.py
             ssl_lib_detected = self.detect_ssl_lib_on_centos6()
+        
         if not ssl_lib_detected:
             p = subprocess.Popen((CURL_CONFIG, '--features'),
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
