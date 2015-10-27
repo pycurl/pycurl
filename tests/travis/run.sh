@@ -55,6 +55,7 @@ python setup.py build $setup_args
 
 ./tests/run.sh "$@"
 ./tests/ext/test-suite.sh "$@"
+pyflakes python examples tests setup.py winbuild.py
 
 # sphinx requires python 2.6+ or 3.3+
 case "$USEPY" in
