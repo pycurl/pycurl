@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+import flaky
 import os.path
 import pycurl
 import unittest
@@ -19,6 +20,7 @@ from . import util
 
 setup_module, teardown_module = appmanager.setup(('app', 8380))
 
+@flaky.flaky(max_runs=3)
 class PostTest(unittest.TestCase):
     def setUp(self):
         self.curl = pycurl.Curl()
