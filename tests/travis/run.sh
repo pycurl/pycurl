@@ -57,6 +57,7 @@ python setup.py build $setup_args
 ./tests/ext/test-suite.sh
 which pyflakes
 pyflakes python examples tests setup.py winbuild.py
+./tests/run-quickstart.sh
 
 # sphinx requires python 2.6+ or 3.3+
 case "$USEPY" in
