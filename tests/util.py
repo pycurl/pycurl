@@ -30,6 +30,12 @@ else:
         from StringIO import StringIO
     BytesIO = StringIO
     
+    # pyflakes workaround
+    # https://github.com/kevinw/pyflakes/issues/13
+    # https://bugs.launchpad.net/pyflakes/+bug/1308508/comments/3
+    if False:
+        unicode = object
+    
     # borrowed from six
     def b(s):
         '''Byte literal'''
