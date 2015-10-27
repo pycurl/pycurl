@@ -238,9 +238,11 @@ class ExtensionConfiguration(object):
                         ssl_lib_detected = True
                         break
         
-        if not ssl_lib_detected and len(self.argv) == len(self.original_argv):
-            # this path should only be taken when no options are given
-            # to setup.py
+        if not ssl_lib_detected and len(self.argv) == len(self.original_argv) \
+                and not os.environ.get('PYCURL_CURL_CONFIG') \
+                and not os.environ.get('PYCURL_SSL_LIBRARY'):
+            # this path should only be taken when no options or
+            # configuration environment variables are given to setup.py
             ssl_lib_detected = self.detect_ssl_lib_on_centos6()
         
         if not ssl_lib_detected:
