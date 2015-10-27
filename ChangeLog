@@ -1,9 +1,16 @@
 master
 ------
 
+        * Added automatic SSL library detection on CentOS 6 by loading
+          libcurl shared library in setup.py. This automatic detection is
+          meant to permit installing pycurl seamlessly via `pip install pycurl`
+          on CentOS; as such, it is only employed when no other configuration
+          options or configuration environment variables are given to setup.py
+          (original patch by Francisco Alves).
+
         * Added --libcurl-dll option to setup.py to take SSL library
-          information out of libcurl shared library (patch by
-          Francisco Alves and Oleg Pudeyev). This option is only usable
+          information out of libcurl shared library (original patch by
+          Francisco Alves). This option is only usable
           with Python 2.5 or higher.
 
         * --with-ssl, --with-gnutls and --with-nss options to setup.py now

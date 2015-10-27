@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+import flaky
 import pycurl
 import unittest
 
@@ -17,6 +18,7 @@ class GetinfoTest(unittest.TestCase):
     def tearDown(self):
         self.curl.close()
     
+    @flaky.flaky(max_runs=3)
     def test_getinfo(self):
         self.make_request()
         
