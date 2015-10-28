@@ -11,7 +11,7 @@ root = 'c:/dev/build-pycurl'
 # where msysgit is installed
 git_root = 'c:/program files/git'
 # which versions of python to build against
-python_versions = ['2.6.6', '2.7.6', '3.2.5', '3.3.5', '3.4.1']
+python_versions = ['2.6.6', '2.7.10', '3.2.5', '3.3.5', '3.4.3', '3.5.0']
 # where pythons are installed
 python_path_template = 'c:/python%s/python'
 vc_paths = {
@@ -62,13 +62,15 @@ def fetch(url, archive=None):
     if not os.path.exists(archive):
         sys.stdout.write("Fetching %s\n" % url)
         io = urlopen(url)
-        with open('.tmp.%s' % archive, 'wb') as f:
+        tmp_path = os.path.join(os.path.dirname(archive),
+            '.%s.part' % os.path.basename(archive))
+        with open(tmp_path, 'wb') as f:
             while True:
                 chunk = io.read(65536)
                 if len(chunk) == 0:
                     break
                 f.write(chunk)
-        os.rename('.tmp.%s' % archive, archive)
+        os.rename(tmp_path, archive)
 
 @contextlib.contextmanager
 def in_dir(dir):
@@ -177,12 +179,21 @@ def build():
 
 def download_pythons():
     for version in python_versions:
-        url = 'http://python.org/ftp/python/%s/python-%s.msi' % (version, version)
-        fetch(url, os.path.join(archives_path, 'python-%s.msi'))
+        parts = [int(part) for part in version.split('.')]
+        if parts[0] >= 3 and parts[1] >= 5:
+            ext = 'exe'
+            amd64_suffix = '-amd64'
+        else:
+            ext = 'msi'
+            amd64_suffix = '.amd64'
+        url = 'https://www.python.org/ftp/python/%s/python-%s.%s' % (version, version, ext)
+        fetch(url, os.path.join(archives_path, 'python-%s.%s') % (version, ext))
+        url = 'https://www.python.org/ftp/python/%s/python-%s%s.%s' % (version, version, amd64_suffix, ext)
+        fetch(url, os.path.join(archives_path, 'python-%s%s.%s') % (version, amd64_suffix, ext))
 
 def download_bootstrap_python():
-    version = python_versions[-1]
-    url = 'http://python.org/ftp/python/%s/python-%s.msi' % (version, version)
+    version = python_versions[-2]
+    url = 'https://www.python.org/ftp/python/%s/python-%s.msi' % (version, version)
     fetch(url)
 
 if len(sys.argv) > 1:
