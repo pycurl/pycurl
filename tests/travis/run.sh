@@ -56,7 +56,7 @@ python setup.py build $setup_args
 ./tests/run.sh
 ./tests/ext/test-suite.sh
 
-if test -n "$TEST_DOCS_EXAMPLES"; then
+if test -n "$TESTDOCSEXAMPLES"; then
   which pyflakes
   pyflakes python examples tests setup.py winbuild.py
   ./tests/run-quickstart.sh
