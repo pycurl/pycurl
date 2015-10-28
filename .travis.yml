@@ -29,12 +29,14 @@ matrix:
     - python: 2.7
       env:
         - USECURL=7.19.0
+        - TEST_DOCS_EXAMPLES=1
     
     # latest libcurl with each supported SSL backend
     - python: 2.7
       env:
         - USECURL=7.43.0
         - USESSL=openssl
+        - TEST_DOCS_EXAMPLES=1
     - python: 2.7
       env:
         - USECURL=7.43.0
