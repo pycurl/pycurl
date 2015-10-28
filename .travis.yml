@@ -29,7 +29,8 @@ matrix:
     # minimum libcurl we support
     - python: 2.7
       env:
-        - USECURL=7.19.0
+        - USECURL=7.19.0-gssapi
+        - USESSL=openssl
         - TESTDOCSEXAMPLES=1
     
     # latest libcurl with each supported SSL backend
