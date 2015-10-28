@@ -27,7 +27,7 @@ for file in "`pwd`"/examples/quickstart/*.py; do \
   set -e
   if test "$rv" != 0; then
     echo "$file failed, standard error contents (if any) is above"
-    if test -n "`cat output`"; then
+    if test -n "`cat "$tmpdir"/output`"; then
       echo "Standard output contents:"
       cat "$tmpdir"/output
     fi
