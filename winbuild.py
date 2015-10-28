@@ -177,16 +177,21 @@ def build():
 
 def download_pythons():
     for version in python_versions:
-        if os.path.exists(os.path.join(archives_path, 'python-%s.msi')):
-            continue
-        print('Downloading %s' % version)
         url = 'http://python.org/ftp/python/%s/python-%s.msi' % (version, version)
-        io = urlopen(url)
-        data = io.read()
-        with open(os.path.join(archives_path, 'python-%s.msi' % version), 'wb') as f:
-            f.write(data)
+        fetch(url, os.path.join(archives_path, 'python-%s.msi'))
 
-if len(sys.argv) > 1 and sys.argv[1] == 'download':
-    download_pythons()
+def download_bootstrap_python():
+    version = python_versions[-1]
+    url = 'http://python.org/ftp/python/%s/python-%s.msi' % (version, version)
+    fetch(url)
+
+if len(sys.argv) > 1:
+    if sys.argv[1] == 'download':
+        download_pythons()
+    elif sys.argv[1] == 'bootstrap':
+        download_bootstrap_python()
+    else:
+        print('Unknown command: %s' % sys.argv[1])
+        exit(2)
 else:
     build()
