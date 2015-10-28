@@ -176,11 +176,6 @@ def build():
                 build_pycurl(python_version, target)
 
 def download_pythons():
-    try:
-        from urllib.request import urlopen
-    except NameError:
-        from urllib import urlopen
-    
     for version in python_versions:
         if os.path.exists(os.path.join(archives_path, 'python-%s.msi')):
             continue
