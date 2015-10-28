@@ -1,17 +1,21 @@
 language: python
-python:
-  - "2.6"
-  - "2.7"
-  - "3.2"
-  - "3.3"
-  - "3.4"
-  - "3.5"
 matrix:
   include:
+    # all supported Python versions
+    - python: 2.6
+    - python: 2.7
     - python: 2.7
       env: USEPY=3.1
+    - python: 3.2
+    - python: 3.3
+    - python: 3.4
+    - python: 3.5
+    
+    # minimum libcurl we support
     - python: 2.7
       env: USECURL=7.19.0
+    
+    # latest libcurl with each supported SSL backend
     - python: 2.7
       env:
         - USECURL=7.43.0
@@ -33,25 +37,31 @@ matrix:
       env:
         - USECURL=7.43.0
         - USESSL=none
+    
+    # GSSAPI without SSL, this feels weird
     - python: 2.7
       env:
         - USECURL=7.43.0-gssapi
         - USESSL=none
+    
+    # AVOIDSTDIO tested on one Python version, must be Python 2.x
     - python: 2.7
       env:
         - AVOIDSTDIO=yes
-    # centos 6
+    
+    # common distributions:
+    # CentOS 6
     - python: 2.6
       env:
         - USECURL=7.19.7-gssapi
         - USESSL=openssl
         - USEOPENSSL=1.0.1e
-    # debian wheezy
+    # Debian Wheezy
     - python: 2.7
       env:
         - USECURL=7.26.0-gssapi
         - USESSL=gnutls
-    # debian jessie
+    # Debian Jessie
     - python: 3.4
       env:
         - USECURL=7.38.0-gssapi
