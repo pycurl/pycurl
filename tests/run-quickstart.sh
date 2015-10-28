@@ -14,6 +14,13 @@ finish() {
 trap finish EXIT
 
 for file in "`pwd`"/examples/quickstart/*.py; do \
+  # skip Python 2-only examples on Python 3
+  if echo "$file" |grep -q python2 &&
+    python -V |grep -q 'Python 3'
+  then
+    continue
+  fi
+  
   set +e
   (cd "$tmpdir" && python "$file" >output)
   rv=$?
