@@ -61,7 +61,7 @@ if test -n "$USESSL"; then
       export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$HOME/opt/libressl-$USELIBRESSL/lib"
     fi
   fi
-else
+elif test -z "$USECURL"; then
   # default for ubuntu 12 which is what travis currently uses is openssl
   export PYCURL_SSL_LIBRARY=openssl
 fi
