@@ -35,11 +35,6 @@ if test -n "$USEPY"; then
     tar xfJ python-"$USEPY"-precise-64.tar.xz)
   export PATH=$HOME/opt/python-$USEPY/bin:$PATH
   
-  # https://launchpad.net/~fkrull/+archive/deadsnakes
-  # http://askubuntu.com/questions/304178/how-do-i-add-a-ppa-in-a-shell-script-without-user-input
-  #sudo add-apt-repository -y ppa:fkrull/deadsnakes
-  #sudo apt-get update
-  #sudo apt-get install python$USEPY-dev
   mkdir archives && (
     cd archives &&
     wget_once https://pypi.python.org/packages/source/v/virtualenv/virtualenv-1.7.1.2.tar.gz &&
@@ -66,8 +61,6 @@ if test -n "$USEPY"; then
   python -V
   which pip
   pip --version
-else
-  : #sudo apt-get update
 fi
 
 if test -e requirements-dev-$USEPY.txt; then
@@ -130,8 +123,6 @@ if test -n "$USECURL"; then
 else
   curl -V
 fi
-
-#sudo apt-get install vsftpd
 
 # for building documentation.
 # this must be done after python is installed so that we install sphinx
