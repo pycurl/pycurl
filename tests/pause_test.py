@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+import flaky
 import pycurl
 import unittest, signal
 import time as _time
@@ -11,6 +12,7 @@ from . import util
 
 setup_module, teardown_module = appmanager.setup(('app', 8380))
 
+@flaky.flaky(max_runs=3)
 class PauseTest(unittest.TestCase):
     def setUp(self):
         self.curl = pycurl.Curl()
