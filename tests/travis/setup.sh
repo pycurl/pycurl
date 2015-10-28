@@ -17,23 +17,32 @@ wget_once() {
   fi
 }
 
+(cd &&
+  mkdir -p opt &&
+  cd opt &&
+  wget http://pycurl.sourceforge.net/travis-deps/bin-precise-64.tar.xz &&
+  tar xfJ bin-precise-64.tar.xz)
+
+export PATH=~/opt/bin:$PATH
+
 if test -n "$USEPY"; then
   # need to launch tests.appmanager with a more modern python.
   # doing this for 2.4 and 2.5 now.
   pip install -r requirements-dev.txt
   
-  # https://launchpad.net/~fkrull/+archive/deadsnakes
-  # http://askubuntu.com/questions/304178/how-do-i-add-a-ppa-in-a-shell-script-without-user-input
-  sudo add-apt-repository -y ppa:fkrull/deadsnakes
-  sudo apt-get update
-  sudo apt-get install python$USEPY-dev
+  (cd && mkdir -p opt && cd opt &&
+    wget http://pycurl.sourceforge.net/travis-deps/python-"$USEPY"-precise-64.tar.xz &&
+    tar xfJ python-"$USEPY"-precise-64.tar.xz)
+  export PATH=$HOME/opt/python-$USEPY/bin:$PATH
+  
   mkdir archives && (
     cd archives &&
     wget_once https://pypi.python.org/packages/source/v/virtualenv/virtualenv-1.7.1.2.tar.gz &&
     tar zxf virtualenv-1.7.1.2.tar.gz &&
     cd virtualenv-1.7.1.2 &&
-    sudo python$USEPY setup.py install
+    ~/opt/python-$USEPY/bin/python$USEPY setup.py install
   )
+  
   virtualenv --version
   which virtualenv
   # travis places its virtualenv in /usr/local/bin.
@@ -42,7 +51,7 @@ if test -n "$USEPY"; then
   # manually invoke the 1.7 version here.
   # however, when installed for 2.x our virtualenv 1.7 goes in /usr/local/bin.
   if test "$USEPY" = 3.1; then
-    virtualenv=/usr/local/bin/virtualenv
+    virtualenv=$HOME/opt/python-$USEPY/bin/virtualenv
   else
     virtualenv=/usr/bin/virtualenv
   fi
@@ -52,8 +61,6 @@ if test -n "$USEPY"; then
   python -V
   which pip
   pip --version
-else
-  sudo apt-get update
 fi
 
 if test -e requirements-dev-$USEPY.txt; then
@@ -77,85 +84,45 @@ if test "$USEPY" = 3.1; then
 fi
 
 if test -n "$USECURL"; then
-  curl_version=`echo "$USECURL" |awk -F- '{print $1}'`
-  wget_once "http://curl.haxx.se/download/curl-$curl_version.tar.gz" ||
-    wget_once "http://curl.haxx.se/download/archeology/curl-$curl_version.tar.gz"
-  if test -n "$USESSL"; then
-    case "$USESSL" in
-    openssl)
-      if test -n "$USEOPENSSL"; then
-        dir=`echo "$USEOPENSSL" |tr -d a-z`
-        wget_once http://www.openssl.org/source/old/$dir/openssl-$USEOPENSSL.tar.gz
-        tar xfz openssl-$USEOPENSSL.tar.gz
-        if test "$USEOPENSSL" = 1.0.1e; then
-          # http://forum.nginx.org/read.php?2,244860
-          # https://bugs.archlinux.org/task/35868
-          patch -p0 <tests/matrix/openssl-1.0.1e-fix_pod_syntax-1.patch
-        fi
-        (cd openssl-$USEOPENSSL &&
-          ./config --prefix=/opt/openssl-$USEOPENSSL shared &&
-          make &&
-          sudo make install)
-        configure_flags="--with-ssl=/opt/openssl-$USEOPENSSL --without-gnutls --without-nss"
-      else
-        sudo apt-get install libssl-dev
-        configure_flags="--with-ssl --without-gnutls --without-nss"
-      fi
-      ;;
-    libressl)
-      wget_once http://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-$USELIBRESSL.tar.gz
-      tar xfz libressl-$USELIBRESSL.tar.gz
-      (cd libressl-$USELIBRESSL &&
-        ./configure --prefix=/opt/libressl-$USELIBRESSL &&
-        make &&
-        sudo make install)
-      configure_flags="--with-ssl=/opt/libressl-$USELIBRESSL --without-gnutls --without-nss"
-      ;;
-    gnutls)
-      sudo apt-get install libgnutls-dev
-      configure_flags="--without-ssl --with-gnutls --without-nss"
-      ;;
-    nss)
-      sudo apt-get install libnss3-dev
-      configure_flags="--without-ssl --without-gnutls --with-nss"
-      ;;
-    none)
-      configure_flags="--without-ssl --without-gnutls --without-nss"
-      ;;
-    *)
-      echo "Bogus USESSL=$USESSL" 1>&2
-      exit 10
-      ;;
-    esac
+  if echo "$USECURL" |grep -q -- "-gssapi\$"; then
+    curl_suffix=-gssapi
+    USECURL=$(echo "$USECURL" |sed -e s/-gssapi//)
   else
-    configure_flags=
+    curl_suffix=
   fi
+  
+  if test -n "$USEOPENSSL"; then
+    (cd && mkdir -p opt && cd opt &&
+      wget http://pycurl.sourceforge.net/travis-deps/openssl-"$USEOPENSSL"-precise-64.tar.xz &&
+      tar xfJ openssl-"$USEOPENSSL"-precise-64.tar.xz)
+  fi
+  if test -n "$USELIBRESSL"; then
+    (cd && mkdir -p opt && cd opt &&
+      wget http://pycurl.sourceforge.net/travis-deps/libressl-"$USELIBRESSL"-precise-64.tar.xz &&
+      tar xfJ libressl-"$USELIBRESSL"-precise-64.tar.xz)
+  fi
+  
+  if test -n "$USESSL"; then
+    if test "$USESSL" != none; then
+      curldirname=curl-"$USECURL"-"$USESSL"$curl_suffix
+    else
+      curldirname=curl-"$USECURL"-none$curl_suffix
+    fi
+  else
+    curldirname=curl-"$USECURL"$curl_suffix
+  fi
+  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/opt/$curldirname/lib
+  name=$curldirname-precise-64.tar.xz
+  (cd &&
+    mkdir -p opt &&
+    cd opt &&
+    wget http://pycurl.sourceforge.net/travis-deps/"$name" &&
+    tar xfJ "$name")
   curl_flavor=`echo "$USECURL" |awk -F- '{print $2}'`
-  if test "$curl_flavor" = gssapi; then
-    sudo apt-get install libkrb5-dev
-    configure_flags="$configure_flags --with-gssapi"
-  fi
-  tar zxf "curl-$curl_version.tar.gz"
-  (cd "curl-$curl_version" &&
-    if test "$curl_version" = 7.19.0; then
-      patch -p1 <"$TRAVIS_BUILD_DIR"/tests/matrix/curl-7.19.0-sslv2-c66b0b32fba-modified.patch
-    fi &&
-    ./configure --prefix="$HOME"/i/curl-"$USECURL" $configure_flags &&
-    if test "$curl_flavor" = gssapi; then
-      if ! egrep -q 'GSS-?API support:.*enabled' config.log; then
-        echo 'GSSAPI support not enabled despite being requested' 1>&2
-	exit 11
-      fi
-    fi &&
-    make &&
-    make install
-  )
-  "$HOME"/i/curl-"$USECURL"/bin/curl -V
+  "$HOME"/opt/$curldirname/bin/curl -V
 else
   curl -V
 fi
-
-sudo apt-get install vsftpd
 
 # for building documentation.
 # this must be done after python is installed so that we install sphinx
