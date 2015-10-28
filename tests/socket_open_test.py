@@ -5,10 +5,6 @@
 import socket
 import pycurl
 import unittest
-try:
-    import urllib.parse as urllib_parse
-except ImportError:
-    import urllib as urllib_parse
 
 from . import appmanager
 from . import util

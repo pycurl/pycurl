@@ -28,7 +28,6 @@ class WriteAbortTest(unittest.TestCase):
     
     def check(self, write_cb):
         # download the script itself through the file:// protocol into write_cb
-        c = pycurl.Curl()
         self.curl.setopt(pycurl.URL, 'file://' + os.path.abspath(sys.argv[0]))
         self.curl.setopt(pycurl.WRITEFUNCTION, write_cb)
         try:

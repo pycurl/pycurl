@@ -19,9 +19,9 @@ class CurlObjectTest(unittest.TestCase):
     # positional arguments are rejected
     @nose.tools.raises(TypeError)
     def test_positional_arguments(self):
-        c = pycurl.Curl(1)
+        pycurl.Curl(1)
     
     # keyword arguments are rejected
     @nose.tools.raises(TypeError)
     def test_keyword_arguments(self):
-        c = pycurl.Curl(a=1)
+        pycurl.Curl(a=1)

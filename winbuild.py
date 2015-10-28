@@ -89,7 +89,7 @@ def step(step_fn, args, target_dir):
     state_file_path = os.path.join(state_path, step)
     if not os.path.exists(state_file_path) or not os.path.exists(target_dir):
         step_fn(*args)
-    with open(state_file_path, 'w') as f:
+    with open(state_file_path, 'w'):
         pass
 
 def untar(basename):

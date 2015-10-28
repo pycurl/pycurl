@@ -53,8 +53,10 @@ python setup.py build $setup_args
 
 (cd tests/fake-curl/libcurl && make)
 
-./tests/run.sh "$@"
-./tests/ext/test-suite.sh "$@"
+./tests/run.sh
+./tests/ext/test-suite.sh
+which pyflakes
+pyflakes python examples tests setup.py winbuild.py
 
 # sphinx requires python 2.6+ or 3.3+
 case "$USEPY" in

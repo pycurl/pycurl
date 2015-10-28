@@ -94,6 +94,7 @@ do-test:
 	cd tests/fake-curl/libcurl && make
 	./tests/run.sh
 	./tests/ext/test-suite.sh
+	pyflakes python examples tests setup.py winbuild.py
 
 test: build do-test
 test-release: build-release do-test

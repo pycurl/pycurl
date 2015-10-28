@@ -4,11 +4,6 @@
 
 import pycurl
 import unittest
-import sys
-try:
-    import urllib.parse as urllib_parse
-except ImportError:
-    import urllib as urllib_parse
 
 from . import appmanager
 from . import util

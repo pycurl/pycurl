@@ -371,9 +371,9 @@ class MultiTest(unittest.TestCase):
     # positional arguments are rejected
     @nose.tools.raises(TypeError)
     def test_positional_arguments(self):
-        c = pycurl.CurlMulti(1)
+        pycurl.CurlMulti(1)
     
     # keyword arguments are rejected
     @nose.tools.raises(TypeError)
     def test_keyword_arguments(self):
-        c = pycurl.CurlMulti(a=1)
+        pycurl.CurlMulti(a=1)
