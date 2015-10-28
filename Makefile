@@ -127,6 +127,9 @@ maintainer-clean: distclean
 dist sdist: distclean
 	$(PYTHON) setup.py sdist
 
+run-quickstart:
+	./tests/run-quickstart.sh
+
 # Rebuild missing or changed documentation.
 # Editing docstrings in Python or C source will not cause the documentation
 # to be rebuilt with this target, use docs-force instead.
