@@ -33,7 +33,8 @@ import os, os.path, sys, subprocess, shutil, contextlib
 
 archives_path = os.path.join(root, 'archives')
 state_path = os.path.join(root, 'state')
-git_bin_path = os.path.join(git_root, 'bin')
+#git_bin_path = os.path.join(git_root, 'bin')
+git_bin_path = ''
 git_path = os.path.join(git_bin_path, 'git')
 rm_path = os.path.join(git_bin_path, 'rm')
 tar_path = os.path.join(git_bin_path, 'tar')
