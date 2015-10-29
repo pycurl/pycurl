@@ -16,9 +16,9 @@ python_versions = ['2.6.6', '2.7.10', '3.2.5', '3.3.5', '3.4.3', '3.5.0']
 python_path_template = 'c:/python%s/python'
 vc_paths = {
     # where msvc 9 is installed, for python 2.6 through 3.2
-    'vc9': 'c:/program files/microsoft visual studio 9.0',
+    'vc9': 'c:/program files (x86)/microsoft visual studio 9.0',
     # where msvc 10 is installed, for python 3.3
-    'vc10': 'c:/program files/microsoft visual studio 10.0',
+    'vc10': 'c:/program files (x86)/microsoft visual studio 10.0',
 }
 # whether to link libcurl against zlib
 use_zlib = True
@@ -41,7 +41,7 @@ tar_path = os.path.join(git_bin_path, 'tar')
 for key in vc_paths:
     vc_paths[key] = {
         'root': vc_paths[key],
-        'vsvars': os.path.join(vc_paths[key], 'common7/tools/vsvars32.bat'),
+        'vcvars': os.path.join(vc_paths[key], 'vc/vcvarsall.bat'),
     }
 python_vc_versions = {
     '2.6': 'vc9',
@@ -118,7 +118,7 @@ def build():
             zlib_dir = rename_for_vc('zlib-%s' % zlib_version, vc_version)
             with in_dir(zlib_dir):
                 with open('doit.bat', 'w') as f:
-                    f.write("call \"%s\"\n" % vc_paths[vc_version]['vsvars'])
+                    f.write("call \"%s\" amd64\n" % vc_paths[vc_version]['vcvars'])
                     f.write("nmake /f win32/Makefile.msc\n")
                 subprocess.check_call(['doit.bat'])
         
@@ -128,7 +128,7 @@ def build():
             curl_dir = rename_for_vc('curl-%s' % libcurl_version, vc_version)
             with in_dir(os.path.join(curl_dir, 'winbuild')):
                 with open('doit.bat', 'w') as f:
-                    f.write("call \"%s\"\n" % vc_paths[vc_version]['vsvars'])
+                    f.write("call \"%s\" amd64\n" % vc_paths[vc_version]['vcvars'])
                     f.write("set include=%%include%%;%s\n" % os.path.join(archives_path, 'zlib-%s-%s' % (zlib_version, vc_version)))
                     f.write("set lib=%%lib%%;%s\n" % os.path.join(archives_path, 'zlib-%s-%s' % (zlib_version, vc_version)))
                     if use_zlib:
@@ -165,7 +165,7 @@ def build():
                     os.makedirs('build/lib.win32-%s' % python_version)
                 shutil.copy(os.path.join(curl_dir, 'bin', 'libcurl.dll'), 'build/lib.win32-%s' % python_version)
                 with open('doit.bat', 'w') as f:
-                    f.write("call \"%s\"\n" % vc_paths[vc_version]['vsvars'])
+                    f.write("call \"%s\" amd64\n" % vc_paths[vc_version]['vcvars'])
                     f.write("%s setup.py docstrings\n" % (python_path,))
                     f.write("%s setup.py %s --curl-dir=%s --use-libcurl-dll\n" % (python_path, target, curl_dir))
                 subprocess.check_call(['doit.bat'])
