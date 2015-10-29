@@ -5,6 +5,12 @@
 # http://go.microsoft.com/?linkid=7729279
 # msvc10/vs2010 express:
 # http://go.microsoft.com/?linkid=9709949
+# for 64 bit builds, then install 2010 sp1:
+# http://go.microsoft.com/fwlink/?LinkId=210710
+# then install sp1 compiler update:
+# https://www.microsoft.com/en-us/download/details.aspx?id=4422
+# msvc14/vs2015 community:
+# https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx
 
 # work directory for downloading dependencies and building everything
 root = 'c:/dev/build-pycurl'
@@ -16,9 +22,9 @@ python_versions = ['2.6.6', '2.7.10', '3.2.5', '3.3.5', '3.4.3', '3.5.0']
 python_path_template = 'c:/python%s/python'
 vc_paths = {
     # where msvc 9 is installed, for python 2.6 through 3.2
-    'vc9': 'c:/program files (x86)/microsoft visual studio 9.0',
-    # where msvc 10 is installed, for python 3.3
-    'vc10': 'c:/program files (x86)/microsoft visual studio 10.0',
+    'vc9': None,
+    # where msvc 10 is installed, for python 3.3 through 3.4
+    'vc10': None,
 }
 # whether to link libcurl against zlib
 use_zlib = True
@@ -29,6 +35,19 @@ libcurl_version = '7.45.0'
 # pycurl version to build, we should know this ourselves
 pycurl_version = '7.19.5.1'
 
+default_vc_paths = {
+    # where msvc 9 is installed, for python 2.6 through 3.2
+    'vc9': [
+        'c:/program files (x86)/microsoft visual studio 9.0',
+        'c:/program files/microsoft visual studio 9.0',
+    ],
+    # where msvc 10 is installed, for python 3.3 through 3.4
+    'vc10': [
+        'c:/program files (x86)/microsoft visual studio 10.0',
+        'c:/program files/microsoft visual studio 10.0',
+    ],
+}
+
 import os, os.path, sys, subprocess, shutil, contextlib
 
 archives_path = os.path.join(root, 'archives')
@@ -38,11 +57,6 @@ git_bin_path = ''
 git_path = os.path.join(git_bin_path, 'git')
 rm_path = os.path.join(git_bin_path, 'rm')
 tar_path = os.path.join(git_bin_path, 'tar')
-for key in vc_paths:
-    vc_paths[key] = {
-        'root': vc_paths[key],
-        'vcvars': os.path.join(vc_paths[key], 'vc/vcvarsall.bat'),
-    }
 python_vc_versions = {
     '2.6': 'vc9',
     '2.7': 'vc9',
@@ -119,10 +133,30 @@ class Builder(object):
             64: 'amd64',
         }
         return params[self.bitness]
+    
+    @property
+    def vcvars_relative_path(self):
+        return 'vc/vcvarsall.bat'
+    
+    def vc_path(self, vc_version):
+        if vc_version in vc_paths and vc_paths[vc_version]:
+            path = vc_paths[vc_version]
+            if not os.path.join(path, self.vcvars_relative_path):
+                raise Exception('vcvars not found in specified path')
+            return path
+        else:
+            for path in default_vc_paths[vc_version]:
+                if os.path.exists(os.path.join(path, self.vcvars_relative_path)):
+                    return path
+            raise Exception('No usable vc path found')
+
+    def vcvars_path(self, vc_version):
+        return os.path.join(self.vc_path(vc_version), self.vcvars_relative_path)
         
     def vcvars_cmd(self, vc_version):
+        # https://msdn.microsoft.com/en-us/library/x4d2c09s.aspx
         return "call \"%s\" %s\n" % (
-            vc_paths[vc_version]['vcvars'],
+            self.vcvars_path(vc_version),
             self.vcvars_bitness_parameter,
         )
     
