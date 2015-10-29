@@ -107,28 +107,53 @@ def rename_for_vc(basename, vc_version):
     os.rename(basename, suffixed_dir)
     return suffixed_dir
 
+class Builder(object):
+    def __init__(self, bitness):
+        assert bitness in (32, 64)
+        self.bitness = bitness
+        
+    @property
+    def vcvars_bitness_parameter(self):
+        params = {
+            32: 'x86',
+            64: 'amd64',
+        }
+        return params[self.bitness]
+        
+    def vcvars_cmd(self, vc_version):
+        return "call \"%s\" %s\n" % (
+            vc_paths[vc_version]['vcvars'],
+            self.vcvars_bitness_parameter,
+        )
+    
+    @contextlib.contextmanager
+    def execute_batch(self, vc_version):
+        with open('doit.bat', 'w') as f:
+            f.write(self.vcvars_cmd(vc_version))
+            yield f
+        subprocess.check_call(['doit.bat'])
+
 def build():
     os.environ['PATH'] += ";%s" % git_bin_path
     if not os.path.exists(archives_path):
         os.makedirs(archives_path)
     with in_dir(archives_path):
+        builder = Builder(32)
+        
         def build_zlib(vc_version):
             fetch('http://downloads.sourceforge.net/project/libpng/zlib/%s/zlib-%s.tar.gz' % (zlib_version, zlib_version))
             untar('zlib-%s' % zlib_version)
             zlib_dir = rename_for_vc('zlib-%s' % zlib_version, vc_version)
             with in_dir(zlib_dir):
-                with open('doit.bat', 'w') as f:
-                    f.write("call \"%s\" amd64\n" % vc_paths[vc_version]['vcvars'])
+                with builder.execute_batch(vc_version) as f:
                     f.write("nmake /f win32/Makefile.msc\n")
-                subprocess.check_call(['doit.bat'])
         
         def build_curl(vc_version):
             fetch('http://curl.haxx.se/download/curl-%s.tar.gz' % libcurl_version)
             untar('curl-%s' % libcurl_version)
             curl_dir = rename_for_vc('curl-%s' % libcurl_version, vc_version)
             with in_dir(os.path.join(curl_dir, 'winbuild')):
-                with open('doit.bat', 'w') as f:
-                    f.write("call \"%s\" amd64\n" % vc_paths[vc_version]['vcvars'])
+                with builder.execute_batch(vc_version) as f:
                     f.write("set include=%%include%%;%s\n" % os.path.join(archives_path, 'zlib-%s-%s' % (zlib_version, vc_version)))
                     f.write("set lib=%%lib%%;%s\n" % os.path.join(archives_path, 'zlib-%s-%s' % (zlib_version, vc_version)))
                     if use_zlib:
@@ -136,7 +161,6 @@ def build():
                     else:
                         extra_options = ''
                     f.write("nmake /f Makefile.vc mode=dll ENABLE_IDN=no%s\n" % extra_options)
-                subprocess.check_call(['doit.bat'])
         for vc_version in vc_versions:
             if use_zlib:
                 step(build_zlib, (vc_version,), 'zlib-%s-%s' % (zlib_version, vc_version))
@@ -164,11 +188,9 @@ def build():
                     # exists for building additional targets for the same python version
                     os.makedirs('build/lib.win32-%s' % python_version)
                 shutil.copy(os.path.join(curl_dir, 'bin', 'libcurl.dll'), 'build/lib.win32-%s' % python_version)
-                with open('doit.bat', 'w') as f:
-                    f.write("call \"%s\" amd64\n" % vc_paths[vc_version]['vcvars'])
+                with builder.execute_batch(vc_version) as f:
                     f.write("%s setup.py docstrings\n" % (python_path,))
                     f.write("%s setup.py %s --curl-dir=%s --use-libcurl-dll\n" % (python_path, target, curl_dir))
-                subprocess.check_call(['doit.bat'])
                 if target == 'bdist':
                     os.rename('dist/pycurl-%s.win32.zip' % pycurl_version, 'dist/pycurl-%s.win32-py%s.zip' % (pycurl_version, python_version))
         
