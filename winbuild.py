@@ -122,9 +122,10 @@ def rename_for_vc(basename, vc_version):
     return suffixed_dir
 
 class Builder(object):
-    def __init__(self, bitness):
+    def __init__(self, bitness, vc_version):
         assert bitness in (32, 64)
         self.bitness = bitness
+        self.vc_version = vc_version
         
     @property
     def vcvars_bitness_parameter(self):
@@ -138,32 +139,35 @@ class Builder(object):
     def vcvars_relative_path(self):
         return 'vc/vcvarsall.bat'
     
-    def vc_path(self, vc_version):
-        if vc_version in vc_paths and vc_paths[vc_version]:
-            path = vc_paths[vc_version]
+    @property
+    def vc_path(self):
+        if self.vc_version in vc_paths and vc_paths[self.vc_version]:
+            path = vc_paths[self.vc_version]
             if not os.path.join(path, self.vcvars_relative_path):
                 raise Exception('vcvars not found in specified path')
             return path
         else:
-            for path in default_vc_paths[vc_version]:
+            for path in default_vc_paths[self.vc_version]:
                 if os.path.exists(os.path.join(path, self.vcvars_relative_path)):
                     return path
             raise Exception('No usable vc path found')
 
-    def vcvars_path(self, vc_version):
-        return os.path.join(self.vc_path(vc_version), self.vcvars_relative_path)
-        
-    def vcvars_cmd(self, vc_version):
+    @property
+    def vcvars_path(self):
+        return os.path.join(self.vc_path, self.vcvars_relative_path)
+    
+    @property
+    def vcvars_cmd(self):
         # https://msdn.microsoft.com/en-us/library/x4d2c09s.aspx
         return "call \"%s\" %s\n" % (
-            self.vcvars_path(vc_version),
+            self.vcvars_path,
             self.vcvars_bitness_parameter,
         )
     
     @contextlib.contextmanager
-    def execute_batch(self, vc_version):
+    def execute_batch(self):
         with open('doit.bat', 'w') as f:
-            f.write(self.vcvars_cmd(vc_version))
+            f.write(self.vcvars_cmd)
             yield f
         subprocess.check_call(['doit.bat'])
 
@@ -172,14 +176,14 @@ def build():
     if not os.path.exists(archives_path):
         os.makedirs(archives_path)
     with in_dir(archives_path):
-        builder = Builder(32)
+        builder = Builder(32, vc_version)
         
         def build_zlib(vc_version):
             fetch('http://downloads.sourceforge.net/project/libpng/zlib/%s/zlib-%s.tar.gz' % (zlib_version, zlib_version))
             untar('zlib-%s' % zlib_version)
             zlib_dir = rename_for_vc('zlib-%s' % zlib_version, vc_version)
             with in_dir(zlib_dir):
-                with builder.execute_batch(vc_version) as f:
+                with builder.execute_batch() as f:
                     f.write("nmake /f win32/Makefile.msc\n")
         
         def build_curl(vc_version):
@@ -187,7 +191,7 @@ def build():
             untar('curl-%s' % libcurl_version)
             curl_dir = rename_for_vc('curl-%s' % libcurl_version, vc_version)
             with in_dir(os.path.join(curl_dir, 'winbuild')):
-                with builder.execute_batch(vc_version) as f:
+                with builder.execute_batch() as f:
                     f.write("set include=%%include%%;%s\n" % os.path.join(archives_path, 'zlib-%s-%s' % (zlib_version, vc_version)))
                     f.write("set lib=%%lib%%;%s\n" % os.path.join(archives_path, 'zlib-%s-%s' % (zlib_version, vc_version)))
                     if use_zlib:
@@ -222,7 +226,7 @@ def build():
                     # exists for building additional targets for the same python version
                     os.makedirs('build/lib.win32-%s' % python_version)
                 shutil.copy(os.path.join(curl_dir, 'bin', 'libcurl.dll'), 'build/lib.win32-%s' % python_version)
-                with builder.execute_batch(vc_version) as f:
+                with builder.execute_batch() as f:
                     f.write("%s setup.py docstrings\n" % (python_path,))
                     f.write("%s setup.py %s --curl-dir=%s --use-libcurl-dll\n" % (python_path, target, curl_dir))
                 if target == 'bdist':
