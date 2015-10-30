@@ -99,11 +99,10 @@ def in_dir(dir):
 @contextlib.contextmanager
 def step(step_fn, args, target_dir):
     step = step_fn.__name__
-    if args:
-        step +=  '-' + '-'.join(args)
+    state_tag = target_dir
     if not os.path.exists(state_path):
         os.makedirs(state_path)
-    state_file_path = os.path.join(state_path, step)
+    state_file_path = os.path.join(state_path, state_tag)
     if not os.path.exists(state_file_path) or not os.path.exists(target_dir):
         step_fn(*args)
     with open(state_file_path, 'w'):
@@ -114,19 +113,20 @@ def untar(basename):
         shutil.rmtree(basename)
     subprocess.check_call([tar_path, 'xf', '%s.tar.gz' % basename])
 
-def rename_for_vc(basename, vc_version):
-    suffixed_dir = '%s-%s' % (basename, vc_version)
+def rename_for_vc(basename, suffix):
+    suffixed_dir = '%s-%s' % (basename, suffix)
     if os.path.exists(suffixed_dir):
         shutil.rmtree(suffixed_dir)
     os.rename(basename, suffixed_dir)
     return suffixed_dir
 
 class Builder(object):
-    def __init__(self, bitness, vc_version):
+    def __init__(self, **kwargs):
+        bitness = kwargs.pop('bitness')
         assert bitness in (32, 64)
         self.bitness = bitness
-        self.vc_version = vc_version
-        
+        self.vc_version = kwargs.pop('vc_version')
+    
     @property
     def vcvars_bitness_parameter(self):
         params = {
@@ -170,39 +170,67 @@ class Builder(object):
             f.write(self.vcvars_cmd)
             yield f
         subprocess.check_call(['doit.bat'])
+        
+    @property
+    def vc_tag(self):
+        return '%s-%s' % (self.vc_version, self.bitness)
+
+class ZlibBuilder(Builder):
+    def __init__(self, **kwargs):
+        super(ZlibBuilder, self).__init__(**kwargs)
+        self.zlib_version = kwargs.pop('zlib_version')
+    
+    @property
+    def state_tag(self):
+        return 'zlib-%s-%s' % (self.zlib_version, self.vc_tag)
+    
+    def build(self):
+        fetch('http://downloads.sourceforge.net/project/libpng/zlib/%s/zlib-%s.tar.gz' % (self.zlib_version, self.zlib_version))
+        untar('zlib-%s' % self.zlib_version)
+        zlib_dir = rename_for_vc('zlib-%s' % self.zlib_version, self.vc_tag)
+        with in_dir(zlib_dir):
+            with self.execute_batch() as f:
+                f.write("nmake /f win32/Makefile.msc\n")
+
+class LibcurlBuilder(Builder):
+    def __init__(self, **kwargs):
+        super(LibcurlBuilder, self).__init__(**kwargs)
+        self.libcurl_version = kwargs.pop('libcurl_version')
+        self.use_zlib = kwargs.pop('use_zlib')
+        if self.use_zlib:
+            self.zlib_version = kwargs.pop('zlib_version')
+    
+    @property
+    def state_tag(self):
+        return 'curl-%s-%s' % (self.libcurl_version, self.vc_tag)
+    
+    def build(self):
+        fetch('http://curl.haxx.se/download/curl-%s.tar.gz' % self.libcurl_version)
+        untar('curl-%s' % self.libcurl_version)
+        curl_dir = rename_for_vc('curl-%s' % self.libcurl_version, self.vc_tag)
+        with in_dir(os.path.join(curl_dir, 'winbuild')):
+            with self.execute_batch() as f:
+                if self.use_zlib:
+                    f.write("set include=%%include%%;%s\n" % os.path.join(archives_path, 'zlib-%s-%s' % (self.zlib_version, self.vc_tag)))
+                    f.write("set lib=%%lib%%;%s\n" % os.path.join(archives_path, 'zlib-%s-%s' % (self.zlib_version, self.vc_tag)))
+                    extra_options = ' WITH_ZLIB=dll'
+                else:
+                    extra_options = ''
+                f.write("nmake /f Makefile.vc mode=dll ENABLE_IDN=no%s\n" % extra_options)
 
 def build():
     os.environ['PATH'] += ";%s" % git_bin_path
     if not os.path.exists(archives_path):
         os.makedirs(archives_path)
     with in_dir(archives_path):
-        builder = Builder(32, vc_version)
-        
-        def build_zlib(vc_version):
-            fetch('http://downloads.sourceforge.net/project/libpng/zlib/%s/zlib-%s.tar.gz' % (zlib_version, zlib_version))
-            untar('zlib-%s' % zlib_version)
-            zlib_dir = rename_for_vc('zlib-%s' % zlib_version, vc_version)
-            with in_dir(zlib_dir):
-                with builder.execute_batch() as f:
-                    f.write("nmake /f win32/Makefile.msc\n")
-        
-        def build_curl(vc_version):
-            fetch('http://curl.haxx.se/download/curl-%s.tar.gz' % libcurl_version)
-            untar('curl-%s' % libcurl_version)
-            curl_dir = rename_for_vc('curl-%s' % libcurl_version, vc_version)
-            with in_dir(os.path.join(curl_dir, 'winbuild')):
-                with builder.execute_batch() as f:
-                    f.write("set include=%%include%%;%s\n" % os.path.join(archives_path, 'zlib-%s-%s' % (zlib_version, vc_version)))
-                    f.write("set lib=%%lib%%;%s\n" % os.path.join(archives_path, 'zlib-%s-%s' % (zlib_version, vc_version)))
-                    if use_zlib:
-                        extra_options = ' WITH_ZLIB=dll'
-                    else:
-                        extra_options = ''
-                    f.write("nmake /f Makefile.vc mode=dll ENABLE_IDN=no%s\n" % extra_options)
         for vc_version in vc_versions:
+            builder = Builder(bitness=32, vc_version=vc_version)
             if use_zlib:
-                step(build_zlib, (vc_version,), 'zlib-%s-%s' % (zlib_version, vc_version))
-            step(build_curl, (vc_version,), 'curl-%s-%s' % (libcurl_version, vc_version))
+                zlib_builder = ZlibBuilder(bitness=32, vc_version=vc_version, zlib_version=zlib_version)
+                step(zlib_builder.build, (), zlib_builder.state_tag)
+            libcurl_builder = LibcurlBuilder(bitness=32, vc_version=vc_version,
+                use_zlib=use_zlib, zlib_version=zlib_version, libcurl_version=libcurl_version)
+            step(libcurl_builder.build, (), libcurl_builder.state_tag)
         
         def prepare_pycurl():
             #fetch('http://pycurl.sourceforge.net/download/pycurl-%s.tar.gz' % pycurl_version)
@@ -215,6 +243,7 @@ def build():
         def build_pycurl(python_version, target):
             python_path = python_path_template % python_version.replace('.', '')
             vc_version = python_vc_versions[python_version]
+            builder = Builder(32, vc_version)
             
             with in_dir(os.path.join('pycurl-%s' % pycurl_version)):
                 if use_zlib:
