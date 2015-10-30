@@ -1,6 +1,9 @@
 master
 ------
 
+        * Fixed build on Windows when using MS SDK 8.1+ or MSVC 14/2015
+          (patch by Gisle Vanem).
+
         * Added automatic SSL library detection on CentOS 6 by loading
           libcurl shared library in setup.py. This automatic detection is
           meant to permit installing pycurl seamlessly via `pip install pycurl`
