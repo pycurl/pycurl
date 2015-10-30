@@ -23,12 +23,14 @@ git_root = 'c:/program files/git'
 # which versions of python to build against
 python_versions = ['2.6.6', '2.7.10', '3.2.5', '3.3.5', '3.4.3', '3.5.0']
 # where pythons are installed
-python_path_template = 'c:/python%s/python'
+python_path_template = 'c:/dev/32/python%s/python'
 vc_paths = {
     # where msvc 9 is installed, for python 2.6 through 3.2
     'vc9': None,
     # where msvc 10 is installed, for python 3.3 through 3.4
     'vc10': None,
+    # where msvc 14 is installed, for python 3.5
+    'vc14': None,
 }
 # whether to link libcurl against zlib
 use_zlib = True
@@ -50,6 +52,11 @@ default_vc_paths = {
         'c:/program files (x86)/microsoft visual studio 10.0',
         'c:/program files/microsoft visual studio 10.0',
     ],
+    # where msvc 14 is installed, for python 3.5
+    'vc14': [
+        'c:/program files (x86)/microsoft visual studio 14.0',
+        'c:/program files/microsoft visual studio 14.0',
+    ],
 }
 
 import os, os.path, sys, subprocess, shutil, contextlib
@@ -67,6 +74,7 @@ python_vc_versions = {
     '3.2': 'vc9',
     '3.3': 'vc10',
     '3.4': 'vc10',
+    '3.5': 'vc14',
 }
 vc_versions = vc_paths.keys()
 
@@ -227,7 +235,7 @@ def build():
     if not os.path.exists(archives_path):
         os.makedirs(archives_path)
     with in_dir(archives_path):
-        bitness = 64
+        bitness = 32
         for vc_version in vc_versions:
             if use_zlib:
                 zlib_builder = ZlibBuilder(bitness=bitness, vc_version=vc_version, zlib_version=zlib_version)
@@ -247,14 +255,21 @@ def build():
         def build_pycurl(python_version, target):
             python_path = python_path_template % python_version.replace('.', '')
             vc_version = python_vc_versions[python_version]
-            builder = Builder(32, vc_version)
+            builder = Builder(bitness=bitness, vc_version=vc_version)
             
             with in_dir(os.path.join('pycurl-%s' % pycurl_version)):
                 if use_zlib:
-                    libcurl_build_name = 'libcurl-vc-x86-release-dll-zlib-dll-ipv6-sspi-spnego-winssl'
+                    zlib_part = '-zlib-dll'
                 else:
-                    libcurl_build_name = 'libcurl-vc-x86-release-dll-ipv6-sspi-spnego-winssl'
-                curl_dir = '../curl-%s-%s/builds/%s' % (libcurl_version, vc_version, libcurl_build_name)
+                    zlib_part = ''
+                if False:
+                    spnego_part = '-spnego'
+                else:
+                    spnego_part = ''
+                libcurl_build_name = 'libcurl-vc-x86-release-dll%s-ipv6-sspi%s-winssl' % (zlib_part, spnego_part)
+                libcurl_builder = LibcurlBuilder(bitness=bitness, vc_version=vc_version,
+                    use_zlib=use_zlib, zlib_version=zlib_version, libcurl_version=libcurl_version)
+                curl_dir = '../curl-%s-%s/builds/%s' % (libcurl_version, builder.vc_tag, libcurl_build_name)
                 if not os.path.exists('build/lib.win32-%s' % python_version):
                     # exists for building additional targets for the same python version
                     os.makedirs('build/lib.win32-%s' % python_version)
