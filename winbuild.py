@@ -7,6 +7,10 @@
 # http://go.microsoft.com/?linkid=9709949
 # for 64 bit builds, then install 2010 sp1:
 # http://go.microsoft.com/fwlink/?LinkId=210710
+# ... and windows 7 sdk (because sp1 compiler update refuses to install
+# without it):
+# http://www.microsoft.com/en-us/download/details.aspx?id=8279
+# or http://www.microsoft.com/en-us/download/details.aspx?id=8442
 # then install sp1 compiler update:
 # https://www.microsoft.com/en-us/download/details.aspx?id=4422
 # msvc14/vs2015 community:
@@ -223,12 +227,12 @@ def build():
     if not os.path.exists(archives_path):
         os.makedirs(archives_path)
     with in_dir(archives_path):
+        bitness = 64
         for vc_version in vc_versions:
-            builder = Builder(bitness=32, vc_version=vc_version)
             if use_zlib:
-                zlib_builder = ZlibBuilder(bitness=32, vc_version=vc_version, zlib_version=zlib_version)
+                zlib_builder = ZlibBuilder(bitness=bitness, vc_version=vc_version, zlib_version=zlib_version)
                 step(zlib_builder.build, (), zlib_builder.state_tag)
-            libcurl_builder = LibcurlBuilder(bitness=32, vc_version=vc_version,
+            libcurl_builder = LibcurlBuilder(bitness=bitness, vc_version=vc_version,
                 use_zlib=use_zlib, zlib_version=zlib_version, libcurl_version=libcurl_version)
             step(libcurl_builder.build, (), libcurl_builder.state_tag)
         
