@@ -110,7 +110,7 @@ def in_dir(dir):
 
 @contextlib.contextmanager
 def step(step_fn, args, target_dir):
-    step = step_fn.__name__
+    #step = step_fn.__name__
     state_tag = target_dir
     if not os.path.exists(state_path):
         os.makedirs(state_path)
@@ -267,8 +267,8 @@ def build():
                 else:
                     spnego_part = ''
                 libcurl_build_name = 'libcurl-vc-x86-release-dll%s-ipv6-sspi%s-winssl' % (zlib_part, spnego_part)
-                libcurl_builder = LibcurlBuilder(bitness=bitness, vc_version=vc_version,
-                    use_zlib=use_zlib, zlib_version=zlib_version, libcurl_version=libcurl_version)
+                #libcurl_builder = LibcurlBuilder(bitness=bitness, vc_version=vc_version,
+                    #use_zlib=use_zlib, zlib_version=zlib_version, libcurl_version=libcurl_version)
                 curl_dir = '../curl-%s-%s/builds/%s' % (libcurl_version, builder.vc_tag, libcurl_build_name)
                 if not os.path.exists('build/lib.win32-%s' % python_version):
                     # exists for building additional targets for the same python version
