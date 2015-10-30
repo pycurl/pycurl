@@ -6,7 +6,7 @@ except ImportError:
     from urllib import urlopen
 
 python_versions = ['2.4.6', '2.5.6', '2.6.8', '2.7.5', '3.1.5', '3.2.5', '3.3.5', '3.4.1']
-libcurl_versions = ['7.19.0', '7.43.0']
+libcurl_versions = ['7.19.0', '7.45.0']
 
 # http://bsdpower.com/building-python-24-with-zlib/
 patch_python_for_zlib = "sed -e 's/^#zlib/zlib/g' Modules/Setup >Modules/Setup.patched && mv Modules/Setup.patched Modules/Setup"
