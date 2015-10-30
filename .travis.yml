@@ -46,7 +46,8 @@ matrix:
         - USELIBRESSL=2.2.0
     - python: 2.7
       env:
-        - USECURL=7.45.0-gssapi
+        # libcurl 7.45.0 does not build against gnutls in travis/ubuntu 12.04
+        - USECURL=7.44.0-gssapi
         - USESSL=gnutls
     - python: 2.7
       env:
