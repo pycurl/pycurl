@@ -1,6 +1,8 @@
 master
 ------
 
+        * Support for building against Python 3.5 added to winbuild.py.
+
         * Fixed build on Windows when using MS SDK 8.1+ or MSVC 14/2015
           (patch by Gisle Vanem).
 
