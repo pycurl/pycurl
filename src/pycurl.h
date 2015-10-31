@@ -46,8 +46,8 @@
 #  define EAFNOSUPPORT 97
 # endif
 
-PYCURL_INTERNAL SOCKET
-dup_winsock(SOCKET sock, const struct curl_sockaddr *address);
+PYCURL_INTERNAL int
+dup_winsock(int sock, const struct curl_sockaddr *address);
 #endif
 
 /* The inet_ntop() was added in ws2_32.dll on Windows Vista [1]. Hence the
