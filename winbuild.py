@@ -23,7 +23,7 @@ git_root = 'c:/program files/git'
 # which versions of python to build against
 python_versions = ['2.6.6', '2.7.10', '3.2.5', '3.3.5', '3.4.3', '3.5.0']
 # where pythons are installed
-python_path_template = 'c:/dev/32/python%s/python'
+python_path_template = 'c:/dev/%(bitness)s/python%(python_version)s/python'
 vc_paths = {
     # where msvc 9 is installed, for python 2.6 through 3.2
     'vc9': None,
@@ -253,7 +253,9 @@ def build():
             shutil.copytree('c:/dev/pycurl', 'pycurl-%s' % pycurl_version)
         
         def build_pycurl(python_version, target):
-            python_path = python_path_template % python_version.replace('.', '')
+            python_path = python_path_template % dict(
+                python_version=python_version.replace('.', ''),
+                bitness=bitness)
             vc_version = python_vc_versions[python_version]
             builder = Builder(bitness=bitness, vc_version=vc_version)
             
