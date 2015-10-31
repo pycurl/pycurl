@@ -248,7 +248,8 @@ class LibcurlBuilder(Builder):
         return output_dir_name
 
 def build():
-    os.environ['PATH'] += ";%s" % git_bin_path
+    if git_bin_path:
+        os.environ['PATH'] += ";%s" % git_bin_path
     if not os.path.exists(archives_path):
         os.makedirs(archives_path)
     with in_dir(archives_path):
