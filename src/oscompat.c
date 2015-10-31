@@ -1,8 +1,8 @@
 #include "pycurl.h"
 
 #if defined(WIN32)
-PYCURL_INTERNAL SOCKET
-dup_winsock(SOCKET sock, const struct curl_sockaddr *address)
+PYCURL_INTERNAL int
+dup_winsock(int sock, const struct curl_sockaddr *address)
 {
     int rv;
     WSAPROTOCOL_INFO pi;
@@ -13,7 +13,7 @@ dup_winsock(SOCKET sock, const struct curl_sockaddr *address)
     }
 
     /* not sure if WSA_FLAG_OVERLAPPED is needed, but it does not seem to hurt */
-    return WSASocket(address->family, address->socktype, address->protocol, &pi, 0, WSA_FLAG_OVERLAPPED);
+    return (int) WSASocket(address->family, address->socktype, address->protocol, &pi, 0, WSA_FLAG_OVERLAPPED);
 }
 #endif
 
@@ -26,6 +26,8 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size)
 {
     SOCKADDR *sa;
     int       sa_len;
+    /* both size_t and DWORD should be unsigned ints */
+    DWORD string_size_dword = (DWORD) string_size;
 
     if (family == AF_INET6) {
         struct sockaddr_in6 sa6;
@@ -45,7 +47,7 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size)
         errno = EAFNOSUPPORT;
         return NULL;
     }
-    if (WSAAddressToString(sa, sa_len, NULL, string, &string_size))
+    if (WSAAddressToString(sa, sa_len, NULL, string, &string_size_dword))
         return NULL;
     return string;
 }

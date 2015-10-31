@@ -280,7 +280,7 @@ initpycurl(void)
     PyObject *m, *d;
     const curl_version_info_data *vi;
     const char *libcurl_version, *runtime_ssl_lib;
-    int libcurl_version_len, pycurl_version_len;
+    size_t libcurl_version_len, pycurl_version_len;
 
     /* Check the version, as this has caused nasty problems in
      * some cases. */
