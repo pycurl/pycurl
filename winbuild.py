@@ -230,6 +230,23 @@ class LibcurlBuilder(Builder):
                     extra_options = ''
                 f.write("nmake /f Makefile.vc mode=dll ENABLE_IDN=no%s\n" % extra_options)
 
+    @property
+    def output_dir_name(self):
+        if self.use_zlib:
+            zlib_part = '-zlib-dll'
+        else:
+            zlib_part = ''
+        # don't know when spnego is on and when it is off yet
+        if False:
+            spnego_part = '-spnego'
+        else:
+            spnego_part = ''
+        bitness_indicators = {32: 'x86', 64: 'x64'}
+        bitness_indicator = bitness_indicators[self.bitness]
+        output_dir_name = 'libcurl-vc-%s-release-dll%s-ipv6-sspi%s-winssl' % (
+            bitness_indicator, zlib_part, spnego_part)
+        return output_dir_name
+
 def build():
     os.environ['PATH'] += ";%s" % git_bin_path
     if not os.path.exists(archives_path):
@@ -260,18 +277,10 @@ def build():
             builder = Builder(bitness=bitness, vc_version=vc_version)
             
             with in_dir(os.path.join('pycurl-%s' % pycurl_version)):
-                if use_zlib:
-                    zlib_part = '-zlib-dll'
-                else:
-                    zlib_part = ''
-                if False:
-                    spnego_part = '-spnego'
-                else:
-                    spnego_part = ''
-                libcurl_build_name = 'libcurl-vc-x86-release-dll%s-ipv6-sspi%s-winssl' % (zlib_part, spnego_part)
-                #libcurl_builder = LibcurlBuilder(bitness=bitness, vc_version=vc_version,
-                    #use_zlib=use_zlib, zlib_version=zlib_version, libcurl_version=libcurl_version)
-                curl_dir = '../curl-%s-%s/builds/%s' % (libcurl_version, builder.vc_tag, libcurl_build_name)
+                libcurl_builder = LibcurlBuilder(bitness=bitness, vc_version=vc_version,
+                    use_zlib=use_zlib, zlib_version=zlib_version, libcurl_version=libcurl_version)
+                curl_dir = '../curl-%s-%s/builds/%s' % (
+                    libcurl_version, libcurl_builder.vc_tag, libcurl_builder.output_dir_name)
                 if not os.path.exists('build/lib.win32-%s' % python_version):
                     # exists for building additional targets for the same python version
                     os.makedirs('build/lib.win32-%s' % python_version)
