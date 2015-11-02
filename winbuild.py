@@ -39,7 +39,7 @@ zlib_version = '1.2.8'
 # which version of libcurl to use, will be downloaded from the internet
 libcurl_version = '7.45.0'
 # pycurl version to build, we should know this ourselves
-pycurl_version = '7.19.5.1'
+pycurl_version = '7.19.5.2'
 
 default_vc_paths = {
     # where msvc 9 is installed, for python 2.6 through 3.2

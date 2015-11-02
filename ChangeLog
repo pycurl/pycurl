@@ -1,5 +1,5 @@
-master
-------
+Version 7.19.5.2 [requires libcurl-7.19.0 or better] - 2015-11-02
+-----------------------------------------------------------------
 
         * C sources made 64-bit clean on Windows.
 
