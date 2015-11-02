@@ -25,7 +25,8 @@ RSYNC_FILES = \
 
 RSYNC_EXCLUDES = \
 	'--exclude=htdocs/download/' \
-	'--exclude=upload/Ignore/'
+	'--exclude=upload/Ignore/' \
+	'--exclude=htdocs/travis-deps/'
 
 RSYNC_TARGET = /home/groups/p/py/pycurl/
 
