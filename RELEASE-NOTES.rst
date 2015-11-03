@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+PycURL 7.19.5.3 - 2015-11-04
+----------------------------
+
+PycURL 7.19.5.2 release did not include some of the test suite files in
+its manifest, leading to inability to run the test suite from the sdist
+tarball. This is now fixed thanks to Kamil Dudka.
+
+
 PycURL 7.19.5.2 - 2015-11-02
 ----------------------------
 

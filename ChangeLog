@@ -1,3 +1,13 @@
+Version 7.19.5.3 [requires libcurl-7.19.0 or better] - 2015-11-03
+-----------------------------------------------------------------
+
+        * python and nosetests binaries can now be overridden when running
+          the test suite (patch by Kamil Dudka).
+
+        * Files needed to run the test suite are distributed in sdist
+          (patch by Kamil Dudka).
+
+
 Version 7.19.5.2 [requires libcurl-7.19.0 or better] - 2015-11-02
 -----------------------------------------------------------------
 
