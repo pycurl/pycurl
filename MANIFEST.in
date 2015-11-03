@@ -42,5 +42,6 @@ include tests/fake-curl/libcurl/*
 include tests/fixtures/form_submission.txt
 include tests/matrix/*.patch
 include tests/run.sh
+include tests/run-quickstart.sh
 include tests/vsftpd.conf
 include winbuild.py
