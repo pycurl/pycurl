@@ -1,7 +1,7 @@
 Release Notes
 =============
 
-PycURL 7.19.5.3 - 2015-11-04
+PycURL 7.19.5.3 - 2015-11-03
 ----------------------------
 
 PycURL 7.19.5.2 release did not include some of the test suite files in
