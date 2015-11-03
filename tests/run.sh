@@ -3,8 +3,11 @@
 set -e
 set -x
 
+test -n "$PYTHON" || PYTHON=python
+test -n "$NOSETESTS" || NOSETESTS=nosetests
+
 mkdir -p tests/tmp
-export PYTHONSUFFIX=$(python -V 2>&1 |awk '{print $2}' |awk -F. '{print $1 "." $2}')
+export PYTHONSUFFIX=$($PYTHON -V 2>&1 |awk '{print $2}' |awk -F. '{print $1 "." $2}')
 export PYTHONPATH=$(ls -d build/lib.*$PYTHONSUFFIX):$PYTHONPATH
 
 extra_attrs=
@@ -16,6 +19,6 @@ if test "$CI" = true; then
   fi
 fi
 
-python -c 'import pycurl; print(pycurl.version)'
-nosetests -a \!standalone"$extra_attrs" --with-flaky "$@"
-nosetests -a standalone --with-flaky "$@"
+$PYTHON -c 'import pycurl; print(pycurl.version)'
+$NOSETESTS -a \!standalone"$extra_attrs" --with-flaky "$@"
+$NOSETESTS -a standalone --with-flaky "$@"
