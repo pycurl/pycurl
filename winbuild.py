@@ -203,6 +203,16 @@ class ZlibBuilder(Builder):
         with in_dir(zlib_dir):
             with self.execute_batch() as f:
                 f.write("nmake /f win32/Makefile.msc\n")
+    
+    @property
+    def output_dir_path(self):
+        return 'zlib-%s-%s' % (self.zlib_version, self.vc_tag)
+
+    @property
+    def dll_paths(self):
+        return [
+            os.path.join(self.output_dir_path, 'zlib1.dll'),
+        ]
 
 class LibcurlBuilder(Builder):
     def __init__(self, **kwargs):
@@ -246,6 +256,74 @@ class LibcurlBuilder(Builder):
         output_dir_name = 'libcurl-vc-%s-release-dll%s-ipv6-sspi%s-winssl' % (
             bitness_indicator, zlib_part, spnego_part)
         return output_dir_name
+    
+    @property
+    def output_dir_path(self):
+        curl_dir = 'curl-%s-%s/builds/%s' % (
+            self.libcurl_version, self.vc_tag, self.output_dir_name)
+        return curl_dir
+
+    @property
+    def dll_paths(self):
+        return [
+            os.path.join(self.output_dir_path, 'bin', 'libcurl.dll'),
+        ]
+
+class PycurlBuilder(Builder):
+    def __init__(self, **kwargs):
+        self.python_version = kwargs.pop('python_version')
+        kwargs['vc_version'] = python_vc_versions[self.python_version]
+        super(PycurlBuilder, self).__init__(**kwargs)
+        self.pycurl_version = kwargs.pop('pycurl_version')
+        self.libcurl_version = kwargs.pop('libcurl_version')
+        self.zlib_version = kwargs.pop('zlib_version')
+        self.use_zlib = kwargs.pop('use_zlib')
+    
+    
+    @property
+    def python_path(self):
+        return python_path_template % dict(
+            python_version=self.python_version.replace('.', ''),
+            bitness=self.bitness)
+    
+    @property
+    def platform_indicator(self):
+        platform_indicators = {32: 'win32', 64: 'win-amd64'}
+        return platform_indicators[self.bitness]
+    
+    def build(self, targets):
+        libcurl_builder = LibcurlBuilder(bitness=self.bitness,
+            vc_version=self.vc_version,
+            use_zlib=self.use_zlib,
+            zlib_version=self.zlib_version,
+            libcurl_version=self.libcurl_version)
+        libcurl_dir = os.path.abspath(libcurl_builder.output_dir_path)
+        dll_paths = libcurl_builder.dll_paths
+        if self.use_zlib:
+            zlib_builder = ZlibBuilder(bitness=self.bitness,
+                vc_version=self.vc_version,
+                zlib_version=self.zlib_version,
+            )
+            dll_paths += zlib_builder.dll_paths
+        dll_paths = [os.path.abspath(dll_path) for dll_path in dll_paths]
+        with in_dir(os.path.join('pycurl-%s' % self.pycurl_version)):
+            dest_lib_path = 'build/lib.%s-%s' % (self.platform_indicator,
+                self.python_version)
+            if not os.path.exists(dest_lib_path):
+                # exists for building additional targets for the same python version
+                os.makedirs(dest_lib_path)
+            for dll_path in dll_paths:
+                shutil.copy(dll_path, dest_lib_path)
+            with self.execute_batch() as f:
+                f.write("%s setup.py docstrings\n" % (self.python_path,))
+                f.write("%s setup.py %s --curl-dir=%s --use-libcurl-dll\n" % (
+                    self.python_path, ' '.join(targets), libcurl_dir))
+            if 'bdist' in targets:
+                zip_basename_orig = 'pycurl-%s.%s.zip' % (
+                    self.pycurl_version, self.platform_indicator)
+                zip_basename_new = 'pycurl-%s.%s-py%s.zip' % (
+                    self.pycurl_version, self.platform_indicator, self.python_version)
+                os.rename('dist/%s' % zip_basename_orig, 'dist/%s' % zip_basename_new)
 
 def build():
     if git_bin_path:
@@ -270,40 +348,17 @@ def build():
             #subprocess.check_call([tar_path, 'xf', 'pycurl-%s.tar.gz' % pycurl_version])
             shutil.copytree('c:/dev/pycurl', 'pycurl-%s' % pycurl_version)
         
-        def build_pycurl(python_version, target):
-            python_path = python_path_template % dict(
-                python_version=python_version.replace('.', ''),
-                bitness=bitness)
-            vc_version = python_vc_versions[python_version]
-            builder = Builder(bitness=bitness, vc_version=vc_version)
-            
-            with in_dir(os.path.join('pycurl-%s' % pycurl_version)):
-                libcurl_builder = LibcurlBuilder(bitness=bitness, vc_version=vc_version,
-                    use_zlib=use_zlib, zlib_version=zlib_version, libcurl_version=libcurl_version)
-                curl_dir = '../curl-%s-%s/builds/%s' % (
-                    libcurl_version, libcurl_builder.vc_tag, libcurl_builder.output_dir_name)
-                platform_indicators = {32: 'win32', 64: 'win-amd64'}
-                platform_indicator = platform_indicators[bitness]
-                dest_lib_path = 'build/lib.%s-%s' % (platform_indicator, python_version)
-                if not os.path.exists(dest_lib_path):
-                    # exists for building additional targets for the same python version
-                    os.makedirs(dest_lib_path)
-                if use_zlib:
-                    shutil.copy(os.path.join('../zlib-%s-%s' % (zlib_version, builder.vc_tag), 'zlib1.dll'), dest_lib_path)
-                shutil.copy(os.path.join(curl_dir, 'bin', 'libcurl.dll'), dest_lib_path)
-                with builder.execute_batch() as f:
-                    f.write("%s setup.py docstrings\n" % (python_path,))
-                    f.write("%s setup.py %s --curl-dir=%s --use-libcurl-dll\n" % (python_path, target, curl_dir))
-                if target == 'bdist':
-                    zip_basename_orig = 'pycurl-%s.%s.zip' % (pycurl_version, platform_indicator)
-                    zip_basename_new = 'pycurl-%s.%s-py%s.zip' % (pycurl_version, platform_indicator, python_version)
-                    os.rename('dist/%s' % zip_basename_orig, 'dist/%s' % zip_basename_new)
+        def build_pycurl(python_version, targets):
+            builder = PycurlBuilder(bitness=bitness, vc_version=vc_version,
+                python_version=python_version, pycurl_version=pycurl_version,
+                use_zlib=use_zlib, zlib_version=zlib_version, libcurl_version=libcurl_version)
+            builder.build(targets)
         
         prepare_pycurl()
         python_releases = ['.'.join(version.split('.')[:2]) for version in python_versions]
         for python_version in python_releases:
-            for target in ['bdist', 'bdist_wininst', 'bdist_msi']:
-                build_pycurl(python_version, target)
+            targets = ['bdist', 'bdist_wininst', 'bdist_msi']
+            build_pycurl(python_version, targets)
 
 def download_pythons():
     for version in python_versions:
