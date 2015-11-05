@@ -348,17 +348,14 @@ def build():
             #subprocess.check_call([tar_path, 'xf', 'pycurl-%s.tar.gz' % pycurl_version])
             shutil.copytree('c:/dev/pycurl', 'pycurl-%s' % pycurl_version)
         
-        def build_pycurl(python_version, targets):
-            builder = PycurlBuilder(bitness=bitness, vc_version=vc_version,
-                python_version=python_version, pycurl_version=pycurl_version,
-                use_zlib=use_zlib, zlib_version=zlib_version, libcurl_version=libcurl_version)
-            builder.build(targets)
-        
         prepare_pycurl()
         python_releases = ['.'.join(version.split('.')[:2]) for version in python_versions]
         for python_version in python_releases:
             targets = ['bdist', 'bdist_wininst', 'bdist_msi']
-            build_pycurl(python_version, targets)
+            builder = PycurlBuilder(bitness=bitness, vc_version=vc_version,
+                python_version=python_version, pycurl_version=pycurl_version,
+                use_zlib=use_zlib, zlib_version=zlib_version, libcurl_version=libcurl_version)
+            builder.build(targets)
 
 def download_pythons():
     for version in python_versions:
