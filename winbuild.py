@@ -59,7 +59,7 @@ default_vc_paths = {
     ],
 }
 
-import os, os.path, sys, subprocess, shutil, contextlib
+import os, os.path, sys, subprocess, shutil, contextlib, zipfile
 
 archives_path = os.path.join(root, 'archives')
 state_path = os.path.join(root, 'state')
@@ -323,7 +323,18 @@ class PycurlBuilder(Builder):
                     self.pycurl_version, self.platform_indicator)
                 zip_basename_new = 'pycurl-%s.%s-py%s.zip' % (
                     self.pycurl_version, self.platform_indicator, self.python_version)
-                os.rename('dist/%s' % zip_basename_orig, 'dist/%s' % zip_basename_new)
+                with zipfile.ZipFile('dist/%s' % zip_basename_orig, 'r') as src_zip:
+                    with zipfile.ZipFile('dist/%s' % zip_basename_new, 'w') as dest_zip:
+                        for name in src_zip.namelist():
+                            parts = name.split('/')
+                            while parts[0] != 'python%s' % self.python_version.replace('.', ''):
+                                parts.pop(0)
+                            assert len(parts) > 0
+                            new_name = '/'.join(parts)
+                            print('Recompressing %s -> %s' % (name, new_name))
+                            
+                            member = src_zip.open(name)
+                            dest_zip.writestr(new_name, member.read(), zipfile.ZIP_DEFLATED)
 
 def build():
     if git_bin_path:
