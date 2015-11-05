@@ -40,7 +40,7 @@ Overview
 Requirements
 ------------
 
-- Python 2.4 through 2.7 or 3.1 through 3.4.
+- Python 2.6, 2.7 or 3.1 through 3.5.
 - libcurl 7.19.0 or better.
 
 Installation
@@ -101,8 +101,6 @@ vsftpd tests you must explicitly set PYCURL_VSFTPD_PATH variable like so::
     # specify full path to vsftpd
     export PYCURL_VSFTPD_PATH=/usr/local/libexec/vsftpd
 
-These instructions work for Python 2.5 through 2.7 and 3.1 through 3.4.
-
 .. _nose: https://nose.readthedocs.org/
 .. _bottle: http://bottlepy.org/
 .. _vsftpd: http://vsftpd.beasts.org/
@@ -118,8 +116,8 @@ configurations. It supports:
   process test server.
 - Testing against locally compiled libcurl with arbitrary options.
 
-To use the test matrix, first you need to start the test server from
-Python 2.5+ by running::
+To use the test matrix, first start the test server from Python 2.5+ by
+running::
 
     python -m tests.appmanager
 
