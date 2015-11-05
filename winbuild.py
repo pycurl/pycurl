@@ -331,15 +331,6 @@ def build():
     if not os.path.exists(archives_path):
         os.makedirs(archives_path)
     with in_dir(archives_path):
-        bitness = 32
-        for vc_version in vc_versions:
-            if use_zlib:
-                zlib_builder = ZlibBuilder(bitness=bitness, vc_version=vc_version, zlib_version=zlib_version)
-                step(zlib_builder.build, (), zlib_builder.state_tag)
-            libcurl_builder = LibcurlBuilder(bitness=bitness, vc_version=vc_version,
-                use_zlib=use_zlib, zlib_version=zlib_version, libcurl_version=libcurl_version)
-            step(libcurl_builder.build, (), libcurl_builder.state_tag)
-        
         def prepare_pycurl():
             #fetch('http://pycurl.sourceforge.net/download/pycurl-%s.tar.gz' % pycurl_version)
             if os.path.exists('pycurl-%s' % pycurl_version):
@@ -349,13 +340,23 @@ def build():
             shutil.copytree('c:/dev/pycurl', 'pycurl-%s' % pycurl_version)
         
         prepare_pycurl()
-        python_releases = ['.'.join(version.split('.')[:2]) for version in python_versions]
-        for python_version in python_releases:
-            targets = ['bdist', 'bdist_wininst', 'bdist_msi']
-            builder = PycurlBuilder(bitness=bitness, vc_version=vc_version,
-                python_version=python_version, pycurl_version=pycurl_version,
-                use_zlib=use_zlib, zlib_version=zlib_version, libcurl_version=libcurl_version)
-            builder.build(targets)
+        
+        for bitness in (32, 64):
+            for vc_version in vc_versions:
+                if use_zlib:
+                    zlib_builder = ZlibBuilder(bitness=bitness, vc_version=vc_version, zlib_version=zlib_version)
+                    step(zlib_builder.build, (), zlib_builder.state_tag)
+                libcurl_builder = LibcurlBuilder(bitness=bitness, vc_version=vc_version,
+                    use_zlib=use_zlib, zlib_version=zlib_version, libcurl_version=libcurl_version)
+                step(libcurl_builder.build, (), libcurl_builder.state_tag)
+            
+            python_releases = ['.'.join(version.split('.')[:2]) for version in python_versions]
+            for python_version in python_releases:
+                targets = ['bdist', 'bdist_wininst', 'bdist_msi']
+                builder = PycurlBuilder(bitness=bitness, vc_version=vc_version,
+                    python_version=python_version, pycurl_version=pycurl_version,
+                    use_zlib=use_zlib, zlib_version=zlib_version, libcurl_version=libcurl_version)
+                builder.build(targets)
 
 def download_pythons():
     for version in python_versions:
