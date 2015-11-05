@@ -284,10 +284,13 @@ def build():
                     libcurl_version, libcurl_builder.vc_tag, libcurl_builder.output_dir_name)
                 platform_indicators = {32: 'win32', 64: 'win-amd64'}
                 platform_indicator = platform_indicators[bitness]
-                if not os.path.exists('build/lib.%s-%s' % (platform_indicator, python_version)):
+                dest_lib_path = 'build/lib.%s-%s' % (platform_indicator, python_version)
+                if not os.path.exists(dest_lib_path):
                     # exists for building additional targets for the same python version
-                    os.makedirs('build/lib.%s-%s' % (platform_indicator, python_version))
-                shutil.copy(os.path.join(curl_dir, 'bin', 'libcurl.dll'), 'build/lib.%s-%s' % (platform_indicator, python_version))
+                    os.makedirs(dest_lib_path)
+                if use_zlib:
+                    shutil.copy(os.path.join('../zlib-%s-%s' % (zlib_version, builder.vc_tag), 'zlib1.dll'), dest_lib_path)
+                shutil.copy(os.path.join(curl_dir, 'bin', 'libcurl.dll'), dest_lib_path)
                 with builder.execute_batch() as f:
                     f.write("%s setup.py docstrings\n" % (python_path,))
                     f.write("%s setup.py %s --curl-dir=%s --use-libcurl-dll\n" % (python_path, target, curl_dir))
