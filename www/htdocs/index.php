@@ -104,8 +104,8 @@ To sum up, PycURL is very fast (especially for multiple concurrent operations)
 and very feature rich, but has a somewhat complex interface.
 If you need something simpler or prefer a pure Python
 module you might want to check out
-<a href="http://www.python.org/doc/current/lib/module-urllib2.html">urllib2</a>
-and
+<a href="http://www.python.org/doc/current/lib/module-urllib2.html">urllib2</a>,
+<a href="http://python-requests.org/">requests</a> and
 <a href="http://urlgrabber.baseurl.org/">urlgrabber</a>.
 </p>
 
