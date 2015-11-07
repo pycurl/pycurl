@@ -88,11 +88,11 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
 #define HAVE_CURL_7_19_4_OPTS
 #endif
 
-#if LIBCURL_VERSION_NUM >= 0x071304 /* check for 7.19.5 or greater */
+#if LIBCURL_VERSION_NUM >= 0x071305 /* check for 7.19.5 or greater */
 #define HAVE_CURL_7_19_5_OPTS
 #endif
 
-#if LIBCURL_VERSION_NUM >= 0x071304 /* check for 7.19.6 or greater */
+#if LIBCURL_VERSION_NUM >= 0x071306 /* check for 7.19.6 or greater */
 #define HAVE_CURL_7_19_6_OPTS
 #endif
 

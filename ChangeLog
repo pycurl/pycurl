@@ -1,3 +1,10 @@
+master
+------
+
+        * Fixed incorrect detection of libcurl 7.19.5 and 7.19.6
+          (thanks to bataniya).
+
+
 Version 7.19.5.3 [requires libcurl-7.19.0 or better] - 2015-11-03
 -----------------------------------------------------------------
 
