@@ -19,3 +19,7 @@ class ErrorConstantsTest(unittest.TestCase):
     @util.min_libcurl(7, 21, 5)
     def test_unknown_option(self):
         assert hasattr(pycurl, 'E_UNKNOWN_OPTION')
+    
+    @util.min_libcurl(7, 39, 0)
+    def test_pinnedpubkeynotmatch(self):
+        assert hasattr(pycurl, 'E_SSL_PINNEDPUBKEYNOTMATCH')

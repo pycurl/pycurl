@@ -1,6 +1,9 @@
 master
 ------
 
+        * Added CURLOPT_PINNEDPUBLICKEY (libcurl 7.39.0-7.44.0
+          depending on SSL backend and encoding algorithm).
+
         * Fixed incorrect detection of libcurl 7.19.5 and 7.19.6
           (thanks to bataniya).
 

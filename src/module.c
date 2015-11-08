@@ -794,6 +794,9 @@ initpycurl(void)
 #ifdef HAVE_CURL_7_25_0_OPTS
     insint_c(d, "MAIL_AUTH", CURLOPT_MAIL_AUTH);
 #endif
+#if LIBCURL_VERSION_NUM >= 0x072700 /* check for 7.39.0 or greater */
+    insint_c(d, "PINNEDPUBLICKEY", CURLOPT_PINNEDPUBLICKEY);
+#endif
 
     insint_m(d, "M_TIMERFUNCTION", CURLMOPT_TIMERFUNCTION);
     insint_m(d, "M_SOCKETFUNCTION", CURLMOPT_SOCKETFUNCTION);

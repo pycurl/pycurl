@@ -1253,6 +1253,9 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 #ifdef HAVE_CURL_7_25_0_OPTS
         case CURLOPT_MAIL_AUTH:
 #endif
+#if LIBCURL_VERSION_NUM >= 0x072700 /* check for 7.39.0 or greater */
+    case CURLOPT_PINNEDPUBLICKEY:
+#endif
 #if LIBCURL_VERSION_NUM >= 0x072b00 /* check for 7.43.0 or greater */
     case CURLOPT_SERVICE_NAME:
     case CURLOPT_PROXY_SERVICE_NAME:
