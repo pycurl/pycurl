@@ -198,3 +198,9 @@ class OptionConstantsTest(unittest.TestCase):
         curl = pycurl.Curl()
         curl.setopt(curl.SERVICE_NAME, 'fakehttp')
         curl.close()
+    
+    @util.min_libcurl(7, 39, 0)
+    def test_pinnedpublickey(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.PINNEDPUBLICKEY, '/etc/publickey.der')
+        curl.close()
