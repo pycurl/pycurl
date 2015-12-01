@@ -1,6 +1,8 @@
 master
 ------
 
+        * Added CURLOPT_WILDCARDMATCH (libcurl 7.21.0+).
+
         * C module initialization changed to raise exceptions on failure
           rather than trigger a fatal error and abort the Python interpreter.
 

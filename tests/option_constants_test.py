@@ -204,3 +204,9 @@ class OptionConstantsTest(unittest.TestCase):
         curl = pycurl.Curl()
         curl.setopt(curl.PINNEDPUBLICKEY, '/etc/publickey.der')
         curl.close()
+    
+    @util.min_libcurl(7, 21, 0)
+    def test_wildcardmatch(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.WILDCARDMATCH, '*')
+        curl.close()
