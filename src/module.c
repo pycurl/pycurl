@@ -832,6 +832,9 @@ initpycurl(void)
 #if LIBCURL_VERSION_NUM >= 0x072700 /* check for 7.39.0 or greater */
     insint_c(d, "PINNEDPUBLICKEY", CURLOPT_PINNEDPUBLICKEY);
 #endif
+#if LIBCURL_VERSION_NUM >= 0x071500 /* check for 7.21.0 or greater */
+    insint_c(d, "WILDCARDMATCH", CURLOPT_WILDCARDMATCH);
+#endif
 
     insint_m(d, "M_TIMERFUNCTION", CURLMOPT_TIMERFUNCTION);
     insint_m(d, "M_SOCKETFUNCTION", CURLMOPT_SOCKETFUNCTION);
