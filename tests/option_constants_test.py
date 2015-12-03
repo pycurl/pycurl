@@ -235,3 +235,8 @@ class OptionConstantsTest(unittest.TestCase):
         curl = pycurl.Curl()
         curl.setopt(curl.SSL_FALSESTART, 1)
         curl.close()
+    
+    def test_ssl_verifyhost(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.SSL_VERIFYHOST, 2)
+        curl.close()
