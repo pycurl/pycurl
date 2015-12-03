@@ -1,6 +1,8 @@
 master
 ------
 
+        * Added CURLOPT_UNIX_SOCKET_PATH (libcurl 7.40.0+).
+
         * Added CURLOPT_WILDCARDMATCH (libcurl 7.21.0+).
 
         * C module initialization changed to raise exceptions on failure

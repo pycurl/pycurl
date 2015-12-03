@@ -210,3 +210,9 @@ class OptionConstantsTest(unittest.TestCase):
         curl = pycurl.Curl()
         curl.setopt(curl.WILDCARDMATCH, '*')
         curl.close()
+    
+    @util.min_libcurl(7, 40, 0)
+    def test_unix_socket_path(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.UNIX_SOCKET_PATH, '/tmp/socket.sock')
+        curl.close()
