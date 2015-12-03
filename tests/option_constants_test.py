@@ -222,3 +222,9 @@ class OptionConstantsTest(unittest.TestCase):
         curl = pycurl.Curl()
         curl.setopt(curl.SSL_ENABLE_ALPN, 1)
         curl.close()
+    
+    @util.min_libcurl(7, 36, 0)
+    def test_ssl_enable_npn(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.SSL_ENABLE_NPN, 1)
+        curl.close()

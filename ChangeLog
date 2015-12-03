@@ -1,6 +1,8 @@
 master
 ------
 
+        * Added CURLOPT_SSL_ENABLE_NPN (libcurl 7.36.0+).
+
         * Added CURLOPT_SSL_ENABLE_ALPN (libcurl 7.36.0+).
 
         * Added CURLOPT_UNIX_SOCKET_PATH (libcurl 7.40.0+).
