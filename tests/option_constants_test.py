@@ -216,3 +216,9 @@ class OptionConstantsTest(unittest.TestCase):
         curl = pycurl.Curl()
         curl.setopt(curl.UNIX_SOCKET_PATH, '/tmp/socket.sock')
         curl.close()
+    
+    @util.min_libcurl(7, 36, 0)
+    def test_ssl_enable_alpn(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.SSL_ENABLE_ALPN, 1)
+        curl.close()
