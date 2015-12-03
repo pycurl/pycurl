@@ -228,3 +228,10 @@ class OptionConstantsTest(unittest.TestCase):
         curl = pycurl.Curl()
         curl.setopt(curl.SSL_ENABLE_NPN, 1)
         curl.close()
+    
+    @util.min_libcurl(7, 42, 0)
+    @util.only_ssl_backends('nss')
+    def test_ssl_falsestart(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.SSL_FALSESTART, 1)
+        curl.close()

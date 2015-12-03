@@ -842,6 +842,9 @@ initpycurl(void)
     insint_c(d, "SSL_ENABLE_ALPN", CURLOPT_SSL_ENABLE_ALPN);
     insint_c(d, "SSL_ENABLE_NPN", CURLOPT_SSL_ENABLE_NPN);
 #endif
+#if LIBCURL_VERSION_NUM >= 0x072a00 /* check for 7.42.0 or greater */
+    insint_c(d, "SSL_FALSESTART", CURLOPT_SSL_FALSESTART);
+#endif
 
     insint_m(d, "M_TIMERFUNCTION", CURLMOPT_TIMERFUNCTION);
     insint_m(d, "M_SOCKETFUNCTION", CURLMOPT_SOCKETFUNCTION);
