@@ -263,3 +263,9 @@ class OptionConstantsTest(unittest.TestCase):
         curl = pycurl.Curl()
         curl.setopt(curl.CRLFILE, '/bogus-crlfile')
         curl.close()
+    
+    @util.only_ssl
+    def test_random_file(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.RANDOM_FILE, '/bogus-random')
+        curl.close()
