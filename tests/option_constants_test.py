@@ -287,3 +287,8 @@ class OptionConstantsTest(unittest.TestCase):
         curl = pycurl.Curl()
         curl.setopt(curl.SSL_SESSIONID_CACHE, True)
         curl.close()
+    
+    def test_krblevel(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.KRBLEVEL, 'clear')
+        curl.close()

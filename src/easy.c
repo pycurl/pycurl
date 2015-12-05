@@ -1266,6 +1266,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 #if LIBCURL_VERSION_NUM >= 0x072800 /* check for 7.40.0 or greater */
     case CURLOPT_UNIX_SOCKET_PATH:
 #endif
+    case CURLOPT_KRBLEVEL:
 /* FIXME: check if more of these options allow binary data */
             str = PyText_AsString_NoNUL(obj, &encoded_obj);
             if (str == NULL)
