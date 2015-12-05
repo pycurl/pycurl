@@ -269,3 +269,9 @@ class OptionConstantsTest(unittest.TestCase):
         curl = pycurl.Curl()
         curl.setopt(curl.RANDOM_FILE, '/bogus-random')
         curl.close()
+
+    @util.only_ssl_backends('openssl', 'gnutls')
+    def test_egdsocket(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.EGDSOCKET, '/bogus-egdsocket')
+        curl.close()
