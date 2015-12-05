@@ -281,3 +281,9 @@ class OptionConstantsTest(unittest.TestCase):
         curl = pycurl.Curl()
         curl.setopt(curl.SSL_CIPHER_LIST, 'RC4-SHA:SHA1+DES')
         curl.close()
+    
+    @util.only_ssl
+    def test_ssl_sessionid_cache(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.SSL_SESSIONID_CACHE, True)
+        curl.close()
