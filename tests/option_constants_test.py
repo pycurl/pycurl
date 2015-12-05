@@ -245,3 +245,9 @@ class OptionConstantsTest(unittest.TestCase):
         curl = pycurl.Curl()
         curl.setopt(curl.CAINFO, '/bogus-cainfo')
         curl.close()
+
+    @util.only_ssl
+    def test_issuercert(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.ISSUERCERT, '/bogus-issuercert')
+        curl.close()
