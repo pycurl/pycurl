@@ -240,3 +240,8 @@ class OptionConstantsTest(unittest.TestCase):
         curl = pycurl.Curl()
         curl.setopt(curl.SSL_VERIFYHOST, 2)
         curl.close()
+    
+    def test_cainfo(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.CAINFO, '/bogus-cainfo')
+        curl.close()
