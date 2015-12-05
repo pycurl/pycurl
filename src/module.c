@@ -676,6 +676,7 @@ initpycurl(void)
     insint_c(d, "STDERR", CURLOPT_STDERR);
     insint_c(d, "INTERFACE", CURLOPT_INTERFACE);
     insint_c(d, "KRB4LEVEL", CURLOPT_KRB4LEVEL);
+    insint_c(d, "KRBLEVEL", CURLOPT_KRBLEVEL);
     insint_c(d, "PROGRESSFUNCTION", CURLOPT_PROGRESSFUNCTION);
     insint_c(d, "SSL_VERIFYPEER", CURLOPT_SSL_VERIFYPEER);
     insint_c(d, "CAPATH", CURLOPT_CAPATH);
@@ -838,7 +839,6 @@ initpycurl(void)
 #if LIBCURL_VERSION_NUM >= 0x072800 /* check for 7.40.0 or greater */
     insint_c(d, "UNIX_SOCKET_PATH", CURLOPT_UNIX_SOCKET_PATH);
 #endif
-    insint_c(d, "KRBLEVEL", CURLOPT_KRBLEVEL);
 #if LIBCURL_VERSION_NUM >= 0x072400 /* check for 7.36.0 or greater */
     insint_c(d, "SSL_ENABLE_ALPN", CURLOPT_SSL_ENABLE_ALPN);
     insint_c(d, "SSL_ENABLE_NPN", CURLOPT_SSL_ENABLE_NPN);

@@ -292,3 +292,8 @@ class OptionConstantsTest(unittest.TestCase):
         curl = pycurl.Curl()
         curl.setopt(curl.KRBLEVEL, 'clear')
         curl.close()
+    
+    def test_krb4level(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.KRB4LEVEL, 'clear')
+        curl.close()

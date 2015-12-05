@@ -1203,7 +1203,6 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_ENCODING:
         case CURLOPT_FTPPORT:
         case CURLOPT_INTERFACE:
-        case CURLOPT_KRB4LEVEL:
         case CURLOPT_NETRC_FILE:
         case CURLOPT_PROXY:
         case CURLOPT_PROXYUSERPWD:
