@@ -846,6 +846,13 @@ initpycurl(void)
 #if LIBCURL_VERSION_NUM >= 0x072a00 /* check for 7.42.0 or greater */
     insint_c(d, "SSL_FALSESTART", CURLOPT_SSL_FALSESTART);
 #endif
+#if LIBCURL_VERSION_NUM >= 0x071900 /* check for 7.25.0 or greater */
+    insint_c(d, "SSL_OPTIONS", CURLOPT_SSL_OPTIONS);
+    insint_c(d, "SSLOPT_ALLOW_BEAST", CURLSSLOPT_ALLOW_BEAST);
+# if LIBCURL_VERSION_NUM >= 0x072c00 /* check for 7.44.0 or greater */
+    insint_c(d, "SSLOPT_NO_REVOKE", CURLSSLOPT_NO_REVOKE);
+# endif
+#endif
 
     insint_m(d, "M_TIMERFUNCTION", CURLMOPT_TIMERFUNCTION);
     insint_m(d, "M_SOCKETFUNCTION", CURLMOPT_SOCKETFUNCTION);
