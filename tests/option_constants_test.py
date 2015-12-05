@@ -257,3 +257,9 @@ class OptionConstantsTest(unittest.TestCase):
         curl = pycurl.Curl()
         curl.setopt(curl.CAPATH, '/bogus-capath')
         curl.close()
+    
+    @util.only_ssl
+    def test_crlfile(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.CRLFILE, '/bogus-crlfile')
+        curl.close()
