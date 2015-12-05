@@ -1,6 +1,10 @@
 master
 ------
 
+        * Added CURLOPT_SSL_OPTIONS (libcurl 7.25.0+).
+
+        * Added CURLOPT_KRBLEVEL.
+
         * Added CURLOPT_SSL_FALSESTART (libcurl 7.42.0+).
 
         * Added CURLOPT_SSL_ENABLE_NPN (libcurl 7.36.0+).

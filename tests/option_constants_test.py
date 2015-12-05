@@ -240,3 +240,74 @@ class OptionConstantsTest(unittest.TestCase):
         curl = pycurl.Curl()
         curl.setopt(curl.SSL_VERIFYHOST, 2)
         curl.close()
+    
+    def test_cainfo(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.CAINFO, '/bogus-cainfo')
+        curl.close()
+
+    @util.only_ssl
+    def test_issuercert(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.ISSUERCERT, '/bogus-issuercert')
+        curl.close()
+    
+    @util.only_ssl
+    def test_capath(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.CAPATH, '/bogus-capath')
+        curl.close()
+    
+    @util.only_ssl
+    def test_crlfile(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.CRLFILE, '/bogus-crlfile')
+        curl.close()
+    
+    @util.only_ssl
+    def test_random_file(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.RANDOM_FILE, '/bogus-random')
+        curl.close()
+
+    @util.only_ssl_backends('openssl', 'gnutls')
+    def test_egdsocket(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.EGDSOCKET, '/bogus-egdsocket')
+        curl.close()
+    
+    @util.only_ssl
+    def test_ssl_cipher_list(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.SSL_CIPHER_LIST, 'RC4-SHA:SHA1+DES')
+        curl.close()
+    
+    @util.only_ssl
+    def test_ssl_sessionid_cache(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.SSL_SESSIONID_CACHE, True)
+        curl.close()
+    
+    def test_krblevel(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.KRBLEVEL, 'clear')
+        curl.close()
+    
+    def test_krb4level(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.KRB4LEVEL, 'clear')
+        curl.close()
+    
+    @util.min_libcurl(7, 25, 0)
+    @util.only_ssl
+    def test_ssl_options(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.SSL_OPTIONS, curl.SSLOPT_ALLOW_BEAST)
+        curl.close()
+    
+    @util.min_libcurl(7, 44, 0)
+    @util.only_ssl
+    def test_ssl_option_no_revoke(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.SSL_OPTIONS, curl.SSLOPT_NO_REVOKE)
+        curl.close()
