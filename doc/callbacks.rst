@@ -43,6 +43,8 @@ HEADERFUNCTION
     alternate way of indicating that the callback has consumed all of the
     string passed to it and, hence, succeeded.
 
+    `header_test.py test`_ shows how to use ``WRITEFUNCTION``.
+
 
 Example: Callbacks for document header and body
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -91,6 +93,8 @@ WRITEFUNCTION
     alternate way of indicating that the callback has consumed all of the
     string passed to it and, hence, succeeded.
 
+    `write_test.py test`_ shows how to use ``WRITEFUNCTION``.
+
 
 READFUNCTION
 ------------
@@ -107,6 +111,8 @@ READFUNCTION
     ``READFUNC_PAUSE``. See the libcurl documentation for an explanation
     of these values.
 
+    The `file_upload.py example`_ in the distribution contains example code for
+    using ``READFUNCTION``.
 
 PROGRESSFUNCTION
 ----------------
@@ -151,6 +157,8 @@ DEBUGFUNCTION
     callback is now of type ``bytes`` on Python 3. Previously the argument was
     of type ``str``.
 
+    `debug_test.py test`_ shows how to use ``DEBUGFUNCTION``.
+
 
 Example: Debug callbacks
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -193,16 +201,6 @@ IOCTLFUNCTION
     *Note:* this callback is deprecated. Use :ref:`SEEKFUNCTION <SEEKFUNCTION>` instead.
 
 
-Other examples
---------------
-
-The pycurl distribution also contains a number of test scripts and examples
-which show how to use the various callbacks in libcurl. For instance, the
-file ``examples/file_upload.py`` in the distribution contains example code for
-using READFUNCTION, ``tests/test_cb.py`` shows WRITEFUNCTION and
-HEADERFUNCTION, ``tests/test_debug.py`` shows DEBUGFUNCTION, and
-``tests/test_getinfo.py`` shows PROGRESSFUNCTION.
-
 .. _CURLOPT_HEADERFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_HEADERFUNCTION.html
 .. _CURLOPT_WRITEFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_WRITEFUNCTION.html
 .. _CURLOPT_READFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_READFUNCTION.html
@@ -210,3 +208,7 @@ HEADERFUNCTION, ``tests/test_debug.py`` shows DEBUGFUNCTION, and
 .. _CURLOPT_DEBUGFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_DEBUGFUNCTION.html
 .. _CURLOPT_SEEKFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_SEEKFUNCTION.html
 .. _CURLOPT_IOCTLFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_IOCTLFUNCTION.html
+.. _file_upload.py example: https://github.com/pycurl/pycurl/blob/master/examples/file_upload.py
+.. _write_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/write_test.py
+.. _header_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/header_test.py
+.. _debug_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/debug_test.py
