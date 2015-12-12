@@ -84,11 +84,15 @@ if test "$USEPY" = 3.1; then
 fi
 
 if test -n "$USECURL"; then
-  if echo "$USECURL" |grep -q -- "-gssapi\$"; then
-    curl_suffix=-gssapi
-    USECURL=$(echo "$USECURL" |sed -e s/-gssapi//)
+  if echo "$USECURL" |grep -q -- "-libssh2\$"; then
+    curl_suffix=-libssh2
+    USECURL=$(echo "$USECURL" |sed -e s/-libssh2//)
   else
     curl_suffix=
+  fi
+  if echo "$USECURL" |grep -q -- "-gssapi\$"; then
+    curl_suffix=-gssapi$curl_suffix
+    USECURL=$(echo "$USECURL" |sed -e s/-gssapi//)
   fi
   
   if test -n "$USEOPENSSL"; then

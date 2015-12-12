@@ -202,6 +202,28 @@ document, the arguments related to uploads are zero, and vice versa.
     c.perform()
 
 
+SSH_KEYFUNCTION
+---------------
+
+.. function:: SSH_KEYFUNCTION(known_key, found_key, match) -> int
+
+    Callback for known host matching logic. Corresponds to
+    `CURLOPT_SSH_KEYFUNCTION`_ in libcurl.
+
+    *known_key* and *found_key* are instances of ``KhKey`` class which is a
+    `namedtuple`_ with ``key`` and ``keytype`` fields, corresponding to
+    libcurl's ``struct curl_khkey``::
+
+        KhKey = namedtuple('KhKey', ('key', 'keytype'))
+
+    On Python 2, the *key* field of ``KhKey`` is a ``str``. On Python 3, the
+    *key* field is ``bytes``. *keytype* is an ``int``.
+
+    *known_key* may be ``None`` when there is no known matching host key.
+
+    ``SSH_KEYFUNCTION`` callback should return a ``KHSTAT_*`` value.
+
+
 .. _CURLOPT_HEADERFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_HEADERFUNCTION.html
 .. _CURLOPT_WRITEFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_WRITEFUNCTION.html
 .. _CURLOPT_READFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_READFUNCTION.html
@@ -213,3 +235,5 @@ document, the arguments related to uploads are zero, and vice versa.
 .. _write_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/write_test.py
 .. _header_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/header_test.py
 .. _debug_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/debug_test.py
+.. _CURLOPT_SSH_KEYFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_SSH_KEYFUNCTION.html
+.. _namedtuple: https://docs.python.org/library/collections.html#collections.namedtuple

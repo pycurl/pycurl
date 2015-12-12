@@ -341,6 +341,7 @@ typedef struct CurlObject {
     PyObject *ioctl_cb;
     PyObject *opensocket_cb;
     PyObject *seek_cb;
+    PyObject *ssh_key_cb;
     /* file objects */
     PyObject *readdata_fp;
     PyObject *writedata_fp;
@@ -447,6 +448,7 @@ extern PyObject *ErrorObject;
 extern PyTypeObject *p_Curl_Type;
 extern PyTypeObject *p_CurlMulti_Type;
 extern PyTypeObject *p_CurlShare_Type;
+extern PyObject *khkey_type;
 
 extern PyObject *curlobject_constants;
 extern PyObject *curlmultiobject_constants;

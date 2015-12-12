@@ -17,6 +17,11 @@ if test "$CI" = true; then
   else
     extra_attrs="$extra_attrs",\!gssapi
   fi
+  if test -n "$USECURL" && echo "$USECURL" |grep -q libssh2; then
+    :
+  else
+    extra_attrs="$extra_attrs",\!sftp
+  fi
 fi
 
 $PYTHON -c 'import pycurl; print(pycurl.version)'

@@ -263,8 +263,9 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
         Py_CLEAR(self->pro_cb);
         Py_CLEAR(self->debug_cb);
         Py_CLEAR(self->ioctl_cb);
-        Py_CLEAR(self->opensocket_cb);
         Py_CLEAR(self->seek_cb);
+        Py_CLEAR(self->opensocket_cb);
+        Py_CLEAR(self->ssh_key_cb);
     }
 
     if (flags & PYCURL_MEMGROUP_FILE) {
@@ -426,8 +427,9 @@ do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
     VISIT(self->pro_cb);
     VISIT(self->debug_cb);
     VISIT(self->ioctl_cb);
-    VISIT(self->opensocket_cb);
     VISIT(self->seek_cb);
+    VISIT(self->opensocket_cb);
+    VISIT(self->ssh_key_cb);
 
     VISIT(self->readdata_fp);
     VISIT(self->writedata_fp);
@@ -663,6 +665,108 @@ verbose_error:
     PyErr_Print();
     goto silent_error;
 }
+
+
+#ifdef HAVE_CURL_7_19_6_OPTS
+static PyObject *
+khkey_to_object(const struct curl_khkey *khkey)
+{
+    PyObject *arglist, *ret;
+
+    if (khkey == NULL) {
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+
+    if (khkey->len) {
+#if PY_MAJOR_VERSION >= 3
+        arglist = Py_BuildValue("(y#i)", khkey->key, khkey->len, khkey->keytype);
+#else
+        arglist = Py_BuildValue("(s#i)", khkey->key, khkey->len, khkey->keytype);
+#endif
+    } else {
+#if PY_MAJOR_VERSION >= 3
+        arglist = Py_BuildValue("(yi)", khkey->key, khkey->keytype);
+#else
+        arglist = Py_BuildValue("(si)", khkey->key, khkey->keytype);
+#endif
+    }
+
+    if (arglist == NULL) {
+        return NULL;
+    }
+
+    ret = PyObject_Call(khkey_type, arglist, NULL);
+    Py_DECREF(arglist);
+    return ret;
+}
+
+
+static int
+ssh_key_cb(CURL *easy, const struct curl_khkey *knownkey,
+    const struct curl_khkey *foundkey, int khmatch, void *clientp)
+{
+    PyObject *arglist;
+    CurlObject *self;
+    int ret = -1;
+    PyObject *knownkey_obj = NULL;
+    PyObject *foundkey_obj = NULL;
+    PyObject *ret_obj = NULL;
+    PYCURL_DECLARE_THREAD_STATE;
+
+    self = (CurlObject *)clientp;
+    PYCURL_ACQUIRE_THREAD();
+
+    knownkey_obj = khkey_to_object(knownkey);
+    if (knownkey_obj == NULL) {
+        goto silent_error;
+    }
+    foundkey_obj = khkey_to_object(foundkey);
+    if (foundkey_obj == NULL) {
+        goto silent_error;
+    }
+
+    arglist = Py_BuildValue("(OOi)", knownkey_obj, foundkey_obj, khmatch);
+    if (arglist == NULL)
+        goto verbose_error;
+
+    ret_obj = PyEval_CallObject(self->ssh_key_cb, arglist);
+    Py_DECREF(arglist);
+    if (!PyInt_Check(ret_obj) && !PyLong_Check(ret_obj)) {
+        PyObject *ret_repr = PyObject_Repr(ret_obj);
+        if (ret_repr) {
+            PyObject *encoded_obj;
+            char *str = PyText_AsString_NoNUL(ret_repr, &encoded_obj);
+            fprintf(stderr, "ssh key callback returned %s which is not an integer\n", str);
+            PyErr_Format(PyExc_TypeError, "ssh key callback returned %s which is not an integer", str);
+            Py_XDECREF(encoded_obj);
+            Py_DECREF(ret_repr);
+        }
+        goto silent_error;
+    }
+    if (PyInt_Check(ret_obj)) {
+        /* long to int cast */
+        ret = (int) PyInt_AsLong(ret_obj);
+    } else {
+        /* long to int cast */
+        ret = (int) PyLong_AsLong(ret_obj);
+    }
+    goto done;
+
+silent_error:
+    ret = -1;
+done:
+    Py_XDECREF(knownkey_obj);
+    Py_XDECREF(foundkey_obj);
+    Py_XDECREF(ret_obj);
+    PYCURL_RELEASE_THREAD();
+    return ret;
+verbose_error:
+    PyErr_Print();
+    goto silent_error;
+}
+#endif
+
 
 static int
 seek_callback(void *stream, curl_off_t offset, int origin)
@@ -1813,6 +1917,15 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             curl_easy_setopt(self->handle, CURLOPT_OPENSOCKETFUNCTION, opensocket_cb);
             curl_easy_setopt(self->handle, CURLOPT_OPENSOCKETDATA, self);
             break;
+#ifdef HAVE_CURL_7_19_6_OPTS
+        case CURLOPT_SSH_KEYFUNCTION:
+            Py_INCREF(obj);
+            Py_CLEAR(self->ssh_key_cb);
+            self->ssh_key_cb = obj;
+            curl_easy_setopt(self->handle, CURLOPT_SSH_KEYFUNCTION, ssh_key_cb);
+            curl_easy_setopt(self->handle, CURLOPT_SSH_KEYDATA, self);
+            break;
+#endif
         case CURLOPT_SEEKFUNCTION:
             Py_INCREF(obj);
             Py_CLEAR(self->seek_cb);
