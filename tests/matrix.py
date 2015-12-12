@@ -6,7 +6,7 @@ except ImportError:
     from urllib import urlopen
 
 python_versions = ['2.4.6', '2.5.6', '2.6.8', '2.7.5', '3.1.5', '3.2.5', '3.3.5', '3.4.1']
-libcurl_versions = ['7.19.0', '7.45.0']
+libcurl_versions = ['7.19.0', '7.46.0']
 
 # http://bsdpower.com/building-python-24-with-zlib/
 patch_python_for_zlib = "sed -e 's/^#zlib/zlib/g' Modules/Setup >Modules/Setup.patched && mv Modules/Setup.patched Modules/Setup"
@@ -39,11 +39,11 @@ root = os.path.abspath(os.path.dirname(__file__))
 class in_dir:
     def __init__(self, dir):
         self.dir = dir
-    
+
     def __enter__(self):
         self.oldwd = os.getcwd()
         os.chdir(self.dir)
-    
+
     def __exit__(self, type, value, traceback):
         os.chdir(self.oldwd)
 
@@ -105,7 +105,7 @@ def run_matrix(python_versions, libcurl_versions):
         url = 'http://www.python.org/ftp/python/%s/Python-%s.tgz' % (python_version, python_version)
         archive = os.path.basename(url)
         fetch(url, archive)
-        
+
         dir = archive.replace('.tgz', '')
         prefix = os.path.abspath('i/%s' % dir)
         build(archive, dir, prefix, meta=python_meta.get(python_version))
@@ -114,7 +114,7 @@ def run_matrix(python_versions, libcurl_versions):
         url = 'http://curl.haxx.se/download/curl-%s.tar.gz' % libcurl_version
         archive = os.path.basename(url)
         fetch(url, archive)
-        
+
         dir = archive.replace('.tar.gz', '')
         prefix = os.path.abspath('i/%s' % dir)
         build(archive, dir, prefix, meta=libcurl_meta.get(libcurl_version))
@@ -184,10 +184,10 @@ def run_matrix(python_versions, libcurl_versions):
 
 if __name__ == '__main__':
     import sys
-    
+
     def main():
         import optparse
-        
+
         parser = optparse.OptionParser()
         parser.add_option('-p', '--python', help='Specify python version to test against')
         parser.add_option('-c', '--curl', help='Specify libcurl version to test against')
@@ -207,7 +207,7 @@ if __name__ == '__main__':
         else:
             chosen_libcurl_versions = libcurl_versions
         run_matrix(chosen_python_versions, chosen_libcurl_versions)
-    
+
     if len(sys.argv) > 1 and sys.argv[1] == 'patch-24':
         patch_pycurl_for_24()
     else:

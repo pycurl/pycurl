@@ -37,7 +37,7 @@ use_zlib = True
 # which version of zlib to use, will be downloaded from internet
 zlib_version = '1.2.8'
 # which version of libcurl to use, will be downloaded from the internet
-libcurl_version = '7.45.0'
+libcurl_version = '7.46.0'
 # pycurl version to build, we should know this ourselves
 pycurl_version = '7.19.5.3'
 
@@ -138,7 +138,7 @@ class Builder(object):
         assert bitness in (32, 64)
         self.bitness = bitness
         self.vc_version = kwargs.pop('vc_version')
-    
+
     @property
     def vcvars_bitness_parameter(self):
         params = {
@@ -146,11 +146,11 @@ class Builder(object):
             64: 'amd64',
         }
         return params[self.bitness]
-    
+
     @property
     def vcvars_relative_path(self):
         return 'vc/vcvarsall.bat'
-    
+
     @property
     def vc_path(self):
         if self.vc_version in vc_paths and vc_paths[self.vc_version]:
@@ -167,7 +167,7 @@ class Builder(object):
     @property
     def vcvars_path(self):
         return os.path.join(self.vc_path, self.vcvars_relative_path)
-    
+
     @property
     def vcvars_cmd(self):
         # https://msdn.microsoft.com/en-us/library/x4d2c09s.aspx
@@ -175,14 +175,14 @@ class Builder(object):
             self.vcvars_path,
             self.vcvars_bitness_parameter,
         )
-    
+
     @contextlib.contextmanager
     def execute_batch(self):
         with open('doit.bat', 'w') as f:
             f.write(self.vcvars_cmd)
             yield f
         subprocess.check_call(['doit.bat'])
-        
+
     @property
     def vc_tag(self):
         return '%s-%s' % (self.vc_version, self.bitness)
@@ -191,11 +191,11 @@ class ZlibBuilder(Builder):
     def __init__(self, **kwargs):
         super(ZlibBuilder, self).__init__(**kwargs)
         self.zlib_version = kwargs.pop('zlib_version')
-    
+
     @property
     def state_tag(self):
         return 'zlib-%s-%s' % (self.zlib_version, self.vc_tag)
-    
+
     def build(self):
         fetch('http://downloads.sourceforge.net/project/libpng/zlib/%s/zlib-%s.tar.gz' % (self.zlib_version, self.zlib_version))
         untar('zlib-%s' % self.zlib_version)
@@ -203,7 +203,7 @@ class ZlibBuilder(Builder):
         with in_dir(zlib_dir):
             with self.execute_batch() as f:
                 f.write("nmake /f win32/Makefile.msc\n")
-    
+
     @property
     def output_dir_path(self):
         return 'zlib-%s-%s' % (self.zlib_version, self.vc_tag)
@@ -221,11 +221,11 @@ class LibcurlBuilder(Builder):
         self.use_zlib = kwargs.pop('use_zlib')
         if self.use_zlib:
             self.zlib_version = kwargs.pop('zlib_version')
-    
+
     @property
     def state_tag(self):
         return 'curl-%s-%s' % (self.libcurl_version, self.vc_tag)
-    
+
     def build(self):
         fetch('http://curl.haxx.se/download/curl-%s.tar.gz' % self.libcurl_version)
         untar('curl-%s' % self.libcurl_version)
@@ -256,7 +256,7 @@ class LibcurlBuilder(Builder):
         output_dir_name = 'libcurl-vc-%s-release-dll%s-ipv6-sspi%s-winssl' % (
             bitness_indicator, zlib_part, spnego_part)
         return output_dir_name
-    
+
     @property
     def output_dir_path(self):
         curl_dir = 'curl-%s-%s/builds/%s' % (
@@ -278,19 +278,19 @@ class PycurlBuilder(Builder):
         self.libcurl_version = kwargs.pop('libcurl_version')
         self.zlib_version = kwargs.pop('zlib_version')
         self.use_zlib = kwargs.pop('use_zlib')
-    
-    
+
+
     @property
     def python_path(self):
         return python_path_template % dict(
             python_version=self.python_version.replace('.', ''),
             bitness=self.bitness)
-    
+
     @property
     def platform_indicator(self):
         platform_indicators = {32: 'win32', 64: 'win-amd64'}
         return platform_indicators[self.bitness]
-    
+
     def build(self, targets):
         libcurl_builder = LibcurlBuilder(bitness=self.bitness,
             vc_version=self.vc_version,
@@ -332,7 +332,7 @@ class PycurlBuilder(Builder):
                             assert len(parts) > 0
                             new_name = '/'.join(parts)
                             print('Recompressing %s -> %s' % (name, new_name))
-                            
+
                             member = src_zip.open(name)
                             dest_zip.writestr(new_name, member.read(), zipfile.ZIP_DEFLATED)
 
@@ -349,9 +349,9 @@ def build():
                 subprocess.check_call([rm_path, '-rf', 'pycurl-%s' % pycurl_version])
             #subprocess.check_call([tar_path, 'xf', 'pycurl-%s.tar.gz' % pycurl_version])
             shutil.copytree('c:/dev/pycurl', 'pycurl-%s' % pycurl_version)
-        
+
         prepare_pycurl()
-        
+
         for bitness in (32, 64):
             for vc_version in vc_versions:
                 if use_zlib:
@@ -360,7 +360,7 @@ def build():
                 libcurl_builder = LibcurlBuilder(bitness=bitness, vc_version=vc_version,
                     use_zlib=use_zlib, zlib_version=zlib_version, libcurl_version=libcurl_version)
                 step(libcurl_builder.build, (), libcurl_builder.state_tag)
-            
+
             python_releases = ['.'.join(version.split('.')[:2]) for version in python_versions]
             for python_version in python_releases:
                 targets = ['bdist', 'bdist_wininst', 'bdist_msi']
