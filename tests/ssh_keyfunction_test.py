@@ -12,7 +12,6 @@ sftp_server = 'sftp://web.sourceforge.net'
 
 @nose.plugins.attrib.attr('online')
 @nose.plugins.attrib.attr('sftp')
-@util.min_libcurl(7, 19, 6)
 class SshKeyfunctionTest(unittest.TestCase):
     '''This test requires Internet access.'''
 
@@ -24,6 +23,7 @@ class SshKeyfunctionTest(unittest.TestCase):
     def tearDown(self):
         self.curl.close()
 
+    @util.min_libcurl(7, 19, 6)
     def test_keyfunction(self):
         # with keyfunction returning ok
 
@@ -53,6 +53,7 @@ class SshKeyfunctionTest(unittest.TestCase):
         except pycurl.error as e:
             self.assertEqual(pycurl.E_PEER_FAILED_VERIFICATION, e.args[0])
 
+    @util.min_libcurl(7, 19, 6)
     def test_keyfunction_bogus_return(self):
         def keyfunction(known_key, found_key, match):
             return 'bogus'
