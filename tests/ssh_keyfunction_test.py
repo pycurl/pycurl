@@ -52,3 +52,16 @@ class SshKeyfunctionTest(unittest.TestCase):
             self.fail('should have raised')
         except pycurl.error as e:
             self.assertEqual(pycurl.E_PEER_FAILED_VERIFICATION, e.args[0])
+
+    def test_keyfunction_bogus_return(self):
+        def keyfunction(known_key, found_key, match):
+            return 'bogus'
+
+        self.curl.setopt(pycurl.SSH_KNOWNHOSTS, '.known_hosts')
+        self.curl.setopt(pycurl.SSH_KEYFUNCTION, keyfunction)
+
+        try:
+            self.curl.perform()
+            self.fail('should have raised')
+        except pycurl.error as e:
+            self.assertEqual(pycurl.E_PEER_FAILED_VERIFICATION, e.args[0])

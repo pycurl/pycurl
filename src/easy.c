@@ -734,9 +734,11 @@ ssh_key_cb(CURL *easy, const struct curl_khkey *knownkey,
     if (!PyInt_Check(ret_obj) && !PyLong_Check(ret_obj)) {
         PyObject *ret_repr = PyObject_Repr(ret_obj);
         if (ret_repr) {
-            char *str = PyString_AsString(ret_repr);
+            PyObject *encoded_obj;
+            char *str = PyText_AsString_NoNUL(ret_repr, &encoded_obj);
             fprintf(stderr, "ssh key callback returned %s which is not an integer\n", str);
             PyErr_Format(PyExc_TypeError, "ssh key callback returned %s which is not an integer", str);
+            Py_XDECREF(encoded_obj);
             Py_DECREF(ret_repr);
         }
         goto silent_error;
