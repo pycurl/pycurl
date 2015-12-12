@@ -21,7 +21,9 @@ PYCURL_INTERNAL PyObject *ErrorObject = NULL;
 PYCURL_INTERNAL PyTypeObject *p_Curl_Type = NULL;
 PYCURL_INTERNAL PyTypeObject *p_CurlMulti_Type = NULL;
 PYCURL_INTERNAL PyTypeObject *p_CurlShare_Type = NULL;
+#ifdef HAVE_CURL_7_19_6_OPTS
 PYCURL_INTERNAL PyObject *khkey_type = NULL;
+#endif
 
 PYCURL_INTERNAL PyObject *curlobject_constants = NULL;
 PYCURL_INTERNAL PyObject *curlmultiobject_constants = NULL;
@@ -309,9 +311,11 @@ initpycurl(void)
     const curl_version_info_data *vi;
     const char *libcurl_version, *runtime_ssl_lib;
     size_t libcurl_version_len, pycurl_version_len;
+#ifdef HAVE_CURL_7_19_6_OPTS
     PyObject *collections_module = NULL;
     PyObject *named_tuple = NULL;
     PyObject *arglist = NULL;
+#endif
 
     /* Check the version, as this has caused nasty problems in
      * some cases. */
@@ -1088,6 +1092,7 @@ initpycurl(void)
     pycurl_ssl_init();
 #endif
 
+#ifdef HAVE_CURL_7_19_6_OPTS
     collections_module = PyImport_ImportModule("collections");
     if (collections_module == NULL) {
         goto error;
@@ -1105,6 +1110,7 @@ initpycurl(void)
         goto error;
     }
     PyDict_SetItemString(d, "KhKey", khkey_type);
+#endif
 
 #ifdef WITH_THREAD
     /* Finally initialize global interpreter lock */
@@ -1122,10 +1128,12 @@ error:
     Py_XDECREF(curlmultiobject_constants);
     Py_XDECREF(curlshareobject_constants);
     Py_XDECREF(ErrorObject);
+#ifdef HAVE_CURL_7_19_6_OPTS
     Py_XDECREF(collections_module);
     Py_XDECREF(named_tuple);
     Py_XDECREF(arglist);
     Py_XDECREF(khkey_type);
+#endif
     PyMem_Free(g_pycurl_useragent);
     if (!PyErr_Occurred())
         PyErr_SetString(PyExc_ImportError, "curl module init failed");

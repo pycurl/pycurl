@@ -667,6 +667,7 @@ verbose_error:
 }
 
 
+#ifdef HAVE_CURL_7_19_6_OPTS
 static PyObject *
 khkey_to_object(const struct curl_khkey *khkey)
 {
@@ -764,6 +765,7 @@ verbose_error:
     PyErr_Print();
     goto silent_error;
 }
+#endif
 
 
 static int
@@ -1915,6 +1917,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             curl_easy_setopt(self->handle, CURLOPT_OPENSOCKETFUNCTION, opensocket_cb);
             curl_easy_setopt(self->handle, CURLOPT_OPENSOCKETDATA, self);
             break;
+#ifdef HAVE_CURL_7_19_6_OPTS
         case CURLOPT_SSH_KEYFUNCTION:
             Py_INCREF(obj);
             Py_CLEAR(self->ssh_key_cb);
@@ -1922,6 +1925,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             curl_easy_setopt(self->handle, CURLOPT_SSH_KEYFUNCTION, ssh_key_cb);
             curl_easy_setopt(self->handle, CURLOPT_SSH_KEYDATA, self);
             break;
+#endif
         case CURLOPT_SEEKFUNCTION:
             Py_INCREF(obj);
             Py_CLEAR(self->seek_cb);
