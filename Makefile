@@ -55,14 +55,17 @@ DOCSTRINGS_SOURCES = \
 	doc/docstrings/curl_unsetopt.rst \
 	doc/docstrings/multi.rst \
 	doc/docstrings/multi_add_handle.rst \
+	doc/docstrings/multi_assign.rst \
 	doc/docstrings/multi_close.rst \
 	doc/docstrings/multi_fdset.rst \
 	doc/docstrings/multi_info_read.rst \
 	doc/docstrings/multi_perform.rst \
 	doc/docstrings/multi_remove_handle.rst \
 	doc/docstrings/multi_select.rst \
+	doc/docstrings/multi_setopt.rst \
 	doc/docstrings/multi_socket_action.rst \
 	doc/docstrings/multi_socket_all.rst \
+	doc/docstrings/multi_timeout.rst \
 	doc/docstrings/pycurl_global_cleanup.rst \
 	doc/docstrings/pycurl_global_init.rst \
 	doc/docstrings/pycurl_module.rst \
