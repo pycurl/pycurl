@@ -87,3 +87,7 @@ before_script: >
   ./tests/travis/hack.sh
 script: >
   ./tests/travis/run.sh
+addons:
+  apt:
+    packages:
+      - libssh2-1
