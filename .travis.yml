@@ -25,14 +25,14 @@ matrix:
     - python: 3.5
       env:
         - TESTDOCSEXAMPLES=1
-    
+
     # minimum libcurl we support
     - python: 2.7
       env:
         - USECURL=7.19.0-gssapi
         - USESSL=openssl
         - TESTDOCSEXAMPLES=1
-    
+
     # latest libcurl with each supported SSL backend
     - python: 2.7
       env:
@@ -58,12 +58,12 @@ matrix:
         # this configuration should be without gssapi
         - USECURL=7.46.0
         - USESSL=none
-    
+
     # AVOIDSTDIO tested on one Python version, must be Python 2.x
     - python: 2.7
       env:
         - AVOIDSTDIO=yes
-    
+
     # common distributions:
     # CentOS 6
     - python: 2.6
