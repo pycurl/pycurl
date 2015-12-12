@@ -211,11 +211,11 @@ insstr(PyObject *d, char *name, char *value)
 {
     PyObject *v;
     int rv;
-    
+
     v = PyText_FromString(value);
     if (v == NULL)
         return -1;
-    
+
     rv = insobj2(d, NULL, name, v);
     if (rv < 0) {
         Py_DECREF(v);
@@ -320,7 +320,7 @@ initpycurl(void)
         PyErr_Format(PyExc_ImportError, "pycurl: libcurl link-time version (%s) is older than compile-time version (%s)", vi->version, LIBCURL_VERSION);
         goto error;
     }
-    
+
     /* Our compiled crypto locks should correspond to runtime ssl library. */
     if (vi->ssl_version == NULL) {
         runtime_ssl_lib = "none/other";
@@ -389,7 +389,7 @@ initpycurl(void)
     curlshareobject_constants = PyDict_New();
     if (curlshareobject_constants == NULL)
         goto error;
-    
+
     /* Add version strings to the module */
     libcurl_version = curl_version();
     libcurl_version_len = strlen(libcurl_version);
@@ -417,7 +417,7 @@ initpycurl(void)
     insobj2_modinit(d, NULL, "Curl", (PyObject *) p_Curl_Type);
     insobj2_modinit(d, NULL, "CurlMulti", (PyObject *) p_CurlMulti_Type);
     insobj2_modinit(d, NULL, "CurlShare", (PyObject *) p_CurlShare_Type);
-    
+
     /**
      ** the order of these constants mostly follows <curl/curl.h>
      **/

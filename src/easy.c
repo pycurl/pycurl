@@ -73,12 +73,12 @@ static PyObject *convert_certinfo(struct curl_certinfo *cinfo)
             field_count ++;
         }
 
-        
+
         cert = PyTuple_New((Py_ssize_t)field_count);
         if (!cert)
             goto error;
         PyList_SetItem(certs, cert_index, cert); /* Eats the ref from New() */
-        
+
         for(field_index = 0, field_cursor = fields;
             field_cursor != NULL;
             field_index ++, field_cursor = field_cursor->next) {
@@ -103,7 +103,7 @@ static PyObject *convert_certinfo(struct curl_certinfo *cinfo)
     }
 
     return certs;
-    
+
  error:
     Py_DECREF(certs);
     return NULL;
@@ -278,7 +278,7 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
         /* Decrement refcount for postfields object */
         Py_CLEAR(self->postfields_obj);
     }
-    
+
     if (flags & PYCURL_MEMGROUP_SHARE) {
         /* Decrement refcount for share objects. */
         if (self->share != NULL) {
@@ -432,7 +432,7 @@ do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
     VISIT(self->readdata_fp);
     VISIT(self->writedata_fp);
     VISIT(self->writeheader_fp);
-    
+
     VISIT(self->postfields_obj);
 
     return 0;
@@ -551,19 +551,19 @@ static PyObject *
 convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
 {
     PyObject *res_obj = NULL;
-    
+
     switch (saddr->sa_family)
     {
     case AF_INET:
         {
             struct sockaddr_in* sin = (struct sockaddr_in*)saddr;
             char *addr_str = (char *)PyMem_Malloc(INET_ADDRSTRLEN);
-            
+
             if (addr_str == NULL) {
                 PyErr_SetString(ErrorObject, "Out of memory");
                 goto error;
             }
-            
+
             if (inet_ntop(saddr->sa_family, &sin->sin_addr, addr_str, INET_ADDRSTRLEN) == NULL) {
                 PyErr_SetFromErrno(ErrorObject);
                 PyMem_Free(addr_str);
@@ -577,12 +577,12 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
         {
             struct sockaddr_in6* sin6 = (struct sockaddr_in6*)saddr;
             char *addr_str = (char *)PyMem_Malloc(INET6_ADDRSTRLEN);
-            
+
             if (addr_str == NULL) {
                 PyErr_SetString(ErrorObject, "Out of memory");
                 goto error;
             }
-            
+
             if (inet_ntop(saddr->sa_family, &sin6->sin6_addr, addr_str, INET6_ADDRSTRLEN) == NULL) {
                 PyErr_SetFromErrno(ErrorObject);
                 PyMem_Free(addr_str);
@@ -597,10 +597,11 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
            with anything else? */
         PyErr_SetString(ErrorObject, "Unsupported address family.");
     }
-    
+
 error:
     return res_obj;
 }
+
 
 /* curl_socket_t is just an int on unix/windows (with limitations that
  * are not important here) */
@@ -617,7 +618,7 @@ opensocket_callback(void *clientp, curlsocktype purpose,
 
     self = (CurlObject *)clientp;
     PYCURL_ACQUIRE_THREAD();
-    
+
     arglist = Py_BuildValue("(iiiN)", address->family, address->socktype, address->protocol, convert_protocol_address(&address->addr, address->addrlen));
     if (arglist == NULL)
         goto verbose_error;
@@ -695,7 +696,7 @@ seek_callback(void *stream, curl_off_t offset, int origin)
           source = origin;
           break;
     }
-    
+
     /* run callback */
     cb = self->seek_cb;
     if (cb == NULL)
@@ -748,7 +749,7 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
     int total_size;
 
     PYCURL_DECLARE_THREAD_STATE;
-    
+
     /* acquire thread */
     self = (CurlObject *)stream;
     if (!PYCURL_ACQUIRE_THREAD())
@@ -793,20 +794,20 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
         Py_ssize_t r;
         /*
         Encode with ascii codec.
-        
+
         HTTP requires sending content-length for request body to the server
         before the request body is sent, therefore typically content length
         is given via POSTFIELDSIZE before read function is invoked to
         provide the data.
-        
+
         However, if we encode the string using any encoding other than ascii,
         the length of encoded string may not match the length of unicode
         string we are encoding. Therefore, if client code does a simple
         len(source_string) to determine the value to supply in content-length,
         the length of bytes read may be different.
-        
+
         To avoid this situation, we only accept ascii bytes in the string here.
-        
+
         Encode data yourself to bytes when dealing with non-ascii data.
         */
         PyObject *encoded = PyUnicode_AsEncodedString(result, "ascii", "strict");
@@ -842,7 +843,7 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
         PyErr_SetString(ErrorObject, "read callback must return a byte string or Unicode string with ASCII code points only");
         goto verbose_error;
     }
-    
+
 done:
 silent_error:
     Py_XDECREF(result);
@@ -1866,13 +1867,13 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
     /*
     Handle the case of file-like objects for Python 3.
-    
+
     Given an object with a write method, we will call the write method
     from the appropriate callback.
-    
+
     Files in Python 3 are no longer FILE * instances and therefore cannot
     be directly given to curl.
-    
+
     For consistency, ability to use any file-like object is also available
     on Python 2.
     */
@@ -1882,7 +1883,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     {
         const char *method_name;
         PyObject *method;
-        
+
         if (option == CURLOPT_READDATA) {
             method_name = "read";
         } else {
@@ -1892,7 +1893,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         if (method) {
             PyObject *arglist;
             PyObject *rv;
-            
+
             switch (option) {
                 case CURLOPT_READDATA:
                     option = CURLOPT_READFUNCTION;
@@ -1913,7 +1914,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                     Py_DECREF(method);
                     return NULL;
             }
-            
+
             arglist = Py_BuildValue("(iO)", option, method);
             /* reference is now in arglist */
             Py_DECREF(method);
