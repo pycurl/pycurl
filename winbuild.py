@@ -37,7 +37,7 @@ use_zlib = True
 # which version of zlib to use, will be downloaded from internet
 zlib_version = '1.2.8'
 # which version of libcurl to use, will be downloaded from the internet
-libcurl_version = '7.45.0'
+libcurl_version = '7.46.0'
 # pycurl version to build, we should know this ourselves
 pycurl_version = '7.19.5.3'
 
