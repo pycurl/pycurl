@@ -27,23 +27,23 @@ callbacks.
 The signature of each callback used in pycurl is documented below.
 
 
-HEADERFUNCTION
---------------
+WRITEFUNCTION
+-------------
 
-.. function:: HEADERFUNCTION(byte string) -> number of characters written
+.. function:: WRITEFUNCTION(byte string) -> number of characters written
 
-    Callback for writing received headers. Corresponds to
-    `CURLOPT_HEADERFUNCTION`_ in libcurl.
+    Callback for writing data. Corresponds to `CURLOPT_WRITEFUNCTION`_
+    in libcurl.
 
     On Python 3, the argument is of type ``bytes``.
 
-    The ``HEADERFUNCTION`` callback may return the number of bytes written.
+    The ``WRITEFUNCTION`` callback may return the number of bytes written.
     If this number is not equal to the size of the byte string, this signifies
     an error and libcurl will abort the request. Returning ``None`` is an
     alternate way of indicating that the callback has consumed all of the
     string passed to it and, hence, succeeded.
 
-    `header_test.py test`_ shows how to use ``WRITEFUNCTION``.
+    `write_test.py test`_ shows how to use ``WRITEFUNCTION``.
 
 
 Example: Callbacks for document header and body
@@ -77,23 +77,23 @@ bytes where written.
     c.perform()
 
 
-WRITEFUNCTION
--------------
+HEADERFUNCTION
+--------------
 
-.. function:: WRITEFUNCTION(byte string) -> number of characters written
+.. function:: HEADERFUNCTION(byte string) -> number of characters written
 
-    Callback for writing data. Corresponds to `CURLOPT_WRITEFUNCTION`_
-    in libcurl.
+    Callback for writing received headers. Corresponds to
+    `CURLOPT_HEADERFUNCTION`_ in libcurl.
 
     On Python 3, the argument is of type ``bytes``.
 
-    The ``WRITEFUNCTION`` callback may return the number of bytes written.
+    The ``HEADERFUNCTION`` callback may return the number of bytes written.
     If this number is not equal to the size of the byte string, this signifies
     an error and libcurl will abort the request. Returning ``None`` is an
     alternate way of indicating that the callback has consumed all of the
     string passed to it and, hence, succeeded.
 
-    `write_test.py test`_ shows how to use ``WRITEFUNCTION``.
+    `header_test.py test`_ shows how to use ``WRITEFUNCTION``.
 
 
 READFUNCTION
@@ -114,35 +114,27 @@ READFUNCTION
     The `file_upload.py example`_ in the distribution contains example code for
     using ``READFUNCTION``.
 
-PROGRESSFUNCTION
-----------------
 
-.. function:: PROGRESSFUNCTION(download total, downloaded, upload total, uploaded) -> status
+.. _SEEKFUNCTION:
 
-    Callback for progress meter. Corresponds to `CURLOPT_PROGRESSFUNCTION`_
+SEEKFUNCTION
+------------
+
+.. function:: SEEKFUNCTION(offset, origin) -> status
+
+    Callback for seek operations. Corresponds to `CURLOPT_SEEKFUNCTION`_
     in libcurl.
 
 
-Example: Download/upload progress callback
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+IOCTLFUNCTION
+-------------
 
-This example shows how to use the progress callback. When downloading a
-document, the arguments related to uploads are zero, and vice versa.
+.. function:: IOCTLFUNCTION(ioctl cmd) -> status
 
-::
+    Callback for I/O operations. Corresponds to `CURLOPT_IOCTLFUNCTION`_
+    in libcurl.
 
-    ## Callback function invoked when download/upload has progress
-    def progress(download_t, download_d, upload_t, upload_d):
-        print "Total to download", download_t
-        print "Total downloaded", download_d
-        print "Total to upload", upload_t
-        print "Total uploaded", upload_d
-
-    c = pycurl.Curl()
-    c.setopt(c.URL, "http://slashdot.org/")
-    c.setopt(c.NOPROGRESS, 0)
-    c.setopt(c.PROGRESSFUNCTION, progress)
-    c.perform()
+    *Note:* this callback is deprecated. Use :ref:`SEEKFUNCTION <SEEKFUNCTION>` instead.
 
 
 DEBUGFUNCTION
@@ -179,26 +171,35 @@ enabled for this callback to be invoked.
     c.perform()
 
 
-.. _SEEKFUNCTION:
+PROGRESSFUNCTION
+----------------
 
-SEEKFUNCTION
-------------
+.. function:: PROGRESSFUNCTION(download total, downloaded, upload total, uploaded) -> status
 
-.. function:: SEEKFUNCTION(offset, origin) -> status
-
-    Callback for seek operations. Corresponds to `CURLOPT_SEEKFUNCTION`_
+    Callback for progress meter. Corresponds to `CURLOPT_PROGRESSFUNCTION`_
     in libcurl.
 
 
-IOCTLFUNCTION
--------------
+Example: Download/upload progress callback
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. function:: IOCTLFUNCTION(ioctl cmd) -> status
+This example shows how to use the progress callback. When downloading a
+document, the arguments related to uploads are zero, and vice versa.
 
-    Callback for I/O operations. Corresponds to `CURLOPT_IOCTLFUNCTION`_
-    in libcurl.
+::
 
-    *Note:* this callback is deprecated. Use :ref:`SEEKFUNCTION <SEEKFUNCTION>` instead.
+    ## Callback function invoked when download/upload has progress
+    def progress(download_t, download_d, upload_t, upload_d):
+        print "Total to download", download_t
+        print "Total downloaded", download_d
+        print "Total to upload", upload_t
+        print "Total uploaded", upload_d
+
+    c = pycurl.Curl()
+    c.setopt(c.URL, "http://slashdot.org/")
+    c.setopt(c.NOPROGRESS, 0)
+    c.setopt(c.PROGRESSFUNCTION, progress)
+    c.perform()
 
 
 .. _CURLOPT_HEADERFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_HEADERFUNCTION.html
