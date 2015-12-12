@@ -29,7 +29,7 @@ The signature of each callback used in pycurl is as follows:
 
     Callback for writing received headers. Corresponds to
     `CURLOPT_HEADERFUNCTION`_ in libcurl.
-    
+
     On Python 3, the argument is of type ``bytes``.
 
     The ``HEADERFUNCTION`` callback may return the number of bytes written.
@@ -55,7 +55,7 @@ The signature of each callback used in pycurl is as follows:
 
     Callback for reading data. Corresponds to `CURLOPT_READFUNCTION`_ in
     libcurl.
-    
+
     On Python 3, the callback must return either a byte string or a Unicode
     string consisting of ASCII code points only.
 
@@ -88,8 +88,9 @@ The signature of each callback used in pycurl is as follows:
 
     Callback for I/O operations. Corresponds to `CURLOPT_IOCTLFUNCTION`_
     in libcurl.
-    
+
     *Note:* this callback is deprecated. Use :ref:`SEEKFUNCTION <SEEKFUNCTION>` instead.
+
 
 Example: Callbacks for document header and body
 -----------------------------------------------
@@ -121,6 +122,7 @@ bytes where written.
     c.setopt(pycurl.HEADERFUNCTION, header)
     c.perform()
 
+
 Example: Download/upload progress callback
 ------------------------------------------
 
@@ -142,6 +144,7 @@ document, the arguments related to uploads are zero, and vice versa.
     c.setopt(c.PROGRESSFUNCTION, progress)
     c.perform()
 
+
 Example: Debug callbacks
 ------------------------
 
@@ -159,6 +162,7 @@ enabled for this callback to be invoked.
     c.setopt(pycurl.VERBOSE, 1)
     c.setopt(pycurl.DEBUGFUNCTION, test)
     c.perform()
+
 
 Other examples
 --------------
