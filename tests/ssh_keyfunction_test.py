@@ -66,3 +66,19 @@ class SshKeyfunctionTest(unittest.TestCase):
             self.fail('should have raised')
         except pycurl.error as e:
             self.assertEqual(pycurl.E_PEER_FAILED_VERIFICATION, e.args[0])
+
+
+@nose.plugins.attrib.attr('sftp')
+class SshKeyfunctionUnsetTest(unittest.TestCase):
+    def setUp(self):
+        self.curl = pycurl.Curl()
+        self.curl.setopt(pycurl.URL, sftp_server)
+        self.curl.setopt(pycurl.VERBOSE, True)
+
+    @util.min_libcurl(7, 19, 6)
+    def test_keyfunction_none(self):
+        self.curl.setopt(pycurl.SSH_KEYFUNCTION, None)
+
+    @util.min_libcurl(7, 19, 6)
+    def test_keyfunction_unset(self):
+        self.curl.unsetopt(pycurl.SSH_KEYFUNCTION)

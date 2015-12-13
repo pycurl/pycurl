@@ -1217,6 +1217,14 @@ util_curl_unsetopt(CurlObject *self, int option)
         break;
 #endif
 
+#ifdef HAVE_CURL_7_19_6_OPTS
+    case CURLOPT_SSH_KEYFUNCTION:
+        curl_easy_setopt(self->handle, CURLOPT_SSH_KEYFUNCTION, NULL);
+        curl_easy_setopt(self->handle, CURLOPT_SSH_KEYDATA, NULL);
+        Py_CLEAR(self->ssh_key_cb);
+        break;
+#endif
+
     /* info: we explicitly list unsupported options here */
     case CURLOPT_COOKIEFILE:
     default:
@@ -1225,7 +1233,7 @@ util_curl_unsetopt(CurlObject *self, int option)
     }
 
     Py_RETURN_NONE;
-
+    
 error:
     CURLERROR_RETVAL();
 
