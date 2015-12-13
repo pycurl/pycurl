@@ -10,7 +10,7 @@ from . import appmanager
 
 setup_module, teardown_module = appmanager.setup(('app', 8380))
 
-class SockoptFunctionTest(unittest.TestCase):
+class SockoptCbTest(unittest.TestCase):
     def setUp(self):
         self.curl = pycurl.Curl()
         self.curl.setopt(self.curl.URL, 'http://localhost:8380/success')
@@ -20,7 +20,7 @@ class SockoptFunctionTest(unittest.TestCase):
 
     def test_sockoptfunction_ok(self):
         called = {}
-        
+
         def sockoptfunction(curlfd, purpose):
             called['called'] = True
             return 0
@@ -32,7 +32,7 @@ class SockoptFunctionTest(unittest.TestCase):
 
     def test_sockoptfunction_fail(self):
         called = {}
-        
+
         def sockoptfunction(curlfd, purpose):
             called['called'] = True
             return 1
@@ -49,7 +49,7 @@ class SockoptFunctionTest(unittest.TestCase):
 
     def test_sockoptfunction_bogus_return(self):
         called = {}
-        
+
         def sockoptfunction(curlfd, purpose):
             called['called'] = True
             return 'bogus'
@@ -68,12 +68,12 @@ class SockoptFunctionTest(unittest.TestCase):
     def test_socktype_accept(self):
         assert hasattr(pycurl, 'SOCKTYPE_ACCEPT')
         assert hasattr(self.curl, 'SOCKTYPE_ACCEPT')
-    
+
     def test_socktype_ipcxn(self):
         assert hasattr(pycurl, 'SOCKTYPE_IPCXN')
         assert hasattr(self.curl, 'SOCKTYPE_IPCXN')
 
-class SockoptFunctionUnsetTest(unittest.TestCase):
+class SockoptCbUnsetTest(unittest.TestCase):
     def setUp(self):
         self.curl = pycurl.Curl()
 

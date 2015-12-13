@@ -23,13 +23,13 @@ def try_fsync(fd):
         # ignore
         pass
 
-class DefaultWriteFunctionTest(unittest.TestCase):
+class DefaultWriteCbTest(unittest.TestCase):
     def setUp(self):
         self.curl = pycurl.Curl()
-    
+
     def tearDown(self):
         self.curl.close()
-    
+
     def test_perform_get(self):
         # This test performs a GET request without doing anything else.
         # Unfortunately, the default curl behavior is to print response
@@ -37,14 +37,14 @@ class DefaultWriteFunctionTest(unittest.TestCase):
         # As a result this test is commented out. Uncomment for debugging.
         # test_perform_get_with_default_write_function is the test
         # which exercises default curl write handler.
-        
+
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
         self.curl.perform()
         # If this flush is not done, stdout output bleeds into the next test
         # that is executed (without nose output capture)
         sys.stdout.flush()
         try_fsync(STDOUT_FD_NUM)
-    
+
     # I have a really hard time getting this to work with nose output capture
     def skip_perform_get_with_default_write_function(self):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
@@ -68,7 +68,7 @@ class DefaultWriteFunctionTest(unittest.TestCase):
             # We also need to flush the output that libcurl wrote to stdout.
             # Since sys.stdout might be nose's StringIO instance, open the
             # stdout file descriptor manually.
-            
+
             try:
                 self.curl.perform()
                 sys.stdout.flush()

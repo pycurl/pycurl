@@ -217,7 +217,7 @@ CLOSESOCKETFUNCTION
     The callback may be unset by calling :ref:`setopt <setopt>` with ``None``
     as the value or by calling :ref:`unsetopt <unsetopt>`.
 
-    `closesocket_function_test.py test`_ shows how to use ``CLOSESOCKETFUNCTION``.
+    `close_socket_cb_test.py test`_ shows how to use ``CLOSESOCKETFUNCTION``.
 
 
 SOCKOPTFUNCTION
@@ -237,7 +237,7 @@ SOCKOPTFUNCTION
     The callback may be unset by calling :ref:`setopt <setopt>` with ``None``
     as the value or by calling :ref:`unsetopt <unsetopt>`.
 
-    `sockopt_function_test.py test`_ shows how to use ``SOCKOPTFUNCTION``.
+    `sockopt_cb_test.py test`_ shows how to use ``SOCKOPTFUNCTION``.
 
 
 SSH_KEYFUNCTION
@@ -264,7 +264,7 @@ SSH_KEYFUNCTION
     The callback may be unset by calling :ref:`setopt <setopt>` with ``None``
     as the value or by calling :ref:`unsetopt <unsetopt>`.
 
-    `ssh_keyfunction_test.py test`_ shows how to use ``SSH_KEYFUNCTION``.
+    `ssh_key_cb_test.py test`_ shows how to use ``SSH_KEYFUNCTION``.
 
 
 .. _CURLOPT_HEADERFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_HEADERFUNCTION.html
@@ -281,7 +281,7 @@ SSH_KEYFUNCTION
 .. _CURLOPT_SSH_KEYFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_SSH_KEYFUNCTION.html
 .. _namedtuple: https://docs.python.org/library/collections.html#collections.namedtuple
 .. _CURLOPT_SOCKOPTFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_SOCKOPTFUNCTION.html
-.. _sockopt_function_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/sockopt_function_test.py
-.. _ssh_keyfunction_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/ssh_keyfunction_test.py
+.. _sockopt_cb_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/sockopt_cb_test.py
+.. _ssh_key_cb_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/ssh_key_cb_test.py
 .. _CURLOPT_CLOSESOCKETFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_CLOSESOCKETFUNCTION.html
-.. _closesocket_function_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/closesocket_function_test.py
+.. _close_socket_cb_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/close_socket_cb_test.py

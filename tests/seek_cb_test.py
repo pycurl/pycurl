@@ -27,7 +27,7 @@ class PartialFileSource:
         self.__bufptr+= len(ret)
         #print 20*">>>", "read(%s)   ==> %s" % (size, len(ret))
         return ret
-      
+
     def seek(self, offset, origin):
         #print 20*">>>",  "seek(%s, %s)" %  (offset, origin)
         self.__bufptr = offset
@@ -35,7 +35,7 @@ class PartialFileSource:
     def set_maxread(self, maxread):
         self.__maxread = maxread
 
-class SeekFunctionTest(unittest.TestCase):
+class SeekCbTest(unittest.TestCase):
     def test_seek_function(self):
         c = pycurl.Curl()
         c.setopt(pycurl.UPLOAD, 1)
@@ -46,7 +46,7 @@ class SeekFunctionTest(unittest.TestCase):
         c.setopt(pycurl.READFUNCTION, upload_file.read)
         upload_file.set_maxread(10)
         c.perform()
-        
+
         f = open(os.path.join(os.path.dirname(__file__), 'tmp', 'upload.txt'))
         try:
             content = f.read()
@@ -68,7 +68,7 @@ class SeekFunctionTest(unittest.TestCase):
         c.setopt(pycurl.SEEKFUNCTION, upload_file.seek)
         c.perform()
         c.close()
-        
+
         f = open(os.path.join(os.path.dirname(__file__), 'tmp', 'upload.txt'))
         try:
             content = f.read()

@@ -11,17 +11,17 @@ from . import util
 
 setup_module, teardown_module = appmanager.setup(('app', 8380))
 
-class HeaderFunctionTest(unittest.TestCase):
+class HeaderCbTest(unittest.TestCase):
     def setUp(self):
         self.curl = pycurl.Curl()
         self.header_lines = []
-    
+
     def tearDown(self):
         self.curl.close()
-    
+
     def header_function(self, line):
         self.header_lines.append(line.decode())
-    
+
     def test_get(self):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
         sio = util.BytesIO()
@@ -29,7 +29,7 @@ class HeaderFunctionTest(unittest.TestCase):
         self.curl.setopt(pycurl.HEADERFUNCTION, self.header_function)
         self.curl.perform()
         self.assertEqual('success', sio.getvalue().decode())
-        
+
         assert len(self.header_lines) > 0
         self.assertEqual("HTTP/1.0 200 OK\r\n", self.header_lines[0])
         # day of week
@@ -41,7 +41,7 @@ class HeaderFunctionTest(unittest.TestCase):
         self.check('Server: WSGIServer')
         self.check('Content-Length: 7')
         self.check('Content-Type: text/html')
-    
+
     def check(self, wanted_text):
         for line in self.header_lines:
             if wanted_text in line:
