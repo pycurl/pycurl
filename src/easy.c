@@ -1337,12 +1337,11 @@ util_curl_unsetopt(CurlObject *self, int option)
         break;
 #endif
 
+    CLEAR_CALLBACK(CURLOPT_OPENSOCKETFUNCTION, CURLOPT_OPENSOCKETDATA, self->opensocket_cb);
 #if LIBCURL_VERSION_NUM >= 0x071507 /* check for 7.21.7 or greater */
     CLEAR_CALLBACK(CURLOPT_CLOSESOCKETFUNCTION, CURLOPT_CLOSESOCKETDATA, self->closesocket_cb);
 #endif
-
     CLEAR_CALLBACK(CURLOPT_SOCKOPTFUNCTION, CURLOPT_SOCKOPTDATA, self->sockopt_cb);
-
 #ifdef HAVE_CURL_7_19_6_OPTS
     CLEAR_CALLBACK(CURLOPT_SSH_KEYFUNCTION, CURLOPT_SSH_KEYDATA, self->ssh_key_cb);
 #endif

@@ -42,3 +42,9 @@ class SocketOpenCbTest(unittest.TestCase):
         assert socket_open_called
         self.assertEqual(("127.0.0.1", 8380), socket_open_address)
         self.assertEqual('success', sio.getvalue().decode())
+
+    def test_socket_open_none(self):
+        self.curl.setopt(pycurl.OPENSOCKETFUNCTION, None)
+
+    def test_unset_socket_open(self):
+        self.curl.unsetopt(pycurl.OPENSOCKETFUNCTION)
