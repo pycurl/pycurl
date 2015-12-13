@@ -699,7 +699,7 @@ sockopt_cb(void *clientp, curl_socket_t curlfd, curlsocktype purpose)
             PyObject *encoded_obj;
             char *str = PyText_AsString_NoNUL(ret_repr, &encoded_obj);
             fprintf(stderr, "sockopt callback returned %s which is not an integer\n", str);
-            PyErr_Format(PyExc_TypeError, "sockopt callback returned %s which is not an integer", str);
+            /* PyErr_Format(PyExc_TypeError, "sockopt callback returned %s which is not an integer", str); */
             Py_XDECREF(encoded_obj);
             Py_DECREF(ret_repr);
         }
@@ -751,7 +751,7 @@ closesocket_callback(void *clientp, curl_socket_t curlfd)
             PyObject *encoded_obj;
             char *str = PyText_AsString_NoNUL(ret_repr, &encoded_obj);
             fprintf(stderr, "closesocket callback returned %s which is not an integer\n", str);
-            PyErr_Format(PyExc_TypeError, "closesocket callback returned %s which is not an integer", str);
+            /* PyErr_Format(PyExc_TypeError, "closesocket callback returned %s which is not an integer", str); */
             Py_XDECREF(encoded_obj);
             Py_DECREF(ret_repr);
         }
@@ -850,7 +850,7 @@ ssh_key_cb(CURL *easy, const struct curl_khkey *knownkey,
             PyObject *encoded_obj;
             char *str = PyText_AsString_NoNUL(ret_repr, &encoded_obj);
             fprintf(stderr, "ssh key callback returned %s which is not an integer\n", str);
-            PyErr_Format(PyExc_TypeError, "ssh key callback returned %s which is not an integer", str);
+            /* PyErr_Format(PyExc_TypeError, "ssh key callback returned %s which is not an integer", str); */
             Py_XDECREF(encoded_obj);
             Py_DECREF(ret_repr);
         }
