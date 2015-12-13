@@ -243,6 +243,11 @@ SSH_KEYFUNCTION
 
     ``SSH_KEYFUNCTION`` callback should return a ``KHSTAT_*`` value.
 
+    The callback may be unset by calling :ref:`setopt <setopt>` with ``None``
+    as the value or by calling :ref:`unsetopt <unsetopt>`.
+
+    `ssh_keyfunction_test.py test`_ shows how to use ``SSH_KEYFUNCTION``.
+
 
 .. _CURLOPT_HEADERFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_HEADERFUNCTION.html
 .. _CURLOPT_WRITEFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_WRITEFUNCTION.html
@@ -259,3 +264,4 @@ SSH_KEYFUNCTION
 .. _namedtuple: https://docs.python.org/library/collections.html#collections.namedtuple
 .. _CURLOPT_SOCKOPTFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_SOCKOPTFUNCTION.html
 .. _sockopt_function_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/sockopt_function_test.py
+.. _ssh_keyfunction_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/ssh_keyfunction_test.py
