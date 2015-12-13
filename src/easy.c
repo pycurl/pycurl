@@ -1271,6 +1271,14 @@ util_curl_unsetopt(CurlObject *self, int option)
 #define SETOPT2(o,x) \
     if ((res = curl_easy_setopt(self->handle, (o), (x))) != CURLE_OK) goto error
 #define SETOPT(x)   SETOPT2((CURLoption)option, (x))
+#define CLEAR_CALLBACK(callback_option, data_option, callback_field) \
+    case callback_option: \
+        if (curl_easy_setopt(self->handle, callback_option, NULL) != CURLE_OK) \
+            goto error; \
+        if (curl_easy_setopt(self->handle, data_option, NULL) != CURLE_OK) \
+            goto error; \
+        Py_CLEAR(callback_field); \
+        break
 
     /* FIXME: implement more options. Have to carefully check lib/url.c in the
      *   libcurl source code to see if it's actually safe to simply
@@ -1328,27 +1336,14 @@ util_curl_unsetopt(CurlObject *self, int option)
         SETOPT((long) 0);
         break;
 #endif
-    
-#if LIBCURL_VERSION_NUM >= 0x071507 /* check for 7.21.7 or greater */
-    case CURLOPT_CLOSESOCKETFUNCTION:
-        curl_easy_setopt(self->handle, CURLOPT_CLOSESOCKETFUNCTION, NULL);
-        curl_easy_setopt(self->handle, CURLOPT_CLOSESOCKETDATA, NULL);
-        Py_CLEAR(self->closesocket_cb);
-        break;
-#endif
 
-    case CURLOPT_SOCKOPTFUNCTION:
-        curl_easy_setopt(self->handle, CURLOPT_SOCKOPTFUNCTION, NULL);
-        curl_easy_setopt(self->handle, CURLOPT_SOCKOPTDATA, NULL);
-        Py_CLEAR(self->sockopt_cb);
-        break;
-    
+    CLEAR_CALLBACK(CURLOPT_OPENSOCKETFUNCTION, CURLOPT_OPENSOCKETDATA, self->opensocket_cb);
+#if LIBCURL_VERSION_NUM >= 0x071507 /* check for 7.21.7 or greater */
+    CLEAR_CALLBACK(CURLOPT_CLOSESOCKETFUNCTION, CURLOPT_CLOSESOCKETDATA, self->closesocket_cb);
+#endif
+    CLEAR_CALLBACK(CURLOPT_SOCKOPTFUNCTION, CURLOPT_SOCKOPTDATA, self->sockopt_cb);
 #ifdef HAVE_CURL_7_19_6_OPTS
-    case CURLOPT_SSH_KEYFUNCTION:
-        curl_easy_setopt(self->handle, CURLOPT_SSH_KEYFUNCTION, NULL);
-        curl_easy_setopt(self->handle, CURLOPT_SSH_KEYDATA, NULL);
-        Py_CLEAR(self->ssh_key_cb);
-        break;
+    CLEAR_CALLBACK(CURLOPT_SSH_KEYFUNCTION, CURLOPT_SSH_KEYDATA, self->ssh_key_cb);
 #endif
 
     /* info: we explicitly list unsupported options here */
@@ -1359,12 +1354,13 @@ util_curl_unsetopt(CurlObject *self, int option)
     }
 
     Py_RETURN_NONE;
-    
+
 error:
     CURLERROR_RETVAL();
 
 #undef SETOPT
 #undef SETOPT2
+#undef CLEAR_CALLBACK
 }
 
 
