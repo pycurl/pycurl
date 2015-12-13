@@ -738,6 +738,7 @@ initpycurl(void)
     insint_c(d, "IOCTLFUNCTION", CURLOPT_IOCTLFUNCTION);
     insint_c(d, "IOCTLDATA", CURLOPT_IOCTLDATA);
     insint_c(d, "OPENSOCKETFUNCTION", CURLOPT_OPENSOCKETFUNCTION);
+    insint_c(d, "SOCKOPTFUNCTION", CURLOPT_SOCKOPTFUNCTION);
     insint_c(d, "FTP_ACCOUNT", CURLOPT_FTP_ACCOUNT);
     insint_c(d, "IGNORE_CONTENT_LENGTH", CURLOPT_IGNORE_CONTENT_LENGTH);
     insint_c(d, "COOKIELIST", CURLOPT_COOKIELIST);
@@ -936,6 +937,11 @@ initpycurl(void)
     insint_c(d, "KHSTAT_REJECT", CURLKHSTAT_REJECT);
     insint_c(d, "KHSTAT_DEFER", CURLKHSTAT_DEFER);
 #endif
+
+#if LIBCURL_VERSION_NUM >= 0x071c00 /* check for 7.28.0 or greater */
+    insint_c(d, "SOCKTYPE_ACCEPT", CURLSOCKTYPE_ACCEPT);
+#endif
+    insint_c(d, "SOCKTYPE_IPCXN", CURLSOCKTYPE_IPCXN);
 
     /* CURLINFO: symbolic constants for getinfo(x) */
     insint_c(d, "EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL);
