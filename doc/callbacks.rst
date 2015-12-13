@@ -202,6 +202,26 @@ document, the arguments related to uploads are zero, and vice versa.
     c.perform()
 
 
+SOCKOPTFUNCTION
+---------------
+
+.. function:: SOCKOPTFUNCTION(curlfd, purpose) -> int
+
+    Callback for setting socket options. Corresponds to `CURLOPT_SOCKOPTFUNCTION`_
+    in libcurl.
+
+    *curlfd* is the file descriptor of the newly created socket.
+
+    *purpose* is a ``SOCKTYPE_*`` value.
+
+    The callback should return an ``int``.
+
+    The callback may be unset by calling :ref:`setopt <setopt>` with ``None``
+    as the value or by calling :ref:`unsetopt <unsetopt>`.
+
+    `sockopt_function_test.py test`_ shows how to use ``SOCKOPTFUNCTION``.
+
+
 SSH_KEYFUNCTION
 ---------------
 
@@ -237,3 +257,5 @@ SSH_KEYFUNCTION
 .. _debug_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/debug_test.py
 .. _CURLOPT_SSH_KEYFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_SSH_KEYFUNCTION.html
 .. _namedtuple: https://docs.python.org/library/collections.html#collections.namedtuple
+.. _CURLOPT_SOCKOPTFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_SOCKOPTFUNCTION.html
+.. _sockopt_function_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/sockopt_function_test.py

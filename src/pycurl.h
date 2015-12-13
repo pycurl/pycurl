@@ -341,6 +341,7 @@ typedef struct CurlObject {
     PyObject *ioctl_cb;
     PyObject *opensocket_cb;
     PyObject *seek_cb;
+    PyObject *sockopt_cb;
     PyObject *ssh_key_cb;
     /* file objects */
     PyObject *readdata_fp;

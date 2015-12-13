@@ -265,6 +265,7 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
         Py_CLEAR(self->ioctl_cb);
         Py_CLEAR(self->seek_cb);
         Py_CLEAR(self->opensocket_cb);
+        Py_CLEAR(self->sockopt_cb);
         Py_CLEAR(self->ssh_key_cb);
     }
 
@@ -429,6 +430,7 @@ do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
     VISIT(self->ioctl_cb);
     VISIT(self->seek_cb);
     VISIT(self->opensocket_cb);
+    VISIT(self->sockopt_cb);
     VISIT(self->ssh_key_cb);
 
     VISIT(self->readdata_fp);
@@ -659,6 +661,57 @@ silent_error:
 done:
     Py_XDECREF(result);
     Py_XDECREF(fileno_result);
+    PYCURL_RELEASE_THREAD();
+    return ret;
+verbose_error:
+    PyErr_Print();
+    goto silent_error;
+}
+
+
+static int
+sockopt_cb(void *clientp, curl_socket_t curlfd, curlsocktype purpose)
+{
+    PyObject *arglist;
+    CurlObject *self;
+    int ret = -1;
+    PyObject *ret_obj = NULL;
+    PYCURL_DECLARE_THREAD_STATE;
+
+    self = (CurlObject *)clientp;
+    PYCURL_ACQUIRE_THREAD();
+
+    arglist = Py_BuildValue("(ii)", (int) curlfd, (int) purpose);
+    if (arglist == NULL)
+        goto verbose_error;
+
+    ret_obj = PyEval_CallObject(self->sockopt_cb, arglist);
+    Py_DECREF(arglist);
+    if (!PyInt_Check(ret_obj) && !PyLong_Check(ret_obj)) {
+        PyObject *ret_repr = PyObject_Repr(ret_obj);
+        if (ret_repr) {
+            PyObject *encoded_obj;
+            char *str = PyText_AsString_NoNUL(ret_repr, &encoded_obj);
+            fprintf(stderr, "sockopt callback returned %s which is not an integer\n", str);
+            PyErr_Format(PyExc_TypeError, "sockopt callback returned %s which is not an integer", str);
+            Py_XDECREF(encoded_obj);
+            Py_DECREF(ret_repr);
+        }
+        goto silent_error;
+    }
+    if (PyInt_Check(ret_obj)) {
+        /* long to int cast */
+        ret = (int) PyInt_AsLong(ret_obj);
+    } else {
+        /* long to int cast */
+        ret = (int) PyLong_AsLong(ret_obj);
+    }
+    goto done;
+
+silent_error:
+    ret = -1;
+done:
+    Py_XDECREF(ret_obj);
     PYCURL_RELEASE_THREAD();
     return ret;
 verbose_error:
@@ -1217,6 +1270,12 @@ util_curl_unsetopt(CurlObject *self, int option)
         break;
 #endif
 
+    case CURLOPT_SOCKOPTFUNCTION:
+        curl_easy_setopt(self->handle, CURLOPT_SOCKOPTFUNCTION, NULL);
+        curl_easy_setopt(self->handle, CURLOPT_SOCKOPTDATA, NULL);
+        Py_CLEAR(self->sockopt_cb);
+        break;
+    
 #ifdef HAVE_CURL_7_19_6_OPTS
     case CURLOPT_SSH_KEYFUNCTION:
         curl_easy_setopt(self->handle, CURLOPT_SSH_KEYFUNCTION, NULL);
@@ -1924,6 +1983,13 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             self->opensocket_cb = obj;
             curl_easy_setopt(self->handle, CURLOPT_OPENSOCKETFUNCTION, opensocket_cb);
             curl_easy_setopt(self->handle, CURLOPT_OPENSOCKETDATA, self);
+            break;
+        case CURLOPT_SOCKOPTFUNCTION:
+            Py_INCREF(obj);
+            Py_CLEAR(self->sockopt_cb);
+            self->sockopt_cb = obj;
+            curl_easy_setopt(self->handle, CURLOPT_SOCKOPTFUNCTION, sockopt_cb);
+            curl_easy_setopt(self->handle, CURLOPT_SOCKOPTDATA, self);
             break;
 #ifdef HAVE_CURL_7_19_6_OPTS
         case CURLOPT_SSH_KEYFUNCTION:
