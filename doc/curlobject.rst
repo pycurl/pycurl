@@ -9,6 +9,7 @@ Curl Object
 
     .. automethod:: pycurl.Curl.close
 
+    .. _setopt:
     .. automethod:: pycurl.Curl.setopt
 
     .. automethod:: pycurl.Curl.perform
@@ -17,6 +18,7 @@ Curl Object
 
     .. automethod:: pycurl.Curl.reset
 
+    .. _unsetopt:
     .. automethod:: pycurl.Curl.unsetopt
 
     .. automethod:: pycurl.Curl.pause
