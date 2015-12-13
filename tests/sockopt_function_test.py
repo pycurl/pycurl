@@ -5,6 +5,7 @@
 import unittest
 import pycurl
 
+from . import util
 from . import appmanager
 
 setup_module, teardown_module = appmanager.setup(('app', 8380))
@@ -61,6 +62,14 @@ class SockoptFunctionTest(unittest.TestCase):
             self.assertEqual(pycurl.E_ABORTED_BY_CALLBACK, e.args[0])
         assert called['called']
 
+    @util.min_libcurl(7, 28, 0)
+    def test_socktype_accept(self):
+        assert hasattr(pycurl, 'SOCKTYPE_ACCEPT')
+        assert hasattr(self.curl, 'SOCKTYPE_ACCEPT')
+    
+    def test_socktype_ipcxn(self):
+        assert hasattr(pycurl, 'SOCKTYPE_IPCXN')
+        assert hasattr(self.curl, 'SOCKTYPE_IPCXN')
 
 class SshKeyfunctionUnsetTest(unittest.TestCase):
     def setUp(self):
