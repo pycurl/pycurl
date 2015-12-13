@@ -43,7 +43,8 @@ class SockoptFunctionTest(unittest.TestCase):
             self.curl.perform()
             self.fail('should have raised')
         except pycurl.error as e:
-            self.assertEqual(pycurl.E_ABORTED_BY_CALLBACK, e.args[0])
+            assert e.args[0] in [pycurl.E_ABORTED_BY_CALLBACK, pycurl.E_COULDNT_CONNECT], \
+                'Unexpected pycurl error code %s' % e.args[0]
         assert called['called']
 
     def test_sockoptfunction_bogus_return(self):
@@ -59,7 +60,8 @@ class SockoptFunctionTest(unittest.TestCase):
             self.curl.perform()
             self.fail('should have raised')
         except pycurl.error as e:
-            self.assertEqual(pycurl.E_ABORTED_BY_CALLBACK, e.args[0])
+            assert e.args[0] in [pycurl.E_ABORTED_BY_CALLBACK, pycurl.E_COULDNT_CONNECT], \
+                'Unexpected pycurl error code %s' % e.args[0]
         assert called['called']
 
     @util.min_libcurl(7, 28, 0)
