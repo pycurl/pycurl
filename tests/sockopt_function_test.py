@@ -73,7 +73,7 @@ class SockoptFunctionTest(unittest.TestCase):
         assert hasattr(pycurl, 'SOCKTYPE_IPCXN')
         assert hasattr(self.curl, 'SOCKTYPE_IPCXN')
 
-class SshKeyfunctionUnsetTest(unittest.TestCase):
+class SockoptFunctionUnsetTest(unittest.TestCase):
     def setUp(self):
         self.curl = pycurl.Curl()
 

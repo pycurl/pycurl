@@ -202,6 +202,24 @@ document, the arguments related to uploads are zero, and vice versa.
     c.perform()
 
 
+CLOSESOCKETFUNCTION
+-------------------
+
+.. function:: CLOSESOCKETFUNCTION(curlfd) -> int
+
+    Callback for setting socket options. Corresponds to
+    `CURLOPT_CLOSESOCKETFUNCTION`_ in libcurl.
+
+    *curlfd* is the file descriptor to be closed.
+
+    The callback should return an ``int``.
+
+    The callback may be unset by calling :ref:`setopt <setopt>` with ``None``
+    as the value or by calling :ref:`unsetopt <unsetopt>`.
+
+    `closesocket_function_test.py test`_ shows how to use ``CLOSESOCKETFUNCTION``.
+
+
 SOCKOPTFUNCTION
 ---------------
 
@@ -265,3 +283,5 @@ SSH_KEYFUNCTION
 .. _CURLOPT_SOCKOPTFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_SOCKOPTFUNCTION.html
 .. _sockopt_function_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/sockopt_function_test.py
 .. _ssh_keyfunction_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/ssh_keyfunction_test.py
+.. _CURLOPT_CLOSESOCKETFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_CLOSESOCKETFUNCTION.html
+.. _closesocket_function_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/closesocket_function_test.py

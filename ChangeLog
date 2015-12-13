@@ -1,6 +1,9 @@
 master
 ------
 
+        * Added CURLOPT_CLOSESOCKETFUNCTION (libcurl 7.21.7+).
+          CURLOPT_CLOSESOCKETDATA is used internally by PycURL.
+
         * Added CURLOPT_SOCKOPTFUNCTION. CURLOPT_SOCKOPTDATA is used
           internally by PycURL.
 
