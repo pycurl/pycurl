@@ -40,7 +40,6 @@ class ClosesocketFunctionTest(unittest.TestCase):
         
         def closesocketfunction(curlfd):
             called['called'] = True
-            os.close(curlfd)
             return 1
 
         self.curl.setopt(pycurl.CLOSESOCKETFUNCTION, closesocketfunction)
@@ -55,7 +54,6 @@ class ClosesocketFunctionTest(unittest.TestCase):
         
         def closesocketfunction(curlfd):
             called['called'] = True
-            os.close(curlfd)
             return 'bogus'
 
         self.curl.setopt(pycurl.CLOSESOCKETFUNCTION, closesocketfunction)
