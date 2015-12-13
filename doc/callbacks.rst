@@ -202,6 +202,24 @@ document, the arguments related to uploads are zero, and vice versa.
     c.perform()
 
 
+OPENSOCKETFUNCTION
+------------------
+
+.. function:: OPENSOCKETFUNCTION(family, socktype, protocol, address) -> int
+
+    Callback for opening sockets. Corresponds to
+    `CURLOPT_OPENSOCKETFUNCTION`_ in libcurl.
+
+    The callback should return a socket object, a socket file descriptor
+    or a Python object with a ``fileno`` property containing the socket
+    file descriptor.
+
+    The callback may be unset by calling :ref:`setopt <setopt>` with ``None``
+    as the value or by calling :ref:`unsetopt <unsetopt>`.
+
+    `open_socket_cb_test.py test`_ shows how to use ``OPENSOCKETFUNCTION``.
+
+
 CLOSESOCKETFUNCTION
 -------------------
 
@@ -285,3 +303,5 @@ SSH_KEYFUNCTION
 .. _ssh_key_cb_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/ssh_key_cb_test.py
 .. _CURLOPT_CLOSESOCKETFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_CLOSESOCKETFUNCTION.html
 .. _close_socket_cb_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/close_socket_cb_test.py
+.. _CURLOPT_OPENSOCKETFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_OPENSOCKETFUNCTION.html
+.. _open_socket_cb_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/open_socket_cb_test.py
