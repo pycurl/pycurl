@@ -265,6 +265,9 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
         Py_CLEAR(self->ioctl_cb);
         Py_CLEAR(self->seek_cb);
         Py_CLEAR(self->opensocket_cb);
+#if LIBCURL_VERSION_NUM >= 0x071507 /* check for 7.21.7 or greater */
+        Py_CLEAR(self->closesocket_cb);
+#endif
         Py_CLEAR(self->sockopt_cb);
         Py_CLEAR(self->ssh_key_cb);
     }
@@ -430,6 +433,9 @@ do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
     VISIT(self->ioctl_cb);
     VISIT(self->seek_cb);
     VISIT(self->opensocket_cb);
+#if LIBCURL_VERSION_NUM >= 0x071507 /* check for 7.21.7 or greater */
+    VISIT(self->closesocket_cb);
+#endif
     VISIT(self->sockopt_cb);
     VISIT(self->ssh_key_cb);
 
@@ -718,6 +724,59 @@ verbose_error:
     PyErr_Print();
     goto silent_error;
 }
+
+
+#if LIBCURL_VERSION_NUM >= 0x071507 /* check for 7.21.7 or greater */
+static int
+closesocket_callback(void *clientp, curl_socket_t curlfd)
+{
+    PyObject *arglist;
+    CurlObject *self;
+    int ret = -1;
+    PyObject *ret_obj = NULL;
+    PYCURL_DECLARE_THREAD_STATE;
+
+    self = (CurlObject *)clientp;
+    PYCURL_ACQUIRE_THREAD();
+
+    arglist = Py_BuildValue("(i)", (int) curlfd);
+    if (arglist == NULL)
+        goto verbose_error;
+
+    ret_obj = PyEval_CallObject(self->closesocket_cb, arglist);
+    Py_DECREF(arglist);
+    if (!PyInt_Check(ret_obj) && !PyLong_Check(ret_obj)) {
+        PyObject *ret_repr = PyObject_Repr(ret_obj);
+        if (ret_repr) {
+            PyObject *encoded_obj;
+            char *str = PyText_AsString_NoNUL(ret_repr, &encoded_obj);
+            fprintf(stderr, "closesocket callback returned %s which is not an integer\n", str);
+            PyErr_Format(PyExc_TypeError, "closesocket callback returned %s which is not an integer", str);
+            Py_XDECREF(encoded_obj);
+            Py_DECREF(ret_repr);
+        }
+        goto silent_error;
+    }
+    if (PyInt_Check(ret_obj)) {
+        /* long to int cast */
+        ret = (int) PyInt_AsLong(ret_obj);
+    } else {
+        /* long to int cast */
+        ret = (int) PyLong_AsLong(ret_obj);
+    }
+    goto done;
+
+silent_error:
+    ret = -1;
+done:
+    Py_XDECREF(ret_obj);
+    PYCURL_RELEASE_THREAD();
+    return ret;
+verbose_error:
+    PyErr_Print();
+    goto silent_error;
+}
+#endif
 
 
 #ifdef HAVE_CURL_7_19_6_OPTS
@@ -1267,6 +1326,14 @@ util_curl_unsetopt(CurlObject *self, int option)
 #ifdef HAVE_CURLOPT_CERTINFO
     case CURLOPT_CERTINFO:
         SETOPT((long) 0);
+        break;
+#endif
+    
+#if LIBCURL_VERSION_NUM >= 0x071507 /* check for 7.21.7 or greater */
+    case CURLOPT_CLOSESOCKETFUNCTION:
+        curl_easy_setopt(self->handle, CURLOPT_CLOSESOCKETFUNCTION, NULL);
+        curl_easy_setopt(self->handle, CURLOPT_CLOSESOCKETDATA, NULL);
+        Py_CLEAR(self->closesocket_cb);
         break;
 #endif
 
@@ -1926,6 +1993,9 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         const curl_debug_callback debug_cb = debug_callback;
         const curl_ioctl_callback ioctl_cb = ioctl_callback;
         const curl_opensocket_callback opensocket_cb = opensocket_callback;
+#if LIBCURL_VERSION_NUM >= 0x071507 /* check for 7.21.7 or greater */
+        const curl_opensocket_callback closesocket_cb = closesocket_callback;
+#endif
         const curl_seek_callback seek_cb = seek_callback;
 
         switch(option) {
@@ -1984,6 +2054,15 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             curl_easy_setopt(self->handle, CURLOPT_OPENSOCKETFUNCTION, opensocket_cb);
             curl_easy_setopt(self->handle, CURLOPT_OPENSOCKETDATA, self);
             break;
+#if LIBCURL_VERSION_NUM >= 0x071507 /* check for 7.21.7 or greater */
+        case CURLOPT_CLOSESOCKETFUNCTION:
+            Py_INCREF(obj);
+            Py_CLEAR(self->closesocket_cb);
+            self->closesocket_cb = obj;
+            curl_easy_setopt(self->handle, CURLOPT_CLOSESOCKETFUNCTION, closesocket_cb);
+            curl_easy_setopt(self->handle, CURLOPT_CLOSESOCKETDATA, self);
+            break;
+#endif
         case CURLOPT_SOCKOPTFUNCTION:
             Py_INCREF(obj);
             Py_CLEAR(self->sockopt_cb);

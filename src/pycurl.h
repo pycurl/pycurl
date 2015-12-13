@@ -340,6 +340,9 @@ typedef struct CurlObject {
     PyObject *debug_cb;
     PyObject *ioctl_cb;
     PyObject *opensocket_cb;
+#if LIBCURL_VERSION_NUM >= 0x071507 /* check for 7.21.7 or greater */
+    PyObject *closesocket_cb;
+#endif
     PyObject *seek_cb;
     PyObject *sockopt_cb;
     PyObject *ssh_key_cb;
