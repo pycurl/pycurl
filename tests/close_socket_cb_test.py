@@ -11,7 +11,7 @@ from . import appmanager
 
 setup_module, teardown_module = appmanager.setup(('app', 8380))
 
-class ClosesocketFunctionTest(unittest.TestCase):
+class CloseSocketCbTest(unittest.TestCase):
     def setUp(self):
         self.curl = pycurl.Curl()
         self.curl.setopt(self.curl.URL, 'http://localhost:8380/success')
@@ -23,7 +23,7 @@ class ClosesocketFunctionTest(unittest.TestCase):
     @util.min_libcurl(7, 21, 7)
     def test_closesocketfunction_ok(self):
         called = {}
-        
+
         def closesocketfunction(curlfd):
             called['called'] = True
             os.close(curlfd)
@@ -37,7 +37,7 @@ class ClosesocketFunctionTest(unittest.TestCase):
     @util.min_libcurl(7, 21, 7)
     def test_closesocketfunction_fail(self):
         called = {}
-        
+
         def closesocketfunction(curlfd):
             called['called'] = True
             return 1
@@ -51,7 +51,7 @@ class ClosesocketFunctionTest(unittest.TestCase):
     @util.min_libcurl(7, 21, 7)
     def test_closesocketfunction_bogus_return(self):
         called = {}
-        
+
         def closesocketfunction(curlfd):
             called['called'] = True
             return 'bogus'
@@ -62,7 +62,7 @@ class ClosesocketFunctionTest(unittest.TestCase):
         self.curl.perform()
         assert called['called']
 
-class ClosesocketFunctionUnsetTest(unittest.TestCase):
+class CloseSocketCbUnsetTest(unittest.TestCase):
     def setUp(self):
         self.curl = pycurl.Curl()
 

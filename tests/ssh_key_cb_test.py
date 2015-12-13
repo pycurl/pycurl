@@ -12,7 +12,7 @@ sftp_server = 'sftp://web.sourceforge.net'
 
 @nose.plugins.attrib.attr('online')
 @nose.plugins.attrib.attr('sftp')
-class SshKeyfunctionTest(unittest.TestCase):
+class SshKeyCbTest(unittest.TestCase):
     '''This test requires Internet access.'''
 
     def setUp(self):
@@ -69,7 +69,7 @@ class SshKeyfunctionTest(unittest.TestCase):
 
 
 @nose.plugins.attrib.attr('sftp')
-class SshKeyfunctionUnsetTest(unittest.TestCase):
+class SshKeyCbUnsetTest(unittest.TestCase):
     def setUp(self):
         self.curl = pycurl.Curl()
         self.curl.setopt(pycurl.URL, sftp_server)
