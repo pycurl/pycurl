@@ -1994,7 +1994,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         const curl_ioctl_callback ioctl_cb = ioctl_callback;
         const curl_opensocket_callback opensocket_cb = opensocket_callback;
 #if LIBCURL_VERSION_NUM >= 0x071507 /* check for 7.21.7 or greater */
-        const curl_opensocket_callback closesocket_cb = closesocket_callback;
+        const curl_closesocket_callback closesocket_cb = closesocket_callback;
 #endif
         const curl_seek_callback seek_cb = seek_callback;
 
