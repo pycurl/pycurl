@@ -25,7 +25,7 @@ def socket_open(family, socktype, protocol, address):
     s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
     return s
 
-class SocketOpenCbTest(unittest.TestCase):
+class OpenSocketCbTest(unittest.TestCase):
     def setUp(self):
         self.curl = pycurl.Curl()
 
