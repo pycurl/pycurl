@@ -570,7 +570,7 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
             char *addr_str = (char *)PyMem_Malloc(INET_ADDRSTRLEN);
 
             if (addr_str == NULL) {
-                PyErr_SetString(ErrorObject, "Out of memory");
+                PyErr_NoMemory();
                 goto error;
             }
 
@@ -589,7 +589,7 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
             char *addr_str = (char *)PyMem_Malloc(INET6_ADDRSTRLEN);
 
             if (addr_str == NULL) {
-                PyErr_SetString(ErrorObject, "Out of memory");
+                PyErr_NoMemory();
                 goto error;
             }
 
