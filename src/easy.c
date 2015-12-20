@@ -570,7 +570,7 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
             char *addr_str = (char *)PyMem_Malloc(INET_ADDRSTRLEN);
 
             if (addr_str == NULL) {
-                PyErr_SetString(ErrorObject, "Out of memory");
+                PyErr_NoMemory();
                 goto error;
             }
 
@@ -589,7 +589,7 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
             char *addr_str = (char *)PyMem_Malloc(INET6_ADDRSTRLEN);
 
             if (addr_str == NULL) {
-                PyErr_SetString(ErrorObject, "Out of memory");
+                PyErr_NoMemory();
                 goto error;
             }
 
@@ -605,7 +605,7 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
     default:
         /* We (currently) only support IPv4/6 addresses.  Can curl even be used
            with anything else? */
-        PyErr_SetString(ErrorObject, "Unsupported address family.");
+        PyErr_SetString(ErrorObject, "Unsupported address family");
     }
 
 error:
@@ -624,14 +624,22 @@ opensocket_callback(void *clientp, curlsocktype purpose,
     PyObject *fileno_result = NULL;
     CurlObject *self;
     int ret = CURL_SOCKET_BAD;
+    PyObject *converted_address;
     PYCURL_DECLARE_THREAD_STATE;
 
     self = (CurlObject *)clientp;
     PYCURL_ACQUIRE_THREAD();
 
-    arglist = Py_BuildValue("(iiiN)", address->family, address->socktype, address->protocol, convert_protocol_address(&address->addr, address->addrlen));
-    if (arglist == NULL)
+    converted_address = convert_protocol_address(&address->addr, address->addrlen);
+    if (converted_address == NULL) {
         goto verbose_error;
+    }
+
+    arglist = Py_BuildValue("(iiiN)", address->family, address->socktype, address->protocol, converted_address);
+    if (arglist == NULL) {
+        Py_DECREF(converted_address);
+        goto verbose_error;
+    }
 
     result = PyEval_CallObject(self->opensocket_cb, arglist);
 
@@ -656,9 +664,12 @@ opensocket_callback(void *clientp, curlsocktype purpose,
             ret = dup(sockfd);
 #endif
             goto done;
+        } else {
+            PyErr_SetString(ErrorObject, "Open socket callback returned an object whose fileno method did not return an integer");
+            ret = CURL_SOCKET_BAD;
         }
     } else {
-        PyErr_SetString(ErrorObject, "Return value must be a socket.");
+        PyErr_SetString(ErrorObject, "Open socket callback's return value must be a socket");
         ret = CURL_SOCKET_BAD;
         goto verbose_error;
     }
