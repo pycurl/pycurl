@@ -605,7 +605,7 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
     default:
         /* We (currently) only support IPv4/6 addresses.  Can curl even be used
            with anything else? */
-        PyErr_SetString(ErrorObject, "Unsupported address family.");
+        PyErr_SetString(ErrorObject, "Unsupported address family");
     }
 
 error:
