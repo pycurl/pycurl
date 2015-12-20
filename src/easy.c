@@ -664,9 +664,12 @@ opensocket_callback(void *clientp, curlsocktype purpose,
             ret = dup(sockfd);
 #endif
             goto done;
+        } else {
+            PyErr_SetString(ErrorObject, "Open socket callback returned an object whose fileno method did not return an integer");
+            ret = CURL_SOCKET_BAD;
         }
     } else {
-        PyErr_SetString(ErrorObject, "Return value must be a socket.");
+        PyErr_SetString(ErrorObject, "Open socket callback's return value must be a socket");
         ret = CURL_SOCKET_BAD;
         goto verbose_error;
     }
