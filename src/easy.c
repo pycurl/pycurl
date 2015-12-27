@@ -598,7 +598,8 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
                 PyMem_Free(addr_str);
                 goto error;
             }
-            res_obj = Py_BuildValue("(si)", addr_str, ntohs(sin6->sin6_port));
+            res_obj = Py_BuildValue("(siii)", addr_str, ntohs(sin6->sin6_port),
+                ntohs(sin6->sin6_flowinfo), ntohs(sin6->sin6_scope_id));
             PyMem_Free(addr_str);
         }
         break;
@@ -625,6 +626,7 @@ opensocket_callback(void *clientp, curlsocktype purpose,
     CurlObject *self;
     int ret = CURL_SOCKET_BAD;
     PyObject *converted_address;
+    PyObject *python_address;
     PYCURL_DECLARE_THREAD_STATE;
 
     self = (CurlObject *)clientp;
@@ -640,9 +642,18 @@ opensocket_callback(void *clientp, curlsocktype purpose,
         Py_DECREF(converted_address);
         goto verbose_error;
     }
+    python_address = PyEval_CallObject(curl_sockaddr_type, arglist);
+    Py_DECREF(arglist);
+    if (python_address == NULL) {
+        goto verbose_error;
+    }
 
+    arglist = Py_BuildValue("(iN)", purpose, python_address);
+    if (arglist == NULL) {
+        Py_DECREF(python_address);
+        goto verbose_error;
+    }
     result = PyEval_CallObject(self->opensocket_cb, arglist);
-
     Py_DECREF(arglist);
     if (result == NULL) {
         goto verbose_error;

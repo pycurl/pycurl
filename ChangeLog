@@ -1,6 +1,18 @@
 master
 ------
 
+        * Breaking change: OPENSOCKETFUNCTION callback API now mirrors that
+          of libcurl:
+          1. The callback now takes two arguments, `purpose' and `address`.
+             Previously the callback took `family', `socktype', `protocol`
+             and `addr' arguments.
+          2. The second argument to the callback, `address', is a
+             `namedtuple' with `family', `socktype', `protocol' and
+             `addr' fields.
+          3. `addr' field on `address' for AF_INET6 family addresses is a
+             4-tuple of (address, port, flow info, scope id) which matches
+             Python's `socket.getaddrinfo' API.
+
         * OPENSOCKETFUNCTION callback can now be unset.
 
         * Added CURLOPT_CLOSESOCKETFUNCTION (libcurl 7.21.7+).

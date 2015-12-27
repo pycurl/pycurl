@@ -24,6 +24,7 @@ PYCURL_INTERNAL PyTypeObject *p_CurlShare_Type = NULL;
 #ifdef HAVE_CURL_7_19_6_OPTS
 PYCURL_INTERNAL PyObject *khkey_type = NULL;
 #endif
+PYCURL_INTERNAL PyObject *curl_sockaddr_type = NULL;
 
 PYCURL_INTERNAL PyObject *curlobject_constants = NULL;
 PYCURL_INTERNAL PyObject *curlmultiobject_constants = NULL;
@@ -311,11 +312,9 @@ initpycurl(void)
     const curl_version_info_data *vi;
     const char *libcurl_version, *runtime_ssl_lib;
     size_t libcurl_version_len, pycurl_version_len;
-#ifdef HAVE_CURL_7_19_6_OPTS
     PyObject *collections_module = NULL;
     PyObject *named_tuple = NULL;
     PyObject *arglist = NULL;
-#endif
 
     /* Check the version, as this has caused nasty problems in
      * some cases. */
@@ -1101,7 +1100,6 @@ initpycurl(void)
     pycurl_ssl_init();
 #endif
 
-#ifdef HAVE_CURL_7_19_6_OPTS
     collections_module = PyImport_ImportModule("collections");
     if (collections_module == NULL) {
         goto error;
@@ -1110,6 +1108,7 @@ initpycurl(void)
     if (named_tuple == NULL) {
         goto error;
     }
+#ifdef HAVE_CURL_7_19_6_OPTS
     arglist = Py_BuildValue("ss", "KhKey", "key keytype");
     if (arglist == NULL) {
         goto error;
@@ -1118,8 +1117,20 @@ initpycurl(void)
     if (khkey_type == NULL) {
         goto error;
     }
+    Py_DECREF(arglist);
     PyDict_SetItemString(d, "KhKey", khkey_type);
 #endif
+
+    arglist = Py_BuildValue("ss", "CurlSockAddr", "family socktype protocol addr");
+    if (arglist == NULL) {
+        goto error;
+    }
+    curl_sockaddr_type = PyObject_Call(named_tuple, arglist, NULL);
+    if (curl_sockaddr_type == NULL) {
+        goto error;
+    }
+    Py_DECREF(arglist);
+    PyDict_SetItemString(d, "CurlSockAddr", curl_sockaddr_type);
 
 #ifdef WITH_THREAD
     /* Finally initialize global interpreter lock */
@@ -1137,11 +1148,12 @@ error:
     Py_XDECREF(curlmultiobject_constants);
     Py_XDECREF(curlshareobject_constants);
     Py_XDECREF(ErrorObject);
-#ifdef HAVE_CURL_7_19_6_OPTS
     Py_XDECREF(collections_module);
     Py_XDECREF(named_tuple);
     Py_XDECREF(arglist);
+#ifdef HAVE_CURL_7_19_6_OPTS
     Py_XDECREF(khkey_type);
+    Py_XDECREF(curl_sockaddr_type);
 #endif
     PyMem_Free(g_pycurl_useragent);
     if (!PyErr_Occurred())

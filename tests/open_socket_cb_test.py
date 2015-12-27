@@ -14,7 +14,8 @@ setup_module, teardown_module = appmanager.setup(('app', 8380))
 socket_open_called = False
 socket_open_address = None
 
-def socket_open(family, socktype, protocol, address):
+def socket_open(purpose, curl_address):
+    family, socktype, protocol, address = curl_address
     global socket_open_called
     global socket_open_address
     socket_open_called = True
