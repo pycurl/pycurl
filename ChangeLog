@@ -13,6 +13,11 @@ master
              4-tuple of (address, port, flow info, scope id) which matches
              Python's `socket.getaddrinfo' API.
 
+          It seems that libcurl may mishandle error return from an
+          opensocket callback, as would happen when code written for
+          pre-PycURL 7.21.5 API is run with PycURL 7.21.5 or newer,
+          resulting in the application hanging.
+
         * OPENSOCKETFUNCTION callback can now be unset.
 
         * Added CURLOPT_CLOSESOCKETFUNCTION (libcurl 7.21.7+).
