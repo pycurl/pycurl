@@ -205,10 +205,24 @@ document, the arguments related to uploads are zero, and vice versa.
 OPENSOCKETFUNCTION
 ------------------
 
-.. function:: OPENSOCKETFUNCTION(family, socktype, protocol, address) -> int
+.. function:: OPENSOCKETFUNCTION(purpose, address) -> int
 
     Callback for opening sockets. Corresponds to
     `CURLOPT_OPENSOCKETFUNCTION`_ in libcurl.
+
+    *purpose* is a ``SOCKTYPE_*`` value.
+
+    *address* is a `namedtuple`_ with ``family``, ``socktype``, ``protocol``
+    and ``addr`` fields, per `CURLOPT_OPENSOCKETFUNCTION`_ documentation.
+
+    *addr* is an object representing the address. Currently the following
+    address families are supported:
+
+    - ``AF_INET``: *addr* is a 2-tuple of ``(host, port)``.
+    - ``AF_INET6``: *addr* is a 4-tuple of ``(host, port, flow info, scope id)``.
+    - ``AF_UNIX``: *addr* is a byte string containing path to the Unix socket.
+
+    This behavior matches that of Python's `socket module`_.
 
     The callback should return a socket object, a socket file descriptor
     or a Python object with a ``fileno`` property containing the socket
@@ -218,6 +232,13 @@ OPENSOCKETFUNCTION
     as the value or by calling :ref:`unsetopt <unsetopt>`.
 
     `open_socket_cb_test.py test`_ shows how to use ``OPENSOCKETFUNCTION``.
+
+    *Changed in version 7.21.5:* Previously, the callback received ``family``,
+    ``socktype``, ``protocol`` and ``addr`` parameters (``purpose`` was
+    not passed and ``address`` was flattened). Also, ``AF_INET6`` addresses
+    were exposed as 2-tuples of ``(host, port)`` rather than 4-tuples.
+
+    *Changed in version 7.19.3:* ``addr`` parameter added to the callback.
 
 
 CLOSESOCKETFUNCTION
@@ -305,3 +326,4 @@ SSH_KEYFUNCTION
 .. _close_socket_cb_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/close_socket_cb_test.py
 .. _CURLOPT_OPENSOCKETFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_OPENSOCKETFUNCTION.html
 .. _open_socket_cb_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/open_socket_cb_test.py
+.. _socket module: https://docs.python.org/library/socket.html
