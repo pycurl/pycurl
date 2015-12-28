@@ -453,6 +453,7 @@ extern PyTypeObject *p_Curl_Type;
 extern PyTypeObject *p_CurlMulti_Type;
 extern PyTypeObject *p_CurlShare_Type;
 extern PyObject *khkey_type;
+extern PyObject *curl_sockaddr_type;
 
 extern PyObject *curlobject_constants;
 extern PyObject *curlmultiobject_constants;
