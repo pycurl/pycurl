@@ -1,6 +1,8 @@
 master
 ------
 
+        * Add VERSION_* constants, corresponding to CURL_VERSION_*.
+
         * Breaking change: OPENSOCKETFUNCTION callback API now mirrors that
           of libcurl:
           1. The callback now takes two arguments, `purpose' and `address`.

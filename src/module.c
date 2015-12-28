@@ -1059,20 +1059,42 @@ initpycurl(void)
 #endif
 
     /* version features - bitmasks for curl_version_info_data.features */
-#if 0
-    /* XXX - do we need these ?? */
-    /* XXX - should we really rename these ?? */
-    insint(d, "VERSION_FEATURE_IPV6", CURL_VERSION_IPV6);
-    insint(d, "VERSION_FEATURE_KERBEROS4", CURL_VERSION_KERBEROS4);
-    insint(d, "VERSION_FEATURE_SSL", CURL_VERSION_SSL);
-    insint(d, "VERSION_FEATURE_LIBZ", CURL_VERSION_LIBZ);
-    insint(d, "VERSION_FEATURE_NTLM", CURL_VERSION_NTLM);
-    insint(d, "VERSION_FEATURE_GSSNEGOTIATE", CURL_VERSION_GSSNEGOTIATE);
-    insint(d, "VERSION_FEATURE_DEBUG", CURL_VERSION_DEBUG);
-    insint(d, "VERSION_FEATURE_ASYNCHDNS", CURL_VERSION_ASYNCHDNS);
-    insint(d, "VERSION_FEATURE_SPNEGO", CURL_VERSION_SPNEGO);
-    insint(d, "VERSION_FEATURE_LARGEFILE", CURL_VERSION_LARGEFILE);
-    insint(d, "VERSION_FEATURE_IDN", CURL_VERSION_IDN);
+    insint(d, "VERSION_IPV6", CURL_VERSION_IPV6);
+    insint(d, "VERSION_KERBEROS4", CURL_VERSION_KERBEROS4);
+#if LIBCURL_VERSION_NUM >= 0x072800 /* check for 7.40.0 or greater */
+    insint(d, "VERSION_KERBEROS5", CURL_VERSION_KERBEROS5);
+#endif
+    insint(d, "VERSION_SSL", CURL_VERSION_SSL);
+    insint(d, "VERSION_LIBZ", CURL_VERSION_LIBZ);
+    insint(d, "VERSION_NTLM", CURL_VERSION_NTLM);
+    insint(d, "VERSION_GSSNEGOTIATE", CURL_VERSION_GSSNEGOTIATE);
+    insint(d, "VERSION_DEBUG", CURL_VERSION_DEBUG);
+#if LIBCURL_VERSION_NUM >= 0x071306 /* check for 7.19.6 or greater */
+    insint(d, "VERSION_CURLDEBUG", CURL_VERSION_CURLDEBUG);
+#endif
+    insint(d, "VERSION_ASYNCHDNS", CURL_VERSION_ASYNCHDNS);
+    insint(d, "VERSION_SPNEGO", CURL_VERSION_SPNEGO);
+    insint(d, "VERSION_LARGEFILE", CURL_VERSION_LARGEFILE);
+    insint(d, "VERSION_IDN", CURL_VERSION_IDN);
+    insint(d, "VERSION_SSPI", CURL_VERSION_SSPI);
+#if LIBCURL_VERSION_NUM >= 0x072600 /* check for 7.38.0 or greater */
+    insint(d, "VERSION_GSSAPI", CURL_VERSION_GSSAPI);
+#endif
+    insint(d, "VERSION_CONV", CURL_VERSION_CONV);
+#if LIBCURL_VERSION_NUM >= 0x071504 /* check for 7.21.4 or greater */
+    insint(d, "VERSION_TLSAUTH_SRP", CURL_VERSION_TLSAUTH_SRP);
+#endif
+#if LIBCURL_VERSION_NUM >= 0x071600 /* check for 7.22.0 or greater */
+    insint(d, "VERSION_NTLM_WB", CURL_VERSION_NTLM_WB);
+#endif
+#if LIBCURL_VERSION_NUM >= 0x072100 /* check for 7.33.0 or greater */
+    insint(d, "VERSION_HTTP2", CURL_VERSION_HTTP2);
+#endif
+#if LIBCURL_VERSION_NUM >= 0x072800 /* check for 7.40.0 or greater */
+    insint(d, "VERSION_UNIX_SOCKETS", CURL_VERSION_UNIX_SOCKETS);
+#endif
+#if LIBCURL_VERSION_NUM >= 0x072F00 /* check for 7.47.0 or greater */
+    insint(d, "VERSION_PSL", CURL_VERSION_PSL);
 #endif
 
     /**
