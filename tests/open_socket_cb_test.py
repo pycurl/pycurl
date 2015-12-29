@@ -21,6 +21,10 @@ def socket_open(purpose, curl_address):
     socket_open_called = True
     socket_open_address = address
 
+    assert len(address) == 2
+    assert address[0] == '127.0.0.1'
+    assert address[1] == 8380
+
     #print(family, socktype, protocol, address)
     s = socket.socket(family, socktype, protocol)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
