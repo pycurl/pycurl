@@ -136,6 +136,19 @@ def only_ssl_backends(*backends):
         return decorated
     return decorator
 
+def only_ipv6(fn):
+    import nose.plugins.skip
+    import pycurl
+
+    @functools.wraps(fn)
+    def decorated(*args, **kwargs):
+        if not pycurl.version_info()[4] & pycurl.VERSION_IPV6:
+            raise nose.plugins.skip.SkipTest('libcurl does not support ipv6')
+
+        return fn(*args, **kwargs)
+
+    return decorated
+
 def guard_unknown_libcurl_option(fn):
     '''Converts curl error 48, CURLE_UNKNOWN_OPTION, into a SkipTest
     exception. This is meant to be used with tests exercising libcurl
