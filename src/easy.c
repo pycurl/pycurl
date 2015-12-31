@@ -1295,9 +1295,9 @@ util_curl_unsetopt(CurlObject *self, int option)
 #define SETOPT(x)   SETOPT2((CURLoption)option, (x))
 #define CLEAR_CALLBACK(callback_option, data_option, callback_field) \
     case callback_option: \
-        if (curl_easy_setopt(self->handle, callback_option, NULL) != CURLE_OK) \
+        if ((res = curl_easy_setopt(self->handle, callback_option, NULL)) != CURLE_OK) \
             goto error; \
-        if (curl_easy_setopt(self->handle, data_option, NULL) != CURLE_OK) \
+        if ((res = curl_easy_setopt(self->handle, data_option, NULL)) != CURLE_OK) \
             goto error; \
         Py_CLEAR(callback_field); \
         break
