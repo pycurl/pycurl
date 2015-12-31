@@ -73,7 +73,11 @@ class OpenSocketCbTest(unittest.TestCase):
         self.curl.setopt(self.curl.URL, 'http://[::1]:8380/success')
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
-        self.curl.perform()
+        try:
+            # perform fails because we do not listen on ::1
+            self.curl.perform()
+        except pycurl.error:
+            pass
 
         assert socket_open_called_ipv6
 
@@ -82,7 +86,6 @@ class OpenSocketCbTest(unittest.TestCase):
         assert socket_open_address[1] == 8380
         assert type(socket_open_address[2]) == int
         assert type(socket_open_address[3]) == int
-        self.assertEqual('success', sio.getvalue().decode())
 
     def test_socket_open_unix(self):
         self.curl.setopt(pycurl.OPENSOCKETFUNCTION, socket_open_unix)
