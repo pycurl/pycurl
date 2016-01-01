@@ -99,13 +99,13 @@ To force pip to recompile pycurl, run::
 
     # upgrade pip if necessary
     pip install --upgrade pip
-    
+
     # remove current pycurl
     pip remove pycurl
-    
+
     # set PYCURL_SSL_LIBRARY
     export PYCURL_SSL_LIBRARY=nss
-    
+
     # recompile and install pycurl
     pip install --compile pycurl
 
@@ -252,3 +252,18 @@ To generate documentation, run::
 Generating documentation requires `Sphinx`_ to be installed.
 
 .. _Sphinx: http://sphinx-doc.org/
+
+
+A Note Regarding SSL Backends
+-----------------------------
+
+libcurl's functionality varies depending on which SSL backend it is compiled
+against. For example, users have `reported`_ `problems`_ with GnuTLS backend.
+As of this writing, generally speaking, OpenSSL backend has the most
+functionality as well as the best compatibility with other software.
+
+If you experience SSL issues, especially if you are not using OpenSSL
+backend, you can try rebuilding libcurl and PycURL against another SSL backend.
+
+.. _reported: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=515200
+.. _problems: https://bugs.launchpad.net/ubuntu/+source/pycurl/+bug/1111673
