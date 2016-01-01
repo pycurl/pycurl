@@ -99,13 +99,13 @@ To force pip to recompile pycurl, run::
 
     # upgrade pip if necessary
     pip install --upgrade pip
-    
+
     # remove current pycurl
     pip remove pycurl
-    
+
     # set PYCURL_SSL_LIBRARY
     export PYCURL_SSL_LIBRARY=nss
-    
+
     # recompile and install pycurl
     pip install --compile pycurl
 
