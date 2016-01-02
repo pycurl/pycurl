@@ -1,6 +1,8 @@
 master
 ------
 
+        * Several CURLE_* constants added.
+
         * Add VERSION_* constants, corresponding to CURL_VERSION_*.
 
         * Breaking change: OPENSOCKETFUNCTION callback API now mirrors that
