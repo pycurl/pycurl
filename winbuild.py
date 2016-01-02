@@ -274,9 +274,10 @@ class OpensslBuilder(Builder):
                     target = 'VC-WIN32'
                     batch_file = 'do_nasm'
                 openssl_prefix = os.path.join(os.path.realpath('.'), 'build')
-                f.write("perl Configure %s --prefix=%s\\build\n" % (target, openssl_prefix))
+                f.write("perl Configure %s --prefix=%s\n" % (target, openssl_prefix))
                 f.write("call ms\\%s\n" % batch_file)
                 f.write("nmake -f ms\\nt.mak\n")
+                f.write("nmake -f ms\\nt.mak install\n")
 
     @property
     def output_dir_path(self):
