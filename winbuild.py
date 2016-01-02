@@ -351,8 +351,14 @@ class LibcurlBuilder(Builder):
             spnego_part = ''
         bitness_indicators = {32: 'x86', 64: 'x64'}
         bitness_indicator = bitness_indicators[self.bitness]
-        output_dir_name = 'libcurl-vc-%s-release-%s%s-ipv6-sspi%s-winssl' % (
-            bitness_indicator, dll_or_static, zlib_part, spnego_part)
+        if self.use_openssl:
+            winssl_part = ''
+            openssl_part = '-ssl-%s' % dll_or_static
+        else:
+            winssl_part = '-winssl'
+            openssl_part = ''
+        output_dir_name = 'libcurl-vc-%s-release-%s%s%s-ipv6-sspi%s%s' % (
+            bitness_indicator, dll_or_static, openssl_part, zlib_part, spnego_part, winssl_part)
         return output_dir_name
 
     @property
