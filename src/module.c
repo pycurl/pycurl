@@ -457,6 +457,25 @@ initpycurl(void)
 
     /* CURLcode: error codes */
     insint_c(d, "E_OK", CURLE_OK);
+    insint_c(d, "E_AGAIN", CURLE_AGAIN);
+    insint_c(d, "E_ALREADY_COMPLETE", CURLE_ALREADY_COMPLETE);
+    insint_c(d, "E_BAD_CALLING_ORDER", CURLE_BAD_CALLING_ORDER);
+    insint_c(d, "E_BAD_PASSWORD_ENTERED", CURLE_BAD_PASSWORD_ENTERED);
+    insint_c(d, "E_FTP_BAD_DOWNLOAD_RESUME", CURLE_FTP_BAD_DOWNLOAD_RESUME);
+    insint_c(d, "E_FTP_COULDNT_SET_TYPE", CURLE_FTP_COULDNT_SET_TYPE);
+    insint_c(d, "E_FTP_PARTIAL_FILE", CURLE_FTP_PARTIAL_FILE);
+    insint_c(d, "E_FTP_USER_PASSWORD_INCORRECT", CURLE_FTP_USER_PASSWORD_INCORRECT);
+    insint_c(d, "E_HTTP_NOT_FOUND", CURLE_HTTP_NOT_FOUND);
+    insint_c(d, "E_HTTP_PORT_FAILED", CURLE_HTTP_PORT_FAILED);
+    insint_c(d, "E_MALFORMAT_USER", CURLE_MALFORMAT_USER);
+    insint_c(d, "E_QUOTE_ERROR", CURLE_QUOTE_ERROR);
+    insint_c(d, "E_RANGE_ERROR", CURLE_RANGE_ERROR);
+    insint_c(d, "E_REMOTE_ACCESS_DENIED", CURLE_REMOTE_ACCESS_DENIED);
+    insint_c(d, "E_REMOTE_DISK_FULL", CURLE_REMOTE_DISK_FULL);
+    insint_c(d, "E_REMOTE_FILE_EXISTS", CURLE_REMOTE_FILE_EXISTS);
+    insint_c(d, "E_UPLOAD_FAILED", CURLE_UPLOAD_FAILED);
+    insint_c(d, "E_URL_MALFORMAT_USER", CURLE_URL_MALFORMAT_USER);
+    insint_c(d, "E_USE_SSL_FAILED", CURLE_USE_SSL_FAILED);
     insint_c(d, "E_UNSUPPORTED_PROTOCOL", CURLE_UNSUPPORTED_PROTOCOL);
     insint_c(d, "E_FAILED_INIT", CURLE_FAILED_INIT);
     insint_c(d, "E_URL_MALFORMAT", CURLE_URL_MALFORMAT);
@@ -617,35 +636,40 @@ initpycurl(void)
     insint_c(d, "FTPMETHOD_SINGLECWD", CURLFTPMETHOD_SINGLECWD);
 
     /* CURLoption: symbolic constants for setopt() */
-    /* FIXME: reorder these to match <curl/curl.h> */
+    insint_c(d, "APPEND", CURLOPT_APPEND);
+    insint_c(d, "COOKIESESSION", CURLOPT_COOKIESESSION);
+    insint_c(d, "DIRLISTONLY", CURLOPT_DIRLISTONLY);
+    /* ERRORBUFFER is not supported */
     insint_c(d, "FILE", CURLOPT_WRITEDATA);
-    insint_c(d, "URL", CURLOPT_URL);
+    insint_c(d, "FTPPORT", CURLOPT_FTPPORT);
+    insint_c(d, "INFILE", CURLOPT_READDATA);
+    insint_c(d, "INFILESIZE", CURLOPT_INFILESIZE_LARGE);    /* _LARGE ! */
+    insint_c(d, "KEYPASSWD", CURLOPT_KEYPASSWD);
+    insint_c(d, "LOW_SPEED_LIMIT", CURLOPT_LOW_SPEED_LIMIT);
+    insint_c(d, "LOW_SPEED_TIME", CURLOPT_LOW_SPEED_TIME);
     insint_c(d, "PORT", CURLOPT_PORT);
+    insint_c(d, "POSTFIELDS", CURLOPT_POSTFIELDS);
     insint_c(d, "PROXY", CURLOPT_PROXY);
+#ifdef HAVE_CURLOPT_PROXYUSERNAME
+    insint_c(d, "PROXYPASSWORD", CURLOPT_PROXYPASSWORD);
+    insint_c(d, "PROXYUSERNAME", CURLOPT_PROXYUSERNAME);
+#endif
+    insint_c(d, "PROXYUSERPWD", CURLOPT_PROXYUSERPWD);
+    insint_c(d, "RANGE", CURLOPT_RANGE);
+    insint_c(d, "READFUNCTION", CURLOPT_READFUNCTION);
+    insint_c(d, "REFERER", CURLOPT_REFERER);
+    insint_c(d, "RESUME_FROM", CURLOPT_RESUME_FROM_LARGE);  /* _LARGE ! */
+    insint_c(d, "TELNETOPTIONS", CURLOPT_TELNETOPTIONS);
+    insint_c(d, "TIMEOUT", CURLOPT_TIMEOUT);
+    insint_c(d, "URL", CURLOPT_URL);
+    insint_c(d, "USE_SSL", CURLOPT_USE_SSL);
+    insint_c(d, "USERAGENT", CURLOPT_USERAGENT);
     insint_c(d, "USERPWD", CURLOPT_USERPWD);
+    insint_c(d, "WRITEFUNCTION", CURLOPT_WRITEFUNCTION);
 #ifdef HAVE_CURLOPT_USERNAME
     insint_c(d, "USERNAME", CURLOPT_USERNAME);
     insint_c(d, "PASSWORD", CURLOPT_PASSWORD);
 #endif
-    insint_c(d, "PROXYUSERPWD", CURLOPT_PROXYUSERPWD);
-#ifdef HAVE_CURLOPT_PROXYUSERNAME
-    insint_c(d, "PROXYUSERNAME", CURLOPT_PROXYUSERNAME);
-    insint_c(d, "PROXYPASSWORD", CURLOPT_PROXYPASSWORD);
-#endif
-    insint_c(d, "RANGE", CURLOPT_RANGE);
-    insint_c(d, "INFILE", CURLOPT_READDATA);
-    /* ERRORBUFFER is not supported */
-    insint_c(d, "WRITEFUNCTION", CURLOPT_WRITEFUNCTION);
-    insint_c(d, "READFUNCTION", CURLOPT_READFUNCTION);
-    insint_c(d, "TIMEOUT", CURLOPT_TIMEOUT);
-    insint_c(d, "INFILESIZE", CURLOPT_INFILESIZE_LARGE);    /* _LARGE ! */
-    insint_c(d, "POSTFIELDS", CURLOPT_POSTFIELDS);
-    insint_c(d, "REFERER", CURLOPT_REFERER);
-    insint_c(d, "FTPPORT", CURLOPT_FTPPORT);
-    insint_c(d, "USERAGENT", CURLOPT_USERAGENT);
-    insint_c(d, "LOW_SPEED_LIMIT", CURLOPT_LOW_SPEED_LIMIT);
-    insint_c(d, "LOW_SPEED_TIME", CURLOPT_LOW_SPEED_TIME);
-    insint_c(d, "RESUME_FROM", CURLOPT_RESUME_FROM_LARGE);  /* _LARGE ! */
     insint_c(d, "WRITEDATA", CURLOPT_WRITEDATA);
     insint_c(d, "READDATA", CURLOPT_READDATA);
     insint_c(d, "PROXYPORT", CURLOPT_PROXYPORT);
@@ -706,6 +730,7 @@ initpycurl(void)
     insint_c(d, "SSLCERTTYPE", CURLOPT_SSLCERTTYPE);
     insint_c(d, "SSLKEY", CURLOPT_SSLKEY);
     insint_c(d, "SSLKEYTYPE", CURLOPT_SSLKEYTYPE);
+    /* same as CURLOPT_KEYPASSWD */
     insint_c(d, "SSLKEYPASSWD", CURLOPT_SSLKEYPASSWD);
     insint_c(d, "SSLENGINE", CURLOPT_SSLENGINE);
     insint_c(d, "SSLENGINE_DEFAULT", CURLOPT_SSLENGINE_DEFAULT);
@@ -945,6 +970,11 @@ initpycurl(void)
 #endif
     insint_c(d, "SOCKTYPE_IPCXN", CURLSOCKTYPE_IPCXN);
 
+    insint_c(d, "USESSL_NONE", CURLUSESSL_NONE);
+    insint_c(d, "USESSL_TRY", CURLUSESSL_TRY);
+    insint_c(d, "USESSL_CONTROL", CURLUSESSL_CONTROL);
+    insint_c(d, "USESSL_ALL", CURLUSESSL_ALL);
+
     /* CURLINFO: symbolic constants for getinfo(x) */
     insint_c(d, "EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL);
     insint_c(d, "HTTP_CODE", CURLINFO_HTTP_CODE);
@@ -1102,12 +1132,18 @@ initpycurl(void)
      **/
 
     /* CURLMcode: multi error codes */
+    /* old symbol */
     insint_m(d, "E_CALL_MULTI_PERFORM", CURLM_CALL_MULTI_PERFORM);
+    /* new symbol for consistency */
+    insint_m(d, "E_MULTI_CALL_MULTI_PERFORM", CURLM_CALL_MULTI_PERFORM);
     insint_m(d, "E_MULTI_OK", CURLM_OK);
     insint_m(d, "E_MULTI_BAD_HANDLE", CURLM_BAD_HANDLE);
     insint_m(d, "E_MULTI_BAD_EASY_HANDLE", CURLM_BAD_EASY_HANDLE);
+    insint_m(d, "E_MULTI_BAD_SOCKET", CURLM_BAD_SOCKET);
+    insint_m(d, "E_MULTI_CALL_MULTI_SOCKET", CURLM_CALL_MULTI_SOCKET);
     insint_m(d, "E_MULTI_OUT_OF_MEMORY", CURLM_OUT_OF_MEMORY);
     insint_m(d, "E_MULTI_INTERNAL_ERROR", CURLM_INTERNAL_ERROR);
+    insint_m(d, "E_MULTI_UNKNOWN_OPTION", CURLM_UNKNOWN_OPTION);
 
     /* curl shared constants */
     insint_s(d, "SH_SHARE", CURLSHOPT_SHARE);

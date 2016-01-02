@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+
+import sys, re, subprocess
+
+def process(siv_path):
+    with open(siv_path) as f:
+        for line in f:
+            if line[0] == ' ':
+                # comment
+                continue
+            line = line.strip()
+            if line == '':
+                continue
+            parts = re.split(r'\s+', line)
+            if len(parts) >= 4:
+                # removed symbol, all are very old
+                continue
+            if parts[0] == 'CURLOPT_CLOSEPOLICY' or \
+                parts[0].startswith('CURLCLOSEPOLICY_') or
+                parts[0] == 'CURLOPT_WRITEINFO':
+                    # no docs for these options
+                    continue
+            try:
+                subprocess.check_call(['git', 'grep', '-q', parts[0], 'src'])
+            except subprocess.CalledProcessError:
+                print('Missing %s (since %s)' % (parts[0], parts[1]))
+
+process(sys.argv[1])

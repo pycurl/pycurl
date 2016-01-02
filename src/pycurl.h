@@ -327,6 +327,7 @@ typedef struct CurlObject {
     struct curl_slist *quote;
     struct curl_slist *postquote;
     struct curl_slist *prequote;
+    struct curl_slist *telnetoptions;
 #ifdef HAVE_CURLOPT_RESOLVE
     struct curl_slist *resolve;
 #endif

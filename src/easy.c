@@ -353,6 +353,7 @@ util_curl_close(CurlObject *self)
     SFREE(self->quote);
     SFREE(self->postquote);
     SFREE(self->prequote);
+    SFREE(self->telnetoptions);
 #ifdef HAVE_CURLOPT_RESOLVE
     SFREE(self->resolve);
 #endif
@@ -1273,6 +1274,7 @@ do_curl_reset(CurlObject *self)
     SFREE(self->quote);
     SFREE(self->postquote);
     SFREE(self->prequote);
+    SFREE(self->telnetoptions);
 #ifdef HAVE_CURLOPT_RESOLVE
     SFREE(self->resolve);
 #endif
@@ -1467,6 +1469,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_ENCODING:
         case CURLOPT_FTPPORT:
         case CURLOPT_INTERFACE:
+        case CURLOPT_KEYPASSWD:
         case CURLOPT_NETRC_FILE:
         case CURLOPT_PROXY:
         case CURLOPT_PROXYUSERPWD:
@@ -1481,7 +1484,6 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_SSLCERTTYPE:
         case CURLOPT_SSLENGINE:
         case CURLOPT_SSLKEY:
-        case CURLOPT_SSLKEYPASSWD:
         case CURLOPT_SSLKEYTYPE:
         case CURLOPT_SSL_CIPHER_LIST:
         case CURLOPT_URL:
@@ -1705,6 +1707,9 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             break;
         case CURLOPT_QUOTE:
             old_slist = &self->quote;
+            break;
+        case CURLOPT_TELNETOPTIONS:
+            old_slist = &self->telnetoptions;
             break;
 #ifdef HAVE_CURLOPT_RESOLVE
         case CURLOPT_RESOLVE:
