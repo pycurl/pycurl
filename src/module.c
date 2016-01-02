@@ -636,6 +636,10 @@ initpycurl(void)
     insint_c(d, "FTPMETHOD_SINGLECWD", CURLFTPMETHOD_SINGLECWD);
 
     /* CURLoption: symbolic constants for setopt() */
+    insint_c(d, "APPEND", CURLOPT_APPEND);
+    insint_c(d, "COOKIESESSION", CURLOPT_COOKIESESSION);
+    insint_c(d, "DIRLISTONLY", CURLOPT_DIRLISTONLY);
+    insint_c(d, "KEYPASSWD", CURLOPT_KEYPASSWD);
     insint_c(d, "PORT", CURLOPT_PORT);
     insint_c(d, "PROXY", CURLOPT_PROXY);
     insint_c(d, "URL", CURLOPT_URL);

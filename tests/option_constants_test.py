@@ -311,3 +311,23 @@ class OptionConstantsTest(unittest.TestCase):
         curl = pycurl.Curl()
         curl.setopt(curl.SSL_OPTIONS, curl.SSLOPT_NO_REVOKE)
         curl.close()
+
+class OptionConstantsSettingTest(unittest.TestCase):
+    def setUp(self):
+        self.curl = pycurl.Curl()
+
+    def tearDown(self):
+        self.curl.close()
+
+    def test_append(self):
+        self.curl.setopt(self.curl.APPEND, True)
+
+    def test_cookiesession(self):
+        self.curl.setopt(self.curl.COOKIESESSION, True)
+
+    def test_dirlistonly(self):
+        self.curl.setopt(self.curl.DIRLISTONLY, True)
+
+    @util.only_ssl
+    def test_keypasswd(self):
+        self.curl.setopt(self.curl.KEYPASSWD, 'secret')

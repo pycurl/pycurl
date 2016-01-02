@@ -1,6 +1,9 @@
 master
 ------
 
+        * Added CURLOPT_APPEND, CURLOPT_COOKIESESSION, CURLOPT_DIRLISTONLY,
+          CURLOPT_KEYPASSWD.
+
         * Several CURLE_* and CURLM_* constants added.
 
         * Add VERSION_* constants, corresponding to CURL_VERSION_*.
