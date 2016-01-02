@@ -16,7 +16,7 @@ def process(siv_path):
                 # removed symbol, all are very old
                 continue
             if parts[0] == 'CURLOPT_CLOSEPOLICY' or \
-                parts[0].startswith('CURLCLOSEPOLICY_') or
+                parts[0].startswith('CURLCLOSEPOLICY_') or \
                 parts[0] == 'CURLOPT_WRITEINFO':
                     # no docs for these options
                     continue
