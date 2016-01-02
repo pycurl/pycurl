@@ -1,0 +1,25 @@
+--- winbuild/MakefileBuild.vc.orig	2015-11-27 07:00:14.000000000 -0800
++++ winbuild/MakefileBuild.vc	2016-01-01 21:33:44.263840800 -0800
+@@ -144,11 +144,11 @@
+ !ENDIF
+ 
+ !IF "$(WITH_ZLIB)"=="dll"
+-ZLIB_LIBS   = zlib.lib
++ZLIB_LIBS   = zdll.lib
+ USE_ZLIB    = true
+ ZLIB        = dll
+ !ELSEIF "$(WITH_ZLIB)"=="static"
+-ZLIB_LIBS   = zlib_a.lib
++ZLIB_LIBS   = zlib.lib
+ USE_ZLIB    = true
+ ZLIB        = static
+ !ENDIF
+@@ -238,7 +238,7 @@
+ 
+ # Runtime library configuration
+ !IF "$(RTLIBCFG)"=="static"
+-RTLIB = /MT
++RTLIB = /MD
+ RTLIB_DEBUG = /MTd
+ !ELSE
+ RTLIB = /MD

@@ -77,6 +77,7 @@ python_vc_versions = {
     '3.5': 'vc14',
 }
 vc_versions = vc_paths.keys()
+dir_here = os.path.abspath(os.path.dirname(__file__))
 
 try:
     from urllib.request import urlopen
@@ -138,6 +139,7 @@ class Builder(object):
         assert bitness in (32, 64)
         self.bitness = bitness
         self.vc_version = kwargs.pop('vc_version')
+        self.use_dlls = False
 
     @property
     def vcvars_bitness_parameter(self):
@@ -181,6 +183,10 @@ class Builder(object):
         with open('doit.bat', 'w') as f:
             f.write(self.vcvars_cmd)
             yield f
+        if True:
+            print("Executing:")
+            with open('doit.bat', 'r') as f:
+                print(f.read())
         subprocess.check_call(['doit.bat'])
 
     @property
@@ -232,18 +238,30 @@ class LibcurlBuilder(Builder):
         curl_dir = rename_for_vc('curl-%s' % self.libcurl_version, self.vc_tag)
         with in_dir(os.path.join(curl_dir, 'winbuild')):
             with self.execute_batch() as f:
+                f.write("patch -p1 < %s\n" % os.path.join(dir_here, 'winbuild', 'fix-zlib-references.patch'))
                 if self.use_zlib:
                     f.write("set include=%%include%%;%s\n" % os.path.join(archives_path, 'zlib-%s-%s' % (self.zlib_version, self.vc_tag)))
                     f.write("set lib=%%lib%%;%s\n" % os.path.join(archives_path, 'zlib-%s-%s' % (self.zlib_version, self.vc_tag)))
-                    extra_options = ' WITH_ZLIB=dll'
+                    if self.use_dlls:
+                        extra_options = ' WITH_ZLIB=dll'
+                    else:
+                        extra_options = ' WITH_ZLIB=static'
                 else:
                     extra_options = ''
-                f.write("nmake /f Makefile.vc mode=dll ENABLE_IDN=no%s\n" % extra_options)
+                if self.use_dlls:
+                    extra_options += ' mode=dll'
+                else:
+                    extra_options += ' mode=static'
+                f.write("nmake /f Makefile.vc ENABLE_IDN=no%s\n" % extra_options)
 
     @property
     def output_dir_name(self):
+        if self.use_dlls:
+            dll_or_static = 'dll'
+        else:
+            dll_or_static = 'static'
         if self.use_zlib:
-            zlib_part = '-zlib-dll'
+            zlib_part = '-zlib-%s' % dll_or_static
         else:
             zlib_part = ''
         # don't know when spnego is on and when it is off yet
@@ -253,8 +271,8 @@ class LibcurlBuilder(Builder):
             spnego_part = ''
         bitness_indicators = {32: 'x86', 64: 'x64'}
         bitness_indicator = bitness_indicators[self.bitness]
-        output_dir_name = 'libcurl-vc-%s-release-dll%s-ipv6-sspi%s-winssl' % (
-            bitness_indicator, zlib_part, spnego_part)
+        output_dir_name = 'libcurl-vc-%s-release-%s%s-ipv6-sspi%s-winssl' % (
+            bitness_indicator, dll_or_static, zlib_part, spnego_part)
         return output_dir_name
 
     @property
@@ -278,7 +296,6 @@ class PycurlBuilder(Builder):
         self.libcurl_version = kwargs.pop('libcurl_version')
         self.zlib_version = kwargs.pop('zlib_version')
         self.use_zlib = kwargs.pop('use_zlib')
-
 
     @property
     def python_path(self):
@@ -312,12 +329,17 @@ class PycurlBuilder(Builder):
             if not os.path.exists(dest_lib_path):
                 # exists for building additional targets for the same python version
                 os.makedirs(dest_lib_path)
-            for dll_path in dll_paths:
-                shutil.copy(dll_path, dest_lib_path)
+            if self.use_dlls:
+                for dll_path in dll_paths:
+                    shutil.copy(dll_path, dest_lib_path)
             with self.execute_batch() as f:
                 f.write("%s setup.py docstrings\n" % (self.python_path,))
-                f.write("%s setup.py %s --curl-dir=%s --use-libcurl-dll\n" % (
-                    self.python_path, ' '.join(targets), libcurl_dir))
+                if self.use_dlls:
+                    libcurl_arg = '--use-libcurl-dll'
+                else:
+                    libcurl_arg = '--libcurl-lib-name=libcurl_a.lib'
+                f.write("%s setup.py %s --curl-dir=%s %s\n" % (
+                    self.python_path, ' '.join(targets), libcurl_dir, libcurl_arg))
             if 'bdist' in targets:
                 zip_basename_orig = 'pycurl-%s.%s.zip' % (
                     self.pycurl_version, self.platform_indicator)
@@ -336,11 +358,24 @@ class PycurlBuilder(Builder):
                             member = src_zip.open(name)
                             dest_zip.writestr(new_name, member.read(), zipfile.ZIP_DEFLATED)
 
-def build():
+def build_dependencies():
     if git_bin_path:
         os.environ['PATH'] += ";%s" % git_bin_path
     if not os.path.exists(archives_path):
         os.makedirs(archives_path)
+    with in_dir(archives_path):
+        for bitness in (32, 64):
+            for vc_version in vc_versions:
+                if use_zlib:
+                    zlib_builder = ZlibBuilder(bitness=bitness, vc_version=vc_version, zlib_version=zlib_version)
+                    step(zlib_builder.build, (), zlib_builder.state_tag)
+                libcurl_builder = LibcurlBuilder(bitness=bitness, vc_version=vc_version,
+                    use_zlib=use_zlib, zlib_version=zlib_version, libcurl_version=libcurl_version)
+                step(libcurl_builder.build, (), libcurl_builder.state_tag)
+
+def build():
+    # note: adds git_bin_path to PATH if necessary, and creates archives_path
+    build_dependencies()
     with in_dir(archives_path):
         def prepare_pycurl():
             #fetch('http://pycurl.sourceforge.net/download/pycurl-%s.tar.gz' % pycurl_version)
@@ -353,17 +388,10 @@ def build():
         prepare_pycurl()
 
         for bitness in (32, 64):
-            for vc_version in vc_versions:
-                if use_zlib:
-                    zlib_builder = ZlibBuilder(bitness=bitness, vc_version=vc_version, zlib_version=zlib_version)
-                    step(zlib_builder.build, (), zlib_builder.state_tag)
-                libcurl_builder = LibcurlBuilder(bitness=bitness, vc_version=vc_version,
-                    use_zlib=use_zlib, zlib_version=zlib_version, libcurl_version=libcurl_version)
-                step(libcurl_builder.build, (), libcurl_builder.state_tag)
-
             python_releases = ['.'.join(version.split('.')[:2]) for version in python_versions]
             for python_version in python_releases:
                 targets = ['bdist', 'bdist_wininst', 'bdist_msi']
+                vc_version = python_vc_versions[python_version]
                 builder = PycurlBuilder(bitness=bitness, vc_version=vc_version,
                     python_version=python_version, pycurl_version=pycurl_version,
                     use_zlib=use_zlib, zlib_version=zlib_version, libcurl_version=libcurl_version)
@@ -393,6 +421,8 @@ if len(sys.argv) > 1:
         download_pythons()
     elif sys.argv[1] == 'bootstrap':
         download_bootstrap_python()
+    elif sys.argv[1] == 'builddeps':
+        build_dependencies()
     else:
         print('Unknown command: %s' % sys.argv[1])
         exit(2)
