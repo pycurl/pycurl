@@ -604,6 +604,7 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
             PyMem_Free(addr_str);
         }
         break;
+#if !defined(WIN32)
     case AF_UNIX:
         {
             struct sockaddr_un* sun = (struct sockaddr_un*)saddr;
@@ -611,6 +612,7 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
             res_obj = Py_BuildValue("s", sun->sun_path);
         }
         break;
+#endif
     default:
         /* We (currently) only support IPv4/6 addresses.  Can curl even be used
            with anything else? */

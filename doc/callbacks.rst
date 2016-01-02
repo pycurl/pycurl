@@ -222,6 +222,8 @@ OPENSOCKETFUNCTION
     - ``AF_INET6``: *addr* is a 4-tuple of ``(host, port, flow info, scope id)``.
     - ``AF_UNIX``: *addr* is a byte string containing path to the Unix socket.
 
+      Availability: Unix.
+
     This behavior matches that of Python's `socket module`_.
 
     The callback should return a socket object, a socket file descriptor
