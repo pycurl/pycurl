@@ -326,7 +326,7 @@ class CaresBuilder(Builder):
 
     @property
     def state_tag(self):
-        return 'cares-%s-%s' % (self.cares_version, self.vc_tag)
+        return 'c-ares-%s-%s' % (self.cares_version, self.vc_tag)
 
     def build(self):
         fetch('http://c-ares.haxx.se/download/c-ares-%s.tar.gz' % (self.cares_version))
@@ -351,7 +351,8 @@ class CaresBuilder(Builder):
 
     @property
     def lib_path(self):
-        return os.path.join(archives_path, self.output_dir_path)
+        return os.path.join(archives_path, self.output_dir_path,
+            'ms%s0' % self.vc_version, 'cares', 'lib-release')
 
 class LibcurlBuilder(Builder):
     def __init__(self, **kwargs):
@@ -363,6 +364,9 @@ class LibcurlBuilder(Builder):
         self.use_openssl = kwargs.pop('use_openssl')
         if self.use_openssl:
             self.openssl_version = kwargs.pop('openssl_version')
+        self.use_cares = kwargs.pop('use_cares')
+        if self.use_cares:
+            self.cares_version = kwargs.pop('cares_version')
 
     @property
     def state_tag(self):
@@ -390,6 +394,11 @@ class LibcurlBuilder(Builder):
                     f.write("set include=%%include%%;%s\n" % openssl_builder.include_path)
                     f.write("set lib=%%lib%%;%s\n" % openssl_builder.lib_path)
                     extra_options += ' WITH_SSL=%s' % dll_or_static
+                if self.use_cares:
+                    cares_builder = CaresBuilder(bitness=self.bitness, vc_version=self.vc_version, cares_version=self.cares_version)
+                    f.write("set include=%%include%%;%s\n" % cares_builder.include_path)
+                    f.write("set lib=%%lib%%;%s\n" % cares_builder.lib_path)
+                    extra_options += ' WITH_CARES=%s' % dll_or_static
                 f.write("nmake /f Makefile.vc ENABLE_IDN=no%s\n" % extra_options)
 
     @property
@@ -415,8 +424,12 @@ class LibcurlBuilder(Builder):
         else:
             winssl_part = '-winssl'
             openssl_part = ''
-        output_dir_name = 'libcurl-vc-%s-release-%s%s%s-ipv6-sspi%s%s' % (
-            bitness_indicator, dll_or_static, openssl_part, zlib_part, spnego_part, winssl_part)
+        if self.use_cares:
+            cares_part = '-cares-%s' % dll_or_static
+        else:
+            cares_part = ''
+        output_dir_name = 'libcurl-vc-%s-release-%s%s%s%s-ipv6-sspi%s%s' % (
+            bitness_indicator, dll_or_static, openssl_part, cares_part, zlib_part, spnego_part, winssl_part)
         return output_dir_name
 
     @property
@@ -442,6 +455,8 @@ class PycurlBuilder(Builder):
         self.use_zlib = kwargs.pop('use_zlib')
         self.openssl_version = kwargs.pop('openssl_version')
         self.use_openssl = kwargs.pop('use_openssl')
+        self.cares_version = kwargs.pop('cares_version')
+        self.use_cares = kwargs.pop('use_cares')
 
     @property
     def python_path(self):
@@ -461,6 +476,8 @@ class PycurlBuilder(Builder):
             zlib_version=self.zlib_version,
             use_openssl=self.use_openssl,
             openssl_version=self.openssl_version,
+            use_cares=self.use_cares,
+            cares_version=self.cares_version,
             libcurl_version=self.libcurl_version)
         libcurl_dir = os.path.abspath(libcurl_builder.output_dir_path)
         dll_paths = libcurl_builder.dll_paths
@@ -526,6 +543,7 @@ def build_dependencies():
                 libcurl_builder = LibcurlBuilder(bitness=bitness, vc_version=vc_version,
                     use_zlib=use_zlib, zlib_version=zlib_version,
                     use_openssl=use_openssl, openssl_version=openssl_version,
+                    use_cares=use_cares, cares_version=cares_version,
                     libcurl_version=libcurl_version)
                 step(libcurl_builder.build, (), libcurl_builder.state_tag)
 
@@ -552,6 +570,7 @@ def build():
                     python_version=python_version, pycurl_version=pycurl_version,
                     use_zlib=use_zlib, zlib_version=zlib_version,
                     use_openssl=use_openssl, openssl_version=openssl_version,
+                    use_cares=use_cares, cares_version=cares_version,
                     libcurl_version=libcurl_version)
                 builder.build(targets)
 
