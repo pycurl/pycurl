@@ -1121,12 +1121,18 @@ initpycurl(void)
      **/
 
     /* CURLMcode: multi error codes */
+    /* old symbol */
     insint_m(d, "E_CALL_MULTI_PERFORM", CURLM_CALL_MULTI_PERFORM);
+    /* new symbol for consistency */
+    insint_m(d, "E_MULTI_CALL_MULTI_PERFORM", CURLM_CALL_MULTI_PERFORM);
     insint_m(d, "E_MULTI_OK", CURLM_OK);
     insint_m(d, "E_MULTI_BAD_HANDLE", CURLM_BAD_HANDLE);
     insint_m(d, "E_MULTI_BAD_EASY_HANDLE", CURLM_BAD_EASY_HANDLE);
+    insint_m(d, "E_MULTI_BAD_SOCKET", CURLM_BAD_SOCKET);
+    insint_m(d, "E_MULTI_CALL_MULTI_SOCKET", CURLM_CALL_MULTI_SOCKET);
     insint_m(d, "E_MULTI_OUT_OF_MEMORY", CURLM_OUT_OF_MEMORY);
     insint_m(d, "E_MULTI_INTERNAL_ERROR", CURLM_INTERNAL_ERROR);
+    insint_m(d, "E_MULTI_UNKNOWN_OPTION", CURLM_UNKNOWN_OPTION);
 
     /* curl shared constants */
     insint_s(d, "SH_SHARE", CURLSHOPT_SHARE);

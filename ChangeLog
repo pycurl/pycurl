@@ -1,7 +1,7 @@
 master
 ------
 
-        * Several CURLE_* constants added.
+        * Several CURLE_* and CURLM_* constants added.
 
         * Add VERSION_* constants, corresponding to CURL_VERSION_*.
 
