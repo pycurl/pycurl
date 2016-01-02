@@ -599,8 +599,8 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
                 PyMem_Free(addr_str);
                 goto error;
             }
-            res_obj = Py_BuildValue("(siii)", addr_str, ntohs(sin6->sin6_port),
-                ntohs(sin6->sin6_flowinfo), ntohs(sin6->sin6_scope_id));
+            res_obj = Py_BuildValue("(siii)", addr_str, (int) ntohs(sin6->sin6_port),
+                (int) ntohl(sin6->sin6_flowinfo), (int) ntohl(sin6->sin6_scope_id));
             PyMem_Free(addr_str);
         }
         break;
