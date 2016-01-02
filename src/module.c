@@ -642,6 +642,7 @@ initpycurl(void)
     insint_c(d, "KEYPASSWD", CURLOPT_KEYPASSWD);
     insint_c(d, "PORT", CURLOPT_PORT);
     insint_c(d, "PROXY", CURLOPT_PROXY);
+    insint_c(d, "TELNETOPTIONS", CURLOPT_TELNETOPTIONS);
     insint_c(d, "URL", CURLOPT_URL);
     insint_c(d, "USERPWD", CURLOPT_USERPWD);
     insint_c(d, "FILE", CURLOPT_WRITEDATA);

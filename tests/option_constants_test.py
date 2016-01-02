@@ -331,3 +331,6 @@ class OptionConstantsSettingTest(unittest.TestCase):
     @util.only_ssl
     def test_keypasswd(self):
         self.curl.setopt(self.curl.KEYPASSWD, 'secret')
+
+    def test_telnetoptions(self):
+        self.curl.setopt(self.curl.TELNETOPTIONS, ('TTYPE=1', 'XDISPLOC=2'))

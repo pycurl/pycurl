@@ -353,6 +353,7 @@ util_curl_close(CurlObject *self)
     SFREE(self->quote);
     SFREE(self->postquote);
     SFREE(self->prequote);
+    SFREE(self->telnetoptions);
 #ifdef HAVE_CURLOPT_RESOLVE
     SFREE(self->resolve);
 #endif
@@ -1273,6 +1274,7 @@ do_curl_reset(CurlObject *self)
     SFREE(self->quote);
     SFREE(self->postquote);
     SFREE(self->prequote);
+    SFREE(self->telnetoptions);
 #ifdef HAVE_CURLOPT_RESOLVE
     SFREE(self->resolve);
 #endif
@@ -1705,6 +1707,9 @@ do_curl_setopt(CurlObject *self, PyObject *args)
             break;
         case CURLOPT_QUOTE:
             old_slist = &self->quote;
+            break;
+        case CURLOPT_TELNETOPTIONS:
+            old_slist = &self->telnetoptions;
             break;
 #ifdef HAVE_CURLOPT_RESOLVE
         case CURLOPT_RESOLVE:

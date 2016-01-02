@@ -2,7 +2,7 @@ master
 ------
 
         * Added CURLOPT_APPEND, CURLOPT_COOKIESESSION, CURLOPT_DIRLISTONLY,
-          CURLOPT_KEYPASSWD.
+          CURLOPT_KEYPASSWD, CURLOPT_TELNETOPTIONS.
 
         * Several CURLE_* and CURLM_* constants added.
 
