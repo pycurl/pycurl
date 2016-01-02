@@ -334,3 +334,10 @@ class OptionConstantsSettingTest(unittest.TestCase):
 
     def test_telnetoptions(self):
         self.curl.setopt(self.curl.TELNETOPTIONS, ('TTYPE=1', 'XDISPLOC=2'))
+
+    @util.only_ssl
+    def test_use_ssl(self):
+        self.curl.setopt(self.curl.USE_SSL, self.curl.USESSL_NONE)
+        self.curl.setopt(self.curl.USE_SSL, self.curl.USESSL_TRY)
+        self.curl.setopt(self.curl.USE_SSL, self.curl.USESSL_CONTROL)
+        self.curl.setopt(self.curl.USE_SSL, self.curl.USESSL_ALL)

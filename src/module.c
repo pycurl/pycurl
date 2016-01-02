@@ -662,6 +662,7 @@ initpycurl(void)
     insint_c(d, "TELNETOPTIONS", CURLOPT_TELNETOPTIONS);
     insint_c(d, "TIMEOUT", CURLOPT_TIMEOUT);
     insint_c(d, "URL", CURLOPT_URL);
+    insint_c(d, "USE_SSL", CURLOPT_USE_SSL);
     insint_c(d, "USERAGENT", CURLOPT_USERAGENT);
     insint_c(d, "USERPWD", CURLOPT_USERPWD);
     insint_c(d, "WRITEFUNCTION", CURLOPT_WRITEFUNCTION);
@@ -968,6 +969,11 @@ initpycurl(void)
     insint_c(d, "SOCKTYPE_ACCEPT", CURLSOCKTYPE_ACCEPT);
 #endif
     insint_c(d, "SOCKTYPE_IPCXN", CURLSOCKTYPE_IPCXN);
+
+    insint_c(d, "USESSL_NONE", CURLUSESSL_NONE);
+    insint_c(d, "USESSL_TRY", CURLUSESSL_TRY);
+    insint_c(d, "USESSL_CONTROL", CURLUSESSL_CONTROL);
+    insint_c(d, "USESSL_ALL", CURLUSESSL_ALL);
 
     /* CURLINFO: symbolic constants for getinfo(x) */
     insint_c(d, "EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL);
