@@ -639,36 +639,36 @@ initpycurl(void)
     insint_c(d, "APPEND", CURLOPT_APPEND);
     insint_c(d, "COOKIESESSION", CURLOPT_COOKIESESSION);
     insint_c(d, "DIRLISTONLY", CURLOPT_DIRLISTONLY);
-    insint_c(d, "KEYPASSWD", CURLOPT_KEYPASSWD);
-    insint_c(d, "PORT", CURLOPT_PORT);
-    insint_c(d, "PROXY", CURLOPT_PROXY);
-    insint_c(d, "TELNETOPTIONS", CURLOPT_TELNETOPTIONS);
-    insint_c(d, "URL", CURLOPT_URL);
-    insint_c(d, "USERPWD", CURLOPT_USERPWD);
+    /* ERRORBUFFER is not supported */
     insint_c(d, "FILE", CURLOPT_WRITEDATA);
+    insint_c(d, "FTPPORT", CURLOPT_FTPPORT);
+    insint_c(d, "INFILE", CURLOPT_READDATA);
+    insint_c(d, "INFILESIZE", CURLOPT_INFILESIZE_LARGE);    /* _LARGE ! */
+    insint_c(d, "KEYPASSWD", CURLOPT_KEYPASSWD);
+    insint_c(d, "LOW_SPEED_LIMIT", CURLOPT_LOW_SPEED_LIMIT);
+    insint_c(d, "LOW_SPEED_TIME", CURLOPT_LOW_SPEED_TIME);
+    insint_c(d, "PORT", CURLOPT_PORT);
+    insint_c(d, "POSTFIELDS", CURLOPT_POSTFIELDS);
+    insint_c(d, "PROXY", CURLOPT_PROXY);
+#ifdef HAVE_CURLOPT_PROXYUSERNAME
+    insint_c(d, "PROXYPASSWORD", CURLOPT_PROXYPASSWORD);
+    insint_c(d, "PROXYUSERNAME", CURLOPT_PROXYUSERNAME);
+#endif
+    insint_c(d, "PROXYUSERPWD", CURLOPT_PROXYUSERPWD);
+    insint_c(d, "RANGE", CURLOPT_RANGE);
+    insint_c(d, "READFUNCTION", CURLOPT_READFUNCTION);
+    insint_c(d, "REFERER", CURLOPT_REFERER);
+    insint_c(d, "RESUME_FROM", CURLOPT_RESUME_FROM_LARGE);  /* _LARGE ! */
+    insint_c(d, "TELNETOPTIONS", CURLOPT_TELNETOPTIONS);
+    insint_c(d, "TIMEOUT", CURLOPT_TIMEOUT);
+    insint_c(d, "URL", CURLOPT_URL);
+    insint_c(d, "USERAGENT", CURLOPT_USERAGENT);
+    insint_c(d, "USERPWD", CURLOPT_USERPWD);
+    insint_c(d, "WRITEFUNCTION", CURLOPT_WRITEFUNCTION);
 #ifdef HAVE_CURLOPT_USERNAME
     insint_c(d, "USERNAME", CURLOPT_USERNAME);
     insint_c(d, "PASSWORD", CURLOPT_PASSWORD);
 #endif
-    insint_c(d, "PROXYUSERPWD", CURLOPT_PROXYUSERPWD);
-#ifdef HAVE_CURLOPT_PROXYUSERNAME
-    insint_c(d, "PROXYUSERNAME", CURLOPT_PROXYUSERNAME);
-    insint_c(d, "PROXYPASSWORD", CURLOPT_PROXYPASSWORD);
-#endif
-    insint_c(d, "RANGE", CURLOPT_RANGE);
-    insint_c(d, "INFILE", CURLOPT_READDATA);
-    /* ERRORBUFFER is not supported */
-    insint_c(d, "WRITEFUNCTION", CURLOPT_WRITEFUNCTION);
-    insint_c(d, "READFUNCTION", CURLOPT_READFUNCTION);
-    insint_c(d, "TIMEOUT", CURLOPT_TIMEOUT);
-    insint_c(d, "INFILESIZE", CURLOPT_INFILESIZE_LARGE);    /* _LARGE ! */
-    insint_c(d, "POSTFIELDS", CURLOPT_POSTFIELDS);
-    insint_c(d, "REFERER", CURLOPT_REFERER);
-    insint_c(d, "FTPPORT", CURLOPT_FTPPORT);
-    insint_c(d, "USERAGENT", CURLOPT_USERAGENT);
-    insint_c(d, "LOW_SPEED_LIMIT", CURLOPT_LOW_SPEED_LIMIT);
-    insint_c(d, "LOW_SPEED_TIME", CURLOPT_LOW_SPEED_TIME);
-    insint_c(d, "RESUME_FROM", CURLOPT_RESUME_FROM_LARGE);  /* _LARGE ! */
     insint_c(d, "WRITEDATA", CURLOPT_WRITEDATA);
     insint_c(d, "READDATA", CURLOPT_READDATA);
     insint_c(d, "PROXYPORT", CURLOPT_PROXYPORT);
