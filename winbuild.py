@@ -230,6 +230,14 @@ class ZlibBuilder(Builder):
             os.path.join(self.output_dir_path, 'zlib1.dll'),
         ]
 
+    @property
+    def include_path(self):
+        return os.path.join(archives_path, self.output_dir_path)
+
+    @property
+    def lib_path(self):
+        return os.path.join(archives_path, self.output_dir_path)
+
 class OpensslBuilder(Builder):
     def __init__(self, **kwargs):
         super(OpensslBuilder, self).__init__(**kwargs)
@@ -278,6 +286,14 @@ class OpensslBuilder(Builder):
     def dll_paths(self):
         raise NotImplemented
 
+    @property
+    def include_path(self):
+        return os.path.join(archives_path, self.output_dir_path, 'include')
+
+    @property
+    def lib_path(self):
+        return os.path.join(archives_path, self.output_dir_path, 'lib')
+
 class LibcurlBuilder(Builder):
     def __init__(self, **kwargs):
         super(LibcurlBuilder, self).__init__(**kwargs)
@@ -306,12 +322,14 @@ class LibcurlBuilder(Builder):
                     dll_or_static = 'static'
                 extra_options = ' mode=%s' % dll_or_static
                 if self.use_zlib:
-                    f.write("set include=%%include%%;%s\n" % os.path.join(archives_path, 'zlib-%s-%s' % (self.zlib_version, self.vc_tag)))
-                    f.write("set lib=%%lib%%;%s\n" % os.path.join(archives_path, 'zlib-%s-%s' % (self.zlib_version, self.vc_tag)))
+                    zlib_builder = ZlibBuilder(bitness=self.bitness, vc_version=self.vc_version, zlib_version=self.zlib_version)
+                    f.write("set include=%%include%%;%s\n" % zlib_builder.include_path)
+                    f.write("set lib=%%lib%%;%s\n" % zlib_builder.lib_path)
                     extra_options += ' WITH_ZLIB=%s' % dll_or_static
                 if self.use_openssl:
-                    f.write("set include=%%include%%;%s\n" % os.path.join(archives_path, 'openssl-%s-%s/build/include' % (self.openssl_version, self.vc_tag)))
-                    f.write("set lib=%%lib%%;%s\n" % os.path.join(archives_path, 'openssl-%s-%s/build/lib' % (self.openssl_version, self.vc_tag)))
+                    openssl_builder = OpensslBuilder(bitness=self.bitness, vc_version=self.vc_version, openssl_version=self.openssl_version)
+                    f.write("set include=%%include%%;%s\n" % openssl_builder.include_path)
+                    f.write("set lib=%%lib%%;%s\n" % openssl_builder.lib_path)
                     extra_options += ' WITH_SSL=%s' % dll_or_static
                 f.write("nmake /f Makefile.vc ENABLE_IDN=no%s\n" % extra_options)
 
