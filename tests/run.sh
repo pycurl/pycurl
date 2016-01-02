@@ -20,7 +20,7 @@ if test "$CI" = true; then
   if test -n "$USECURL" && echo "$USECURL" |grep -q libssh2; then
     :
   else
-    extra_attrs="$extra_attrs",\!sftp
+    extra_attrs="$extra_attrs",\!ssh
   fi
 fi
 
