@@ -259,8 +259,14 @@ class OpensslBuilder(Builder):
         with in_dir(openssl_dir):
             with self.execute_batch() as f:
                 f.write("patch -p0 < %s\n" % os.path.join(dir_here, 'winbuild', 'fix-openssl-crt.patch'))
-                f.write("perl Configure VC-WIN32 --prefix=%s\\build\n" % openssl_dir)
-                f.write("call ms\\do_nasm\n")
+                if self.bitness == 64:
+                    target = 'VC-WIN64A'
+                    batch_file = 'do_nasm'
+                else:
+                    target = 'VC-WIN32'
+                    batch_file = 'do_win64a'
+                f.write("perl Configure %s --prefix=%s\\build\n" % (target, openssl_dir))
+                f.write("call ms\\%s\n" % batch_file)
                 f.write("nmake -f ms\\nt.mak\n")
 
     @property
