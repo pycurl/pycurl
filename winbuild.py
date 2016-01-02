@@ -293,7 +293,9 @@ class OpensslBuilder(Builder):
                     target = 'VC-WIN32'
                     batch_file = 'do_nasm'
                 openssl_prefix = os.path.join(os.path.realpath('.'), 'build')
-                f.write("perl Configure %s --prefix=%s\n" % (target, openssl_prefix))
+                # Do not want compression:
+                # https://en.wikipedia.org/wiki/CRIME
+                f.write("perl Configure %s no-comp --prefix=%s\n" % (target, openssl_prefix))
                 f.write("call ms\\%s\n" % batch_file)
                 f.write("nmake -f ms\\nt.mak\n")
                 f.write("nmake -f ms\\nt.mak install\n")
