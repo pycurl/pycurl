@@ -600,7 +600,7 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
                 goto error;
             }
             res_obj = Py_BuildValue("(siii)", addr_str, ntohs(sin6->sin6_port),
-                ntohs(sin6->sin6_flowinfo), ntohs(sin6->sin6_scope_id));
+                ntohl(sin6->sin6_flowinfo), ntohl(sin6->sin6_scope_id));
             PyMem_Free(addr_str);
         }
         break;
