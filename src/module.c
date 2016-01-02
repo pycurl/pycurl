@@ -636,12 +636,11 @@ initpycurl(void)
     insint_c(d, "FTPMETHOD_SINGLECWD", CURLFTPMETHOD_SINGLECWD);
 
     /* CURLoption: symbolic constants for setopt() */
-    /* FIXME: reorder these to match <curl/curl.h> */
-    insint_c(d, "FILE", CURLOPT_WRITEDATA);
-    insint_c(d, "URL", CURLOPT_URL);
     insint_c(d, "PORT", CURLOPT_PORT);
     insint_c(d, "PROXY", CURLOPT_PROXY);
+    insint_c(d, "URL", CURLOPT_URL);
     insint_c(d, "USERPWD", CURLOPT_USERPWD);
+    insint_c(d, "FILE", CURLOPT_WRITEDATA);
 #ifdef HAVE_CURLOPT_USERNAME
     insint_c(d, "USERNAME", CURLOPT_USERNAME);
     insint_c(d, "PASSWORD", CURLOPT_PASSWORD);
