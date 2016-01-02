@@ -11,7 +11,7 @@ from . import util
 sftp_server = 'sftp://web.sourceforge.net'
 
 @nose.plugins.attrib.attr('online')
-@nose.plugins.attrib.attr('sftp')
+@nose.plugins.attrib.attr('ssh')
 class SshKeyCbTest(unittest.TestCase):
     '''This test requires Internet access.'''
 
@@ -68,7 +68,7 @@ class SshKeyCbTest(unittest.TestCase):
             self.assertEqual(pycurl.E_PEER_FAILED_VERIFICATION, e.args[0])
 
 
-@nose.plugins.attrib.attr('sftp')
+@nose.plugins.attrib.attr('ssh')
 class SshKeyCbUnsetTest(unittest.TestCase):
     def setUp(self):
         self.curl = pycurl.Curl()
