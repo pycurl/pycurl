@@ -1467,6 +1467,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_ENCODING:
         case CURLOPT_FTPPORT:
         case CURLOPT_INTERFACE:
+        case CURLOPT_KEYPASSWD:
         case CURLOPT_NETRC_FILE:
         case CURLOPT_PROXY:
         case CURLOPT_PROXYUSERPWD:
@@ -1481,7 +1482,6 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_SSLCERTTYPE:
         case CURLOPT_SSLENGINE:
         case CURLOPT_SSLKEY:
-        case CURLOPT_SSLKEYPASSWD:
         case CURLOPT_SSLKEYTYPE:
         case CURLOPT_SSL_CIPHER_LIST:
         case CURLOPT_URL:

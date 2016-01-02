@@ -728,6 +728,7 @@ initpycurl(void)
     insint_c(d, "SSLCERTTYPE", CURLOPT_SSLCERTTYPE);
     insint_c(d, "SSLKEY", CURLOPT_SSLKEY);
     insint_c(d, "SSLKEYTYPE", CURLOPT_SSLKEYTYPE);
+    /* same as CURLOPT_KEYPASSWD */
     insint_c(d, "SSLKEYPASSWD", CURLOPT_SSLKEYPASSWD);
     insint_c(d, "SSLENGINE", CURLOPT_SSLENGINE);
     insint_c(d, "SSLENGINE_DEFAULT", CURLOPT_SSLENGINE_DEFAULT);
