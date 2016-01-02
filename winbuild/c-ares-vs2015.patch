@@ -1,0 +1,13 @@
+--- a/Makefile.msvc 2015-12-02 22:40:45
++++ b/Makefile.msvc            2015-12-02 22:46:39
+@@ -125,6 +125,12 @@
+ CC_VERS_NUM = 110
+ !ELSEIF "$(_NMAKE_VER)" == "11.00.60315.1"
+ CC_VERS_NUM = 110
++!ELSEIF "$(_NMAKE_VER)" == "11.00.61030.0"
++CC_VERS_NUM = 110
++!ELSEIF "$(_NMAKE_VER)" == "12.00.21005.1"
++CC_VERS_NUM = 120
++!ELSEIF "$(_NMAKE_VER)" == "14.00.23026.0"
++CC_VERS_NUM = 140
+ !ELSE

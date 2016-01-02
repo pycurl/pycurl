@@ -334,6 +334,7 @@ class CaresBuilder(Builder):
         cares_dir = rename_for_vc('c-ares-%s' % self.cares_version, self.vc_tag)
         with in_dir(cares_dir):
             with self.execute_batch() as f:
+                f.write("patch -p1 < %s\n" % os.path.join(dir_here, 'winbuild', 'c-ares-vs2015.patch'))
                 f.write("nmake -f Makefile.msvc\n")
 
     @property
