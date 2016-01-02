@@ -20,6 +20,8 @@
 root = 'c:/dev/build-pycurl'
 # where msysgit is installed
 git_root = 'c:/program files/git'
+# where ActiveState Perl is installed, for building 64-bit OpenSSL
+activestate_perl_path = r'c:\dev\perl64\bin'
 # which versions of python to build against
 python_versions = ['2.6.6', '2.7.10', '3.2.5', '3.3.5', '3.4.3', '3.5.0']
 # where pythons are installed
@@ -73,6 +75,7 @@ git_bin_path = ''
 git_path = os.path.join(git_bin_path, 'git')
 rm_path = os.path.join(git_bin_path, 'rm')
 tar_path = os.path.join(git_bin_path, 'tar')
+activestate_perl_bin_path = os.path.join(activestate_perl_path, 'bin')
 python_vc_versions = {
     '2.6': 'vc9',
     '2.7': 'vc9',
@@ -270,6 +273,11 @@ class OpensslBuilder(Builder):
                 if self.bitness == 64:
                     target = 'VC-WIN64A'
                     batch_file = 'do_win64a'
+
+                    # msysgit perl has trouble with backslashes used in
+                    # win64 assembly things; use ActiveState Perl
+                    f.write("set path=%s;%path%\n" % activestate_perl_bin_path)
+                    f.write("perl -v\n")
                 else:
                     target = 'VC-WIN32'
                     batch_file = 'do_nasm'
