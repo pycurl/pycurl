@@ -265,7 +265,8 @@ class OpensslBuilder(Builder):
                 else:
                     target = 'VC-WIN32'
                     batch_file = 'do_win64a'
-                f.write("perl Configure %s --prefix=%s\\build\n" % (target, openssl_dir))
+                openssl_prefix = os.path.join(os.path.realpath('.'), 'build')
+                f.write("perl Configure %s --prefix=%s\\build\n" % (target, openssl_prefix))
                 f.write("call ms\\%s\n" % batch_file)
                 f.write("nmake -f ms\\nt.mak\n")
 
@@ -284,6 +285,9 @@ class LibcurlBuilder(Builder):
         self.use_zlib = kwargs.pop('use_zlib')
         if self.use_zlib:
             self.zlib_version = kwargs.pop('zlib_version')
+        self.use_openssl = kwargs.pop('use_openssl')
+        if self.use_openssl:
+            self.openssl_version = kwargs.pop('openssl_version')
 
     @property
     def state_tag(self):
@@ -296,19 +300,19 @@ class LibcurlBuilder(Builder):
         with in_dir(os.path.join(curl_dir, 'winbuild')):
             with self.execute_batch() as f:
                 f.write("patch -p1 < %s\n" % os.path.join(dir_here, 'winbuild', 'fix-zlib-references.patch'))
+                if self.use_dlls:
+                    dll_or_static = 'dll'
+                else:
+                    dll_or_static = 'static'
+                extra_options = ' mode=%s' % dll_or_static
                 if self.use_zlib:
                     f.write("set include=%%include%%;%s\n" % os.path.join(archives_path, 'zlib-%s-%s' % (self.zlib_version, self.vc_tag)))
                     f.write("set lib=%%lib%%;%s\n" % os.path.join(archives_path, 'zlib-%s-%s' % (self.zlib_version, self.vc_tag)))
-                    if self.use_dlls:
-                        extra_options = ' WITH_ZLIB=dll'
-                    else:
-                        extra_options = ' WITH_ZLIB=static'
-                else:
-                    extra_options = ''
-                if self.use_dlls:
-                    extra_options += ' mode=dll'
-                else:
-                    extra_options += ' mode=static'
+                    extra_options += ' WITH_ZLIB=%s' % dll_or_static
+                if self.use_openssl:
+                    f.write("set include=%%include%%;%s\n" % os.path.join(archives_path, 'openssl-%s-%s/build/include' % (self.openssl_version, self.vc_tag)))
+                    f.write("set lib=%%lib%%;%s\n" % os.path.join(archives_path, 'openssl-%s-%s/build/lib' % (self.openssl_version, self.vc_tag)))
+                    extra_options += ' WITH_SSL=%s' % dll_or_static
                 f.write("nmake /f Makefile.vc ENABLE_IDN=no%s\n" % extra_options)
 
     @property
@@ -430,7 +434,9 @@ def build_dependencies():
                     openssl_builder = OpensslBuilder(bitness=bitness, vc_version=vc_version, openssl_version=openssl_version)
                     step(openssl_builder.build, (), openssl_builder.state_tag)
                 libcurl_builder = LibcurlBuilder(bitness=bitness, vc_version=vc_version,
-                    use_zlib=use_zlib, zlib_version=zlib_version, libcurl_version=libcurl_version)
+                    use_zlib=use_zlib, zlib_version=zlib_version,
+                    use_openssl=use_openssl, openssl_version=openssl_version,
+                    libcurl_version=libcurl_version)
                 step(libcurl_builder.build, (), libcurl_builder.state_tag)
 
 def build():
@@ -454,7 +460,8 @@ def build():
                 vc_version = python_vc_versions[python_version]
                 builder = PycurlBuilder(bitness=bitness, vc_version=vc_version,
                     python_version=python_version, pycurl_version=pycurl_version,
-                    use_zlib=use_zlib, zlib_version=zlib_version, libcurl_version=libcurl_version)
+                    use_zlib=use_zlib, zlib_version=zlib_version,
+                    libcurl_version=libcurl_version)
                 builder.build(targets)
 
 def download_pythons():
