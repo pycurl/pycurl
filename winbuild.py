@@ -376,6 +376,8 @@ class PycurlBuilder(Builder):
         self.libcurl_version = kwargs.pop('libcurl_version')
         self.zlib_version = kwargs.pop('zlib_version')
         self.use_zlib = kwargs.pop('use_zlib')
+        self.openssl_version = kwargs.pop('openssl_version')
+        self.use_openssl = kwargs.pop('use_openssl')
 
     @property
     def python_path(self):
@@ -393,6 +395,8 @@ class PycurlBuilder(Builder):
             vc_version=self.vc_version,
             use_zlib=self.use_zlib,
             zlib_version=self.zlib_version,
+            use_openssl=self.use_openssl,
+            openssl_version=self.openssl_version,
             libcurl_version=self.libcurl_version)
         libcurl_dir = os.path.abspath(libcurl_builder.output_dir_path)
         dll_paths = libcurl_builder.dll_paths
@@ -480,6 +484,7 @@ def build():
                 builder = PycurlBuilder(bitness=bitness, vc_version=vc_version,
                     python_version=python_version, pycurl_version=pycurl_version,
                     use_zlib=use_zlib, zlib_version=zlib_version,
+                    use_openssl=use_openssl, openssl_version=openssl_version,
                     libcurl_version=libcurl_version)
                 builder.build(targets)
 
