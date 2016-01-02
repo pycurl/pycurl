@@ -15,11 +15,23 @@
 # https://www.microsoft.com/en-us/download/details.aspx?id=4422
 # msvc14/vs2015 community:
 # https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx
+#
+# OpenSSL build resources including 64-bit builds:
+# http://stackoverflow.com/questions/158232/how-do-you-compile-openssl-for-x64
+# https://wiki.openssl.org/index.php/Compilation_and_Installation
+# http://developer.covenanteyes.com/building-openssl-for-visual-studio/
+#
+# NASM:
+# http://www.nasm.us/
+# ActiveState Perl:
+# http://www.activestate.com/activeperl/downloads
 
 # work directory for downloading dependencies and building everything
 root = 'c:/dev/build-pycurl'
 # where msysgit is installed
 git_root = 'c:/program files/git'
+# where NASM is installed, for building OpenSSL
+nasm_path = 'c:/program files (x86)/nasm'
 # where ActiveState Perl is installed, for building 64-bit OpenSSL
 activestate_perl_path = r'c:\dev\perl64\bin'
 # which versions of python to build against
@@ -64,7 +76,6 @@ default_vc_paths = {
         'c:/program files/microsoft visual studio 14.0',
     ],
 }
-nasm_path = 'c:/program files (x86)/nasm'
 
 import os, os.path, sys, subprocess, shutil, contextlib, zipfile
 
