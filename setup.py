@@ -316,7 +316,8 @@ class ExtensionConfiguration(object):
 
         # libcurl windows documentation states that for linking against libcurl
         # dll, the import library name is libcurl_imp.lib.
-        # in practice, the library name sometimes is libcurl.lib.
+        # For libcurl 7.46.0, the library name is libcurl.lib.
+        # And static library name is libcurl_a.lib by default as of libcurl 7.46.0.
         # override with: --libcurl-lib-name=libcurl_imp.lib
         curl_lib_name = scan_argv(self.argv, '--libcurl-lib-name=', 'libcurl.lib')
 
@@ -453,7 +454,7 @@ def get_bdist_msi_version_hack():
 def strip_pycurl_options(argv):
     if sys.platform == 'win32':
         options = [
-            '--curl-dir=', '--curl-lib-name=', '--use-libcurl-dll',
+            '--curl-dir=', '--libcurl-lib-name=', '--use-libcurl-dll',
             '--avoid-stdio',
         ]
     else:
