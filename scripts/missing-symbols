@@ -15,6 +15,10 @@ def process(siv_path):
             if len(parts) >= 4:
                 # removed symbol, all are very old
                 continue
+            if parts[0] == 'CURLOPT_CLOSEPOLICY' or \
+                parts[0].startswith('CURLCLOSEPOLICY_'):
+                    # no docs for this option
+                    continue
             try:
                 subprocess.check_call(['git', 'grep', '-q', parts[0], 'src'])
             except subprocess.CalledProcessError:
