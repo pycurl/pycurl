@@ -54,6 +54,9 @@ zlib_version = '1.2.8'
 use_openssl = True
 # which version of openssl to use, will be downloaded from internet
 openssl_version = '1.0.2e'
+# whether to use c-ares
+use_cares = True
+cares_version = '1.10.0'
 # which version of libcurl to use, will be downloaded from the internet
 libcurl_version = '7.46.0'
 # pycurl version to build, we should know this ourselves
@@ -316,6 +319,39 @@ class OpensslBuilder(Builder):
     def lib_path(self):
         return os.path.join(archives_path, self.output_dir_path, 'lib')
 
+class CaresBuilder(Builder):
+    def __init__(self, **kwargs):
+        super(CaresBuilder, self).__init__(**kwargs)
+        self.cares_version = kwargs.pop('cares_version')
+
+    @property
+    def state_tag(self):
+        return 'cares-%s-%s' % (self.cares_version, self.vc_tag)
+
+    def build(self):
+        fetch('http://c-ares.haxx.se/download/c-ares-%s.tar.gz' % (self.cares_version))
+        untar('c-ares-%s' % self.cares_version)
+        cares_dir = rename_for_vc('c-ares-%s' % self.cares_version, self.vc_tag)
+        with in_dir(cares_dir):
+            with self.execute_batch() as f:
+                f.write("nmake -f Makefile.msvc\n")
+
+    @property
+    def output_dir_path(self):
+        return 'c-ares-%s-%s' % (self.cares_version, self.vc_tag)
+
+    @property
+    def dll_paths(self):
+        raise NotImplemented
+
+    @property
+    def include_path(self):
+        return os.path.join(archives_path, self.output_dir_path)
+
+    @property
+    def lib_path(self):
+        return os.path.join(archives_path, self.output_dir_path)
+
 class LibcurlBuilder(Builder):
     def __init__(self, **kwargs):
         super(LibcurlBuilder, self).__init__(**kwargs)
@@ -483,6 +519,9 @@ def build_dependencies():
                 if use_openssl:
                     openssl_builder = OpensslBuilder(bitness=bitness, vc_version=vc_version, openssl_version=openssl_version)
                     step(openssl_builder.build, (), openssl_builder.state_tag)
+                if use_cares:
+                    cares_builder = CaresBuilder(bitness=bitness, vc_version=vc_version, cares_version=cares_version)
+                    step(cares_builder.build, (), cares_builder.state_tag)
                 libcurl_builder = LibcurlBuilder(bitness=bitness, vc_version=vc_version,
                     use_zlib=use_zlib, zlib_version=zlib_version,
                     use_openssl=use_openssl, openssl_version=openssl_version,
