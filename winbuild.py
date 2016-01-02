@@ -36,6 +36,10 @@ vc_paths = {
 use_zlib = True
 # which version of zlib to use, will be downloaded from internet
 zlib_version = '1.2.8'
+# whether to use openssl instead of winssl
+use_openssl = True
+# which version of openssl to use, will be downloaded from internet
+openssl_version = '1.0.2e'
 # which version of libcurl to use, will be downloaded from the internet
 libcurl_version = '7.46.0'
 # pycurl version to build, we should know this ourselves
@@ -58,6 +62,7 @@ default_vc_paths = {
         'c:/program files/microsoft visual studio 14.0',
     ],
 }
+nasm_path = 'c:/program files (x86)/nasm'
 
 import os, os.path, sys, subprocess, shutil, contextlib, zipfile
 
@@ -178,10 +183,15 @@ class Builder(object):
             self.vcvars_bitness_parameter,
         )
 
+    @property
+    def nasm_cmd(self):
+        return "set path=%s;%%path%%\n" % nasm_path
+
     @contextlib.contextmanager
     def execute_batch(self):
         with open('doit.bat', 'w') as f:
             f.write(self.vcvars_cmd)
+            f.write(self.nasm_cmd)
             yield f
         if True:
             print("Executing:")
@@ -219,6 +229,47 @@ class ZlibBuilder(Builder):
         return [
             os.path.join(self.output_dir_path, 'zlib1.dll'),
         ]
+
+class OpensslBuilder(Builder):
+    def __init__(self, **kwargs):
+        super(OpensslBuilder, self).__init__(**kwargs)
+        self.openssl_version = kwargs.pop('openssl_version')
+
+    @property
+    def state_tag(self):
+        return 'openssl-%s-%s' % (self.openssl_version, self.vc_tag)
+
+    def build(self):
+        fetch('https://www.openssl.org/source/openssl-%s.tar.gz' % self.openssl_version)
+        try:
+            untar('openssl-%s' % self.openssl_version)
+        except subprocess.CalledProcessError:
+            # openssl tarballs include symlinks which cannot be extracted on windows,
+            # and hence cause errors during extraction.
+            # apparently these symlinks will be regenerated at configure stage...
+            # makes one wonder why they are included in the first place.
+            pass
+        # another openssl gem:
+        # nasm output is redirected to NUL which ends up creating a file named NUL.
+        # however being a reserved file name this file is not deletable by
+        # ordinary tools.
+        nul_file = "openssl-%s-%s\\NUL" % (self.openssl_version, self.vc_tag)
+        subprocess.check_call(['rm', '-f', nul_file])
+        openssl_dir = rename_for_vc('openssl-%s' % self.openssl_version, self.vc_tag)
+        with in_dir(openssl_dir):
+            with self.execute_batch() as f:
+                f.write("patch -p0 < %s\n" % os.path.join(dir_here, 'winbuild', 'fix-openssl-crt.patch'))
+                f.write("perl Configure VC-WIN32 --prefix=%s\\build\n" % openssl_dir)
+                f.write("call ms\\do_nasm\n")
+                f.write("nmake -f ms\\nt.mak\n")
+
+    @property
+    def output_dir_path(self):
+        return 'openssl-%s-%s/build' % (self.openssl_version, self.vc_tag)
+
+    @property
+    def dll_paths(self):
+        raise NotImplemented
 
 class LibcurlBuilder(Builder):
     def __init__(self, **kwargs):
@@ -369,6 +420,9 @@ def build_dependencies():
                 if use_zlib:
                     zlib_builder = ZlibBuilder(bitness=bitness, vc_version=vc_version, zlib_version=zlib_version)
                     step(zlib_builder.build, (), zlib_builder.state_tag)
+                if use_openssl:
+                    openssl_builder = OpensslBuilder(bitness=bitness, vc_version=vc_version, openssl_version=openssl_version)
+                    step(openssl_builder.build, (), openssl_builder.state_tag)
                 libcurl_builder = LibcurlBuilder(bitness=bitness, vc_version=vc_version,
                     use_zlib=use_zlib, zlib_version=zlib_version, libcurl_version=libcurl_version)
                 step(libcurl_builder.build, (), libcurl_builder.state_tag)
