@@ -1,0 +1,10 @@
+--- win32/libssh2_config.h.orig	2014-12-04 13:43:57.000000000 -0800
++++ win32/libssh2_config.h	2016-01-02 21:56:50.468363200 -0800
+@@ -24,7 +24,6 @@
+ #define HAVE_SELECT
+ 
+ #ifdef _MSC_VER
+-#define snprintf _snprintf
+ #if _MSC_VER < 1500
+ #define vsnprintf _vsnprintf
+ #endif

@@ -57,7 +57,10 @@ openssl_version = '1.0.2e'
 # whether to use c-ares
 use_cares = True
 cares_version = '1.10.0'
-# which version of libcurl to use, will be downloaded from the internet
+# whether to use libssh2
+use_libssh2 = True
+libssh2_version = '1.6.0'
+# which version of libcurl to use, will be downloaded from internet
 libcurl_version = '7.46.0'
 # pycurl version to build, we should know this ourselves
 pycurl_version = '7.19.5.3'
@@ -354,6 +357,64 @@ class CaresBuilder(Builder):
         return os.path.join(archives_path, self.output_dir_path,
             'ms%s0' % self.vc_version, 'cares', 'lib-release')
 
+class Libssh2Builder(Builder):
+    def __init__(self, **kwargs):
+        super(Libssh2Builder, self).__init__(**kwargs)
+        self.libssh2_version = kwargs.pop('libssh2_version')
+        self.zlib_version = kwargs.pop('zlib_version')
+        self.openssl_version = kwargs.pop('openssl_version')
+
+    @property
+    def state_tag(self):
+        return 'libssh2-%s-%s' % (self.libssh2_version, self.vc_tag)
+
+    def build(self):
+        fetch('http://www.libssh2.org/download/libssh2-%s.tar.gz' % (self.libssh2_version))
+        untar('libssh2-%s' % self.libssh2_version)
+        libssh2_dir = rename_for_vc('libssh2-%s' % self.libssh2_version, self.vc_tag)
+        with in_dir(libssh2_dir):
+            with self.execute_batch() as f:
+                if self.vc_version == 'vc14':
+                    f.write("patch -p0 < %s\n" % os.path.join(dir_here, 'winbuild', 'libssh2-vs2015.patch'))
+                zlib_builder = ZlibBuilder(bitness=self.bitness, vc_version=self.vc_version, zlib_version=self.zlib_version)
+                openssl_builder = OpensslBuilder(bitness=self.bitness, vc_version=self.vc_version, openssl_version=self.openssl_version)
+                vars = '''
+OPENSSLINC=%(openssl_include_path)s
+OPENSSLLIB=%(openssl_lib_path)s
+ZLIBINC=%(zlib_include_path)s
+ZLIBLIB=%(zlib_lib_path)s
+WITH_ZLIB=1
+BUILD_STATIC_LIB=1
+                ''' % dict(
+                    openssl_include_path=openssl_builder.include_path,
+                    openssl_lib_path=openssl_builder.lib_path,
+                    zlib_include_path=zlib_builder.include_path,
+                    zlib_lib_path=zlib_builder.lib_path,
+                )
+                with open('win32/config.mk', 'r+') as cf:
+                    contents = cf.read()
+                    cf.seek(0)
+                    cf.write(vars)
+                    cf.write(contents)
+                f.write("nmake -f NMakefile\n")
+
+    @property
+    def output_dir_path(self):
+        return 'libssh2-%s-%s' % (self.libssh2_version, self.vc_tag)
+
+    @property
+    def dll_paths(self):
+        raise NotImplemented
+
+    @property
+    def include_path(self):
+        return os.path.join(archives_path, self.output_dir_path, 'include')
+
+    @property
+    def lib_path(self):
+        return os.path.join(archives_path, self.output_dir_path,
+            'Release', 'src')
+
 class LibcurlBuilder(Builder):
     def __init__(self, **kwargs):
         super(LibcurlBuilder, self).__init__(**kwargs)
@@ -524,6 +585,13 @@ class PycurlBuilder(Builder):
                             dest_zip.writestr(new_name, member.read(), zipfile.ZIP_DEFLATED)
 
 def build_dependencies():
+    if use_libssh2:
+        if not use_zlib:
+            # technically we can build libssh2 without zlib but I don't want to bother
+            raise ValueError('use_zlib must be True if use_libssh2 is True')
+        if not use_openssl:
+            raise ValueError('use_openssl must be True if use_libssh2 is True')
+
     if git_bin_path:
         os.environ['PATH'] += ";%s" % git_bin_path
     if not os.path.exists(archives_path):
@@ -540,10 +608,14 @@ def build_dependencies():
                 if use_cares:
                     cares_builder = CaresBuilder(bitness=bitness, vc_version=vc_version, cares_version=cares_version)
                     step(cares_builder.build, (), cares_builder.state_tag)
+                if use_libssh2:
+                    libssh2_builder = Libssh2Builder(bitness=bitness, vc_version=vc_version, libssh2_version=libssh2_version, zlib_version=zlib_version, openssl_version=openssl_version)
+                    step(libssh2_builder.build, (), libssh2_builder.state_tag)
                 libcurl_builder = LibcurlBuilder(bitness=bitness, vc_version=vc_version,
                     use_zlib=use_zlib, zlib_version=zlib_version,
                     use_openssl=use_openssl, openssl_version=openssl_version,
                     use_cares=use_cares, cares_version=cares_version,
+                    use_libssh2=use_libssh2, libssh2_version=libssh2_version,
                     libcurl_version=libcurl_version)
                 step(libcurl_builder.build, (), libcurl_builder.state_tag)
 
@@ -571,6 +643,7 @@ def build():
                     use_zlib=use_zlib, zlib_version=zlib_version,
                     use_openssl=use_openssl, openssl_version=openssl_version,
                     use_cares=use_cares, cares_version=cares_version,
+                    use_libssh2=use_libssh2, libssh2_version=libssh2_version,
                     libcurl_version=libcurl_version)
                 builder.build(targets)
 
