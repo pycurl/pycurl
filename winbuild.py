@@ -33,7 +33,7 @@ git_root = 'c:/program files/git'
 # where NASM is installed, for building OpenSSL
 nasm_path = 'c:/program files (x86)/nasm'
 # where ActiveState Perl is installed, for building 64-bit OpenSSL
-activestate_perl_path = r'c:\dev\perl64\bin'
+activestate_perl_path = r'c:\dev\perl64'
 # which versions of python to build against
 python_versions = ['2.6.6', '2.7.10', '3.2.5', '3.3.5', '3.4.3', '3.5.0']
 # where pythons are installed
@@ -217,6 +217,7 @@ class Builder(object):
             print("Executing:")
             with open('doit.bat', 'r') as f:
                 print(f.read())
+            sys.stdout.flush()
         subprocess.check_call(['doit.bat'])
 
     @property
@@ -293,7 +294,7 @@ class OpensslBuilder(Builder):
 
                     # msysgit perl has trouble with backslashes used in
                     # win64 assembly things; use ActiveState Perl
-                    f.write("set path=%s;%path%\n" % activestate_perl_bin_path)
+                    f.write("set path=%s;%%path%%\n" % activestate_perl_bin_path)
                     f.write("perl -v\n")
                 else:
                     target = 'VC-WIN32'
@@ -499,8 +500,12 @@ class LibcurlBuilder(Builder):
             cares_part = '-cares-%s' % dll_or_static
         else:
             cares_part = ''
-        output_dir_name = 'libcurl-vc-%s-release-%s%s%s%s-ipv6-sspi%s%s' % (
-            bitness_indicator, dll_or_static, openssl_part, cares_part, zlib_part, spnego_part, winssl_part)
+        if self.use_libssh2:
+            libssh2_part = '-ssh2-%s' % dll_or_static
+        else:
+            libssh2_part = ''
+        output_dir_name = 'libcurl-vc-%s-release-%s%s%s%s%s-ipv6-sspi%s%s' % (
+            bitness_indicator, dll_or_static, openssl_part, cares_part, zlib_part, libssh2_part, spnego_part, winssl_part)
         return output_dir_name
 
     @property
