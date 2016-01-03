@@ -397,6 +397,8 @@ BUILD_STATIC_LIB=1
                     cf.write(vars)
                     cf.write(contents)
                 f.write("nmake -f NMakefile\n")
+                # libcurl loves its _a suffixes on static library names
+                f.write("cp Release\\src\\libssh2.lib Release\\src\\libssh2_a.lib\n")
 
     @property
     def output_dir_path(self):
