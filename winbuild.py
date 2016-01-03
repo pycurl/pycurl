@@ -428,6 +428,9 @@ class LibcurlBuilder(Builder):
         self.use_cares = kwargs.pop('use_cares')
         if self.use_cares:
             self.cares_version = kwargs.pop('cares_version')
+        self.use_libssh2 = kwargs.pop('use_libssh2')
+        if self.use_libssh2:
+            self.libssh2_version = kwargs.pop('libssh2_version')
 
     @property
     def state_tag(self):
@@ -460,6 +463,11 @@ class LibcurlBuilder(Builder):
                     f.write("set include=%%include%%;%s\n" % cares_builder.include_path)
                     f.write("set lib=%%lib%%;%s\n" % cares_builder.lib_path)
                     extra_options += ' WITH_CARES=%s' % dll_or_static
+                if self.use_libssh2:
+                    libssh2_builder = Libssh2Builder(bitness=self.bitness, vc_version=self.vc_version, libssh2_version=self.libssh2_version, zlib_version=self.zlib_version, openssl_version=self.openssl_version)
+                    f.write("set include=%%include%%;%s\n" % libssh2_builder.include_path)
+                    f.write("set lib=%%lib%%;%s\n" % libssh2_builder.lib_path)
+                    extra_options += ' WITH_SSH2=%s' % dll_or_static
                 f.write("nmake /f Makefile.vc ENABLE_IDN=no%s\n" % extra_options)
 
     @property
@@ -518,6 +526,8 @@ class PycurlBuilder(Builder):
         self.use_openssl = kwargs.pop('use_openssl')
         self.cares_version = kwargs.pop('cares_version')
         self.use_cares = kwargs.pop('use_cares')
+        self.libssh2_version = kwargs.pop('libssh2_version')
+        self.use_libssh2 = kwargs.pop('use_libssh2')
 
     @property
     def python_path(self):
@@ -539,6 +549,8 @@ class PycurlBuilder(Builder):
             openssl_version=self.openssl_version,
             use_cares=self.use_cares,
             cares_version=self.cares_version,
+            use_libssh2=self.use_libssh2,
+            libssh2_version=self.libssh2_version,
             libcurl_version=self.libcurl_version)
         libcurl_dir = os.path.abspath(libcurl_builder.output_dir_path)
         dll_paths = libcurl_builder.dll_paths

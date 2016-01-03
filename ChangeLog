@@ -1,8 +1,10 @@
 master
 ------
 
+        * Official Windows builds are now linked against C-Ares and libssh2.
+
         * Official Windows builds are now linked against OpenSSL instead of
-          WinSSL and C-Ares.
+          WinSSL.
 
         * Official Windows builds are now statically linked against
           their dependencies (libcurl and zlib).
