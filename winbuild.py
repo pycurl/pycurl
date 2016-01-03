@@ -283,7 +283,7 @@ class OpensslBuilder(Builder):
         openssl_dir = rename_for_vc('openssl-%s' % self.openssl_version, self.vc_tag)
         with in_dir(openssl_dir):
             with self.execute_batch() as f:
-                f.write("patch -p0 < %s\n" % os.path.join(dir_here, 'winbuild', 'fix-openssl-crt.patch'))
+                f.write("patch -p0 < %s\n" % os.path.join(dir_here, 'winbuild', 'openssl-fix-crt.patch'))
                 if self.bitness == 64:
                     target = 'VC-WIN64A'
                     batch_file = 'do_win64a'
