@@ -378,7 +378,7 @@ class LibcurlBuilder(Builder):
         curl_dir = rename_for_vc('curl-%s' % self.libcurl_version, self.vc_tag)
         with in_dir(os.path.join(curl_dir, 'winbuild')):
             with self.execute_batch() as f:
-                f.write("patch -p1 < %s\n" % os.path.join(dir_here, 'winbuild', 'fix-zlib-references.patch'))
+                f.write("patch -p1 < %s\n" % os.path.join(dir_here, 'winbuild', 'libcurl-fix-zlib-references.patch'))
                 if self.use_dlls:
                     dll_or_static = 'dll'
                 else:
