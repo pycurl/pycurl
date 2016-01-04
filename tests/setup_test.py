@@ -178,6 +178,17 @@ class SetupTest(unittest.TestCase):
         assert 'HAVE_CURL_NSS' not in config.define_symbols
     
     @using_curl_config('curl-config-empty')
+    def test_with_openssl_library(self):
+        config = pycurl_setup.ExtensionConfiguration(['',
+            '--with-openssl'])
+        assert 'HAVE_CURL_SSL' in config.define_symbols
+        assert 'HAVE_CURL_OPENSSL' in config.define_symbols
+        assert 'crypto' in config.libraries
+        
+        assert 'HAVE_CURL_GNUTLS' not in config.define_symbols
+        assert 'HAVE_CURL_NSS' not in config.define_symbols
+    
+    @using_curl_config('curl-config-empty')
     def test_with_gnutls_library(self):
         config = pycurl_setup.ExtensionConfiguration(['',
             '--with-gnutls'])

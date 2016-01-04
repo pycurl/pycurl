@@ -1,6 +1,12 @@
 master
 ------
 
+        * --with-openssl and its --win-ssl alias setup.py options are now
+          accepted under Windows in order to use OpenSSL's crypto locks
+          when building against OpenSSL.
+
+        * --with-openssl added as an alias for --with-ssl option to setup.py.
+
         * Official Windows builds are now linked against C-Ares and libssh2.
 
         * Official Windows builds are now linked against OpenSSL instead of
