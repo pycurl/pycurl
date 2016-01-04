@@ -191,6 +191,7 @@ class ExtensionConfiguration(object):
             else:
                 raise ConfigurationError('Invalid value "%s" for PYCURL_SSL_LIBRARY' % ssl_lib)
         ssl_options = {
+            '--with-openssl': self.using_openssl,
             '--with-ssl': self.using_openssl,
             '--with-gnutls': self.using_gnutls,
             '--with-nss': self.using_nss,
@@ -336,6 +337,9 @@ class ExtensionConfiguration(object):
             fail("libcurl.lib does not exist at %s.\nCurl directory must point to compiled libcurl (bin/include/lib subdirectories): %s" %(libcurl_lib_path, curl_dir))
         self.extra_objects.append(libcurl_lib_path)
 
+        if scan_argv(self.argv, '--with-openssl') is not None or scan_argv(self.argv, '--with-ssl') is not None:
+            self.using_openssl()
+
         self.check_avoid_stdio()
 
         # make pycurl binary work on windows xp.
@@ -400,11 +404,15 @@ class ExtensionConfiguration(object):
     
     def using_openssl(self):
         self.define_macros.append(('HAVE_CURL_OPENSSL', 1))
-        # the actual library that defines CRYPTO_num_locks etc.
-        # is crypto, and on cygwin linking against ssl does not
-        # link against crypto as of May 2014.
-        # http://stackoverflow.com/questions/23687488/cant-get-pycurl-to-install-on-cygwin-missing-openssl-symbols-crypto-num-locks
-        self.libraries.append('crypto')
+        if sys.platform == "win32":
+            # CRYPTO_num_locks is defined in libeay32.lib
+            self.extra_link_args.append('libeay32.lib')
+        else:
+            # the actual library that defines CRYPTO_num_locks etc.
+            # is crypto, and on cygwin linking against ssl does not
+            # link against crypto as of May 2014.
+            # http://stackoverflow.com/questions/23687488/cant-get-pycurl-to-install-on-cygwin-missing-openssl-symbols-crypto-num-locks
+            self.libraries.append('crypto')
         self.define_macros.append(('HAVE_CURL_SSL', 1))
     
     def using_gnutls(self):
@@ -455,7 +463,7 @@ def strip_pycurl_options(argv):
     if sys.platform == 'win32':
         options = [
             '--curl-dir=', '--libcurl-lib-name=', '--use-libcurl-dll',
-            '--avoid-stdio',
+            '--avoid-stdio', '--with-openssl',
         ]
     else:
         options = ['--openssl-dir=', '--curl-config=', '--avoid-stdio']
@@ -690,7 +698,8 @@ PycURL Unix options:
  --curl-config=/path/to/curl-config  use specified curl-config binary
  --libcurl-dll=[/path/to/]libcurl.so obtain SSL library from libcurl.so
  --openssl-dir=/path/to/openssl/dir  path to OpenSSL headers and libraries
- --with-ssl                          libcurl is linked against OpenSSL
+ --with-openssl                      libcurl is linked against OpenSSL
+ --with-ssl                          legacy alias for --with-openssl
  --with-gnutls                       libcurl is linked against GnuTLS
  --with-nss                          libcurl is linked against NSS
 '''
@@ -701,6 +710,8 @@ PycURL Windows options:
  --use-libcurl-dll                     link against libcurl DLL, if not given
                                        link against libcurl statically
  --libcurl-lib-name=libcurl_imp.lib    override libcurl import library name
+ --with-openssl                        libcurl is linked against OpenSSL
+ --with-ssl                            legacy alias for --with-openssl
 '''
 
 if __name__ == "__main__":

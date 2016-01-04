@@ -583,7 +583,12 @@ class PycurlBuilder(Builder):
                     libcurl_arg = '--use-libcurl-dll'
                 else:
                     libcurl_arg = '--libcurl-lib-name=libcurl_a.lib'
-                f.write("%s setup.py %s --curl-dir=%s %s\n" % (
+                if self.use_openssl:
+                    libcurl_arg += ' --with-openssl'
+                    openssl_builder = OpensslBuilder(bitness=self.bitness, vc_version=self.vc_version, openssl_version=self.openssl_version)
+                    f.write("set include=%%include%%;%s\n" % openssl_builder.include_path)
+                    f.write("set lib=%%lib%%;%s\n" % openssl_builder.lib_path)
+                    f.write("%s setup.py %s --curl-dir=%s %s\n" % (
                     self.python_path, ' '.join(targets), libcurl_dir, libcurl_arg))
             if 'bdist' in targets:
                 zip_basename_orig = 'pycurl-%s.%s.zip' % (

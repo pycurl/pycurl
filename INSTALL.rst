@@ -51,7 +51,11 @@ It will then fail at runtime as follows::
 
 To fix this, you need to tell ``setup.py`` what SSL backend is used::
 
-    python setup.py --with-[ssl|gnutls|nss] install
+    python setup.py --with-[openssl|gnutls|nss] install
+
+Note: as of PycURL 7.21.5, setup.py accepts ``--with-openssl`` option to
+indicate that libcurl is built against OpenSSL. ``--with-ssl`` is an alias
+for ``--with-openssl`` and continues to be accepted for backwards compatibility.
 
 You can also ask ``setup.py`` to obtain SSL backend information from installed
 libcurl shared library, as follows:
@@ -81,10 +85,6 @@ note above)::
 
     export PYCURL_SSL_LIBRARY=[openssl|gnutls|nss]
     easy_install pycurl
-
-Please note the difference in spelling that concerns OpenSSL: the command-line
-argument is --with-ssl, to match libcurl, but the environment variable value is
-"openssl".
 
 
 pip and cached pycurl package
@@ -178,7 +178,10 @@ Additional Windows setup.py options:
   import library. The default is ``libcurl.lib`` which is appropriate for
   static linking and is sometimes the correct choice for dynamic linking as
   well. The other possibility for dynamic linking is ``libcurl_imp.lib``.
-- ``--avoid-stdio``: on windows, a process and each library it is using
+- ``--with-openssl``: use OpenSSL crypto locks when libcurl was built against
+  OpenSSL.
+- ``--with-ssl``: legacy alias for ``--with-openssl``.
+- ``--avoid-stdio``: on Windows, a process and each library it is using
   may be linked to its own version of the C runtime (msvcrt).
   FILE pointers from one C runtime may not be passed to another C runtime.
   This option prevents direct passing of FILE pointers from Python to libcurl,
