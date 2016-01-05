@@ -1,5 +1,5 @@
-master
-------
+Version 7.21.5 [requires libcurl-7.19.0 or better] - 2016-01-05
+---------------------------------------------------------------
 
         * --with-openssl and its --win-ssl alias setup.py options are now
           accepted under Windows in order to use OpenSSL's crypto locks

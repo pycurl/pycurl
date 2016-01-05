@@ -63,7 +63,7 @@ libssh2_version = '1.6.0'
 # which version of libcurl to use, will be downloaded from internet
 libcurl_version = '7.46.0'
 # pycurl version to build, we should know this ourselves
-pycurl_version = '7.19.5.3'
+pycurl_version = '7.21.5'
 
 default_vc_paths = {
     # where msvc 9 is installed, for python 2.6 through 3.2
