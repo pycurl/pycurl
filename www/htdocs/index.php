@@ -59,7 +59,7 @@ PycURL is mature, very fast, and supports a lot of features.
 
 <ul>
   <li>
-	libcurl is a free and easy-to-use client-side URL transfer library, supporting FTP, FTPS, HTTP, HTTPS, SCP, SFTP, TFTP, TELNET, DICT, LDAP, LDAPS, FILE, IMAP, SMTP, POP3 and RTSP. libcurl supports SSL certificates, HTTP POST, HTTP PUT, FTP uploading, HTTP form based upload, proxies, cookies, user+password authentication (Basic, Digest, NTLM, Negotiate, Kerberos4), file transfer resume, http proxy tunneling and more! 	
+	libcurl is a free and easy-to-use client-side URL transfer library, supporting FTP, FTPS, HTTP, HTTPS, SCP, SFTP, TFTP, TELNET, DICT, LDAP, LDAPS, FILE, IMAP, SMTP, POP3 and RTSP. libcurl supports SSL certificates, HTTP POST, HTTP PUT, FTP uploading, HTTP form based upload, proxies, cookies, user+password authentication (Basic, Digest, NTLM, Negotiate, Kerberos4), file transfer resume, http proxy tunneling and more!
     <br />
     <br />
   </li>
@@ -80,7 +80,7 @@ PycURL is mature, very fast, and supports a lot of features.
 	and is already used by many known, big and successful <a href="http://curl.haxx.se/docs/companies.html">companies</a>
 	and numerous <a href="http://curl.haxx.se/libcurl/using/apps.html">applications</a>.
   </li>
-	
+
 </ul>
 
 
