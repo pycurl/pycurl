@@ -198,7 +198,7 @@ The libcurl library also has its own
 
 Copyright (C) 2001-2008 Kjetil Jacobsen<br />
 Copyright (C) 2001-2008 Markus F.X.J. Oberhumer<br />
-Copyright (C) 2013-2015 Oleg Pudeyev<br />
+Copyright (C) 2013-2016 Oleg Pudeyev<br />
 <br />
 PycURL is dual licensed under the LGPL and an MIT/X derivative license
 based on the cURL license. You can redistribute and/or modify PycURL
