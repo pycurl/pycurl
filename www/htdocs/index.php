@@ -1,7 +1,7 @@
 <?php // vi:ts=4:et
 echo "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
-$version = "7.19.5.3";
-$version_date = "Nov 3 2015"
+$version = "7.21.5";
+$version_date = "Jan 5 2016"
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
@@ -59,7 +59,7 @@ PycURL is mature, very fast, and supports a lot of features.
 
 <ul>
   <li>
-	libcurl is a free and easy-to-use client-side URL transfer library, supporting FTP, FTPS, HTTP, HTTPS, SCP, SFTP, TFTP, TELNET, DICT, LDAP, LDAPS, FILE, IMAP, SMTP, POP3 and RTSP. libcurl supports SSL certificates, HTTP POST, HTTP PUT, FTP uploading, HTTP form based upload, proxies, cookies, user+password authentication (Basic, Digest, NTLM, Negotiate, Kerberos4), file transfer resume, http proxy tunneling and more! 	
+	libcurl is a free and easy-to-use client-side URL transfer library, supporting FTP, FTPS, HTTP, HTTPS, SCP, SFTP, TFTP, TELNET, DICT, LDAP, LDAPS, FILE, IMAP, SMTP, POP3 and RTSP. libcurl supports SSL certificates, HTTP POST, HTTP PUT, FTP uploading, HTTP form based upload, proxies, cookies, user+password authentication (Basic, Digest, NTLM, Negotiate, Kerberos4), file transfer resume, http proxy tunneling and more!
     <br />
     <br />
   </li>
@@ -80,7 +80,7 @@ PycURL is mature, very fast, and supports a lot of features.
 	and is already used by many known, big and successful <a href="http://curl.haxx.se/docs/companies.html">companies</a>
 	and numerous <a href="http://curl.haxx.se/libcurl/using/apps.html">applications</a>.
   </li>
-	
+
 </ul>
 
 
@@ -198,7 +198,7 @@ The libcurl library also has its own
 
 Copyright (C) 2001-2008 Kjetil Jacobsen<br />
 Copyright (C) 2001-2008 Markus F.X.J. Oberhumer<br />
-Copyright (C) 2013-2015 Oleg Pudeyev<br />
+Copyright (C) 2013-2016 Oleg Pudeyev<br />
 <br />
 PycURL is dual licensed under the LGPL and an MIT/X derivative license
 based on the cURL license. You can redistribute and/or modify PycURL

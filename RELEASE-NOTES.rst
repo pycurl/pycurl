@@ -1,6 +1,30 @@
 Release Notes
 =============
 
+PycURL 7.21.5 - 2016-01-05
+--------------------------
+
+Highlights of this release:
+
+1. Socket callbacks are now fully implemented (``CURLOPT_OPENSOCKETFUNCTION``,
+   ``CURLOPT_SOCKOPTFUNCTION``, ``CURLOPT_CLOSESOCKETFUNCTION``). Unfortunately
+   this required changing ``OPENSOCKETFUNCTION`` API once again in a
+   backwards-incompatible manner. Support for ``SOCKOPTFUNCTION`` and
+   ``CLOSESOCKETFUNCTION`` was added in this release. ``OPENSOCKETFUNCTION``
+   now supports Unix sockets.
+
+2. Many other libcurl options and constants have been added to PycURL.
+
+3. When ``pycurl`` module initialization fails, ``ImportError`` is raised
+   instead of a fatal error terminating the process.
+
+4. Usability of official Windows builds has been greatly improved:
+
+   * Dependencies are linked statically, eliminating possible DLL conflicts.
+   * OpenSSL is used instead of WinSSL.
+   * libcurl is linked against C-Ares and libssh2.
+
+
 PycURL 7.19.5.3 - 2015-11-03
 ----------------------------
 

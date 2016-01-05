@@ -111,11 +111,12 @@ To force pip to recompile pycurl, run::
 
 .. _this Stack Overflow post: http://stackoverflow.com/questions/21487278/ssl-error-installing-pycurl-after-ssl-is-set
 
+
 Windows
 -------
 
 Binary Packages
-...............
+^^^^^^^^^^^^^^^
 
 Binary packages are available in the `download area`_
 for some Windows and Python version combinations.
@@ -151,8 +152,9 @@ You may find `the entire thread starting here`_ helpful.
 .. _msvcrt.dll variants: http://curl.haxx.se/mail/curlpython-2014-05/0010.html
 .. _the entire thread starting here: http://curl.haxx.se/mail/curlpython-2014-05/0000.html
 
+
 Installing From Source
-......................
+^^^^^^^^^^^^^^^^^^^^^^
 
 First, you will need to obtain dependencies. These can be precompiled binaries
 or source packages that you are going to compile yourself.
@@ -206,7 +208,7 @@ You may find the following mailing list posts helpful:
 
 
 winbuild.py
-...........
+^^^^^^^^^^^
 
 This script is used to build official PycURL Windows packages. You can
 use it to build a full complement of packages with your own options or modify

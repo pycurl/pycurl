@@ -45,3 +45,4 @@ include tests/run.sh
 include tests/run-quickstart.sh
 include tests/vsftpd.conf
 include winbuild.py
+include winbuild/*
