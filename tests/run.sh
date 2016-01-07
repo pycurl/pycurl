@@ -25,5 +25,5 @@ if test "$CI" = true; then
 fi
 
 $PYTHON -c 'import pycurl; print(pycurl.version)'
-$NOSETESTS -a \!standalone"$extra_attrs" --with-flaky "$@"
-$NOSETESTS -a standalone --with-flaky "$@"
+$NOSETESTS -a \!standalone"$extra_attrs" --with-flaky --show-skipped "$@"
+$NOSETESTS -a standalone --with-flaky --show-skipped "$@"
