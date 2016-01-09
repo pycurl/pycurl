@@ -1,6 +1,9 @@
 master
 ------
 
+        * Unbroken `curl' module import on Windows - apparently Windows now
+          has a `signal' Python module but no `SIGPIPE' (patch by Gabi Davar).
+
         * Added CURLMOPT_PIPELINING_SITE_BL and CURLMOPT_PIPELINING_SERVER_BL
           options (libcurl 7.30.0+).
 
