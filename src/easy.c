@@ -568,7 +568,7 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
     case AF_INET:
         {
             struct sockaddr_in* sin = (struct sockaddr_in*)saddr;
-            char *addr_str = (char *)PyMem_Malloc(INET_ADDRSTRLEN);
+            char *addr_str = PyMem_New(char, INET_ADDRSTRLEN);
 
             if (addr_str == NULL) {
                 PyErr_NoMemory();
@@ -587,7 +587,7 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
     case AF_INET6:
         {
             struct sockaddr_in6* sin6 = (struct sockaddr_in6*)saddr;
-            char *addr_str = (char *)PyMem_Malloc(INET6_ADDRSTRLEN);
+            char *addr_str = PyMem_New(char, INET6_ADDRSTRLEN);
 
             if (addr_str == NULL) {
                 PyErr_NoMemory();
@@ -1820,7 +1820,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
                     }
 
                     /* Allocate enough space to accommodate length options for content or buffers, plus a terminator. */
-                    forms = PyMem_Malloc(sizeof(struct curl_forms) * ((tlen*2) + 1));
+                    forms = PyMem_New(struct curl_forms, (tlen*2) + 1);
                     if (forms == NULL) {
                         curl_formfree(post);
                         Py_XDECREF(ref_params);
