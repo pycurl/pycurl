@@ -1,6 +1,8 @@
 master
 ------
 
+        * Added remaining CURLE_* constants through libcurl 7.46.0.
+
         * Unbroken `curl' module import on Windows - apparently Windows now
           has a `signal' Python module but no `SIGPIPE' (patch by Gabi Davar).
 
