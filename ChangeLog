@@ -1,6 +1,8 @@
 master
 ------
 
+        * Added CURLM_ADDED_ALREADY error constant (libcurl 7.32.1+).
+
         * Added remaining CURLE_* constants through libcurl 7.46.0.
 
         * Unbroken `curl' module import on Windows - apparently Windows now

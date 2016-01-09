@@ -1177,7 +1177,9 @@ initpycurl(void)
     insint_m(d, "E_MULTI_OUT_OF_MEMORY", CURLM_OUT_OF_MEMORY);
     insint_m(d, "E_MULTI_INTERNAL_ERROR", CURLM_INTERNAL_ERROR);
     insint_m(d, "E_MULTI_UNKNOWN_OPTION", CURLM_UNKNOWN_OPTION);
-
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 32, 1)
+    insint_m(d, "E_MULTI_ADDED_ALREADY", CURLM_ADDED_ALREADY);
+#endif
     /* curl shared constants */
     insint_s(d, "SH_SHARE", CURLSHOPT_SHARE);
     insint_s(d, "SH_UNSHARE", CURLSHOPT_UNSHARE);
