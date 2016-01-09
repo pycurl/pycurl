@@ -246,6 +246,60 @@ verbose_error:
 
 
 static PyObject *
+do_multi_setopt_int(CurlMultiObject *self, int option, PyObject *obj)
+{
+    long d = PyInt_AsLong(obj);
+    switch(option) {
+    case CURLMOPT_MAXCONNECTS:
+    case CURLMOPT_PIPELINING:
+#ifdef HAVE_CURL_7_30_0_PIPELINE_OPTS
+    case CURLMOPT_MAX_HOST_CONNECTIONS:
+    case CURLMOPT_MAX_TOTAL_CONNECTIONS:
+    case CURLMOPT_MAX_PIPELINE_LENGTH:
+    case CURLMOPT_CONTENT_LENGTH_PENALTY_SIZE:
+    case CURLMOPT_CHUNK_LENGTH_PENALTY_SIZE:
+#endif
+        curl_multi_setopt(self->multi_handle, option, d);
+        break;
+    default:
+        PyErr_SetString(PyExc_TypeError, "integers are not supported for this option");
+        return NULL;
+    }
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
+do_multi_setopt_callable(CurlMultiObject *self, int option, PyObject *obj)
+{
+    /* We use function types here to make sure that our callback
+     * definitions exactly match the <curl/multi.h> interface.
+     */
+    const curl_multi_timer_callback t_cb = multi_timer_callback;
+    const curl_socket_callback s_cb = multi_socket_callback;
+
+    switch(option) {
+    case CURLMOPT_SOCKETFUNCTION:
+        curl_multi_setopt(self->multi_handle, CURLMOPT_SOCKETFUNCTION, s_cb);
+        curl_multi_setopt(self->multi_handle, CURLMOPT_SOCKETDATA, self);
+        Py_INCREF(obj);
+        self->s_cb = obj;
+        break;
+    case CURLMOPT_TIMERFUNCTION:
+        curl_multi_setopt(self->multi_handle, CURLMOPT_TIMERFUNCTION, t_cb);
+        curl_multi_setopt(self->multi_handle, CURLMOPT_TIMERDATA, self);
+        Py_INCREF(obj);
+        self->t_cb = obj;
+        break;
+    default:
+        PyErr_SetString(PyExc_TypeError, "callables are not supported for this option");
+        return NULL;
+    }
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
 do_multi_setopt(CurlMultiObject *self, PyObject *args)
 {
     int option;
@@ -266,51 +320,11 @@ do_multi_setopt(CurlMultiObject *self, PyObject *args)
 
     /* Handle the case of integer arguments */
     if (PyInt_Check(obj)) {
-        long d = PyInt_AsLong(obj);
-        switch(option) {
-        case CURLMOPT_MAXCONNECTS:
-        case CURLMOPT_PIPELINING:
-#ifdef HAVE_CURL_7_30_0_PIPELINE_OPTS
-        case CURLMOPT_MAX_HOST_CONNECTIONS:
-        case CURLMOPT_MAX_TOTAL_CONNECTIONS:
-        case CURLMOPT_MAX_PIPELINE_LENGTH:
-	case CURLMOPT_CONTENT_LENGTH_PENALTY_SIZE:
-	case CURLMOPT_CHUNK_LENGTH_PENALTY_SIZE:
-#endif
-            curl_multi_setopt(self->multi_handle, option, d);
-            break;
-        default:
-            PyErr_SetString(PyExc_TypeError, "integers are not supported for this option");
-            return NULL;
-        }
-        Py_RETURN_NONE;
+        return do_multi_setopt_int(self, option, obj);
     }
     if (PyFunction_Check(obj) || PyCFunction_Check(obj) ||
         PyCallable_Check(obj) || PyMethod_Check(obj)) {
-        /* We use function types here to make sure that our callback
-         * definitions exactly match the <curl/multi.h> interface.
-         */
-        const curl_multi_timer_callback t_cb = multi_timer_callback;
-        const curl_socket_callback s_cb = multi_socket_callback;
-
-        switch(option) {
-        case CURLMOPT_SOCKETFUNCTION:
-            curl_multi_setopt(self->multi_handle, CURLMOPT_SOCKETFUNCTION, s_cb);
-            curl_multi_setopt(self->multi_handle, CURLMOPT_SOCKETDATA, self);
-            Py_INCREF(obj);
-            self->s_cb = obj;
-            break;
-        case CURLMOPT_TIMERFUNCTION:
-            curl_multi_setopt(self->multi_handle, CURLMOPT_TIMERFUNCTION, t_cb);
-            curl_multi_setopt(self->multi_handle, CURLMOPT_TIMERDATA, self);
-            Py_INCREF(obj);
-            self->t_cb = obj;
-            break;
-        default:
-            PyErr_SetString(PyExc_TypeError, "callables are not supported for this option");
-            return NULL;
-        }
-        Py_RETURN_NONE;
+        return do_multi_setopt_callable(self, option, obj);
     }
     /* Failed to match any of the function signatures -- return error */
 error:
@@ -374,7 +388,7 @@ do_multi_socket_action(CurlMultiObject *self, PyObject *args)
     curl_socket_t socket;
     int ev_bitmask;
     int running = -1;
-    
+
     if (!PyArg_ParseTuple(args, "ii:socket_action", &socket, &ev_bitmask))
         return NULL;
     if (check_multi_state(self, 1 | 2, "socket_action") != 0) {
