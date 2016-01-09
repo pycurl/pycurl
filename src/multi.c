@@ -246,9 +246,151 @@ verbose_error:
 
 
 static PyObject *
+do_multi_setopt_int(CurlMultiObject *self, int option, PyObject *obj)
+{
+    long d = PyInt_AsLong(obj);
+    switch(option) {
+    case CURLMOPT_MAXCONNECTS:
+    case CURLMOPT_PIPELINING:
+#ifdef HAVE_CURL_7_30_0_PIPELINE_OPTS
+    case CURLMOPT_MAX_HOST_CONNECTIONS:
+    case CURLMOPT_MAX_TOTAL_CONNECTIONS:
+    case CURLMOPT_MAX_PIPELINE_LENGTH:
+    case CURLMOPT_CONTENT_LENGTH_PENALTY_SIZE:
+    case CURLMOPT_CHUNK_LENGTH_PENALTY_SIZE:
+#endif
+        curl_multi_setopt(self->multi_handle, option, d);
+        break;
+    default:
+        PyErr_SetString(PyExc_TypeError, "integers are not supported for this option");
+        return NULL;
+    }
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
+do_multi_setopt_charpp(CurlMultiObject *self, int option, int which, PyObject *obj)
+{
+    int len, i;
+    int res;
+    static const char *empty_list[] = { NULL };
+    char **list = NULL;
+    PyObject **encoded_objs = NULL;
+    PyObject *encoded_obj = NULL;
+    char *encoded_str;
+    int encoded_len;
+    PyObject *rv = NULL;
+
+    len = PyListOrTuple_Size(obj, which);
+    if (len == 0) {
+        res = curl_multi_setopt(self->multi_handle, option, empty_list);
+        if (res != CURLE_OK) {
+            CURLERROR_RETVAL_MULTI_DONE();
+        }
+        Py_RETURN_NONE;
+    }
+
+    /* add NULL terminator as the last list item */
+    list = PyMem_New(char *, len+1);
+    if (list == NULL) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+    /* no need for the NULL terminator here */
+    encoded_objs = PyMem_New(PyObject *, len);
+    if (encoded_objs == NULL) {
+        PyErr_NoMemory();
+        goto done;
+    }
+    memset(encoded_objs, 0, sizeof(PyObject *) * len);
+
+    for (i = 0; i < len; i++) {
+        PyObject *listitem = PyListOrTuple_GetItem(obj, i, which);
+        if (!PyText_Check(listitem)) {
+            PyErr_SetString(ErrorObject, "list/tuple items must be strings");
+            goto done;
+        }
+        encoded_str = PyText_AsString_NoNUL(listitem, &encoded_obj);
+        if (encoded_str == NULL) {
+            goto done;
+        }
+        list[i] = encoded_str;
+        encoded_objs[i] = encoded_obj;
+    }
+    list[len] = NULL;
+
+    res = curl_multi_setopt(self->multi_handle, option, list);
+    if (res != CURLE_OK) {
+        rv = NULL;
+        CURLERROR_RETVAL_MULTI_DONE();
+    }
+
+    rv = Py_None;
+done:
+    if (encoded_objs) {
+        for (i = 0; i < len; i++) {
+            Py_XDECREF(encoded_objs[i]);
+        }
+        PyMem_Free(encoded_objs);
+    }
+    PyMem_Free(list);
+    return rv;
+}
+
+
+static PyObject *
+do_multi_setopt_list(CurlMultiObject *self, int option, int which, PyObject *obj)
+{
+    switch(option) {
+#ifdef HAVE_CURL_7_30_0_PIPELINE_OPTS
+    case CURLMOPT_PIPELINING_SITE_BL:
+    case CURLMOPT_PIPELINING_SERVER_BL:
+#endif
+        return do_multi_setopt_charpp(self, option, which, obj);
+        break;
+    default:
+        PyErr_SetString(PyExc_TypeError, "lists/tuples are not supported for this option");
+        return NULL;
+    }
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
+do_multi_setopt_callable(CurlMultiObject *self, int option, PyObject *obj)
+{
+    /* We use function types here to make sure that our callback
+     * definitions exactly match the <curl/multi.h> interface.
+     */
+    const curl_multi_timer_callback t_cb = multi_timer_callback;
+    const curl_socket_callback s_cb = multi_socket_callback;
+
+    switch(option) {
+    case CURLMOPT_SOCKETFUNCTION:
+        curl_multi_setopt(self->multi_handle, CURLMOPT_SOCKETFUNCTION, s_cb);
+        curl_multi_setopt(self->multi_handle, CURLMOPT_SOCKETDATA, self);
+        Py_INCREF(obj);
+        self->s_cb = obj;
+        break;
+    case CURLMOPT_TIMERFUNCTION:
+        curl_multi_setopt(self->multi_handle, CURLMOPT_TIMERFUNCTION, t_cb);
+        curl_multi_setopt(self->multi_handle, CURLMOPT_TIMERDATA, self);
+        Py_INCREF(obj);
+        self->t_cb = obj;
+        break;
+    default:
+        PyErr_SetString(PyExc_TypeError, "callables are not supported for this option");
+        return NULL;
+    }
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
 do_multi_setopt(CurlMultiObject *self, PyObject *args)
 {
-    int option;
+    int option, which;
     PyObject *obj;
 
     if (!PyArg_ParseTuple(args, "iO:setopt", &option, &obj))
@@ -266,52 +408,20 @@ do_multi_setopt(CurlMultiObject *self, PyObject *args)
 
     /* Handle the case of integer arguments */
     if (PyInt_Check(obj)) {
-        long d = PyInt_AsLong(obj);
-        switch(option) {
-        case CURLMOPT_MAXCONNECTS:
-        case CURLMOPT_PIPELINING:
-#ifdef HAVE_CURL_7_30_0_PIPELINE_OPTS
-        case CURLMOPT_MAX_HOST_CONNECTIONS:
-        case CURLMOPT_MAX_TOTAL_CONNECTIONS:
-        case CURLMOPT_MAX_PIPELINE_LENGTH:
-	case CURLMOPT_CONTENT_LENGTH_PENALTY_SIZE:
-	case CURLMOPT_CHUNK_LENGTH_PENALTY_SIZE:
-#endif
-            curl_multi_setopt(self->multi_handle, option, d);
-            break;
-        default:
-            PyErr_SetString(PyExc_TypeError, "integers are not supported for this option");
-            return NULL;
-        }
-        Py_RETURN_NONE;
+        return do_multi_setopt_int(self, option, obj);
     }
+
+    /* Handle the case of list or tuple objects */
+    which = PyListOrTuple_Check(obj);
+    if (which) {
+        return do_multi_setopt_list(self, option, which, obj);
+    }
+
     if (PyFunction_Check(obj) || PyCFunction_Check(obj) ||
         PyCallable_Check(obj) || PyMethod_Check(obj)) {
-        /* We use function types here to make sure that our callback
-         * definitions exactly match the <curl/multi.h> interface.
-         */
-        const curl_multi_timer_callback t_cb = multi_timer_callback;
-        const curl_socket_callback s_cb = multi_socket_callback;
-
-        switch(option) {
-        case CURLMOPT_SOCKETFUNCTION:
-            curl_multi_setopt(self->multi_handle, CURLMOPT_SOCKETFUNCTION, s_cb);
-            curl_multi_setopt(self->multi_handle, CURLMOPT_SOCKETDATA, self);
-            Py_INCREF(obj);
-            self->s_cb = obj;
-            break;
-        case CURLMOPT_TIMERFUNCTION:
-            curl_multi_setopt(self->multi_handle, CURLMOPT_TIMERFUNCTION, t_cb);
-            curl_multi_setopt(self->multi_handle, CURLMOPT_TIMERDATA, self);
-            Py_INCREF(obj);
-            self->t_cb = obj;
-            break;
-        default:
-            PyErr_SetString(PyExc_TypeError, "callables are not supported for this option");
-            return NULL;
-        }
-        Py_RETURN_NONE;
+        return do_multi_setopt_callable(self, option, obj);
     }
+
     /* Failed to match any of the function signatures -- return error */
 error:
     PyErr_SetString(PyExc_TypeError, "invalid arguments to setopt");
@@ -374,7 +484,7 @@ do_multi_socket_action(CurlMultiObject *self, PyObject *args)
     curl_socket_t socket;
     int ev_bitmask;
     int running = -1;
-    
+
     if (!PyArg_ParseTuple(args, "ii:socket_action", &socket, &ev_bitmask))
         return NULL;
     if (check_multi_state(self, 1 | 2, "socket_action") != 0) {

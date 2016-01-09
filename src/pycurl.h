@@ -281,6 +281,13 @@ PyText_Check(PyObject *o);
     return NULL; \
 } while (0)
 
+#define CURLERROR_RETVAL_MULTI_DONE() do {\
+    PyObject *v; \
+    v = Py_BuildValue("(i)", (int) (res)); \
+    if (v != NULL) { PyErr_SetObject(ErrorObject, v); Py_DECREF(v); } \
+    goto done; \
+} while (0)
+
 /* Raise exception based on return value `res' and custom message */
 #define CURLERROR_MSG(msg) do {\
     PyObject *v; const char *m = (msg); \

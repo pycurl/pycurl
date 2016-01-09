@@ -1,6 +1,9 @@
 master
 ------
 
+        * Added CURLMOPT_PIPELINING_SITE_BL and CURLMOPT_PIPELINING_SERVER_BL
+          options (libcurl 7.30.0+).
+
         * Added CURLOPT_TCP_KEEPALIVE, CURLOPT_TCP_KEEPIDLE and
           CURLOPT_TCP_KEEPINTVL options (libcurl 7.25.0+).
 
