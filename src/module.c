@@ -405,7 +405,7 @@ initpycurl(void)
      * replaced with the space; libcurl_version_len does not include
      * terminating null. */
     pycurl_version_len = PYCURL_VERSION_PREFIX_SIZE + libcurl_version_len + 1;
-    g_pycurl_useragent = PyMem_Malloc(pycurl_version_len);
+    g_pycurl_useragent = PyMem_New(char, pycurl_version_len);
     if (g_pycurl_useragent == NULL)
         goto error;
     memcpy(g_pycurl_useragent, PYCURL_VERSION_PREFIX, PYCURL_VERSION_PREFIX_SIZE);

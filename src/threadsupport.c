@@ -111,7 +111,7 @@ pycurl_ssl_init(void)
 {
     int i, c = CRYPTO_num_locks();
 
-    pycurl_openssl_tsl = PyMem_Malloc(c * sizeof(PyThread_type_lock));
+    pycurl_openssl_tsl = PyMem_New(PyThread_type_lock, c);
 
     for (i = 0; i < c; ++i) {
         pycurl_openssl_tsl[i] = PyThread_allocate_lock();
@@ -213,7 +213,7 @@ PYCURL_INTERNAL ShareLock *
 share_lock_new(void)
 {
     int i;
-    ShareLock *lock = (ShareLock*)PyMem_Malloc(sizeof(ShareLock));
+    ShareLock *lock = PyMem_New(ShareLock, 1);
 
     assert(lock);
     for (i = 0; i < CURL_LOCK_DATA_LAST; ++i) {
