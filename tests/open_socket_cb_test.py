@@ -104,9 +104,10 @@ class OpenSocketCbTest(unittest.TestCase):
         assert socket_open_called_unix
         if util.py3:
             assert isinstance(socket_open_address, bytes)
+            self.assertEqual(b'/tmp/pycurl-test-path.sock', socket_open_address)
         else:
             assert isinstance(socket_open_address, str)
-        self.assertEqual('/tmp/pycurl-test-path.sock', socket_open_address)
+            self.assertEqual('/tmp/pycurl-test-path.sock', socket_open_address)
 
     def test_socket_open_none(self):
         self.curl.setopt(pycurl.OPENSOCKETFUNCTION, None)

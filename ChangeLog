@@ -1,6 +1,11 @@
 master
 ------
 
+        * OPENSOCKETFUNCTION callback for AF_UNIX sockets was mistakenly
+          invoked with the address as a `string' rather than `bytes' on
+          Python 3. The callback now receives a `bytes' instance as was
+          documented.
+
 
 Version 7.21.5 [requires libcurl-7.19.0 or better] - 2016-01-05
 ---------------------------------------------------------------
