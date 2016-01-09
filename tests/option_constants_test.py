@@ -355,3 +355,7 @@ class OptionConstantsSettingTest(unittest.TestCase):
     @util.min_libcurl(7, 21, 6)
     def test_transfer_encoding(self):
         self.curl.setopt(self.curl.TRANSFER_ENCODING, True)
+
+    @util.min_libcurl(7, 24, 0)
+    def test_accepttimeout_ms(self):
+        self.curl.setopt(self.curl.ACCEPTTIMEOUT_MS, 1000)

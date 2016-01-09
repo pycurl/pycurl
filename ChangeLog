@@ -1,6 +1,8 @@
 master
 ------
 
+        * Added CURLOPT_ACCEPTTIMEOUT_MS (libcurl 7.24.0+).
+
         * Added CURLOPT_ACCEPT_ENCODING and CURLOPT_TRANSFER_ENCODING
           options (libcurl 7.21.6+).
 
