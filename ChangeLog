@@ -1,6 +1,9 @@
 master
 ------
 
+        * Added CURLOPT_TCP_KEEPALIVE, CURLOPT_TCP_KEEPIDLE and
+          CURLOPT_TCP_KEEPINTVL options (libcurl 7.25.0+).
+
         * Added CURLOPT_ACCEPTTIMEOUT_MS (libcurl 7.24.0+).
 
         * Added CURLOPT_ACCEPT_ENCODING and CURLOPT_TRANSFER_ENCODING
