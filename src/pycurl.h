@@ -35,6 +35,14 @@
 #undef NDEBUG
 #include <assert.h>
 
+#define MAKE_LIBCURL_VERSION(major, minor, patch) \
+    ((major) * 0x10000 + (minor) * 0x100 + (patch))
+
+/* spot check */
+#if MAKE_LIBCURL_VERSION(7, 21, 16) != 0x071510
+# error MAKE_LIBCURL_VERSION is not working correctly
+#endif
+
 #if defined(PYCURL_SINGLE_FILE)
 # define PYCURL_INTERNAL static
 #else

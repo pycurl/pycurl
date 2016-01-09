@@ -1472,6 +1472,8 @@ do_curl_setopt(CurlObject *self, PyObject *args)
         case CURLOPT_COOKIEJAR:
         case CURLOPT_CUSTOMREQUEST:
         case CURLOPT_EGDSOCKET:
+        /* use CURLOPT_ENCODING instead of CURLOPT_ACCEPT_ENCODING
+        for compatibility with older libcurls */
         case CURLOPT_ENCODING:
         case CURLOPT_FTPPORT:
         case CURLOPT_INTERFACE:
