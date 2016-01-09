@@ -355,3 +355,19 @@ class OptionConstantsSettingTest(unittest.TestCase):
     @util.min_libcurl(7, 21, 6)
     def test_transfer_encoding(self):
         self.curl.setopt(self.curl.TRANSFER_ENCODING, True)
+
+    @util.min_libcurl(7, 24, 0)
+    def test_accepttimeout_ms(self):
+        self.curl.setopt(self.curl.ACCEPTTIMEOUT_MS, 1000)
+
+    @util.min_libcurl(7, 25, 0)
+    def test_tcp_keepalive(self):
+        self.curl.setopt(self.curl.TCP_KEEPALIVE, True)
+
+    @util.min_libcurl(7, 25, 0)
+    def test_tcp_keepidle(self):
+        self.curl.setopt(self.curl.TCP_KEEPIDLE, 100)
+
+    @util.min_libcurl(7, 25, 0)
+    def test_tcp_keepintvl(self):
+        self.curl.setopt(self.curl.TCP_KEEPINTVL, 100)
