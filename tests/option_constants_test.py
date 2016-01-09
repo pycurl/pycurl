@@ -341,3 +341,17 @@ class OptionConstantsSettingTest(unittest.TestCase):
         self.curl.setopt(self.curl.USE_SSL, self.curl.USESSL_TRY)
         self.curl.setopt(self.curl.USE_SSL, self.curl.USESSL_CONTROL)
         self.curl.setopt(self.curl.USE_SSL, self.curl.USESSL_ALL)
+
+    def test_encoding(self):
+        # old name for ACCEPT_ENCODING
+        self.curl.setopt(self.curl.ENCODING, "")
+        self.curl.setopt(self.curl.ENCODING, "application/json")
+
+    @util.min_libcurl(7, 21, 6)
+    def test_accept_encoding(self):
+        self.curl.setopt(self.curl.ACCEPT_ENCODING, "")
+        self.curl.setopt(self.curl.ACCEPT_ENCODING, "application/json")
+
+    @util.min_libcurl(7, 21, 6)
+    def test_transfer_encoding(self):
+        self.curl.setopt(self.curl.TRANSFER_ENCODING, True)

@@ -1,6 +1,9 @@
 master
 ------
 
+        * Added CURLOPT_ACCEPT_ENCODING and CURLOPT_TRANSFER_ENCODING
+          options (libcurl 7.21.6+).
+
         * OPENSOCKETFUNCTION callback for AF_UNIX sockets was mistakenly
           invoked with the address as a `string' rather than `bytes' on
           Python 3. The callback now receives a `bytes' instance as was
