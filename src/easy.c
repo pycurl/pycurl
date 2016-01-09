@@ -609,7 +609,11 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
         {
             struct sockaddr_un* sun = (struct sockaddr_un*)saddr;
 
+#if PY_MAJOR_VERSION >= 3
+            res_obj = Py_BuildValue("y", sun->sun_path);
+#else
             res_obj = Py_BuildValue("s", sun->sun_path);
+#endif
         }
         break;
 #endif
