@@ -41,3 +41,10 @@ method, as appropriate::
 
     curl.setopt(curl.READDATA, reader)
     curl.setopt(curl.READFUNCTION, reader.read)
+
+
+``CURLINFO_TLS_SESSION``
+------------------------
+
+It is unclear how the SSL context should be exposed to Python code.
+This option can be implemented if it finds a use case.
