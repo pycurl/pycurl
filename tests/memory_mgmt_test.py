@@ -234,7 +234,11 @@ class MemoryMgmtTest(unittest.TestCase):
 
     def test_progressfunction_collection(self):
         self.check_callback(pycurl.PROGRESSFUNCTION)
-    
+
+    @util.min_libcurl(7, 32, 0)
+    def test_xferinfofunction_collection(self):
+        self.check_callback(pycurl.XFERINFOFUNCTION)
+
     def test_debugfunction_collection(self):
         self.check_callback(pycurl.DEBUGFUNCTION)
 

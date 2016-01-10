@@ -354,6 +354,9 @@ typedef struct CurlObject {
     PyObject *h_cb;
     PyObject *r_cb;
     PyObject *pro_cb;
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 32, 0)
+    PyObject *xferinfo_cb;
+#endif
     PyObject *debug_cb;
     PyObject *ioctl_cb;
     PyObject *opensocket_cb;
