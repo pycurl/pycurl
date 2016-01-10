@@ -715,6 +715,9 @@ initpycurl(void)
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 42, 0)
     insint_c(d, "PATH_AS_IS", CURLOPT_PATH_AS_IS);
 #endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 43, 0)
+    insint_c(d, "PIPEWAIT", CURLOPT_PIPEWAIT);
+#endif
     insint_c(d, "HTTPPOST", CURLOPT_HTTPPOST);
     insint_c(d, "SSLCERT", CURLOPT_SSLCERT);
     insint_c(d, "SSLCERTPASSWD", CURLOPT_SSLCERTPASSWD);

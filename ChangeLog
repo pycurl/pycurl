@@ -1,6 +1,8 @@
 master
 ------
 
+        * Added CURLOPT_PIPEWAIT (libcurl 7.43.0+).
+
         * Added CURLOPT_PATH_AS_IS (libcurl 7.42.0+).
 
         * Added CURLOPT_PROXYHEADER and CURLOPT_HEADEROPT as well as

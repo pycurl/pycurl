@@ -384,3 +384,7 @@ class OptionConstantsSettingTest(unittest.TestCase):
     @util.min_libcurl(7, 42, 0)
     def test_path_as_is(self):
         self.curl.setopt(self.curl.PATH_AS_IS, True)
+
+    @util.min_libcurl(7, 43, 0)
+    def test_pipewait(self):
+        self.curl.setopt(self.curl.PIPEWAIT, True)
