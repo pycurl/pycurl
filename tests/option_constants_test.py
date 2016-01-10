@@ -380,3 +380,7 @@ class OptionConstantsSettingTest(unittest.TestCase):
     def test_headeropt(self):
         self.curl.setopt(self.curl.HEADEROPT, self.curl.HEADER_UNIFIED)
         self.curl.setopt(self.curl.HEADEROPT, self.curl.HEADER_SEPARATE)
+
+    @util.min_libcurl(7, 42, 0)
+    def test_path_as_is(self):
+        self.curl.setopt(self.curl.PATH_AS_IS, True)

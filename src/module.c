@@ -712,6 +712,9 @@ initpycurl(void)
     insint_c(d, "PROXYHEADER", CURLOPT_PROXYHEADER);
     insint_c(d, "HEADEROPT", CURLOPT_HEADEROPT);
 #endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 42, 0)
+    insint_c(d, "PATH_AS_IS", CURLOPT_PATH_AS_IS);
+#endif
     insint_c(d, "HTTPPOST", CURLOPT_HTTPPOST);
     insint_c(d, "SSLCERT", CURLOPT_SSLCERT);
     insint_c(d, "SSLCERTPASSWD", CURLOPT_SSLCERTPASSWD);
