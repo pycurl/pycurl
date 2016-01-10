@@ -49,6 +49,9 @@ else:
     text_type = unicode
     binary_type = str
 
+    if False:
+        # pacify pyflakes
+        long = int
     long_int = long
 
 def version_less_than_spec(version_tuple, spec_tuple):
