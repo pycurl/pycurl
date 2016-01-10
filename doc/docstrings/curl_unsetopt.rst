@@ -4,7 +4,7 @@ Reset curl session option to its default value.
 
 Only some curl options may be reset via this method.
 
-libcurl does not provide a way to reset a single option to its default value;
+libcurl does not provide a general way to reset a single option to its default value;
 :py:meth:`pycurl.Curl.reset` resets all options to their default values,
 otherwise :py:meth:`pycurl.Curl.setopt` must be called with whatever value
 is the default. For convenience, PycURL provides this unsetopt method

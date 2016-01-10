@@ -88,7 +88,7 @@ For example, ``pycurl.VERBOSE`` has the value 42, and may be set as follows::
 
     c.setopt(42, 1)
 
-*setopt* can reset an option to its default value, performing the job of
+*setopt* can reset some options to their default value, performing the job of
 :py:meth:`pycurl.Curl.unsetopt`, if ``None`` is passed
 for the option value. The following two calls are equivalent::
 
