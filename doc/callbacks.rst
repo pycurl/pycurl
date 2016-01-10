@@ -17,10 +17,8 @@ concurrently with the pycurl callbacks compared to the libcurl callbacks.
 This is to allow different callback functions to be associated with different
 Curl objects. More specifically, ``WRITEDATA`` cannot be used with
 ``WRITEFUNCTION``, ``READDATA`` cannot be used with ``READFUNCTION``,
-``WRITEHEADER`` cannot be used with ``HEADERFUNCTION``,
-``IOCTLDATA``
-cannot be used with ``IOCTLFUNCTION``, and ``DEBUGDATA`` cannot be used with
-``DEBUGFUNCTION``. In practice, these limitations can be overcome by having a
+``WRITEHEADER`` cannot be used with ``HEADERFUNCTION``.
+In practice, these limitations can be overcome by having a
 callback function be a class instance method and rather use the class
 instance attributes to store per object data such as files used in the
 callbacks.

@@ -1,6 +1,10 @@
 master
 ------
 
+        * CURLOPT_IOCTLDATA option support has been removed.
+          This option is used internally by PycURL and is not settable by
+          applications.
+
         * HTTPHEADER and PROXYHEADER options can now be unset.
 
         * Added CURLPIPE_* constants (libcurl 7.43.0+).
