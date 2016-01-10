@@ -1,6 +1,9 @@
 master
 ------
 
+        * Added CURLOPT_PROXYHEADER and CURLOPT_HEADEROPT as well as
+          CURLHEADER_UNIFIED and CURLHEADER_SEPARATE (libcurl 7.37.0+).
+
         * Added CURLOPT_EXPECT_100_TIMEOUT_MS (libcurl 7.36.0+).
 
         * Added CURLOPT_XFERINFOFUNCTION (libcurl 7.32.0+).

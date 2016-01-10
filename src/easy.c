@@ -352,6 +352,9 @@ util_curl_close(CurlObject *self)
 #undef SFREE
 #define SFREE(v)   if ((v) != NULL) (curl_slist_free_all(v), (v) = NULL)
     SFREE(self->httpheader);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
+    SFREE(self->proxyheader);
+#endif
     SFREE(self->http200aliases);
     SFREE(self->quote);
     SFREE(self->postquote);
@@ -1335,6 +1338,9 @@ do_curl_reset(CurlObject *self)
 #undef SFREE
 #define SFREE(v)   if ((v) != NULL) (curl_slist_free_all(v), (v) = NULL)
     SFREE(self->httpheader);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
+    SFREE(self->proxyheader);
+#endif
     SFREE(self->http200aliases);
     SFREE(self->quote);
     SFREE(self->postquote);
@@ -1753,6 +1759,11 @@ do_curl_setopt_list(CurlObject *self, int option, int which, PyObject *obj)
     case CURLOPT_HTTPHEADER:
         old_slist = &self->httpheader;
         break;
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
+    case CURLOPT_PROXYHEADER:
+        old_slist = &self->proxyheader;
+        break;
+#endif
     case CURLOPT_POSTQUOTE:
         old_slist = &self->postquote;
         break;

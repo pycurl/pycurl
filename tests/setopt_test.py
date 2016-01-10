@@ -6,6 +6,8 @@ import pycurl
 import unittest
 import nose.tools
 
+from . import util
+
 class SetoptTest(unittest.TestCase):
     def setUp(self):
         self.curl = pycurl.Curl()
@@ -36,7 +38,24 @@ class SetoptTest(unittest.TestCase):
     @nose.tools.raises(TypeError)
     def test_float_value_for_integer_option(self):
         self.curl.setopt(pycurl.VERBOSE, 1.0)
-    
-    def test_list_value(self):
-        # expect no exceptions raised
-        self.curl.setopt(pycurl.HTTPHEADER, ['Accept:'])
+
+    def test_httpheader_list(self):
+        self.curl.setopt(self.curl.HTTPHEADER, ['Accept:'])
+
+    def test_httpheader_tuple(self):
+        self.curl.setopt(self.curl.HTTPHEADER, ('Accept:',))
+
+    def test_httpheader_unicode(self):
+        self.curl.setopt(self.curl.HTTPHEADER, (u'Accept:',))
+
+    @util.min_libcurl(7, 37, 0)
+    def test_proxyheader_list(self):
+        self.curl.setopt(self.curl.PROXYHEADER, ['Accept:'])
+
+    @util.min_libcurl(7, 37, 0)
+    def test_proxyheader_tuple(self):
+        self.curl.setopt(self.curl.PROXYHEADER, ('Accept:',))
+
+    @util.min_libcurl(7, 37, 0)
+    def test_proxyheader_unicode(self):
+        self.curl.setopt(self.curl.PROXYHEADER, (u'Accept:',))

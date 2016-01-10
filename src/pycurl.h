@@ -338,6 +338,9 @@ typedef struct CurlObject {
     /* List of INC'ed references associated with httppost. */
     PyObject *httppost_ref_list;
     struct curl_slist *httpheader;
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
+    struct curl_slist *proxyheader;
+#endif
     struct curl_slist *http200aliases;
     struct curl_slist *quote;
     struct curl_slist *postquote;

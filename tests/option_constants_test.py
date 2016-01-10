@@ -375,3 +375,8 @@ class OptionConstantsSettingTest(unittest.TestCase):
     @util.min_libcurl(7, 36, 0)
     def test_expect_100_timeout_ms(self):
         self.curl.setopt(self.curl.EXPECT_100_TIMEOUT_MS, 100)
+
+    @util.min_libcurl(7, 37, 0)
+    def test_headeropt(self):
+        self.curl.setopt(self.curl.HEADEROPT, self.curl.HEADER_UNIFIED)
+        self.curl.setopt(self.curl.HEADEROPT, self.curl.HEADER_SEPARATE)

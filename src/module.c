@@ -708,6 +708,10 @@ initpycurl(void)
     insint_c(d, "POSTFIELDSIZE", CURLOPT_POSTFIELDSIZE_LARGE);  /* _LARGE ! */
     insint_c(d, "COOKIE", CURLOPT_COOKIE);
     insint_c(d, "HTTPHEADER", CURLOPT_HTTPHEADER);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
+    insint_c(d, "PROXYHEADER", CURLOPT_PROXYHEADER);
+    insint_c(d, "HEADEROPT", CURLOPT_HEADEROPT);
+#endif
     insint_c(d, "HTTPPOST", CURLOPT_HTTPPOST);
     insint_c(d, "SSLCERT", CURLOPT_SSLCERT);
     insint_c(d, "SSLCERTPASSWD", CURLOPT_SSLCERTPASSWD);
@@ -984,6 +988,11 @@ initpycurl(void)
     insint_c(d, "SSH_AUTH_HOST", CURLSSH_AUTH_HOST);
     insint_c(d, "SSH_AUTH_KEYBOARD", CURLSSH_AUTH_KEYBOARD);
     insint_c(d, "SSH_AUTH_DEFAULT", CURLSSH_AUTH_DEFAULT);
+
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
+    insint_c(d, "HEADER_UNIFIED", CURLHEADER_UNIFIED);
+    insint_c(d, "HEADER_SEPARATE", CURLHEADER_SEPARATE);
+#endif
 
 #ifdef HAVE_CURL_7_19_6_OPTS
     /* curl_khtype constants */
