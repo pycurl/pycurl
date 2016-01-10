@@ -1216,7 +1216,9 @@ initpycurl(void)
 
     /* Initialize callback locks if ssl is enabled */
 #if defined(PYCURL_NEED_SSL_TSL)
-    pycurl_ssl_init();
+    if (pycurl_ssl_init() != 0) {
+        goto error;
+    }
 #endif
 
     collections_module = PyImport_ImportModule("collections");

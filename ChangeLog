@@ -1,6 +1,8 @@
 master
 ------
 
+        * Added failed memory allocation handling during SSL lock initialization.
+
         * CURLOPT_IOCTLDATA option support has been removed.
           This option is used internally by PycURL and is not settable by
           applications.
