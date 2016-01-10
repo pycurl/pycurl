@@ -46,7 +46,7 @@ class SetoptTest(unittest.TestCase):
         self.curl.setopt(self.curl.HTTPHEADER, ('Accept:',))
 
     def test_httpheader_unicode(self):
-        self.curl.setopt(self.curl.HTTPHEADER, (u'Accept:',))
+        self.curl.setopt(self.curl.HTTPHEADER, (util.u('Accept:'),))
 
     @util.min_libcurl(7, 37, 0)
     def test_proxyheader_list(self):
@@ -58,4 +58,4 @@ class SetoptTest(unittest.TestCase):
 
     @util.min_libcurl(7, 37, 0)
     def test_proxyheader_unicode(self):
-        self.curl.setopt(self.curl.PROXYHEADER, (u'Accept:',))
+        self.curl.setopt(self.curl.PROXYHEADER, (util.u('Accept:'),))
