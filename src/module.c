@@ -953,6 +953,12 @@ initpycurl(void)
     insint_m(d, "M_PIPELINING_SERVER_BL", CURLMOPT_PIPELINING_SERVER_BL);
 #endif
 
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 43, 0)
+    insint_m(d, "PIPE_NOTHING", CURLPIPE_NOTHING);
+    insint_m(d, "PIPE_HTTP1", CURLPIPE_HTTP1);
+    insint_m(d, "PIPE_MULTIPLEX", CURLPIPE_MULTIPLEX);
+#endif
+
     /* constants for setopt(IPRESOLVE, x) */
     insint_c(d, "IPRESOLVE_WHATEVER", CURL_IPRESOLVE_WHATEVER);
     insint_c(d, "IPRESOLVE_V4", CURL_IPRESOLVE_V4);
