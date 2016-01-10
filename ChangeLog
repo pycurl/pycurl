@@ -1,6 +1,8 @@
 master
 ------
 
+        * Added CURLOPT_EXPECT_100_TIMEOUT_MS (libcurl 7.36.0+).
+
         * Added CURLOPT_XFERINFOFUNCTION (libcurl 7.32.0+).
 
         * Added CURLM_ADDED_ALREADY error constant (libcurl 7.32.1+).

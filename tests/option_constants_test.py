@@ -371,3 +371,7 @@ class OptionConstantsSettingTest(unittest.TestCase):
     @util.min_libcurl(7, 25, 0)
     def test_tcp_keepintvl(self):
         self.curl.setopt(self.curl.TCP_KEEPINTVL, 100)
+
+    @util.min_libcurl(7, 36, 0)
+    def test_expect_100_timeout_ms(self):
+        self.curl.setopt(self.curl.EXPECT_100_TIMEOUT_MS, 100)
