@@ -42,7 +42,8 @@ values of different types:
     # Python 3.x only:
     c.setopt(pycurl.URL, b"http://www.python.org/")
 
-- ``HTTP200ALIASES``, ``HTTPHEADER``, ``POSTQUOTE``, ``PREQUOTE`` and
+- ``HTTP200ALIASES``, ``HTTPHEADER``, ``POSTQUOTE``, ``PREQUOTE``,
+   ``PROXYHEADER`` and
   ``QUOTE`` accept a list or tuple of strings. The same rules apply to these
   strings as do to string option values. Example::
 
