@@ -261,6 +261,9 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
         Py_CLEAR(self->h_cb);
         Py_CLEAR(self->r_cb);
         Py_CLEAR(self->pro_cb);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 32, 0)
+        Py_CLEAR(self->xferinfo_cb);
+#endif
         Py_CLEAR(self->debug_cb);
         Py_CLEAR(self->ioctl_cb);
         Py_CLEAR(self->seek_cb);
@@ -349,6 +352,9 @@ util_curl_close(CurlObject *self)
 #undef SFREE
 #define SFREE(v)   if ((v) != NULL) (curl_slist_free_all(v), (v) = NULL)
     SFREE(self->httpheader);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
+    SFREE(self->proxyheader);
+#endif
     SFREE(self->http200aliases);
     SFREE(self->quote);
     SFREE(self->postquote);
@@ -430,6 +436,9 @@ do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
     VISIT(self->h_cb);
     VISIT(self->r_cb);
     VISIT(self->pro_cb);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 32, 0)
+    VISIT(self->xferinfo_cb);
+#endif
     VISIT(self->debug_cb);
     VISIT(self->ioctl_cb);
     VISIT(self->seek_cb);
@@ -1156,6 +1165,59 @@ verbose_error:
 }
 
 
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 32, 0)
+static int
+xferinfo_callback(void *stream,
+                  curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)
+{
+    CurlObject *self;
+    PyObject *arglist;
+    PyObject *result = NULL;
+    int ret = 1;       /* assume error */
+    PYCURL_DECLARE_THREAD_STATE;
+
+    /* acquire thread */
+    self = (CurlObject *)stream;
+    if (!PYCURL_ACQUIRE_THREAD())
+        return ret;
+
+    /* check args */
+    if (self->xferinfo_cb == NULL)
+        goto silent_error;
+
+    /* run callback */
+    arglist = Py_BuildValue("(LLLL)",
+        (PY_LONG_LONG) dltotal, (PY_LONG_LONG) dlnow,
+        (PY_LONG_LONG) ultotal, (PY_LONG_LONG) ulnow);
+    if (arglist == NULL)
+        goto verbose_error;
+    result = PyEval_CallObject(self->xferinfo_cb, arglist);
+    Py_DECREF(arglist);
+    if (result == NULL)
+        goto verbose_error;
+
+    /* handle result */
+    if (result == Py_None) {
+        ret = 0;        /* None means success */
+    }
+    else if (PyInt_Check(result)) {
+        ret = (int) PyInt_AsLong(result);
+    }
+    else {
+        ret = PyObject_IsTrue(result);  /* FIXME ??? */
+    }
+
+silent_error:
+    Py_XDECREF(result);
+    PYCURL_RELEASE_THREAD();
+    return ret;
+verbose_error:
+    PyErr_Print();
+    goto silent_error;
+}
+#endif
+
+
 static int
 debug_callback(CURL *curlobj, curl_infotype type,
                char *buffer, size_t total_size, void *stream)
@@ -1276,6 +1338,9 @@ do_curl_reset(CurlObject *self)
 #undef SFREE
 #define SFREE(v)   if ((v) != NULL) (curl_slist_free_all(v), (v) = NULL)
     SFREE(self->httpheader);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
+    SFREE(self->proxyheader);
+#endif
     SFREE(self->http200aliases);
     SFREE(self->quote);
     SFREE(self->postquote);
@@ -1694,6 +1759,11 @@ do_curl_setopt_list(CurlObject *self, int option, int which, PyObject *obj)
     case CURLOPT_HTTPHEADER:
         old_slist = &self->httpheader;
         break;
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
+    case CURLOPT_PROXYHEADER:
+        old_slist = &self->proxyheader;
+        break;
+#endif
     case CURLOPT_POSTQUOTE:
         old_slist = &self->postquote;
         break;
@@ -2016,6 +2086,9 @@ do_curl_setopt_callable(CurlObject *self, int option, PyObject *obj)
     const curl_write_callback h_cb = header_callback;
     const curl_read_callback r_cb = read_callback;
     const curl_progress_callback pro_cb = progress_callback;
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 32, 0)
+    const curl_xferinfo_callback xferinfo_cb = xferinfo_callback;
+#endif
     const curl_debug_callback debug_cb = debug_callback;
     const curl_ioctl_callback ioctl_cb = ioctl_callback;
     const curl_opensocket_callback opensocket_cb = opensocket_callback;
@@ -2059,6 +2132,15 @@ do_curl_setopt_callable(CurlObject *self, int option, PyObject *obj)
         curl_easy_setopt(self->handle, CURLOPT_PROGRESSFUNCTION, pro_cb);
         curl_easy_setopt(self->handle, CURLOPT_PROGRESSDATA, self);
         break;
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 32, 0)
+    case CURLOPT_XFERINFOFUNCTION:
+        Py_INCREF(obj);
+        Py_CLEAR(self->xferinfo_cb);
+        self->xferinfo_cb = obj;
+        curl_easy_setopt(self->handle, CURLOPT_XFERINFOFUNCTION, xferinfo_cb);
+        curl_easy_setopt(self->handle, CURLOPT_XFERINFODATA, self);
+        break;
+#endif
     case CURLOPT_DEBUGFUNCTION:
         Py_INCREF(obj);
         Py_CLEAR(self->debug_cb);

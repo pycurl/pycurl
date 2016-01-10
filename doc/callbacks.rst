@@ -6,7 +6,8 @@ Callbacks
 For more fine-grained control, libcurl allows a number of callbacks to be
 associated with each connection. In pycurl, callbacks are defined using the
 ``setopt()`` method for Curl objects with options ``WRITEFUNCTION``,
-``READFUNCTION``, ``HEADERFUNCTION``, ``PROGRESSFUNCTION``, ``IOCTLFUNCTION``, or
+``READFUNCTION``, ``HEADERFUNCTION``, ``PROGRESSFUNCTION``,
+``XFERINFOFUNCTION``, ``IOCTLFUNCTION``, or
 ``DEBUGFUNCTION``. These options correspond to the libcurl options with ``CURLOPT_``
 prefix removed. A callback in pycurl must be either a regular Python
 function, a class method or an extension type function.
@@ -16,8 +17,8 @@ concurrently with the pycurl callbacks compared to the libcurl callbacks.
 This is to allow different callback functions to be associated with different
 Curl objects. More specifically, ``WRITEDATA`` cannot be used with
 ``WRITEFUNCTION``, ``READDATA`` cannot be used with ``READFUNCTION``,
-``WRITEHEADER`` cannot be used with ``HEADERFUNCTION``, ``PROGRESSDATA``
-cannot be used with ``PROGRESSFUNCTION``, ``IOCTLDATA``
+``WRITEHEADER`` cannot be used with ``HEADERFUNCTION``,
+``IOCTLDATA``
 cannot be used with ``IOCTLFUNCTION``, and ``DEBUGDATA`` cannot be used with
 ``DEBUGFUNCTION``. In practice, these limitations can be overcome by having a
 callback function be a class instance method and rather use the class
@@ -179,6 +180,28 @@ PROGRESSFUNCTION
     Callback for progress meter. Corresponds to `CURLOPT_PROGRESSFUNCTION`_
     in libcurl.
 
+    ``PROGRESSFUNCTION`` receives amounts as floating point arguments to the
+    callback. Since libcurl 7.32.0 ``PROGRESSFUNCTION`` is deprecated;
+    ``XFERINFOFUNCTION`` should be used instead which receives amounts as
+    long integers.
+
+    ``NOPROGRESS`` option must be set for False libcurl to invoke a
+    progress callback, as PycURL by default sets ``NOPROGRESS`` to True.
+
+
+XFERINFOFUNCTION
+----------------
+
+.. function:: XFERINFOFUNCTION(download total, downloaded, upload total, uploaded) -> status
+
+    Callback for progress meter. Corresponds to `CURLOPT_XFERINFOFUNCTION`_
+    in libcurl.
+
+    ``XFERINFOFUNCTION`` receives amounts as long integers.
+
+    ``NOPROGRESS`` option must be set for False libcurl to invoke a
+    progress callback, as PycURL by default sets ``NOPROGRESS`` to True.
+
 
 Example: Download/upload progress callback
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -197,8 +220,8 @@ document, the arguments related to uploads are zero, and vice versa.
 
     c = pycurl.Curl()
     c.setopt(c.URL, "http://slashdot.org/")
-    c.setopt(c.NOPROGRESS, 0)
-    c.setopt(c.PROGRESSFUNCTION, progress)
+    c.setopt(c.NOPROGRESS, False)
+    c.setopt(c.XFERINFOFUNCTION, progress)
     c.perform()
 
 

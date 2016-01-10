@@ -371,3 +371,20 @@ class OptionConstantsSettingTest(unittest.TestCase):
     @util.min_libcurl(7, 25, 0)
     def test_tcp_keepintvl(self):
         self.curl.setopt(self.curl.TCP_KEEPINTVL, 100)
+
+    @util.min_libcurl(7, 36, 0)
+    def test_expect_100_timeout_ms(self):
+        self.curl.setopt(self.curl.EXPECT_100_TIMEOUT_MS, 100)
+
+    @util.min_libcurl(7, 37, 0)
+    def test_headeropt(self):
+        self.curl.setopt(self.curl.HEADEROPT, self.curl.HEADER_UNIFIED)
+        self.curl.setopt(self.curl.HEADEROPT, self.curl.HEADER_SEPARATE)
+
+    @util.min_libcurl(7, 42, 0)
+    def test_path_as_is(self):
+        self.curl.setopt(self.curl.PATH_AS_IS, True)
+
+    @util.min_libcurl(7, 43, 0)
+    def test_pipewait(self):
+        self.curl.setopt(self.curl.PIPEWAIT, True)

@@ -23,14 +23,14 @@ class MemoryMgmtTest(unittest.TestCase):
             gc.collect()
 
             print("Tracked objects:", len(gc.get_objects()))
-    
+
     def maybe_print_objects(self):
         if debug:
             print("Tracked objects:", len(gc.get_objects()))
-    
+
     def tearDown(self):
         gc.set_debug(0)
-    
+
     def test_multi_collection(self):
         gc.collect()
         self.maybe_enable_debug()
@@ -42,7 +42,7 @@ class MemoryMgmtTest(unittest.TestCase):
             curl = pycurl.Curl()
             multi.add_handle(curl)
             t.append(curl)
-            
+
             c_id = id(curl)
             searches.append(c_id)
         m_id = id(multi)
@@ -63,12 +63,12 @@ class MemoryMgmtTest(unittest.TestCase):
         self.maybe_print_objects()
         gc.collect()
         self.maybe_print_objects()
-        
+
         objects = gc.get_objects()
         for search in searches:
             for object in objects:
                 assert search != id(object)
-    
+
     def test_multi_cycle(self):
         gc.collect()
         self.maybe_enable_debug()
@@ -80,7 +80,7 @@ class MemoryMgmtTest(unittest.TestCase):
             curl = pycurl.Curl()
             multi.add_handle(curl)
             t.append(curl)
-            
+
             c_id = id(curl)
             searches.append(c_id)
         m_id = id(multi)
@@ -95,12 +95,12 @@ class MemoryMgmtTest(unittest.TestCase):
         self.maybe_print_objects()
         gc.collect()
         self.maybe_print_objects()
-        
+
         objects = gc.get_objects()
         for search in searches:
             for object in objects:
                 assert search != id(object)
-    
+
     def test_share_collection(self):
         gc.collect()
         self.maybe_enable_debug()
@@ -112,7 +112,7 @@ class MemoryMgmtTest(unittest.TestCase):
             curl = pycurl.Curl()
             curl.setopt(curl.SHARE, share)
             t.append(curl)
-            
+
             c_id = id(curl)
             searches.append(c_id)
         m_id = id(share)
@@ -133,12 +133,12 @@ class MemoryMgmtTest(unittest.TestCase):
         self.maybe_print_objects()
         gc.collect()
         self.maybe_print_objects()
-        
+
         objects = gc.get_objects()
         for search in searches:
             for object in objects:
                 assert search != id(object)
-    
+
     def test_share_cycle(self):
         gc.collect()
         self.maybe_enable_debug()
@@ -150,7 +150,7 @@ class MemoryMgmtTest(unittest.TestCase):
             curl = pycurl.Curl()
             curl.setopt(curl.SHARE, share)
             t.append(curl)
-            
+
             c_id = id(curl)
             searches.append(c_id)
         m_id = id(share)
@@ -165,7 +165,7 @@ class MemoryMgmtTest(unittest.TestCase):
         self.maybe_print_objects()
         gc.collect()
         self.maybe_print_objects()
-        
+
         objects = gc.get_objects()
         for search in searches:
             for object in objects:
@@ -180,7 +180,7 @@ class MemoryMgmtTest(unittest.TestCase):
         m = pycurl.CurlMulti()
         c.close()
         del m, c
-    
+
     def test_cyclic_gc(self):
         gc.collect()
         c = pycurl.Curl()
@@ -212,7 +212,7 @@ class MemoryMgmtTest(unittest.TestCase):
             assert id(object) != c_id
         #if opts.verbose >= 1:
             #print("Tracked objects:", len(gc.get_objects()))
-    
+
     def test_refcounting_bug_in_reset(self):
         try:
             range_generator = xrange
@@ -222,31 +222,35 @@ class MemoryMgmtTest(unittest.TestCase):
         for i in range_generator(100000):
             c = pycurl.Curl()
             c.reset()
-    
+
     def test_writefunction_collection(self):
         self.check_callback(pycurl.WRITEFUNCTION)
-    
+
     def test_headerfunction_collection(self):
         self.check_callback(pycurl.HEADERFUNCTION)
-    
+
     def test_readfunction_collection(self):
         self.check_callback(pycurl.READFUNCTION)
-    
+
     def test_progressfunction_collection(self):
         self.check_callback(pycurl.PROGRESSFUNCTION)
-    
+
+    @util.min_libcurl(7, 32, 0)
+    def test_xferinfofunction_collection(self):
+        self.check_callback(pycurl.XFERINFOFUNCTION)
+
     def test_debugfunction_collection(self):
         self.check_callback(pycurl.DEBUGFUNCTION)
-    
+
     def test_ioctlfunction_collection(self):
         self.check_callback(pycurl.IOCTLFUNCTION)
-    
+
     def test_opensocketfunction_collection(self):
         self.check_callback(pycurl.OPENSOCKETFUNCTION)
-    
+
     def test_seekfunction_collection(self):
         self.check_callback(pycurl.SEEKFUNCTION)
-    
+
     def check_callback(self, callback):
         # Note: extracting a context manager seems to result in
         # everything being garbage collected even if the C code
@@ -254,11 +258,11 @@ class MemoryMgmtTest(unittest.TestCase):
         object_count = 0
         gc.collect()
         object_count = len(gc.get_objects())
-        
+
         c = pycurl.Curl()
         c.setopt(callback, lambda x: True)
         del c
-        
+
         gc.collect()
         new_object_count = len(gc.get_objects())
         # it seems that GC sometimes collects something that existed
@@ -268,18 +272,18 @@ class MemoryMgmtTest(unittest.TestCase):
     def test_postfields_unicode_memory_leak_gh252(self):
         # this test passed even before the memory leak was fixed,
         # not sure why.
-        
+
         c = pycurl.Curl()
         gc.collect()
         before_object_count = len(gc.get_objects())
 
         for i in range(100000):
             c.setopt(pycurl.POSTFIELDS, util.u('hello world'))
-        
+
         gc.collect()
         after_object_count = len(gc.get_objects())
         self.assert_(after_object_count <= before_object_count + 1000, 'Grew from %d to %d objects' % (before_object_count, after_object_count))
-    
+
     def test_form_bufferptr_memory_leak_gh267(self):
         c = pycurl.Curl()
         gc.collect()
@@ -294,7 +298,7 @@ class MemoryMgmtTest(unittest.TestCase):
                 ("post1", (pycurl.FORM_BUFFER, 'foo.txt', pycurl.FORM_BUFFERPTR, "data1")),
                 ("post2", (pycurl.FORM_BUFFER, 'bar.txt', pycurl.FORM_BUFFERPTR, "data2")),
             ])
-        
+
         gc.collect()
         after_object_count = len(gc.get_objects())
         self.assert_(after_object_count <= before_object_count + 1000, 'Grew from %d to %d objects' % (before_object_count, after_object_count))

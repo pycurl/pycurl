@@ -25,6 +25,12 @@ class MultiOptionConstantsTest(unittest.TestCase):
     def test_option_constant_on_curlmulti(self):
         assert hasattr(self.m, 'M_PIPELINING')
 
+    @util.min_libcurl(7, 43, 0)
+    def test_pipe_constants(self):
+        self.m.setopt(self.m.M_PIPELINING, self.m.PIPE_NOTHING)
+        self.m.setopt(self.m.M_PIPELINING, self.m.PIPE_HTTP1)
+        self.m.setopt(self.m.M_PIPELINING, self.m.PIPE_MULTIPLEX)
+
     @util.min_libcurl(7, 30, 0)
     def test_multi_pipeline_opts(self):
         assert hasattr(pycurl, 'M_MAX_HOST_CONNECTIONS')

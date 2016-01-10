@@ -1,6 +1,23 @@
 master
 ------
 
+        * Added CURLPIPE_* constants (libcurl 7.43.0+).
+
+        * Added CURLOPT_PIPEWAIT (libcurl 7.43.0+).
+
+        * Added CURLOPT_PATH_AS_IS (libcurl 7.42.0+).
+
+        * Added CURLOPT_PROXYHEADER and CURLOPT_HEADEROPT as well as
+          CURLHEADER_UNIFIED and CURLHEADER_SEPARATE (libcurl 7.37.0+).
+
+        * Added CURLOPT_EXPECT_100_TIMEOUT_MS (libcurl 7.36.0+).
+
+        * Added CURLOPT_XFERINFOFUNCTION (libcurl 7.32.0+).
+
+        * Added CURLM_ADDED_ALREADY error constant (libcurl 7.32.1+).
+
+        * Added remaining CURLE_* constants through libcurl 7.46.0.
+
         * Unbroken `curl' module import on Windows - apparently Windows now
           has a `signal' Python module but no `SIGPIPE' (patch by Gabi Davar).
 
