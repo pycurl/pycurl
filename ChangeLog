@@ -1,6 +1,8 @@
 master
 ------
 
+        * HTTPHEADER and PROXYHEADER options can now be unset.
+
         * Added CURLPIPE_* constants (libcurl 7.43.0+).
 
         * Added CURLOPT_PIPEWAIT (libcurl 7.43.0+).

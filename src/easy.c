@@ -1430,7 +1430,11 @@ util_curl_unsetopt(CurlObject *self, int option)
     case CURLOPT_SERVICE_NAME:
     case CURLOPT_PROXY_SERVICE_NAME:
 #endif
-        SETOPT((char *) 0);
+    case CURLOPT_HTTPHEADER:
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
+    case CURLOPT_PROXYHEADER:
+#endif
+        SETOPT((char *) NULL);
         break;
 
 #ifdef HAVE_CURLOPT_CERTINFO

@@ -6,7 +6,10 @@ import pycurl
 import unittest
 import nose.tools
 
+from . import appmanager
 from . import util
+
+setup_module, teardown_module = appmanager.setup(('app', 8380))
 
 class SetoptTest(unittest.TestCase):
     def setUp(self):
@@ -48,6 +51,34 @@ class SetoptTest(unittest.TestCase):
     def test_httpheader_unicode(self):
         self.curl.setopt(self.curl.HTTPHEADER, (util.u('Accept:'),))
 
+    def test_unset_httpheader(self):
+        self.curl.setopt(self.curl.HTTPHEADER, ('x-test: foo',))
+        self.curl.setopt(self.curl.URL, 'http://localhost:8380/header?h=x-test')
+        io = util.BytesIO()
+        self.curl.setopt(self.curl.WRITEDATA, io)
+        self.curl.perform()
+        self.assertEquals(util.b('foo'), io.getvalue())
+
+        self.curl.unsetopt(self.curl.HTTPHEADER)
+        io = util.BytesIO()
+        self.curl.setopt(self.curl.WRITEDATA, io)
+        self.curl.perform()
+        self.assertEquals(util.b(''), io.getvalue())
+
+    def test_set_httpheader_none(self):
+        self.curl.setopt(self.curl.HTTPHEADER, ('x-test: foo',))
+        self.curl.setopt(self.curl.URL, 'http://localhost:8380/header?h=x-test')
+        io = util.BytesIO()
+        self.curl.setopt(self.curl.WRITEDATA, io)
+        self.curl.perform()
+        self.assertEquals(util.b('foo'), io.getvalue())
+
+        self.curl.setopt(self.curl.HTTPHEADER, None)
+        io = util.BytesIO()
+        self.curl.setopt(self.curl.WRITEDATA, io)
+        self.curl.perform()
+        self.assertEquals(util.b(''), io.getvalue())
+
     @util.min_libcurl(7, 37, 0)
     def test_proxyheader_list(self):
         self.curl.setopt(self.curl.PROXYHEADER, ['Accept:'])
@@ -59,3 +90,11 @@ class SetoptTest(unittest.TestCase):
     @util.min_libcurl(7, 37, 0)
     def test_proxyheader_unicode(self):
         self.curl.setopt(self.curl.PROXYHEADER, (util.u('Accept:'),))
+
+    @util.min_libcurl(7, 37, 0)
+    def test_unset_proxyheader(self):
+        self.curl.unsetopt(self.curl.PROXYHEADER)
+
+    @util.min_libcurl(7, 37, 0)
+    def test_set_proxyheader_none(self):
+        self.curl.setopt(self.curl.PROXYHEADER, None)

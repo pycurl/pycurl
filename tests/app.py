@@ -78,7 +78,7 @@ def files():
 
 @app.route('/header')
 def header():
-    return bottle.request.headers[bottle.request.query['h']]
+    return bottle.request.headers.get(bottle.request.query['h'], '')
 
 # This is a hacky endpoint to test non-ascii text being given to libcurl
 # via headers.
