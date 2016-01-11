@@ -106,19 +106,33 @@ pycurl_ssl_id(void)
     return (unsigned long) PyThread_get_thread_ident();
 }
 
-PYCURL_INTERNAL void
+PYCURL_INTERNAL int
 pycurl_ssl_init(void)
 {
     int i, c = CRYPTO_num_locks();
 
     pycurl_openssl_tsl = PyMem_New(PyThread_type_lock, c);
+    if (pycurl_openssl_tsl == NULL) {
+        PyErr_NoMemory();
+        return -1;
+    }
+    memset(pycurl_openssl_tsl, 0, sizeof(PyThread_type_lock) * c);
 
     for (i = 0; i < c; ++i) {
         pycurl_openssl_tsl[i] = PyThread_allocate_lock();
+        if (pycurl_openssl_tsl[i] == NULL) {
+            for (--i; i >= 0; --i) {
+                PyThread_free_lock(pycurl_openssl_tsl[i]);
+            }
+            PyMem_Free(pycurl_openssl_tsl);
+            PyErr_NoMemory();
+            return -1;
+        }
     }
 
     CRYPTO_set_id_callback(pycurl_ssl_id);
     CRYPTO_set_locking_callback(pycurl_ssl_lock);
+    return 0;
 }
 
 PYCURL_INTERNAL void
@@ -180,10 +194,11 @@ static struct gcry_thread_cbs pycurl_gnutls_tsl = {
     pycurl_ssl_mutex_unlock
 };
 
-PYCURL_INTERNAL void
+PYCURL_INTERNAL int
 pycurl_ssl_init(void)
 {
     gcry_control(GCRYCTL_SET_THREAD_CBS, &pycurl_gnutls_tsl);
+    return 0;
 }
 
 PYCURL_INTERNAL void
@@ -214,16 +229,21 @@ share_lock_new(void)
 {
     int i;
     ShareLock *lock = PyMem_New(ShareLock, 1);
+    if (lock == NULL) {
+        PyErr_NoMemory();
+        return NULL;
+    }
 
-    assert(lock);
     for (i = 0; i < CURL_LOCK_DATA_LAST; ++i) {
         lock->locks[i] = PyThread_allocate_lock();
         if (lock->locks[i] == NULL) {
+            PyErr_NoMemory();
             goto error;
         }
     }
     return lock;
- error:
+
+error:
     for (--i; i >= 0; --i) {
         PyThread_free_lock(lock->locks[i]);
         lock->locks[i] = NULL;
@@ -266,7 +286,7 @@ share_unlock_callback(CURL *handle, curl_lock_data data, void *userptr)
 PYCURL_INTERNAL void
 pycurl_ssl_init(void)
 {
-    return;
+    return 0;
 }
 
 PYCURL_INTERNAL void

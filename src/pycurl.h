@@ -201,7 +201,7 @@ typedef int Py_ssize_t;
 #endif /* HAVE_CURL_SSL */
 
 #if defined(PYCURL_NEED_SSL_TSL)
-PYCURL_INTERNAL void pycurl_ssl_init(void);
+PYCURL_INTERNAL int pycurl_ssl_init(void);
 PYCURL_INTERNAL void pycurl_ssl_cleanup(void);
 #endif
 
@@ -434,13 +434,6 @@ PYCURL_INTERNAL void
 share_unlock_callback(CURL *handle, curl_lock_data data, void *userptr);
 
 #endif /* WITH_THREAD */
-
-#if defined(PYCURL_NEED_SSL_TSL)
-PYCURL_INTERNAL void
-pycurl_ssl_init(void);
-PYCURL_INTERNAL void
-pycurl_ssl_cleanup(void);
-#endif
 
 #if PY_MAJOR_VERSION >= 3
 PYCURL_INTERNAL PyObject *

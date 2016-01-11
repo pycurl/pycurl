@@ -23,7 +23,7 @@ Contents:
 
 .. toctree::
    :maxdepth: 2
-   
+
    release-notes
    install
    quickstart
@@ -35,6 +35,7 @@ Contents:
    curl
    unicode
    files
+   unimplemented
 
 
 Indices and tables

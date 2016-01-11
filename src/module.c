@@ -796,7 +796,6 @@ initpycurl(void)
     insint_c(d, "TCP_NODELAY", CURLOPT_TCP_NODELAY);
     insint_c(d, "FTPSSLAUTH", CURLOPT_FTPSSLAUTH);
     insint_c(d, "IOCTLFUNCTION", CURLOPT_IOCTLFUNCTION);
-    insint_c(d, "IOCTLDATA", CURLOPT_IOCTLDATA);
     insint_c(d, "OPENSOCKETFUNCTION", CURLOPT_OPENSOCKETFUNCTION);
 #if LIBCURL_VERSION_NUM >= 0x071507 /* check for 7.21.7 or greater */
     insint_c(d, "CLOSESOCKETFUNCTION", CURLOPT_CLOSESOCKETFUNCTION);
@@ -1217,7 +1216,9 @@ initpycurl(void)
 
     /* Initialize callback locks if ssl is enabled */
 #if defined(PYCURL_NEED_SSL_TSL)
-    pycurl_ssl_init();
+    if (pycurl_ssl_init() != 0) {
+        goto error;
+    }
 #endif
 
     collections_module = PyImport_ImportModule("collections");
