@@ -1,6 +1,9 @@
 master
 ------
 
+        * Added setopt_string method to Curl objects to set arbitrary
+          string options.
+
         * Switched to Bintray for hosting release distributions.
 
         * Added CURLOPT_DEFAULT_PROTOCOL (libcurl 7.45.0+).
