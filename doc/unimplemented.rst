@@ -48,3 +48,18 @@ method, as appropriate::
 
 It is unclear how the SSL context should be exposed to Python code.
 This option can be implemented if it finds a use case.
+
+
+
+Undocumented symbols
+--------------------
+
+Some symbols are present in libcurl's `symbols in versions`_ document but
+are not documented by libcurl. These symbols are not impemented by PycURL.
+
+As of this writing, the following symbols are thusly omitted:
+
+- ``CURLPAUSE_RECV_CONT``
+- ``CURLPAUSE_SEND_CONT``
+
+.. _symbols in versions: http://curl.haxx.se/libcurl/c/symbols-in-versions.html
