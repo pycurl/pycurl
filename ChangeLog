@@ -1,6 +1,10 @@
 master
 ------
 
+        * Added CURL_HTTP_VERSION_2_0, CURL_HTTP_VERSION_2 and
+          CURL_HTTP_VERSION_2TLS constants for CURLOPT_HTTP_VERSION
+          (various libcurl versions required for these).
+
         * winbuild.py can now build binary wheels on Windows.
 
         * Added failed memory allocation handling during SSL lock initialization.

@@ -388,3 +388,20 @@ class OptionConstantsSettingTest(unittest.TestCase):
     @util.min_libcurl(7, 43, 0)
     def test_pipewait(self):
         self.curl.setopt(self.curl.PIPEWAIT, True)
+
+    def test_http_version(self):
+        self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_NONE)
+        self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_1_0)
+        self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_1_1)
+
+    @util.min_libcurl(7, 33, 0)
+    def test_http_version_2_0(self):
+        self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_2_0)
+
+    @util.min_libcurl(7, 43, 0)
+    def test_http_version_2(self):
+        self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_2)
+
+    @util.min_libcurl(7, 47, 0)
+    def test_http_version_2tls(self):
+        self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_2TLS)
