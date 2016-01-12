@@ -167,6 +167,7 @@ That was a lot of code for something very straightforward. Unfortunately,
 as libcurl refrains from allocating memory for response data, it is on our
 application to perform this grunt work.
 
+
 Writing To A File
 -----------------
 
@@ -189,6 +190,7 @@ This code is available as ``examples/quickstart/write_file.py``.
 The important part is opening the file in binary mode - then response body
 can be written bytewise without decoding or encoding steps.
 
+
 Following Redirects
 -------------------
 
@@ -210,6 +212,7 @@ This code is available as ``examples/quickstart/follow_redirect.py``.
 As we did not set a write callback, the default libcurl and PycURL behavior
 to write response body to standard output takes effect.
 
+
 Setting Options
 ---------------
 
@@ -220,6 +223,7 @@ option names by removing the ``CURLOPT_`` prefix. Thus, ``CURLOPT_URL``
 becomes simply ``URL``.
 
 .. _curl_easy_setopt: http://curl.haxx.se/libcurl/c/curl_easy_setopt.html
+
 
 Examining Response
 ------------------
@@ -259,6 +263,7 @@ Thus, ``CURLINFO_RESPONSE_CODE`` becomes simply ``RESPONSE_CODE``.
 
 .. _curl_easy_getinfo: http://curl.haxx.se/libcurl/c/curl_easy_getinfo.html
 
+
 Sending Form Data
 -----------------
 
@@ -293,6 +298,7 @@ This code is available as ``examples/quickstart/form_post.py``.
 methods can be specified via ``CUSTOMREQUEST`` option::
 
     c.setopt(c.CUSTOMREQUEST, 'PATCH')
+
 
 File Upload
 -----------
