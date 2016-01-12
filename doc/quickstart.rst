@@ -73,6 +73,22 @@ Python 2 and Python 3 versions can be combined. Doing so requires decoding
 the response body as in Python 3 version. The code for the combined
 example can be found in ``examples/quickstart/get.py``.
 
+
+Troubleshooting
+---------------
+
+When things don't work as expected, use libcurl's ``VERBOSE`` option to
+receive lots of debugging output pertaining to the request::
+
+    c.setopt(c.VERBOSE, True)
+
+It is often helpful to compare verbose output from the program using PycURL
+with that of ``curl`` command line tool when the latter is invoked with
+``-v`` option::
+
+    curl -v http://pycurl.sourceforge.net/
+
+
 Examining Response Headers
 --------------------------
 
