@@ -414,3 +414,8 @@ class OptionConstantsSettingTest(unittest.TestCase):
         assert self.curl.SOCKOPT_OK is not None
         assert self.curl.SOCKOPT_ERROR is not None
         assert self.curl.SOCKOPT_ALREADY_CONNECTED is not None
+
+    @util.min_libcurl(7, 40, 0)
+    def test_proto_smb(self):
+        assert self.curl.PROTO_SMB is not None
+        assert self.curl.PROTO_SMBS is not None

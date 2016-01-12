@@ -900,6 +900,10 @@ initpycurl(void)
 #ifdef HAVE_CURL_7_21_2_OPTS
     insint_c(d, "PROTO_GOPHER", CURLPROTO_GOPHER);
 #endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 40, 0)
+    insint_c(d, "PROTO_SMB", CURLPROTO_SMB);
+    insint_c(d, "PROTO_SMBS", CURLPROTO_SMBS);
+#endif
     insint_c(d, "PROTO_ALL", CURLPROTO_ALL);
 #endif
 #ifdef HAVE_CURL_7_19_4_OPTS
