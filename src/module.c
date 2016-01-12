@@ -1014,6 +1014,12 @@ initpycurl(void)
     insint_c(d, "HEADER_SEPARATE", CURLHEADER_SEPARATE);
 #endif
 
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 5)
+    insint_c(d, "SOCKOPT_ALREADY_CONNECTED", CURL_SOCKOPT_ALREADY_CONNECTED);
+    insint_c(d, "SOCKOPT_ERROR", CURL_SOCKOPT_ERROR);
+    insint_c(d, "SOCKOPT_OK", CURL_SOCKOPT_OK);
+#endif
+
 #ifdef HAVE_CURL_7_19_6_OPTS
     /* curl_khtype constants */
     insint_c(d, "KHTYPE_UNKNOWN", CURLKHTYPE_UNKNOWN);

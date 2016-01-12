@@ -408,3 +408,9 @@ class OptionConstantsSettingTest(unittest.TestCase):
     @util.min_libcurl(7, 47, 0)
     def test_http_version_2tls(self):
         self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_2TLS)
+
+    @util.min_libcurl(7, 21, 5)
+    def test_sockopt_constants(self):
+        assert self.curl.SOCKOPT_OK is not None
+        assert self.curl.SOCKOPT_ERROR is not None
+        assert self.curl.SOCKOPT_ALREADY_CONNECTED is not None
