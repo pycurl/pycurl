@@ -37,7 +37,7 @@ activestate_perl_path = r'c:\dev\perl64'
 # which versions of python to build against
 python_versions = ['2.6.6', '2.7.10', '3.2.5', '3.3.5', '3.4.3', '3.5.0']
 # where pythons are installed
-python_path_template = 'c:/dev/%(bitness)s/python%(python_version)s/python'
+python_path_template = 'c:/dev/%(bitness)s/python%(python_release)s/python'
 vc_paths = {
     # where msvc 9 is installed, for python 2.6 through 3.2
     'vc9': None,
@@ -62,6 +62,10 @@ use_libssh2 = True
 libssh2_version = '1.6.0'
 # which version of libcurl to use, will be downloaded from internet
 libcurl_version = '7.46.0'
+# virtualenv version
+virtualenv_version = '13.1.2'
+# whether to build binary wheels
+build_wheels = True
 # pycurl version to build, we should know this ourselves
 pycurl_version = '7.21.5'
 
@@ -157,6 +161,26 @@ def rename_for_vc(basename, suffix):
         shutil.rmtree(suffixed_dir)
     os.rename(basename, suffixed_dir)
     return suffixed_dir
+
+class PythonRelease(str):
+    @property
+    def dotless(self):
+        return self.replace('.', '')
+
+def python_releases():
+    return [PythonRelease('.'.join(version.split('.')[:2]))
+        for version in python_versions]
+
+class PythonBinary(object):
+    def __init__(self, python_release, bitness):
+        self.python_release = python_release
+        self.bitness = bitness
+        
+    @property
+    def executable_path(self):
+        return python_path_template % dict(
+            python_release=self.python_release.dotless,
+            bitness=self.bitness)
 
 class Builder(object):
     def __init__(self, **kwargs):
@@ -522,8 +546,8 @@ class LibcurlBuilder(Builder):
 
 class PycurlBuilder(Builder):
     def __init__(self, **kwargs):
-        self.python_version = kwargs.pop('python_version')
-        kwargs['vc_version'] = python_vc_versions[self.python_version]
+        self.python_release = kwargs.pop('python_release')
+        kwargs['vc_version'] = python_vc_versions[self.python_release]
         super(PycurlBuilder, self).__init__(**kwargs)
         self.pycurl_version = kwargs.pop('pycurl_version')
         self.libcurl_version = kwargs.pop('libcurl_version')
@@ -538,9 +562,11 @@ class PycurlBuilder(Builder):
 
     @property
     def python_path(self):
-        return python_path_template % dict(
-            python_version=self.python_version.replace('.', ''),
-            bitness=self.bitness)
+        if build_wheels:
+            python_path = os.path.join(archives_path, 'venv-%s-%s' % (self.python_release, self.bitness), 'scripts', 'python')
+        else:
+            python_path = PythonBinary(self.python_release, self.bitness).executable_path
+        return python_path
 
     @property
     def platform_indicator(self):
@@ -570,7 +596,7 @@ class PycurlBuilder(Builder):
         dll_paths = [os.path.abspath(dll_path) for dll_path in dll_paths]
         with in_dir(os.path.join('pycurl-%s' % self.pycurl_version)):
             dest_lib_path = 'build/lib.%s-%s' % (self.platform_indicator,
-                self.python_version)
+                self.python_release)
             if not os.path.exists(dest_lib_path):
                 # exists for building additional targets for the same python version
                 os.makedirs(dest_lib_path)
@@ -588,19 +614,25 @@ class PycurlBuilder(Builder):
                     openssl_builder = OpensslBuilder(bitness=self.bitness, vc_version=self.vc_version, openssl_version=self.openssl_version)
                     f.write("set include=%%include%%;%s\n" % openssl_builder.include_path)
                     f.write("set lib=%%lib%%;%s\n" % openssl_builder.lib_path)
-                    f.write("%s setup.py %s --curl-dir=%s %s\n" % (
+                #if build_wheels:
+                    #f.write("call %s\n" % os.path.join('..', 'venv-%s-%s' % (self.python_release, self.bitness), 'Scripts', 'activate'))
+                if build_wheels:
+                    targets = targets + ['bdist_wheel']
+                f.write("%s setup.py %s --curl-dir=%s %s\n" % (
                     self.python_path, ' '.join(targets), libcurl_dir, libcurl_arg))
             if 'bdist' in targets:
                 zip_basename_orig = 'pycurl-%s.%s.zip' % (
                     self.pycurl_version, self.platform_indicator)
                 zip_basename_new = 'pycurl-%s.%s-py%s.zip' % (
-                    self.pycurl_version, self.platform_indicator, self.python_version)
+                    self.pycurl_version, self.platform_indicator, self.python_release)
                 with zipfile.ZipFile('dist/%s' % zip_basename_orig, 'r') as src_zip:
                     with zipfile.ZipFile('dist/%s' % zip_basename_new, 'w') as dest_zip:
                         for name in src_zip.namelist():
                             parts = name.split('/')
-                            while parts[0] != 'python%s' % self.python_version.replace('.', ''):
-                                parts.pop(0)
+                            while True:
+                                popped = parts.pop(0)
+                                if popped == 'python%s' % self.python_release.dotless or popped.startswith('venv-'):
+                                    break
                             assert len(parts) > 0
                             new_name = '/'.join(parts)
                             print('Recompressing %s -> %s' % (name, new_name))
@@ -654,16 +686,20 @@ def build():
                 subprocess.check_call([rm_path, '-rf', 'pycurl-%s' % pycurl_version])
             #subprocess.check_call([tar_path, 'xf', 'pycurl-%s.tar.gz' % pycurl_version])
             shutil.copytree('c:/dev/pycurl', 'pycurl-%s' % pycurl_version)
+            if build_wheels:
+                with in_dir('pycurl-%s' % pycurl_version):
+                    subprocess.check_call(['sed', '-i',
+                        's/from distutils.core import setup/from setuptools import setup/',
+                        'setup.py'])
 
         prepare_pycurl()
 
         for bitness in (32, 64):
-            python_releases = ['.'.join(version.split('.')[:2]) for version in python_versions]
-            for python_version in python_releases:
+            for python_release in python_releases():
                 targets = ['bdist', 'bdist_wininst', 'bdist_msi']
-                vc_version = python_vc_versions[python_version]
+                vc_version = python_vc_versions[python_release]
                 builder = PycurlBuilder(bitness=bitness, vc_version=vc_version,
-                    python_version=python_version, pycurl_version=pycurl_version,
+                    python_release=python_release, pycurl_version=pycurl_version,
                     use_zlib=use_zlib, zlib_version=zlib_version,
                     use_openssl=use_openssl, openssl_version=openssl_version,
                     use_cares=use_cares, cares_version=cares_version,
@@ -690,6 +726,30 @@ def download_bootstrap_python():
     url = 'https://www.python.org/ftp/python/%s/python-%s.msi' % (version, version)
     fetch(url)
 
+def install_virtualenv():
+    with in_dir(archives_path):
+        fetch('https://pypi.python.org/packages/source/v/virtualenv/virtualenv-%s.tar.gz' % virtualenv_version)
+        for bitness in (32, 64):
+            for python_release in python_releases():
+                print('Installing virtualenv %s for Python %s (%s bit)' % (virtualenv_version, python_release, bitness))
+                sys.stdout.flush()
+                untar('virtualenv-%s' % virtualenv_version)
+                with in_dir('virtualenv-%s' % virtualenv_version):
+                    python_binary = PythonBinary(python_release, bitness)
+                    cmd = [python_binary.executable_path, 'setup.py', 'install']
+                    subprocess.check_call(cmd)
+
+def create_virtualenvs():
+    for bitness in (32, 64):
+        for python_release in python_releases():
+            print('Creating a virtualenv for Python %s (%s bit)' % (python_release, bitness))
+            sys.stdout.flush()
+            with in_dir(archives_path):
+                python_binary = PythonBinary(python_release, bitness)
+                venv_basename = 'venv-%s-%s' % (python_release, bitness)
+                cmd = [python_binary.executable_path, '-m', 'virtualenv', venv_basename]
+                subprocess.check_call(cmd)
+
 if len(sys.argv) > 1:
     if sys.argv[1] == 'download':
         download_pythons()
@@ -697,6 +757,10 @@ if len(sys.argv) > 1:
         download_bootstrap_python()
     elif sys.argv[1] == 'builddeps':
         build_dependencies()
+    elif sys.argv[1] == 'installvirtualenv':
+        install_virtualenv()
+    elif sys.argv[1] == 'createvirtualenvs':
+        create_virtualenvs()
     else:
         print('Unknown command: %s' % sys.argv[1])
         exit(2)
