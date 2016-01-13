@@ -1,6 +1,8 @@
 master
 ------
 
+        * winbuild.py can now build binary wheels on Windows.
+
         * Added failed memory allocation handling during SSL lock initialization.
 
         * CURLOPT_IOCTLDATA option support has been removed.

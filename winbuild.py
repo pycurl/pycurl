@@ -64,6 +64,8 @@ libssh2_version = '1.6.0'
 libcurl_version = '7.46.0'
 # virtualenv version
 virtualenv_version = '13.1.2'
+# whether to build binary wheels
+build_wheels = True
 # pycurl version to build, we should know this ourselves
 pycurl_version = '7.21.5'
 
@@ -560,7 +562,11 @@ class PycurlBuilder(Builder):
 
     @property
     def python_path(self):
-        return PythonBinary(self.python_release, self.bitness).executable_path
+        if build_wheels:
+            python_path = os.path.join(archives_path, 'venv-%s-%s' % (self.python_release, self.bitness), 'scripts', 'python')
+        else:
+            python_path = PythonBinary(self.python_release, self.bitness).executable_path
+        return python_path
 
     @property
     def platform_indicator(self):
@@ -608,7 +614,11 @@ class PycurlBuilder(Builder):
                     openssl_builder = OpensslBuilder(bitness=self.bitness, vc_version=self.vc_version, openssl_version=self.openssl_version)
                     f.write("set include=%%include%%;%s\n" % openssl_builder.include_path)
                     f.write("set lib=%%lib%%;%s\n" % openssl_builder.lib_path)
-                    f.write("%s setup.py %s --curl-dir=%s %s\n" % (
+                #if build_wheels:
+                    #f.write("call %s\n" % os.path.join('..', 'venv-%s-%s' % (self.python_release, self.bitness), 'Scripts', 'activate'))
+                if build_wheels:
+                    targets = targets + ['bdist_wheel']
+                f.write("%s setup.py %s --curl-dir=%s %s\n" % (
                     self.python_path, ' '.join(targets), libcurl_dir, libcurl_arg))
             if 'bdist' in targets:
                 zip_basename_orig = 'pycurl-%s.%s.zip' % (
@@ -619,8 +629,10 @@ class PycurlBuilder(Builder):
                     with zipfile.ZipFile('dist/%s' % zip_basename_new, 'w') as dest_zip:
                         for name in src_zip.namelist():
                             parts = name.split('/')
-                            while parts[0] != 'python%s' % self.python_release.dotless:
-                                parts.pop(0)
+                            while True:
+                                popped = parts.pop(0)
+                                if popped == 'python%s' % self.python_release.dotless or popped.startswith('venv-'):
+                                    break
                             assert len(parts) > 0
                             new_name = '/'.join(parts)
                             print('Recompressing %s -> %s' % (name, new_name))
@@ -674,6 +686,11 @@ def build():
                 subprocess.check_call([rm_path, '-rf', 'pycurl-%s' % pycurl_version])
             #subprocess.check_call([tar_path, 'xf', 'pycurl-%s.tar.gz' % pycurl_version])
             shutil.copytree('c:/dev/pycurl', 'pycurl-%s' % pycurl_version)
+            if build_wheels:
+                with in_dir('pycurl-%s' % pycurl_version):
+                    subprocess.check_call(['sed', '-i',
+                        's/from distutils.core import setup/from setuptools import setup/',
+                        'setup.py'])
 
         prepare_pycurl()
 
