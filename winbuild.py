@@ -710,23 +710,24 @@ def download_bootstrap_python():
     fetch(url)
 
 def install_virtualenv():
-    fetch('https://pypi.python.org/packages/source/v/virtualenv/virtualenv-%s.tar.gz' % virtualenv_version)
-    for bitness in (32, 64):
-        for python_release in python_releases():
-            print('Installing virtualenv %s for Python %s (%s bit)' % (virtualenv_version, python_release, bitness))
-            sys.stdout.flush()
-            untar('virtualenv-%s' % virtualenv_version)
-            with in_dir('virtualenv-%s' % virtualenv_version):
-                python_binary = PythonBinary(python_release, bitness)
-                cmd = [python_binary.executable_path, 'setup.py', 'install']
-                subprocess.check_call(cmd)
+    with in_dir(archives_path):
+        fetch('https://pypi.python.org/packages/source/v/virtualenv/virtualenv-%s.tar.gz' % virtualenv_version)
+        for bitness in (32, 64):
+            for python_release in python_releases():
+                print('Installing virtualenv %s for Python %s (%s bit)' % (virtualenv_version, python_release, bitness))
+                sys.stdout.flush()
+                untar('virtualenv-%s' % virtualenv_version)
+                with in_dir('virtualenv-%s' % virtualenv_version):
+                    python_binary = PythonBinary(python_release, bitness)
+                    cmd = [python_binary.executable_path, 'setup.py', 'install']
+                    subprocess.check_call(cmd)
 
 def create_virtualenvs():
     for bitness in (32, 64):
         for python_release in python_releases():
             print('Creating a virtualenv for Python %s (%s bit)' % (python_release, bitness))
             sys.stdout.flush()
-            with in_dir('.'):
+            with in_dir(archives_path):
                 python_binary = PythonBinary(python_release, bitness)
                 venv_basename = 'venv-%s-%s' % (python_release, bitness)
                 cmd = [python_binary.executable_path, '-m', 'virtualenv', venv_basename]
