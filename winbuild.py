@@ -721,6 +721,17 @@ def install_virtualenv():
                 cmd = [python_binary.executable_path, 'setup.py', 'install']
                 subprocess.check_call(cmd)
 
+def create_virtualenvs():
+    for bitness in (32, 64):
+        for python_release in python_releases():
+            print('Creating a virtualenv for Python %s (%s bit)' % (python_release, bitness))
+            sys.stdout.flush()
+            with in_dir('.'):
+                python_binary = PythonBinary(python_release, bitness)
+                venv_basename = 'venv-%s-%s' % (python_release, bitness)
+                cmd = [python_binary.executable_path, '-m', 'virtualenv', venv_basename]
+                subprocess.check_call(cmd)
+
 if len(sys.argv) > 1:
     if sys.argv[1] == 'download':
         download_pythons()
@@ -730,6 +741,8 @@ if len(sys.argv) > 1:
         build_dependencies()
     elif sys.argv[1] == 'installvirtualenv':
         install_virtualenv()
+    elif sys.argv[1] == 'createvirtualenvs':
+        create_virtualenvs()
     else:
         print('Unknown command: %s' % sys.argv[1])
         exit(2)
