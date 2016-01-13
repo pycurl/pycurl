@@ -37,7 +37,7 @@ activestate_perl_path = r'c:\dev\perl64'
 # which versions of python to build against
 python_versions = ['2.6.6', '2.7.10', '3.2.5', '3.3.5', '3.4.3', '3.5.0']
 # where pythons are installed
-python_path_template = 'c:/dev/%(bitness)s/python%(python_version)s/python'
+python_path_template = 'c:/dev/%(bitness)s/python%(python_release)s/python'
 vc_paths = {
     # where msvc 9 is installed, for python 2.6 through 3.2
     'vc9': None,
@@ -522,8 +522,8 @@ class LibcurlBuilder(Builder):
 
 class PycurlBuilder(Builder):
     def __init__(self, **kwargs):
-        self.python_version = kwargs.pop('python_version')
-        kwargs['vc_version'] = python_vc_versions[self.python_version]
+        self.python_release = kwargs.pop('python_release')
+        kwargs['vc_version'] = python_vc_versions[self.python_release]
         super(PycurlBuilder, self).__init__(**kwargs)
         self.pycurl_version = kwargs.pop('pycurl_version')
         self.libcurl_version = kwargs.pop('libcurl_version')
@@ -539,7 +539,7 @@ class PycurlBuilder(Builder):
     @property
     def python_path(self):
         return python_path_template % dict(
-            python_version=self.python_version.replace('.', ''),
+            python_release=self.python_release.dotless,
             bitness=self.bitness)
 
     @property
@@ -570,7 +570,7 @@ class PycurlBuilder(Builder):
         dll_paths = [os.path.abspath(dll_path) for dll_path in dll_paths]
         with in_dir(os.path.join('pycurl-%s' % self.pycurl_version)):
             dest_lib_path = 'build/lib.%s-%s' % (self.platform_indicator,
-                self.python_version)
+                self.python_release)
             if not os.path.exists(dest_lib_path):
                 # exists for building additional targets for the same python version
                 os.makedirs(dest_lib_path)
@@ -594,12 +594,12 @@ class PycurlBuilder(Builder):
                 zip_basename_orig = 'pycurl-%s.%s.zip' % (
                     self.pycurl_version, self.platform_indicator)
                 zip_basename_new = 'pycurl-%s.%s-py%s.zip' % (
-                    self.pycurl_version, self.platform_indicator, self.python_version)
+                    self.pycurl_version, self.platform_indicator, self.python_release)
                 with zipfile.ZipFile('dist/%s' % zip_basename_orig, 'r') as src_zip:
                     with zipfile.ZipFile('dist/%s' % zip_basename_new, 'w') as dest_zip:
                         for name in src_zip.namelist():
                             parts = name.split('/')
-                            while parts[0] != 'python%s' % self.python_version.replace('.', ''):
+                            while parts[0] != 'python%s' % self.python_release.dotless:
                                 parts.pop(0)
                             assert len(parts) > 0
                             new_name = '/'.join(parts)
@@ -643,6 +643,15 @@ def build_dependencies():
                     libcurl_version=libcurl_version)
                 step(libcurl_builder.build, (), libcurl_builder.state_tag)
 
+class PythonRelease(string):
+    @property
+    def dotless():
+        return self.replace('.', '')
+
+def python_releases():
+    return [PythonRelease('.'.join(version.split('.')[:2]))
+        for version in python_versions]
+
 def build():
     # note: adds git_bin_path to PATH if necessary, and creates archives_path
     build_dependencies()
@@ -658,12 +667,11 @@ def build():
         prepare_pycurl()
 
         for bitness in (32, 64):
-            python_releases = ['.'.join(version.split('.')[:2]) for version in python_versions]
-            for python_version in python_releases:
+            for python_release in python_releases():
                 targets = ['bdist', 'bdist_wininst', 'bdist_msi']
-                vc_version = python_vc_versions[python_version]
+                vc_version = python_vc_versions[python_release]
                 builder = PycurlBuilder(bitness=bitness, vc_version=vc_version,
-                    python_version=python_version, pycurl_version=pycurl_version,
+                    python_release=python_release, pycurl_version=pycurl_version,
                     use_zlib=use_zlib, zlib_version=zlib_version,
                     use_openssl=use_openssl, openssl_version=openssl_version,
                     use_cares=use_cares, cares_version=cares_version,
