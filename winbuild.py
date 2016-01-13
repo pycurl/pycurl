@@ -62,6 +62,8 @@ use_libssh2 = True
 libssh2_version = '1.6.0'
 # which version of libcurl to use, will be downloaded from internet
 libcurl_version = '7.46.0'
+# virtualenv version
+virtualenv_version = '13.1.2'
 # pycurl version to build, we should know this ourselves
 pycurl_version = '7.21.5'
 
@@ -157,6 +159,26 @@ def rename_for_vc(basename, suffix):
         shutil.rmtree(suffixed_dir)
     os.rename(basename, suffixed_dir)
     return suffixed_dir
+
+class PythonRelease(str):
+    @property
+    def dotless(self):
+        return self.replace('.', '')
+
+def python_releases():
+    return [PythonRelease('.'.join(version.split('.')[:2]))
+        for version in python_versions]
+
+class PythonBinary(object):
+    def __init__(self, python_release, bitness):
+        self.python_release = python_release
+        self.bitness = bitness
+        
+    @property
+    def executable_path(self):
+        return python_path_template % dict(
+            python_release=self.python_release.dotless,
+            bitness=self.bitness)
 
 class Builder(object):
     def __init__(self, **kwargs):
@@ -538,9 +560,7 @@ class PycurlBuilder(Builder):
 
     @property
     def python_path(self):
-        return python_path_template % dict(
-            python_release=self.python_release.dotless,
-            bitness=self.bitness)
+        return PythonBinary(self.python_release, self.bitness).executable_path
 
     @property
     def platform_indicator(self):
@@ -643,15 +663,6 @@ def build_dependencies():
                     libcurl_version=libcurl_version)
                 step(libcurl_builder.build, (), libcurl_builder.state_tag)
 
-class PythonRelease(string):
-    @property
-    def dotless():
-        return self.replace('.', '')
-
-def python_releases():
-    return [PythonRelease('.'.join(version.split('.')[:2]))
-        for version in python_versions]
-
 def build():
     # note: adds git_bin_path to PATH if necessary, and creates archives_path
     build_dependencies()
@@ -698,6 +709,18 @@ def download_bootstrap_python():
     url = 'https://www.python.org/ftp/python/%s/python-%s.msi' % (version, version)
     fetch(url)
 
+def install_virtualenv():
+    fetch('https://pypi.python.org/packages/source/v/virtualenv/virtualenv-%s.tar.gz' % virtualenv_version)
+    for bitness in (32, 64):
+        for python_release in python_releases():
+            print('Installing virtualenv %s for Python %s (%s bit)' % (virtualenv_version, python_release, bitness))
+            sys.stdout.flush()
+            untar('virtualenv-%s' % virtualenv_version)
+            with in_dir('virtualenv-%s' % virtualenv_version):
+                python_binary = PythonBinary(python_release, bitness)
+                cmd = [python_binary.executable_path, 'setup.py', 'install']
+                subprocess.check_call(cmd)
+
 if len(sys.argv) > 1:
     if sys.argv[1] == 'download':
         download_pythons()
@@ -705,6 +728,8 @@ if len(sys.argv) > 1:
         download_bootstrap_python()
     elif sys.argv[1] == 'builddeps':
         build_dependencies()
+    elif sys.argv[1] == 'installvirtualenv':
+        install_virtualenv()
     else:
         print('Unknown command: %s' % sys.argv[1])
         exit(2)
