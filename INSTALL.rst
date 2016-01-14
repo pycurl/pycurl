@@ -115,35 +115,53 @@ To force pip to recompile pycurl, run::
 Windows
 -------
 
-Binary Packages
-^^^^^^^^^^^^^^^
+Official Packages
+^^^^^^^^^^^^^^^^^
 
-Binary packages are available in the `download area`_
-for some Windows and Python version combinations.
-Currently, 32-bit packages are available for Python 2.6, 2.7, 3.2 and 3.3.
-64-bit packages are not presently available.
+As of version 7.43.0, PycURL provides binary wheels for Windows. If you are
+using an official distribution of Python (i.e., one downloaded from
+https://www.python.org/), and you are using pip, you should be able to
+install PycURL by running:
 
-In order to use the official binary packages, your installation of Python must
-have been compiled against the same MS Visual C++ runtime that the packages
-have been compiled against. Importantly, which version of MSVC is used
-has changed in minor releases of Python, for example between 2.7.3 and 2.7.6.
-As such, you may need to upgrade or downgrade your version of Python to use
-official PycURL packages.
+    pip install pycurl
+
+If you are not using pip, EXE and MSI installers are available in the
+`download area`_.
+
+Both 32-bit and 64-bit builds of PycURL are available for Windows.
+
+
+Using PycURL With Custom Python Builds
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As of version 7.21.5, PycURL is linked statically against all of its
+dependencies except MSVCRT. This means that as long as your custom Python
+build uses the same version of MSVC as the corresponding official Python build
+as well as the same MSVCRT linking setting (/MD et. al.) you should be
+able to use an official PycURL package.
+
+If your Python build uses different MSVCRT settings or a different MSVC
+version from the official Python builds, you will need to compile PycURL
+from source.
 
 Currently official PycURL packages are built against the following Python
 versions:
 
 - 2.6.6
-- 2.7.6
+- 2.7.10
 - 3.2.5
 - 3.3.5
+- 3.4.3
+- 3.5.0
 
-If CRTs used by PycURL and Python do not match, you will receive a message
-like following when trying to import pycurl module::
+If the C runtime library (MSVCRT.DLL) versions used by PycURL and Python
+do not match, you will receive a message
+like the following one when trying to import ``pycurl`` module::
 
     ImportError: DLL load failed: The specified procedure could not be found.
 
-To troubleshoot this situation use the `application profiling feature`_ of
+To identify which MSVCRT version your Python uses use the
+`application profiling feature`_ of
 `Dependency Walker`_ and look for `msvcrt.dll variants`_ being loaded.
 You may find `the entire thread starting here`_ helpful.
 
@@ -153,11 +171,25 @@ You may find `the entire thread starting here`_ helpful.
 .. _the entire thread starting here: http://curl.haxx.se/mail/curlpython-2014-05/0000.html
 
 
-Installing From Source
-^^^^^^^^^^^^^^^^^^^^^^
+Building From Source
+^^^^^^^^^^^^^^^^^^^^
 
-First, you will need to obtain dependencies. These can be precompiled binaries
-or source packages that you are going to compile yourself.
+Building PycURL from source is not for the faint of heart due to the multitude
+of possible dependencies. Additionally different dependencies have different
+settings for MSVCRT usage, and an application must have all of its parts
+agreeing on a single setting. If you decide to build PycURL from source
+you should familiarize yourself with the ``winbuild.py``
+script - it is used to build the official binaries and tweaking it for
+your environment is likely to be less work than starting from scratch.
+
+If you are compiling PycURL from source it is recommended to compile all of its
+dependencies from source as well. Using precompiled libraries may lead to
+multiple MSVCRT versions mixed in the resulting PycURL binary, which will
+not be good.
+
+If PycURL is to be linked statically against its dependencies, OpenSSL must
+be patched to link to the DLL version of MSVCRT. There is a patch for this in
+``winbuild`` directory of PycURL source.
 
 For a minimum build you will just need libcurl source. Follow its Windows
 build instructions to build either a static or a DLL version of the library,
@@ -165,7 +197,7 @@ then configure PycURL as follows to use it::
 
     python setup.py --curl-dir=c:\dev\curl-7.33.0\builds\libcurl-vc-x86-release-dll-ipv6-sspi-spnego-winssl --use-libcurl-dll
 
-Note that ``--curl-dir`` does not point to libcurl source but rather to headers
+Note that ``--curl-dir`` must point not to libcurl source but rather to headers
 and compiled libraries.
 
 If libcurl and Python are not linked against the same exact C runtime
@@ -184,7 +216,7 @@ Additional Windows setup.py options:
   OpenSSL.
 - ``--with-ssl``: legacy alias for ``--with-openssl``.
 - ``--avoid-stdio``: on Windows, a process and each library it is using
-  may be linked to its own version of the C runtime (msvcrt).
+  may be linked to its own version of the C runtime (MSVCRT).
   FILE pointers from one C runtime may not be passed to another C runtime.
   This option prevents direct passing of FILE pointers from Python to libcurl,
   thus permitting Python and libcurl to be linked against different C runtimes.
@@ -216,17 +248,24 @@ it to build a single package you need.
 
 Prerequisites:
 
-- msysgit_.
+- `Git for Windows`_.
 - Appropriate `Python versions`_ installed.
 - MS Visual C++ 9/2008 for Python <= 3.2, MS Visual C++ 10/2010 for
-  Python >= 3.3. Express versions of Visual Studio work fine for this.
+  Python 3.3 or 3.4, MS Visual C++ 14/2015 for Python 3.5.
+  Express versions of Visual Studio work fine for this,
+  although getting 64 bit compilers to wok in some Express versions involves
+  jumping through several hoops.
+- NASM if building libcurl against OpenSSL.
+- ActivePerl if building libcurl against OpenSSL. The perl shipping with
+  Git for Windows handles forward and backslashes in paths in a way that is
+  incompatible with OpenSSL's build scripts.
 
-.. _msysgit: http://msysgit.github.io/
+.. _Git for Windows: https://git-for-windows.github.io/
 .. _Python versions: http://python.org/download/
 
 ``winbuild.py`` assumes all programs are installed in their default locations,
 if this is not the case edit it as needed. ``winbuild.py`` itself can be run
-with any Python it supports - 2.6, 2.7, 3.2, 3.3 or 3.4.
+with any Python it supports - 2.6, 2.7 or 3.2 through 3.5.
 
 .. _`download area`: http://pycurl.sourceforge.net/download/
 
