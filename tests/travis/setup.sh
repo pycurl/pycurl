@@ -17,10 +17,12 @@ wget_once() {
   fi
 }
 
+file_host=https://dl.bintray.com/pycurl/deps
+
 (cd &&
   mkdir -p opt &&
   cd opt &&
-  wget http://pycurl.sourceforge.net/travis-deps/bin-precise-64.tar.xz &&
+  wget $file_host/bin-precise-64.tar.xz &&
   tar xfJ bin-precise-64.tar.xz)
 
 export PATH=~/opt/bin:$PATH
@@ -29,12 +31,12 @@ if test -n "$USEPY"; then
   # need to launch tests.appmanager with a more modern python.
   # doing this for 2.4 and 2.5 now.
   pip install -r requirements-dev.txt
-  
+
   (cd && mkdir -p opt && cd opt &&
-    wget http://pycurl.sourceforge.net/travis-deps/python-"$USEPY"-precise-64.tar.xz &&
+    wget $file_host/python-"$USEPY"-precise-64.tar.xz &&
     tar xfJ python-"$USEPY"-precise-64.tar.xz)
   export PATH=$HOME/opt/python-$USEPY/bin:$PATH
-  
+
   mkdir archives && (
     cd archives &&
     wget_once https://pypi.python.org/packages/source/v/virtualenv/virtualenv-1.7.1.2.tar.gz &&
@@ -42,7 +44,7 @@ if test -n "$USEPY"; then
     cd virtualenv-1.7.1.2 &&
     ~/opt/python-$USEPY/bin/python$USEPY setup.py install
   )
-  
+
   virtualenv --version
   which virtualenv
   # travis places its virtualenv in /usr/local/bin.
@@ -94,18 +96,18 @@ if test -n "$USECURL"; then
     curl_suffix=-gssapi$curl_suffix
     USECURL=$(echo "$USECURL" |sed -e s/-gssapi//)
   fi
-  
+
   if test -n "$USEOPENSSL"; then
     (cd && mkdir -p opt && cd opt &&
-      wget http://pycurl.sourceforge.net/travis-deps/openssl-"$USEOPENSSL"-precise-64.tar.xz &&
+      wget $file_host/openssl-"$USEOPENSSL"-precise-64.tar.xz &&
       tar xfJ openssl-"$USEOPENSSL"-precise-64.tar.xz)
   fi
   if test -n "$USELIBRESSL"; then
     (cd && mkdir -p opt && cd opt &&
-      wget http://pycurl.sourceforge.net/travis-deps/libressl-"$USELIBRESSL"-precise-64.tar.xz &&
+      wget $file_host/libressl-"$USELIBRESSL"-precise-64.tar.xz &&
       tar xfJ libressl-"$USELIBRESSL"-precise-64.tar.xz)
   fi
-  
+
   if test -n "$USESSL"; then
     if test "$USESSL" != none; then
       curldirname=curl-"$USECURL"-"$USESSL"$curl_suffix
@@ -120,7 +122,7 @@ if test -n "$USECURL"; then
   (cd &&
     mkdir -p opt &&
     cd opt &&
-    wget http://pycurl.sourceforge.net/travis-deps/"$name" &&
+    wget $file_host/"$name" &&
     tar xfJ "$name")
   curl_flavor=`echo "$USECURL" |awk -F- '{print $2}'`
   "$HOME"/opt/$curldirname/bin/curl -V
