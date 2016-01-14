@@ -2311,7 +2311,6 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 {
     int option;
     PyObject *obj;
-    int res;
     int which;
 
     if (!PyArg_ParseTuple(args, "iO:setopt", &option, &obj))

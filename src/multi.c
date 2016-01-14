@@ -279,7 +279,6 @@ do_multi_setopt_charpp(CurlMultiObject *self, int option, int which, PyObject *o
     PyObject **encoded_objs = NULL;
     PyObject *encoded_obj = NULL;
     char *encoded_str;
-    int encoded_len;
     PyObject *rv = NULL;
 
     len = PyListOrTuple_Size(obj, which);
@@ -752,7 +751,7 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
         }
 
         /* Fetch the curl object that corresponds to the curl handle in the message */
-        res = curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, &co);
+        res = curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, (char **) &co);
         if (res != CURLE_OK || co == NULL) {
             Py_DECREF(err_list);
             Py_DECREF(ok_list);
