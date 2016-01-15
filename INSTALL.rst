@@ -311,3 +311,19 @@ backend, you can try rebuilding libcurl and PycURL against another SSL backend.
 
 .. _reported: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=515200
 .. _problems: https://bugs.launchpad.net/ubuntu/+source/pycurl/+bug/1111673
+
+
+SSL Certificate Bundle
+----------------------
+
+libcurl, and PycURL, by default verify validity of HTTPS servers' SSL
+certificates. Doing so requires a CA certificate bundle, which libcurl
+and most SSL libraries do not provide.
+
+Here_ is a good resource on how to build your own certificate bundle.
+certifie.com also has a `prebuilt certificate bundle`_.
+To use the certificate bundle, use ``CAINFO`` or ``CAPPATH`` PycURL
+options.
+
+.. _Here: http://certifie.com/ca-bundle/
+.. _prebuilt certificate bundle: http://certifie.com/ca-bundle/ca-bundle.crt.txt
