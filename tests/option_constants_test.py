@@ -388,3 +388,34 @@ class OptionConstantsSettingTest(unittest.TestCase):
     @util.min_libcurl(7, 43, 0)
     def test_pipewait(self):
         self.curl.setopt(self.curl.PIPEWAIT, True)
+
+    def test_http_version(self):
+        self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_NONE)
+        self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_1_0)
+        self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_1_1)
+
+    @nose.plugins.attrib.attr('http2')
+    @util.min_libcurl(7, 33, 0)
+    def test_http_version_2_0(self):
+        self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_2_0)
+
+    @nose.plugins.attrib.attr('http2')
+    @util.min_libcurl(7, 43, 0)
+    def test_http_version_2(self):
+        self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_2)
+
+    @nose.plugins.attrib.attr('http2')
+    @util.min_libcurl(7, 47, 0)
+    def test_http_version_2tls(self):
+        self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_2TLS)
+
+    @util.min_libcurl(7, 21, 5)
+    def test_sockopt_constants(self):
+        assert self.curl.SOCKOPT_OK is not None
+        assert self.curl.SOCKOPT_ERROR is not None
+        assert self.curl.SOCKOPT_ALREADY_CONNECTED is not None
+
+    @util.min_libcurl(7, 40, 0)
+    def test_proto_smb(self):
+        assert self.curl.PROTO_SMB is not None
+        assert self.curl.PROTO_SMBS is not None
