@@ -17,7 +17,7 @@ wget_once() {
   fi
 }
 
-file_host=https://dl.bintray.com/pycurl/deps
+file_host=https://github.com/pycurl/deps/raw/master
 
 (cd &&
   mkdir -p opt &&
