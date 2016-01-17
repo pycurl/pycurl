@@ -426,3 +426,7 @@ class OptionConstantsSettingTest(unittest.TestCase):
         self.curl.setopt(self.curl.TLSAUTH_TYPE, "SRP")
         self.curl.setopt(self.curl.TLSAUTH_USERNAME, "test")
         self.curl.setopt(self.curl.TLSAUTH_PASSWORD, "test")
+
+    @util.min_libcurl(7, 45, 0)
+    def test_default_protocol(self):
+        self.curl.setopt(self.curl.DEFAULT_PROTOCOL, "http")
