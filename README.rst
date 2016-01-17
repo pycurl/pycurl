@@ -1,41 +1,31 @@
-PycURL: Python interface to libcurl
-====================================
+PycURL -- A Python Interface To The cURL library
+================================================
 
 .. image:: https://api.travis-ci.org/pycurl/pycurl.png
 	   :target: https://travis-ci.org/pycurl/pycurl
 
-PycURL is a Python interface to `libcurl`_. PycURL can be used to fetch objects
-identified by a URL from a Python program, similar to the `urllib`_ Python module.
-PycURL is mature, very fast, and supports a lot of features.
 
-Overview
---------
+PycURL is a Python interface to `libcurl`_, the multiprotocol file
+transfer library. Similarly to the urllib_ Python module,
+PycURL can be used to fetch objects identified by a URL from a Python program.
+Beyond simple fetches however PycURL exposes most of the functionality of
+libcurl, including:
 
-- libcurl is a free and easy-to-use client-side URL transfer library, supporting
-  FTP, FTPS, HTTP, HTTPS, SCP, SFTP, TFTP, TELNET, DICT, LDAP, LDAPS, FILE, IMAP,
-  SMTP, POP3 and RTSP. libcurl supports SSL certificates, HTTP POST, HTTP PUT,
-  FTP uploading, HTTP form based upload, proxies, cookies, user+password
-  authentication  (Basic, Digest, NTLM, Negotiate, Kerberos4), file transfer
-  resume, http proxy tunneling and more!
+- Speed - libcurl is very fast and PycURL, being a thin wrapper above
+  libcurl, is very fast as well. PycURL `was benchmarked`_ to be several
+  times faster than requests_.
+- Features including multiple protocol support, SSL, authentication and
+  proxy options. PycURL supports most of libcurl's callbacks.
+- Multi_ and share_ interfaces.
+- Sockets used for network operations, permitting integration of PycURL
+  into the application's I/O loop (e.g., using Tornado_).
 
-- libcurl is highly portable, it builds and works identically on numerous
-  platforms, including Solaris, NetBSD, FreeBSD, OpenBSD, Darwin, HPUX, IRIX,
-  AIX, Tru64, Linux, UnixWare, HURD, Windows, Amiga, OS/2, BeOs, Mac OS X,
-  Ultrix, QNX, OpenVMS, RISC OS, Novell NetWare, DOS and more...
+.. _was benchmarked: http://stackoverflow.com/questions/15461995/python-requests-vs-pycurl-performance
+.. _requests: http://python-requests.org/
+.. _Multi: http://curl.haxx.se/libcurl/c/libcurl-multi.html
+.. _share: http://curl.haxx.se/libcurl/c/libcurl-share.html
+.. _Tornado: http://www.tornadoweb.org/
 
-- libcurl is `free`_, `thread-safe`_, `IPv6 compatible`_, `feature rich`_,
-  `well supported`_, `fast`_, `thoroughly documented`_ and is already used by
-  many known, big and successful `companies`_ and numerous `applications`_.
-
-.. _free: http://curl.haxx.se/docs/copyright.html
-.. _thread-safe: http://curl.haxx.se/libcurl/features.html#thread
-.. _`IPv6 compatible`: http://curl.haxx.se/libcurl/features.html#ipv6
-.. _`feature rich`: http://curl.haxx.se/libcurl/features.html#features
-.. _`well supported`: http://curl.haxx.se/libcurl/features.html#support
-.. _`fast`: http://curl.haxx.se/libcurl/features.html#fast
-.. _`thoroughly documented`: http://curl.haxx.se/libcurl/features.html#docs
-.. _companies: http://curl.haxx.se/docs/companies.html
-.. _applications: http://curl.haxx.se/libcurl/using/apps.html
 
 Requirements
 ------------
@@ -43,12 +33,34 @@ Requirements
 - Python 2.6, 2.7 or 3.1 through 3.5.
 - libcurl 7.19.0 or better.
 
+
 Installation
 ------------
 
 Please see INSTALL.rst for installation instructions. If installing from
 a Git checkout, please follow instruction in the "Git Checkout" section
-in INSTALL.rst.
+of INSTALL.rst.
+
+
+Support
+-------
+
+For support questions, please use `curl-and-python mailing list`_.
+`Mailing list archives`_ are available for your perusal as well.
+
+Although not an official support venue, `Stack Overflow`_ has been
+popular with PycURL users as well.
+
+Bugs can be reported `via GitHub`_. Please only use GitHub issues when you are
+certain you have found a bug in PycURL. If you do not have a patch to fix
+the bug, or at least a specific code fragment in PycURL that you believe is
+the cause, you should instead post your inquiry to the mailing list.
+
+.. _curl-and-python mailing list: http://cool.haxx.se/mailman/listinfo/curl-and-python
+.. _Stack Overflow: http://stackoverflow.com/questions/tagged/pycurl
+.. _Mailing list archives: http://curl.haxx.se/mail/list.cgi?list=curl-and-python
+.. _via GitHub: https://github.com/pycurl/pycurl/issues
+
 
 Documentation
 -------------
@@ -62,24 +74,6 @@ be installed, as well as pycurl extension module built as docstrings are
 extracted from it. Built documentation is stored in ``build/doc``
 subdirectory.
 
-Support
--------
-
-For support questions, please use `curl-and-python mailing list`_.
-`Mailing list archives`_ are available for your perusal as well.
-
-Although not an official support venue, `Stack Overflow`_ has been quite
-popular with PycURL users as well.
-
-Bugs can be reported `via GitHub`_. Please only use GitHub issues when you are
-certain you have found a bug in PycURL. If you do not have a patch to fix
-the bug, or at least a specific code fragment in PycURL that you believe is
-the cause, you should instead post your inquiry to the mailing list.
-
-.. _curl-and-python mailing list: http://cool.haxx.se/mailman/listinfo/curl-and-python
-.. _Stack Overflow: http://stackoverflow.com/questions/tagged/pycurl
-.. _Mailing list archives: http://curl.haxx.se/mail/list.cgi?list=curl-and-python
-.. _via GitHub: https://github.com/pycurl/pycurl/issues
 
 Automated Tests
 ---------------
@@ -104,6 +98,7 @@ vsftpd tests you must explicitly set PYCURL_VSFTPD_PATH variable like so::
 .. _nose: https://nose.readthedocs.org/
 .. _bottle: http://bottlepy.org/
 .. _vsftpd: http://vsftpd.beasts.org/
+
 
 Test Matrix
 -----------
@@ -137,6 +132,7 @@ and supported libcurl versions, then run pycurl tests against each combination.
 To see what the combinations are, look in
 `tests/matrix.py <tests/matrix.py>`_.
 
+
 Contribute
 ----------
 
@@ -160,6 +156,7 @@ For larger changes:
 
 Please contribute binary distributions for your system to the
 `downloads repository`_.
+
 
 License
 -------
