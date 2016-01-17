@@ -421,6 +421,7 @@ class OptionConstantsSettingTest(unittest.TestCase):
         assert self.curl.PROTO_SMBS is not None
 
     @util.min_libcurl(7, 21, 4)
+    @util.only_ssl_backends('openssl', 'gnutls')
     def test_tlsauth(self):
         self.curl.setopt(self.curl.TLSAUTH_TYPE, "SRP")
         self.curl.setopt(self.curl.TLSAUTH_USERNAME, "test")
