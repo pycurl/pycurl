@@ -661,7 +661,6 @@ setup_args = dict(
     maintainer="Oleg Pudeyev",
     maintainer_email="oleg@bsdpower.com",
     url="http://pycurl.sourceforge.net/",
-    download_url="http://pycurl.sourceforge.net/download/",
     license="LGPL/MIT",
     keywords=['curl', 'libcurl', 'urllib', 'wget', 'download', 'file transfer',
         'http', 'www'],

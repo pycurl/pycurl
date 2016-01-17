@@ -20,14 +20,13 @@ Release Process
 9. ``python setup.py sdist``.
 10. Manually test install the built package.
 11. Build windows packages using winbuild.py.
-12. Add windows packages to downloads repo on github.
+12. Add sdist and windows packages to downloads repo on github.
 13. Tag the new version.
 14. Register new version with pypi - ``python setup.py register``.
-15. Upload source distribution to pypi - ``python setup.py sdist upload``.
-    This recreates the source distribution.
-16. Add the source distribution to downloads repo on github.
-17. Rsync downloads repo to sourceforge.
-18. Rsync build/www/htdocs to sourceforge.
+15. Upload source distribution to pypi using twine.
+16. Upload windows wheels to pypi using twine.
+17. Upload windows exe installers to pypi using twine.
+18. Upload release files to bintray.
 19. Push tag to github pycurl repo.
 20. Announce release on mailing list.
 21. Link to announcement from website.

@@ -269,7 +269,7 @@ Prerequisites:
 if this is not the case edit it as needed. ``winbuild.py`` itself can be run
 with any Python it supports - 2.6, 2.7 or 3.2 through 3.5.
 
-.. _`download area`: http://pycurl.sourceforge.net/download/
+.. _`download area`: https://dl.bintray.com/pycurl/pycurl/
 
 
 Git Checkout
