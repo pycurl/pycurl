@@ -1583,6 +1583,11 @@ do_curl_setopt_string(CurlObject *self, int option, PyObject *obj)
 #if LIBCURL_VERSION_NUM >= 0x072800 /* check for 7.40.0 or greater */
     case CURLOPT_UNIX_SOCKET_PATH:
 #endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 4)
+    case CURLOPT_TLSAUTH_TYPE:
+    case CURLOPT_TLSAUTH_USERNAME:
+    case CURLOPT_TLSAUTH_PASSWORD:
+#endif
     case CURLOPT_KRBLEVEL:
         str = PyText_AsString_NoNUL(obj, &encoded_obj);
         if (str == NULL)
