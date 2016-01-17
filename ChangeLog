@@ -1,6 +1,8 @@
 master
 ------
 
+        * Added CURLOPT_DEFAULT_PROTOCOL (libcurl 7.45.0+).
+
         * Added CURLOPT_TLSAUTH_* options (libcurl 7.21.4+).
 
         * Added CURLPROTO_SMB and CURLPROTO_SMBS constants (libcurl 7.40.0+).
