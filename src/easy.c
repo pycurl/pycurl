@@ -1499,7 +1499,7 @@ error:
 
 
 static PyObject *
-do_curl_setopt_string(CurlObject *self, int option, PyObject *obj)
+do_curl_setopt_string_impl(CurlObject *self, int option, PyObject *obj)
 {
     char *str = NULL;
     Py_ssize_t len = -1;
@@ -2341,7 +2341,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
     /* Handle the case of string arguments */
     if (PyText_Check(obj)) {
-        return do_curl_setopt_string(self, option, obj);
+        return do_curl_setopt_string_impl(self, option, obj);
     }
 
     /* Handle the case of integer arguments */
@@ -2399,6 +2399,30 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     /* Failed to match any of the function signatures -- return error */
 error:
     PyErr_SetString(PyExc_TypeError, "invalid arguments to setopt");
+    return NULL;
+}
+
+
+static PyObject *
+do_curl_setopt_string(CurlObject *self, PyObject *args)
+{
+    int option;
+    PyObject *obj;
+    int which;
+
+    if (!PyArg_ParseTuple(args, "iO:setopt", &option, &obj))
+        return NULL;
+    if (check_curl_state(self, 1 | 2, "setopt") != 0)
+        return NULL;
+
+    /* Handle the case of string arguments */
+    if (PyText_Check(obj)) {
+        return do_curl_setopt_string_impl(self, option, obj);
+    }
+
+    /* Failed to match any of the function signatures -- return error */
+error:
+    PyErr_SetString(PyExc_TypeError, "invalid arguments to setopt_string");
     return NULL;
 }
 
@@ -2601,6 +2625,7 @@ PYCURL_INTERNAL PyMethodDef curlobject_methods[] = {
     {"pause", (PyCFunction)do_curl_pause, METH_VARARGS, curl_pause_doc},
     {"perform", (PyCFunction)do_curl_perform, METH_NOARGS, curl_perform_doc},
     {"setopt", (PyCFunction)do_curl_setopt, METH_VARARGS, curl_setopt_doc},
+    {"setopt_string", (PyCFunction)do_curl_setopt_string, METH_VARARGS, curl_setopt_string_doc},
     {"unsetopt", (PyCFunction)do_curl_unsetopt, METH_VARARGS, curl_unsetopt_doc},
     {"reset", (PyCFunction)do_curl_reset, METH_NOARGS, curl_reset_doc},
     {"__getstate__", (PyCFunction)do_curl_getstate, METH_NOARGS, NULL},

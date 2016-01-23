@@ -24,3 +24,5 @@ Curl Object
     .. automethod:: pycurl.Curl.pause
 
     .. automethod:: pycurl.Curl.errstr
+
+    .. automethod:: pycurl.Curl.setopt_string
