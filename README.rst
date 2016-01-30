@@ -66,7 +66,7 @@ Documentation
 -------------
 
 Documentation for the most recent PycURL release is available on
-`PycURL website <http://pycurl.sourceforge.net/doc/>`_.
+`PycURL website <http://pycurl.io/docs/latest/>`_.
 
 To build documentation from source, run ``make docs``.
 Building documentation requires `Sphinx <http://sphinx-doc.org/>`_ to
@@ -175,7 +175,7 @@ License
     included in the file COPYING-MIT.  You can redistribute and/or modify PycURL
     according to the terms of either license.
 
-.. _PycURL: http://pycurl.sourceforge.net/
+.. _PycURL: http://pycurl.io/
 .. _libcurl: http://curl.haxx.se/libcurl/
 .. _urllib: http://docs.python.org/library/urllib.html
 .. _`the repository`: https://github.com/pycurl/pycurl

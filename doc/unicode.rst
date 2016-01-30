@@ -99,7 +99,7 @@ in binary mode for the writes to work::
 
     import pycurl
     c = pycurl.Curl()
-    c.setopt(c.URL,'http://pycurl.sourceforge.net')
+    c.setopt(c.URL,'http://pycurl.io')
     # File opened in binary mode.
     with open('/dev/null','wb') as f:
         c.setopt(c.WRITEDATA, f)
@@ -131,7 +131,7 @@ object::
     import pycurl
     from StringIO import StringIO
     c = pycurl.Curl()
-    c.setopt(c.URL,'http://pycurl.sourceforge.net')
+    c.setopt(c.URL,'http://pycurl.io')
     buffer = StringIO()
     c.setopt(c.WRITEDATA, buffer)
     # Same result if using WRITEFUNCTION instead:
@@ -145,7 +145,7 @@ the response must be written to a ``BytesIO`` object::
     import pycurl
     from io import BytesIO
     c = pycurl.Curl()
-    c.setopt(c.URL,'http://pycurl.sourceforge.net')
+    c.setopt(c.URL,'http://pycurl.io')
     buffer = BytesIO()
     c.setopt(c.WRITEDATA, buffer)
     # Same result if using WRITEFUNCTION instead:
@@ -158,7 +158,7 @@ Attempting to use a ``StringIO`` object will produce an error::
     import pycurl
     from io import StringIO
     c = pycurl.Curl()
-    c.setopt(c.URL,'http://pycurl.sourceforge.net')
+    c.setopt(c.URL,'http://pycurl.io')
     buffer = StringIO()
     c.setopt(c.WRITEDATA, buffer)
     c.perform()
@@ -180,7 +180,7 @@ Python 2 and Python 3::
         # Python 2
         from StringIO import StringIO as BytesIO
     c = pycurl.Curl()
-    c.setopt(c.URL,'http://pycurl.sourceforge.net')
+    c.setopt(c.URL,'http://pycurl.io')
     buffer = BytesIO()
     c.setopt(c.WRITEDATA, buffer)
     c.perform()

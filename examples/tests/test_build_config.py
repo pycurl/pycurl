@@ -13,7 +13,7 @@ except ImportError:
         from StringIO import StringIO as BytesIO
 
 c = pycurl.Curl()
-c.setopt(c.URL, 'http://pycurl.sourceforge.net')
+c.setopt(c.URL, 'http://pycurl.io')
 #c.setopt(c.ENCODING, 'deflate')
 c.setopt(c.HTTPHEADER, ['Accept-Encoding: deflate'])
 body = BytesIO()
@@ -33,7 +33,7 @@ zlib.decompress(encoded, -zlib.MAX_WBITS)
 print('Server served deflated body')
 
 c.reset()
-c.setopt(c.URL, 'http://pycurl.sourceforge.net')
+c.setopt(c.URL, 'http://pycurl.io')
 c.setopt(c.ENCODING, 'deflate')
 body = BytesIO()
 c.setopt(c.WRITEFUNCTION, body.write)

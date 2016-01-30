@@ -10,7 +10,7 @@ except ImportError:
 
 buffer = BytesIO()
 c = pycurl.Curl()
-c.setopt(c.URL, 'http://pycurl.sourceforge.net/')
+c.setopt(c.URL, 'http://pycurl.io/')
 c.setopt(c.WRITEDATA, buffer)
 c.perform()
 

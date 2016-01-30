@@ -7,7 +7,7 @@ from StringIO import StringIO
 
 buffer = StringIO()
 c = pycurl.Curl()
-c.setopt(c.URL, 'http://pycurl.sourceforge.net/')
+c.setopt(c.URL, 'http://pycurl.io/')
 c.setopt(c.WRITEDATA, buffer)
 # For older PycURL versions:
 #c.setopt(c.WRITEFUNCTION, buffer.write)

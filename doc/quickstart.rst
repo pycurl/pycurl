@@ -19,7 +19,7 @@ Here is how we can retrieve a network resource in Python 2::
 
     buffer = StringIO()
     c = pycurl.Curl()
-    c.setopt(c.URL, 'http://pycurl.sourceforge.net/')
+    c.setopt(c.URL, 'http://pycurl.io/')
     c.setopt(c.WRITEDATA, buffer)
     c.perform()
     c.close()
@@ -51,7 +51,7 @@ Python 3 version is slightly more complicated::
 
     buffer = BytesIO()
     c = pycurl.Curl()
-    c.setopt(c.URL, 'http://pycurl.sourceforge.net/')
+    c.setopt(c.URL, 'http://pycurl.io/')
     c.setopt(c.WRITEDATA, buffer)
     c.perform()
     c.close()
@@ -86,7 +86,7 @@ It is often helpful to compare verbose output from the program using PycURL
 with that of ``curl`` command line tool when the latter is invoked with
 ``-v`` option::
 
-    curl -v http://pycurl.sourceforge.net/
+    curl -v http://pycurl.io/
 
 
 Examining Response Headers
@@ -134,7 +134,7 @@ examine the response headers::
 
     buffer = BytesIO()
     c = pycurl.Curl()
-    c.setopt(c.URL, 'http://pycurl.sourceforge.net')
+    c.setopt(c.URL, 'http://pycurl.io')
     c.setopt(c.WRITEFUNCTION, buffer.write)
     # Set our header function.
     c.setopt(c.HEADERFUNCTION, header_function)
@@ -180,7 +180,7 @@ for a change::
     # can write response body to it without decoding.
     with open('out.html', 'wb') as f:
         c = pycurl.Curl()
-        c.setopt(c.URL, 'http://pycurl.sourceforge.net/')
+        c.setopt(c.URL, 'http://pycurl.io/')
         c.setopt(c.WRITEDATA, f)
         c.perform()
         c.close()
@@ -239,7 +239,7 @@ accessible via ``getinfo`` call as follows::
 
     buffer = BytesIO()
     c = pycurl.Curl()
-    c.setopt(c.URL, 'http://pycurl.sourceforge.net/')
+    c.setopt(c.URL, 'http://pycurl.io/')
     c.setopt(c.WRITEDATA, buffer)
     c.perform()
 
@@ -279,7 +279,7 @@ beforehand::
         from urllib import urlencode
 
     c = pycurl.Curl()
-    c.setopt(c.URL, 'http://pycurl.sourceforge.net/tests/testpostvars.php')
+    c.setopt(c.URL, 'http://pycurl.io/tests/testpostvars.php')
 
     post_data = {'field': 'value'}
     # Form data must be provided already urlencoded.
@@ -309,7 +309,7 @@ use ``FORM_FILE`` as follows::
     import pycurl
 
     c = pycurl.Curl()
-    c.setopt(c.URL, 'http://pycurl.sourceforge.net/tests/testfileupload.php')
+    c.setopt(c.URL, 'http://pycurl.io/tests/testfileupload.php')
 
     c.setopt(c.HTTPPOST, [
         ('fileupload', (
@@ -330,7 +330,7 @@ For example, to set a different filename and content type::
     import pycurl
 
     c = pycurl.Curl()
-    c.setopt(c.URL, 'http://pycurl.sourceforge.net/tests/testfileupload.php')
+    c.setopt(c.URL, 'http://pycurl.io/tests/testfileupload.php')
 
     c.setopt(c.HTTPPOST, [
         ('fileupload', (
@@ -353,7 +353,7 @@ If the file data is in memory, use ``BUFFER``/``BUFFERPTR`` as follows::
     import pycurl
 
     c = pycurl.Curl()
-    c.setopt(c.URL, 'http://pycurl.sourceforge.net/tests/testfileupload.php')
+    c.setopt(c.URL, 'http://pycurl.io/tests/testfileupload.php')
 
     c.setopt(c.HTTPPOST, [
         ('fileupload', (
