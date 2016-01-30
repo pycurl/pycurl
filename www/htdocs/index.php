@@ -1,4 +1,8 @@
 <?php // vi:ts=4:et
+
+header('Location: http://pycurl.io/', true, 301);
+exit;
+
 echo "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
 $version = "7.21.5";
 $version_date = "Jan 5 2016"
