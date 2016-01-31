@@ -750,6 +750,9 @@ initpycurl(void)
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 31, 0)
     insint_c(d, "SASL_IR", CURLOPT_SASL_IR);
 #endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 33, 0)
+    insint_c(d, "XOAUTH2_BEARER", CURLOPT_XOAUTH2_BEARER);
+#endif
     insint_c(d, "SSL_VERIFYPEER", CURLOPT_SSL_VERIFYPEER);
     insint_c(d, "CAPATH", CURLOPT_CAPATH);
     insint_c(d, "CAINFO", CURLOPT_CAINFO);

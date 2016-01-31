@@ -1594,6 +1594,9 @@ do_curl_setopt_string_impl(CurlObject *self, int option, PyObject *obj)
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 34, 0)
     case CURLOPT_LOGIN_OPTIONS:
 #endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 33, 0)
+    case CURLOPT_XOAUTH2_BEARER:
+#endif
     case CURLOPT_KRBLEVEL:
         str = PyText_AsString_NoNUL(obj, &encoded_obj);
         if (str == NULL)

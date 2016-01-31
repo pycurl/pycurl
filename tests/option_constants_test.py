@@ -442,3 +442,7 @@ class OptionConstantsSettingTest(unittest.TestCase):
     @util.min_libcurl(7, 31, 0)
     def test_sasl_ir(self):
         self.curl.setopt(self.curl.SASL_IR, True)
+
+    @util.min_libcurl(7, 33, 0)
+    def test_xauth_bearer(self):
+        self.curl.setopt(self.curl.XOAUTH2_BEARER, 'test')
