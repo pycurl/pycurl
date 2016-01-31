@@ -434,3 +434,7 @@ class OptionConstantsSettingTest(unittest.TestCase):
     @util.min_libcurl(7, 20, 0)
     def test_ftp_use_pret(self):
         self.curl.setopt(self.curl.FTP_USE_PRET, True)
+
+    @util.min_libcurl(7, 34, 0)
+    def test_login_options(self):
+        self.curl.setopt(self.curl.LOGIN_OPTIONS, 'AUTH=NTLM')
