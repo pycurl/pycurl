@@ -1763,6 +1763,247 @@ do_curl_setopt_file_passthrough(CurlObject *self, int option, PyObject *obj)
 
 
 static PyObject *
+do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
+{
+    struct curl_httppost *post = NULL;
+    struct curl_httppost *last = NULL;
+    /* List of all references that have been INCed as a result of
+     * this operation */
+    PyObject *ref_params = NULL;
+    PyObject *nencoded_obj, *cencoded_obj, *oencoded_obj;
+    int which_httppost_item, which_httppost_option;
+    PyObject *httppost_option;
+    Py_ssize_t i, len;
+    int res;
+
+    len = PyListOrTuple_Size(obj, which);
+    if (len == 0)
+        Py_RETURN_NONE;
+
+    for (i = 0; i < len; i++) {
+        char *nstr = NULL, *cstr = NULL;
+        Py_ssize_t nlen = -1, clen = -1;
+        PyObject *listitem = PyListOrTuple_GetItem(obj, i, which);
+
+        which_httppost_item = PyListOrTuple_Check(listitem);
+        if (!which_httppost_item) {
+            curl_formfree(post);
+            Py_XDECREF(ref_params);
+            PyErr_SetString(PyExc_TypeError, "list items must be list or tuple objects");
+            return NULL;
+        }
+        if (PyListOrTuple_Size(listitem, which_httppost_item) != 2) {
+            curl_formfree(post);
+            Py_XDECREF(ref_params);
+            PyErr_SetString(PyExc_TypeError, "list or tuple must contain two elements (name, value)");
+            return NULL;
+        }
+        if (PyText_AsStringAndSize(PyListOrTuple_GetItem(listitem, 0, which_httppost_item),
+                &nstr, &nlen, &nencoded_obj) != 0) {
+            curl_formfree(post);
+            Py_XDECREF(ref_params);
+            PyErr_SetString(PyExc_TypeError, "list or tuple must contain a byte string or Unicode string with ASCII code points only as first element");
+            return NULL;
+        }
+        httppost_option = PyListOrTuple_GetItem(listitem, 1, which_httppost_item);
+        if (PyText_Check(httppost_option)) {
+            /* Handle strings as second argument for backwards compatibility */
+
+            if (PyText_AsStringAndSize(httppost_option, &cstr, &clen, &cencoded_obj)) {
+                curl_formfree(post);
+                Py_XDECREF(ref_params);
+                PyText_EncodedDecref(nencoded_obj);
+                CURLERROR_RETVAL();
+            }
+            /* INFO: curl_formadd() internally does memdup() the data, so
+             * embedded NUL characters _are_ allowed here. */
+            res = curl_formadd(&post, &last,
+                               CURLFORM_COPYNAME, nstr,
+                               CURLFORM_NAMELENGTH, (long) nlen,
+                               CURLFORM_COPYCONTENTS, cstr,
+                               CURLFORM_CONTENTSLENGTH, (long) clen,
+                               CURLFORM_END);
+            PyText_EncodedDecref(cencoded_obj);
+            if (res != CURLE_OK) {
+                curl_formfree(post);
+                Py_XDECREF(ref_params);
+                PyText_EncodedDecref(nencoded_obj);
+                CURLERROR_RETVAL();
+            }
+        }
+        /* assignment is intended */
+        else if ((which_httppost_option = PyListOrTuple_Check(httppost_option))) {
+            /* Supports content, file and content-type */
+            Py_ssize_t tlen = PyListOrTuple_Size(httppost_option, which_httppost_option);
+            int j, k, l;
+            struct curl_forms *forms = NULL;
+
+            /* Sanity check that there are at least two tuple items */
+            if (tlen < 2) {
+                curl_formfree(post);
+                Py_XDECREF(ref_params);
+                PyText_EncodedDecref(nencoded_obj);
+                PyErr_SetString(PyExc_TypeError, "list or tuple must contain at least one option and one value");
+                return NULL;
+            }
+
+            /* Allocate enough space to accommodate length options for content or buffers, plus a terminator. */
+            forms = PyMem_New(struct curl_forms, (tlen*2) + 1);
+            if (forms == NULL) {
+                curl_formfree(post);
+                Py_XDECREF(ref_params);
+                PyText_EncodedDecref(nencoded_obj);
+                PyErr_NoMemory();
+                return NULL;
+            }
+
+            /* Iterate all the tuple members pairwise */
+            for (j = 0, k = 0, l = 0; j < tlen; j += 2, l++) {
+                char *ostr;
+                Py_ssize_t olen;
+                int val;
+
+                if (j == (tlen-1)) {
+                    PyErr_SetString(PyExc_TypeError, "expected value");
+                    PyMem_Free(forms);
+                    curl_formfree(post);
+                    Py_XDECREF(ref_params);
+                    PyText_EncodedDecref(nencoded_obj);
+                    return NULL;
+                }
+                if (!PyInt_Check(PyListOrTuple_GetItem(httppost_option, j, which_httppost_option))) {
+                    PyErr_SetString(PyExc_TypeError, "option must be long");
+                    PyMem_Free(forms);
+                    curl_formfree(post);
+                    Py_XDECREF(ref_params);
+                    PyText_EncodedDecref(nencoded_obj);
+                    return NULL;
+                }
+                if (!PyText_Check(PyListOrTuple_GetItem(httppost_option, j+1, which_httppost_option))) {
+                    PyErr_SetString(PyExc_TypeError, "value must be a byte string or a Unicode string with ASCII code points only");
+                    PyMem_Free(forms);
+                    curl_formfree(post);
+                    Py_XDECREF(ref_params);
+                    PyText_EncodedDecref(nencoded_obj);
+                    return NULL;
+                }
+
+                val = PyLong_AsLong(PyListOrTuple_GetItem(httppost_option, j, which_httppost_option));
+                if (val != CURLFORM_COPYCONTENTS &&
+                    val != CURLFORM_FILE &&
+                    val != CURLFORM_FILENAME &&
+                    val != CURLFORM_CONTENTTYPE &&
+                    val != CURLFORM_BUFFER &&
+                    val != CURLFORM_BUFFERPTR)
+                {
+                    PyErr_SetString(PyExc_TypeError, "unsupported option");
+                    PyMem_Free(forms);
+                    curl_formfree(post);
+                    Py_XDECREF(ref_params);
+                    PyText_EncodedDecref(nencoded_obj);
+                    return NULL;
+                }
+                if (PyText_AsStringAndSize(PyListOrTuple_GetItem(httppost_option, j+1, which_httppost_option), &ostr, &olen, &oencoded_obj)) {
+                    /* exception should be already set */
+                    PyMem_Free(forms);
+                    curl_formfree(post);
+                    Py_XDECREF(ref_params);
+                    PyText_EncodedDecref(nencoded_obj);
+                    return NULL;
+                }
+                forms[k].option = val;
+                forms[k].value = ostr;
+                ++k;
+                if (val == CURLFORM_COPYCONTENTS) {
+                    /* Contents can contain \0 bytes so we specify the length */
+                    forms[k].option = CURLFORM_CONTENTSLENGTH;
+                    forms[k].value = (const char *)olen;
+                    ++k;
+                }
+                else if (val == CURLFORM_BUFFERPTR) {
+                    PyObject *obj = NULL;
+
+                    if (ref_params == NULL) {
+                        ref_params = PyList_New((Py_ssize_t)0);
+                        if (ref_params == NULL) {
+                            PyText_EncodedDecref(oencoded_obj);
+                            PyMem_Free(forms);
+                            curl_formfree(post);
+                            PyText_EncodedDecref(nencoded_obj);
+                            return NULL;
+                        }
+                    }
+
+                    /* Keep a reference to the object that holds the ostr buffer. */
+                    if (oencoded_obj == NULL) {
+                        obj = PyListOrTuple_GetItem(httppost_option, j+1, which_httppost_option);
+                    }
+                    else {
+                        obj = oencoded_obj;
+                    }
+
+                    /* Ensure that the buffer remains alive until curl_easy_cleanup() */
+                    if (PyList_Append(ref_params, obj) != 0) {
+                        PyText_EncodedDecref(oencoded_obj);
+                        PyMem_Free(forms);
+                        curl_formfree(post);
+                        Py_DECREF(ref_params);
+                        PyText_EncodedDecref(nencoded_obj);
+                        return NULL;
+                    }
+
+                    /* As with CURLFORM_COPYCONTENTS, specify the length. */
+                    forms[k].option = CURLFORM_BUFFERLENGTH;
+                    forms[k].value = (const char *)olen;
+                    ++k;
+                }
+            }
+            forms[k].option = CURLFORM_END;
+            res = curl_formadd(&post, &last,
+                               CURLFORM_COPYNAME, nstr,
+                               CURLFORM_NAMELENGTH, (long) nlen,
+                               CURLFORM_ARRAY, forms,
+                               CURLFORM_END);
+            PyText_EncodedDecref(oencoded_obj);
+            PyMem_Free(forms);
+            if (res != CURLE_OK) {
+                curl_formfree(post);
+                Py_XDECREF(ref_params);
+                PyText_EncodedDecref(nencoded_obj);
+                CURLERROR_RETVAL();
+            }
+        } else {
+            /* Some other type was given, ignore */
+            curl_formfree(post);
+            Py_XDECREF(ref_params);
+            PyText_EncodedDecref(nencoded_obj);
+            PyErr_SetString(PyExc_TypeError, "unsupported second type in tuple");
+            return NULL;
+        }
+        PyText_EncodedDecref(nencoded_obj);
+    }
+    res = curl_easy_setopt(self->handle, CURLOPT_HTTPPOST, post);
+    /* Check for errors */
+    if (res != CURLE_OK) {
+        curl_formfree(post);
+        Py_XDECREF(ref_params);
+        CURLERROR_RETVAL();
+    }
+    /* Finally, free previously allocated httppost, ZAP any
+     * buffer references, and update */
+    curl_formfree(self->httppost);
+    util_curl_xdecref(self, PYCURL_MEMGROUP_HTTPPOST, self->handle);
+    self->httppost = post;
+
+    /* The previous list of INCed references was ZAPed above; save
+     * the new one so that we can clean it up on the next
+     * self->httppost free. */
+    self->httppost_ref_list = ref_params;
+
+    Py_RETURN_NONE;
+}
+
+static PyObject *
 do_curl_setopt_list(CurlObject *self, int option, int which, PyObject *obj)
 {
     struct curl_slist **old_slist = NULL;
@@ -1804,8 +2045,6 @@ do_curl_setopt_list(CurlObject *self, int option, int which, PyObject *obj)
         old_slist = &self->mail_rcpt;
         break;
 #endif
-    case CURLOPT_HTTPPOST:
-        break;
     default:
         /* None of the list options were recognized, raise exception */
         PyErr_SetString(PyExc_TypeError, "lists are not supported for this option");
@@ -1815,240 +2054,6 @@ do_curl_setopt_list(CurlObject *self, int option, int which, PyObject *obj)
     len = PyListOrTuple_Size(obj, which);
     if (len == 0)
         Py_RETURN_NONE;
-
-    /* Handle HTTPPOST different since we construct a HttpPost form struct */
-    if (option == CURLOPT_HTTPPOST) {
-        struct curl_httppost *post = NULL;
-        struct curl_httppost *last = NULL;
-        /* List of all references that have been INCed as a result of
-         * this operation */
-        PyObject *ref_params = NULL;
-        PyObject *nencoded_obj, *cencoded_obj, *oencoded_obj;
-        int which_httppost_item, which_httppost_option;
-        PyObject *httppost_option;
-
-        for (i = 0; i < len; i++) {
-            char *nstr = NULL, *cstr = NULL;
-            Py_ssize_t nlen = -1, clen = -1;
-            PyObject *listitem = PyListOrTuple_GetItem(obj, i, which);
-
-            which_httppost_item = PyListOrTuple_Check(listitem);
-            if (!which_httppost_item) {
-                curl_formfree(post);
-                Py_XDECREF(ref_params);
-                PyErr_SetString(PyExc_TypeError, "list items must be list or tuple objects");
-                return NULL;
-            }
-            if (PyListOrTuple_Size(listitem, which_httppost_item) != 2) {
-                curl_formfree(post);
-                Py_XDECREF(ref_params);
-                PyErr_SetString(PyExc_TypeError, "list or tuple must contain two elements (name, value)");
-                return NULL;
-            }
-            if (PyText_AsStringAndSize(PyListOrTuple_GetItem(listitem, 0, which_httppost_item),
-                    &nstr, &nlen, &nencoded_obj) != 0) {
-                curl_formfree(post);
-                Py_XDECREF(ref_params);
-                PyErr_SetString(PyExc_TypeError, "list or tuple must contain a byte string or Unicode string with ASCII code points only as first element");
-                return NULL;
-            }
-            httppost_option = PyListOrTuple_GetItem(listitem, 1, which_httppost_item);
-            if (PyText_Check(httppost_option)) {
-                /* Handle strings as second argument for backwards compatibility */
-
-                if (PyText_AsStringAndSize(httppost_option, &cstr, &clen, &cencoded_obj)) {
-                    curl_formfree(post);
-                    Py_XDECREF(ref_params);
-                    PyText_EncodedDecref(nencoded_obj);
-                    CURLERROR_RETVAL();
-                }
-                /* INFO: curl_formadd() internally does memdup() the data, so
-                 * embedded NUL characters _are_ allowed here. */
-                res = curl_formadd(&post, &last,
-                                   CURLFORM_COPYNAME, nstr,
-                                   CURLFORM_NAMELENGTH, (long) nlen,
-                                   CURLFORM_COPYCONTENTS, cstr,
-                                   CURLFORM_CONTENTSLENGTH, (long) clen,
-                                   CURLFORM_END);
-                PyText_EncodedDecref(cencoded_obj);
-                if (res != CURLE_OK) {
-                    curl_formfree(post);
-                    Py_XDECREF(ref_params);
-                    PyText_EncodedDecref(nencoded_obj);
-                    CURLERROR_RETVAL();
-                }
-            }
-            /* assignment is intended */
-            else if ((which_httppost_option = PyListOrTuple_Check(httppost_option))) {
-                /* Supports content, file and content-type */
-                Py_ssize_t tlen = PyListOrTuple_Size(httppost_option, which_httppost_option);
-                int j, k, l;
-                struct curl_forms *forms = NULL;
-
-                /* Sanity check that there are at least two tuple items */
-                if (tlen < 2) {
-                    curl_formfree(post);
-                    Py_XDECREF(ref_params);
-                    PyText_EncodedDecref(nencoded_obj);
-                    PyErr_SetString(PyExc_TypeError, "list or tuple must contain at least one option and one value");
-                    return NULL;
-                }
-
-                /* Allocate enough space to accommodate length options for content or buffers, plus a terminator. */
-                forms = PyMem_New(struct curl_forms, (tlen*2) + 1);
-                if (forms == NULL) {
-                    curl_formfree(post);
-                    Py_XDECREF(ref_params);
-                    PyText_EncodedDecref(nencoded_obj);
-                    PyErr_NoMemory();
-                    return NULL;
-                }
-
-                /* Iterate all the tuple members pairwise */
-                for (j = 0, k = 0, l = 0; j < tlen; j += 2, l++) {
-                    char *ostr;
-                    Py_ssize_t olen;
-                    int val;
-
-                    if (j == (tlen-1)) {
-                        PyErr_SetString(PyExc_TypeError, "expected value");
-                        PyMem_Free(forms);
-                        curl_formfree(post);
-                        Py_XDECREF(ref_params);
-                        PyText_EncodedDecref(nencoded_obj);
-                        return NULL;
-                    }
-                    if (!PyInt_Check(PyListOrTuple_GetItem(httppost_option, j, which_httppost_option))) {
-                        PyErr_SetString(PyExc_TypeError, "option must be long");
-                        PyMem_Free(forms);
-                        curl_formfree(post);
-                        Py_XDECREF(ref_params);
-                        PyText_EncodedDecref(nencoded_obj);
-                        return NULL;
-                    }
-                    if (!PyText_Check(PyListOrTuple_GetItem(httppost_option, j+1, which_httppost_option))) {
-                        PyErr_SetString(PyExc_TypeError, "value must be a byte string or a Unicode string with ASCII code points only");
-                        PyMem_Free(forms);
-                        curl_formfree(post);
-                        Py_XDECREF(ref_params);
-                        PyText_EncodedDecref(nencoded_obj);
-                        return NULL;
-                    }
-
-                    val = PyLong_AsLong(PyListOrTuple_GetItem(httppost_option, j, which_httppost_option));
-                    if (val != CURLFORM_COPYCONTENTS &&
-                        val != CURLFORM_FILE &&
-                        val != CURLFORM_FILENAME &&
-                        val != CURLFORM_CONTENTTYPE &&
-                        val != CURLFORM_BUFFER &&
-                        val != CURLFORM_BUFFERPTR)
-                    {
-                        PyErr_SetString(PyExc_TypeError, "unsupported option");
-                        PyMem_Free(forms);
-                        curl_formfree(post);
-                        Py_XDECREF(ref_params);
-                        PyText_EncodedDecref(nencoded_obj);
-                        return NULL;
-                    }
-                    if (PyText_AsStringAndSize(PyListOrTuple_GetItem(httppost_option, j+1, which_httppost_option), &ostr, &olen, &oencoded_obj)) {
-                        /* exception should be already set */
-                        PyMem_Free(forms);
-                        curl_formfree(post);
-                        Py_XDECREF(ref_params);
-                        PyText_EncodedDecref(nencoded_obj);
-                        return NULL;
-                    }
-                    forms[k].option = val;
-                    forms[k].value = ostr;
-                    ++k;
-                    if (val == CURLFORM_COPYCONTENTS) {
-                        /* Contents can contain \0 bytes so we specify the length */
-                        forms[k].option = CURLFORM_CONTENTSLENGTH;
-                        forms[k].value = (const char *)olen;
-                        ++k;
-                    }
-                    else if (val == CURLFORM_BUFFERPTR) {
-                        PyObject *obj = NULL;
-
-                        if (ref_params == NULL) {
-                            ref_params = PyList_New((Py_ssize_t)0);
-                            if (ref_params == NULL) {
-                                PyText_EncodedDecref(oencoded_obj);
-                                PyMem_Free(forms);
-                                curl_formfree(post);
-                                PyText_EncodedDecref(nencoded_obj);
-                                return NULL;
-                            }
-                        }
-
-                        /* Keep a reference to the object that holds the ostr buffer. */
-                        if (oencoded_obj == NULL) {
-                            obj = PyListOrTuple_GetItem(httppost_option, j+1, which_httppost_option);
-                        }
-                        else {
-                            obj = oencoded_obj;
-                        }
-
-                        /* Ensure that the buffer remains alive until curl_easy_cleanup() */
-                        if (PyList_Append(ref_params, obj) != 0) {
-                            PyText_EncodedDecref(oencoded_obj);
-                            PyMem_Free(forms);
-                            curl_formfree(post);
-                            Py_DECREF(ref_params);
-                            PyText_EncodedDecref(nencoded_obj);
-                            return NULL;
-                        }
-
-                        /* As with CURLFORM_COPYCONTENTS, specify the length. */
-                        forms[k].option = CURLFORM_BUFFERLENGTH;
-                        forms[k].value = (const char *)olen;
-                        ++k;
-                    }
-                }
-                forms[k].option = CURLFORM_END;
-                res = curl_formadd(&post, &last,
-                                   CURLFORM_COPYNAME, nstr,
-                                   CURLFORM_NAMELENGTH, (long) nlen,
-                                   CURLFORM_ARRAY, forms,
-                                   CURLFORM_END);
-                PyText_EncodedDecref(oencoded_obj);
-                PyMem_Free(forms);
-                if (res != CURLE_OK) {
-                    curl_formfree(post);
-                    Py_XDECREF(ref_params);
-                    PyText_EncodedDecref(nencoded_obj);
-                    CURLERROR_RETVAL();
-                }
-            } else {
-                /* Some other type was given, ignore */
-                curl_formfree(post);
-                Py_XDECREF(ref_params);
-                PyText_EncodedDecref(nencoded_obj);
-                PyErr_SetString(PyExc_TypeError, "unsupported second type in tuple");
-                return NULL;
-            }
-            PyText_EncodedDecref(nencoded_obj);
-        }
-        res = curl_easy_setopt(self->handle, CURLOPT_HTTPPOST, post);
-        /* Check for errors */
-        if (res != CURLE_OK) {
-            curl_formfree(post);
-            Py_XDECREF(ref_params);
-            CURLERROR_RETVAL();
-        }
-        /* Finally, free previously allocated httppost, ZAP any
-         * buffer references, and update */
-        curl_formfree(self->httppost);
-        util_curl_xdecref(self, PYCURL_MEMGROUP_HTTPPOST, self->handle);
-        self->httppost = post;
-
-        /* The previous list of INCed references was ZAPed above; save
-         * the new one so that we can clean it up on the next
-         * self->httppost free. */
-        self->httppost_ref_list = ref_params;
-
-        Py_RETURN_NONE;
-    }
 
     /* Just to be sure we do not bug off here */
     assert(old_slist != NULL && slist == NULL);
@@ -2370,7 +2375,11 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     /* Handle the case of list or tuple objects */
     which = PyListOrTuple_Check(obj);
     if (which) {
-        return do_curl_setopt_list(self, option, which, obj);
+        if (option == CURLOPT_HTTPPOST) {
+            return do_curl_setopt_httppost(self, option, which, obj);
+        } else {
+            return do_curl_setopt_list(self, option, which, obj);
+        }
     }
 
     /* Handle the case of function objects for callbacks */
