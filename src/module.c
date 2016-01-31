@@ -187,7 +187,12 @@ insobj2(PyObject *dict1, PyObject *dict2, char *name, PyObject *value)
     PyString_InternInPlace(&key);   /* XXX Should we really? */
 #endif
     if (dict1 != NULL) {
-        assert(PyDict_GetItem(dict1, key) == NULL);
+#if !defined(NDEBUG)
+        if (PyDict_GetItem(dict1, key) != NULL) {
+            fprintf(stderr, "Symbol already defined: %s\n", name);
+            assert(0);
+        }
+#endif
         if (PyDict_SetItem(dict1, key, value) != 0)
             goto error;
     }
@@ -1075,8 +1080,9 @@ initpycurl(void)
 
     /* CURLINFO: symbolic constants for getinfo(x) */
     insint_c(d, "EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL);
+    /* same as CURLINFO_RESPONSE_CODE */
     insint_c(d, "HTTP_CODE", CURLINFO_HTTP_CODE);
-    insint_c(d, "RESPONSE_CODE", CURLINFO_HTTP_CODE);
+    insint_c(d, "RESPONSE_CODE", CURLINFO_RESPONSE_CODE);
     insint_c(d, "TOTAL_TIME", CURLINFO_TOTAL_TIME);
     insint_c(d, "NAMELOOKUP_TIME", CURLINFO_NAMELOOKUP_TIME);
     insint_c(d, "CONNECT_TIME", CURLINFO_CONNECT_TIME);

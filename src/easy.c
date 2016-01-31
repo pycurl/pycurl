@@ -2449,7 +2449,7 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
     switch (option) {
     case CURLINFO_FILETIME:
     case CURLINFO_HEADER_SIZE:
-    case CURLINFO_HTTP_CODE:
+    case CURLINFO_RESPONSE_CODE:
     case CURLINFO_REDIRECT_COUNT:
     case CURLINFO_REQUEST_SIZE:
     case CURLINFO_SSL_VERIFYRESULT:
