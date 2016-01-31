@@ -430,3 +430,7 @@ class OptionConstantsSettingTest(unittest.TestCase):
     @util.min_libcurl(7, 45, 0)
     def test_default_protocol(self):
         self.curl.setopt(self.curl.DEFAULT_PROTOCOL, "http")
+
+    @util.min_libcurl(7, 20, 0)
+    def test_ftp_use_pret(self):
+        self.curl.setopt(self.curl.FTP_USE_PRET, True)
