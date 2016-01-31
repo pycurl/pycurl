@@ -2465,6 +2465,11 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
 #ifdef HAVE_CURLINFO_PRIMARY_PORT
     case CURLINFO_PRIMARY_PORT:
 #endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 20, 0)
+    case CURLINFO_RTSP_CLIENT_CSEQ:
+    case CURLINFO_RTSP_SERVER_CSEQ:
+    case CURLINFO_RTSP_CSEQ_RECV:
+#endif
 
         {
             /* Return PyInt as result */
@@ -2485,6 +2490,9 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
     case CURLINFO_PRIMARY_IP:
 #ifdef HAVE_CURLINFO_LOCAL_IP
     case CURLINFO_LOCAL_IP:
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 20, 0)
+    case CURLINFO_RTSP_SESSION_ID:
 #endif
         {
             /* Return PyString as result */

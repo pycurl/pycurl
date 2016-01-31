@@ -1128,6 +1128,12 @@ initpycurl(void)
 #ifdef HAVE_CURL_7_19_4_OPTS
     insint_c(d, "CONDITION_UNMET", CURLINFO_CONDITION_UNMET);
 #endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 20, 0)
+    insint_c(d, "INFO_RTSP_CLIENT_CSEQ", CURLINFO_RTSP_CLIENT_CSEQ);
+    insint_c(d, "INFO_RTSP_CSEQ_RECV", CURLINFO_RTSP_CSEQ_RECV);
+    insint_c(d, "INFO_RTSP_SERVER_CSEQ", CURLINFO_RTSP_SERVER_CSEQ);
+    insint_c(d, "INFO_RTSP_SESSION_ID", CURLINFO_RTSP_SESSION_ID);
+#endif
 
     /* CURLPAUSE: symbolic constants for pause(bitmask) */
     insint_c(d, "PAUSE_RECV", CURLPAUSE_RECV);
