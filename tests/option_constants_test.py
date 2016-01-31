@@ -438,3 +438,7 @@ class OptionConstantsSettingTest(unittest.TestCase):
     @util.min_libcurl(7, 34, 0)
     def test_login_options(self):
         self.curl.setopt(self.curl.LOGIN_OPTIONS, 'AUTH=NTLM')
+
+    @util.min_libcurl(7, 31, 0)
+    def test_sasl_ir(self):
+        self.curl.setopt(self.curl.SASL_IR, True)

@@ -747,6 +747,9 @@ initpycurl(void)
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 34, 0)
     insint_c(d, "LOGIN_OPTIONS", CURLOPT_LOGIN_OPTIONS);
 #endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 31, 0)
+    insint_c(d, "SASL_IR", CURLOPT_SASL_IR);
+#endif
     insint_c(d, "SSL_VERIFYPEER", CURLOPT_SSL_VERIFYPEER);
     insint_c(d, "CAPATH", CURLOPT_CAPATH);
     insint_c(d, "CAINFO", CURLOPT_CAINFO);
