@@ -187,7 +187,12 @@ insobj2(PyObject *dict1, PyObject *dict2, char *name, PyObject *value)
     PyString_InternInPlace(&key);   /* XXX Should we really? */
 #endif
     if (dict1 != NULL) {
-        assert(PyDict_GetItem(dict1, key) == NULL);
+#if !defined(NDEBUG)
+        if (PyDict_GetItem(dict1, key) != NULL) {
+            fprintf(stderr, "Symbol already defined: %s\n", name);
+            assert(0);
+        }
+#endif
         if (PyDict_SetItem(dict1, key, value) != 0)
             goto error;
     }
@@ -741,6 +746,18 @@ initpycurl(void)
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 32, 0)
     insint_c(d, "XFERINFOFUNCTION", CURLOPT_XFERINFOFUNCTION);
 #endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 20, 0)
+    insint_c(d, "FTP_USE_PRET", CURLOPT_FTP_USE_PRET);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 34, 0)
+    insint_c(d, "LOGIN_OPTIONS", CURLOPT_LOGIN_OPTIONS);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 31, 0)
+    insint_c(d, "SASL_IR", CURLOPT_SASL_IR);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 33, 0)
+    insint_c(d, "XOAUTH2_BEARER", CURLOPT_XOAUTH2_BEARER);
+#endif
     insint_c(d, "SSL_VERIFYPEER", CURLOPT_SSL_VERIFYPEER);
     insint_c(d, "CAPATH", CURLOPT_CAPATH);
     insint_c(d, "CAINFO", CURLOPT_CAINFO);
@@ -1063,8 +1080,9 @@ initpycurl(void)
 
     /* CURLINFO: symbolic constants for getinfo(x) */
     insint_c(d, "EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL);
+    /* same as CURLINFO_RESPONSE_CODE */
     insint_c(d, "HTTP_CODE", CURLINFO_HTTP_CODE);
-    insint_c(d, "RESPONSE_CODE", CURLINFO_HTTP_CODE);
+    insint_c(d, "RESPONSE_CODE", CURLINFO_RESPONSE_CODE);
     insint_c(d, "TOTAL_TIME", CURLINFO_TOTAL_TIME);
     insint_c(d, "NAMELOOKUP_TIME", CURLINFO_NAMELOOKUP_TIME);
     insint_c(d, "CONNECT_TIME", CURLINFO_CONNECT_TIME);
@@ -1109,6 +1127,12 @@ initpycurl(void)
 #endif
 #ifdef HAVE_CURL_7_19_4_OPTS
     insint_c(d, "CONDITION_UNMET", CURLINFO_CONDITION_UNMET);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 20, 0)
+    insint_c(d, "INFO_RTSP_CLIENT_CSEQ", CURLINFO_RTSP_CLIENT_CSEQ);
+    insint_c(d, "INFO_RTSP_CSEQ_RECV", CURLINFO_RTSP_CSEQ_RECV);
+    insint_c(d, "INFO_RTSP_SERVER_CSEQ", CURLINFO_RTSP_SERVER_CSEQ);
+    insint_c(d, "INFO_RTSP_SESSION_ID", CURLINFO_RTSP_SESSION_ID);
 #endif
 
     /* CURLPAUSE: symbolic constants for pause(bitmask) */

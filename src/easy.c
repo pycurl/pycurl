@@ -1591,6 +1591,12 @@ do_curl_setopt_string_impl(CurlObject *self, int option, PyObject *obj)
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 45, 0)
     case CURLOPT_DEFAULT_PROTOCOL:
 #endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 34, 0)
+    case CURLOPT_LOGIN_OPTIONS:
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 33, 0)
+    case CURLOPT_XOAUTH2_BEARER:
+#endif
     case CURLOPT_KRBLEVEL:
         str = PyText_AsString_NoNUL(obj, &encoded_obj);
         if (str == NULL)
@@ -2443,7 +2449,7 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
     switch (option) {
     case CURLINFO_FILETIME:
     case CURLINFO_HEADER_SIZE:
-    case CURLINFO_HTTP_CODE:
+    case CURLINFO_RESPONSE_CODE:
     case CURLINFO_REDIRECT_COUNT:
     case CURLINFO_REQUEST_SIZE:
     case CURLINFO_SSL_VERIFYRESULT:
@@ -2458,6 +2464,11 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
 #endif
 #ifdef HAVE_CURLINFO_PRIMARY_PORT
     case CURLINFO_PRIMARY_PORT:
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 20, 0)
+    case CURLINFO_RTSP_CLIENT_CSEQ:
+    case CURLINFO_RTSP_SERVER_CSEQ:
+    case CURLINFO_RTSP_CSEQ_RECV:
 #endif
 
         {
@@ -2479,6 +2490,9 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
     case CURLINFO_PRIMARY_IP:
 #ifdef HAVE_CURLINFO_LOCAL_IP
     case CURLINFO_LOCAL_IP:
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 20, 0)
+    case CURLINFO_RTSP_SESSION_ID:
 #endif
         {
             /* Return PyString as result */

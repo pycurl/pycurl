@@ -1,6 +1,16 @@
 master
 ------
 
+        * Added CURLINFO_RTSP_* constants (libcurl 7.20.0+).
+
+        * Added CURLOPT_XOAUTH2_BEARER (libcurl 7.33.0+).
+
+        * Added CURLOPT_SASL_IR (libcurl 7.31.0+).
+
+        * Added CURLOPT_LOGIN_OPTIONS (libcurl 7.34.0+).
+
+        * Added CURLOPT_FTP_USE_PRET (libcurl 7.20.0+).
+
         * Added setopt_string method to Curl objects to set arbitrary
           string options.
 
