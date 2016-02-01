@@ -1839,6 +1839,12 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
                 goto error;
             }
 
+            if (tlen % 2 == 1) {
+                PyText_EncodedDecref(nencoded_obj);
+                PyErr_SetString(PyExc_TypeError, "list or tuple must contain an even number of items");
+                goto error;
+            }
+
             /* Allocate enough space to accommodate length options for content or buffers, plus a terminator. */
             forms = PyMem_New(struct curl_forms, (tlen*2) + 1);
             if (forms == NULL) {
