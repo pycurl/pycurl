@@ -1804,10 +1804,9 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
             /* Handle strings as second argument for backwards compatibility */
 
             if (PyText_AsStringAndSize(httppost_option, &cstr, &clen, &cencoded_obj)) {
-                curl_formfree(post);
-                Py_XDECREF(ref_params);
                 PyText_EncodedDecref(nencoded_obj);
-                CURLERROR_RETVAL();
+                CURLERROR_SET_RETVAL();
+                goto error;
             }
             /* INFO: curl_formadd() internally does memdup() the data, so
              * embedded NUL characters _are_ allowed here. */
@@ -1819,10 +1818,9 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
                                CURLFORM_END);
             PyText_EncodedDecref(cencoded_obj);
             if (res != CURLE_OK) {
-                curl_formfree(post);
-                Py_XDECREF(ref_params);
                 PyText_EncodedDecref(nencoded_obj);
-                CURLERROR_RETVAL();
+                CURLERROR_SET_RETVAL();
+                goto error;
             }
         }
         /* assignment is intended */
@@ -1950,10 +1948,9 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
             PyText_EncodedDecref(oencoded_obj);
             PyMem_Free(forms);
             if (res != CURLE_OK) {
-                curl_formfree(post);
-                Py_XDECREF(ref_params);
                 PyText_EncodedDecref(nencoded_obj);
-                CURLERROR_RETVAL();
+                CURLERROR_SET_RETVAL();
+                goto error;
             }
         } else {
             /* Some other type was given, ignore */
@@ -1966,9 +1963,8 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
     res = curl_easy_setopt(self->handle, CURLOPT_HTTPPOST, post);
     /* Check for errors */
     if (res != CURLE_OK) {
-        curl_formfree(post);
-        Py_XDECREF(ref_params);
-        CURLERROR_RETVAL();
+        CURLERROR_SET_RETVAL();
+        goto error;
     }
     /* Finally, free previously allocated httppost, ZAP any
      * buffer references, and update */
