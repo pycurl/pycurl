@@ -1866,7 +1866,7 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
                     goto error;
                 }
                 if (!PyInt_Check(PyListOrTuple_GetItem(httppost_option, j, which_httppost_option))) {
-                    PyErr_SetString(PyExc_TypeError, "option must be long");
+                    PyErr_SetString(PyExc_TypeError, "option must be an integer");
                     PyMem_Free(forms);
                     PyText_EncodedDecref(nencoded_obj);
                     goto error;
