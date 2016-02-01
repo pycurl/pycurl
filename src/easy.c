@@ -1787,23 +1787,17 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
 
         which_httppost_item = PyListOrTuple_Check(listitem);
         if (!which_httppost_item) {
-            curl_formfree(post);
-            Py_XDECREF(ref_params);
             PyErr_SetString(PyExc_TypeError, "list items must be list or tuple objects");
-            return NULL;
+            goto error;
         }
         if (PyListOrTuple_Size(listitem, which_httppost_item) != 2) {
-            curl_formfree(post);
-            Py_XDECREF(ref_params);
             PyErr_SetString(PyExc_TypeError, "list or tuple must contain two elements (name, value)");
-            return NULL;
+            goto error;
         }
         if (PyText_AsStringAndSize(PyListOrTuple_GetItem(listitem, 0, which_httppost_item),
                 &nstr, &nlen, &nencoded_obj) != 0) {
-            curl_formfree(post);
-            Py_XDECREF(ref_params);
             PyErr_SetString(PyExc_TypeError, "list or tuple must contain a byte string or Unicode string with ASCII code points only as first element");
-            return NULL;
+            goto error;
         }
         httppost_option = PyListOrTuple_GetItem(listitem, 1, which_httppost_item);
         if (PyText_Check(httppost_option)) {
@@ -1840,21 +1834,17 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
 
             /* Sanity check that there are at least two tuple items */
             if (tlen < 2) {
-                curl_formfree(post);
-                Py_XDECREF(ref_params);
                 PyText_EncodedDecref(nencoded_obj);
                 PyErr_SetString(PyExc_TypeError, "list or tuple must contain at least one option and one value");
-                return NULL;
+                goto error;
             }
 
             /* Allocate enough space to accommodate length options for content or buffers, plus a terminator. */
             forms = PyMem_New(struct curl_forms, (tlen*2) + 1);
             if (forms == NULL) {
-                curl_formfree(post);
-                Py_XDECREF(ref_params);
                 PyText_EncodedDecref(nencoded_obj);
                 PyErr_NoMemory();
-                return NULL;
+                goto error;
             }
 
             /* Iterate all the tuple members pairwise */
@@ -1866,26 +1856,20 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
                 if (j == (tlen-1)) {
                     PyErr_SetString(PyExc_TypeError, "expected value");
                     PyMem_Free(forms);
-                    curl_formfree(post);
-                    Py_XDECREF(ref_params);
                     PyText_EncodedDecref(nencoded_obj);
-                    return NULL;
+                    goto error;
                 }
                 if (!PyInt_Check(PyListOrTuple_GetItem(httppost_option, j, which_httppost_option))) {
                     PyErr_SetString(PyExc_TypeError, "option must be long");
                     PyMem_Free(forms);
-                    curl_formfree(post);
-                    Py_XDECREF(ref_params);
                     PyText_EncodedDecref(nencoded_obj);
-                    return NULL;
+                    goto error;
                 }
                 if (!PyText_Check(PyListOrTuple_GetItem(httppost_option, j+1, which_httppost_option))) {
                     PyErr_SetString(PyExc_TypeError, "value must be a byte string or a Unicode string with ASCII code points only");
                     PyMem_Free(forms);
-                    curl_formfree(post);
-                    Py_XDECREF(ref_params);
                     PyText_EncodedDecref(nencoded_obj);
-                    return NULL;
+                    goto error;
                 }
 
                 val = PyLong_AsLong(PyListOrTuple_GetItem(httppost_option, j, which_httppost_option));
@@ -1898,18 +1882,14 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
                 {
                     PyErr_SetString(PyExc_TypeError, "unsupported option");
                     PyMem_Free(forms);
-                    curl_formfree(post);
-                    Py_XDECREF(ref_params);
                     PyText_EncodedDecref(nencoded_obj);
-                    return NULL;
+                    goto error;
                 }
                 if (PyText_AsStringAndSize(PyListOrTuple_GetItem(httppost_option, j+1, which_httppost_option), &ostr, &olen, &oencoded_obj)) {
                     /* exception should be already set */
                     PyMem_Free(forms);
-                    curl_formfree(post);
-                    Py_XDECREF(ref_params);
                     PyText_EncodedDecref(nencoded_obj);
-                    return NULL;
+                    goto error;
                 }
                 forms[k].option = val;
                 forms[k].value = ostr;
@@ -1928,9 +1908,8 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
                         if (ref_params == NULL) {
                             PyText_EncodedDecref(oencoded_obj);
                             PyMem_Free(forms);
-                            curl_formfree(post);
                             PyText_EncodedDecref(nencoded_obj);
-                            return NULL;
+                            goto error;
                         }
                     }
 
@@ -1946,10 +1925,8 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
                     if (PyList_Append(ref_params, obj) != 0) {
                         PyText_EncodedDecref(oencoded_obj);
                         PyMem_Free(forms);
-                        curl_formfree(post);
-                        Py_DECREF(ref_params);
                         PyText_EncodedDecref(nencoded_obj);
-                        return NULL;
+                        goto error;
                     }
 
                     /* As with CURLFORM_COPYCONTENTS, specify the length. */
@@ -1974,11 +1951,9 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
             }
         } else {
             /* Some other type was given, ignore */
-            curl_formfree(post);
-            Py_XDECREF(ref_params);
             PyText_EncodedDecref(nencoded_obj);
             PyErr_SetString(PyExc_TypeError, "unsupported second type in tuple");
-            return NULL;
+            goto error;
         }
         PyText_EncodedDecref(nencoded_obj);
     }
@@ -2001,6 +1976,11 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
     self->httppost_ref_list = ref_params;
 
     Py_RETURN_NONE;
+
+error:
+    curl_formfree(post);
+    Py_XDECREF(ref_params);
+    return NULL;
 }
 
 static PyObject *
