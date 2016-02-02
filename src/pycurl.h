@@ -281,6 +281,13 @@ PyText_Check(PyObject *o);
     return NULL; \
 } while (0)
 
+#define CURLERROR_SET_RETVAL() do {\
+    PyObject *v; \
+    self->error[sizeof(self->error) - 1] = 0; \
+    v = Py_BuildValue("(is)", (int) (res), self->error); \
+    if (v != NULL) { PyErr_SetObject(ErrorObject, v); Py_DECREF(v); } \
+} while (0)
+
 #define CURLERROR_RETVAL_MULTI_DONE() do {\
     PyObject *v; \
     v = Py_BuildValue("(i)", (int) (res)); \
