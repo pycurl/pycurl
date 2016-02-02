@@ -67,7 +67,7 @@ def version_less_than_spec(version_tuple, spec_tuple):
 def pycurl_version_less_than(*spec):
     import pycurl
 
-    version = [int(part) for part in pycurl.version_info()[1].split('.')]
+    version = [int(part) for part in pycurl.version_info()[1].split('-')[0].split('.')]
     return version_less_than_spec(version, spec)
 
 def only_python3(fn):

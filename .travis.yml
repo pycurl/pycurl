@@ -99,6 +99,14 @@ matrix:
       env:
         - USECURL=7.38.0-gssapi
         - USESSL=gnutls
+    - python: 3.5
+      env:
+        - USECURL=7.47.0-dev-gssapi-libssh2
+        - USESSL=openssl
+    - python: 3.5
+      env:
+        - USECURL=7.47.0-dev-gssapi-libssh2
+        - USESSL=nss
 install: >
   ./tests/travis/setup.sh
 before_script: >
