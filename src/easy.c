@@ -44,6 +44,43 @@ error:
 }
 
 
+static struct curl_slist *
+pycurl_list_or_tuple_to_slist(int which, PyObject *obj, Py_ssize_t len)
+{
+    struct curl_slist *slist = NULL;
+    Py_ssize_t i;
+
+    for (i = 0; i < len; i++) {
+        PyObject *listitem = PyListOrTuple_GetItem(obj, i, which);
+        struct curl_slist *nlist;
+        char *str;
+        PyObject *sencoded_obj;
+
+        if (!PyText_Check(listitem)) {
+            curl_slist_free_all(slist);
+            PyErr_SetString(PyExc_TypeError, "list items must be byte strings or Unicode strings with ASCII code points only");
+            return NULL;
+        }
+        /* INFO: curl_slist_append() internally does strdup() the data, so
+         * no embedded NUL characters allowed here. */
+        str = PyText_AsString_NoNUL(listitem, &sencoded_obj);
+        if (str == NULL) {
+            curl_slist_free_all(slist);
+            return NULL;
+        }
+        nlist = curl_slist_append(slist, str);
+        PyText_EncodedDecref(sencoded_obj);
+        if (nlist == NULL || nlist->data == NULL) {
+            curl_slist_free_all(slist);
+            PyErr_NoMemory();
+            return NULL;
+        }
+        slist = nlist;
+    }
+    return slist;
+}
+
+
 #ifdef HAVE_CURLOPT_CERTINFO
 /* Convert a struct curl_certinfo into a Python data structure.
  * In case of error return NULL with an exception set.
@@ -1889,6 +1926,7 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
                     PyText_EncodedDecref(nencoded_obj);
                     goto error;
                 }
+
                 if (PyText_AsStringAndSize(PyListOrTuple_GetItem(httppost_option, j+1, which_httppost_option), &ostr, &olen, &oencoded_obj)) {
                     /* exception should be already set */
                     PyMem_Free(forms);
@@ -1898,13 +1936,13 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
                 forms[k].option = val;
                 forms[k].value = ostr;
                 ++k;
+
                 if (val == CURLFORM_COPYCONTENTS) {
                     /* Contents can contain \0 bytes so we specify the length */
                     forms[k].option = CURLFORM_CONTENTSLENGTH;
                     forms[k].value = (const char *)olen;
                     ++k;
-                }
-                else if (val == CURLFORM_BUFFERPTR) {
+                } else if (val == CURLFORM_BUFFERPTR) {
                     PyObject *obj = NULL;
 
                     if (ref_params == NULL) {
@@ -1985,6 +2023,7 @@ error:
     return NULL;
 }
 
+
 static PyObject *
 do_curl_setopt_list(CurlObject *self, int option, int which, PyObject *obj)
 {
@@ -2041,31 +2080,9 @@ do_curl_setopt_list(CurlObject *self, int option, int which, PyObject *obj)
     assert(old_slist != NULL && slist == NULL);
 
     /* Handle regular list operations on the other options */
-    for (i = 0; i < len; i++) {
-        PyObject *listitem = PyListOrTuple_GetItem(obj, i, which);
-        struct curl_slist *nlist;
-        char *str;
-        PyObject *sencoded_obj;
-
-        if (!PyText_Check(listitem)) {
-            curl_slist_free_all(slist);
-            PyErr_SetString(PyExc_TypeError, "list items must be byte strings or Unicode strings with ASCII code points only");
-            return NULL;
-        }
-        /* INFO: curl_slist_append() internally does strdup() the data, so
-         * no embedded NUL characters allowed here. */
-        str = PyText_AsString_NoNUL(listitem, &sencoded_obj);
-        if (str == NULL) {
-            curl_slist_free_all(slist);
-            return NULL;
-        }
-        nlist = curl_slist_append(slist, str);
-        PyText_EncodedDecref(sencoded_obj);
-        if (nlist == NULL || nlist->data == NULL) {
-            curl_slist_free_all(slist);
-            return PyErr_NoMemory();
-        }
-        slist = nlist;
+    slist = pycurl_list_or_tuple_to_slist(which, obj, len);
+    if (slist == NULL) {
+        return NULL;
     }
     res = curl_easy_setopt(self->handle, (CURLoption)option, slist);
     /* Check for errors */
