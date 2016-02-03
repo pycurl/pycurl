@@ -61,7 +61,7 @@ cares_version = '1.10.0'
 use_libssh2 = True
 libssh2_version = '1.6.0'
 # which version of libcurl to use, will be downloaded from internet
-libcurl_version = '7.46.0'
+libcurl_version = '7.47.0'
 # virtualenv version
 virtualenv_version = '13.1.2'
 # whether to build binary wheels
