@@ -2029,7 +2029,7 @@ do_curl_setopt_list(CurlObject *self, int option, int which, PyObject *obj)
 {
     struct curl_slist **old_slist = NULL;
     struct curl_slist *slist = NULL;
-    Py_ssize_t i, len;
+    Py_ssize_t len;
     int res;
 
     switch (option) {
@@ -2422,7 +2422,6 @@ do_curl_setopt_string(CurlObject *self, PyObject *args)
 {
     int option;
     PyObject *obj;
-    int which;
 
     if (!PyArg_ParseTuple(args, "iO:setopt", &option, &obj))
         return NULL;
@@ -2435,7 +2434,6 @@ do_curl_setopt_string(CurlObject *self, PyObject *args)
     }
 
     /* Failed to match any of the function signatures -- return error */
-error:
     PyErr_SetString(PyExc_TypeError, "invalid arguments to setopt_string");
     return NULL;
 }
