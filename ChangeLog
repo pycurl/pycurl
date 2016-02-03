@@ -1,5 +1,5 @@
-master
-------
+Version 7.43.0 [requires libcurl-7.19.0 or better] - 2016-02-02
+---------------------------------------------------------------
 
         * Added CURLINFO_RTSP_* constants (libcurl 7.20.0+).
 

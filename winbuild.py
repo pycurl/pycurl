@@ -67,7 +67,7 @@ virtualenv_version = '13.1.2'
 # whether to build binary wheels
 build_wheels = True
 # pycurl version to build, we should know this ourselves
-pycurl_version = '7.21.5'
+pycurl_version = '7.43.0'
 
 default_vc_paths = {
     # where msvc 9 is installed, for python 2.6 through 3.2

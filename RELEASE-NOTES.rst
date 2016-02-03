@@ -1,6 +1,24 @@
 Release Notes
 =============
 
+PycURL 7.43.0 - 2016-02-02
+--------------------------
+
+Highlights of this release:
+
+1. Binary wheels are now built for Windows systems.
+
+2. setopt_string method added to Curl objects to permit setting string libcurl
+   options that PycURL does not know about.
+
+3. curl module can now be imported on Windows again.
+
+4. OPENSOCKETFUNCTION callback is now invoked with the address as bytes on
+   Python 3 as was documented.
+
+5. Support for many libcurl options and constants was added.
+
+
 PycURL 7.21.5 - 2016-01-05
 --------------------------
 
