@@ -732,10 +732,12 @@ License
 
 PycURL is dual licensed under the LGPL and an MIT/X derivative license
 based on the libcurl license. The complete text of the licenses is available
-in COPYING-LGPL and COPYING-MIT files in the source distribution.
+in COPYING-LGPL_ and COPYING-MIT_ files in the source distribution.
 
 .. _libcurl: http://curl.haxx.se/libcurl/
 .. _urllib: http://docs.python.org/library/urllib.html
+.. _COPYING-LGPL: https://raw.githubusercontent.com/pycurl/pycurl/master/COPYING-LGPL
+.. _COPYING-MIT: https://raw.githubusercontent.com/pycurl/pycurl/master/COPYING-MIT
 ''',
     author="Kjetil Jacobsen, Markus F.X.J. Oberhumer, Oleg Pudeyev",
     author_email="kjetilja at gmail.com, markus at oberhumer.com, oleg at bsdpower.com",
