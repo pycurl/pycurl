@@ -37,13 +37,14 @@ Requirements
 Installation
 ------------
 
-Download source and binary distributions from `Bintray`_.
+Download source and binary distributions from `PyPI`_ or `Bintray`_.
 Binary wheels are now available for 32 and 64 bit Windows versions.
 
 Please see `INSTALL.rst`_ for installation instructions. If installing from
 a Git checkout, please follow instruction in the `Git Checkout`_ section
 of INSTALL.rst.
 
+.. _PyPI: https://pypi.python.org/pypi/pycurl
 .. _Bintray: https://dl.bintray.com/pycurl/pycurl/
 .. _INSTALL.rst: http://pycurl.io/docs/latest/install.html
 .. _Git Checkout: http://pycurl.io/docs/latest/install.html#git-checkout
