@@ -699,7 +699,7 @@ Please see `the installation documentation`_ for installation instructions.
 
 .. _PyPI: https://pypi.python.org/pypi/pycurl
 .. _Bintray: https://dl.bintray.com/pycurl/pycurl/
-.. _the installation instructions: http://pycurl.io/docs/latest/install.html
+.. _the installation documentation: http://pycurl.io/docs/latest/install.html
 
 
 Documentation
@@ -733,6 +733,9 @@ License
 PycURL is dual licensed under the LGPL and an MIT/X derivative license
 based on the libcurl license. The complete text of the licenses is available
 in COPYING-LGPL and COPYING-MIT files in the source distribution.
+
+.. _libcurl: http://curl.haxx.se/libcurl/
+.. _urllib: http://docs.python.org/library/urllib.html
 ''',
     author="Kjetil Jacobsen, Markus F.X.J. Oberhumer, Oleg Pudeyev",
     author_email="kjetilja at gmail.com, markus at oberhumer.com, oleg at bsdpower.com",
