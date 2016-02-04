@@ -655,7 +655,8 @@ def gen_docstrings_sources():
 setup_args = dict(
     name=PACKAGE,
     version=VERSION,
-    description='''\
+    description='PycURL -- A Python Interface To The cURL library',
+    long_description='''\
 PycURL -- A Python Interface To The cURL library
 ================================================
 
@@ -756,8 +757,6 @@ in COPYING-LGPL and COPYING-MIT files in the source distribution.
     ],
     packages=[PY_PACKAGE],
     package_dir={ PY_PACKAGE: os.path.join('python', 'curl') },
-    long_description="""
-This module provides Python bindings for the cURL library.""",
 )
 
 if sys.platform == "win32":
