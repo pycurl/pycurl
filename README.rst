@@ -37,29 +37,17 @@ Requirements
 Installation
 ------------
 
-Please see INSTALL.rst for installation instructions. If installing from
-a Git checkout, please follow instruction in the "Git Checkout" section
+Download source and binary distributions from `PyPI`_ or `Bintray`_.
+Binary wheels are now available for 32 and 64 bit Windows versions.
+
+Please see `INSTALL.rst`_ for installation instructions. If installing from
+a Git checkout, please follow instruction in the `Git Checkout`_ section
 of INSTALL.rst.
 
-
-Support
--------
-
-For support questions, please use `curl-and-python mailing list`_.
-`Mailing list archives`_ are available for your perusal as well.
-
-Although not an official support venue, `Stack Overflow`_ has been
-popular with PycURL users as well.
-
-Bugs can be reported `via GitHub`_. Please only use GitHub issues when you are
-certain you have found a bug in PycURL. If you do not have a patch to fix
-the bug, or at least a specific code fragment in PycURL that you believe is
-the cause, you should instead post your inquiry to the mailing list.
-
-.. _curl-and-python mailing list: http://cool.haxx.se/mailman/listinfo/curl-and-python
-.. _Stack Overflow: http://stackoverflow.com/questions/tagged/pycurl
-.. _Mailing list archives: http://curl.haxx.se/mail/list.cgi?list=curl-and-python
-.. _via GitHub: https://github.com/pycurl/pycurl/issues
+.. _PyPI: https://pypi.python.org/pypi/pycurl
+.. _Bintray: https://dl.bintray.com/pycurl/pycurl/
+.. _INSTALL.rst: http://pycurl.io/docs/latest/install.html
+.. _Git Checkout: http://pycurl.io/docs/latest/install.html#git-checkout
 
 
 Documentation
@@ -68,11 +56,32 @@ Documentation
 Documentation for the most recent PycURL release is available on
 `PycURL website <http://pycurl.io/docs/latest/>`_.
 
+Documentation for the development version of PycURL
+is available `here <pycurl.io/docs/dev/>`.
+
 To build documentation from source, run ``make docs``.
 Building documentation requires `Sphinx <http://sphinx-doc.org/>`_ to
 be installed, as well as pycurl extension module built as docstrings are
 extracted from it. Built documentation is stored in ``build/doc``
 subdirectory.
+
+
+Support
+-------
+
+For support questions please use `curl-and-python mailing list`_.
+`Mailing list archives`_ are available for your perusal as well.
+
+Although not an official support venue, `Stack Overflow`_ has been
+popular with some PycURL users.
+
+Bugs can be reported `via GitHub`_. Please use GitHub only for bug
+reports and direct questions to our mailing list instead.
+
+.. _curl-and-python mailing list: http://cool.haxx.se/mailman/listinfo/curl-and-python
+.. _Stack Overflow: http://stackoverflow.com/questions/tagged/pycurl
+.. _Mailing list archives: http://curl.haxx.se/mail/list.cgi?list=curl-and-python
+.. _via GitHub: https://github.com/pycurl/pycurl/issues
 
 
 Automated Tests
