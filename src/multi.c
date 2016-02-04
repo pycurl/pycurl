@@ -272,7 +272,7 @@ do_multi_setopt_int(CurlMultiObject *self, int option, PyObject *obj)
 static PyObject *
 do_multi_setopt_charpp(CurlMultiObject *self, int option, int which, PyObject *obj)
 {
-    int len, i;
+    Py_ssize_t len, i;
     int res;
     static const char *empty_list[] = { NULL };
     char **list = NULL;
