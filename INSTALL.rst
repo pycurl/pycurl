@@ -324,7 +324,7 @@ and most SSL libraries do not provide.
 
 Here_ is a good resource on how to build your own certificate bundle.
 certifie.com also has a `prebuilt certificate bundle`_.
-To use the certificate bundle, use ``CAINFO`` or ``CAPPATH`` PycURL
+To use the certificate bundle, use ``CAINFO`` or ``CAPATH`` PycURL
 options.
 
 .. _Here: http://certifie.com/ca-bundle/
