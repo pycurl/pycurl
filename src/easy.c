@@ -1589,6 +1589,11 @@ do_curl_setopt_string_impl(CurlObject *self, int option, PyObject *obj)
     case CURLOPT_SSH_HOST_PUBLIC_KEY_MD5:
     case CURLOPT_CRLFILE:
     case CURLOPT_ISSUERCERT:
+#if LIBCURL_VERSION_NUM >= 0x071400 /* check for 7.20.0 or greater */
+    case CURLOPT_RTSP_STREAM_URI:
+    case CURLOPT_RTSP_SESSION_ID:
+    case CURLOPT_RTSP_TRANSPORT:
+#endif
 #ifdef HAVE_CURLOPT_DNS_SERVERS
     case CURLOPT_DNS_SERVERS:
 #endif
