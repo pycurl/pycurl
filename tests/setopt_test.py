@@ -98,3 +98,6 @@ class SetoptTest(unittest.TestCase):
     @util.min_libcurl(7, 37, 0)
     def test_set_proxyheader_none(self):
         self.curl.setopt(self.curl.PROXYHEADER, None)
+
+    def test_unset_encoding(self):
+        self.curl.unsetopt(self.curl.ENCODING)

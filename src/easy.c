@@ -1449,6 +1449,7 @@ util_curl_unsetopt(CurlObject *self, int option)
     case CURLOPT_COOKIEJAR:
     case CURLOPT_CUSTOMREQUEST:
     case CURLOPT_EGDSOCKET:
+    case CURLOPT_ENCODING:
     case CURLOPT_FTPPORT:
     case CURLOPT_PROXYUSERPWD:
 #ifdef HAVE_CURLOPT_PROXYUSERNAME
