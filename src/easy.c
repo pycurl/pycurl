@@ -653,12 +653,12 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
 #if !defined(WIN32)
     case AF_UNIX:
         {
-            struct sockaddr_un* sun = (struct sockaddr_un*)saddr;
+            struct sockaddr_un* s_un = (struct sockaddr_un*)saddr;
 
 #if PY_MAJOR_VERSION >= 3
-            res_obj = Py_BuildValue("y", sun->sun_path);
+            res_obj = Py_BuildValue("y", s_un->sun_path);
 #else
-            res_obj = Py_BuildValue("s", sun->sun_path);
+            res_obj = Py_BuildValue("s", s_un->sun_path);
 #endif
         }
         break;
