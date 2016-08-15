@@ -101,3 +101,7 @@ class SetoptTest(unittest.TestCase):
 
     def test_unset_encoding(self):
         self.curl.unsetopt(self.curl.ENCODING)
+
+    def test_resume_from_large(self):
+        # gh #405
+        self.curl.setopt(self.curl.RESUME_FROM, 3333858173)
