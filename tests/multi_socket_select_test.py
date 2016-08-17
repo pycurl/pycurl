@@ -5,6 +5,7 @@
 import pycurl
 import unittest
 import select
+import flaky
 
 from . import appmanager
 from . import util
@@ -23,6 +24,7 @@ def teardown_module(mod):
     teardown_module_2(mod)
     teardown_module_1(mod)
 
+@flaky.flaky(max_runs=3)
 class MultiSocketSelectTest(unittest.TestCase):
     def test_multi_socket_select(self):
         sockets = set()
