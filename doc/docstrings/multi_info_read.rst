@@ -10,4 +10,4 @@ number, curl error message)* for each failed curl object. The number of
 queued messages after this method has been called is also returned.
 
 .. _curl_multi_info_read:
-    http://curl.haxx.se/libcurl/c/curl_multi_info_read.html
+    https://curl.haxx.se/libcurl/c/curl_multi_info_read.html

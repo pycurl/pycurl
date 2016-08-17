@@ -8,4 +8,4 @@ from the Curl object (and thus does not decrease the reference count on the
 Curl object).
 
 .. _curl_multi_remove_handle:
-    http://curl.haxx.se/libcurl/c/curl_multi_remove_handle.html
+    https://curl.haxx.se/libcurl/c/curl_multi_remove_handle.html

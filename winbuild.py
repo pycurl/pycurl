@@ -464,7 +464,7 @@ class LibcurlBuilder(Builder):
         return 'curl-%s-%s' % (self.libcurl_version, self.vc_tag)
 
     def build(self):
-        fetch('http://curl.haxx.se/download/curl-%s.tar.gz' % self.libcurl_version)
+        fetch('https://curl.haxx.se/download/curl-%s.tar.gz' % self.libcurl_version)
         untar('curl-%s' % self.libcurl_version)
         curl_dir = rename_for_vc('curl-%s' % self.libcurl_version, self.vc_tag)
         with in_dir(os.path.join(curl_dir, 'winbuild')):

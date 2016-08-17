@@ -8,4 +8,4 @@ Curl object (and thus does not increase the reference count on the Curl
 object).
 
 .. _curl_multi_add_handle:
-    http://curl.haxx.se/libcurl/c/curl_multi_add_handle.html
+    https://curl.haxx.se/libcurl/c/curl_multi_add_handle.html

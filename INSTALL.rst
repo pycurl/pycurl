@@ -167,10 +167,10 @@ To identify which MSVCRT version your Python uses use the
 `Dependency Walker`_ and look for `msvcrt.dll variants`_ being loaded.
 You may find `the entire thread starting here`_ helpful.
 
-.. _application profiling feature: http://curl.haxx.se/mail/curlpython-2014-05/0007.html
+.. _application profiling feature: https://curl.haxx.se/mail/curlpython-2014-05/0007.html
 .. _Dependency Walker: http://www.dependencywalker.com/
-.. _msvcrt.dll variants: http://curl.haxx.se/mail/curlpython-2014-05/0010.html
-.. _the entire thread starting here: http://curl.haxx.se/mail/curlpython-2014-05/0000.html
+.. _msvcrt.dll variants: https://curl.haxx.se/mail/curlpython-2014-05/0010.html
+.. _the entire thread starting here: https://curl.haxx.se/mail/curlpython-2014-05/0000.html
 
 
 Building From Source
@@ -237,8 +237,8 @@ executable installer that you can run to install PycURL.
 
 You may find the following mailing list posts helpful:
 
-- http://curl.haxx.se/mail/curlpython-2009-11/0010.html
-- http://curl.haxx.se/mail/curlpython-2013-11/0002.html
+- https://curl.haxx.se/mail/curlpython-2009-11/0010.html
+- https://curl.haxx.se/mail/curlpython-2013-11/0002.html
 
 
 winbuild.py

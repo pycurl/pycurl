@@ -99,4 +99,4 @@ Raises TypeError when the option value is not of a type accepted by the
 respective option, and pycurl.error exception when libcurl rejects the
 option or its value.
 
-.. _curl_easy_setopt: http://curl.haxx.se/libcurl/c/curl_easy_setopt.html
+.. _curl_easy_setopt: https://curl.haxx.se/libcurl/c/curl_easy_setopt.html

@@ -10,7 +10,7 @@ Example usage::
 
     import pycurl
     c = pycurl.Curl()
-    c.setopt(pycurl.URL, "http://curl.haxx.se")
+    c.setopt(pycurl.URL, "https://curl.haxx.se")
     m = pycurl.CurlMulti()
     m.add_handle(c)
     while 1:
@@ -23,4 +23,4 @@ Example usage::
             if ret != pycurl.E_CALL_MULTI_PERFORM: break
 
 .. _curl_multi_fdset:
-    http://curl.haxx.se/libcurl/c/curl_multi_fdset.html
+    https://curl.haxx.se/libcurl/c/curl_multi_fdset.html

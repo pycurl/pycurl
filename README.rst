@@ -22,8 +22,8 @@ libcurl, including:
 
 .. _was benchmarked: http://stackoverflow.com/questions/15461995/python-requests-vs-pycurl-performance
 .. _requests: http://python-requests.org/
-.. _Multi: http://curl.haxx.se/libcurl/c/libcurl-multi.html
-.. _share: http://curl.haxx.se/libcurl/c/libcurl-share.html
+.. _Multi: https://curl.haxx.se/libcurl/c/libcurl-multi.html
+.. _share: https://curl.haxx.se/libcurl/c/libcurl-share.html
 .. _Tornado: http://www.tornadoweb.org/
 
 
@@ -80,7 +80,7 @@ reports and direct questions to our mailing list instead.
 
 .. _curl-and-python mailing list: http://cool.haxx.se/mailman/listinfo/curl-and-python
 .. _Stack Overflow: http://stackoverflow.com/questions/tagged/pycurl
-.. _Mailing list archives: http://curl.haxx.se/mail/list.cgi?list=curl-and-python
+.. _Mailing list archives: https://curl.haxx.se/mail/list.cgi?list=curl-and-python
 .. _via GitHub: https://github.com/pycurl/pycurl/issues
 
 
@@ -185,7 +185,7 @@ License
     according to the terms of either license.
 
 .. _PycURL: http://pycurl.io/
-.. _libcurl: http://curl.haxx.se/libcurl/
+.. _libcurl: https://curl.haxx.se/libcurl/
 .. _urllib: http://docs.python.org/library/urllib.html
 .. _`the repository`: https://github.com/pycurl/pycurl
 .. _`mailing list`: http://cool.haxx.se/mailman/listinfo/curl-and-python

@@ -168,7 +168,7 @@ class Curl:
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        url = 'http://curl.haxx.se'
+        url = 'https://curl.haxx.se'
     else:
         url = sys.argv[1]
     c = Curl()

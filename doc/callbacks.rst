@@ -164,7 +164,7 @@ enabled for this callback to be invoked.
         print "debug(%d): %s" % (debug_type, debug_msg)
 
     c = pycurl.Curl()
-    c.setopt(pycurl.URL, "http://curl.haxx.se/")
+    c.setopt(pycurl.URL, "https://curl.haxx.se/")
     c.setopt(pycurl.VERBOSE, 1)
     c.setopt(pycurl.DEBUGFUNCTION, test)
     c.perform()
@@ -329,25 +329,25 @@ SSH_KEYFUNCTION
     `ssh_key_cb_test.py test`_ shows how to use ``SSH_KEYFUNCTION``.
 
 
-.. _CURLOPT_HEADERFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_HEADERFUNCTION.html
-.. _CURLOPT_WRITEFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_WRITEFUNCTION.html
-.. _CURLOPT_READFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_READFUNCTION.html
-.. _CURLOPT_PROGRESSFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_PROGRESSFUNCTION.html
-.. _CURLOPT_XFERINFOFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_XFERINFOFUNCTION.html
-.. _CURLOPT_DEBUGFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_DEBUGFUNCTION.html
-.. _CURLOPT_SEEKFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_SEEKFUNCTION.html
-.. _CURLOPT_IOCTLFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_IOCTLFUNCTION.html
+.. _CURLOPT_HEADERFUNCTION: https://curl.haxx.se/libcurl/c/CURLOPT_HEADERFUNCTION.html
+.. _CURLOPT_WRITEFUNCTION: https://curl.haxx.se/libcurl/c/CURLOPT_WRITEFUNCTION.html
+.. _CURLOPT_READFUNCTION: https://curl.haxx.se/libcurl/c/CURLOPT_READFUNCTION.html
+.. _CURLOPT_PROGRESSFUNCTION: https://curl.haxx.se/libcurl/c/CURLOPT_PROGRESSFUNCTION.html
+.. _CURLOPT_XFERINFOFUNCTION: https://curl.haxx.se/libcurl/c/CURLOPT_XFERINFOFUNCTION.html
+.. _CURLOPT_DEBUGFUNCTION: https://curl.haxx.se/libcurl/c/CURLOPT_DEBUGFUNCTION.html
+.. _CURLOPT_SEEKFUNCTION: https://curl.haxx.se/libcurl/c/CURLOPT_SEEKFUNCTION.html
+.. _CURLOPT_IOCTLFUNCTION: https://curl.haxx.se/libcurl/c/CURLOPT_IOCTLFUNCTION.html
 .. _file_upload.py example: https://github.com/pycurl/pycurl/blob/master/examples/file_upload.py
 .. _write_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/write_test.py
 .. _header_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/header_test.py
 .. _debug_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/debug_test.py
-.. _CURLOPT_SSH_KEYFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_SSH_KEYFUNCTION.html
+.. _CURLOPT_SSH_KEYFUNCTION: https://curl.haxx.se/libcurl/c/CURLOPT_SSH_KEYFUNCTION.html
 .. _namedtuple: https://docs.python.org/library/collections.html#collections.namedtuple
-.. _CURLOPT_SOCKOPTFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_SOCKOPTFUNCTION.html
+.. _CURLOPT_SOCKOPTFUNCTION: https://curl.haxx.se/libcurl/c/CURLOPT_SOCKOPTFUNCTION.html
 .. _sockopt_cb_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/sockopt_cb_test.py
 .. _ssh_key_cb_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/ssh_key_cb_test.py
-.. _CURLOPT_CLOSESOCKETFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_CLOSESOCKETFUNCTION.html
+.. _CURLOPT_CLOSESOCKETFUNCTION: https://curl.haxx.se/libcurl/c/CURLOPT_CLOSESOCKETFUNCTION.html
 .. _close_socket_cb_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/close_socket_cb_test.py
-.. _CURLOPT_OPENSOCKETFUNCTION: http://curl.haxx.se/libcurl/c/CURLOPT_OPENSOCKETFUNCTION.html
+.. _CURLOPT_OPENSOCKETFUNCTION: https://curl.haxx.se/libcurl/c/CURLOPT_OPENSOCKETFUNCTION.html
 .. _open_socket_cb_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/open_socket_cb_test.py
 .. _socket module: https://docs.python.org/library/socket.html

@@ -7,4 +7,4 @@ automatically called by pycurl when a CurlShare object no longer has
 any references to it, but can also be called explicitly.
 
 .. _curl_share_cleanup:
-    http://curl.haxx.se/libcurl/c/curl_share_cleanup.html
+    https://curl.haxx.se/libcurl/c/curl_share_cleanup.html

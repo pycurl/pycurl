@@ -222,7 +222,7 @@ With very few exceptions, PycURL option names are derived from libcurl
 option names by removing the ``CURLOPT_`` prefix. Thus, ``CURLOPT_URL``
 becomes simply ``URL``.
 
-.. _curl_easy_setopt: http://curl.haxx.se/libcurl/c/curl_easy_setopt.html
+.. _curl_easy_setopt: https://curl.haxx.se/libcurl/c/curl_easy_setopt.html
 
 
 Examining Response
@@ -261,7 +261,7 @@ Response information that libcurl exposes is documented on
 are derived from libcurl constants by removing the ``CURLINFO_`` prefix.
 Thus, ``CURLINFO_RESPONSE_CODE`` becomes simply ``RESPONSE_CODE``.
 
-.. _curl_easy_getinfo: http://curl.haxx.se/libcurl/c/curl_easy_getinfo.html
+.. _curl_easy_getinfo: https://curl.haxx.se/libcurl/c/curl_easy_getinfo.html
 
 
 Sending Form Data
@@ -367,4 +367,4 @@ If the file data is in memory, use ``BUFFER``/``BUFFERPTR`` as follows::
 
 This code is available as ``examples/quickstart/file_upload_buffer.py``.
 
-.. _curl_formadd page: http://curl.haxx.se/libcurl/c/curl_formadd.html
+.. _curl_formadd page: https://curl.haxx.se/libcurl/c/curl_formadd.html

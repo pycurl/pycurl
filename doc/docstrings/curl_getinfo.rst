@@ -33,4 +33,4 @@ Example usage::
 Raises pycurl.error exception upon failure.
 
 .. _curl_easy_getinfo:
-    http://curl.haxx.se/libcurl/c/curl_easy_getinfo.html
+    https://curl.haxx.se/libcurl/c/curl_easy_getinfo.html
