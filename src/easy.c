@@ -1703,14 +1703,18 @@ do_curl_setopt_string_impl(CurlObject *self, int option, PyObject *obj)
 static PyObject *
 do_curl_setopt_int(CurlObject *self, int option, PyObject *obj)
 {
-    long d = PyInt_AsLong(obj);
+    long d;
+    PY_LONG_LONG ld;
     int res;
 
-    if (IS_LONG_OPTION(option))
+    if (IS_LONG_OPTION(option)) {
+        d = PyInt_AsLong(obj);
         res = curl_easy_setopt(self->handle, (CURLoption)option, (long)d);
-    else if (IS_OFF_T_OPTION(option))
-        res = curl_easy_setopt(self->handle, (CURLoption)option, (curl_off_t)d);
-    else {
+    } else if (IS_OFF_T_OPTION(option)) {
+        /* this path should only be taken in Python 3 */
+        ld = PyLong_AsLongLong(obj);
+        res = curl_easy_setopt(self->handle, (CURLoption)option, (curl_off_t)ld);
+    } else {
         PyErr_SetString(PyExc_TypeError, "integers are not supported for this option");
         return NULL;
     }

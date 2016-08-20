@@ -101,3 +101,12 @@ class SetoptTest(unittest.TestCase):
 
     def test_unset_encoding(self):
         self.curl.unsetopt(self.curl.ENCODING)
+
+    # github issue #405
+    def test_large_options(self):
+        self.curl.setopt(self.curl.INFILESIZE, 3333858173)
+        self.curl.setopt(self.curl.MAX_RECV_SPEED_LARGE, 3333858173)
+        self.curl.setopt(self.curl.MAX_SEND_SPEED_LARGE, 3333858173)
+        self.curl.setopt(self.curl.MAXFILESIZE, 3333858173)
+        self.curl.setopt(self.curl.POSTFIELDSIZE, 3333858173)
+        self.curl.setopt(self.curl.RESUME_FROM, 3333858173)
