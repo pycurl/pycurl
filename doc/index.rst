@@ -18,8 +18,8 @@ libcurl, including:
 
 .. _was benchmarked: http://stackoverflow.com/questions/15461995/python-requests-vs-pycurl-performance
 .. _requests: http://python-requests.org/
-.. _Multi: http://curl.haxx.se/libcurl/c/libcurl-multi.html
-.. _share: http://curl.haxx.se/libcurl/c/libcurl-share.html
+.. _Multi: https://curl.haxx.se/libcurl/c/libcurl-multi.html
+.. _share: https://curl.haxx.se/libcurl/c/libcurl-share.html
 .. _Tornado: http://www.tornadoweb.org/
 
 
@@ -43,15 +43,15 @@ About libcurl
   `well supported`_, `fast`_, `thoroughly documented`_ and is already used by
   many known, big and successful `companies`_ and numerous `applications`_.
 
-.. _free: http://curl.haxx.se/docs/copyright.html
-.. _thread-safe: http://curl.haxx.se/libcurl/features.html#thread
-.. _`IPv6 compatible`: http://curl.haxx.se/libcurl/features.html#ipv6
-.. _`feature rich`: http://curl.haxx.se/libcurl/features.html#features
-.. _`well supported`: http://curl.haxx.se/libcurl/features.html#support
-.. _`fast`: http://curl.haxx.se/libcurl/features.html#fast
-.. _`thoroughly documented`: http://curl.haxx.se/libcurl/features.html#docs
-.. _companies: http://curl.haxx.se/docs/companies.html
-.. _applications: http://curl.haxx.se/libcurl/using/apps.html
+.. _free: https://curl.haxx.se/docs/copyright.html
+.. _thread-safe: https://curl.haxx.se/libcurl/features.html#thread
+.. _`IPv6 compatible`: https://curl.haxx.se/libcurl/features.html#ipv6
+.. _`feature rich`: https://curl.haxx.se/libcurl/features.html#features
+.. _`well supported`: https://curl.haxx.se/libcurl/features.html#support
+.. _`fast`: https://curl.haxx.se/libcurl/features.html#fast
+.. _`thoroughly documented`: https://curl.haxx.se/libcurl/features.html#docs
+.. _companies: https://curl.haxx.se/docs/companies.html
+.. _applications: https://curl.haxx.se/libcurl/using/apps.html
 
 
 Requirements
@@ -101,7 +101,7 @@ the cause, you should instead post your inquiry to the mailing list.
 
 .. _curl-and-python mailing list: http://cool.haxx.se/mailman/listinfo/curl-and-python
 .. _Stack Overflow: http://stackoverflow.com/questions/tagged/pycurl
-.. _Mailing list archives: http://curl.haxx.se/mail/list.cgi?list=curl-and-python
+.. _Mailing list archives: https://curl.haxx.se/mail/list.cgi?list=curl-and-python
 .. _via GitHub: https://github.com/pycurl/pycurl/issues
 
 
@@ -132,5 +132,5 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-.. _libcurl: http://curl.haxx.se/libcurl/
+.. _libcurl: https://curl.haxx.se/libcurl/
 .. _urllib: http://docs.python.org/library/urllib.html

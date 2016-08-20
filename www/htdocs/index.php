@@ -27,7 +27,7 @@ $version_date = "Jan 5 2016"
 <body text="#000000" bgcolor="#ffffff" link="#0000ee" vlink="#551a8b" alink="#0000ee">
 
 <center>
-  <a href="http://curl.haxx.se/libcurl/"><img src="http://curl.haxx.se/ds-libcurl.jpg" width="466" height="181" border="0" alt="libcurl"></img></a>
+  <a href="https://curl.haxx.se/libcurl/"><img src="https://curl.haxx.se/ds-libcurl.jpg" width="466" height="181" border="0" alt="libcurl"></img></a>
 </center>
 
 <center>
@@ -42,9 +42,9 @@ $version_date = "Jan 5 2016"
 
 <ul>
   <li><a href="/doc/index.html">PycURL documentation</a></li>
-  <li><a href="http://curl.haxx.se/libcurl/c/">libcurl documentation</a></li>
+  <li><a href="https://curl.haxx.se/libcurl/c/">libcurl documentation</a></li>
   <li><a href="http://cool.haxx.se/mailman/listinfo/curl-and-python">Mailing list</a></li>
-  <li><a href="http://curl.haxx.se/mail/list.cgi?list=curl-and-python">Mailing list archives</a></li>
+  <li><a href="https://curl.haxx.se/mail/list.cgi?list=curl-and-python">Mailing list archives</a></li>
 </ul>
 
 
@@ -53,7 +53,7 @@ $version_date = "Jan 5 2016"
 <p>
 PycURL is a
 <a href="http://www.python.org/">Python</a> interface to
-<a href="http://curl.haxx.se/libcurl/">libcurl</a>.
+<a href="https://curl.haxx.se/libcurl/">libcurl</a>.
 PycURL can be used to fetch objects identified by a URL
 from a Python program, similar to the
 <a href="http://www.python.org/doc/current/lib/module-urllib.html">urllib</a> Python module.
@@ -74,15 +74,15 @@ PycURL is mature, very fast, and supports a lot of features.
   </li>
   <li>
     libcurl is
-    <a href="http://curl.haxx.se/docs/copyright.html">free</a>,
-    <a href="http://curl.haxx.se/libcurl/features.html#thread">thread-safe</a>,
-    <a href="http://curl.haxx.se/libcurl/features.html#ipv6">IPv6 compatible</a>,
-    <a href="http://curl.haxx.se/libcurl/features.html#features">feature rich</a>,
-    <a href="http://curl.haxx.se/libcurl/features.html#support">well supported</a>,
-    <a href="http://curl.haxx.se/libcurl/features.html#fast">fast</a>,
-    <a href="http://curl.haxx.se/libcurl/features.html#docs">thoroughly documented</a>
-	and is already used by many known, big and successful <a href="http://curl.haxx.se/docs/companies.html">companies</a>
-	and numerous <a href="http://curl.haxx.se/libcurl/using/apps.html">applications</a>.
+    <a href="https://curl.haxx.se/docs/copyright.html">free</a>,
+    <a href="https://curl.haxx.se/libcurl/features.html#thread">thread-safe</a>,
+    <a href="https://curl.haxx.se/libcurl/features.html#ipv6">IPv6 compatible</a>,
+    <a href="https://curl.haxx.se/libcurl/features.html#features">feature rich</a>,
+    <a href="https://curl.haxx.se/libcurl/features.html#support">well supported</a>,
+    <a href="https://curl.haxx.se/libcurl/features.html#fast">fast</a>,
+    <a href="https://curl.haxx.se/libcurl/features.html#docs">thoroughly documented</a>
+	and is already used by many known, big and successful <a href="https://curl.haxx.se/docs/companies.html">companies</a>
+	and numerous <a href="https://curl.haxx.se/libcurl/using/apps.html">applications</a>.
   </li>
 
 </ul>
@@ -125,11 +125,11 @@ directories of the distribution.
 
 <p>
 The real info, though, is located in the
-<a href="http://curl.haxx.se/libcurl/c/">libcurl documentation</a>,
+<a href="https://curl.haxx.se/libcurl/c/">libcurl documentation</a>,
 most important being
-<a href="http://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>.
+<a href="https://curl.haxx.se/libcurl/c/curl_easy_setopt.html">curl_easy_setopt</a>.
 The
-<a href="http://curl.haxx.se/libcurl/c/libcurl-tutorial.html">libcurl tutorial</a>
+<a href="https://curl.haxx.se/libcurl/c/libcurl-tutorial.html">libcurl tutorial</a>
 also provides a lot of useful information.
 </p>
 
@@ -174,7 +174,7 @@ and <a href="http://openbsd.org">OpenBSD</a>.
 If you want to ask questions or discuss PycURL related issues, our
 <a href="http://cool.haxx.se/mailman/listinfo/curl-and-python">mailing list</a>
 is the place to be.
-<a href="http://curl.haxx.se/mail/list.cgi?list=curl-and-python">Mailing list
+<a href="https://curl.haxx.se/mail/list.cgi?list=curl-and-python">Mailing list
 archives</a> are available for your perusal.
 </p>
 
@@ -194,7 +194,7 @@ project page.
 
 <p>
 The libcurl library also has its own
-<a href="http://curl.haxx.se/mail/">mailing lists</a>.
+<a href="https://curl.haxx.se/mail/">mailing lists</a>.
 </p>
 
 
@@ -212,8 +212,8 @@ according to the terms of either license.
 <div align="right">
   <table align="right">
     <tr align="right">
-      <td><a href="http://curl.haxx.se/"><img
-      src="http://curl.haxx.se/pix/powered_by_curl.gif"
+      <td><a href="https://curl.haxx.se/"><img
+      src="https://curl.haxx.se/pix/powered_by_curl.gif"
       width="88" height="31" border="0" alt="" /></a>
       </td>
 

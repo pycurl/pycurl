@@ -277,7 +277,7 @@ Version 7.19.5 [requires libcurl-7.21.2 or better] - 2014-07-12
           (they were accessible as e.g. type(pycurl.Curl()), but could not be
           instantiated, nor could class methods be obtained from the classes.
           Please see this mailing list post for further information:
-          http://curl.haxx.se/mail/curlpython-2014-06/0004.html
+          https://curl.haxx.se/mail/curlpython-2014-06/0004.html
 
         * When passing a file-like object to READDATA option, PycURL was
           mistakenly looking for write method on this object. Now read method
@@ -441,7 +441,7 @@ Version 7.19.0.3 [requires libcurl-7.19.0 or better] - 2013-12-24
 
         * Re-release of 7.19.0.2 with minor changes to build Windows packages
           due to botched 7.19.0.2 files on PyPi.
-          http://curl.haxx.se/mail/curlpython-2013-12/0021.html
+          https://curl.haxx.se/mail/curlpython-2013-12/0021.html
 
 
 Version 7.19.0.2 [requires libcurl-7.19.0 or better] - 2013-10-08

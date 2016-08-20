@@ -62,4 +62,4 @@ As of this writing, the following symbols are thusly omitted:
 - ``CURLPAUSE_RECV_CONT``
 - ``CURLPAUSE_SEND_CONT``
 
-.. _symbols in versions: http://curl.haxx.se/libcurl/c/symbols-in-versions.html
+.. _symbols in versions: https://curl.haxx.se/libcurl/c/symbols-in-versions.html

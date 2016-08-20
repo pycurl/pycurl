@@ -15,4 +15,4 @@ Example usage::
     'imap', 'imaps', 'pop3', 'pop3s', 'rtsp', 'smtp', 'smtps', 'telnet',
     'tftp'), None, 0, None)
 
-.. _curl_version_info: http://curl.haxx.se/libcurl/c/curl_version_info.html
+.. _curl_version_info: https://curl.haxx.se/libcurl/c/curl_version_info.html

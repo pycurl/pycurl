@@ -346,7 +346,7 @@ class ExtensionConfiguration(object):
         # we use inet_ntop which was added in vista and implement a fallback.
         # our implementation will not be compiled with _WIN32_WINNT targeting
         # vista or above, thus said binary won't work on xp.
-        # http://curl.haxx.se/mail/curlpython-2013-12/0007.html
+        # https://curl.haxx.se/mail/curlpython-2013-12/0007.html
         self.extra_compile_args.append("-D_WIN32_WINNT=0x0501")
 
         if str.find(sys.version, "MSC") >= 0:
@@ -677,8 +677,8 @@ libcurl, including:
 
 .. _was benchmarked: http://stackoverflow.com/questions/15461995/python-requests-vs-pycurl-performance
 .. _requests: http://python-requests.org/
-.. _Multi: http://curl.haxx.se/libcurl/c/libcurl-multi.html
-.. _share: http://curl.haxx.se/libcurl/c/libcurl-share.html
+.. _Multi: https://curl.haxx.se/libcurl/c/libcurl-multi.html
+.. _share: https://curl.haxx.se/libcurl/c/libcurl-share.html
 .. _Tornado: http://www.tornadoweb.org/
 
 
@@ -723,7 +723,7 @@ reports and direct questions to our mailing list instead.
 
 .. _curl-and-python mailing list: http://cool.haxx.se/mailman/listinfo/curl-and-python
 .. _Stack Overflow: http://stackoverflow.com/questions/tagged/pycurl
-.. _Mailing list archives: http://curl.haxx.se/mail/list.cgi?list=curl-and-python
+.. _Mailing list archives: https://curl.haxx.se/mail/list.cgi?list=curl-and-python
 .. _via GitHub: https://github.com/pycurl/pycurl/issues
 
 
@@ -734,7 +734,7 @@ PycURL is dual licensed under the LGPL and an MIT/X derivative license
 based on the libcurl license. The complete text of the licenses is available
 in COPYING-LGPL_ and COPYING-MIT_ files in the source distribution.
 
-.. _libcurl: http://curl.haxx.se/libcurl/
+.. _libcurl: https://curl.haxx.se/libcurl/
 .. _urllib: http://docs.python.org/library/urllib.html
 .. _COPYING-LGPL: https://raw.githubusercontent.com/pycurl/pycurl/master/COPYING-LGPL
 .. _COPYING-MIT: https://raw.githubusercontent.com/pycurl/pycurl/master/COPYING-MIT

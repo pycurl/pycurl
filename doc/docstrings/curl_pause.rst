@@ -9,4 +9,4 @@ derived from the ``PAUSE_RECV``, ``PAUSE_SEND``, ``PAUSE_ALL`` and
 
 Raises pycurl.error exception upon failure.
 
-.. _curl_easy_pause: http://curl.haxx.se/libcurl/c/curl_easy_pause.html
+.. _curl_easy_pause: https://curl.haxx.se/libcurl/c/curl_easy_pause.html

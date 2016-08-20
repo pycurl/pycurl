@@ -28,4 +28,4 @@ Example setting URL via ``setopt_string``::
     c = pycurl.Curl()
     c.setopt_string(10002, "http://www.python.org/")
 
-.. _CURLOPT_POSTFIELDS: http://curl.haxx.se/libcurl/c/CURLOPT_POSTFIELDS.html
+.. _CURLOPT_POSTFIELDS: https://curl.haxx.se/libcurl/c/CURLOPT_POSTFIELDS.html

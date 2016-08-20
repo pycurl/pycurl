@@ -14,7 +14,7 @@ Example usage::
     s = pycurl.CurlShare()
     s.setopt(pycurl.SH_SHARE, pycurl.LOCK_DATA_COOKIE)
     s.setopt(pycurl.SH_SHARE, pycurl.LOCK_DATA_DNS)
-    curl.setopt(pycurl.URL, 'http://curl.haxx.se')
+    curl.setopt(pycurl.URL, 'https://curl.haxx.se')
     curl.setopt(pycurl.SHARE, s)
     curl.perform()
     curl.close()
@@ -22,4 +22,4 @@ Example usage::
 Raises pycurl.error exception upon failure.
 
 .. _curl_share_setopt:
-    http://curl.haxx.se/libcurl/c/curl_share_setopt.html
+    https://curl.haxx.se/libcurl/c/curl_share_setopt.html

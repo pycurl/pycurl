@@ -111,7 +111,7 @@ def run_matrix(python_versions, libcurl_versions):
         build(archive, dir, prefix, meta=python_meta.get(python_version))
 
     for libcurl_version in libcurl_versions:
-        url = 'http://curl.haxx.se/download/curl-%s.tar.gz' % libcurl_version
+        url = 'https://curl.haxx.se/download/curl-%s.tar.gz' % libcurl_version
         archive = os.path.basename(url)
         fetch(url, archive)
 

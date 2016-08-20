@@ -21,7 +21,7 @@ sys.stderr.write("Testing %s\n" % pycurl.version)
 
 t = Test()
 c = pycurl.Curl()
-c.setopt(c.URL, 'http://curl.haxx.se/dev/')
+c.setopt(c.URL, 'https://curl.haxx.se/dev/')
 c.setopt(c.WRITEFUNCTION, t.body_callback)
 c.perform()
 c.close()

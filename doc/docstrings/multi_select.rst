@@ -10,7 +10,7 @@ Example usage::
 
     import pycurl
     c = pycurl.Curl()
-    c.setopt(pycurl.URL, "http://curl.haxx.se")
+    c.setopt(pycurl.URL, "https://curl.haxx.se")
     m = pycurl.CurlMulti()
     m.add_handle(c)
     while 1:
