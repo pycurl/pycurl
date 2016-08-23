@@ -1,3 +1,15 @@
+master
+------
+
+        * LARGE options fixed under Windows and Python 3 (INFILESIZE,
+          MAX_RECV_SPEED_LARGE, MAX_SEND_SPEED_LARGE, MAXFILESIZE,
+          POSTFILESIZE, RESUME_FROM).
+
+        * Fixed compilation on Solaris (patch by Yiteng Zhang).
+
+        * ENCODING option can now be unset (patch by Yves Bastide).
+
+
 Version 7.43.0 [requires libcurl-7.19.0 or better] - 2016-02-02
 ---------------------------------------------------------------
 
