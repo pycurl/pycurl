@@ -305,7 +305,7 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
         Py_CLEAR(self->ioctl_cb);
         Py_CLEAR(self->seek_cb);
         Py_CLEAR(self->opensocket_cb);
-#if LIBCURL_VERSION_NUM >= 0x071507 /* check for 7.21.7 or greater */
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
         Py_CLEAR(self->closesocket_cb);
 #endif
         Py_CLEAR(self->sockopt_cb);
@@ -480,7 +480,7 @@ do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
     VISIT(self->ioctl_cb);
     VISIT(self->seek_cb);
     VISIT(self->opensocket_cb);
-#if LIBCURL_VERSION_NUM >= 0x071507 /* check for 7.21.7 or greater */
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
     VISIT(self->closesocket_cb);
 #endif
     VISIT(self->sockopt_cb);
@@ -808,7 +808,7 @@ verbose_error:
 }
 
 
-#if LIBCURL_VERSION_NUM >= 0x071507 /* check for 7.21.7 or greater */
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
 static int
 closesocket_callback(void *clientp, curl_socket_t curlfd)
 {
@@ -1464,7 +1464,7 @@ util_curl_unsetopt(CurlObject *self, int option)
     case CURLOPT_PASSWORD:
 #endif
     case CURLOPT_RANGE:
-#if LIBCURL_VERSION_NUM >= 0x072b00 /* check for 7.43.0 or greater */
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 43, 0)
     case CURLOPT_SERVICE_NAME:
     case CURLOPT_PROXY_SERVICE_NAME:
 #endif
@@ -1482,7 +1482,7 @@ util_curl_unsetopt(CurlObject *self, int option)
 #endif
 
     CLEAR_CALLBACK(CURLOPT_OPENSOCKETFUNCTION, CURLOPT_OPENSOCKETDATA, self->opensocket_cb);
-#if LIBCURL_VERSION_NUM >= 0x071507 /* check for 7.21.7 or greater */
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
     CLEAR_CALLBACK(CURLOPT_CLOSESOCKETFUNCTION, CURLOPT_CLOSESOCKETDATA, self->closesocket_cb);
 #endif
     CLEAR_CALLBACK(CURLOPT_SOCKOPTFUNCTION, CURLOPT_SOCKOPTDATA, self->sockopt_cb);
@@ -1590,7 +1590,7 @@ do_curl_setopt_string_impl(CurlObject *self, int option, PyObject *obj)
     case CURLOPT_SSH_HOST_PUBLIC_KEY_MD5:
     case CURLOPT_CRLFILE:
     case CURLOPT_ISSUERCERT:
-#if LIBCURL_VERSION_NUM >= 0x071400 /* check for 7.20.0 or greater */
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 20, 0)
     case CURLOPT_RTSP_STREAM_URI:
     case CURLOPT_RTSP_SESSION_ID:
     case CURLOPT_RTSP_TRANSPORT:
@@ -1613,17 +1613,17 @@ do_curl_setopt_string_impl(CurlObject *self, int option, PyObject *obj)
 #ifdef HAVE_CURL_7_25_0_OPTS
     case CURLOPT_MAIL_AUTH:
 #endif
-#if LIBCURL_VERSION_NUM >= 0x072700 /* check for 7.39.0 or greater */
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 39, 0)
     case CURLOPT_PINNEDPUBLICKEY:
 #endif
-#if LIBCURL_VERSION_NUM >= 0x072b00 /* check for 7.43.0 or greater */
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 43, 0)
     case CURLOPT_SERVICE_NAME:
     case CURLOPT_PROXY_SERVICE_NAME:
 #endif
-#if LIBCURL_VERSION_NUM >= 0x071500 /* check for 7.21.0 or greater */
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 0)
     case CURLOPT_WILDCARDMATCH:
 #endif
-#if LIBCURL_VERSION_NUM >= 0x072800 /* check for 7.40.0 or greater */
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 40, 0)
     case CURLOPT_UNIX_SOCKET_PATH:
 #endif
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 4)
@@ -2124,7 +2124,7 @@ do_curl_setopt_callable(CurlObject *self, int option, PyObject *obj)
     const curl_debug_callback debug_cb = debug_callback;
     const curl_ioctl_callback ioctl_cb = ioctl_callback;
     const curl_opensocket_callback opensocket_cb = opensocket_callback;
-#if LIBCURL_VERSION_NUM >= 0x071507 /* check for 7.21.7 or greater */
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
     const curl_closesocket_callback closesocket_cb = closesocket_callback;
 #endif
     const curl_seek_callback seek_cb = seek_callback;
@@ -2194,7 +2194,7 @@ do_curl_setopt_callable(CurlObject *self, int option, PyObject *obj)
         curl_easy_setopt(self->handle, CURLOPT_OPENSOCKETFUNCTION, opensocket_cb);
         curl_easy_setopt(self->handle, CURLOPT_OPENSOCKETDATA, self);
         break;
-#if LIBCURL_VERSION_NUM >= 0x071507 /* check for 7.21.7 or greater */
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
     case CURLOPT_CLOSESOCKETFUNCTION:
         Py_INCREF(obj);
         Py_CLEAR(self->closesocket_cb);
