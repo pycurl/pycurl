@@ -83,6 +83,8 @@ class Curl:
         if relative_url:
             self.set_option(pycurl.URL, urljoin(self.base_url, relative_url))
         self.payload = None
+        self.payload_io.seek(0)
+        self.payload_io.truncate()
         self.hdr = ""
         self.handle.perform()
         self.payload = self.payload_io.getvalue()
