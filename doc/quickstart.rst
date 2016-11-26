@@ -130,7 +130,13 @@ examine the response headers::
         name = name.lower()
 
         # Now we can actually record the header name and value.
-        headers[name] = value
+        if name in headers:
+            if isinstance(headers[name], list):
+                headers[name].append(value)
+            else:
+                headers[name] = [headers[name], value]
+        else:
+            headers[name] = value
 
     buffer = BytesIO()
     c = pycurl.Curl()
