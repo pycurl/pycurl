@@ -130,6 +130,7 @@ examine the response headers::
         name = name.lower()
 
         # Now we can actually record the header name and value.
+        # Note: this only works when headers are not duplicated, see below.
         headers[name] = value
 
     buffer = BytesIO()
@@ -166,6 +167,19 @@ This code is available as ``examples/quickstart/response_headers.py``.
 That was a lot of code for something very straightforward. Unfortunately,
 as libcurl refrains from allocating memory for response data, it is on our
 application to perform this grunt work.
+
+One caveat with the above code is that if there are multiple headers
+for the same name, such as Set-Cookie, only the last header value will be
+stored. To record all values in multi-valued headers as a list the following
+code can be used instead of ``headers[name] = value`` line::
+
+    if name in headers:
+        if isinstance(headers[name], list):
+            headers[name].append(value)
+        else:
+            headers[name] = [headers[name], value]
+    else:
+        headers[name] = value
 
 
 Writing To A File
