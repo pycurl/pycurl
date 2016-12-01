@@ -12,7 +12,7 @@ setup_module, teardown_module = appmanager.setup(('app', 8380))
 
 class XferinfoCbTest(unittest.TestCase):
     def setUp(self):
-        self.curl = pycurl.Curl()
+        self.curl = util.default_test_curl()
         self.curl.setopt(self.curl.URL, 'http://localhost:8380/long_pause')
 
     def tearDown(self):

@@ -13,21 +13,21 @@ setup_module, teardown_module = appmanager.setup(('app', 8380))
 
 class SetoptUnicodeTest(unittest.TestCase):
     def setUp(self):
-        self.curl = pycurl.Curl()
-    
+        self.curl = util.default_test_curl()
+
     def tearDown(self):
         self.curl.close()
-    
+
     def test_ascii_string(self):
         self.check('p=test', 'test')
-    
+
     @nose.tools.raises(UnicodeEncodeError)
     def test_unicode_string(self):
         self.check(util.u('p=Москва'), util.u('Москва'))
-    
+
     def test_unicode_encoded(self):
         self.check(util.u('p=Москва').encode('utf8'), util.u('Москва'))
-    
+
     def check(self, send, expected):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/param_utf8_hack')
         sio = util.BytesIO()

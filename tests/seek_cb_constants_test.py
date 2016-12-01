@@ -12,7 +12,7 @@ class SeekCbConstantsTest(unittest.TestCase):
     # the constant is only defined in 7.19.5+
     @util.min_libcurl(7, 19, 5)
     def test_ok(self):
-        curl = pycurl.Curl()
+        curl = util.default_test_curl()
         self.assertEqual(0, curl.SEEKFUNC_OK)
         curl.close()
 
@@ -20,12 +20,12 @@ class SeekCbConstantsTest(unittest.TestCase):
     # the constant is only defined in 7.19.5+
     @util.min_libcurl(7, 19, 5)
     def test_fail(self):
-        curl = pycurl.Curl()
+        curl = util.default_test_curl()
         self.assertEqual(1, curl.SEEKFUNC_FAIL)
         curl.close()
 
     @util.min_libcurl(7, 19, 5)
     def test_cantseek(self):
-        curl = pycurl.Curl()
+        curl = util.default_test_curl()
         self.assertEqual(2, curl.SEEKFUNC_CANTSEEK)
         curl.close()

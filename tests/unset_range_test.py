@@ -7,9 +7,11 @@ import pycurl
 import sys
 import unittest
 
+from . import util
+
 class UnsetRangeTest(unittest.TestCase):
     def setUp(self):
-        self.curl = pycurl.Curl()
+        self.curl = util.default_test_curl()
 
     def tearDown(self):
         self.curl.close()

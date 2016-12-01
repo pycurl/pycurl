@@ -39,7 +39,7 @@ class MemoryMgmtTest(unittest.TestCase):
         t = []
         searches = []
         for a in range(100):
-            curl = pycurl.Curl()
+            curl = util.default_test_curl()
             multi.add_handle(curl)
             t.append(curl)
 
@@ -77,7 +77,7 @@ class MemoryMgmtTest(unittest.TestCase):
         t = []
         searches = []
         for a in range(100):
-            curl = pycurl.Curl()
+            curl = util.default_test_curl()
             multi.add_handle(curl)
             t.append(curl)
 
@@ -109,7 +109,7 @@ class MemoryMgmtTest(unittest.TestCase):
         t = []
         searches = []
         for a in range(100):
-            curl = pycurl.Curl()
+            curl = util.default_test_curl()
             curl.setopt(curl.SHARE, share)
             t.append(curl)
 
@@ -147,7 +147,7 @@ class MemoryMgmtTest(unittest.TestCase):
         t = []
         searches = []
         for a in range(100):
-            curl = pycurl.Curl()
+            curl = util.default_test_curl()
             curl.setopt(curl.SHARE, share)
             t.append(curl)
 
@@ -173,7 +173,7 @@ class MemoryMgmtTest(unittest.TestCase):
 
     # basic check of reference counting (use a memory checker like valgrind)
     def test_reference_counting(self):
-        c = pycurl.Curl()
+        c = util.default_test_curl()
         m = pycurl.CurlMulti()
         m.add_handle(c)
         del m
@@ -183,7 +183,7 @@ class MemoryMgmtTest(unittest.TestCase):
 
     def test_cyclic_gc(self):
         gc.collect()
-        c = pycurl.Curl()
+        c = util.default_test_curl()
         c.m = pycurl.CurlMulti()
         c.m.add_handle(c)
         # create some nasty cyclic references
@@ -220,7 +220,7 @@ class MemoryMgmtTest(unittest.TestCase):
             range_generator = range
         # Ensure that the refcounting error in "reset" is fixed:
         for i in range_generator(100000):
-            c = pycurl.Curl()
+            c = util.default_test_curl()
             c.reset()
 
     def test_writefunction_collection(self):
@@ -259,7 +259,7 @@ class MemoryMgmtTest(unittest.TestCase):
         gc.collect()
         object_count = len(gc.get_objects())
 
-        c = pycurl.Curl()
+        c = util.default_test_curl()
         c.setopt(callback, lambda x: True)
         del c
 
@@ -273,7 +273,7 @@ class MemoryMgmtTest(unittest.TestCase):
         # this test passed even before the memory leak was fixed,
         # not sure why.
 
-        c = pycurl.Curl()
+        c = util.default_test_curl()
         gc.collect()
         before_object_count = len(gc.get_objects())
 
@@ -285,7 +285,7 @@ class MemoryMgmtTest(unittest.TestCase):
         self.assert_(after_object_count <= before_object_count + 1000, 'Grew from %d to %d objects' % (before_object_count, after_object_count))
 
     def test_form_bufferptr_memory_leak_gh267(self):
-        c = pycurl.Curl()
+        c = util.default_test_curl()
         gc.collect()
         before_object_count = len(gc.get_objects())
 

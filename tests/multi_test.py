@@ -30,8 +30,8 @@ class MultiTest(unittest.TestCase):
         io2 = util.BytesIO()
         m = pycurl.CurlMulti()
         handles = []
-        c1 = pycurl.Curl()
-        c2 = pycurl.Curl()
+        c1 = util.default_test_curl()
+        c2 = util.default_test_curl()
         c1.setopt(c1.URL, 'http://localhost:8380/success')
         c1.setopt(c1.WRITEFUNCTION, io1.write)
         c2.setopt(c2.URL, 'http://localhost:8381/success')
@@ -54,14 +54,14 @@ class MultiTest(unittest.TestCase):
         m.close()
         c1.close()
         c2.close()
-        
+
         self.assertEqual('success', io1.getvalue().decode())
         self.assertEqual('success', io2.getvalue().decode())
-    
+
     def test_multi_select_fdset(self):
-        c1 = pycurl.Curl()
-        c2 = pycurl.Curl()
-        c3 = pycurl.Curl()
+        c1 = util.default_test_curl()
+        c2 = util.default_test_curl()
+        c3 = util.default_test_curl()
         c1.setopt(c1.URL, "http://localhost:8380/success")
         c2.setopt(c2.URL, "http://localhost:8381/success")
         c3.setopt(c3.URL, "http://localhost:8382/success")
@@ -102,11 +102,11 @@ class MultiTest(unittest.TestCase):
         c1.close()
         c2.close()
         c3.close()
-        
+
         self.assertEqual('success', c1.body.getvalue().decode())
         self.assertEqual('success', c2.body.getvalue().decode())
         self.assertEqual('success', c3.body.getvalue().decode())
-    
+
     def test_multi_status_codes(self):
         # init
         m = pycurl.CurlMulti()
@@ -117,7 +117,7 @@ class MultiTest(unittest.TestCase):
             'http://localhost:8382/status/404',
         ]
         for url in urls:
-            c = pycurl.Curl()
+            c = util.default_test_curl()
             # save info in standard Python attributes
             c.url = url.rstrip()
             c.body = util.BytesIO()
@@ -157,7 +157,7 @@ class MultiTest(unittest.TestCase):
         # bottle generated response body
         self.assertEqual('not found', m.handles[2].body.getvalue().decode())
         self.assertEqual(404, m.handles[2].http_code)
-    
+
     def check_adding_closed_handle(self, close_fn):
         # init
         m = pycurl.CurlMulti()
@@ -168,7 +168,7 @@ class MultiTest(unittest.TestCase):
             'http://localhost:8382/status/404',
         ]
         for url in urls:
-            c = pycurl.Curl()
+            c = util.default_test_curl()
             # save info in standard Python attributes
             c.url = url
             c.body = util.BytesIO()
@@ -218,34 +218,34 @@ class MultiTest(unittest.TestCase):
         # bottle generated response body
         self.assertEqual('', m.handles[2].body.getvalue().decode())
         self.assertEqual(-1, m.handles[2].http_code)
-    
+
     def _remove_then_close(self, m, c):
         m.remove_handle(c)
         c.close()
-    
+
     def _close_then_remove(self, m, c):
         # in the C API this is the wrong calling order, but pycurl
         # handles this automatically
         c.close()
         m.remove_handle(c)
-    
+
     def _close_without_removing(self, m, c):
         # actually, remove_handle is called automatically on close
         c.close
-    
+
     def test_adding_closed_handle_remove_then_close(self):
         self.check_adding_closed_handle(self._remove_then_close)
-    
+
     def test_adding_closed_handle_close_then_remove(self):
         self.check_adding_closed_handle(self._close_then_remove)
-    
+
     def test_adding_closed_handle_close_without_removing(self):
         self.check_adding_closed_handle(self._close_without_removing)
-    
+
     def test_multi_select(self):
-        c1 = pycurl.Curl()
-        c2 = pycurl.Curl()
-        c3 = pycurl.Curl()
+        c1 = util.default_test_curl()
+        c2 = util.default_test_curl()
+        c3 = util.default_test_curl()
         c1.setopt(c1.URL, "http://localhost:8380/success")
         c2.setopt(c2.URL, "http://localhost:8381/success")
         c3.setopt(c3.URL, "http://localhost:8382/success")
@@ -288,15 +288,15 @@ class MultiTest(unittest.TestCase):
         c1.close()
         c2.close()
         c3.close()
-        
+
         self.assertEqual('success', c1.body.getvalue().decode())
         self.assertEqual('success', c2.body.getvalue().decode())
         self.assertEqual('success', c3.body.getvalue().decode())
-    
+
     def test_multi_info_read(self):
-        c1 = pycurl.Curl()
-        c2 = pycurl.Curl()
-        c3 = pycurl.Curl()
+        c1 = util.default_test_curl()
+        c2 = util.default_test_curl()
+        c3 = util.default_test_curl()
         c1.setopt(c1.URL, "http://localhost:8380/short_wait")
         c2.setopt(c2.URL, "http://localhost:8381/short_wait")
         c3.setopt(c3.URL, "http://localhost:8382/short_wait")
@@ -340,12 +340,12 @@ class MultiTest(unittest.TestCase):
             # last info is an empty array
             if handles:
                 all_handles.extend(handles)
-        
+
         self.assertEqual(3, len(all_handles))
         assert c1 in all_handles
         assert c2 in all_handles
         assert c3 in all_handles
-        
+
         # Cleanup
         m.remove_handle(c3)
         m.remove_handle(c2)
@@ -354,25 +354,25 @@ class MultiTest(unittest.TestCase):
         c1.close()
         c2.close()
         c3.close()
-        
+
         self.assertEqual('success', c1.body.getvalue().decode())
         self.assertEqual('success', c2.body.getvalue().decode())
         self.assertEqual('success', c3.body.getvalue().decode())
-    
+
     def test_multi_close(self):
         m = pycurl.CurlMulti()
         m.close()
-    
+
     def test_multi_close_twice(self):
         m = pycurl.CurlMulti()
         m.close()
         m.close()
-    
+
     # positional arguments are rejected
     @nose.tools.raises(TypeError)
     def test_positional_arguments(self):
         pycurl.CurlMulti(1)
-    
+
     # keyword arguments are rejected
     @nose.tools.raises(TypeError)
     def test_keyword_arguments(self):

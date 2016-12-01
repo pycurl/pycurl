@@ -12,7 +12,7 @@ setup_module, teardown_module = appmanager.setup(('app', 8380))
 
 class SockoptCbTest(unittest.TestCase):
     def setUp(self):
-        self.curl = pycurl.Curl()
+        self.curl = util.default_test_curl()
         self.curl.setopt(self.curl.URL, 'http://localhost:8380/success')
 
     def tearDown(self):
@@ -75,7 +75,7 @@ class SockoptCbTest(unittest.TestCase):
 
 class SockoptCbUnsetTest(unittest.TestCase):
     def setUp(self):
-        self.curl = pycurl.Curl()
+        self.curl = util.default_test_curl()
 
     def test_sockoptfunction_none(self):
         self.curl.setopt(pycurl.SOCKOPTFUNCTION, None)

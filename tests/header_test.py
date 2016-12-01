@@ -16,35 +16,35 @@ setup_module, teardown_module = appmanager.setup(('app', 8380))
 
 class HeaderTest(unittest.TestCase):
     def setUp(self):
-        self.curl = pycurl.Curl()
-    
+        self.curl = util.default_test_curl()
+
     def tearDown(self):
         self.curl.close()
-    
+
     def test_ascii_string_header(self):
         self.check('x-test-header: ascii', 'ascii')
-    
+
     def test_ascii_unicode_header(self):
         self.check(util.u('x-test-header: ascii'), 'ascii')
-    
+
     # on python 2 unicode is accepted in strings because strings are byte strings
     @util.only_python3
     @nose.tools.raises(UnicodeEncodeError)
     def test_unicode_string_header(self):
         self.check('x-test-header: Москва', 'Москва')
-    
+
     @nose.tools.raises(UnicodeEncodeError)
     def test_unicode_unicode_header(self):
         self.check(util.u('x-test-header: Москва'), util.u('Москва'))
-    
+
     def test_encoded_unicode_header(self):
         self.check(util.u('x-test-header: Москва').encode('utf-8'), util.u('Москва'))
-    
+
     def check(self, send, expected):
         # check as list and as tuple, because they may be handled differently
         self.do_check([send], expected)
         self.do_check((send,), expected)
-    
+
     def do_check(self, send, expected):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/header_utf8?h=x-test-header')
         sio = util.BytesIO()

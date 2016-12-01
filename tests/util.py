@@ -238,3 +238,12 @@ def get_sys_path(p=None):
     return p
 
 
+def default_test_curl():
+    import pycurl
+
+    curl = pycurl.Curl()
+    # the test servers are run in process and if libcurl keeps the connections
+    # open, the servers are shut down before libcurl closes the connections.
+    # avoid connection reuse by default
+    curl.setopt(curl.FORBID_REUSE, True)
+    return curl
