@@ -13,13 +13,13 @@ setup_module, teardown_module = appmanager.setup(('app', 8380))
 class RelativeUrlTest(unittest.TestCase):
     def setUp(self):
         self.curl = curl.Curl('http://localhost:8380/')
-    
+
     def tearDown(self):
         self.curl.close()
-    
+
     def test_reuse(self):
         result = self.curl.get('/success')
-        self.assertEqual('success', result)
+        self.assertEqual('success', result.decode())
 
         result = self.curl.get('/success')
-        self.assertEqual('success', result)
+        self.assertEqual('success', result.decode())
