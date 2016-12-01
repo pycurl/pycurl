@@ -13,7 +13,7 @@ setup_module, teardown_module = appmanager.setup(('app', 8380))
 
 class SetoptTest(unittest.TestCase):
     def setUp(self):
-        self.curl = pycurl.Curl()
+        self.curl = util.default_test_curl()
 
     def tearDown(self):
         self.curl.close()

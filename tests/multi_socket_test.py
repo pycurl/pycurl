@@ -45,7 +45,7 @@ class MultiSocketTest(unittest.TestCase):
         m.setopt(pycurl.M_SOCKETFUNCTION, socket)
         m.handles = []
         for url in urls:
-            c = pycurl.Curl()
+            c = util.default_test_curl()
             # save info in standard Python attributes
             c.url = url
             c.body = util.BytesIO()
@@ -78,18 +78,18 @@ class MultiSocketTest(unittest.TestCase):
         for c in m.handles:
             self.assertEqual('success', c.body.getvalue().decode())
             self.assertEqual(200, c.http_code)
-            
+
             # multi, not curl handle
             self.check(pycurl.POLL_IN, m, socket_events)
             self.check(pycurl.POLL_REMOVE, m, socket_events)
-        
+
         # close handles
         for c in m.handles:
             # pycurl API calls
             m.remove_handle(c)
             c.close()
         m.close()
-    
+
     def check(self, event, multi, socket_events):
         for event_, multi_ in socket_events:
             if event == event_ and multi == multi_:

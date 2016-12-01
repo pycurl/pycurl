@@ -57,7 +57,7 @@ class MultiSocketSelectTest(unittest.TestCase):
         m.setopt(pycurl.M_SOCKETFUNCTION, socket)
         m.handles = []
         for url in urls:
-            c = pycurl.Curl()
+            c = util.default_test_curl()
             # save info in standard Python attributes
             c.url = url
             c.body = util.BytesIO()

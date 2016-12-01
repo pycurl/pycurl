@@ -14,21 +14,21 @@ setup_module, teardown_module = procmgr.vsftpd_setup()
 
 class FtpTest(unittest.TestCase):
     def setUp(self):
-        self.curl = pycurl.Curl()
-    
+        self.curl = util.default_test_curl()
+
     def tearDown(self):
         self.curl.close()
-    
+
     def test_get_ftp(self):
         self.curl.setopt(pycurl.URL, 'ftp://%s:8321' % localhost)
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
-        
+
         result = sio.getvalue().decode()
         assert 'README.rst' in result
         assert 'INSTALL.rst' in result
-    
+
     # XXX this test needs to be fixed
     def test_quote(self):
         self.curl.setopt(pycurl.URL, 'ftp://%s:8321' % localhost)
@@ -36,18 +36,18 @@ class FtpTest(unittest.TestCase):
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.setopt(pycurl.QUOTE, ['CWD tests'])
         self.curl.perform()
-        
+
         result = sio.getvalue().decode()
         assert 'README.rst' not in result
         assert 'ftp_test.py' in result
-    
+
     def test_epsv(self):
         self.curl.setopt(pycurl.URL, 'ftp://%s:8321' % localhost)
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.setopt(pycurl.FTP_USE_EPSV, 1)
         self.curl.perform()
-        
+
         result = sio.getvalue().decode()
         assert 'README.rst' in result
         assert 'INSTALL.rst' in result

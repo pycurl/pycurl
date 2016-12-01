@@ -6,9 +6,11 @@ import pycurl
 import sys
 import unittest
 
+from . import util
+
 class ErrorTest(unittest.TestCase):
     def setUp(self):
-        self.curl = pycurl.Curl()
+        self.curl = util.default_test_curl()
 
     def tearDown(self):
         self.curl.close()
@@ -32,10 +34,10 @@ class ErrorTest(unittest.TestCase):
             self.assertEqual('No URL set!', msg)
         else:
             self.fail('Expected pycurl.error to be raised')
-    
+
     def test_pycurl_errstr_initially_empty(self):
         self.assertEqual('', self.curl.errstr())
-    
+
     def test_pycurl_errstr_type(self):
         self.assertEqual('', self.curl.errstr())
         try:

@@ -7,9 +7,11 @@ import pycurl
 import sys
 import unittest
 
+from . import util
+
 class WriteAbortTest(unittest.TestCase):
     def setUp(self):
-        self.curl = pycurl.Curl()
+        self.curl = util.default_test_curl()
 
     def tearDown(self):
         self.curl.close()
@@ -22,17 +24,17 @@ class WriteAbortTest(unittest.TestCase):
 
     def test_write_cb_returning_string(self):
         self.check(self.write_cb_returning_string)
-    
+
     def test_write_cb_returning_float(self):
         self.check(self.write_cb_returning_float)
-    
+
     def check(self, write_cb):
         # download the script itself through the file:// protocol into write_cb
         self.curl.setopt(pycurl.URL, 'file://' + os.path.abspath(sys.argv[0]))
         self.curl.setopt(pycurl.WRITEFUNCTION, write_cb)
         try:
             self.curl.perform()
-            
+
             self.fail('Should not get here')
         except pycurl.error:
             err, msg = sys.exc_info()[1].args

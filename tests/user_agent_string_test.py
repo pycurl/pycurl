@@ -12,11 +12,11 @@ setup_module, teardown_module = appmanager.setup(('app', 8380))
 
 class UserAgentStringTest(unittest.TestCase):
     def setUp(self):
-        self.curl = pycurl.Curl()
-    
+        self.curl = util.default_test_curl()
+
     def tearDown(self):
         self.curl.close()
-    
+
     def test_pycurl_user_agent_string(self):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/header?h=user-agent')
         sio = util.BytesIO()

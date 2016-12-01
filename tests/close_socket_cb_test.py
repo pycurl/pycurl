@@ -13,7 +13,7 @@ setup_module, teardown_module = appmanager.setup(('app', 8380))
 
 class CloseSocketCbTest(unittest.TestCase):
     def setUp(self):
-        self.curl = pycurl.Curl()
+        self.curl = util.default_test_curl()
         self.curl.setopt(self.curl.URL, 'http://localhost:8380/success')
         self.curl.setopt(pycurl.FORBID_REUSE, True)
 
@@ -64,7 +64,7 @@ class CloseSocketCbTest(unittest.TestCase):
 
 class CloseSocketCbUnsetTest(unittest.TestCase):
     def setUp(self):
-        self.curl = pycurl.Curl()
+        self.curl = util.default_test_curl()
 
     @util.min_libcurl(7, 21, 7)
     def test_closesocketfunction_none(self):
