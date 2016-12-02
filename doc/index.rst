@@ -39,12 +39,12 @@ About libcurl
   AIX, Tru64, Linux, UnixWare, HURD, Windows, Amiga, OS/2, BeOs, Mac OS X,
   Ultrix, QNX, OpenVMS, RISC OS, Novell NetWare, DOS and more...
 
-- libcurl is `free`_, `thread-safe`_, `IPv6 compatible`_, `feature rich`_,
+- libcurl is `free`_, :ref:`thread-safe <thread-safety>`, `IPv6 compatible`_, `feature rich`_,
   `well supported`_, `fast`_, `thoroughly documented`_ and is already used by
   many known, big and successful `companies`_ and numerous `applications`_.
 
 .. _free: https://curl.haxx.se/docs/copyright.html
-.. _thread-safe: https://curl.haxx.se/libcurl/features.html#thread
+.. _thread-safe: :ref:`thread-safety`
 .. _`IPv6 compatible`: https://curl.haxx.se/libcurl/features.html#ipv6
 .. _`feature rich`: https://curl.haxx.se/libcurl/features.html#features
 .. _`well supported`: https://curl.haxx.se/libcurl/features.html#support
@@ -122,6 +122,7 @@ Documentation Contents
    curl
    unicode
    files
+   thread-safety
    unimplemented
 
 
