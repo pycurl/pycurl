@@ -110,8 +110,8 @@ do_multi_dealloc(CurlMultiObject *self)
     util_multi_xdecref(self);
     util_multi_close(self);
 
-    Py_TRASHCAN_SAFE_END(self);
     CurlMulti_Type.tp_free(self);
+    Py_TRASHCAN_SAFE_END(self);
 }
 
 

@@ -127,8 +127,8 @@ do_share_dealloc(CurlShareObject *self)
     share_lock_destroy(self->lock);
 #endif
 
-    Py_TRASHCAN_SAFE_END(self);
     CurlShare_Type.tp_free(self);
+    Py_TRASHCAN_SAFE_END(self);
 }
 
 
