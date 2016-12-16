@@ -35,15 +35,15 @@ nasm_path = 'c:/program files (x86)/nasm'
 # where ActiveState Perl is installed, for building 64-bit OpenSSL
 activestate_perl_path = r'c:\dev\perl64'
 # which versions of python to build against
-python_versions = ['2.6.6', '2.7.10', '3.2.5', '3.3.5', '3.4.3', '3.5.0']
+python_versions = ['2.6.6', '2.7.10', '3.2.5', '3.3.5', '3.4.3', '3.5.2']
 # where pythons are installed
 python_path_template = 'c:/dev/%(bitness)s/python%(python_release)s/python'
 vc_paths = {
-    # where msvc 9 is installed, for python 2.6 through 3.2
+    # where msvc 9/vs 2008 is installed, for python 2.6 through 3.2
     'vc9': None,
-    # where msvc 10 is installed, for python 3.3 through 3.4
+    # where msvc 10/vs 2010 is installed, for python 3.3 through 3.4
     'vc10': None,
-    # where msvc 14 is installed, for python 3.5
+    # where msvc 14/vs 2015 is installed, for python 3.5
     'vc14': None,
 }
 # whether to link libcurl against zlib
@@ -59,11 +59,11 @@ use_cares = True
 cares_version = '1.10.0'
 # whether to use libssh2
 use_libssh2 = True
-libssh2_version = '1.6.0'
+libssh2_version = '1.8.0'
 # which version of libcurl to use, will be downloaded from internet
-libcurl_version = '7.47.0'
+libcurl_version = '7.51.0'
 # virtualenv version
-virtualenv_version = '13.1.2'
+virtualenv_version = '15.1.0'
 # whether to build binary wheels
 build_wheels = True
 # pycurl version to build, we should know this ourselves

@@ -154,7 +154,7 @@ versions:
 - 3.2.5
 - 3.3.5
 - 3.4.3
-- 3.5.0
+- 3.5.2
 
 If the C runtime library (MSVCRT.DLL) versions used by PycURL and Python
 do not match, you will receive a message
