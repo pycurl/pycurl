@@ -2,7 +2,7 @@ master
 ------
 
         * Fixed a possible double free situation in all Curl objects
-          due to a misuse of the trashcan api (patch by Benjamin Peterson).
+          due to a misuse of the trashcan API (patch by Benjamin Peterson).
 
         * High level Curl objects can now be reused.
 
