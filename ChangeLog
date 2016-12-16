@@ -1,6 +1,9 @@
 master
 ------
 
+        * Fixed a possible double free situation in all Curl objects
+          due to a misuse of the trashcan api (patch by Benjamin Peterson).
+
         * High level Curl objects can now be reused.
 
         * LARGE options fixed under Windows and Python 3 (INFILESIZE,
