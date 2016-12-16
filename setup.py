@@ -41,7 +41,8 @@ def scan_argv(argv, s, default=None):
             if s.endswith('='):
                 # --option=value
                 p = arg[len(s):]
-                assert p, arg
+                if s != '--openssl-lib-name=':
+                    assert p, arg
             else:
                 # --option
                 # set value to True
@@ -321,6 +322,12 @@ class ExtensionConfiguration(object):
         # And static library name is libcurl_a.lib by default as of libcurl 7.46.0.
         # override with: --libcurl-lib-name=libcurl_imp.lib
         curl_lib_name = scan_argv(self.argv, '--libcurl-lib-name=', 'libcurl.lib')
+        
+        # openssl 1.1.0 changed its library names
+        # from libeay32.lib/ssleay32.lib to libcrypto.lib/libssl.lib.
+        # at the same time they dropped thread locking callback interface,
+        # meaning the correct usage of this option is --openssl-lib-name=""
+        self.openssl_lib_name = scan_argv(self.argv, '--openssl-lib-name=', 'libeay32.lib')
 
         if scan_argv(self.argv, "--use-libcurl-dll") is not None:
             libcurl_lib_path = os.path.join(curl_dir, "lib", curl_lib_name)
@@ -406,7 +413,8 @@ class ExtensionConfiguration(object):
         self.define_macros.append(('HAVE_CURL_OPENSSL', 1))
         if sys.platform == "win32":
             # CRYPTO_num_locks is defined in libeay32.lib
-            self.extra_link_args.append('libeay32.lib')
+            # for openssl < 1.1.0; it is a noop for openssl >= 1.1.0
+            self.extra_link_args.append(self.openssl_lib_name)
         else:
             # the actual library that defines CRYPTO_num_locks etc.
             # is crypto, and on cygwin linking against ssl does not

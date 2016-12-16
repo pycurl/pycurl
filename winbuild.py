@@ -530,7 +530,8 @@ class LibcurlBuilder(Builder):
                     # openssl 1.1.0
                     # https://curl.haxx.se/mail/lib-2016-08/0104.html
                     # https://github.com/curl/curl/issues/984
-                    extra_options += ' MAKE="NMAKE /e" SSL_LIBS="libssl.lib libcrypto.lib"'
+                    # crypt32.lib: http://stackoverflow.com/questions/37522654/linking-with-openssl-lib-statically
+                    extra_options += ' MAKE="NMAKE /e" SSL_LIBS="libssl.lib libcrypto.lib crypt32.lib"'
                 f.write("nmake /f Makefile.vc ENABLE_IDN=no%s\n" % extra_options)
 
     @property
@@ -647,6 +648,8 @@ class PycurlBuilder(Builder):
                     libcurl_arg = '--libcurl-lib-name=libcurl_a.lib'
                 if self.use_openssl:
                     libcurl_arg += ' --with-openssl'
+                    if openssl_version_tuple >= (1, 1):
+                        libcurl_arg += ' --openssl-lib-name=""'
                     openssl_builder = OpensslBuilder(bitness=self.bitness, vc_version=self.vc_version, openssl_version=self.openssl_version)
                     f.write("set include=%%include%%;%s\n" % openssl_builder.include_path)
                     f.write("set lib=%%lib%%;%s\n" % openssl_builder.lib_path)

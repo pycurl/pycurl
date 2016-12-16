@@ -217,6 +217,9 @@ Additional Windows setup.py options:
 - ``--with-openssl``: use OpenSSL crypto locks when libcurl was built against
   OpenSSL.
 - ``--with-ssl``: legacy alias for ``--with-openssl``.
+- ``--openssl-lib-name=""``: specify a different name for OpenSSL import
+  library containing CRYPTO_num_locks. For OpenSSL 1.1.0+ this should be set
+  to an empty string as given here.
 - ``--avoid-stdio``: on Windows, a process and each library it is using
   may be linked to its own version of the C runtime (MSVCRT).
   FILE pointers from one C runtime may not be passed to another C runtime.

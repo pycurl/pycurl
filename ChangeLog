@@ -1,6 +1,9 @@
 master
 ------
 
+        * Added --openssl-lib-name="" option to support building against
+          OpenSSL 1.1.0 on Windows.
+
         * Fixed a possible double free situation in all Curl objects
           due to a misuse of the trashcan API (patch by Benjamin Peterson).
 
