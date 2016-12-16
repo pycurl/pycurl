@@ -130,14 +130,27 @@ else
   curl -V
 fi
 
+if test -n "$USEPY"; then
+  PYTHON_VERSION="$USEPY"
+else
+  PYTHON_VERSION="$TRAVIS_PYTHON_VERSION"
+fi
+
 # for building documentation.
 # this must be done after python is installed so that we install sphinx
 # into the correct python version.
-# sphinx requires python 2.6+ or 3.3+
-case "$USEPY" in
+# sphinx 1.4.9 requires python 2.6+ or 3.3+
+# sphinx 1.5 requires python 2.7 or 3.4+
+case "$PYTHON_VERSION" in
   2.[45])
     ;;
+  2.6)
+    pip install sphinx==1.4.9
+    ;;
   3.[12])
+    ;;
+  3.3)
+    pip install sphinx==1.4.9
     ;;
   *)
     pip install sphinx
