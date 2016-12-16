@@ -53,7 +53,7 @@ zlib_version = '1.2.8'
 # whether to use openssl instead of winssl
 use_openssl = True
 # which version of openssl to use, will be downloaded from internet
-openssl_version = '1.0.2e'
+openssl_version = '1.1.0c'
 # whether to use c-ares
 use_cares = True
 cares_version = '1.10.0'
@@ -87,7 +87,7 @@ default_vc_paths = {
     ],
 }
 
-import os, os.path, sys, subprocess, shutil, contextlib, zipfile
+import os, os.path, sys, subprocess, shutil, contextlib, zipfile, re
 
 archives_path = os.path.join(root, 'archives')
 state_path = os.path.join(root, 'state')
@@ -107,6 +107,11 @@ python_vc_versions = {
 }
 vc_versions = vc_paths.keys()
 dir_here = os.path.abspath(os.path.dirname(__file__))
+
+openssl_version_tuple = tuple(
+    int(part) if part < 'a' else part
+    for part in re.sub(r'([a-z])', r'.\1', openssl_version).split('.')
+)
 
 try:
     from urllib.request import urlopen
@@ -311,25 +316,51 @@ class OpensslBuilder(Builder):
         openssl_dir = rename_for_vc('openssl-%s' % self.openssl_version, self.vc_tag)
         with in_dir(openssl_dir):
             with self.execute_batch() as f:
-                f.write("patch -p0 < %s\n" % os.path.join(dir_here, 'winbuild', 'openssl-fix-crt.patch'))
+                if openssl_version_tuple < (1, 1):
+                    # openssl 1.0.2
+                    f.write("patch -p0 < %s\n" % os.path.join(dir_here, 'winbuild', 'openssl-fix-crt-1.0.2.patch'))
+                else:
+                    # openssl 1.1.0
+                    f.write("patch -p0 < %s\n" % os.path.join(dir_here, 'winbuild', 'openssl-fix-crt-1.1.0.patch'))
                 if self.bitness == 64:
                     target = 'VC-WIN64A'
                     batch_file = 'do_win64a'
-
-                    # msysgit perl has trouble with backslashes used in
-                    # win64 assembly things; use ActiveState Perl
-                    f.write("set path=%s;%%path%%\n" % activestate_perl_bin_path)
-                    f.write("perl -v\n")
                 else:
                     target = 'VC-WIN32'
                     batch_file = 'do_nasm'
+                
+                # msysgit perl has trouble with backslashes used in
+                # win64 assembly things in openssl 1.0.2
+                # and in x86 assembly as well in openssl 1.1.0;
+                # use ActiveState Perl
+                if not os.path.exists(activestate_perl_bin_path):
+                    raise ValueError('activestate_perl_bin_path refers to a nonexisting path')
+                if not os.path.exists(os.path.join(activestate_perl_bin_path, 'perl.exe')):
+                    raise ValueError('No perl binary in activestate_perl_bin_path')
+                f.write("set path=%s;%%path%%\n" % activestate_perl_bin_path)
+                f.write("perl -v\n")
+                
                 openssl_prefix = os.path.join(os.path.realpath('.'), 'build')
                 # Do not want compression:
                 # https://en.wikipedia.org/wiki/CRIME
-                f.write("perl Configure %s no-comp --prefix=%s\n" % (target, openssl_prefix))
-                f.write("call ms\\%s\n" % batch_file)
-                f.write("nmake -f ms\\nt.mak\n")
-                f.write("nmake -f ms\\nt.mak install\n")
+                if openssl_version_tuple < (1, 1):
+                    # openssl 1.0.2
+                    extras = ''
+                else:
+                    # openssl 1.1.0
+                    # in 1.1.0 the static/shared selection is handled by
+                    # invoking the right makefile
+                    extras = 'no-shared'
+                f.write("perl Configure %s no-comp %s --prefix=%s\n" % (target, extras, openssl_prefix))
+                if openssl_version_tuple < (1, 1):
+                    # openssl 1.0.2
+                    f.write("call ms\\%s\n" % batch_file)
+                    f.write("nmake -f ms\\nt.mak\n")
+                    f.write("nmake -f ms\\nt.mak install\n")
+                else:
+                    # openssl 1.1.0
+                    f.write("nmake\n")
+                    f.write("nmake install\n")
 
     @property
     def output_dir_path(self):
@@ -495,6 +526,11 @@ class LibcurlBuilder(Builder):
                     f.write("set include=%%include%%;%s\n" % libssh2_builder.include_path)
                     f.write("set lib=%%lib%%;%s\n" % libssh2_builder.lib_path)
                     extra_options += ' WITH_SSH2=%s' % dll_or_static
+                if openssl_version_tuple >= (1, 1):
+                    # openssl 1.1.0
+                    # https://curl.haxx.se/mail/lib-2016-08/0104.html
+                    # https://github.com/curl/curl/issues/984
+                    extra_options += ' MAKE="NMAKE /e" SSL_LIBS="libssl.lib libcrypto.lib"'
                 f.write("nmake /f Makefile.vc ENABLE_IDN=no%s\n" % extra_options)
 
     @property
