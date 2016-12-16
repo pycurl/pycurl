@@ -1,0 +1,29 @@
+--- Configurations/10-main.conf.orig	2016-11-10 06:03:43.000000000 -0800
++++ Configurations/10-main.conf	2016-12-15 20:18:47.576426000 -0800
+@@ -1291,7 +1291,7 @@
+                                            ($disabled{shared} ? "" : "/MD")
+                                                ." /O2";
+                                        })),
+-        lib_cflags       => add(sub { $disabled{shared} ? "/MT /Zl" : () }),
++        lib_cflags       => add(sub { $disabled{shared} ? "/MD" : () }),
+         # Following might/should appears controversial, i.e. defining
+         # /MDd without evaluating $disabled{shared}. It works in
+         # non-shared build because static library is compiled with /Zl
+@@ -1304,7 +1304,7 @@
+         # prefer [non-debug] openssl.exe to be free from Micorosoft RTL
+         # redistributable.
+         bin_cflags       => add(picker(debug   => "/MDd",
+-                                       release => sub { $disabled{shared} ? "/MT" : () },
++                                       release => sub { $disabled{shared} ? "/MD" : () },
+                                       )),
+         bin_lflags       => add("/subsystem:console /opt:ref"),
+         ex_libs          => add(sub {
+@@ -1385,7 +1385,7 @@
+                            sub { defined($ENV{'PORTSDK_LIBPATH'})
+                                      ? '-I$(PORTSDK_LIBPATH)/../../include' : (); },
+                            sub { `cl 2>&1` =~ /Version ([0-9]+)\./ && $1>=14
+-                                     ? ($disabled{shared} ? " /MT" : " /MD")
++                                     ? ($disabled{shared} ? " /MD" : " /MD")
+                                      : " /MC"; }),
+                    debug   => "/Od -DDEBUG -D_DEBUG",
+                    release => "/O1i"),
