@@ -11,7 +11,7 @@ except ImportError:
     from urllib import urlencode
 
 c = pycurl.Curl()
-c.setopt(c.URL, 'http://pycurl.sourceforge.net/tests/testpostvars.php')
+c.setopt(c.URL, 'https://httpbin.org/post')
 
 post_data = {'field': 'value'}
 # Form data must be provided already urlencoded.

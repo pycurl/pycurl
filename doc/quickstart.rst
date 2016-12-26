@@ -293,7 +293,7 @@ beforehand::
         from urllib import urlencode
 
     c = pycurl.Curl()
-    c.setopt(c.URL, 'http://pycurl.io/tests/testpostvars.php')
+    c.setopt(c.URL, 'https://httpbin.org/post')
 
     post_data = {'field': 'value'}
     # Form data must be provided already urlencoded.
@@ -323,7 +323,7 @@ use ``FORM_FILE`` as follows::
     import pycurl
 
     c = pycurl.Curl()
-    c.setopt(c.URL, 'http://pycurl.io/tests/testfileupload.php')
+    c.setopt(c.URL, 'https://httpbin.org/post')
 
     c.setopt(c.HTTPPOST, [
         ('fileupload', (
@@ -344,7 +344,7 @@ For example, to set a different filename and content type::
     import pycurl
 
     c = pycurl.Curl()
-    c.setopt(c.URL, 'http://pycurl.io/tests/testfileupload.php')
+    c.setopt(c.URL, 'https://httpbin.org/post')
 
     c.setopt(c.HTTPPOST, [
         ('fileupload', (
@@ -367,7 +367,7 @@ If the file data is in memory, use ``BUFFER``/``BUFFERPTR`` as follows::
     import pycurl
 
     c = pycurl.Curl()
-    c.setopt(c.URL, 'http://pycurl.io/tests/testfileupload.php')
+    c.setopt(c.URL, 'https://httpbin.org/post')
 
     c.setopt(c.HTTPPOST, [
         ('fileupload', (

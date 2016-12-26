@@ -22,12 +22,12 @@ Example usage::
 
     import pycurl
     c = pycurl.Curl()
-    c.setopt(pycurl.URL, "http://sf.net")
+    c.setopt(pycurl.URL, "https://python.org")
     c.setopt(pycurl.FOLLOWLOCATION, 1)
     c.perform()
     print c.getinfo(pycurl.HTTP_CODE), c.getinfo(pycurl.EFFECTIVE_URL)
     ...
-    --> 200 "http://sourceforge.net/"
+    --> 200 "https://www.python.org/"
 
 
 Raises pycurl.error exception upon failure.

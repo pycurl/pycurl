@@ -5,7 +5,7 @@
 import pycurl
 
 c = pycurl.Curl()
-c.setopt(c.URL, 'http://pycurl.sourceforge.net/tests/testfileupload.php')
+c.setopt(c.URL, 'https://httpbin.org/post')
 
 c.setopt(c.HTTPPOST, [
     ('fileupload', (
