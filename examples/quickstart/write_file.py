@@ -8,7 +8,7 @@ import pycurl
 # can write response body to it without decoding.
 with open('out.html', 'wb') as f:
     c = pycurl.Curl()
-    c.setopt(c.URL, 'http://pycurl.sourceforge.net/')
+    c.setopt(c.URL, 'http://pycurl.io/')
     c.setopt(c.WRITEDATA, f)
     c.perform()
     c.close()
