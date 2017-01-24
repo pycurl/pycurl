@@ -56,7 +56,7 @@ use_openssl = True
 openssl_version = '1.1.0c'
 # whether to use c-ares
 use_cares = True
-cares_version = '1.10.0'
+cares_version = '1.12.0'
 # whether to use libssh2
 use_libssh2 = True
 libssh2_version = '1.8.0'
@@ -390,10 +390,16 @@ class CaresBuilder(Builder):
     def build(self):
         fetch('http://c-ares.haxx.se/download/c-ares-%s.tar.gz' % (self.cares_version))
         untar('c-ares-%s' % self.cares_version)
+        if self.cares_version == '1.12.0':
+            # msvc_ver.inc is missing in c-ares-1.12.0.tar.gz
+            # https://github.com/c-ares/c-ares/issues/69
+            fetch('https://raw.githubusercontent.com/c-ares/c-ares/cares-1_12_0/msvc_ver.inc',
+                  archive='c-ares-1.12.0/msvc_ver.inc')
         cares_dir = rename_for_vc('c-ares-%s' % self.cares_version, self.vc_tag)
         with in_dir(cares_dir):
             with self.execute_batch() as f:
-                f.write("patch -p1 < %s\n" % os.path.join(dir_here, 'winbuild', 'c-ares-vs2015.patch'))
+                if self.cares_version == '1.10.0':
+                    f.write("patch -p1 < %s\n" % os.path.join(dir_here, 'winbuild', 'c-ares-vs2015.patch'))
                 f.write("nmake -f Makefile.msvc\n")
 
     @property
