@@ -258,6 +258,14 @@ class OptionConstantsTest(unittest.TestCase):
         curl.setopt(curl.CAPATH, '/bogus-capath')
         curl.close()
 
+    # CURLOPT_PROXY_CAPATH was introduced in libcurl-7.52.0
+    @util.min_libcurl(7, 52, 0)
+    @util.only_ssl
+    def test_proxy_capath(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.PROXY_CAPATH, '/bogus-capath')
+        curl.close()
+
     @util.only_ssl
     def test_crlfile(self):
         curl = pycurl.Curl()
