@@ -6,7 +6,7 @@
 
 PACKAGE = "pycurl"
 PY_PACKAGE = "curl"
-VERSION = "7.43.0"
+VERSION = "7.43.0.1"
 
 import glob, os, re, sys, subprocess
 import distutils
@@ -322,7 +322,7 @@ class ExtensionConfiguration(object):
         # And static library name is libcurl_a.lib by default as of libcurl 7.46.0.
         # override with: --libcurl-lib-name=libcurl_imp.lib
         curl_lib_name = scan_argv(self.argv, '--libcurl-lib-name=', 'libcurl.lib')
-        
+
         # openssl 1.1.0 changed its library names
         # from libeay32.lib/ssleay32.lib to libcrypto.lib/libssl.lib.
         # at the same time they dropped thread locking callback interface,

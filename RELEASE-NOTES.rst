@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+PycURL 7.43.0.1 - 2017-01-31
+----------------------------
+
+This release collects fixes and improvements made over the past year,
+notably updating Windows dependencies to address DNS resolution and
+SSL connection issues.
+
+
 PycURL 7.43.0 - 2016-02-02
 --------------------------
 

@@ -1,5 +1,5 @@
-master
-------
+Version 7.43.0.1 [requires libcurl-7.19.0 or better] - 2017-01-31
+-----------------------------------------------------------------
 
         * Added support for CURLOPT_PROXY_CAPATH (libcurl 7.52.0+,
           patch by Jan Kryl).

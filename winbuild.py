@@ -67,7 +67,7 @@ virtualenv_version = '15.1.0'
 # whether to build binary wheels
 build_wheels = True
 # pycurl version to build, we should know this ourselves
-pycurl_version = '7.43.0'
+pycurl_version = '7.43.0.1'
 
 default_vc_paths = {
     # where msvc 9 is installed, for python 2.6 through 3.2
@@ -328,7 +328,7 @@ class OpensslBuilder(Builder):
                 else:
                     target = 'VC-WIN32'
                     batch_file = 'do_nasm'
-                
+
                 # msysgit perl has trouble with backslashes used in
                 # win64 assembly things in openssl 1.0.2
                 # and in x86 assembly as well in openssl 1.1.0;
@@ -339,7 +339,7 @@ class OpensslBuilder(Builder):
                     raise ValueError('No perl binary in activestate_perl_bin_path')
                 f.write("set path=%s;%%path%%\n" % activestate_perl_bin_path)
                 f.write("perl -v\n")
-                
+
                 openssl_prefix = os.path.join(os.path.realpath('.'), 'build')
                 # Do not want compression:
                 # https://en.wikipedia.org/wiki/CRIME
