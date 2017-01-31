@@ -1,6 +1,12 @@
 master
 ------
 
+        * Added support for CURLOPT_PROXY_CAPATH (libcurl 7.52.0+,
+          patch by Jan Kryl).
+
+        * C-Ares updated to 1.12.0 in Windows builds, fixing DNS resolution
+          issues on Windows (patch by Wei C).
+
         * Added --openssl-lib-name="" option to support building against
           OpenSSL 1.1.0 on Windows.
 
