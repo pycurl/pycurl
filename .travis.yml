@@ -22,6 +22,9 @@ matrix:
       env:
         - TESTDOCSEXAMPLES=1
     - python: 3.5
+      env:
+        - TESTDOCSEXAMPLES=1
+    - python: 3.6
       # docs are built for most recent libcurl, below
 
     # minimum libcurl we support
@@ -59,18 +62,18 @@ matrix:
 
     # latest libcurl with each SSL backend that uses different code,
     # see #357/#360
-    - python: 3.5
+    - python: 3.6
       env:
         - USECURL=7.46.0-gssapi-libssh2
         - USESSL=openssl
         - TESTDOCSEXAMPLES=1
     # no need to test libressl because it's treated exactly like openssl
-    - python: 3.5
+    - python: 3.6
       env:
         # libcurl 7.45.0+ does not build against gnutls in travis/ubuntu 12.04
         - USECURL=7.44.0-gssapi-libssh2
         - USESSL=gnutls
-    - python: 3.5
+    - python: 3.6
       env:
         - USECURL=7.46.0-gssapi-libssh2
         - USESSL=nss
@@ -104,6 +107,14 @@ matrix:
         - USECURL=7.47.0-dev-gssapi-libssh2
         - USESSL=openssl
     - python: 3.5
+      env:
+        - USECURL=7.47.0-dev-gssapi-libssh2
+        - USESSL=nss
+    - python: 3.6
+      env:
+        - USECURL=7.47.0-dev-gssapi-libssh2
+        - USESSL=openssl
+    - python: 3.6
       env:
         - USECURL=7.47.0-dev-gssapi-libssh2
         - USESSL=nss
