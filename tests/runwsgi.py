@@ -4,10 +4,13 @@ import sys
 import bottle
 import threading
 import os.path
+import time as _time
+import atexit
 
 from . import util
 
 global_stop = False
+global_stopped = False
 
 class Server(bottle.WSGIRefServer):
     def run(self, handler): # pragma: no cover
@@ -31,6 +34,7 @@ class Server(bottle.WSGIRefServer):
             # and thus no way to stop the server
             while not global_stop:
                 self.srv.handle_request()
+            global_stopped = True
         else:
             self.srv.serve_forever(poll_interval=0.1)
 
@@ -101,22 +105,31 @@ def app_runner_setup(*specs):
             else:
                 app, port, kwargs = spec
             if port in started_servers:
-                assert started_servers[port] == (app, kwargs)
+                assert started_servers[port][0] == app
+                assert started_servers[port][1] == kwargs
             else:
-                server = Server
+                server_class = Server
                 if 'server' in kwargs:
-                    server = kwargs['server']
+                    server_class = kwargs['server']
                     del kwargs['server']
                 elif 'ssl' in kwargs:
                     if kwargs['ssl']:
-                        server = SslServer
+                        server_class = SslServer
                     del kwargs['ssl']
-                self.servers.append(start_bottle_server(app, port, server, **kwargs))
-            started_servers[port] = (app, kwargs)
+                server = start_bottle_server(app, port, server_class, **kwargs)
+                self.servers.append(server)
+                # run teardown once before exit to avoid waiting for
+                # servers to start and stop pointlessly
+                if len(started_servers) == 0:
+                    atexit.register(global_teardown)
+                started_servers[port] = (app, kwargs, server)
     
     def teardown(self):
-        return
-        for server in self.servers:
+        pass
+    
+    def global_teardown():
+        for port in started_servers:
+            app, kwargs, server = started_servers[port]
             # if no tests from module were run, there is no server to shut down
             if hasattr(server, 'srv'):
                 if hasattr(server.srv, 'shutdown'):
@@ -125,5 +138,9 @@ def app_runner_setup(*specs):
                     # python 2.5
                     global global_stop
                     global_stop = True
+                    for i in range(100):
+                        if global_stopped:
+                            break
+                        _time.sleep(10)
     
     return [setup, teardown]
