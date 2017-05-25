@@ -178,6 +178,78 @@ check_curl_state(const CurlObject *self, int flags, const char *name)
 }
 
 
+#if defined(HAVE_CURL_OPENSSL)
+/* internal helper that load certificates from buffer, returns -1 on error  */
+static int
+add_ca_certs(SSL_CTX *context, void *data, Py_ssize_t len)
+{
+    // this code was copied from _ssl module
+    BIO *biobuf = NULL;
+    X509_STORE *store;
+    int retval = 0, err, loaded = 0;
+
+    if (len <= 0) {
+        PyErr_SetString(PyExc_ValueError,
+                        "Empty certificate data");
+        return -1;
+    } else if (len > INT_MAX) {
+        PyErr_SetString(PyExc_OverflowError,
+                        "Certificate data is too long.");
+        return -1;
+    }
+
+    biobuf = BIO_new_mem_buf(data, (int)len);
+    if (biobuf == NULL) {
+        PyErr_SetString(PyExc_MemoryError, "Can't allocate buffer");
+        ERR_clear_error();
+        return -1;
+    }
+
+    store = SSL_CTX_get_cert_store(context);
+    assert(store != NULL);
+
+    while (1) {
+        X509 *cert = NULL;
+        int r;
+
+        cert = PEM_read_bio_X509(biobuf, NULL, 0, NULL);
+        if (cert == NULL) {
+            break;
+        }
+        r = X509_STORE_add_cert(store, cert);
+        X509_free(cert);
+        if (!r) {
+            err = ERR_peek_last_error();
+            if ((ERR_GET_LIB(err) == ERR_LIB_X509) &&
+                (ERR_GET_REASON(err) == X509_R_CERT_ALREADY_IN_HASH_TABLE)) {
+                /* cert already in hash table, not an error */
+                ERR_clear_error();
+            } else {
+                break;
+            }
+        }
+        loaded++;
+    }
+
+    err = ERR_peek_last_error();
+    if ((loaded > 0) &&
+            (ERR_GET_LIB(err) == ERR_LIB_PEM) &&
+            (ERR_GET_REASON(err) == PEM_R_NO_START_LINE)) {
+        /* EOF PEM file, not an error */
+        ERR_clear_error();
+        retval = 0;
+    } else {
+        PyErr_SetString(ErrorObject, ERR_reason_error_string(err));
+        ERR_clear_error();
+        retval = -1;
+    }
+
+    BIO_free(biobuf);
+    return retval;
+}
+#endif
+
+
 /*************************************************************************
 // CurlObject
 **************************************************************************/
@@ -340,6 +412,11 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
         /* Decrement refcounts for httppost related references. */
         Py_CLEAR(self->httppost_ref_list);
     }
+
+    if (flags & PYCURL_MEMGROUP_CACERTS) {
+        /* Decrement refcounts for ca certs related references. */
+        Py_CLEAR(self->ca_certs_obj);
+    }
 }
 
 
@@ -491,6 +568,8 @@ do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
     VISIT(self->writeheader_fp);
 
     VISIT(self->postfields_obj);
+
+    VISIT(self->ca_certs_obj);
 
     return 0;
 #undef VISIT
@@ -1354,6 +1433,33 @@ verbose_error:
     PyErr_Print();
     goto silent_error;
 }
+
+
+#if defined(HAVE_CURL_OPENSSL)
+static CURLcode
+ssl_ctx_callback(CURL *curl, void *ssl_ctx, void *ptr)
+{
+    CurlObject *self;
+    PYCURL_DECLARE_THREAD_STATE;
+
+    UNUSED(curl);
+
+    /* acquire thread */
+    self = (CurlObject *)ptr;
+    if (!PYCURL_ACQUIRE_THREAD())
+        return CURLE_FAILED_INIT;
+
+    int r = add_ca_certs((SSL_CTX*)ssl_ctx,
+                         PyBytes_AS_STRING(self->ca_certs_obj),
+                         PyBytes_GET_SIZE(self->ca_certs_obj));
+
+    if (r != 0)
+        PyErr_Print();
+
+    PYCURL_RELEASE_THREAD();
+    return r == 0 ? CURLE_OK : CURLE_FAILED_INIT;
+}
+#endif
 
 
 /* ------------------------ reset ------------------------ */
@@ -2634,6 +2740,45 @@ do_curl_pause(CurlObject *self, PyObject *args)
 }
 
 
+#if defined(HAVE_CURL_OPENSSL)
+/* load ca certs from string */
+static PyObject *
+do_curl_set_ca_certs(CurlObject *self, PyObject *args)
+{
+    PyObject *cadata;
+
+    if (!PyArg_ParseTuple(args, "O:cadata", &cadata))
+        return NULL;
+
+    PyObject *cadata_ascii = PyUnicode_AsASCIIString(cadata);
+    if (cadata_ascii == NULL) {
+        PyErr_SetString(PyExc_TypeError,
+                        "cadata should be an ASCII string or a "
+                        "bytes-like object");
+        return NULL;
+    }
+
+    Py_CLEAR(self->ca_certs_obj);
+    self->ca_certs_obj = cadata_ascii;
+
+    int res;
+
+    const curl_ssl_ctx_callback ssl_ctx_cb = ssl_ctx_callback;
+    res = curl_easy_setopt(self->handle, CURLOPT_SSL_CTX_FUNCTION, ssl_ctx_cb);
+    if (res != CURLE_OK) {
+        CURLERROR_RETVAL();
+    }
+
+    res = curl_easy_setopt(self->handle, CURLOPT_SSL_CTX_DATA, self);
+    if (res != CURLE_OK) {
+        CURLERROR_RETVAL();
+    }
+
+    Py_RETURN_NONE;
+}
+#endif
+
+
 static PyObject *do_curl_getstate(CurlObject *self)
 {
     PyErr_SetString(PyExc_TypeError, "Curl objects do not support serialization");
@@ -2664,6 +2809,9 @@ PYCURL_INTERNAL PyMethodDef curlobject_methods[] = {
     {"setopt_string", (PyCFunction)do_curl_setopt_string, METH_VARARGS, curl_setopt_string_doc},
     {"unsetopt", (PyCFunction)do_curl_unsetopt, METH_VARARGS, curl_unsetopt_doc},
     {"reset", (PyCFunction)do_curl_reset, METH_NOARGS, curl_reset_doc},
+#if defined(HAVE_CURL_OPENSSL)
+    {"set_ca_certs", (PyCFunction)do_curl_set_ca_certs, METH_VARARGS, curl_set_ca_certs_doc},
+#endif
     {"__getstate__", (PyCFunction)do_curl_getstate, METH_NOARGS, NULL},
     {"__setstate__", (PyCFunction)do_curl_setstate, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}

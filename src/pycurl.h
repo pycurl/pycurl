@@ -167,7 +167,8 @@ typedef int Py_ssize_t;
 # if defined(HAVE_CURL_OPENSSL)
 #   define PYCURL_NEED_SSL_TSL
 #   define PYCURL_NEED_OPENSSL_TSL
-#   include <openssl/crypto.h>
+#   include <openssl/ssl.h>
+#   include <openssl/err.h>
 #   define COMPILE_SSL_LIB "openssl"
 # elif defined(HAVE_CURL_GNUTLS)
 #   include <gnutls/gnutls.h>
@@ -323,10 +324,13 @@ PyText_Check(PyObject *o);
 #define PYCURL_MEMGROUP_HTTPPOST        32
 /* Postfields object */
 #define PYCURL_MEMGROUP_POSTFIELDS      64
+/* CA certs object */
+#define PYCURL_MEMGROUP_CACERTS         128
 
 #define PYCURL_MEMGROUP_EASY \
     (PYCURL_MEMGROUP_CALLBACK | PYCURL_MEMGROUP_FILE | \
-    PYCURL_MEMGROUP_HTTPPOST | PYCURL_MEMGROUP_POSTFIELDS)
+    PYCURL_MEMGROUP_HTTPPOST | PYCURL_MEMGROUP_POSTFIELDS | \
+    PYCURL_MEMGROUP_CACERTS)
 
 #define PYCURL_MEMGROUP_ALL \
     (PYCURL_MEMGROUP_ATTRDICT | PYCURL_MEMGROUP_EASY | \
@@ -382,6 +386,8 @@ typedef struct CurlObject {
     PyObject *writeheader_fp;
     /* reference to the object used for CURLOPT_POSTFIELDS */
     PyObject *postfields_obj;
+    /* reference to the object containing ca certs */
+    PyObject *ca_certs_obj;
     /* misc */
     char error[CURL_ERROR_SIZE+1];
 } CurlObject;
