@@ -244,7 +244,11 @@ insint_worker(PyObject *d, PyObject *extra, char *name, long value)
     PyObject *v = PyInt_FromLong(value);
     if (v == NULL)
         return -1;
-    return insobj2(d, extra, name, v);
+    if (insobj2(d, extra, name, v) < 0) {
+        Py_DECREF(v);
+        return -1;
+    }
+    return 0;
 }
 
 #define insint(d, name, value) \
