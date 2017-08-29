@@ -35,7 +35,7 @@ nasm_path = 'c:/program files (x86)/nasm'
 # where ActiveState Perl is installed, for building 64-bit OpenSSL
 activestate_perl_path = r'c:\dev\perl64'
 # which versions of python to build against
-python_versions = ['2.6.6', '2.7.10', '3.2.5', '3.3.5', '3.4.3', '3.5.2']
+python_versions = ['2.6.6', '2.7.10', '3.2.5', '3.3.5', '3.4.3', '3.5.4', '3.6.2']
 # where pythons are installed
 python_path_template = 'c:/dev/%(bitness)s/python%(python_release)s/python'
 vc_paths = {
@@ -104,6 +104,7 @@ python_vc_versions = {
     '3.3': 'vc10',
     '3.4': 'vc10',
     '3.5': 'vc14',
+    '3.6': 'vc14',
 }
 vc_versions = vc_paths.keys()
 dir_here = os.path.abspath(os.path.dirname(__file__))
