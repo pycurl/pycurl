@@ -57,7 +57,7 @@ Documentation for the most recent PycURL release is available on
 `PycURL website <http://pycurl.io/docs/latest/>`_.
 
 Documentation for the development version of PycURL
-is available `here <pycurl.io/docs/dev/>`.
+is available `here <http://pycurl.io/docs/dev/>`_.
 
 To build documentation from source, run ``make docs``.
 Building documentation requires `Sphinx <http://sphinx-doc.org/>`_ to
