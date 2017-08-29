@@ -755,6 +755,7 @@ def build():
                 builder.build(targets)
 
 def download_pythons():
+    mkdir_p(archives_path)
     for version in python_versions:
         parts = [int(part) for part in version.split('.')]
         if parts[0] >= 3 and parts[1] >= 5:
