@@ -119,6 +119,10 @@ try:
 except ImportError:
     from urllib import urlopen
 
+def mkdir_p(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
 def fetch(url, archive=None):
     if archive is None:
         archive = os.path.basename(url)
@@ -148,8 +152,7 @@ def in_dir(dir):
 def step(step_fn, args, target_dir):
     #step = step_fn.__name__
     state_tag = target_dir
-    if not os.path.exists(state_path):
-        os.makedirs(state_path)
+    mkdir_p(state_path)
     state_file_path = os.path.join(state_path, state_tag)
     if not os.path.exists(state_file_path) or not os.path.exists(target_dir):
         step_fn(*args)
@@ -641,9 +644,8 @@ class PycurlBuilder(Builder):
         with in_dir(os.path.join('pycurl-%s' % self.pycurl_version)):
             dest_lib_path = 'build/lib.%s-%s' % (self.platform_indicator,
                 self.python_release)
-            if not os.path.exists(dest_lib_path):
-                # exists for building additional targets for the same python version
-                os.makedirs(dest_lib_path)
+            # exists for building additional targets for the same python version
+            mkdir_p(dest_lib_path)
             if self.use_dlls:
                 for dll_path in dll_paths:
                     shutil.copy(dll_path, dest_lib_path)
@@ -696,8 +698,7 @@ def build_dependencies():
 
     if git_bin_path:
         os.environ['PATH'] += ";%s" % git_bin_path
-    if not os.path.exists(archives_path):
-        os.makedirs(archives_path)
+    mkdir_p(archives_path)
     with in_dir(archives_path):
         for bitness in (32, 64):
             for vc_version in vc_versions:
