@@ -31,7 +31,7 @@ root = 'c:/dev/build-pycurl'
 # where msysgit is installed
 git_root = 'c:/program files/git'
 # where NASM is installed, for building OpenSSL
-nasm_path = 'c:/program files (x86)/nasm'
+nasm_path = ('c:/dev/nasm', 'c:/program files (x86)/nasm')
 # where ActiveState Perl is installed, for building 64-bit OpenSSL
 activestate_perl_path = r'c:\dev\perl64'
 # which versions of python to build against
@@ -113,6 +113,17 @@ openssl_version_tuple = tuple(
     int(part) if part < 'a' else part
     for part in re.sub(r'([a-z])', r'.\1', openssl_version).split('.')
 )
+
+def select_existing_path(paths):
+    if isinstance(paths, list) or isinstance(paths, tuple):
+        for path in paths:
+            if os.path.exists(path):
+                return path
+        return paths[0]
+    else:
+        return paths
+
+nasm_path = select_existing_path(nasm_path)
 
 try:
     from urllib.request import urlopen
