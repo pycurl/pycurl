@@ -812,7 +812,8 @@ def download_bootstrap_python():
 
 def install_virtualenv():
     with in_dir(archives_path):
-        fetch('https://pypi.python.org/packages/source/v/virtualenv/virtualenv-%s.tar.gz' % virtualenv_version)
+        #fetch('https://pypi.python.org/packages/source/v/virtualenv/virtualenv-%s.tar.gz' % virtualenv_version)
+        fetch('https://pypi.python.org/packages/d4/0c/9840c08189e030873387a73b90ada981885010dd9aea134d6de30cd24cb8/virtualenv-15.1.0.tar.gz')
         for bitness in bitnesses:
             for python_release in python_releases():
                 print('Installing virtualenv %s for Python %s (%s bit)' % (virtualenv_version, python_release, bitness))
