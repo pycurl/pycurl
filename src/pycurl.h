@@ -149,6 +149,10 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
 #define HAVE_CURL_7_30_0_PIPELINE_OPTS
 #endif
 
+#if LIBCURL_VERSION_NUM >= 0x073200 /* check for 7.50.0 or greater */
+#define HAVE_CURLINFO_HTTP_VERSION
+#endif
+
 /* Python < 2.5 compat for Py_ssize_t */
 #if PY_VERSION_HEX < 0x02050000
 typedef int Py_ssize_t;

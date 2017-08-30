@@ -2599,6 +2599,9 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
     case CURLINFO_RTSP_SERVER_CSEQ:
     case CURLINFO_RTSP_CSEQ_RECV:
 #endif
+#ifdef HAVE_CURLINFO_HTTP_VERSION
+    case CURLINFO_HTTP_VERSION:
+#endif
 
         {
             /* Return PyInt as result */
