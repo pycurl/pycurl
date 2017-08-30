@@ -1441,6 +1441,7 @@ ssl_ctx_callback(CURL *curl, void *ssl_ctx, void *ptr)
 {
     CurlObject *self;
     PYCURL_DECLARE_THREAD_STATE;
+    int r;
 
     UNUSED(curl);
 
@@ -1449,7 +1450,7 @@ ssl_ctx_callback(CURL *curl, void *ssl_ctx, void *ptr)
     if (!PYCURL_ACQUIRE_THREAD())
         return CURLE_FAILED_INIT;
 
-    int r = add_ca_certs((SSL_CTX*)ssl_ctx,
+    r = add_ca_certs((SSL_CTX*)ssl_ctx,
                          PyBytes_AS_STRING(self->ca_certs_obj),
                          PyBytes_GET_SIZE(self->ca_certs_obj));
 
@@ -2745,12 +2746,13 @@ do_curl_pause(CurlObject *self, PyObject *args)
 static PyObject *
 do_curl_set_ca_certs(CurlObject *self, PyObject *args)
 {
-    PyObject *cadata;
+    PyObject *cadata, *cadata_ascii;
+    int res;
 
     if (!PyArg_ParseTuple(args, "O:cadata", &cadata))
         return NULL;
 
-    PyObject *cadata_ascii = PyUnicode_AsASCIIString(cadata);
+    cadata_ascii = PyUnicode_AsASCIIString(cadata);
     if (cadata_ascii == NULL) {
         PyErr_SetString(PyExc_TypeError,
                         "cadata should be an ASCII string or a "
@@ -2761,10 +2763,7 @@ do_curl_set_ca_certs(CurlObject *self, PyObject *args)
     Py_CLEAR(self->ca_certs_obj);
     self->ca_certs_obj = cadata_ascii;
 
-    int res;
-
-    const curl_ssl_ctx_callback ssl_ctx_cb = ssl_ctx_callback;
-    res = curl_easy_setopt(self->handle, CURLOPT_SSL_CTX_FUNCTION, ssl_ctx_cb);
+    res = curl_easy_setopt(self->handle, CURLOPT_SSL_CTX_FUNCTION, (curl_ssl_ctx_callback) ssl_ctx_callback);
     if (res != CURLE_OK) {
         CURLERROR_RETVAL();
     }

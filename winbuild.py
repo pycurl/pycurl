@@ -31,11 +31,11 @@ root = 'c:/dev/build-pycurl'
 # where msysgit is installed
 git_root = 'c:/program files/git'
 # where NASM is installed, for building OpenSSL
-nasm_path = 'c:/program files (x86)/nasm'
+nasm_path = ('c:/dev/nasm', 'c:/program files (x86)/nasm')
 # where ActiveState Perl is installed, for building 64-bit OpenSSL
 activestate_perl_path = r'c:\dev\perl64'
 # which versions of python to build against
-python_versions = ['2.6.6', '2.7.10', '3.2.5', '3.3.5', '3.4.3', '3.5.2']
+python_versions = ['2.6.6', '2.7.10', '3.2.5', '3.3.5', '3.4.3', '3.5.4', '3.6.2']
 # where pythons are installed
 python_path_template = 'c:/dev/%(bitness)s/python%(python_release)s/python'
 vc_paths = {
@@ -49,19 +49,19 @@ vc_paths = {
 # whether to link libcurl against zlib
 use_zlib = True
 # which version of zlib to use, will be downloaded from internet
-zlib_version = '1.2.8'
+zlib_version = '1.2.11'
 # whether to use openssl instead of winssl
 use_openssl = True
 # which version of openssl to use, will be downloaded from internet
-openssl_version = '1.1.0c'
+openssl_version = '1.1.0f'
 # whether to use c-ares
 use_cares = True
-cares_version = '1.12.0'
+cares_version = '1.13.0'
 # whether to use libssh2
 use_libssh2 = True
 libssh2_version = '1.8.0'
 # which version of libcurl to use, will be downloaded from internet
-libcurl_version = '7.51.0'
+libcurl_version = '7.55.1'
 # virtualenv version
 virtualenv_version = '15.1.0'
 # whether to build binary wheels
@@ -87,6 +87,16 @@ default_vc_paths = {
     ],
 }
 
+def short_python_versions(python_versions):
+    return ['.'.join(python_version.split('.')[:2])
+        for python_version in python_versions]
+
+def needed_vc_versions(python_versions):
+    return [vc_version for vc_version in vc_paths.keys()
+        if vc_version in [
+            python_vc_versions[short_python_version]
+            for short_python_version in short_python_versions(python_versions)]]
+
 import os, os.path, sys, subprocess, shutil, contextlib, zipfile, re
 
 archives_path = os.path.join(root, 'archives')
@@ -104,6 +114,7 @@ python_vc_versions = {
     '3.3': 'vc10',
     '3.4': 'vc10',
     '3.5': 'vc14',
+    '3.6': 'vc14',
 }
 vc_versions = vc_paths.keys()
 dir_here = os.path.abspath(os.path.dirname(__file__))
@@ -113,10 +124,25 @@ openssl_version_tuple = tuple(
     for part in re.sub(r'([a-z])', r'.\1', openssl_version).split('.')
 )
 
+def select_existing_path(paths):
+    if isinstance(paths, list) or isinstance(paths, tuple):
+        for path in paths:
+            if os.path.exists(path):
+                return path
+        return paths[0]
+    else:
+        return paths
+
+nasm_path = select_existing_path(nasm_path)
+
 try:
     from urllib.request import urlopen
 except ImportError:
     from urllib import urlopen
+
+def mkdir_p(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
 
 def fetch(url, archive=None):
     if archive is None:
@@ -147,8 +173,7 @@ def in_dir(dir):
 def step(step_fn, args, target_dir):
     #step = step_fn.__name__
     state_tag = target_dir
-    if not os.path.exists(state_path):
-        os.makedirs(state_path)
+    mkdir_p(state_path)
     state_file_path = os.path.join(state_path, state_tag)
     if not os.path.exists(state_file_path) or not os.path.exists(target_dir):
         step_fn(*args)
@@ -242,12 +267,18 @@ class Builder(object):
             f.write(self.vcvars_cmd)
             f.write(self.nasm_cmd)
             yield f
-        if True:
+        if False:
             print("Executing:")
             with open('doit.bat', 'r') as f:
                 print(f.read())
             sys.stdout.flush()
-        subprocess.check_call(['doit.bat'])
+        rv = subprocess.call(['doit.bat'])
+        if rv != 0:
+            print("\nFailed to execute the following commands:\n")
+            with open('doit.bat', 'r') as f:
+                print(f.read())
+            sys.stdout.flush()
+            exit(3)
 
     @property
     def vc_tag(self):
@@ -343,15 +374,20 @@ class OpensslBuilder(Builder):
                 openssl_prefix = os.path.join(os.path.realpath('.'), 'build')
                 # Do not want compression:
                 # https://en.wikipedia.org/wiki/CRIME
-                if openssl_version_tuple < (1, 1):
-                    # openssl 1.0.2
-                    extras = ''
-                else:
+                extras = ['no-comp']
+                if openssl_version_tuple >= (1, 1):
                     # openssl 1.1.0
                     # in 1.1.0 the static/shared selection is handled by
                     # invoking the right makefile
-                    extras = 'no-shared'
-                f.write("perl Configure %s no-comp %s --prefix=%s\n" % (target, extras, openssl_prefix))
+                    extras += ['no-shared']
+                    
+                    # looks like openssl 1.1.0c does not derive
+                    # --openssldir from --prefix, like its Configure claims,
+                    # and like 1.0.2 does; provide a relative openssl dir
+                    # manually
+                    extras += ['--openssldir=ssl']
+                f.write("perl Configure %s %s --prefix=%s\n" % (target, ' '.join(extras), openssl_prefix))
+                
                 if openssl_version_tuple < (1, 1):
                     # openssl 1.0.2
                     f.write("call ms\\%s\n" % batch_file)
@@ -640,9 +676,8 @@ class PycurlBuilder(Builder):
         with in_dir(os.path.join('pycurl-%s' % self.pycurl_version)):
             dest_lib_path = 'build/lib.%s-%s' % (self.platform_indicator,
                 self.python_release)
-            if not os.path.exists(dest_lib_path):
-                # exists for building additional targets for the same python version
-                os.makedirs(dest_lib_path)
+            # exists for building additional targets for the same python version
+            mkdir_p(dest_lib_path)
             if self.use_dlls:
                 for dll_path in dll_paths:
                     shutil.copy(dll_path, dest_lib_path)
@@ -685,7 +720,7 @@ class PycurlBuilder(Builder):
                             member = src_zip.open(name)
                             dest_zip.writestr(new_name, member.read(), zipfile.ZIP_DEFLATED)
 
-def build_dependencies():
+def build_dependencies(bitnesses=(32, 64)):
     if use_libssh2:
         if not use_zlib:
             # technically we can build libssh2 without zlib but I don't want to bother
@@ -695,11 +730,12 @@ def build_dependencies():
 
     if git_bin_path:
         os.environ['PATH'] += ";%s" % git_bin_path
-    if not os.path.exists(archives_path):
-        os.makedirs(archives_path)
+    mkdir_p(archives_path)
     with in_dir(archives_path):
-        for bitness in (32, 64):
-            for vc_version in vc_versions:
+        for bitness in bitnesses:
+            for vc_version in needed_vc_versions(python_versions):
+                if opts.verbose:
+                    print('Builddep for %s, %s-bit' % (vc_version, bitness))
                 if use_zlib:
                     zlib_builder = ZlibBuilder(bitness=bitness, vc_version=vc_version, zlib_version=zlib_version)
                     step(zlib_builder.build, (), zlib_builder.state_tag)
@@ -720,9 +756,11 @@ def build_dependencies():
                     libcurl_version=libcurl_version)
                 step(libcurl_builder.build, (), libcurl_builder.state_tag)
 
+bitnesses = (32, 64)
+
 def build():
     # note: adds git_bin_path to PATH if necessary, and creates archives_path
-    build_dependencies()
+    build_dependencies(bitnesses)
     with in_dir(archives_path):
         def prepare_pycurl():
             #fetch('https://dl.bintray.com/pycurl/pycurl/pycurl-%s.tar.gz' % pycurl_version)
@@ -739,7 +777,7 @@ def build():
 
         prepare_pycurl()
 
-        for bitness in (32, 64):
+        for bitness in bitnesses:
             for python_release in python_releases():
                 targets = ['bdist', 'bdist_wininst', 'bdist_msi']
                 vc_version = python_vc_versions[python_release]
@@ -753,6 +791,7 @@ def build():
                 builder.build(targets)
 
 def download_pythons():
+    mkdir_p(archives_path)
     for version in python_versions:
         parts = [int(part) for part in version.split('.')]
         if parts[0] >= 3 and parts[1] >= 5:
@@ -773,8 +812,9 @@ def download_bootstrap_python():
 
 def install_virtualenv():
     with in_dir(archives_path):
-        fetch('https://pypi.python.org/packages/source/v/virtualenv/virtualenv-%s.tar.gz' % virtualenv_version)
-        for bitness in (32, 64):
+        #fetch('https://pypi.python.org/packages/source/v/virtualenv/virtualenv-%s.tar.gz' % virtualenv_version)
+        fetch('https://pypi.python.org/packages/d4/0c/9840c08189e030873387a73b90ada981885010dd9aea134d6de30cd24cb8/virtualenv-15.1.0.tar.gz')
+        for bitness in bitnesses:
             for python_release in python_releases():
                 print('Installing virtualenv %s for Python %s (%s bit)' % (virtualenv_version, python_release, bitness))
                 sys.stdout.flush()
@@ -785,7 +825,7 @@ def install_virtualenv():
                     subprocess.check_call(cmd)
 
 def create_virtualenvs():
-    for bitness in (32, 64):
+    for bitness in bitnesses:
         for python_release in python_releases():
             print('Creating a virtualenv for Python %s (%s bit)' % (python_release, bitness))
             sys.stdout.flush()
@@ -795,19 +835,55 @@ def create_virtualenvs():
                 cmd = [python_binary.executable_path, '-m', 'virtualenv', venv_basename]
                 subprocess.check_call(cmd)
 
-if len(sys.argv) > 1:
-    if sys.argv[1] == 'download':
+import optparse
+
+parser = optparse.OptionParser()
+parser.add_option('-b', '--bitness', help='Bitnesses build for, comma separated')
+parser.add_option('-p', '--python', help='Python versions to build for, comma separated')
+parser.add_option('-v', '--verbose', help='Print what is being done', action='store_true')
+opts, args = parser.parse_args()
+
+if opts.bitness:
+    chosen_bitnesses = [int(bitness) for bitness in opts.bitness.split(',')]
+    for bitness in chosen_bitnesses:
+        if bitness not in bitnesses:
+            print('Invalid bitness %d' % bitness)
+            exit(2)
+    bitnesses = chosen_bitnesses
+
+if opts.python:
+    chosen_pythons = opts.python.split(',')
+    chosen_python_versions = []
+    for python in chosen_pythons:
+        python = python.replace('.', '')
+        python = python[0] + '.' + python[1] + '.'
+        ok = False
+        for python_version in python_versions:
+            if python_version.startswith(python):
+                chosen_python_versions.append(python_version)
+                ok = True
+        if not ok:
+            print('Invalid python %s' % python)
+            exit(2)
+    python_versions = chosen_python_versions
+
+# https://stackoverflow.com/questions/35569042/python-3-ssl-certificate-verify-failed
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
+
+if len(args) > 0:
+    if args[0] == 'download':
         download_pythons()
-    elif sys.argv[1] == 'bootstrap':
+    elif args[0] == 'bootstrap':
         download_bootstrap_python()
-    elif sys.argv[1] == 'builddeps':
-        build_dependencies()
-    elif sys.argv[1] == 'installvirtualenv':
+    elif args[0] == 'builddeps':
+        build_dependencies(bitnesses)
+    elif args[0] == 'installvirtualenv':
         install_virtualenv()
-    elif sys.argv[1] == 'createvirtualenvs':
+    elif args[0] == 'createvirtualenvs':
         create_virtualenvs()
     else:
-        print('Unknown command: %s' % sys.argv[1])
+        print('Unknown command: %s' % args[0])
         exit(2)
 else:
     build()
