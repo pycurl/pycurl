@@ -178,12 +178,14 @@ Building From Source
 ^^^^^^^^^^^^^^^^^^^^
 
 Building PycURL from source is not for the faint of heart due to the multitude
-of possible dependencies. Additionally different dependencies have different
+of possible dependencies and each of these dependencies having its own
+directory structure, configuration style, parameters and quirks.
+Additionally different dependencies have different
 settings for MSVCRT usage, and an application must have all of its parts
 agreeing on a single setting. If you decide to build PycURL from source
-you should familiarize yourself with the ``winbuild.py``
-script - it is used to build the official binaries and tweaking it for
-your environment is likely to be less work than starting from scratch.
+it is advisable to look through the ``winbuild.py``
+script - it is used to build the official binaries and contains a wealth
+of information for compiling PycURL's dependencies on Windows.
 
 If you are compiling PycURL from source it is recommended to compile all of its
 dependencies from source as well. Using precompiled libraries may lead to
