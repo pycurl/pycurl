@@ -14,7 +14,6 @@ Release Process
    - doc/conf.py
    - setup.py
    - winbuild.py
-   - www/htdocs/index.php (also update release date)
 7. Draft release notes, add to RELEASE-NOTES.rst.
 8. ``make gen docs``.
 9. ``python setup.py sdist``.
