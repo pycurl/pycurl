@@ -815,6 +815,7 @@ import optparse
 
 parser = optparse.OptionParser()
 parser.add_option('-b', '--bitness', help='Bitnesses build for, comma separated')
+parser.add_option('-p', '--python', help='Python versions to build for, comma separated')
 opts, args = parser.parse_args()
 
 if opts.bitness:
@@ -824,6 +825,22 @@ if opts.bitness:
             print('Invalid bitness %d' % bitness)
             exit(2)
     bitnesses = chosen_bitnesses
+
+if opts.python:
+    chosen_pythons = opts.python.split(',')
+    chosen_python_versions = []
+    for python in chosen_pythons:
+        python = python.replace('.', '')
+        python = python[0] + '.' + python[1] + '.'
+        ok = False
+        for python_version in python_versions:
+            if python_version.startswith(python):
+                chosen_python_versions.append(python_version)
+                ok = True
+        if not ok:
+            print('Invalid python %s' % python)
+            exit(2)
+    python_versions = chosen_python_versions
 
 if len(args) > 0:
     if args[0] == 'download':
