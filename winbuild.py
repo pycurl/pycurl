@@ -267,12 +267,18 @@ class Builder(object):
             f.write(self.vcvars_cmd)
             f.write(self.nasm_cmd)
             yield f
-        if True:
+        if False:
             print("Executing:")
             with open('doit.bat', 'r') as f:
                 print(f.read())
             sys.stdout.flush()
-        subprocess.check_call(['doit.bat'])
+        rv = subprocess.call(['doit.bat'])
+        if rv != 0:
+            print("\nFailed to execute the following commands:\n")
+            with open('doit.bat', 'r') as f:
+                print(f.read())
+            sys.stdout.flush()
+            exit(3)
 
     @property
     def vc_tag(self):
