@@ -699,7 +699,7 @@ class PycurlBuilder(Builder):
                             member = src_zip.open(name)
                             dest_zip.writestr(new_name, member.read(), zipfile.ZIP_DEFLATED)
 
-def build_dependencies():
+def build_dependencies(bitnesses=(32, 64)):
     if use_libssh2:
         if not use_zlib:
             # technically we can build libssh2 without zlib but I don't want to bother
@@ -711,7 +711,7 @@ def build_dependencies():
         os.environ['PATH'] += ";%s" % git_bin_path
     mkdir_p(archives_path)
     with in_dir(archives_path):
-        for bitness in (32, 64):
+        for bitness in bitnesses:
             for vc_version in vc_versions:
                 if use_zlib:
                     zlib_builder = ZlibBuilder(bitness=bitness, vc_version=vc_version, zlib_version=zlib_version)
@@ -733,6 +733,8 @@ def build_dependencies():
                     libcurl_version=libcurl_version)
                 step(libcurl_builder.build, (), libcurl_builder.state_tag)
 
+bitnesses = (32, 64)
+
 def build():
     # note: adds git_bin_path to PATH if necessary, and creates archives_path
     build_dependencies()
@@ -752,7 +754,7 @@ def build():
 
         prepare_pycurl()
 
-        for bitness in (32, 64):
+        for bitness in bitnesses:
             for python_release in python_releases():
                 targets = ['bdist', 'bdist_wininst', 'bdist_msi']
                 vc_version = python_vc_versions[python_release]
@@ -788,7 +790,7 @@ def download_bootstrap_python():
 def install_virtualenv():
     with in_dir(archives_path):
         fetch('https://pypi.python.org/packages/source/v/virtualenv/virtualenv-%s.tar.gz' % virtualenv_version)
-        for bitness in (32, 64):
+        for bitness in bitnesses:
             for python_release in python_releases():
                 print('Installing virtualenv %s for Python %s (%s bit)' % (virtualenv_version, python_release, bitness))
                 sys.stdout.flush()
@@ -799,7 +801,7 @@ def install_virtualenv():
                     subprocess.check_call(cmd)
 
 def create_virtualenvs():
-    for bitness in (32, 64):
+    for bitness in bitnesses:
         for python_release in python_releases():
             print('Creating a virtualenv for Python %s (%s bit)' % (python_release, bitness))
             sys.stdout.flush()
@@ -809,19 +811,33 @@ def create_virtualenvs():
                 cmd = [python_binary.executable_path, '-m', 'virtualenv', venv_basename]
                 subprocess.check_call(cmd)
 
-if len(sys.argv) > 1:
-    if sys.argv[1] == 'download':
+import optparse
+
+parser = optparse.OptionParser()
+parser.add_option('-b', '--bitness', help='Bitnesses build for, comma separated')
+opts, args = parser.parse_args()
+
+if opts.bitness:
+    chosen_bitnesses = [int(bitness) for bitness in opts.bitness.split(',')]
+    for bitness in chosen_bitnesses:
+        if bitness not in bitnesses:
+            print('Invalid bitness %d' % bitness)
+            exit(2)
+    bitnesses = chosen_bitnesses
+
+if len(args) > 0:
+    if args[0] == 'download':
         download_pythons()
-    elif sys.argv[1] == 'bootstrap':
+    elif args[0] == 'bootstrap':
         download_bootstrap_python()
-    elif sys.argv[1] == 'builddeps':
+    elif args[0] == 'builddeps':
         build_dependencies()
-    elif sys.argv[1] == 'installvirtualenv':
+    elif args[0] == 'installvirtualenv':
         install_virtualenv()
-    elif sys.argv[1] == 'createvirtualenvs':
+    elif args[0] == 'createvirtualenvs':
         create_virtualenvs()
     else:
-        print('Unknown command: %s' % sys.argv[1])
+        print('Unknown command: %s' % args[0])
         exit(2)
 else:
     build()
