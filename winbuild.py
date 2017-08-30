@@ -87,6 +87,16 @@ default_vc_paths = {
     ],
 }
 
+def short_python_versions(python_versions):
+    return ['.'.join(python_version.split('.')[:2])
+        for python_version in python_versions]
+
+def needed_vc_versions(python_versions):
+    return [vc_version for vc_version in vc_paths.keys()
+        if vc_version in [
+            python_vc_versions[short_python_version]
+            for short_python_version in short_python_versions(python_versions)]]
+
 import os, os.path, sys, subprocess, shutil, contextlib, zipfile, re
 
 archives_path = os.path.join(root, 'archives')
@@ -717,7 +727,9 @@ def build_dependencies(bitnesses=(32, 64)):
     mkdir_p(archives_path)
     with in_dir(archives_path):
         for bitness in bitnesses:
-            for vc_version in vc_versions:
+            for vc_version in needed_vc_versions(python_versions):
+                if opts.verbose:
+                    print('Builddep for %s, %s-bit' % (vc_version, bitness))
                 if use_zlib:
                     zlib_builder = ZlibBuilder(bitness=bitness, vc_version=vc_version, zlib_version=zlib_version)
                     step(zlib_builder.build, (), zlib_builder.state_tag)
@@ -821,6 +833,7 @@ import optparse
 parser = optparse.OptionParser()
 parser.add_option('-b', '--bitness', help='Bitnesses build for, comma separated')
 parser.add_option('-p', '--python', help='Python versions to build for, comma separated')
+parser.add_option('-v', '--verbose', help='Print what is being done', action='store_true')
 opts, args = parser.parse_args()
 
 if opts.bitness:
