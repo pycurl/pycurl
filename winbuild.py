@@ -49,19 +49,19 @@ vc_paths = {
 # whether to link libcurl against zlib
 use_zlib = True
 # which version of zlib to use, will be downloaded from internet
-zlib_version = '1.2.8'
+zlib_version = '1.2.11'
 # whether to use openssl instead of winssl
 use_openssl = True
 # which version of openssl to use, will be downloaded from internet
-openssl_version = '1.1.0c'
+openssl_version = '1.1.0f'
 # whether to use c-ares
 use_cares = True
-cares_version = '1.12.0'
+cares_version = '1.13.0'
 # whether to use libssh2
 use_libssh2 = True
 libssh2_version = '1.8.0'
 # which version of libcurl to use, will be downloaded from internet
-libcurl_version = '7.51.0'
+libcurl_version = '7.55.1'
 # virtualenv version
 virtualenv_version = '15.1.0'
 # whether to build binary wheels
