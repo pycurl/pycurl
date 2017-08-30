@@ -742,7 +742,7 @@ bitnesses = (32, 64)
 
 def build():
     # note: adds git_bin_path to PATH if necessary, and creates archives_path
-    build_dependencies()
+    build_dependencies(bitnesses)
     with in_dir(archives_path):
         def prepare_pycurl():
             #fetch('https://dl.bintray.com/pycurl/pycurl/pycurl-%s.tar.gz' % pycurl_version)
@@ -857,7 +857,7 @@ if len(args) > 0:
     elif args[0] == 'bootstrap':
         download_bootstrap_python()
     elif args[0] == 'builddeps':
-        build_dependencies()
+        build_dependencies(bitnesses)
     elif args[0] == 'installvirtualenv':
         install_virtualenv()
     elif args[0] == 'createvirtualenvs':
