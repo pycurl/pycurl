@@ -358,15 +358,20 @@ class OpensslBuilder(Builder):
                 openssl_prefix = os.path.join(os.path.realpath('.'), 'build')
                 # Do not want compression:
                 # https://en.wikipedia.org/wiki/CRIME
-                if openssl_version_tuple < (1, 1):
-                    # openssl 1.0.2
-                    extras = ''
-                else:
+                extras = ['no-comp']
+                if openssl_version_tuple >= (1, 1):
                     # openssl 1.1.0
                     # in 1.1.0 the static/shared selection is handled by
                     # invoking the right makefile
-                    extras = 'no-shared'
-                f.write("perl Configure %s no-comp %s --prefix=%s\n" % (target, extras, openssl_prefix))
+                    extras += ['no-shared']
+                    
+                    # looks like openssl 1.1.0c does not derive
+                    # --openssldir from --prefix, like its Configure claims,
+                    # and like 1.0.2 does; provide a relative openssl dir
+                    # manually
+                    extras += ['--openssldir=ssl']
+                f.write("perl Configure %s %s --prefix=%s\n" % (target, ' '.join(extras), openssl_prefix))
+                
                 if openssl_version_tuple < (1, 1):
                     # openssl 1.0.2
                     f.write("call ms\\%s\n" % batch_file)
