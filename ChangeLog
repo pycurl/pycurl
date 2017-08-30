@@ -1,6 +1,21 @@
 Version 7.43.0.1 [requires libcurl-7.19.0 or better] - 2017-01-31
 -----------------------------------------------------------------
 
+        * Fixed a theoretical memory leak in module initialization (patch by
+          ideal).
+
+        * Added support for CURL_SSLVERSION_MAX_* constants (libcurl 7.52.0+,
+          patch by Jozef Melicher).
+
+        * Added support for CURLSSH_AUTH_AGENT (libcurl 7.28.0+,
+          patch by kxrd).
+
+        * Added set_ca_certs method to the Easy object to set CA certificates
+          from a string (OpenSSL only, patch by Lipin Dmitriy).
+
+        * Python 3.6 is now officially supported (patch by Samuel
+          Dion-Girardeau).
+
         * Added support for CURLOPT_PROXY_CAPATH (libcurl 7.52.0+,
           patch by Jan Kryl).
 
