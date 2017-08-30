@@ -1202,6 +1202,10 @@ initpycurl(void)
     insint_c(d, "REDIR_POST_ALL", CURL_REDIR_POST_ALL);
 #endif
 
+#ifdef HAVE_CURLINFO_HTTP_VERSION
+    insint_c(d, "INFO_HTTP_VERSION", CURLINFO_HTTP_VERSION);
+#endif
+
     /* options for global_init() */
     insint(d, "GLOBAL_SSL", CURL_GLOBAL_SSL);
     insint(d, "GLOBAL_WIN32", CURL_GLOBAL_WIN32);
