@@ -480,6 +480,9 @@ util_curl_close(CurlObject *self)
 #ifdef HAVE_CURL_7_20_0_OPTS
     SFREE(self->mail_rcpt);
 #endif
+#ifdef HAVE_CURLOPT_CONNECT_TO
+    SFREE(self->connect_to);
+#endif
 #undef SFREE
 }
 
@@ -1496,6 +1499,9 @@ do_curl_reset(CurlObject *self)
 #ifdef HAVE_CURL_7_20_0_OPTS
     SFREE(self->mail_rcpt);
 #endif
+#ifdef HAVE_CURLOPT_CONNECT_TO
+    SFREE(self->connect_to);
+#endif
 #undef SFREE
     res = util_curl_init(self);
     if (res < 0) {
@@ -2187,6 +2193,11 @@ do_curl_setopt_list(CurlObject *self, int option, int which, PyObject *obj)
 #ifdef HAVE_CURL_7_20_0_OPTS
     case CURLOPT_MAIL_RCPT:
         old_slist = &self->mail_rcpt;
+        break;
+#endif
+#ifdef HAVE_CURLOPT_CONNECT_TO
+    case CURLOPT_CONNECT_TO:
+        old_slist = &self->connect_to;
         break;
 #endif
     default:

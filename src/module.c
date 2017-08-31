@@ -1202,6 +1202,10 @@ initpycurl(void)
     insint_c(d, "REDIR_POST_ALL", CURL_REDIR_POST_ALL);
 #endif
 
+#ifdef HAVE_CURLOPT_CONNECT_TO
+    insint_c(d, "CONNECT_TO", CURLOPT_CONNECT_TO);
+#endif
+
 #ifdef HAVE_CURLINFO_HTTP_VERSION
     insint_c(d, "INFO_HTTP_VERSION", CURLINFO_HTTP_VERSION);
 #endif
