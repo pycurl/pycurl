@@ -149,6 +149,10 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
 #define HAVE_CURL_7_30_0_PIPELINE_OPTS
 #endif
 
+#if LIBCURL_VERSION_NUM >= 0x073100 /* check for 7.49.0 or greater */
+#define HAVE_CURLOPT_CONNECT_TO
+#endif
+
 #if LIBCURL_VERSION_NUM >= 0x073200 /* check for 7.50.0 or greater */
 #define HAVE_CURLINFO_HTTP_VERSION
 #endif
@@ -366,6 +370,9 @@ typedef struct CurlObject {
 #endif
 #ifdef HAVE_CURL_7_20_0_OPTS
     struct curl_slist *mail_rcpt;
+#endif
+#ifdef HAVE_CURLOPT_CONNECT_TO
+    struct curl_slist *connect_to;
 #endif
     /* callbacks */
     PyObject *w_cb;
