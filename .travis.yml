@@ -37,45 +37,49 @@ matrix:
     # latest libcurl with each supported SSL backend
     - python: 2.7
       env:
-        - USECURL=7.46.0-gssapi-libssh2
+        - USECURL=7.52.1-gssapi-libssh2
         - USESSL=openssl
         - TESTDOCSEXAMPLES=1
     - python: 2.7
       env:
-        - USECURL=7.46.0-gssapi-libssh2
+        - USECURL=7.52.1-gssapi-libssh2
         - USESSL=libressl
         - USELIBRESSL=2.2.0
     - python: 2.7
       env:
-        # libcurl 7.45.0+ does not build against gnutls in travis/ubuntu 12.04
+        # libcurl 7.45.0, 7.46.0 do not build against gnutls
+        # in travis/ubuntu 12.04
+        # did not test 7.52.1
         - USECURL=7.44.0-gssapi-libssh2
         - USESSL=gnutls
     - python: 2.7
       env:
-        - USECURL=7.46.0-gssapi-libssh2
+        - USECURL=7.52.1-gssapi-libssh2
         - USESSL=nss
     - python: 2.7
       env:
         # this configuration should be without gssapi
-        - USECURL=7.46.0
+        - USECURL=7.52.1
         - USESSL=none
 
     # latest libcurl with each SSL backend that uses different code,
     # see #357/#360
     - python: 3.6
       env:
-        - USECURL=7.46.0-gssapi-libssh2
+        - USECURL=7.52.1-gssapi-libssh2
         - USESSL=openssl
         - TESTDOCSEXAMPLES=1
     # no need to test libressl because it's treated exactly like openssl
     - python: 3.6
       env:
-        # libcurl 7.45.0+ does not build against gnutls in travis/ubuntu 12.04
+        # libcurl 7.45.0, 7.46.0 do not build against gnutls
+        # in travis/ubuntu 12.04
+        # did not test 7.52.1
         - USECURL=7.44.0-gssapi-libssh2
         - USESSL=gnutls
     - python: 3.6
       env:
-        - USECURL=7.46.0-gssapi-libssh2
+        - USECURL=7.52.1-gssapi-libssh2
         - USESSL=nss
     # no need to test ssl-less configuration because there is no code that
     # is specific to it
@@ -104,11 +108,11 @@ matrix:
         - USESSL=gnutls
     - python: 3.5
       env:
-        - USECURL=7.47.0-dev-gssapi-libssh2
+        - USECURL=7.53.0-dev-gssapi-libssh2
         - USESSL=openssl
     - python: 3.5
       env:
-        - USECURL=7.47.0-dev-gssapi-libssh2
+        - USECURL=7.53.0-dev-gssapi-libssh2
         - USESSL=nss
     - python: 3.6
       env:
