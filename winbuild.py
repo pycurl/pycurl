@@ -70,17 +70,17 @@ build_wheels = True
 pycurl_version = '7.43.0.1'
 
 default_vc_paths = {
-    # where msvc 9 is installed, for python 2.6 through 3.2
+    # where msvc 9 is installed, for python 2.6-3.2
     'vc9': [
         'c:/program files (x86)/microsoft visual studio 9.0',
         'c:/program files/microsoft visual studio 9.0',
     ],
-    # where msvc 10 is installed, for python 3.3 through 3.4
+    # where msvc 10 is installed, for python 3.3-3.4
     'vc10': [
         'c:/program files (x86)/microsoft visual studio 10.0',
         'c:/program files/microsoft visual studio 10.0',
     ],
-    # where msvc 14 is installed, for python 3.5
+    # where msvc 14 is installed, for python 3.5-3.6
     'vc14': [
         'c:/program files (x86)/microsoft visual studio 14.0',
         'c:/program files/microsoft visual studio 14.0',
