@@ -161,6 +161,11 @@ def fetch(url, archive=None):
                 f.write(chunk)
         os.rename(tmp_path, archive)
 
+def fetch_to_archives(url):
+    mkdir_p(archives_path)
+    path = os.path.join(archives_path, os.path.basename(url))
+    fetch(url, path)
+
 @contextlib.contextmanager
 def in_dir(dir):
     old_cwd = os.getcwd()
@@ -791,8 +796,8 @@ def build():
                     libcurl_version=libcurl_version)
                 builder.build(targets)
 
-def download_pythons():
-    mkdir_p(archives_path)
+def python_metas():
+    metas = []
     for version in python_versions:
         parts = [int(part) for part in version.split('.')]
         if parts[0] >= 3 and parts[1] >= 5:
@@ -801,10 +806,19 @@ def download_pythons():
         else:
             ext = 'msi'
             amd64_suffix = '.amd64'
-        url = 'https://www.python.org/ftp/python/%s/python-%s.%s' % (version, version, ext)
-        fetch(url, os.path.join(archives_path, 'python-%s.%s') % (version, ext))
-        url = 'https://www.python.org/ftp/python/%s/python-%s%s.%s' % (version, version, amd64_suffix, ext)
-        fetch(url, os.path.join(archives_path, 'python-%s%s.%s') % (version, amd64_suffix, ext))
+        url_32 = 'https://www.python.org/ftp/python/%s/python-%s.%s' % (version, version, ext)
+        url_64 = 'https://www.python.org/ftp/python/%s/python-%s%s.%s' % (version, version, amd64_suffix, ext)
+        meta = dict(
+            version=version, ext=ext, amd64_suffix=amd64_suffix,
+            url_32=url_32, url_64=url_64,
+        )
+        metas.append(meta)
+    return metas
+
+def download_pythons():
+    for meta in python_metas():
+        fetch_to_archives(meta['url_32'])
+        fetch_to_archives(meta['url_64'])
 
 def download_bootstrap_python():
     version = python_versions[-2]
