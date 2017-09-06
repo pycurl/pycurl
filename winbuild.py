@@ -1,6 +1,7 @@
 # Bootstrap python binary:
-# http://www.python.org/ftp/python/3.3.4/python-3.3.4.msi
-# http://www.python.org/ftp/python/3.3.4/python-3.3.4.amd64.msi
+# http://www.python.org/ftp/python/3.3.5/python-3.3.5.msi
+# Then execute:
+# msiexec /i c:\dev\build-pycurl\archives\python-3.3.5.msi /norestart /passive InstallAllUsers=1 Include_test=0 Include_doc=0 Include_launcher=0 Include_ckltk=0 TargetDir=c:\dev\32\python33
 # msvc9/vs2008 express:
 # http://go.microsoft.com/?linkid=7729279
 # msvc10/vs2010 express:
@@ -202,6 +203,11 @@ class PythonRelease(str):
     @property
     def dotless(self):
         return self.replace('.', '')
+
+class PythonVersion(str):
+    @property
+    def release(self):
+        return PythonRelease('.'.join(self.split('.')[:2]))
 
 def python_releases():
     return [PythonRelease('.'.join(version.split('.')[:2]))
@@ -811,14 +817,42 @@ def python_metas():
         meta = dict(
             version=version, ext=ext, amd64_suffix=amd64_suffix,
             url_32=url_32, url_64=url_64,
+            installed_path_32 = 'c:\\dev\\32\\python%d%d' % (parts[0], parts[1]),
+            installed_path_64 = 'c:\\dev\\64\\python%d%d' % (parts[0], parts[1]),
         )
         metas.append(meta)
     return metas
 
 def download_pythons():
     for meta in python_metas():
-        fetch_to_archives(meta['url_32'])
-        fetch_to_archives(meta['url_64'])
+        for bitness in bitnesses:
+            fetch_to_archives(meta['url_%d' % bitness])
+
+def install_pythons():
+    for meta in python_metas():
+        for bitness in bitnesses:
+            if not os.path.exists(meta['installed_path_%d' % bitness]):
+                install_python(meta, bitness)
+
+def fix_slashes(path):
+    return path.replace('/', '\\')
+
+# http://eddiejackson.net/wp/?p=10276
+def install_python(meta, bitness):
+    archive_path = fix_slashes(os.path.join(archives_path, os.path.basename(meta['url_%d' % bitness])))
+    if meta['ext'] == 'exe':
+        cmd = [archive_path]
+    else:
+        cmd = ['msiexec', '/i', archive_path, '/norestart']
+    cmd += ['/passive', 'InstallAllUsers=1',
+            'Include_test=0', 'Include_doc=0', 'Include_launcher=0',
+            'Include_ckltk=0',
+            'TargetDir=%s' % meta['installed_path_%d' % bitness],
+        ]
+    sys.stdout.write('Installing python %s (%d bit)\n' % (meta['version'], bitness))
+    print(' '.join(cmd))
+    sys.stdout.flush()
+    subprocess.check_call(cmd)
 
 def download_bootstrap_python():
     version = python_versions[-2]
@@ -891,6 +925,8 @@ if len(args) > 0:
         download_pythons()
     elif args[0] == 'bootstrap':
         download_bootstrap_python()
+    elif args[0] == 'installpy':
+        install_pythons()
     elif args[0] == 'builddeps':
         build_dependencies(bitnesses)
     elif args[0] == 'installvirtualenv':
