@@ -149,6 +149,7 @@ def fetch(url, archive=None):
         archive = os.path.basename(url)
     if not os.path.exists(archive):
         sys.stdout.write("Fetching %s\n" % url)
+        sys.stdout.flush()
         io = urlopen(url)
         tmp_path = os.path.join(os.path.dirname(archive),
             '.%s.part' % os.path.basename(archive))
