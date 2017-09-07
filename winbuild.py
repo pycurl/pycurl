@@ -277,6 +277,14 @@ class Builder(object):
     def execute_batch(self):
         with open('doit.bat', 'w') as f:
             f.write(self.vcvars_cmd)
+            if self.vc_version == 'vc14':
+                # I don't know why vcvars doesn't configure this under vc14
+                windows_sdk_path = 'c:\\program files (x86)\\microsoft sdks\\windows\\v7.1a'
+                f.write('set include=%s\\include;%%include%%\n' % windows_sdk_path)
+                if self.bitness == 32:
+                    f.write('set lib=%s\\lib;%%lib%%\n' % windows_sdk_path)
+                else:
+                    f.write('set lib=%s\\lib\\x64;%%lib%%\n' % windows_sdk_path)
             f.write(self.nasm_cmd)
             yield f
         if False:
