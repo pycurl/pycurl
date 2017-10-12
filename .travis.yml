@@ -124,8 +124,6 @@ matrix:
         - USESSL=gnutls
 install: >
   ./tests/travis/setup.sh
-before_script: >
-  ./tests/travis/hack.sh
 script: >
   ./tests/travis/run.sh
 addons:

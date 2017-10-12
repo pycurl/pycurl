@@ -72,10 +72,6 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
 #define inet_ntop(fam,addr,string,size) pycurl_inet_ntop(fam,addr,string,size)
 #endif
 
-/* Ensure we have updated versions */
-#if !defined(PY_VERSION_HEX) || (PY_VERSION_HEX < 0x02040000)
-#  error "Need Python version 2.4 or greater to compile pycurl."
-#endif
 #if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x071300)
 #  error "Need libcurl version 7.19.0 or greater to compile pycurl."
 #endif
@@ -155,16 +151,6 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
 
 #if LIBCURL_VERSION_NUM >= 0x073200 /* check for 7.50.0 or greater */
 #define HAVE_CURLINFO_HTTP_VERSION
-#endif
-
-/* Python < 2.5 compat for Py_ssize_t */
-#if PY_VERSION_HEX < 0x02050000
-typedef int Py_ssize_t;
-#endif
-
-/* Py_TYPE is defined by Python 2.6+ */
-#if PY_VERSION_HEX < 0x02060000 && !defined(Py_TYPE)
-#  define Py_TYPE(x) (x)->ob_type
 #endif
 
 #undef UNUSED
