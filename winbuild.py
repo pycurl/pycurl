@@ -283,8 +283,10 @@ class Builder(object):
                 f.write('set include=%s\\include;%%include%%\n' % windows_sdk_path)
                 if self.bitness == 32:
                     f.write('set lib=%s\\lib;%%lib%%\n' % windows_sdk_path)
+                    f.write('set path=%s\\bin;%%path%%\n' % windows_sdk_path)
                 else:
                     f.write('set lib=%s\\lib\\x64;%%lib%%\n' % windows_sdk_path)
+                    f.write('set path=%s\\bin\\x64;%%path%%\n' % windows_sdk_path)
             f.write(self.nasm_cmd)
             yield f
         if False:
