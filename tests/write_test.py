@@ -92,3 +92,20 @@ class WriteTest(unittest.TestCase):
         self.curl.setopt(pycurl.WRITEDATA, acceptor)
         self.curl.perform()
         self.assertEqual('success', acceptor.buffer)
+    
+    def test_write_to_file_like_then_real_file(self):
+        self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
+        acceptor = Acceptor()
+        self.curl.setopt(pycurl.WRITEDATA, acceptor)
+        self.curl.perform()
+        self.assertEqual('success', acceptor.buffer)
+        del acceptor
+        f = tempfile.NamedTemporaryFile()
+        try:
+            self.curl.setopt(pycurl.WRITEDATA, f)
+            self.curl.perform()
+            f.seek(0)
+            body = f.read()
+        finally:
+            f.close()
+        self.assertEqual('success', body.decode())
