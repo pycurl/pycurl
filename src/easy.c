@@ -1884,6 +1884,10 @@ do_curl_setopt_file_passthrough(CurlObject *self, int option, PyObject *obj)
     switch (option) {
     case CURLOPT_READDATA:
     case CURLOPT_WRITEDATA:
+        res = curl_easy_setopt(self->handle, CURLOPT_WRITEFUNCTION, fwrite);
+        if (res != CURLE_OK) {
+            CURLERROR_RETVAL();
+        }
         break;
     case CURLOPT_WRITEHEADER:
         if (self->w_cb != NULL) {
