@@ -16,7 +16,7 @@ class SshKeyCbTest(unittest.TestCase):
     '''This test requires Internet access.'''
 
     def setUp(self):
-        self.curl = pycurl.Curl()
+        self.curl = util.DefaultCurl()
         self.curl.setopt(pycurl.URL, sftp_server)
         self.curl.setopt(pycurl.VERBOSE, True)
 
@@ -71,7 +71,7 @@ class SshKeyCbTest(unittest.TestCase):
 @nose.plugins.attrib.attr('ssh')
 class SshKeyCbUnsetTest(unittest.TestCase):
     def setUp(self):
-        self.curl = pycurl.Curl()
+        self.curl = util.DefaultCurl()
         self.curl.setopt(pycurl.URL, sftp_server)
         self.curl.setopt(pycurl.VERBOSE, True)
 

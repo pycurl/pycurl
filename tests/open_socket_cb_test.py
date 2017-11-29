@@ -51,7 +51,7 @@ def socket_open_unix(purpose, curl_address):
 
 class OpenSocketCbTest(unittest.TestCase):
     def setUp(self):
-        self.curl = pycurl.Curl()
+        self.curl = util.DefaultCurl()
 
     def tearDown(self):
         self.curl.close()

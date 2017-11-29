@@ -23,7 +23,7 @@ setup_module, teardown_module = appmanager.setup(('app', 8380))
 @flaky.flaky(max_runs=3)
 class PostTest(unittest.TestCase):
     def setUp(self):
-        self.curl = pycurl.Curl()
+        self.curl = util.DefaultCurl()
 
     def tearDown(self):
         self.curl.close()
@@ -82,7 +82,7 @@ class PostTest(unittest.TestCase):
             'field3': 'this is wei\000rd, but null-bytes are okay',
         }
         self.check_post(send, expect, 'http://localhost:8380/postfields')
-    
+
     def test_post_file(self):
         path = os.path.join(os.path.dirname(__file__), '..', 'README.rst')
         f = open(path)

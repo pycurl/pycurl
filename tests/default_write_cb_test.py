@@ -8,7 +8,7 @@ import sys
 import tempfile
 import os
 
-from . import appmanager
+from . import appmanager, util
 
 setup_module, teardown_module = appmanager.setup(('app', 8380))
 
@@ -25,7 +25,7 @@ def try_fsync(fd):
 
 class DefaultWriteCbTest(unittest.TestCase):
     def setUp(self):
-        self.curl = pycurl.Curl()
+        self.curl = util.DefaultCurl()
 
     def tearDown(self):
         self.curl.close()
