@@ -1,4 +1,4 @@
-import os, os.path, subprocess, shutil, re
+import os, os.path, subprocess, shutil
 
 try:
     from urllib.request import urlopen

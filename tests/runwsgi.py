@@ -1,6 +1,5 @@
 # Run a WSGI application in a daemon thread
 
-import sys
 import bottle
 import threading
 import os.path
