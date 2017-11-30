@@ -425,7 +425,6 @@ initpycurl(void)
 #undef PYCURL_VERSION_PREFIX_SIZE
 
     insstr_modinit(d, "version", g_pycurl_useragent);
-    insstr_modinit(d, "COMPILE_DATE", __DATE__ " " __TIME__);
     insint(d, "COMPILE_PY_VERSION_HEX", PY_VERSION_HEX);
     insint(d, "COMPILE_LIBCURL_VERSION_NUM", LIBCURL_VERSION_NUM);
 
