@@ -421,6 +421,9 @@ class ExtensionConfiguration(object):
             # link against crypto as of May 2014.
             # http://stackoverflow.com/questions/23687488/cant-get-pycurl-to-install-on-cygwin-missing-openssl-symbols-crypto-num-locks
             self.libraries.append('crypto')
+            # we also need ssl for the certificate functions
+            # (SSL_CTX_get_cert_store)
+            self.libraries.append('ssl')
         self.define_macros.append(('HAVE_CURL_SSL', 1))
 
     def using_gnutls(self):

@@ -67,8 +67,9 @@ if test -n "$USESSL"; then
     fi
   fi
 elif test -z "$USECURL"; then
-  # default for ubuntu 12 which is what travis currently uses is openssl
-  export PYCURL_SSL_LIBRARY=openssl
+  # default for ubuntu 12 is openssl
+  # default for ubuntu 14 which is what travis currently uses is gnutls
+  export PYCURL_SSL_LIBRARY=gnutls
 fi
 
 if test -n "$AVOIDSTDIO"; then
