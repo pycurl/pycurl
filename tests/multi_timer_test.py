@@ -31,7 +31,7 @@ class MultiSocketTest(unittest.TestCase):
         ]
 
         timers = []
-        
+
         # timer callback
         def timer(msecs):
             #print('Timer callback msecs:', msecs)
@@ -42,7 +42,7 @@ class MultiSocketTest(unittest.TestCase):
         m.setopt(pycurl.M_TIMERFUNCTION, timer)
         m.handles = []
         for url in urls:
-            c = pycurl.Curl()
+            c = util.DefaultCurl()
             # save info in standard Python attributes
             c.url = url
             c.body = util.BytesIO()
@@ -72,7 +72,7 @@ class MultiSocketTest(unittest.TestCase):
         for c in m.handles:
             self.assertEqual('success', c.body.getvalue().decode())
             self.assertEqual(200, c.http_code)
-        
+
         assert len(timers) > 0
         # libcurl 7.23.0 produces a 0 timer
         assert timers[0] >= 0

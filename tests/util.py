@@ -238,3 +238,9 @@ def get_sys_path(p=None):
     return p
 
 
+def DefaultCurl():
+    import pycurl
+
+    curl = pycurl.Curl()
+    curl.setopt(curl.FORBID_REUSE, True)
+    return curl

@@ -16,17 +16,17 @@ setup_module, teardown_module = appmanager.setup(('app', 8380))
 class Acceptor(object):
     def __init__(self):
         self.buffer = ''
-    
+
     def write(self, chunk):
         self.buffer += chunk.decode()
 
 class WriteTest(unittest.TestCase):
     def setUp(self):
-        self.curl = pycurl.Curl()
-    
+        self.curl = util.DefaultCurl()
+
     def tearDown(self):
         self.curl.close()
-    
+
     def test_write_to_tempfile_via_function(self):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
         f = tempfile.NamedTemporaryFile()
@@ -38,7 +38,7 @@ class WriteTest(unittest.TestCase):
         finally:
             f.close()
         self.assertEqual('success', body.decode())
-    
+
     @util.only_python3
     def test_write_to_tempfile_via_object(self):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
@@ -51,7 +51,7 @@ class WriteTest(unittest.TestCase):
         finally:
             f.close()
         self.assertEqual('success', body.decode())
-    
+
     def test_write_to_file_via_function(self):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
         dir = tempfile.mkdtemp()
@@ -68,7 +68,7 @@ class WriteTest(unittest.TestCase):
         finally:
             shutil.rmtree(dir)
         self.assertEqual('success', body.decode())
-    
+
     def test_write_to_file_via_object(self):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
         dir = tempfile.mkdtemp()
@@ -85,7 +85,7 @@ class WriteTest(unittest.TestCase):
         finally:
             shutil.rmtree(dir)
         self.assertEqual('success', body.decode())
-    
+
     def test_write_to_file_like(self):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
         acceptor = Acceptor()

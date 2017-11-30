@@ -28,18 +28,18 @@ class SetoptLifecycleTest(unittest.TestCase):
         pf = TestString('&'.join(50*['field=value%d' % (index,)]))
         curl.setopt(pycurl.URL, 'http://localhost:8380/postfields')
         curl.setopt(pycurl.POSTFIELDS, pf)
-    
+
     # This test takes 6+ seconds to run.
     # It seems to pass with broken pycurl code when run by itself,
     # but fails when run as part of the entire test suite.
     def test_postfields_lifecycle(self):
         requests = []
         for i in range(1000):
-            curl = pycurl.Curl()
+            curl = util.DefaultCurl()
             self.do_setopt(curl, i)
             gc.collect()
             requests.append(curl)
-        
+
         # send requests here to permit maximum garbage recycling
         for i in range(100):
             curl = requests[i]
@@ -51,7 +51,7 @@ class SetoptLifecycleTest(unittest.TestCase):
             body = sio.getvalue().decode()
             returned_fields = json.loads(body)
             self.assertEqual(dict(field='value%d' % i), returned_fields)
-        
+
         for i in range(100):
             curl = requests[i]
             curl.close()
