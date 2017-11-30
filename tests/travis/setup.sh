@@ -29,7 +29,7 @@ export PATH=~/opt/bin:$PATH
 
 if test -n "$USEPY"; then
   # need to launch tests.appmanager with a more modern python.
-  # doing this for 2.4 and 2.5 now.
+  # doing this for 3.1 now.
   pip install -r requirements-dev.txt
 
   (cd && mkdir -p opt && cd opt &&
@@ -69,11 +69,6 @@ if test -e requirements-dev-$USEPY.txt; then
   pip install -r requirements-dev-$USEPY.txt
 else
   pip install -r requirements-dev.txt
-fi
-
-if test "$USEPY" = 2.4; then
-  # patch nose
-  sed -i -e s/BaseException/Exception/ ~/virtualenv/python2.4/lib/python2.4/site-packages/nose/failure.py
 fi
 
 if test "$USEPY" = 3.1; then

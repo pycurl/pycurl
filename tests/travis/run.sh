@@ -35,7 +35,7 @@ if test -n "$USECURL"; then
     curl_suffix=-gssapi$curl_suffix
     USECURLV=$(echo "$USECURLV" |sed -e s/-gssapi//)
   fi
-  
+
   if test -n "$USESSL"; then
     if test "$USESSL" != none; then
       curldirname=curl-"$USECURLV"-"$USESSL"$curl_suffix
@@ -93,8 +93,6 @@ if test -n "$TESTDOCSEXAMPLES"; then
 
   # sphinx requires python 2.6+ or 3.3+
   case "$USEPY" in
-    2.[45])
-      ;;
     3.[12])
       ;;
     *)
