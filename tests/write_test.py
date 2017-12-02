@@ -100,12 +100,12 @@ class WriteTest(unittest.TestCase):
         self.curl.perform()
         self.assertEqual('success', acceptor.buffer)
         del acceptor
-        f = tempfile.NamedTemporaryFile()
-        try:
-            self.curl.setopt(pycurl.WRITEDATA, f)
-            self.curl.perform()
-            f.seek(0)
-            body = f.read()
-        finally:
-            f.close()
-        self.assertEqual('success', body.decode())
+        with tempfile.NamedTemporaryFile() as f:
+            try:
+                self.curl.setopt(pycurl.WRITEDATA, f)
+                self.curl.perform()
+                f.seek(0)
+                body = f.read()
+            finally:
+                f.close()
+            self.assertEqual('success', body.decode())
