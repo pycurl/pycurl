@@ -1883,16 +1883,29 @@ do_curl_setopt_file_passthrough(CurlObject *self, int option, PyObject *obj)
     /* Ensure the option specified a file as well as the input */
     switch (option) {
     case CURLOPT_READDATA:
+        res = curl_easy_setopt(self->handle, CURLOPT_READFUNCTION, fread);
+        if (res != CURLE_OK) {
+            CURLERROR_RETVAL();
+        }
+        break;
     case CURLOPT_WRITEDATA:
+        if (self->w_cb != NULL) {
+            PyErr_SetString(ErrorObject, "cannot combine WRITEDATA with WRITEFUNCTION.");
+            return NULL;
+        }
         res = curl_easy_setopt(self->handle, CURLOPT_WRITEFUNCTION, fwrite);
         if (res != CURLE_OK) {
             CURLERROR_RETVAL();
         }
         break;
     case CURLOPT_WRITEHEADER:
-        if (self->w_cb != NULL) {
-            PyErr_SetString(ErrorObject, "cannot combine WRITEHEADER with WRITEFUNCTION.");
+        if (self->h_cb != NULL) {
+            PyErr_SetString(ErrorObject, "cannot combine WRITEHEADER with HEADERFUNCTION.");
             return NULL;
+        }
+        res = curl_easy_setopt(self->handle, CURLOPT_HEADERFUNCTION, fwrite);
+        if (res != CURLE_OK) {
+            CURLERROR_RETVAL();
         }
         break;
     default:
