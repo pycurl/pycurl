@@ -1880,7 +1880,6 @@ do_curl_setopt_file_passthrough(CurlObject *self, int option, PyObject *obj)
     FILE *fp;
     int res;
 
-    /* Ensure the option specified a file as well as the input */
     switch (option) {
     case CURLOPT_READDATA:
         res = curl_easy_setopt(self->handle, CURLOPT_READFUNCTION, fread);
