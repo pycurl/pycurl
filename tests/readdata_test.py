@@ -41,6 +41,8 @@ class DataProvider(object):
             # Nothing more to read
             return ""
 
+FORM_SUBMISSION_PATH = os.path.join(os.path.dirname(__file__), 'fixtures', 'form_submission.txt')
+
 class ReaddataTest(unittest.TestCase):
     def setUp(self):
         self.curl = util.DefaultCurl()
@@ -124,13 +126,12 @@ class ReaddataTest(unittest.TestCase):
         self.assertEqual(poststring, actual)
 
     def test_readdata_file_binary(self):
-        path = os.path.join(os.path.dirname(__file__), 'fixtures', 'form_submission.txt')
         # file opened in binary mode
-        f = open(path, 'rb')
+        f = open(FORM_SUBMISSION_PATH, 'rb')
         try:
             self.curl.setopt(self.curl.URL, 'http://localhost:8380/postfields')
             self.curl.setopt(self.curl.POST, 1)
-            self.curl.setopt(self.curl.POSTFIELDSIZE, os.stat(path).st_size)
+            self.curl.setopt(self.curl.POSTFIELDSIZE, os.stat(FORM_SUBMISSION_PATH).st_size)
             self.curl.setopt(self.curl.READDATA, f)
             sio = util.BytesIO()
             self.curl.setopt(pycurl.WRITEDATA, sio)
@@ -142,13 +143,12 @@ class ReaddataTest(unittest.TestCase):
             f.close()
 
     def test_readdata_file_text(self):
-        path = os.path.join(os.path.dirname(__file__), 'fixtures', 'form_submission.txt')
         # file opened in text mode
-        f = open(path, 'rt')
+        f = open(FORM_SUBMISSION_PATH, 'rt')
         try:
             self.curl.setopt(self.curl.URL, 'http://localhost:8380/postfields')
             self.curl.setopt(self.curl.POST, 1)
-            self.curl.setopt(self.curl.POSTFIELDSIZE, os.stat(path).st_size)
+            self.curl.setopt(self.curl.POSTFIELDSIZE, os.stat(FORM_SUBMISSION_PATH).st_size)
             self.curl.setopt(self.curl.READDATA, f)
             sio = util.BytesIO()
             self.curl.setopt(pycurl.WRITEDATA, sio)
@@ -158,3 +158,83 @@ class ReaddataTest(unittest.TestCase):
             self.assertEqual({'foo': 'bar'}, actual)
         finally:
             f.close()
+
+    def test_readdata_file_like(self):
+        data = 'hello=world'
+        data_provider = DataProvider(data)
+        self.curl.setopt(self.curl.URL, 'http://localhost:8380/postfields')
+        self.curl.setopt(self.curl.POST, 1)
+        self.curl.setopt(self.curl.POSTFIELDSIZE, len(data))
+        self.curl.setopt(self.curl.READDATA, data_provider)
+        sio = util.BytesIO()
+        self.curl.setopt(pycurl.WRITEDATA, sio)
+        self.curl.perform()
+
+        actual = json.loads(sio.getvalue().decode())
+        self.assertEqual({'hello': 'world'}, actual)
+
+    def test_readdata_and_readfunction_file_like(self):
+        data = 'hello=world'
+        data_provider = DataProvider(data)
+        # data must be the same length
+        function_provider = DataProvider('aaaaa=bbbbb')
+        self.curl.setopt(self.curl.URL, 'http://localhost:8380/postfields')
+        self.curl.setopt(self.curl.POST, 1)
+        self.curl.setopt(self.curl.POSTFIELDSIZE, len(data))
+        self.curl.setopt(self.curl.READDATA, data_provider)
+        self.curl.setopt(self.curl.READFUNCTION, function_provider.read)
+        sio = util.BytesIO()
+        self.curl.setopt(pycurl.WRITEDATA, sio)
+        self.curl.perform()
+
+        actual = json.loads(sio.getvalue().decode())
+        self.assertEqual({'aaaaa': 'bbbbb'}, actual)
+
+    def test_readfunction_and_readdata_file_like(self):
+        data = 'hello=world'
+        data_provider = DataProvider(data)
+        # data must be the same length
+        function_provider = DataProvider('aaaaa=bbbbb')
+        self.curl.setopt(self.curl.URL, 'http://localhost:8380/postfields')
+        self.curl.setopt(self.curl.POST, 1)
+        self.curl.setopt(self.curl.POSTFIELDSIZE, len(data))
+        self.curl.setopt(self.curl.READFUNCTION, function_provider.read)
+        self.curl.setopt(self.curl.READDATA, data_provider)
+        sio = util.BytesIO()
+        self.curl.setopt(pycurl.WRITEDATA, sio)
+        self.curl.perform()
+
+        actual = json.loads(sio.getvalue().decode())
+        self.assertEqual({'hello': 'world'}, actual)
+
+    def test_readdata_and_readfunction_real_file(self):
+        # data must be the same length
+        with open(FORM_SUBMISSION_PATH) as f:
+            function_provider = DataProvider('aaa=bbb')
+            self.curl.setopt(self.curl.URL, 'http://localhost:8380/postfields')
+            self.curl.setopt(self.curl.POST, 1)
+            self.curl.setopt(self.curl.POSTFIELDSIZE, os.stat(FORM_SUBMISSION_PATH).st_size)
+            self.curl.setopt(self.curl.READDATA, f)
+            self.curl.setopt(self.curl.READFUNCTION, function_provider.read)
+            sio = util.BytesIO()
+            self.curl.setopt(pycurl.WRITEDATA, sio)
+            self.curl.perform()
+
+            actual = json.loads(sio.getvalue().decode())
+            self.assertEqual({'aaa': 'bbb'}, actual)
+
+    def test_readfunction_and_readdata_real_file(self):
+        # data must be the same length
+        with open(FORM_SUBMISSION_PATH) as f:
+            function_provider = DataProvider('aaa=bbb')
+            self.curl.setopt(self.curl.URL, 'http://localhost:8380/postfields')
+            self.curl.setopt(self.curl.POST, 1)
+            self.curl.setopt(self.curl.POSTFIELDSIZE, os.stat(FORM_SUBMISSION_PATH).st_size)
+            self.curl.setopt(self.curl.READFUNCTION, function_provider.read)
+            self.curl.setopt(self.curl.READDATA, f)
+            sio = util.BytesIO()
+            self.curl.setopt(pycurl.WRITEDATA, sio)
+            self.curl.perform()
+
+            actual = json.loads(sio.getvalue().decode())
+            self.assertEqual({'foo': 'bar'}, actual)
