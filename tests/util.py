@@ -250,6 +250,6 @@ def with_real_write_file(fn):
     @functools.wraps(fn)
     def wrapper(*args):
         with tempfile.NamedTemporaryFile() as f:
-            with open(f.name, 'w+') as real_f:
+            with open(f.name, 'w+b') as real_f:
                 return fn(*(list(args) + [real_f]))
     return wrapper

@@ -135,8 +135,8 @@ class WriteTest(unittest.TestCase):
         self.curl.perform()
         real_f_header.seek(0)
         real_f_data.seek(0)
-        self.assertEqual('success', real_f_data.read())
-        self.assertIn('content-type', real_f_header.read().lower())
+        self.assertEqual('success', real_f_data.read().decode())
+        self.assertIn('content-type', real_f_header.read().decode().lower())
 
     def test_writedata_and_writefunction_file_like(self):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
@@ -156,7 +156,7 @@ class WriteTest(unittest.TestCase):
         self.curl.setopt(pycurl.WRITEFUNCTION, function_acceptor.write)
         self.curl.perform()
         real_f.seek(0)
-        self.assertEqual('', real_f.read().lower())
+        self.assertEqual('', real_f.read().decode().lower())
         self.assertEqual('success', function_acceptor.buffer)
 
     def test_writefunction_and_writedata_file_like(self):
@@ -177,7 +177,7 @@ class WriteTest(unittest.TestCase):
         self.curl.setopt(pycurl.WRITEDATA, real_f)
         self.curl.perform()
         real_f.seek(0)
-        self.assertEqual('success', real_f.read().lower())
+        self.assertEqual('success', real_f.read().decode().lower())
         self.assertEqual('', function_acceptor.buffer)
 
     def test_writeheader_and_headerfunction_file_like(self):
@@ -204,7 +204,7 @@ class WriteTest(unittest.TestCase):
         self.curl.setopt(pycurl.WRITEDATA, body_acceptor)
         self.curl.perform()
         real_f.seek(0)
-        self.assertEqual('', real_f.read().lower())
+        self.assertEqual('', real_f.read().decode().lower())
         self.assertIn('content-type', function_acceptor.buffer.lower())
 
     def test_headerfunction_and_writeheader_file_like(self):
@@ -231,7 +231,7 @@ class WriteTest(unittest.TestCase):
         self.curl.setopt(pycurl.WRITEDATA, body_acceptor)
         self.curl.perform()
         real_f.seek(0)
-        self.assertIn('content-type', real_f.read().lower())
+        self.assertIn('content-type', real_f.read().decode().lower())
         self.assertEqual('', function_acceptor.buffer)
 
     def test_writedata_not_file_like(self):
