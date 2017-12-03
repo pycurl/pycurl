@@ -109,3 +109,13 @@ class WriteTest(unittest.TestCase):
             finally:
                 f.close()
             self.assertEqual('success', body.decode())
+
+    def test_writeheader_and_writefunction(self):
+        self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
+        header_acceptor = Acceptor()
+        body_acceptor = Acceptor()
+        self.curl.setopt(pycurl.HEADERFUNCTION, header_acceptor.write)
+        self.curl.setopt(pycurl.WRITEFUNCTION, body_acceptor.write)
+        self.curl.perform()
+        self.assertEqual('success', body_acceptor.buffer)
+        self.assertIn('content-type', header_acceptor.buffer.lower())
