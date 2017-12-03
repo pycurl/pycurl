@@ -5,6 +5,9 @@ Version 7.43.0.1 [requires libcurl-7.19.0 or better] - 2017-09-03
           be set on the same handle. The last call will take precedence over
           previous calls. Previously some combinations were not allowed.
 
+        * Fixed a crash when using WRITEDATA with a file-like object followed
+          by WRITEDATA with a real file object (patch by Léo El Amri).
+
         * Fixed a theoretical memory leak in module initialization (patch by
           ideal).
 
