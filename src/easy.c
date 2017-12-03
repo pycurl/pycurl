@@ -1894,20 +1894,12 @@ do_curl_setopt_file_passthrough(CurlObject *self, int option, PyObject *obj)
         }
         break;
     case CURLOPT_WRITEDATA:
-        if (self->w_cb != NULL) {
-            PyErr_SetString(ErrorObject, "cannot combine WRITEDATA with WRITEFUNCTION.");
-            return NULL;
-        }
         res = curl_easy_setopt(self->handle, CURLOPT_WRITEFUNCTION, fwrite);
         if (res != CURLE_OK) {
             CURLERROR_RETVAL();
         }
         break;
     case CURLOPT_WRITEHEADER:
-        if (self->h_cb != NULL) {
-            PyErr_SetString(ErrorObject, "cannot combine WRITEHEADER with HEADERFUNCTION.");
-            return NULL;
-        }
         res = curl_easy_setopt(self->handle, CURLOPT_HEADERFUNCTION, fwrite);
         if (res != CURLE_OK) {
             CURLERROR_RETVAL();
@@ -1920,6 +1912,12 @@ do_curl_setopt_file_passthrough(CurlObject *self, int option, PyObject *obj)
 
     res = curl_easy_setopt(self->handle, (CURLoption)option, fp);
     if (res != CURLE_OK) {
+        /*
+        If we get here fread/fwrite are set as callbacks but the file pointer
+        is not set, program will crash if it does not reset read/write
+        callback. Also, we won't do the memory management later in this
+        function.
+        */
         CURLERROR_RETVAL();
     }
     Py_INCREF(obj);
@@ -2274,10 +2272,6 @@ do_curl_setopt_callable(CurlObject *self, int option, PyObject *obj)
 
     switch(option) {
     case CURLOPT_WRITEFUNCTION:
-        if (self->writeheader_fp != NULL) {
-            PyErr_SetString(ErrorObject, "cannot combine WRITEFUNCTION with WRITEHEADER option.");
-            return NULL;
-        }
         Py_INCREF(obj);
         Py_CLEAR(self->writedata_fp);
         Py_CLEAR(self->w_cb);
@@ -2287,6 +2281,7 @@ do_curl_setopt_callable(CurlObject *self, int option, PyObject *obj)
         break;
     case CURLOPT_HEADERFUNCTION:
         Py_INCREF(obj);
+        Py_CLEAR(self->writeheader_fp);
         Py_CLEAR(self->h_cb);
         self->h_cb = obj;
         curl_easy_setopt(self->handle, CURLOPT_HEADERFUNCTION, h_cb);
@@ -2448,11 +2443,6 @@ do_curl_setopt_filelike(CurlObject *self, int option, PyObject *obj)
                 option = CURLOPT_WRITEFUNCTION;
                 break;
             case CURLOPT_WRITEHEADER:
-                if (self->w_cb != NULL) {
-                    PyErr_SetString(ErrorObject, "cannot combine WRITEHEADER with WRITEFUNCTION.");
-                    Py_DECREF(method);
-                    return NULL;
-                }
                 option = CURLOPT_HEADERFUNCTION;
                 break;
             default:
@@ -2471,7 +2461,11 @@ do_curl_setopt_filelike(CurlObject *self, int option, PyObject *obj)
         Py_DECREF(arglist);
         return rv;
     } else {
-        PyErr_SetString(ErrorObject, "object given without a write method");
+        if (option == CURLOPT_READDATA) {
+            PyErr_SetString(ErrorObject, "object given without a read method");
+        } else {
+            PyErr_SetString(ErrorObject, "object given without a write method");
+        }
         return NULL;
     }
 }
