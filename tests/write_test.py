@@ -118,3 +118,49 @@ class WriteTest(unittest.TestCase):
         self.curl.perform()
         self.assertEqual('success', body_acceptor.buffer)
         self.assertIn('content-type', header_acceptor.buffer.lower())
+
+    def test_writedata_and_writefunction(self):
+        self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
+        data_acceptor = Acceptor()
+        function_acceptor = Acceptor()
+        self.curl.setopt(pycurl.WRITEDATA, data_acceptor)
+        self.curl.setopt(pycurl.WRITEFUNCTION, function_acceptor.write)
+        self.curl.perform()
+        self.assertEqual('', data_acceptor.buffer)
+        self.assertEqual('success', function_acceptor.buffer)
+
+    def test_writefunction_and_writedata(self):
+        self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
+        data_acceptor = Acceptor()
+        function_acceptor = Acceptor()
+        self.curl.setopt(pycurl.WRITEFUNCTION, function_acceptor.write)
+        self.curl.setopt(pycurl.WRITEDATA, data_acceptor)
+        self.curl.perform()
+        self.assertEqual('success', data_acceptor.buffer)
+        self.assertEqual('', function_acceptor.buffer)
+
+    def test_writeheader_and_headerfunction(self):
+        self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
+        data_acceptor = Acceptor()
+        function_acceptor = Acceptor()
+        body_acceptor = Acceptor()
+        self.curl.setopt(pycurl.WRITEHEADER, data_acceptor)
+        self.curl.setopt(pycurl.HEADERFUNCTION, function_acceptor.write)
+        # silence output
+        self.curl.setopt(pycurl.WRITEDATA, body_acceptor)
+        self.curl.perform()
+        self.assertEqual('', data_acceptor.buffer)
+        self.assertIn('content-type', function_acceptor.buffer.lower())
+
+    def test_headerfunction_and_writeheader(self):
+        self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
+        data_acceptor = Acceptor()
+        function_acceptor = Acceptor()
+        body_acceptor = Acceptor()
+        self.curl.setopt(pycurl.HEADERFUNCTION, function_acceptor.write)
+        self.curl.setopt(pycurl.WRITEHEADER, data_acceptor)
+        # silence output
+        self.curl.setopt(pycurl.WRITEDATA, body_acceptor)
+        self.curl.perform()
+        self.assertIn('content-type', data_acceptor.buffer.lower())
+        self.assertEqual('', function_acceptor.buffer)
