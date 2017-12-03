@@ -1880,6 +1880,12 @@ do_curl_setopt_file_passthrough(CurlObject *self, int option, PyObject *obj)
     FILE *fp;
     int res;
 
+    fp = PyFile_AsFile(obj);
+    if (fp == NULL) {
+        PyErr_SetString(PyExc_TypeError, "second argument must be open file");
+        return NULL;
+    }
+    
     switch (option) {
     case CURLOPT_READDATA:
         res = curl_easy_setopt(self->handle, CURLOPT_READFUNCTION, fread);
@@ -1912,11 +1918,6 @@ do_curl_setopt_file_passthrough(CurlObject *self, int option, PyObject *obj)
         return NULL;
     }
 
-    fp = PyFile_AsFile(obj);
-    if (fp == NULL) {
-        PyErr_SetString(PyExc_TypeError, "second argument must be open file");
-        return NULL;
-    }
     res = curl_easy_setopt(self->handle, (CURLoption)option, fp);
     if (res != CURLE_OK) {
         CURLERROR_RETVAL();
