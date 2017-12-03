@@ -2,7 +2,10 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 import pycurl
 import tempfile
 import shutil

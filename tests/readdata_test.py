@@ -3,7 +3,10 @@
 # vi:ts=4:et
 
 import pycurl
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 import sys
 import os.path
 try:
