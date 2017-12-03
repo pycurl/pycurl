@@ -39,7 +39,6 @@ class WriteTest(unittest.TestCase):
             f.close()
         self.assertEqual('success', body.decode())
 
-    @util.only_python3
     def test_write_to_tempfile_via_object(self):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
         f = tempfile.NamedTemporaryFile()
