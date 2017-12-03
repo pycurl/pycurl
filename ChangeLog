@@ -17,6 +17,12 @@ Version 7.43.0.1 [requires libcurl-7.19.0 or better] - 2017-09-03
         * Added support for CURLSSH_AUTH_AGENT (libcurl 7.28.0+,
           patch by kxrd).
 
+        * Added support for CURLOPT_CONNECT_TO (patch by Iain R. Learmonth).
+
+        * Added support for CURLINFO_HTTP_VERSION (patch by Iain R. Learmonth).
+
+        * Fixed build against OpenSSL l.1 on Windows.
+
         * Added set_ca_certs method to the Easy object to set CA certificates
           from a string (OpenSSL only, patch by Lipin Dmitriy).
 
