@@ -2544,16 +2544,18 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     }
 
     /*
-    Handle the case of file-like objects for Python 3.
+    Handle the case of file-like objects.
 
     Given an object with a write method, we will call the write method
     from the appropriate callback.
 
     Files in Python 3 are no longer FILE * instances and therefore cannot
-    be directly given to curl.
-
-    For consistency, ability to use any file-like object is also available
-    on Python 2.
+    be directly given to curl, therefore this method handles all I/O to
+    Python objects.
+    
+    In Python 2 true file objects are FILE * instances and will be handled
+    by stdio passthrough code invoked above, and file-like objects will
+    be handled by this method.
     */
     if (option == CURLOPT_READDATA ||
         option == CURLOPT_WRITEDATA ||
