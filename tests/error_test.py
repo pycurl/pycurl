@@ -62,7 +62,8 @@ class ErrorTest(unittest.TestCase):
             self.fail('Expected TypeError to be raised')
 
     # error originating in pycurl
-    def test_pycurl_error_pycurl(self):
+    # looks like currently there are none
+    def xtest_pycurl_error_pycurl(self):
         try:
             # invalid option combination
             self.curl.setopt(pycurl.WRITEFUNCTION, lambda x: x)

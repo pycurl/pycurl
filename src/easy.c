@@ -1880,15 +1880,29 @@ do_curl_setopt_file_passthrough(CurlObject *self, int option, PyObject *obj)
     FILE *fp;
     int res;
 
-    /* Ensure the option specified a file as well as the input */
+    fp = PyFile_AsFile(obj);
+    if (fp == NULL) {
+        PyErr_SetString(PyExc_TypeError, "second argument must be open file");
+        return NULL;
+    }
+    
     switch (option) {
     case CURLOPT_READDATA:
+        res = curl_easy_setopt(self->handle, CURLOPT_READFUNCTION, fread);
+        if (res != CURLE_OK) {
+            CURLERROR_RETVAL();
+        }
+        break;
     case CURLOPT_WRITEDATA:
+        res = curl_easy_setopt(self->handle, CURLOPT_WRITEFUNCTION, fwrite);
+        if (res != CURLE_OK) {
+            CURLERROR_RETVAL();
+        }
         break;
     case CURLOPT_WRITEHEADER:
-        if (self->w_cb != NULL) {
-            PyErr_SetString(ErrorObject, "cannot combine WRITEHEADER with WRITEFUNCTION.");
-            return NULL;
+        res = curl_easy_setopt(self->handle, CURLOPT_HEADERFUNCTION, fwrite);
+        if (res != CURLE_OK) {
+            CURLERROR_RETVAL();
         }
         break;
     default:
@@ -1896,13 +1910,14 @@ do_curl_setopt_file_passthrough(CurlObject *self, int option, PyObject *obj)
         return NULL;
     }
 
-    fp = PyFile_AsFile(obj);
-    if (fp == NULL) {
-        PyErr_SetString(PyExc_TypeError, "second argument must be open file");
-        return NULL;
-    }
     res = curl_easy_setopt(self->handle, (CURLoption)option, fp);
     if (res != CURLE_OK) {
+        /*
+        If we get here fread/fwrite are set as callbacks but the file pointer
+        is not set, program will crash if it does not reset read/write
+        callback. Also, we won't do the memory management later in this
+        function.
+        */
         CURLERROR_RETVAL();
     }
     Py_INCREF(obj);
@@ -2257,10 +2272,6 @@ do_curl_setopt_callable(CurlObject *self, int option, PyObject *obj)
 
     switch(option) {
     case CURLOPT_WRITEFUNCTION:
-        if (self->writeheader_fp != NULL) {
-            PyErr_SetString(ErrorObject, "cannot combine WRITEFUNCTION with WRITEHEADER option.");
-            return NULL;
-        }
         Py_INCREF(obj);
         Py_CLEAR(self->writedata_fp);
         Py_CLEAR(self->w_cb);
@@ -2270,6 +2281,7 @@ do_curl_setopt_callable(CurlObject *self, int option, PyObject *obj)
         break;
     case CURLOPT_HEADERFUNCTION:
         Py_INCREF(obj);
+        Py_CLEAR(self->writeheader_fp);
         Py_CLEAR(self->h_cb);
         self->h_cb = obj;
         curl_easy_setopt(self->handle, CURLOPT_HEADERFUNCTION, h_cb);
@@ -2431,11 +2443,6 @@ do_curl_setopt_filelike(CurlObject *self, int option, PyObject *obj)
                 option = CURLOPT_WRITEFUNCTION;
                 break;
             case CURLOPT_WRITEHEADER:
-                if (self->w_cb != NULL) {
-                    PyErr_SetString(ErrorObject, "cannot combine WRITEHEADER with WRITEFUNCTION.");
-                    Py_DECREF(method);
-                    return NULL;
-                }
                 option = CURLOPT_HEADERFUNCTION;
                 break;
             default:
@@ -2454,7 +2461,11 @@ do_curl_setopt_filelike(CurlObject *self, int option, PyObject *obj)
         Py_DECREF(arglist);
         return rv;
     } else {
-        PyErr_SetString(ErrorObject, "object given without a write method");
+        if (option == CURLOPT_READDATA) {
+            PyErr_SetString(PyExc_TypeError, "object given without a read method");
+        } else {
+            PyErr_SetString(PyExc_TypeError, "object given without a write method");
+        }
         return NULL;
     }
 }
@@ -2528,16 +2539,18 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     }
 
     /*
-    Handle the case of file-like objects for Python 3.
+    Handle the case of file-like objects.
 
     Given an object with a write method, we will call the write method
     from the appropriate callback.
 
     Files in Python 3 are no longer FILE * instances and therefore cannot
-    be directly given to curl.
-
-    For consistency, ability to use any file-like object is also available
-    on Python 2.
+    be directly given to curl, therefore this method handles all I/O to
+    Python objects.
+    
+    In Python 2 true file objects are FILE * instances and will be handled
+    by stdio passthrough code invoked above, and file-like objects will
+    be handled by this method.
     */
     if (option == CURLOPT_READDATA ||
         option == CURLOPT_WRITEDATA ||
