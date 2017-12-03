@@ -6,7 +6,6 @@ import unittest
 import pycurl
 import tempfile
 import shutil
-import functools
 import os.path
 
 from . import appmanager
