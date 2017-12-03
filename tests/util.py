@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+import tempfile
 import os, sys, socket
 import time as _time
 try:
@@ -244,3 +245,11 @@ def DefaultCurl():
     curl = pycurl.Curl()
     curl.setopt(curl.FORBID_REUSE, True)
     return curl
+
+def with_real_write_file(fn):
+    @functools.wraps(fn)
+    def wrapper(*args):
+        with tempfile.NamedTemporaryFile() as f:
+            with open(f.name, 'w+') as real_f:
+                return fn(*(list(args) + [real_f]))
+    return wrapper

@@ -14,14 +14,6 @@ from . import util
 
 setup_module, teardown_module = appmanager.setup(('app', 8380))
 
-def with_real_write_file(fn):
-    @functools.wraps(fn)
-    def wrapper(*args):
-        with tempfile.NamedTemporaryFile() as f:
-            with open(f.name, 'w+') as real_f:
-                return fn(*(list(args) + [real_f]))
-    return wrapper
-
 class Acceptor(object):
     def __init__(self):
         self.buffer = ''
@@ -101,7 +93,7 @@ class WriteTest(unittest.TestCase):
         self.curl.perform()
         self.assertEqual('success', acceptor.buffer)
     
-    @with_real_write_file
+    @util.with_real_write_file
     def test_write_to_file_like_then_real_file(self, real_f):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
         acceptor = Acceptor()
@@ -135,8 +127,8 @@ class WriteTest(unittest.TestCase):
         self.assertEqual('success', body_acceptor.buffer)
         self.assertIn('content-type', header_acceptor.buffer.lower())
 
-    @with_real_write_file
-    @with_real_write_file
+    @util.with_real_write_file
+    @util.with_real_write_file
     def test_writeheader_and_writedata_real_file(self, real_f_header, real_f_data):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
         self.curl.setopt(pycurl.WRITEHEADER, real_f_header)
@@ -157,7 +149,7 @@ class WriteTest(unittest.TestCase):
         self.assertEqual('', data_acceptor.buffer)
         self.assertEqual('success', function_acceptor.buffer)
 
-    @with_real_write_file
+    @util.with_real_write_file
     def test_writedata_and_writefunction_real_file(self, real_f):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
         function_acceptor = Acceptor()
@@ -178,7 +170,7 @@ class WriteTest(unittest.TestCase):
         self.assertEqual('success', data_acceptor.buffer)
         self.assertEqual('', function_acceptor.buffer)
 
-    @with_real_write_file
+    @util.with_real_write_file
     def test_writefunction_and_writedata_real_file(self, real_f):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
         function_acceptor = Acceptor()
@@ -202,7 +194,7 @@ class WriteTest(unittest.TestCase):
         self.assertEqual('', data_acceptor.buffer)
         self.assertIn('content-type', function_acceptor.buffer.lower())
 
-    @with_real_write_file
+    @util.with_real_write_file
     def test_writeheader_and_headerfunction_real_file(self, real_f):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
         function_acceptor = Acceptor()
@@ -229,7 +221,7 @@ class WriteTest(unittest.TestCase):
         self.assertIn('content-type', data_acceptor.buffer.lower())
         self.assertEqual('', function_acceptor.buffer)
 
-    @with_real_write_file
+    @util.with_real_write_file
     def test_headerfunction_and_writeheader_real_file(self, real_f):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
         function_acceptor = Acceptor()
