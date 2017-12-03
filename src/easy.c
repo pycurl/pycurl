@@ -2462,9 +2462,9 @@ do_curl_setopt_filelike(CurlObject *self, int option, PyObject *obj)
         return rv;
     } else {
         if (option == CURLOPT_READDATA) {
-            PyErr_SetString(ErrorObject, "object given without a read method");
+            PyErr_SetString(PyExc_TypeError, "object given without a read method");
         } else {
-            PyErr_SetString(ErrorObject, "object given without a write method");
+            PyErr_SetString(PyExc_TypeError, "object given without a write method");
         }
         return NULL;
     }

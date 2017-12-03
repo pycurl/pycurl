@@ -234,3 +234,21 @@ class WriteTest(unittest.TestCase):
         real_f.seek(0)
         self.assertIn('content-type', real_f.read().lower())
         self.assertEqual('', function_acceptor.buffer)
+
+    def test_writedata_not_file_like(self):
+        not_file_like = object()
+        try:
+            self.curl.setopt(self.curl.WRITEDATA, not_file_like)
+        except TypeError as exc:
+            self.assertIn('object given without a write method', str(exc))
+        else:
+            self.fail('TypeError not raised')
+
+    def test_writeheader_not_file_like(self):
+        not_file_like = object()
+        try:
+            self.curl.setopt(self.curl.WRITEHEADER, not_file_like)
+        except TypeError as exc:
+            self.assertIn('object given without a write method', str(exc))
+        else:
+            self.fail('TypeError not raised')

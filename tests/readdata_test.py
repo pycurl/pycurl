@@ -238,3 +238,12 @@ class ReaddataTest(unittest.TestCase):
 
             actual = json.loads(sio.getvalue().decode())
             self.assertEqual({'foo': 'bar'}, actual)
+
+    def test_readdata_not_file_like(self):
+        not_file_like = object()
+        try:
+            self.curl.setopt(self.curl.READDATA, not_file_like)
+        except TypeError as exc:
+            self.assertIn('object given without a read method', str(exc))
+        else:
+            self.fail('TypeError not raised')
