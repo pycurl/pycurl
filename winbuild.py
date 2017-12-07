@@ -32,9 +32,9 @@ root = 'c:/dev/build-pycurl'
 # where msysgit is installed
 git_root = 'c:/program files/git'
 # where NASM is installed, for building OpenSSL
-nasm_path = ('c:/dev/nasm', 'c:/program files (x86)/nasm')
+nasm_path = ('c:/dev/nasm', 'c:/program files/nasm', 'c:/program files (x86)/nasm')
 # where ActiveState Perl is installed, for building 64-bit OpenSSL
-activestate_perl_path = r'c:\dev\perl64'
+activestate_perl_path = ('c:/perl64', r'c:\dev\perl64')
 # which versions of python to build against
 python_versions = ['2.6.6', '2.7.10', '3.2.5', '3.3.5', '3.4.3', '3.5.4', '3.6.2']
 # where pythons are installed
@@ -100,6 +100,18 @@ def needed_vc_versions(python_versions):
 
 import os, os.path, sys, subprocess, shutil, contextlib, zipfile, re
 
+def select_existing_path(paths):
+    if isinstance(paths, list) or isinstance(paths, tuple):
+        for path in paths:
+            if os.path.exists(path):
+                return path
+        return paths[0]
+    else:
+        return paths
+
+nasm_path = select_existing_path(nasm_path)
+activestate_perl_path = select_existing_path(activestate_perl_path)
+
 archives_path = os.path.join(root, 'archives')
 state_path = os.path.join(root, 'state')
 #git_bin_path = os.path.join(git_root, 'bin')
@@ -124,17 +136,6 @@ openssl_version_tuple = tuple(
     int(part) if part < 'a' else part
     for part in re.sub(r'([a-z])', r'.\1', openssl_version).split('.')
 )
-
-def select_existing_path(paths):
-    if isinstance(paths, list) or isinstance(paths, tuple):
-        for path in paths:
-            if os.path.exists(path):
-                return path
-        return paths[0]
-    else:
-        return paths
-
-nasm_path = select_existing_path(nasm_path)
 
 try:
     from urllib.request import urlopen
