@@ -1,6 +1,7 @@
 # Bootstrap python binary:
-# http://www.python.org/ftp/python/3.3.4/python-3.3.4.msi
-# http://www.python.org/ftp/python/3.3.4/python-3.3.4.amd64.msi
+# http://www.python.org/ftp/python/3.3.5/python-3.3.5.msi
+# Then execute:
+# msiexec /i c:\dev\build-pycurl\archives\python-3.3.5.msi /norestart /passive InstallAllUsers=1 Include_test=0 Include_doc=0 Include_launcher=0 Include_ckltk=0 TargetDir=c:\dev\32\python33
 # msvc9/vs2008 express:
 # http://go.microsoft.com/?linkid=7729279
 # msvc10/vs2010 express:
@@ -31,9 +32,9 @@ root = 'c:/dev/build-pycurl'
 # where msysgit is installed
 git_root = 'c:/program files/git'
 # where NASM is installed, for building OpenSSL
-nasm_path = ('c:/dev/nasm', 'c:/program files (x86)/nasm')
+nasm_path = ('c:/dev/nasm', 'c:/program files/nasm', 'c:/program files (x86)/nasm')
 # where ActiveState Perl is installed, for building 64-bit OpenSSL
-activestate_perl_path = r'c:\dev\perl64'
+activestate_perl_path = ('c:/perl64', r'c:\dev\perl64')
 # which versions of python to build against
 python_versions = ['2.6.6', '2.7.10', '3.2.5', '3.3.5', '3.4.3', '3.5.4', '3.6.2']
 # where pythons are installed
@@ -53,7 +54,7 @@ zlib_version = '1.2.11'
 # whether to use openssl instead of winssl
 use_openssl = True
 # which version of openssl to use, will be downloaded from internet
-openssl_version = '1.1.0f'
+openssl_version = '1.1.0g'
 # whether to use c-ares
 use_cares = True
 cares_version = '1.13.0'
@@ -61,7 +62,7 @@ cares_version = '1.13.0'
 use_libssh2 = True
 libssh2_version = '1.8.0'
 # which version of libcurl to use, will be downloaded from internet
-libcurl_version = '7.55.1'
+libcurl_version = '7.57.0'
 # virtualenv version
 virtualenv_version = '15.1.0'
 # whether to build binary wheels
@@ -70,17 +71,17 @@ build_wheels = True
 pycurl_version = '7.43.0.1'
 
 default_vc_paths = {
-    # where msvc 9 is installed, for python 2.6 through 3.2
+    # where msvc 9 is installed, for python 2.6-3.2
     'vc9': [
         'c:/program files (x86)/microsoft visual studio 9.0',
         'c:/program files/microsoft visual studio 9.0',
     ],
-    # where msvc 10 is installed, for python 3.3 through 3.4
+    # where msvc 10 is installed, for python 3.3-3.4
     'vc10': [
         'c:/program files (x86)/microsoft visual studio 10.0',
         'c:/program files/microsoft visual studio 10.0',
     ],
-    # where msvc 14 is installed, for python 3.5
+    # where msvc 14 is installed, for python 3.5-3.6
     'vc14': [
         'c:/program files (x86)/microsoft visual studio 14.0',
         'c:/program files/microsoft visual studio 14.0',
@@ -98,6 +99,18 @@ def needed_vc_versions(python_versions):
             for short_python_version in short_python_versions(python_versions)]]
 
 import os, os.path, sys, subprocess, shutil, contextlib, zipfile, re
+
+def select_existing_path(paths):
+    if isinstance(paths, list) or isinstance(paths, tuple):
+        for path in paths:
+            if os.path.exists(path):
+                return path
+        return paths[0]
+    else:
+        return paths
+
+nasm_path = select_existing_path(nasm_path)
+activestate_perl_path = select_existing_path(activestate_perl_path)
 
 archives_path = os.path.join(root, 'archives')
 state_path = os.path.join(root, 'state')
@@ -124,17 +137,6 @@ openssl_version_tuple = tuple(
     for part in re.sub(r'([a-z])', r'.\1', openssl_version).split('.')
 )
 
-def select_existing_path(paths):
-    if isinstance(paths, list) or isinstance(paths, tuple):
-        for path in paths:
-            if os.path.exists(path):
-                return path
-        return paths[0]
-    else:
-        return paths
-
-nasm_path = select_existing_path(nasm_path)
-
 try:
     from urllib.request import urlopen
 except ImportError:
@@ -149,6 +151,7 @@ def fetch(url, archive=None):
         archive = os.path.basename(url)
     if not os.path.exists(archive):
         sys.stdout.write("Fetching %s\n" % url)
+        sys.stdout.flush()
         io = urlopen(url)
         tmp_path = os.path.join(os.path.dirname(archive),
             '.%s.part' % os.path.basename(archive))
@@ -159,6 +162,11 @@ def fetch(url, archive=None):
                     break
                 f.write(chunk)
         os.rename(tmp_path, archive)
+
+def fetch_to_archives(url):
+    mkdir_p(archives_path)
+    path = os.path.join(archives_path, os.path.basename(url))
+    fetch(url, path)
 
 @contextlib.contextmanager
 def in_dir(dir):
@@ -196,6 +204,11 @@ class PythonRelease(str):
     @property
     def dotless(self):
         return self.replace('.', '')
+
+class PythonVersion(str):
+    @property
+    def release(self):
+        return PythonRelease('.'.join(self.split('.')[:2]))
 
 def python_releases():
     return [PythonRelease('.'.join(version.split('.')[:2]))
@@ -265,6 +278,16 @@ class Builder(object):
     def execute_batch(self):
         with open('doit.bat', 'w') as f:
             f.write(self.vcvars_cmd)
+            if self.vc_version == 'vc14':
+                # I don't know why vcvars doesn't configure this under vc14
+                windows_sdk_path = 'c:\\program files (x86)\\microsoft sdks\\windows\\v7.1a'
+                f.write('set include=%s\\include;%%include%%\n' % windows_sdk_path)
+                if self.bitness == 32:
+                    f.write('set lib=%s\\lib;%%lib%%\n' % windows_sdk_path)
+                    f.write('set path=%s\\bin;%%path%%\n' % windows_sdk_path)
+                else:
+                    f.write('set lib=%s\\lib\\x64;%%lib%%\n' % windows_sdk_path)
+                    f.write('set path=%s\\bin\\x64;%%path%%\n' % windows_sdk_path)
             f.write(self.nasm_cmd)
             yield f
         if False:
@@ -790,8 +813,8 @@ def build():
                     libcurl_version=libcurl_version)
                 builder.build(targets)
 
-def download_pythons():
-    mkdir_p(archives_path)
+def python_metas():
+    metas = []
     for version in python_versions:
         parts = [int(part) for part in version.split('.')]
         if parts[0] >= 3 and parts[1] >= 5:
@@ -800,10 +823,47 @@ def download_pythons():
         else:
             ext = 'msi'
             amd64_suffix = '.amd64'
-        url = 'https://www.python.org/ftp/python/%s/python-%s.%s' % (version, version, ext)
-        fetch(url, os.path.join(archives_path, 'python-%s.%s') % (version, ext))
-        url = 'https://www.python.org/ftp/python/%s/python-%s%s.%s' % (version, version, amd64_suffix, ext)
-        fetch(url, os.path.join(archives_path, 'python-%s%s.%s') % (version, amd64_suffix, ext))
+        url_32 = 'https://www.python.org/ftp/python/%s/python-%s.%s' % (version, version, ext)
+        url_64 = 'https://www.python.org/ftp/python/%s/python-%s%s.%s' % (version, version, amd64_suffix, ext)
+        meta = dict(
+            version=version, ext=ext, amd64_suffix=amd64_suffix,
+            url_32=url_32, url_64=url_64,
+            installed_path_32 = 'c:\\dev\\32\\python%d%d' % (parts[0], parts[1]),
+            installed_path_64 = 'c:\\dev\\64\\python%d%d' % (parts[0], parts[1]),
+        )
+        metas.append(meta)
+    return metas
+
+def download_pythons():
+    for meta in python_metas():
+        for bitness in bitnesses:
+            fetch_to_archives(meta['url_%d' % bitness])
+
+def install_pythons():
+    for meta in python_metas():
+        for bitness in bitnesses:
+            if not os.path.exists(meta['installed_path_%d' % bitness]):
+                install_python(meta, bitness)
+
+def fix_slashes(path):
+    return path.replace('/', '\\')
+
+# http://eddiejackson.net/wp/?p=10276
+def install_python(meta, bitness):
+    archive_path = fix_slashes(os.path.join(archives_path, os.path.basename(meta['url_%d' % bitness])))
+    if meta['ext'] == 'exe':
+        cmd = [archive_path]
+    else:
+        cmd = ['msiexec', '/i', archive_path, '/norestart']
+    cmd += ['/passive', 'InstallAllUsers=1',
+            'Include_test=0', 'Include_doc=0', 'Include_launcher=0',
+            'Include_ckltk=0',
+            'TargetDir=%s' % meta['installed_path_%d' % bitness],
+        ]
+    sys.stdout.write('Installing python %s (%d bit)\n' % (meta['version'], bitness))
+    print(' '.join(cmd))
+    sys.stdout.flush()
+    subprocess.check_call(cmd)
 
 def download_bootstrap_python():
     version = python_versions[-2]
@@ -869,13 +929,18 @@ if opts.python:
 
 # https://stackoverflow.com/questions/35569042/python-3-ssl-certificate-verify-failed
 import ssl
-ssl._create_default_https_context = ssl._create_unverified_context
+try:
+	ssl._create_default_https_context = ssl._create_unverified_context
+except AttributeError:
+	pass
 
 if len(args) > 0:
     if args[0] == 'download':
         download_pythons()
     elif args[0] == 'bootstrap':
         download_bootstrap_python()
+    elif args[0] == 'installpy':
+        install_pythons()
     elif args[0] == 'builddeps':
         build_dependencies(bitnesses)
     elif args[0] == 'installvirtualenv':
