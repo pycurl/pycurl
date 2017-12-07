@@ -1,4 +1,4 @@
-Version 7.43.0.1 [requires libcurl-7.19.0 or better] - 2017-09-03
+Version 7.43.0.1 [requires libcurl-7.19.0 or better] - 2017-12-07
 -----------------------------------------------------------------
 
         * WRITEHEADER/WRITEFUNCTION and WRITEDATA/WRITEFUNCTION can now
