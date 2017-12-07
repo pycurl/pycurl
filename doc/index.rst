@@ -114,6 +114,7 @@ Documentation Contents
    release-notes
    install
    quickstart
+   troubleshooting
    pycurl
    curlobject
    curlmultiobject
