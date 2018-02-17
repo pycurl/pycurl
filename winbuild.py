@@ -427,7 +427,7 @@ class OpensslBuilder(Builder):
 
     @property
     def dll_paths(self):
-        raise NotImplemented
+        raise NotImplementedError
 
     @property
     def include_path(self):
@@ -467,7 +467,7 @@ class CaresBuilder(Builder):
 
     @property
     def dll_paths(self):
-        raise NotImplemented
+        raise NotImplementedError
 
     @property
     def include_path(self):
@@ -527,7 +527,7 @@ BUILD_STATIC_LIB=1
 
     @property
     def dll_paths(self):
-        raise NotImplemented
+        raise NotImplementedError
 
     @property
     def include_path(self):
