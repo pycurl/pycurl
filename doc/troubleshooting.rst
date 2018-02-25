@@ -7,6 +7,30 @@ PycURL is a thin wrapper around libcurl; libcurl performs most of the
 network operations and transfer-related issues are generally the domain
 of libcurl.
 
+``setopt``-Related Issues
+-------------------------
+
+:ref:`setopt <setopt>` is one method that is used for setting most
+of the libcurl options, as such calls to it can fail in a wide variety
+of ways.
+
+``TypeError: invalid arguments to setopt``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This usually means the *type* of argument passed to ``setopt`` does not
+match what the option expects. Recent versions of PycURL have improved
+error reporting when this happens and they also accept more data types
+(for example tuples in addition to lists). If you are using an old version of
+PycURL, upgrading to the last version may help troubleshoot the situation.
+
+The next step is carefully reading libcurl documentation for the option
+in question and verifying that the type, structure and format of data
+you are passing matches what the option expects.
+
+
+Transfer-Related Issues
+-----------------------
+
 If your issue is transfer-related (timeout, connection failure, transfer
 failure, ``perform`` hangs, etc.) the first step in troubleshooting is
 setting the ``VERBOSE`` flag for the operation. libcurl will then output
@@ -34,7 +58,7 @@ debugging information as the transfer executes::
     *      server certificate activation date OK
     *      certificate public key: RSA
     *      certificate version: #3
-    *      subject: 
+    *      subject:
     *      start date: Sat, 17 Jun 2017 00:00:00 GMT
     *      expire date: Thu, 27 Sep 2018 12:00:00 GMT
     *      issuer: C=US,O=DigiCert Inc,OU=www.digicert.com,CN=DigiCert SHA2 Extended Validation Server CA
@@ -65,10 +89,10 @@ debugging information as the transfer executes::
     < X-Timer: S1512631712.274059,VS0,VE0
     < Vary: Cookie
     < Strict-Transport-Security: max-age=63072000; includeSubDomains
-    < 
+    <
     * Curl_http_done: called premature == 0
     * Connection #1 to host www.python.org left intact
-    >>> 
+    >>>
 
 The verbose output in the above example includes:
 
