@@ -27,6 +27,22 @@ The next step is carefully reading libcurl documentation for the option
 in question and verifying that the type, structure and format of data
 you are passing matches what the option expects.
 
+``pycurl.error: (1, '')``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+An exception like this means PycURL accepted the structure and values
+in the option parameter and sent them on to libcurl, and
+libcurl rejected the attempt to set the option.
+
+Until PycURL implements an error code to symbol mapping,
+you have to perform this mapping by hand. Error codes are
+found in the file `curl.h`_ in libcurl source; look for ``CURLE_OK``.
+For example, error code 1 means ``CURLE_UNSUPPORTED_PROTOCOL``.
+
+libcurl can reject a ``setopt`` call for a variety of reasons of its own,
+including but not limited to the requested functionality
+`not being compiled in`_ or being not supported with the SSL backend
+being used.
 
 Transfer-Related Issues
 -----------------------
@@ -107,3 +123,6 @@ the next step is to perform an identical transfer using ``curl`` command-line
 utility and verify that the behavior is PycURL-specific, as in most cases
 it is not. This is also a good time to check the behavior of the latest
 version of libcurl.
+
+.. _curl.h: https://github.com/curl/curl/blob/master/include/curl/curl.h#L456
+.. _not being compiled in: https://github.com/pycurl/pycurl/issues/477
