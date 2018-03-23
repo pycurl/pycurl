@@ -1,3 +1,10 @@
+master
+------
+
+        * Recognize BoringSSL as equivalent to OpenSSL backend
+          (patch by Gisle Vanem).
+
+
 Version 7.43.0.1 [requires libcurl-7.19.0 or better] - 2017-12-07
 -----------------------------------------------------------------
 
