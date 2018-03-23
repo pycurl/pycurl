@@ -1,7 +1,10 @@
 master
 ------
 
-        * Recognize BoringSSL as equivalent to OpenSSL backend
+        * Added SOCKET_BAD constant and it is now recognized as a valid
+          return value from OPENSOCKET callback.
+
+        * BoringSSL is now recognized as equivalent to OpenSSL backend
           (patch by Gisle Vanem).
 
 

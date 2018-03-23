@@ -49,6 +49,9 @@ def socket_open_unix(purpose, curl_address):
     sockets[0].close()
     return sockets[1]
 
+def socket_open_bad(purpose, curl_address):
+    return pycurl.SOCKET_BAD
+
 class OpenSocketCbTest(unittest.TestCase):
     def setUp(self):
         self.curl = util.DefaultCurl()
@@ -114,3 +117,16 @@ class OpenSocketCbTest(unittest.TestCase):
 
     def test_unset_socket_open(self):
         self.curl.unsetopt(pycurl.OPENSOCKETFUNCTION)
+
+    def test_socket_bad(self):
+        self.assertEqual(-1, pycurl.SOCKET_BAD)
+
+    def test_socket_open_bad(self):
+        self.curl.setopt(pycurl.OPENSOCKETFUNCTION, socket_open_bad)
+        self.curl.setopt(self.curl.URL, 'http://localhost:8380/success')
+        try:
+            self.curl.perform()
+        except pycurl.error as e:
+            self.assertEqual(pycurl.E_COULDNT_CONNECT, e.args[0])
+        else:
+            self.fail('Should have raised')
