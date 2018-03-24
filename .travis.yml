@@ -3,11 +3,6 @@ language: python
 matrix:
   include:
     # all supported Python versions
-    - python: 2.6
-      env:
-        - USECURL=7.46.0-gssapi-libssh2
-        - USESSL=openssl
-        - TESTDOCSEXAMPLES=1
     - python: 2.7
       env:
         - USECURL=7.46.0-gssapi-libssh2
@@ -106,12 +101,6 @@ matrix:
         - USESSL=nss
 
     # common distributions:
-    # CentOS 6
-    - python: 2.6
-      env:
-        - USECURL=7.19.7-gssapi
-        - USESSL=openssl
-        - USEOPENSSL=1.0.1e
     # Debian Wheezy
     - python: 2.7
       env:

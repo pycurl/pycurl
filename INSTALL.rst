@@ -149,7 +149,6 @@ from source.
 Currently official PycURL packages are built against the following Python
 versions:
 
-- 2.6.6
 - 2.7.10
 - 3.2.5
 - 3.3.5
@@ -273,7 +272,7 @@ Prerequisites:
 
 ``winbuild.py`` assumes all programs are installed in their default locations,
 if this is not the case edit it as needed. ``winbuild.py`` itself can be run
-with any Python it supports - 2.6, 2.7 or 3.2 through 3.5.
+with any Python it supports - 2.7 or 3.2 through 3.6.
 
 .. _`download area`: https://dl.bintray.com/pycurl/pycurl/
 

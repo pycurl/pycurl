@@ -36,7 +36,7 @@ nasm_path = ('c:/dev/nasm', 'c:/program files/nasm', 'c:/program files (x86)/nas
 # where ActiveState Perl is installed, for building 64-bit OpenSSL
 activestate_perl_path = ('c:/perl64', r'c:\dev\perl64')
 # which versions of python to build against
-python_versions = ['2.6.6', '2.7.10', '3.2.5', '3.3.5', '3.4.3', '3.5.4', '3.6.2']
+python_versions = ['2.7.10', '3.2.5', '3.3.5', '3.4.3', '3.5.4', '3.6.2']
 # where pythons are installed
 python_path_template = 'c:/dev/%(bitness)s/python%(python_release)s/python'
 vc_paths = {
@@ -44,7 +44,7 @@ vc_paths = {
     'vc9': None,
     # where msvc 10/vs 2010 is installed, for python 3.3 through 3.4
     'vc10': None,
-    # where msvc 14/vs 2015 is installed, for python 3.5
+    # where msvc 14/vs 2015 is installed, for python 3.5 through 3.6
     'vc14': None,
 }
 # whether to link libcurl against zlib
