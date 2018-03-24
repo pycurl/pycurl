@@ -4,10 +4,7 @@
 import tempfile
 import os, sys, socket
 import time as _time
-try:
-    import functools
-except ImportError:
-    import functools_backport as functools
+import functools
 
 py3 = sys.version_info[0] == 3
 

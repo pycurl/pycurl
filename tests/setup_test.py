@@ -6,11 +6,7 @@ import setup as pycurl_setup
 import unittest
 import os, os.path, sys
 import nose.plugins.skip
-
-try:
-    import functools
-except ImportError:
-    import functools_backport as functools
+import functools
 
 def set_env(key, new_value):
     old_value = os.environ.get(key)

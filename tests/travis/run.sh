@@ -91,7 +91,7 @@ if test -n "$TESTDOCSEXAMPLES"; then
   pyflakes python examples tests setup.py winbuild.py
   ./tests/run-quickstart.sh
 
-  # sphinx requires python 2.6+ or 3.3+
+  # sphinx requires python 2.7+ or 3.3+
   case "$USEPY" in
     3.[12])
       ;;
