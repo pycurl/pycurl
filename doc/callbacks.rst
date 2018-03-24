@@ -23,7 +23,57 @@ callback function be a class instance method and rather use the class
 instance attributes to store per object data such as files used in the
 callbacks.
 
-The signature of each callback used in pycurl is documented below.
+The signature of each callback used in PycURL is documented below.
+
+
+Error Reporting
+---------------
+
+PycURL callbacks are invoked as follows:
+
+Python application -> ``perform()`` -> libcurl (C code) -> Python callback
+
+Because callbacks are invoked by libcurl, they should not raise exceptions
+on failure but instead return appropriate values indicating failure.
+The documentation for individual callbacks below specifies expected success and
+failure return values.
+
+Unhandled exceptions propagated out of Python callbacks will be intercepted
+by PycURL or the Python runtime. This will fail the callback with a
+generic failure status, in turn failing the ``perform()`` operation.
+A failing ``perform()`` will raise ``pycurl.error``, but the error code
+used depends on the specific callback.
+
+Rich context information like exception objects can be stored in various ways,
+for example the following example stores OPENSOCKET callback exception on the
+Curl object::
+
+    import pycurl, random, socket
+
+    class ConnectionRejected(Exception):
+        pass
+
+    def opensocket(curl, purpose, curl_address):
+        # always fail
+        curl.exception = ConnectionRejected('Rejecting connection attempt in opensocket callback')
+        return pycurl.SOCKET_BAD
+        
+        # the callback must create a socket if it does not fail,
+        # see examples/opensocketexception.py
+
+    c = pycurl.Curl()
+    c.setopt(c.URL, 'http://pycurl.io')
+    c.exception = None
+    c.setopt(c.OPENSOCKETFUNCTION,
+        lambda purpose, address: opensocket(c, purpose, address))
+
+    try:
+        c.perform()
+    except pycurl.error as e:
+        if e.args[0] == pycurl.E_COULDNT_CONNECT and c.exception:
+            print(c.exception)
+        else:
+            print(e)
 
 
 WRITEFUNCTION
