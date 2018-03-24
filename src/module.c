@@ -453,6 +453,9 @@ initpycurl(void)
     /* constants for ioctl callback argument values */
     insint_c(d, "IOCMD_NOP", CURLIOCMD_NOP);
     insint_c(d, "IOCMD_RESTARTREAD", CURLIOCMD_RESTARTREAD);
+    
+    /* opensocketfunction return value */
+    insint_c(d, "SOCKET_BAD", CURL_SOCKET_BAD);
 
     /* curl_infotype: the kind of data that is passed to information_callback */
 /* XXX do we actually need curl_infotype in pycurl ??? */

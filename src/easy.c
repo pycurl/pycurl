@@ -801,7 +801,9 @@ opensocket_callback(void *clientp, curlsocktype purpose,
         goto verbose_error;
     }
 
-    if (PyObject_HasAttrString(result, "fileno")) {
+    if (PyInt_Check(result) && PyInt_AsLong(result) == CURL_SOCKET_BAD) {
+        ret = CURL_SOCKET_BAD;
+    } else if (PyObject_HasAttrString(result, "fileno")) {
         fileno_result = PyObject_CallMethod(result, "fileno", NULL);
 
         if (fileno_result == NULL) {
