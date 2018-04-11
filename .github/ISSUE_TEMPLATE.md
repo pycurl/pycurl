@@ -18,6 +18,11 @@ http://pycurl.io/docs/dev/troubleshooting.html
 (output of `pycurl.version`)
 
 
+## What is your Python version?
+
+(output of `python -V`)
+
+
 ## What is your operating system?
 
 
