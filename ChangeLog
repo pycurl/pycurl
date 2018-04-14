@@ -1,6 +1,9 @@
 master
 ------
 
+        * Use OpenSSL 1.1 and 1.0 specific APIs for controlling thread locks
+          depending on OpenSSL version (patch by Vitaly Murashev).
+
         * Fixed a crash when closesocket callback failed (patch by
           Gisle Vanem and toddrme2178).
 
