@@ -1591,6 +1591,10 @@ util_curl_unsetopt(CurlObject *self, int option)
     case CURLOPT_PROXY_CAPATH:
     case CURLOPT_PROXY_CAINFO:
     case CURLOPT_PRE_PROXY:
+    case CURLOPT_PROXY_SSLCERT:
+    case CURLOPT_PROXY_SSLCERTTYPE:
+    case CURLOPT_PROXY_SSLKEY:
+    case CURLOPT_PROXY_SSLKEYTYPE:
 #endif
         SETOPT((char *) NULL);
         break;
@@ -1764,6 +1768,10 @@ do_curl_setopt_string_impl(CurlObject *self, int option, PyObject *obj)
     case CURLOPT_PROXY_CAPATH:
     case CURLOPT_PROXY_CAINFO:
     case CURLOPT_PRE_PROXY:
+    case CURLOPT_PROXY_SSLCERT:
+    case CURLOPT_PROXY_SSLCERTTYPE:
+    case CURLOPT_PROXY_SSLKEY:
+    case CURLOPT_PROXY_SSLKEYTYPE:
 #endif
     case CURLOPT_KRBLEVEL:
         str = PyText_AsString_NoNUL(obj, &encoded_obj);
