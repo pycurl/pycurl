@@ -266,6 +266,41 @@ class OptionConstantsTest(unittest.TestCase):
         curl.setopt(curl.PROXY_CAPATH, '/bogus-capath')
         curl.close()
 
+    @util.min_libcurl(7, 52, 0)
+    @util.only_ssl
+    def test_proxy_sslcert(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.PROXY_SSLCERT, '/bogus-sslcert')
+        curl.close()
+
+    @util.min_libcurl(7, 52, 0)
+    @util.only_ssl
+    def test_proxy_sslcerttype(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.PROXY_SSLCERTTYPE, 'PEM')
+        curl.close()
+
+    @util.min_libcurl(7, 52, 0)
+    @util.only_ssl
+    def test_proxy_sslkey(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.PROXY_SSLKEY, '/bogus-sslkey')
+        curl.close()
+
+    @util.min_libcurl(7, 52, 0)
+    @util.only_ssl
+    def test_proxy_sslkeytype(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.PROXY_SSLKEYTYPE, 'PEM')
+        curl.close()
+
+    @util.min_libcurl(7, 52, 0)
+    @util.only_ssl
+    def test_proxy_ssl_verifypeer(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.PROXY_SSL_VERIFYPEER, 1)
+        curl.close()
+
     @util.only_ssl
     def test_crlfile(self):
         curl = pycurl.Curl()
