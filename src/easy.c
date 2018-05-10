@@ -911,6 +911,8 @@ closesocket_callback(void *clientp, curl_socket_t curlfd)
 
     ret_obj = PyEval_CallObject(self->closesocket_cb, arglist);
     Py_DECREF(arglist);
+    if (!ret_obj)
+       goto silent_error;
     if (!PyInt_Check(ret_obj) && !PyLong_Check(ret_obj)) {
         PyObject *ret_repr = PyObject_Repr(ret_obj);
         if (ret_repr) {
