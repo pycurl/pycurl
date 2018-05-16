@@ -1,6 +1,9 @@
 master
 ------
 
+        * Fixed a crash when closesocket callback failed (patch by
+          Gisle Vanem and toddrme2178).
+
         * Added CURLOPT_PROXY_SSLCERT, CURLOPT_PROXY_SSLCERTTYPE,
           CURLOPT_PROXY_SSLKEY, CURLOPT_PROXY_SSLKEYTYPE,
           CURLOPT_PROXY_SSL_VERIFYPEER (libcurl 7.52.0+,
