@@ -1590,6 +1590,7 @@ util_curl_unsetopt(CurlObject *self, int option)
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 52, 0)
     case CURLOPT_PROXY_CAPATH:
     case CURLOPT_PROXY_CAINFO:
+    case CURLOPT_PRE_PROXY:
 #endif
         SETOPT((char *) NULL);
         break;
@@ -1762,6 +1763,7 @@ do_curl_setopt_string_impl(CurlObject *self, int option, PyObject *obj)
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 52, 0)
     case CURLOPT_PROXY_CAPATH:
     case CURLOPT_PROXY_CAINFO:
+    case CURLOPT_PRE_PROXY:
 #endif
     case CURLOPT_KRBLEVEL:
         str = PyText_AsString_NoNUL(obj, &encoded_obj);
