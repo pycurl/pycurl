@@ -1,6 +1,8 @@
 master
 ------
 
+        * Added CURLOPT_PRE_PROXY (libcurl 7.52.0+, patch by ziggy).
+
         * Support for Python 2.6 officially dropped.
 
         * Added SOCKET_BAD constant and it is now recognized as a valid
