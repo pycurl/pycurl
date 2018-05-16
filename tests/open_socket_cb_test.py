@@ -127,6 +127,11 @@ class OpenSocketCbTest(unittest.TestCase):
         try:
             self.curl.perform()
         except pycurl.error as e:
-            self.assertEqual(pycurl.E_COULDNT_CONNECT, e.args[0])
+            # libcurl 7.38.0 for some reason fails with a timeout
+            # (and spends 5 minutes on this test)
+            if pycurl.version_info()[1].split('.') == ['7', '38', '0']:
+                self.assertEqual(pycurl.E_OPERATION_TIMEDOUT, e.args[0])
+            else:
+                self.assertEqual(pycurl.E_COULDNT_CONNECT, e.args[0])
         else:
             self.fail('Should have raised')
