@@ -90,6 +90,7 @@ matrix:
       env:
         - USECURL=7.60.0-gssapi-libssh2
         - USESSL=openssl
+        - USEOPENSSL=1.0.2o
         - AVOIDSTDIO=yes
     
     # libcurl development head with various SSL backends
