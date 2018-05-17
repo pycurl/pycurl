@@ -68,8 +68,7 @@ matrix:
         - TESTDOCSEXAMPLES=1
     - python: 3.6
       env:
-        # libcurl 7.45.0+ does not build against gnutls in travis/ubuntu 12.04
-        - USECURL=7.44.0-gssapi-libssh2
+        - USECURL=7.60.0-gssapi-libssh2
         - USESSL=gnutls
         - TESTDOCSEXAMPLES=1
     - python: 3.6
