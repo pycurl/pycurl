@@ -18,12 +18,13 @@ wget_once() {
 }
 
 file_host=https://github.com/pycurl/deps/raw/master
+distro=trusty
 
 (cd &&
   mkdir -p opt &&
   cd opt &&
-  wget $file_host/bin-precise-64.tar.xz &&
-  tar xfJ bin-precise-64.tar.xz)
+  wget $file_host/bin-$distro-64.tar.xz &&
+  tar xfJ bin-$distro-64.tar.xz)
 
 export PATH=~/opt/bin:$PATH
 
@@ -33,8 +34,8 @@ if test -n "$USEPY"; then
   pip install -r requirements-dev.txt
 
   (cd && mkdir -p opt && cd opt &&
-    wget $file_host/python-"$USEPY"-precise-64.tar.xz &&
-    tar xfJ python-"$USEPY"-precise-64.tar.xz)
+    wget $file_host/python-"$USEPY"-$distro-64.tar.xz &&
+    tar xfJ python-"$USEPY"-$distro-64.tar.xz)
   export PATH=$HOME/opt/python-$USEPY/bin:$PATH
 
   mkdir archives && (
@@ -94,17 +95,17 @@ if test -n "$USECURL"; then
 
   if test -n "$USEOPENSSL"; then
     (cd && mkdir -p opt && cd opt &&
-      wget $file_host/openssl-"$USEOPENSSL"-precise-64.tar.xz &&
-      tar xfJ openssl-"$USEOPENSSL"-precise-64.tar.xz)
+      wget $file_host/openssl-"$USEOPENSSL"-$distro-64.tar.xz &&
+      tar xfJ openssl-"$USEOPENSSL"-$distro-64.tar.xz)
   fi
   if test -n "$USELIBRESSL"; then
     (cd && mkdir -p opt && cd opt &&
-      wget $file_host/libressl-"$USELIBRESSL"-precise-64.tar.xz &&
-      tar xfJ libressl-"$USELIBRESSL"-precise-64.tar.xz)
+      wget $file_host/libressl-"$USELIBRESSL"-$distro-64.tar.xz &&
+      tar xfJ libressl-"$USELIBRESSL"-$distro-64.tar.xz)
   fi
 
   if test -n "$USESSL"; then
-    if test "$USESSL" != none; then
+    if test "$USESSL" != none && ! echo "$USECURL" |grep -q "$USESSL"; then
       curldirname=curl-"$USECURL"-"$USESSL"$curl_suffix
     else
       curldirname=curl-"$USECURL"-none$curl_suffix
@@ -113,7 +114,7 @@ if test -n "$USECURL"; then
     curldirname=curl-"$USECURL"$curl_suffix
   fi
   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/opt/$curldirname/lib
-  name=$curldirname-precise-64.tar.xz
+  name=$curldirname-$distro-64.tar.xz
   (cd &&
     mkdir -p opt &&
     cd opt &&

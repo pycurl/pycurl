@@ -5,55 +5,66 @@ matrix:
     # all supported Python versions
     - python: 2.7
       env:
-        - USECURL=7.46.0-gssapi-libssh2
+        - USECURL=7.60.0-openssl11-gssapi-libssh2
         - USESSL=openssl
+        - USEOPENSSL=1.1.0h
         - TESTDOCSEXAMPLES=1
     - python: 2.7
       env:
-        - USECURL=7.46.0-gssapi-libssh2
+        - USECURL=7.60.0-openssl10-gssapi-libssh2
+        - USESSL=openssl
+        - USEOPENSSL=1.0.2o
+        - TESTDOCSEXAMPLES=1
+    - python: 2.7
+      env:
+        - USECURL=7.60.0-gssapi-libssh2
         - USESSL=libressl
         - USELIBRESSL=2.2.0
     - python: 2.7
       env:
-        # libcurl 7.45.0+ does not build against gnutls in travis/ubuntu 12.04
-        - USECURL=7.44.0-gssapi-libssh2
+        - USECURL=7.60.0-gssapi-libssh2
         - USESSL=gnutls
         - TESTDOCSEXAMPLES=1
     - python: 2.7
       env:
-        - USECURL=7.46.0-gssapi-libssh2
+        - USECURL=7.60.0-gssapi-libssh2
         - USESSL=nss
         # Examples fail with NSS due to CA certs not being explicitly given
         #- TESTDOCSEXAMPLES=1
     - python: 2.7
       env:
         # this configuration should be without gssapi
-        - USECURL=7.46.0
+        - USECURL=7.60.0
         - USESSL=none
     - python: 3.2
       env:
-        - USECURL=7.46.0-gssapi-libssh2
+        - USECURL=7.60.0-openssl10-gssapi-libssh2
         - USESSL=openssl
+        - USEOPENSSL=1.0.2o
         - TESTDOCSEXAMPLES=1
     - python: 3.3
       env:
-        - USECURL=7.46.0-gssapi-libssh2
+        - USECURL=7.60.0-openssl11-gssapi-libssh2
         - USESSL=openssl
+        - USEOPENSSL=1.1.0h
         - TESTDOCSEXAMPLES=1
     - python: 3.4
       env:
-        - USECURL=7.46.0-gssapi-libssh2
+        - USECURL=7.60.0-openssl10-gssapi-libssh2
         - USESSL=openssl
+        - USEOPENSSL=1.0.2o
         - TESTDOCSEXAMPLES=1
     - python: 3.5
       env:
-        - USECURL=7.46.0-gssapi-libssh2
+        - USECURL=7.60.0-openssl11-gssapi-libssh2
         - USESSL=openssl
+        - USEOPENSSL=1.1.0h
         - TESTDOCSEXAMPLES=1
     - python: 3.6
       env:
-        - USECURL=7.46.0-gssapi-libssh2
+        - USECURL=7.60.0-openssl11-gssapi-libssh2
         - USESSL=openssl
+        - USEOPENSSL=1.1.0h
         - TESTDOCSEXAMPLES=1
     - python: 3.6
       env:
@@ -63,7 +74,7 @@ matrix:
         - TESTDOCSEXAMPLES=1
     - python: 3.6
       env:
-        - USECURL=7.46.0-gssapi-libssh2
+        - USECURL=7.60.0-gssapi-libssh2
         - USESSL=nss
         # Examples fail with NSS due to CA certs not being explicitly given
         #- TESTDOCSEXAMPLES=1
@@ -78,7 +89,7 @@ matrix:
     # AVOIDSTDIO tested on one Python version, must be Python 2.x
     - python: 2.7
       env:
-        - USECURL=7.46.0-gssapi-libssh2
+        - USECURL=7.60.0-gssapi-libssh2
         - USESSL=openssl
         - AVOIDSTDIO=yes
     
