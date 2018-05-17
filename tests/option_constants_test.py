@@ -200,6 +200,7 @@ class OptionConstantsTest(unittest.TestCase):
         curl.close()
 
     @util.min_libcurl(7, 39, 0)
+    @util.only_ssl
     def test_pinnedpublickey(self):
         curl = pycurl.Curl()
         curl.setopt(curl.PINNEDPUBLICKEY, '/etc/publickey.der')
