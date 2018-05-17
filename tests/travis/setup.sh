@@ -118,6 +118,12 @@ if test -n "$USECURL"; then
     curldirname=curl-"$USECURL"$curl_suffix
   fi
   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/opt/$curldirname/lib
+  if test -n "$USEOPENSSL"; then
+    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$HOME/opt/openssl-$USEOPENSSL/lib"
+  fi
+  if test -n "$USELIBRESSL"; then
+    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$HOME/opt/libressl-$USELIBRESSL/lib"
+  fi
   name=$curldirname-$distro-64.tar.xz
   (cd &&
     mkdir -p opt &&
