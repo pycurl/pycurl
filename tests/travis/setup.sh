@@ -82,17 +82,6 @@ if test "$USEPY" = 3.1; then
 fi
 
 if test -n "$USECURL"; then
-  if echo "$USECURL" |grep -q -- "-libssh2\$"; then
-    curl_suffix=-libssh2
-    USECURL=$(echo "$USECURL" |sed -e s/-libssh2//)
-  else
-    curl_suffix=
-  fi
-  if echo "$USECURL" |grep -q -- "-gssapi\$"; then
-    curl_suffix=-gssapi$curl_suffix
-    USECURL=$(echo "$USECURL" |sed -e s/-gssapi//)
-  fi
-
   if test -n "$USEOPENSSL"; then
     (cd && mkdir -p opt && cd opt &&
       wget $file_host/openssl-"$USEOPENSSL"-$distro-64.tar.xz &&
@@ -104,19 +93,7 @@ if test -n "$USECURL"; then
       tar xfJ libressl-"$USELIBRESSL"-$distro-64.tar.xz)
   fi
 
-  if test -n "$USESSL"; then
-    if test "$USESSL" != none; then
-      if echo "$USECURL" |grep -q "$USESSL"; then
-        curldirname=curl-"$USECURL"$curl_suffix
-      else
-        curldirname=curl-"$USECURL"-"$USESSL"$curl_suffix
-      fi
-    else
-      curldirname=curl-"$USECURL"-none$curl_suffix
-    fi
-  else
-    curldirname=curl-"$USECURL"$curl_suffix
-  fi
+  curldirname=curl-"$USECURL"
   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/opt/$curldirname/lib
   if test -n "$USEOPENSSL"; then
     export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$HOME/opt/openssl-$USEOPENSSL/lib"
