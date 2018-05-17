@@ -38,7 +38,11 @@ if test -n "$USECURL"; then
 
   if test -n "$USESSL"; then
     if test "$USESSL" != none; then
-      curldirname=curl-"$USECURLV"-"$USESSL"$curl_suffix
+      if echo "$USECURL" |grep -q "$USESSL"; then
+        curldirname=curl-"$USECURL"$curl_suffix
+      else
+        curldirname=curl-"$USECURL"-"$USESSL"$curl_suffix
+      fi
     else
       curldirname=curl-"$USECURLV"-none$curl_suffix
     fi
