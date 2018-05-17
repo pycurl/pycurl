@@ -19,6 +19,11 @@ wget_once() {
 
 file_host=https://github.com/pycurl/deps/raw/master
 distro=trusty
+ldlp=$LD_LIBRARY_PATH
+
+ldlp_exec() {
+  env LD_LIBRARY_PATH=$ldlp "$@"
+}
 
 (cd &&
   mkdir -p opt &&
@@ -86,29 +91,24 @@ if test -n "$USECURL"; then
     (cd && mkdir -p opt && cd opt &&
       wget $file_host/openssl-"$USEOPENSSL"-$distro-64.tar.xz &&
       tar xfJ openssl-"$USEOPENSSL"-$distro-64.tar.xz)
+    ldlp=$ldlp:$HOME/opt/openssl-$USEOPENSSL/lib
   fi
   if test -n "$USELIBRESSL"; then
     (cd && mkdir -p opt && cd opt &&
       wget $file_host/libressl-"$USELIBRESSL"-$distro-64.tar.xz &&
       tar xfJ libressl-"$USELIBRESSL"-$distro-64.tar.xz)
+    ldlp=$ldlp:$HOME/opt/libressl-$USELIBRESSL/lib
   fi
 
   curldirname=curl-"$USECURL"
-  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/opt/$curldirname/lib
-  if test -n "$USEOPENSSL"; then
-    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$HOME/opt/openssl-$USEOPENSSL/lib"
-  fi
-  if test -n "$USELIBRESSL"; then
-    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$HOME/opt/libressl-$USELIBRESSL/lib"
-  fi
+  ldlp=$ldlp:$HOME/opt/$curldirname/lib
   name=$curldirname-$distro-64.tar.xz
   (cd &&
     mkdir -p opt &&
     cd opt &&
     wget $file_host/"$name" &&
     tar xfJ "$name")
-  curl_flavor=`echo "$USECURL" |awk -F- '{print $2}'`
-  "$HOME"/opt/$curldirname/bin/curl -V
+  ldlp_exec "$HOME"/opt/$curldirname/bin/curl -V
 else
   curl -V
 fi
