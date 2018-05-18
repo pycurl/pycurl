@@ -5,65 +5,75 @@ matrix:
     # all supported Python versions
     - python: 2.7
       env:
-        - USECURL=7.46.0-gssapi-libssh2
+        - USECURL=7.60.0-openssl11-gssapi-libssh2
         - USESSL=openssl
+        - USEOPENSSL=1.1.0h
         - TESTDOCSEXAMPLES=1
     - python: 2.7
       env:
-        - USECURL=7.46.0-gssapi-libssh2
-        - USESSL=libressl
-        - USELIBRESSL=2.2.0
+        - USECURL=7.60.0-openssl10-gssapi-libssh2
+        - USESSL=openssl
+        - USEOPENSSL=1.0.2o
+        - TESTDOCSEXAMPLES=1
     - python: 2.7
       env:
-        # libcurl 7.45.0+ does not build against gnutls in travis/ubuntu 12.04
-        - USECURL=7.44.0-gssapi-libssh2
+        - USECURL=7.60.0-libressl-gssapi-libssh2
+        - USESSL=libressl
+        - USELIBRESSL=2.7.3
+    - python: 2.7
+      env:
+        - USECURL=7.60.0-gnutls-gssapi-libssh2
         - USESSL=gnutls
         - TESTDOCSEXAMPLES=1
     - python: 2.7
       env:
-        - USECURL=7.46.0-gssapi-libssh2
+        - USECURL=7.60.0-nss-gssapi-libssh2
         - USESSL=nss
         # Examples fail with NSS due to CA certs not being explicitly given
         #- TESTDOCSEXAMPLES=1
     - python: 2.7
       env:
         # this configuration should be without gssapi
-        - USECURL=7.46.0
+        - USECURL=7.60.0-none
         - USESSL=none
     - python: 3.2
       env:
-        - USECURL=7.46.0-gssapi-libssh2
+        - USECURL=7.60.0-openssl10-gssapi-libssh2
         - USESSL=openssl
+        - USEOPENSSL=1.0.2o
         - TESTDOCSEXAMPLES=1
     - python: 3.3
       env:
-        - USECURL=7.46.0-gssapi-libssh2
+        - USECURL=7.60.0-openssl11-gssapi-libssh2
         - USESSL=openssl
+        - USEOPENSSL=1.1.0h
         - TESTDOCSEXAMPLES=1
     - python: 3.4
       env:
-        - USECURL=7.46.0-gssapi-libssh2
+        - USECURL=7.60.0-openssl10-gssapi-libssh2
         - USESSL=openssl
+        - USEOPENSSL=1.0.2o
         - TESTDOCSEXAMPLES=1
     - python: 3.5
       env:
-        - USECURL=7.46.0-gssapi-libssh2
+        - USECURL=7.60.0-openssl11-gssapi-libssh2
         - USESSL=openssl
+        - USEOPENSSL=1.1.0h
         - TESTDOCSEXAMPLES=1
     - python: 3.6
       env:
-        - USECURL=7.46.0-gssapi-libssh2
+        - USECURL=7.60.0-openssl11-gssapi-libssh2
         - USESSL=openssl
+        - USEOPENSSL=1.1.0h
         - TESTDOCSEXAMPLES=1
     - python: 3.6
       env:
-        # libcurl 7.45.0+ does not build against gnutls in travis/ubuntu 12.04
-        - USECURL=7.44.0-gssapi-libssh2
+        - USECURL=7.60.0-gnutls-gssapi-libssh2
         - USESSL=gnutls
         - TESTDOCSEXAMPLES=1
     - python: 3.6
       env:
-        - USECURL=7.46.0-gssapi-libssh2
+        - USECURL=7.60.0-nss-gssapi-libssh2
         - USESSL=nss
         # Examples fail with NSS due to CA certs not being explicitly given
         #- TESTDOCSEXAMPLES=1
@@ -71,45 +81,49 @@ matrix:
     # minimum libcurl we support
     - python: 2.7
       env:
-        - USECURL=7.19.0-gssapi
+        - USECURL=7.19.0-openssl-gssapi
         - USESSL=openssl
         - TESTDOCSEXAMPLES=1
 
     # AVOIDSTDIO tested on one Python version, must be Python 2.x
     - python: 2.7
       env:
-        - USECURL=7.46.0-gssapi-libssh2
+        - USECURL=7.60.0-openssl10-gssapi-libssh2
         - USESSL=openssl
+        - USEOPENSSL=1.0.2o
         - AVOIDSTDIO=yes
-    
-    # libcurl development head with various SSL backends
-    - python: 2.7
-      env:
-        - USECURL=7.47.0-dev-gssapi-libssh2
-        - USESSL=openssl
-    - python: 2.7
-      env:
-        - USECURL=7.47.0-dev-gssapi-libssh2
-        - USESSL=nss
-    - python: 3.6
-      env:
-        - USECURL=7.47.0-dev-gssapi-libssh2
-        - USESSL=openssl
-    - python: 3.6
-      env:
-        - USECURL=7.47.0-dev-gssapi-libssh2
-        - USESSL=nss
 
     # common distributions:
     # Debian Wheezy
     - python: 2.7
       env:
-        - USECURL=7.26.0-gssapi
+        - USECURL=7.26.0-gnutls-gssapi
         - USESSL=gnutls
     # Debian Jessie
+    # this takes 5 minutes and should not be last
     - python: 3.4
       env:
-        - USECURL=7.38.0-gssapi
+        - USECURL=7.38.0-gnutls-gssapi
+        - USESSL=gnutls
+    
+    # libcurl development head with various SSL backends
+    - python: 2.7
+      env:
+        - USECURL=dev-openssl11-gssapi-libssh2
+        - USEOPENSSL=1.1.0h
+        - USESSL=openssl
+    - python: 2.7
+      env:
+        - USECURL=dev-nss-gssapi-libssh2
+        - USESSL=nss
+    - python: 3.6
+      env:
+        - USECURL=dev-openssl11-gssapi-libssh2
+        - USEOPENSSL=1.1.0h
+        - USESSL=openssl
+    - python: 3.6
+      env:
+        - USECURL=dev-gnutls-gssapi-libssh2
         - USESSL=gnutls
 install: >
   ./tests/travis/setup.sh

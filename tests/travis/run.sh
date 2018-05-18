@@ -24,27 +24,7 @@ else
 fi
 
 if test -n "$USECURL"; then
-  USECURLV="$USECURL"
-  if echo "$USECURLV" |grep -q -- "-libssh2\$"; then
-    curl_suffix=-libssh2
-    USECURLV=$(echo "$USECURLV" |sed -e s/-libssh2//)
-  else
-    curl_suffix=
-  fi
-  if echo "$USECURLV" |grep -q -- "-gssapi\$"; then
-    curl_suffix=-gssapi$curl_suffix
-    USECURLV=$(echo "$USECURLV" |sed -e s/-gssapi//)
-  fi
-
-  if test -n "$USESSL"; then
-    if test "$USESSL" != none; then
-      curldirname=curl-"$USECURLV"-"$USESSL"$curl_suffix
-    else
-      curldirname=curl-"$USECURLV"-none$curl_suffix
-    fi
-  else
-    curldirname=curl-"$USECURLV"$curl_suffix
-  fi
+  curldirname=curl-"$USECURL"
   export PYCURL_CURL_CONFIG="$HOME"/opt/$curldirname/bin/curl-config
   $PYCURL_CURL_CONFIG --features
   export LD_LIBRARY_PATH="$HOME"/opt/$curldirname/lib
