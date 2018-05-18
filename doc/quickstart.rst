@@ -74,6 +74,34 @@ the response body as in Python 3 version. The code for the combined
 example can be found in ``examples/quickstart/get.py``.
 
 
+Working With HTTPS
+------------------
+
+Most web sites today use HTTPS which is HTTP over TLS/SSL. In order to
+take advantage of security that HTTPS provides, PycURL needs to utilize
+a *certificate bundle*. As certificates change over time PycURL does not
+provide such a bundle; one may be supplied by your operating system, but
+if not, consider using the `certifi`_ Python package::
+
+    import pycurl
+    import certifi
+    from StringIO import StringIO
+
+    buffer = StringIO()
+    c = pycurl.Curl()
+    c.setopt(c.URL, 'https://python.org/')
+    c.setopt(c.WRITEDATA, buffer)
+    c.setopt(c.CAINFO, certifi.where())
+    c.perform()
+    c.close()
+
+    body = buffer.getvalue()
+    print(body)
+
+This code is available as ``examples/quickstart/get_python2_https.py`` and
+``examples/quickstart/get_python3_https.py``.
+
+
 Troubleshooting
 ---------------
 
@@ -382,3 +410,4 @@ If the file data is in memory, use ``BUFFER``/``BUFFERPTR`` as follows::
 This code is available as ``examples/quickstart/file_upload_buffer.py``.
 
 .. _curl_formadd page: https://curl.haxx.se/libcurl/c/curl_formadd.html
+.. _certifi: https://pypi.org/project/certifi/
