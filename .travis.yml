@@ -105,8 +105,8 @@ matrix:
         - USESSL=nss
     - python: 3.6
       env:
-        - USECURL=dev-openssl10-gssapi-libssh2
-        - USEOPENSSL=1.0.2o
+        - USECURL=dev-openssl11-gssapi-libssh2
+        - USEOPENSSL=1.1.0h
         - USESSL=openssl
     - python: 3.6
       env:
