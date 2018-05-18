@@ -27,7 +27,7 @@ matrix:
         - TESTDOCSEXAMPLES=1
     - python: 2.7
       env:
-        - USECURL=7.60.0-gssapi-libssh2
+        - USECURL=7.60.0-nss-gssapi-libssh2
         - USESSL=nss
         # Examples fail with NSS due to CA certs not being explicitly given
         #- TESTDOCSEXAMPLES=1
