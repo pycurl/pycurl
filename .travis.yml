@@ -92,6 +92,19 @@ matrix:
         - USESSL=openssl
         - USEOPENSSL=1.0.2o
         - AVOIDSTDIO=yes
+
+    # common distributions:
+    # Debian Wheezy
+    - python: 2.7
+      env:
+        - USECURL=7.26.0-gnutls-gssapi
+        - USESSL=gnutls
+    # Debian Jessie
+    # this takes 5 minutes and should not be last
+    - python: 3.4
+      env:
+        - USECURL=7.38.0-gnutls-gssapi
+        - USESSL=gnutls
     
     # libcurl development head with various SSL backends
     - python: 2.7
@@ -111,18 +124,6 @@ matrix:
     - python: 3.6
       env:
         - USECURL=dev-gnutls-gssapi-libssh2
-        - USESSL=gnutls
-
-    # common distributions:
-    # Debian Wheezy
-    - python: 2.7
-      env:
-        - USECURL=7.26.0-gnutls-gssapi
-        - USESSL=gnutls
-    # Debian Jessie
-    - python: 3.4
-      env:
-        - USECURL=7.38.0-gnutls-gssapi
         - USESSL=gnutls
 install: >
   ./tests/travis/setup.sh
