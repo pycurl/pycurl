@@ -1,6 +1,15 @@
 master
 ------
 
+        * PycURL now skips automatic SSL backend detection if curl-config
+          indicates that libcurl is not built with SSL support, and will warn
+          if an SSL backend is explicitly specified in this case.
+
+        * PycURL now requires that SSL backend is determined by setup.py
+          to provide earlier failure compared to the existing warning
+          during compilation and failing during module import on mismatched
+          SSL backends.
+
         * Use OpenSSL 1.1 and 1.0 specific APIs for controlling thread locks
           depending on OpenSSL version (patch by Vitaly Murashev).
 
