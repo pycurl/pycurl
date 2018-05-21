@@ -222,6 +222,7 @@ class MemoryMgmtTest(unittest.TestCase):
         for i in range_generator(100000):
             c = util.DefaultCurl()
             c.reset()
+            c.close()
 
     def test_writefunction_collection(self):
         self.check_callback(pycurl.WRITEFUNCTION)
@@ -283,6 +284,7 @@ class MemoryMgmtTest(unittest.TestCase):
         gc.collect()
         after_object_count = len(gc.get_objects())
         self.assert_(after_object_count <= before_object_count + 1000, 'Grew from %d to %d objects' % (before_object_count, after_object_count))
+        c.close()
 
     def test_form_bufferptr_memory_leak_gh267(self):
         c = util.DefaultCurl()
@@ -302,6 +304,7 @@ class MemoryMgmtTest(unittest.TestCase):
         gc.collect()
         after_object_count = len(gc.get_objects())
         self.assert_(after_object_count <= before_object_count + 1000, 'Grew from %d to %d objects' % (before_object_count, after_object_count))
+        c.close()
 
     def test_readdata_refcounting(self):
         c = util.DefaultCurl()
@@ -315,6 +318,7 @@ class MemoryMgmtTest(unittest.TestCase):
         after_object_count = len(gc.get_objects())
         self.assertEqual(before_object_count, after_object_count)
         f.close()
+        c.close()
 
     def test_readfunction_refcounting(self):
         c = util.DefaultCurl()
@@ -328,6 +332,7 @@ class MemoryMgmtTest(unittest.TestCase):
         after_object_count = len(gc.get_objects())
         self.assertEqual(before_object_count, after_object_count)
         f.close()
+        c.close()
 
     def test_writedata_refcounting(self):
         c = util.DefaultCurl()
@@ -341,6 +346,7 @@ class MemoryMgmtTest(unittest.TestCase):
         after_object_count = len(gc.get_objects())
         self.assertEqual(before_object_count, after_object_count)
         f.close()
+        c.close()
 
     def test_writefunction_refcounting(self):
         c = util.DefaultCurl()
@@ -354,6 +360,7 @@ class MemoryMgmtTest(unittest.TestCase):
         after_object_count = len(gc.get_objects())
         self.assertEqual(before_object_count, after_object_count)
         f.close()
+        c.close()
 
     def test_writeheader_refcounting(self):
         c = util.DefaultCurl()
@@ -367,6 +374,7 @@ class MemoryMgmtTest(unittest.TestCase):
         after_object_count = len(gc.get_objects())
         self.assertEqual(before_object_count, after_object_count)
         f.close()
+        c.close()
 
     def test_headerfunction_refcounting(self):
         c = util.DefaultCurl()
@@ -380,3 +388,4 @@ class MemoryMgmtTest(unittest.TestCase):
         after_object_count = len(gc.get_objects())
         self.assertEqual(before_object_count, after_object_count)
         f.close()
+        c.close()
