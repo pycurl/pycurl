@@ -36,18 +36,6 @@ matrix:
         # this configuration should be without gssapi
         - USECURL=7.60.0-none
         - USESSL=none
-    - python: 3.2
-      env:
-        - USECURL=7.60.0-openssl10-gssapi-libssh2
-        - USESSL=openssl
-        - USEOPENSSL=1.0.2o
-        - TESTDOCSEXAMPLES=1
-    - python: 3.3
-      env:
-        - USECURL=7.60.0-openssl11-gssapi-libssh2
-        - USESSL=openssl
-        - USEOPENSSL=1.1.0h
-        - TESTDOCSEXAMPLES=1
     - python: 3.4
       env:
         - USECURL=7.60.0-openssl10-gssapi-libssh2
