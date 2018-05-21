@@ -1,6 +1,9 @@
 master
 ------
 
+        * Python 3.2 and 3.3 support officially dropped as those versions
+          are end of lifed.
+
         * set_ca_certs now accepts byte strings as it should have been
           all along.
 
