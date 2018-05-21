@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+import weakref
 import pycurl
 import unittest
 import gc
@@ -306,86 +307,61 @@ class MemoryMgmtTest(unittest.TestCase):
         self.assert_(after_object_count <= before_object_count + 1000, 'Grew from %d to %d objects' % (before_object_count, after_object_count))
         c.close()
 
-    def test_readdata_refcounting(self):
+    def do_data_refcounting(self, option):
         c = util.DefaultCurl()
-        f = open('/dev/null')
-        c.setopt(c.READDATA, f)
+        f = open('/dev/null', 'a+')
+        c.setopt(option, f)
+        ref = weakref.ref(f)
+        del f
         gc.collect()
-        before_object_count = len(gc.get_objects())
+        assert ref()
+        
         for i in range(100):
-            c.setopt(c.READDATA, f)
+            assert ref()
+            c.setopt(option, ref())
         gc.collect()
-        after_object_count = len(gc.get_objects())
-        self.assertEqual(before_object_count, after_object_count)
-        f.close()
+        assert ref()
+        
         c.close()
+        gc.collect()
+        assert ref() is None
 
-    def test_readfunction_refcounting(self):
-        c = util.DefaultCurl()
-        f = open('/dev/null')
-        c.setopt(c.READFUNCTION, f.read)
-        gc.collect()
-        before_object_count = len(gc.get_objects())
-        for i in range(100):
-            c.setopt(c.READFUNCTION, f.read)
-        gc.collect()
-        after_object_count = len(gc.get_objects())
-        self.assertEqual(before_object_count, after_object_count)
-        f.close()
-        c.close()
+    def test_readdata_refcounting(self):
+        self.do_data_refcounting(pycurl.READDATA)
 
     def test_writedata_refcounting(self):
-        c = util.DefaultCurl()
-        f = open('/dev/null', 'w')
-        c.setopt(c.WRITEDATA, f)
-        gc.collect()
-        before_object_count = len(gc.get_objects())
-        for i in range(100):
-            c.setopt(c.WRITEDATA, f)
-        gc.collect()
-        after_object_count = len(gc.get_objects())
-        self.assertEqual(before_object_count, after_object_count)
-        f.close()
-        c.close()
-
-    def test_writefunction_refcounting(self):
-        c = util.DefaultCurl()
-        f = open('/dev/null', 'w')
-        c.setopt(c.WRITEFUNCTION, f.write)
-        gc.collect()
-        before_object_count = len(gc.get_objects())
-        for i in range(100):
-            c.setopt(c.WRITEFUNCTION, f.write)
-        gc.collect()
-        after_object_count = len(gc.get_objects())
-        self.assertEqual(before_object_count, after_object_count)
-        f.close()
-        c.close()
+        self.do_data_refcounting(pycurl.WRITEDATA)
 
     def test_writeheader_refcounting(self):
+        self.do_data_refcounting(pycurl.WRITEHEADER)
+
+    # Python 2 cannot create weak references to functions
+    @util.only_python3
+    def do_function_refcounting(self, option, method_name):
         c = util.DefaultCurl()
-        f = open('/dev/null', 'w')
-        c.setopt(c.WRITEHEADER, f)
+        f = open('/dev/null', 'a+')
+        fn = getattr(f, method_name)
+        c.setopt(option, fn)
+        ref = weakref.ref(fn)
+        del f, fn
         gc.collect()
-        before_object_count = len(gc.get_objects())
+        assert ref()
+        
         for i in range(100):
-            c.setopt(c.WRITEHEADER, f)
+            assert ref()
+            c.setopt(option, ref())
         gc.collect()
-        after_object_count = len(gc.get_objects())
-        self.assertEqual(before_object_count, after_object_count)
-        f.close()
+        assert ref()
+        
         c.close()
+        gc.collect()
+        assert ref() is None
+
+    def test_readfunction_refcounting(self):
+        self.do_function_refcounting(pycurl.READFUNCTION, 'read')
+
+    def test_writefunction_refcounting(self):
+        self.do_function_refcounting(pycurl.WRITEFUNCTION, 'write')
 
     def test_headerfunction_refcounting(self):
-        c = util.DefaultCurl()
-        f = open('/dev/null', 'w')
-        c.setopt(c.HEADERFUNCTION, f.write)
-        gc.collect()
-        before_object_count = len(gc.get_objects())
-        for i in range(100):
-            c.setopt(c.HEADERFUNCTION, f.write)
-        gc.collect()
-        after_object_count = len(gc.get_objects())
-        self.assertEqual(before_object_count, after_object_count)
-        f.close()
-        c.close()
+        self.do_function_refcounting(pycurl.HEADERFUNCTION, 'write')
