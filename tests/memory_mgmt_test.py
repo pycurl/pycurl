@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+import weakref
 import pycurl
 import unittest
 import gc
@@ -222,6 +223,7 @@ class MemoryMgmtTest(unittest.TestCase):
         for i in range_generator(100000):
             c = util.DefaultCurl()
             c.reset()
+            c.close()
 
     def test_writefunction_collection(self):
         self.check_callback(pycurl.WRITEFUNCTION)
@@ -283,6 +285,7 @@ class MemoryMgmtTest(unittest.TestCase):
         gc.collect()
         after_object_count = len(gc.get_objects())
         self.assert_(after_object_count <= before_object_count + 1000, 'Grew from %d to %d objects' % (before_object_count, after_object_count))
+        c.close()
 
     def test_form_bufferptr_memory_leak_gh267(self):
         c = util.DefaultCurl()
@@ -302,3 +305,63 @@ class MemoryMgmtTest(unittest.TestCase):
         gc.collect()
         after_object_count = len(gc.get_objects())
         self.assert_(after_object_count <= before_object_count + 1000, 'Grew from %d to %d objects' % (before_object_count, after_object_count))
+        c.close()
+
+    def do_data_refcounting(self, option):
+        c = util.DefaultCurl()
+        f = open('/dev/null', 'a+')
+        c.setopt(option, f)
+        ref = weakref.ref(f)
+        del f
+        gc.collect()
+        assert ref()
+        
+        for i in range(100):
+            assert ref()
+            c.setopt(option, ref())
+        gc.collect()
+        assert ref()
+        
+        c.close()
+        gc.collect()
+        assert ref() is None
+
+    def test_readdata_refcounting(self):
+        self.do_data_refcounting(pycurl.READDATA)
+
+    def test_writedata_refcounting(self):
+        self.do_data_refcounting(pycurl.WRITEDATA)
+
+    def test_writeheader_refcounting(self):
+        self.do_data_refcounting(pycurl.WRITEHEADER)
+
+    # Python < 3.5 cannot create weak references to functions
+    @util.min_python(3, 5)
+    def do_function_refcounting(self, option, method_name):
+        c = util.DefaultCurl()
+        f = open('/dev/null', 'a+')
+        fn = getattr(f, method_name)
+        c.setopt(option, fn)
+        ref = weakref.ref(fn)
+        del f, fn
+        gc.collect()
+        assert ref()
+        
+        for i in range(100):
+            assert ref()
+            c.setopt(option, ref())
+        gc.collect()
+        assert ref()
+        
+        c.close()
+        gc.collect()
+        assert ref() is None
+
+    def test_readfunction_refcounting(self):
+        self.do_function_refcounting(pycurl.READFUNCTION, 'read')
+
+    def test_writefunction_refcounting(self):
+        self.do_function_refcounting(pycurl.WRITEFUNCTION, 'write')
+
+    def test_headerfunction_refcounting(self):
+        self.do_function_refcounting(pycurl.HEADERFUNCTION, 'write')
