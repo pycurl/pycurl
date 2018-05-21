@@ -302,3 +302,81 @@ class MemoryMgmtTest(unittest.TestCase):
         gc.collect()
         after_object_count = len(gc.get_objects())
         self.assert_(after_object_count <= before_object_count + 1000, 'Grew from %d to %d objects' % (before_object_count, after_object_count))
+
+    def test_readdata_refcounting(self):
+        c = util.DefaultCurl()
+        f = open('/dev/null')
+        c.setopt(c.READDATA, f)
+        gc.collect()
+        before_object_count = len(gc.get_objects())
+        for i in range(100):
+            c.setopt(c.READDATA, f)
+        gc.collect()
+        after_object_count = len(gc.get_objects())
+        self.assertEqual(before_object_count, after_object_count)
+        f.close()
+
+    def test_readfunction_refcounting(self):
+        c = util.DefaultCurl()
+        f = open('/dev/null')
+        c.setopt(c.READFUNCTION, f.read)
+        gc.collect()
+        before_object_count = len(gc.get_objects())
+        for i in range(100):
+            c.setopt(c.READFUNCTION, f.read)
+        gc.collect()
+        after_object_count = len(gc.get_objects())
+        self.assertEqual(before_object_count, after_object_count)
+        f.close()
+
+    def test_writedata_refcounting(self):
+        c = util.DefaultCurl()
+        f = open('/dev/null', 'w')
+        c.setopt(c.WRITEDATA, f)
+        gc.collect()
+        before_object_count = len(gc.get_objects())
+        for i in range(100):
+            c.setopt(c.WRITEDATA, f)
+        gc.collect()
+        after_object_count = len(gc.get_objects())
+        self.assertEqual(before_object_count, after_object_count)
+        f.close()
+
+    def test_writefunction_refcounting(self):
+        c = util.DefaultCurl()
+        f = open('/dev/null', 'w')
+        c.setopt(c.WRITEFUNCTION, f.write)
+        gc.collect()
+        before_object_count = len(gc.get_objects())
+        for i in range(100):
+            c.setopt(c.WRITEFUNCTION, f.write)
+        gc.collect()
+        after_object_count = len(gc.get_objects())
+        self.assertEqual(before_object_count, after_object_count)
+        f.close()
+
+    def test_writeheader_refcounting(self):
+        c = util.DefaultCurl()
+        f = open('/dev/null', 'w')
+        c.setopt(c.WRITEHEADER, f)
+        gc.collect()
+        before_object_count = len(gc.get_objects())
+        for i in range(100):
+            c.setopt(c.WRITEHEADER, f)
+        gc.collect()
+        after_object_count = len(gc.get_objects())
+        self.assertEqual(before_object_count, after_object_count)
+        f.close()
+
+    def test_headerfunction_refcounting(self):
+        c = util.DefaultCurl()
+        f = open('/dev/null', 'w')
+        c.setopt(c.HEADERFUNCTION, f.write)
+        gc.collect()
+        before_object_count = len(gc.get_objects())
+        for i in range(100):
+            c.setopt(c.HEADERFUNCTION, f.write)
+        gc.collect()
+        after_object_count = len(gc.get_objects())
+        self.assertEqual(before_object_count, after_object_count)
+        f.close()
