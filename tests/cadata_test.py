@@ -30,3 +30,14 @@ class CaCertsTest(unittest.TestCase):
         self.curl.setopt(pycurl.SSL_VERIFYPEER, 1)
         self.curl.perform()
         assert sio.getvalue().decode() == 'success'
+
+    @util.only_ssl_backends('openssl')
+    def test_set_ca_certs_bytes(self):
+        self.curl.set_ca_certs(util.b('hello world\x02\xe0'))
+
+    @util.only_ssl_backends('openssl')
+    def test_set_ca_certs_bogus_type(self):
+        try:
+            self.curl.set_ca_certs(42)
+        except TypeError as e:
+            self.assertEqual('set_ca_certs argument must be a byte string or a Unicode string with ASCII code points only', str(e))

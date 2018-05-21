@@ -1,6 +1,9 @@
 master
 ------
 
+        * set_ca_certs now accepts byte strings as it should have been
+          all along.
+
         * PycURL now skips automatic SSL backend detection if curl-config
           indicates that libcurl is not built with SSL support, and will warn
           if an SSL backend is explicitly specified in this case.
