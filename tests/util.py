@@ -80,6 +80,21 @@ def only_python3(fn):
 
     return decorated
 
+def min_python(major, minor):
+    import nose.plugins.skip
+
+    def decorator(fn):
+        @functools.wraps(fn)
+        def decorated(*args, **kwargs):
+            if sys.version_info[0:2] < (major, minor):
+                raise nose.plugins.skip.SkipTest('python < %d.%d' % (major, minor))
+
+            return fn(*args, **kwargs)
+
+        return decorated
+
+    return decorator
+
 def min_libcurl(major, minor, patch):
     import nose.plugins.skip
 

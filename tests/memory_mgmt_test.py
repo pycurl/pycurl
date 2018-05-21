@@ -335,8 +335,8 @@ class MemoryMgmtTest(unittest.TestCase):
     def test_writeheader_refcounting(self):
         self.do_data_refcounting(pycurl.WRITEHEADER)
 
-    # Python 2 cannot create weak references to functions
-    @util.only_python3
+    # Python < 3.5 cannot create weak references to functions
+    @util.min_python(3, 5)
     def do_function_refcounting(self, option, method_name):
         c = util.DefaultCurl()
         f = open('/dev/null', 'a+')
