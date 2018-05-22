@@ -249,11 +249,13 @@ PyListOrTuple_GetItem(PyObject *v, Py_ssize_t i, int which);
 #if PY_MAJOR_VERSION >= 3
 # define PyText_FromFormat(format, str) PyUnicode_FromFormat((format), (str))
 # define PyText_FromString(str) PyUnicode_FromString(str)
+# define PyByteStr_FromString(str) PyBytes_FromString(str)
 # define PyByteStr_Check(obj) PyBytes_Check(obj)
 # define PyByteStr_AsStringAndSize(obj, buffer, length) PyBytes_AsStringAndSize((obj), (buffer), (length))
 #else
 # define PyText_FromFormat(format, str) PyString_FromFormat((format), (str))
 # define PyText_FromString(str) PyString_FromString(str)
+# define PyByteStr_FromString(str) PyString_FromString(str)
 # define PyByteStr_Check(obj) PyString_Check(obj)
 # define PyByteStr_AsStringAndSize(obj, buffer, length) PyString_AsStringAndSize((obj), (buffer), (length))
 #endif

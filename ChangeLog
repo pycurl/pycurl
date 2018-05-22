@@ -1,6 +1,10 @@
 master
 ------
 
+        * Added getinfo_raw method to Curl objects to return byte strings
+          as is from libcurl without attempting to decode them
+          (GitHub issue #493).
+
         * When adding a Curl easy object to CurlMulti via add_handle,
           the easy objects now have their reference counts increased so that
           the application is no longer required to keep references to them

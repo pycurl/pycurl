@@ -23,7 +23,7 @@ static PyObject *convert_slist(struct curl_slist *slist, int free_flags)
         if (slist->data == NULL) {
             v = Py_None; Py_INCREF(v);
         } else {
-            v = PyText_FromString(slist->data);
+            v = PyByteStr_FromString(slist->data);
         }
         if (v == NULL || PyList_Append(ret, v) != 0) {
             Py_XDECREF(v);
@@ -2611,12 +2611,12 @@ do_curl_setopt_string(CurlObject *self, PyObject *args)
 
 
 static PyObject *
-do_curl_getinfo(CurlObject *self, PyObject *args)
+do_curl_getinfo_raw(CurlObject *self, PyObject *args)
 {
     int option;
     int res;
 
-    if (!PyArg_ParseTuple(args, "i:getinfo", &option)) {
+    if (!PyArg_ParseTuple(args, "i:getinfo_raw", &option)) {
         return NULL;
     }
     if (check_curl_state(self, 1 | 2, "getinfo") != 0) {
@@ -2686,7 +2686,7 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
             if (s_res == NULL) {
                 Py_RETURN_NONE;
             }
-            return PyText_FromString(s_res);
+            return PyByteStr_FromString(s_res);
 
         }
 
@@ -2746,6 +2746,92 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
     PyErr_SetString(PyExc_ValueError, "invalid argument to getinfo");
     return NULL;
 }
+
+
+#if PY_MAJOR_VERSION >= 3
+static PyObject *
+decode_string_list(PyObject *list)
+{
+    PyObject *decoded_list = NULL;
+    Py_ssize_t size = PyList_Size(list);
+    int i;
+    
+    decoded_list = PyList_New(size);
+    if (decoded_list == NULL) {
+        return NULL;
+    }
+    
+    for (i = 0; i < size; ++i) {
+        PyObject *decoded_item = PyUnicode_FromEncodedObject(
+            PyList_GET_ITEM(list, i),
+            NULL,
+            NULL);
+        
+        if (decoded_item == NULL) {
+            goto err;
+        }
+    }
+    
+    return decoded_list;
+    
+err:
+    Py_DECREF(decoded_list);
+    return NULL;
+}
+
+static PyObject *
+do_curl_getinfo(CurlObject *self, PyObject *args)
+{
+    int option;
+    PyObject *rv;
+
+    if (!PyArg_ParseTuple(args, "i:getinfo", &option)) {
+        return NULL;
+    }
+    
+    rv = do_curl_getinfo_raw(self, args);
+    if (rv == NULL) {
+        return rv;
+    }
+    
+    switch (option) {
+    case CURLINFO_CONTENT_TYPE:
+    case CURLINFO_EFFECTIVE_URL:
+    case CURLINFO_FTP_ENTRY_PATH:
+    case CURLINFO_REDIRECT_URL:
+    case CURLINFO_PRIMARY_IP:
+#ifdef HAVE_CURLINFO_LOCAL_IP
+    case CURLINFO_LOCAL_IP:
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 20, 0)
+    case CURLINFO_RTSP_SESSION_ID:
+#endif
+        {
+            PyObject *decoded;
+            
+            // Decode bytes into a Unicode string using default encoding
+            decoded = PyUnicode_FromEncodedObject(rv, NULL, NULL);
+            // success and failure paths both need to free bytes object
+            Py_DECREF(rv);
+            return decoded;
+        }
+
+    case CURLINFO_SSL_ENGINES:
+    case CURLINFO_COOKIELIST:
+        {
+            PyObject *decoded = decode_string_list(rv);
+            Py_DECREF(rv);
+            return decoded;
+        }
+        
+    default:
+        return rv;
+    }
+}
+#else
+# define do_curl_getinfo do_curl_getinfo_raw
+#endif
+
 
 /* curl_easy_pause() can be called from inside a callback or outside */
 static PyObject *
@@ -2868,6 +2954,7 @@ PYCURL_INTERNAL PyMethodDef curlobject_methods[] = {
     {"close", (PyCFunction)do_curl_close, METH_NOARGS, curl_close_doc},
     {"errstr", (PyCFunction)do_curl_errstr, METH_NOARGS, curl_errstr_doc},
     {"getinfo", (PyCFunction)do_curl_getinfo, METH_VARARGS, curl_getinfo_doc},
+    {"getinfo_raw", (PyCFunction)do_curl_getinfo_raw, METH_VARARGS, curl_getinfo_raw_doc},
     {"pause", (PyCFunction)do_curl_pause, METH_VARARGS, curl_pause_doc},
     {"perform", (PyCFunction)do_curl_perform, METH_NOARGS, curl_perform_doc},
     {"setopt", (PyCFunction)do_curl_setopt, METH_VARARGS, curl_setopt_doc},
