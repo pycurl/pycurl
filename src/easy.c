@@ -85,7 +85,7 @@ pycurl_list_or_tuple_to_slist(int which, PyObject *obj, Py_ssize_t len)
 /* Convert a struct curl_certinfo into a Python data structure.
  * In case of error return NULL with an exception set.
  */
-static PyObject *convert_certinfo(struct curl_certinfo *cinfo)
+static PyObject *convert_certinfo(struct curl_certinfo *cinfo, int decode)
 {
     PyObject *certs;
     int cert_index;
@@ -127,10 +127,22 @@ static PyObject *convert_certinfo(struct curl_certinfo *cinfo)
             } else {
                 const char *sep = strchr(field, ':');
                 if (!sep) {
-                    field_tuple = PyText_FromString(field);
+                    if (decode) {
+                        field_tuple = PyText_FromString(field);
+                    } else {
+                        field_tuple = PyByteStr_FromString(field);
+                    }
                 } else {
                     /* XXX check */
-                    field_tuple = Py_BuildValue("s#s", field, (int)(sep - field), sep+1);
+                    if (decode) {
+                        field_tuple = Py_BuildValue("s#s", field, (int)(sep - field), sep+1);
+                    } else {
+#if PY_MAJOR_VERSION >= 3
+                        field_tuple = Py_BuildValue("y#y", field, (int)(sep - field), sep+1);
+#else
+                        field_tuple = Py_BuildValue("s#s", field, (int)(sep - field), sep+1);
+#endif
+                    }
                 }
                 if (!field_tuple)
                     goto error;
@@ -2736,7 +2748,7 @@ do_curl_getinfo_raw(CurlObject *self, PyObject *args)
             if (res != CURLE_OK) {
                 CURLERROR_RETVAL();
             } else {
-                return convert_certinfo(clist);
+                return convert_certinfo(clist, 0);
             }
         }
 #endif
@@ -2782,12 +2794,25 @@ err:
 static PyObject *
 do_curl_getinfo(CurlObject *self, PyObject *args)
 {
-    int option;
+    int option, res;
     PyObject *rv;
 
     if (!PyArg_ParseTuple(args, "i:getinfo", &option)) {
         return NULL;
     }
+    
+#ifdef HAVE_CURLOPT_CERTINFO
+    if (option == CURLINFO_CERTINFO) {
+        /* Return a list of lists of 2-tuples */
+        struct curl_certinfo *clist = NULL;
+        res = curl_easy_getinfo(self->handle, CURLINFO_CERTINFO, &clist);
+        if (res != CURLE_OK) {
+            CURLERROR_RETVAL();
+        } else {
+            return convert_certinfo(clist, 1);
+        }
+    }
+#endif
     
     rv = do_curl_getinfo_raw(self, args);
     if (rv == NULL) {

@@ -42,6 +42,7 @@ Example usage::
 
     import pycurl
     c = pycurl.Curl()
+    c.setopt(pycurl.OPT_CERTINFO, 1)
     c.setopt(pycurl.URL, "https://python.org")
     c.setopt(pycurl.FOLLOWLOCATION, 1)
     c.perform()
@@ -49,6 +50,12 @@ Example usage::
     # --> 200
     print(c.getinfo_raw(pycurl.EFFECTIVE_URL))
     # --> b"https://www.python.org/"
+    certinfo = c.getinfo_raw(pycurl.INFO_CERTINFO)
+    print(certinfo)
+    # --> [((b'Subject', b'C = AU, ST = Some-State, O = PycURL test suite,
+             CN = localhost'), (b'Issuer', b'C = AU, ST = Some-State,
+             O = PycURL test suite, OU = localhost, CN = localhost'),
+            (b'Version', b'0'), ...)]
 
 
 Raises pycurl.error exception upon failure.
