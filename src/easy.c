@@ -23,7 +23,7 @@ static PyObject *convert_slist(struct curl_slist *slist, int free_flags)
         if (slist->data == NULL) {
             v = Py_None; Py_INCREF(v);
         } else {
-            v = PyText_FromString(slist->data);
+            v = PyByteStr_FromString(slist->data);
         }
         if (v == NULL || PyList_Append(ret, v) != 0) {
             Py_XDECREF(v);
@@ -85,7 +85,7 @@ pycurl_list_or_tuple_to_slist(int which, PyObject *obj, Py_ssize_t len)
 /* Convert a struct curl_certinfo into a Python data structure.
  * In case of error return NULL with an exception set.
  */
-static PyObject *convert_certinfo(struct curl_certinfo *cinfo)
+static PyObject *convert_certinfo(struct curl_certinfo *cinfo, int decode)
 {
     PyObject *certs;
     int cert_index;
@@ -127,10 +127,22 @@ static PyObject *convert_certinfo(struct curl_certinfo *cinfo)
             } else {
                 const char *sep = strchr(field, ':');
                 if (!sep) {
-                    field_tuple = PyText_FromString(field);
+                    if (decode) {
+                        field_tuple = PyText_FromString(field);
+                    } else {
+                        field_tuple = PyByteStr_FromString(field);
+                    }
                 } else {
                     /* XXX check */
-                    field_tuple = Py_BuildValue("s#s", field, (int)(sep - field), sep+1);
+                    if (decode) {
+                        field_tuple = Py_BuildValue("s#s", field, (int)(sep - field), sep+1);
+                    } else {
+#if PY_MAJOR_VERSION >= 3
+                        field_tuple = Py_BuildValue("y#y", field, (int)(sep - field), sep+1);
+#else
+                        field_tuple = Py_BuildValue("s#s", field, (int)(sep - field), sep+1);
+#endif
+                    }
                 }
                 if (!field_tuple)
                     goto error;
@@ -2611,12 +2623,12 @@ do_curl_setopt_string(CurlObject *self, PyObject *args)
 
 
 static PyObject *
-do_curl_getinfo(CurlObject *self, PyObject *args)
+do_curl_getinfo_raw(CurlObject *self, PyObject *args)
 {
     int option;
     int res;
 
-    if (!PyArg_ParseTuple(args, "i:getinfo", &option)) {
+    if (!PyArg_ParseTuple(args, "i:getinfo_raw", &option)) {
         return NULL;
     }
     if (check_curl_state(self, 1 | 2, "getinfo") != 0) {
@@ -2686,7 +2698,7 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
             if (s_res == NULL) {
                 Py_RETURN_NONE;
             }
-            return PyText_FromString(s_res);
+            return PyByteStr_FromString(s_res);
 
         }
 
@@ -2736,7 +2748,7 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
             if (res != CURLE_OK) {
                 CURLERROR_RETVAL();
             } else {
-                return convert_certinfo(clist);
+                return convert_certinfo(clist, 0);
             }
         }
 #endif
@@ -2746,6 +2758,105 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
     PyErr_SetString(PyExc_ValueError, "invalid argument to getinfo");
     return NULL;
 }
+
+
+#if PY_MAJOR_VERSION >= 3
+static PyObject *
+decode_string_list(PyObject *list)
+{
+    PyObject *decoded_list = NULL;
+    Py_ssize_t size = PyList_Size(list);
+    int i;
+    
+    decoded_list = PyList_New(size);
+    if (decoded_list == NULL) {
+        return NULL;
+    }
+    
+    for (i = 0; i < size; ++i) {
+        PyObject *decoded_item = PyUnicode_FromEncodedObject(
+            PyList_GET_ITEM(list, i),
+            NULL,
+            NULL);
+        
+        if (decoded_item == NULL) {
+            goto err;
+        }
+    }
+    
+    return decoded_list;
+    
+err:
+    Py_DECREF(decoded_list);
+    return NULL;
+}
+
+static PyObject *
+do_curl_getinfo(CurlObject *self, PyObject *args)
+{
+    int option, res;
+    PyObject *rv;
+
+    if (!PyArg_ParseTuple(args, "i:getinfo", &option)) {
+        return NULL;
+    }
+    
+#ifdef HAVE_CURLOPT_CERTINFO
+    if (option == CURLINFO_CERTINFO) {
+        /* Return a list of lists of 2-tuples */
+        struct curl_certinfo *clist = NULL;
+        res = curl_easy_getinfo(self->handle, CURLINFO_CERTINFO, &clist);
+        if (res != CURLE_OK) {
+            CURLERROR_RETVAL();
+        } else {
+            return convert_certinfo(clist, 1);
+        }
+    }
+#endif
+    
+    rv = do_curl_getinfo_raw(self, args);
+    if (rv == NULL) {
+        return rv;
+    }
+    
+    switch (option) {
+    case CURLINFO_CONTENT_TYPE:
+    case CURLINFO_EFFECTIVE_URL:
+    case CURLINFO_FTP_ENTRY_PATH:
+    case CURLINFO_REDIRECT_URL:
+    case CURLINFO_PRIMARY_IP:
+#ifdef HAVE_CURLINFO_LOCAL_IP
+    case CURLINFO_LOCAL_IP:
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 20, 0)
+    case CURLINFO_RTSP_SESSION_ID:
+#endif
+        {
+            PyObject *decoded;
+            
+            // Decode bytes into a Unicode string using default encoding
+            decoded = PyUnicode_FromEncodedObject(rv, NULL, NULL);
+            // success and failure paths both need to free bytes object
+            Py_DECREF(rv);
+            return decoded;
+        }
+
+    case CURLINFO_SSL_ENGINES:
+    case CURLINFO_COOKIELIST:
+        {
+            PyObject *decoded = decode_string_list(rv);
+            Py_DECREF(rv);
+            return decoded;
+        }
+        
+    default:
+        return rv;
+    }
+}
+#else
+# define do_curl_getinfo do_curl_getinfo_raw
+#endif
+
 
 /* curl_easy_pause() can be called from inside a callback or outside */
 static PyObject *
@@ -2868,6 +2979,7 @@ PYCURL_INTERNAL PyMethodDef curlobject_methods[] = {
     {"close", (PyCFunction)do_curl_close, METH_NOARGS, curl_close_doc},
     {"errstr", (PyCFunction)do_curl_errstr, METH_NOARGS, curl_errstr_doc},
     {"getinfo", (PyCFunction)do_curl_getinfo, METH_VARARGS, curl_getinfo_doc},
+    {"getinfo_raw", (PyCFunction)do_curl_getinfo_raw, METH_VARARGS, curl_getinfo_raw_doc},
     {"pause", (PyCFunction)do_curl_pause, METH_VARARGS, curl_pause_doc},
     {"perform", (PyCFunction)do_curl_perform, METH_NOARGS, curl_perform_doc},
     {"setopt", (PyCFunction)do_curl_setopt, METH_VARARGS, curl_setopt_doc},

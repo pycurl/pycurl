@@ -47,9 +47,75 @@ class GetinfoTest(unittest.TestCase):
         assert type(self.curl.getinfo(pycurl.LOCAL_IP)) is str
         assert type(self.curl.getinfo(pycurl.LOCAL_PORT)) is int
 
-    def make_request(self):
-        self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
+    def make_request(self, path='/success', expected_body='success'):
+        self.curl.setopt(pycurl.URL, 'http://localhost:8380' + path)
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
-        self.assertEqual('success', sio.getvalue().decode())
+        self.assertEqual(expected_body, sio.getvalue().decode())
+
+    @util.only_python2
+    def test_getinfo_cookie_invalid_utf8_python2(self):
+        self.curl.setopt(self.curl.COOKIELIST, '')
+        self.make_request('/set_cookie_invalid_utf8', 'cookie set')
+        
+        self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
+        expected = "localhost\tFALSE\t/\tFALSE\t0\t\xb3\xd2\xda\xcd\xd7\t%96%A6g%9Ay%B0%A5g%A7tm%7C%95%9A"
+        self.assertEqual([expected], self.curl.getinfo(pycurl.INFO_COOKIELIST))
+
+    @util.only_python3
+    def test_getinfo_cookie_invalid_utf8_python3(self):
+        self.curl.setopt(self.curl.COOKIELIST, '')
+        self.make_request('/set_cookie_invalid_utf8', 'cookie set')
+        
+        self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
+        try:
+            self.curl.getinfo(pycurl.INFO_COOKIELIST)
+        except UnicodeDecodeError:
+            pass
+        else:
+            self.fail('Should have raised')
+
+    def test_getinfo_raw_cookie_invalid_utf8(self):
+        self.curl.setopt(self.curl.COOKIELIST, '')
+        self.make_request('/set_cookie_invalid_utf8', 'cookie set')
+        
+        self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
+        expected = util.b("localhost\tFALSE\t/\tFALSE\t0\t\xb3\xd2\xda\xcd\xd7\t%96%A6g%9Ay%B0%A5g%A7tm%7C%95%9A")
+        self.assertEqual([expected], self.curl.getinfo_raw(pycurl.INFO_COOKIELIST))
+
+    @util.only_python2
+    def test_getinfo_content_type_invalid_utf8_python2(self):
+        self.make_request('/content_type_invalid_utf8', 'content type set')
+        
+        self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
+        expected = '\xb3\xd2\xda\xcd\xd7'
+        self.assertEqual(expected, self.curl.getinfo(pycurl.CONTENT_TYPE))
+
+    @util.only_python3
+    def test_getinfo_content_type_invalid_utf8_python3(self):
+        self.make_request('/content_type_invalid_utf8', 'content type set')
+        
+        self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
+        
+        try:
+            self.curl.getinfo(pycurl.CONTENT_TYPE)
+        except UnicodeDecodeError:
+            pass
+        else:
+            self.fail('Should have raised')
+
+    def test_getinfo_raw_content_type_invalid_utf8(self):
+        self.make_request('/content_type_invalid_utf8', 'content type set')
+        
+        self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
+        expected = util.b('\xb3\xd2\xda\xcd\xd7')
+        self.assertEqual(expected, self.curl.getinfo_raw(pycurl.CONTENT_TYPE))
+
+    def test_getinfo_number(self):
+        self.make_request()
+        self.assertEqual(7, self.curl.getinfo(pycurl.SIZE_DOWNLOAD))
+
+    def test_getinfo_raw_number(self):
+        self.make_request()
+        self.assertEqual(7, self.curl.getinfo_raw(pycurl.SIZE_DOWNLOAD))

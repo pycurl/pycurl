@@ -14,7 +14,11 @@ Curl Object
 
     .. automethod:: pycurl.Curl.perform
 
+    .. _getinfo:
     .. automethod:: pycurl.Curl.getinfo
+
+    .. _getinfo_raw:
+    .. automethod:: pycurl.Curl.getinfo_raw
 
     .. automethod:: pycurl.Curl.reset
 
