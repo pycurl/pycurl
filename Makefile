@@ -36,7 +36,7 @@ RSYNC_USER = armco@web.sourceforge.net
 # src/module.c is first because it declares global variables
 # which other files reference; important for single source build
 SOURCES = src/module.c src/easy.c src/multi.c src/oscompat.c src/pythoncompat.c \
-	src/share.c src/stringcompat.c src/threadsupport.c
+	src/share.c src/stringcompat.c src/threadsupport.c src/util.c
 
 GEN_SOURCES = src/docstrings.c src/docstrings.h
 

@@ -133,3 +133,7 @@ def set_cookie_invalid_utf8():
 def content_type_invalid_utf8():
     bottle.response.set_header('Content-Type', '\xb3\xd2\xda\xcd\xd7')
     return 'content type set'
+
+@app.route('/status_invalid_utf8')
+def status_invalid_utf8():
+    raise bottle.HTTPResponse('status set', '555 \xb3\xd2\xda\xcd\xd7')

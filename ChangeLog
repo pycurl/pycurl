@@ -1,6 +1,10 @@
 master
 ------
 
+        * PycURL is now able to report errors triggered by libcurl
+          via CURLOPT_FAILONERROR mechanism when the error messages are
+          not decodable in Python's default encoding (GitHub issue #259).
+
         * Added getinfo_raw method to Curl objects to return byte strings
           as is from libcurl without attempting to decode them
           (GitHub issue #493).

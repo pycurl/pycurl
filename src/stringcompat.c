@@ -62,3 +62,25 @@ PyText_Check(PyObject *o)
     return PyUnicode_Check(o) || PyString_Check(o);
 }
 #endif
+
+PYCURL_INTERNAL PyObject *
+PyText_FromString_Ignore(const char *string)
+{
+    PyObject *v;
+
+#if PY_MAJOR_VERSION >= 3
+    PyObject *u;
+    
+    v = Py_BuildValue("y", string);
+    if (v == NULL) {
+        return NULL;
+    }
+    
+    u = PyUnicode_FromEncodedObject(v, NULL, "replace");
+    Py_DECREF(v);
+    return u;
+#else
+    v = Py_BuildValue("s", string);
+    return v;
+#endif
+}

@@ -535,6 +535,7 @@ def get_extension(argv, split_extension_source=False):
             os.path.join("src", "share.c"),
             os.path.join("src", "stringcompat.c"),
             os.path.join("src", "threadsupport.c"),
+            os.path.join("src", "util.c"),
         ]
         depends = [
             os.path.join("src", "pycurl.h"),
