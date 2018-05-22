@@ -6,6 +6,9 @@ import pycurl
 import unittest
 import gc
 import flaky
+import weakref
+
+from . import util
 
 debug = False
 
@@ -37,3 +40,19 @@ class MultiMemoryMgmtTest(unittest.TestCase):
         # it seems that GC sometimes collects something that existed
         # before this test ran, GH issues #273/#274
         self.assertTrue(new_object_count in (object_count, object_count-1))
+
+    def test_curl_ref(self):
+        c = util.DefaultCurl()
+        m = pycurl.CurlMulti()
+        
+        ref = weakref.ref(c)
+        m.add_handle(c)
+        del c
+        
+        assert ref()
+        gc.collect()
+        assert ref()
+        
+        m.remove_handle(ref())
+        gc.collect()
+        assert ref() is None

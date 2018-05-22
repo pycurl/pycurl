@@ -1,6 +1,13 @@
 master
 ------
 
+        * When adding a Curl easy object to CurlMulti via add_handle,
+          the easy objects now have their reference counts increased so that
+          the application is no longer required to keep references to them
+          to keep them from being garbage collected (GitHub issue #171).
+
+        * PycURL easy, multi and share objects can now be weak referenced.
+
         * Python 3.2 and 3.3 support officially dropped as those versions
           are end of lifed.
 

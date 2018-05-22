@@ -324,6 +324,10 @@ initpycurl(void)
     PyObject *collections_module = NULL;
     PyObject *named_tuple = NULL;
     PyObject *arglist = NULL;
+    
+    assert(Curl_Type.tp_weaklistoffset > 0);
+    assert(CurlMulti_Type.tp_weaklistoffset > 0);
+    assert(CurlShare_Type.tp_weaklistoffset > 0);
 
     /* Check the version, as this has caused nasty problems in
      * some cases. */

@@ -67,6 +67,12 @@ do_multi_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
         ++ptr)
             assert(*ptr == 0);
 
+    self->easy_object_dict = PyDict_New();
+    if (self->easy_object_dict == NULL) {
+        Py_DECREF(self);
+        return NULL;
+    }
+    
     /* Allocate libcurl multi handle */
     self->multi_handle = curl_multi_init();
     if (self->multi_handle == NULL) {
@@ -81,9 +87,11 @@ static void
 util_multi_close(CurlMultiObject *self)
 {
     assert(self != NULL);
+
 #ifdef WITH_THREAD
     self->state = NULL;
 #endif
+    
     if (self->multi_handle != NULL) {
         CURLM *multi_handle = self->multi_handle;
         self->multi_handle = NULL;
@@ -95,6 +103,7 @@ util_multi_close(CurlMultiObject *self)
 static void
 util_multi_xdecref(CurlMultiObject *self)
 {
+    Py_CLEAR(self->easy_object_dict);
     Py_CLEAR(self->dict);
     Py_CLEAR(self->t_cb);
     Py_CLEAR(self->s_cb);
@@ -109,6 +118,10 @@ do_multi_dealloc(CurlMultiObject *self)
 
     util_multi_xdecref(self);
     util_multi_close(self);
+
+    if (self->weakreflist != NULL) {
+        PyObject_ClearWeakRefs((PyObject *) self);
+    }
 
     CurlMulti_Type.tp_free(self);
     Py_TRASHCAN_SAFE_END(self);
@@ -144,6 +157,7 @@ do_multi_traverse(CurlMultiObject *self, visitproc visit, void *arg)
 #define VISIT(v)    if ((v) != NULL && ((err = visit(v, arg)) != 0)) return err
 
     VISIT(self->dict);
+    VISIT(self->easy_object_dict);
 
     return 0;
 #undef VISIT
@@ -607,13 +621,18 @@ do_multi_add_handle(CurlMultiObject *self, PyObject *args)
         PyErr_SetString(ErrorObject, "curl object already on this multi-stack");
         return NULL;
     }
+    
+    PyDict_SetItem(self->easy_object_dict, (PyObject *) obj, Py_True);
+    
     assert(obj->multi_stack == NULL);
     res = curl_multi_add_handle(self->multi_handle, obj->handle);
     if (res != CURLM_OK) {
         CURLERROR_MSG("curl_multi_add_handle() failed due to internal errors");
+        PyDict_DelItem(self->easy_object_dict, (PyObject *) obj);
     }
     obj->multi_stack = self;
     Py_INCREF(self);
+    
     Py_RETURN_NONE;
 }
 
@@ -632,6 +651,9 @@ do_multi_remove_handle(CurlMultiObject *self, PyObject *args)
     }
     if (obj->handle == NULL) {
         /* CurlObject handle already closed -- ignore */
+        if (PyDict_GetItem(self->easy_object_dict, (PyObject *) obj)) {
+            PyDict_DelItem(self->easy_object_dict, (PyObject *) obj);
+        }
         goto done;
     }
     if (obj->multi_stack != self) {
@@ -639,7 +661,13 @@ do_multi_remove_handle(CurlMultiObject *self, PyObject *args)
         return NULL;
     }
     res = curl_multi_remove_handle(self->multi_handle, obj->handle);
-    if (res != CURLM_OK) {
+    if (res == CURLM_OK) {
+        PyDict_DelItem(self->easy_object_dict, (PyObject *) obj);
+        // if PyDict_DelItem fails, remove_handle call will also fail.
+        // but the dictionary should always have our object in it
+        // hence this failure shouldn't happen unless something unaccounted
+        // for went wrong
+    } else {
         CURLERROR_MSG("curl_multi_remove_handle() failed due to internal errors");
     }
     assert(obj->multi_stack == self);
@@ -963,12 +991,12 @@ PYCURL_INTERNAL PyTypeObject CurlMulti_Type = {
     0,                          /* tp_setattro */
 #endif
     0,                          /* tp_as_buffer */
-    Py_TPFLAGS_HAVE_GC,         /* tp_flags */
+    PYCURL_TYPE_FLAGS,          /* tp_flags */
     multi_doc,                   /* tp_doc */
     (traverseproc)do_multi_traverse, /* tp_traverse */
     (inquiry)do_multi_clear,    /* tp_clear */
     0,                          /* tp_richcompare */
-    0,                          /* tp_weaklistoffset */
+    offsetof(CurlMultiObject, weakreflist), /* tp_weaklistoffset */
     0,                          /* tp_iter */
     0,                          /* tp_iternext */
     curlmultiobject_methods,    /* tp_methods */

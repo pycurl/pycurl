@@ -333,6 +333,8 @@ PyText_Check(PyObject *o);
 typedef struct CurlObject {
     PyObject_HEAD
     PyObject *dict;                 /* Python attributes dictionary */
+    // https://docs.python.org/3/extending/newtypes.html
+    PyObject *weakreflist;
     CURL *handle;
 #ifdef WITH_THREAD
     PyThreadState *state;
@@ -392,6 +394,8 @@ typedef struct CurlObject {
 typedef struct CurlMultiObject {
     PyObject_HEAD
     PyObject *dict;                 /* Python attributes dictionary */
+    // https://docs.python.org/3/extending/newtypes.html
+    PyObject *weakreflist;
     CURLM *multi_handle;
 #ifdef WITH_THREAD
     PyThreadState *state;
@@ -402,6 +406,8 @@ typedef struct CurlMultiObject {
     /* callbacks */
     PyObject *t_cb;
     PyObject *s_cb;
+
+    PyObject *easy_object_dict;
 } CurlMultiObject;
 
 typedef struct {
@@ -411,6 +417,8 @@ typedef struct {
 typedef struct CurlShareObject {
     PyObject_HEAD
     PyObject *dict;                 /* Python attributes dictionary */
+    // https://docs.python.org/3/extending/newtypes.html
+    PyObject *weakreflist;
     CURLSH *share_handle;
 #ifdef WITH_THREAD
     ShareLock *lock;                /* lock object to implement CURLSHOPT_LOCKFUNC */
@@ -495,6 +503,12 @@ extern PyMethodDef curlshareobject_methods[];
 extern PyMethodDef curlmultiobject_methods[];
 #endif
 #endif /* !PYCURL_SINGLE_FILE */
+
+#if PY_MAJOR_VERSION >= 3
+# define PYCURL_TYPE_FLAGS Py_TPFLAGS_HAVE_GC
+#else
+# define PYCURL_TYPE_FLAGS Py_TPFLAGS_HAVE_GC | Py_TPFLAGS_HAVE_WEAKREFS
+#endif
 
 /* vi:ts=4:et:nowrap
  */

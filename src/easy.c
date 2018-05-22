@@ -358,6 +358,10 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
             CurlMultiObject *multi_stack = self->multi_stack;
             self->multi_stack = NULL;
             if (multi_stack->multi_handle != NULL && handle != NULL) {
+                /* TODO this is where we could remove the easy object
+                from the multi object's easy_object_dict, but this
+                requires us to have a reference to the multi object
+                which right now we don't. */
                 (void) curl_multi_remove_handle(multi_stack->multi_handle, handle);
             }
             Py_DECREF(multi_stack);
@@ -458,6 +462,10 @@ util_curl_close(CurlObject *self)
 
     /* Decref easy related objects */
     util_curl_xdecref(self, PYCURL_MEMGROUP_EASY, handle);
+
+    if (self->weakreflist != NULL) {
+        PyObject_ClearWeakRefs((PyObject *) self);
+    }
 
     /* Free all variables allocated by setopt */
 #undef SFREE
@@ -2954,12 +2962,12 @@ PYCURL_INTERNAL PyTypeObject Curl_Type = {
     0,                          /* tp_setattro */
 #endif
     0,                          /* tp_as_buffer */
-    Py_TPFLAGS_HAVE_GC,         /* tp_flags */
+    PYCURL_TYPE_FLAGS,          /* tp_flags */
     curl_doc,                   /* tp_doc */
     (traverseproc)do_curl_traverse, /* tp_traverse */
     (inquiry)do_curl_clear,     /* tp_clear */
     0,                          /* tp_richcompare */
-    0,                          /* tp_weaklistoffset */
+    offsetof(CurlObject, weakreflist), /* tp_weaklistoffset */
     0,                          /* tp_iter */
     0,                          /* tp_iternext */
     curlobject_methods,         /* tp_methods */
