@@ -1,6 +1,8 @@
 master
 ------
 
+        * PycURL easy, multi and share objects can now be weak referenced.
+
         * Python 3.2 and 3.3 support officially dropped as those versions
           are end of lifed.
 

@@ -110,6 +110,10 @@ do_multi_dealloc(CurlMultiObject *self)
     util_multi_xdecref(self);
     util_multi_close(self);
 
+    if (self->weakreflist != NULL) {
+        PyObject_ClearWeakRefs((PyObject *) self);
+    }
+
     CurlMulti_Type.tp_free(self);
     Py_TRASHCAN_SAFE_END(self);
 }
@@ -963,12 +967,12 @@ PYCURL_INTERNAL PyTypeObject CurlMulti_Type = {
     0,                          /* tp_setattro */
 #endif
     0,                          /* tp_as_buffer */
-    Py_TPFLAGS_HAVE_GC,         /* tp_flags */
+    PYCURL_TYPE_FLAGS,          /* tp_flags */
     multi_doc,                   /* tp_doc */
     (traverseproc)do_multi_traverse, /* tp_traverse */
     (inquiry)do_multi_clear,    /* tp_clear */
     0,                          /* tp_richcompare */
-    0,                          /* tp_weaklistoffset */
+    offsetof(CurlMultiObject, weakreflist), /* tp_weaklistoffset */
     0,                          /* tp_iter */
     0,                          /* tp_iternext */
     curlmultiobject_methods,    /* tp_methods */

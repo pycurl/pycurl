@@ -459,6 +459,10 @@ util_curl_close(CurlObject *self)
     /* Decref easy related objects */
     util_curl_xdecref(self, PYCURL_MEMGROUP_EASY, handle);
 
+    if (self->weakreflist != NULL) {
+        PyObject_ClearWeakRefs((PyObject *) self);
+    }
+
     /* Free all variables allocated by setopt */
 #undef SFREE
 #define SFREE(v)   if ((v) != NULL) (curl_formfree(v), (v) = NULL)
@@ -2954,12 +2958,12 @@ PYCURL_INTERNAL PyTypeObject Curl_Type = {
     0,                          /* tp_setattro */
 #endif
     0,                          /* tp_as_buffer */
-    Py_TPFLAGS_HAVE_GC,         /* tp_flags */
+    PYCURL_TYPE_FLAGS,          /* tp_flags */
     curl_doc,                   /* tp_doc */
     (traverseproc)do_curl_traverse, /* tp_traverse */
     (inquiry)do_curl_clear,     /* tp_clear */
     0,                          /* tp_richcompare */
-    0,                          /* tp_weaklistoffset */
+    offsetof(CurlObject, weakreflist), /* tp_weaklistoffset */
     0,                          /* tp_iter */
     0,                          /* tp_iternext */
     curlobject_methods,         /* tp_methods */

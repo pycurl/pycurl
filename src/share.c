@@ -51,9 +51,10 @@ do_share_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
     /* tp_alloc is expected to return zeroed memory */
     for (ptr = (int *) &self->dict;
         ptr < (int *) (((char *) self) + sizeof(CurlShareObject));
-        ++ptr)
+        ++ptr) {
             assert(*ptr == 0);
-
+    }
+    
 #ifdef WITH_THREAD
     self->lock = share_lock_new();
     assert(self->lock != NULL);
@@ -127,6 +128,10 @@ do_share_dealloc(CurlShareObject *self)
     share_lock_destroy(self->lock);
 #endif
 
+    if (self->weakreflist != NULL) {
+        PyObject_ClearWeakRefs((PyObject *) self);
+    }
+     
     CurlShare_Type.tp_free(self);
     Py_TRASHCAN_SAFE_END(self);
 }
@@ -306,12 +311,12 @@ PYCURL_INTERNAL PyTypeObject CurlShare_Type = {
     0,                          /* tp_setattro */
 #endif
     0,                          /* tp_as_buffer */
-    Py_TPFLAGS_HAVE_GC,         /* tp_flags */
+    PYCURL_TYPE_FLAGS,          /* tp_flags */
     share_doc,                  /* tp_doc */
     (traverseproc)do_share_traverse, /* tp_traverse */
     (inquiry)do_share_clear,    /* tp_clear */
     0,                          /* tp_richcompare */
-    0,                          /* tp_weaklistoffset */
+    offsetof(CurlShareObject, weakreflist), /* tp_weaklistoffset */
     0,                          /* tp_iter */
     0,                          /* tp_iternext */
     curlshareobject_methods,    /* tp_methods */
