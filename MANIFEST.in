@@ -26,6 +26,7 @@ include src/easy.c
 include src/easycb.c
 include src/easyinfo.c
 include src/easyopt.c
+include src/easyperform.c
 include src/module.c
 include src/multi.c
 include src/oscompat.c

@@ -485,6 +485,10 @@ PYCURL_INTERNAL PyObject *
 do_curl_setopt_string(CurlObject *self, PyObject *args);
 PYCURL_INTERNAL PyObject *
 do_curl_unsetopt(CurlObject *self, PyObject *args);
+PYCURL_INTERNAL PyObject *
+do_curl_perform(CurlObject *self);
+PYCURL_INTERNAL PyObject *
+do_curl_pause(CurlObject *self, PyObject *args);
 
 PYCURL_INTERNAL PyObject *
 do_curl_getinfo_raw(CurlObject *self, PyObject *args);
