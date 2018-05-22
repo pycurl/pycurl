@@ -20,6 +20,7 @@ The following are exceptions to option constant naming convention:
 - ``CURLOPT_FILETIME`` is mapped as ``pycurl.OPT_FILETIME``
 - ``CURLOPT_CERTINFO`` is mapped as ``pycurl.OPT_CERTINFO``
 - ``CURLOPT_COOKIELIST`` is mapped as ``pycurl.COOKIELIST``
+  and, as of PycURL 7.43.0.2, also as ``pycurl.OPT_COOKIELIST``.
 
 *value* specifies the value to set the option to. Different options accept
 values of different types:

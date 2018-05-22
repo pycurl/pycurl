@@ -490,3 +490,6 @@ class OptionConstantsSettingTest(unittest.TestCase):
     @util.min_libcurl(7, 33, 0)
     def test_xauth_bearer(self):
         self.curl.setopt(self.curl.XOAUTH2_BEARER, 'test')
+        
+    def test_cookielist_constants(self):
+        self.assertEqual(pycurl.OPT_COOKIELIST, pycurl.COOKIELIST)
