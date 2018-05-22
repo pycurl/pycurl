@@ -406,6 +406,8 @@ typedef struct CurlMultiObject {
     /* callbacks */
     PyObject *t_cb;
     PyObject *s_cb;
+
+    PyObject *easy_object_dict;
 } CurlMultiObject;
 
 typedef struct {

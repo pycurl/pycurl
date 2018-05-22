@@ -358,6 +358,10 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
             CurlMultiObject *multi_stack = self->multi_stack;
             self->multi_stack = NULL;
             if (multi_stack->multi_handle != NULL && handle != NULL) {
+                /* TODO this is where we could remove the easy object
+                from the multi object's easy_object_dict, but this
+                requires us to have a reference to the multi object
+                which right now we don't. */
                 (void) curl_multi_remove_handle(multi_stack->multi_handle, handle);
             }
             Py_DECREF(multi_stack);
