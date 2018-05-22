@@ -502,6 +502,14 @@ do_curl_getinfo(CurlObject *self, PyObject *args);
 #else
 # define do_curl_getinfo do_curl_getinfo_raw
 #endif
+PYCURL_INTERNAL PyObject *
+do_curl_errstr(CurlObject *self);
+#if PY_MAJOR_VERSION >= 3
+PYCURL_INTERNAL PyObject *
+do_curl_errstr_raw(CurlObject *self);
+#else
+# define do_curl_errstr_raw do_curl_errstr
+#endif
 
 PYCURL_INTERNAL size_t
 write_callback(char *ptr, size_t size, size_t nmemb, void *stream);

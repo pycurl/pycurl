@@ -307,34 +307,6 @@ do_curl_close(CurlObject *self)
 }
 
 
-static PyObject *
-do_curl_errstr(CurlObject *self)
-{
-    if (check_curl_state(self, 1 | 2, "errstr") != 0) {
-        return NULL;
-    }
-    self->error[sizeof(self->error) - 1] = 0;
-
-    return PyText_FromString(self->error);
-}
-
-
-#if PY_MAJOR_VERSION >= 3
-static PyObject *
-do_curl_errstr_raw(CurlObject *self)
-{
-    if (check_curl_state(self, 1 | 2, "errstr") != 0) {
-        return NULL;
-    }
-    self->error[sizeof(self->error) - 1] = 0;
-
-    return PyByteStr_FromString(self->error);
-}
-#else
-#define do_curl_errstr_raw do_curl_errstr
-#endif
-
-
 /* --------------- GC support --------------- */
 
 /* Drop references that may have created reference cycles. */
