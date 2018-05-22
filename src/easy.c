@@ -438,58 +438,6 @@ do_curl_reset(CurlObject *self)
 }
 
 
-#if defined(HAVE_CURL_OPENSSL)
-/* load ca certs from string */
-static PyObject *
-do_curl_set_ca_certs(CurlObject *self, PyObject *args)
-{
-    PyObject *cadata;
-    PyObject *encoded_obj;
-    char *buffer;
-    Py_ssize_t length;
-    int res;
-
-    if (!PyArg_ParseTuple(args, "O:cadata", &cadata))
-        return NULL;
-
-    // This may result in cadata string being encoded twice,
-    // not going to worry about it for now
-    if (!PyText_Check(cadata)) {
-        PyErr_SetString(PyExc_TypeError, "set_ca_certs argument must be a byte string or a Unicode string with ASCII code points only");
-        return NULL;
-    }
-
-    res = PyText_AsStringAndSize(cadata, &buffer, &length, &encoded_obj);
-    if (res) {
-        PyErr_SetString(PyExc_TypeError, "set_ca_certs argument must be a byte string or a Unicode string with ASCII code points only");
-        return NULL;
-    }
-
-    Py_CLEAR(self->ca_certs_obj);
-    if (encoded_obj) {
-        self->ca_certs_obj = encoded_obj;
-    } else {
-        Py_INCREF(cadata);
-        self->ca_certs_obj = cadata;
-    }
-
-    res = curl_easy_setopt(self->handle, CURLOPT_SSL_CTX_FUNCTION, (curl_ssl_ctx_callback) ssl_ctx_callback);
-    if (res != CURLE_OK) {
-        Py_CLEAR(self->ca_certs_obj);
-        CURLERROR_RETVAL();
-    }
-
-    res = curl_easy_setopt(self->handle, CURLOPT_SSL_CTX_DATA, self);
-    if (res != CURLE_OK) {
-        Py_CLEAR(self->ca_certs_obj);
-        CURLERROR_RETVAL();
-    }
-
-    Py_RETURN_NONE;
-}
-#endif
-
-
 static PyObject *do_curl_getstate(CurlObject *self)
 {
     PyErr_SetString(PyExc_TypeError, "Curl objects do not support serialization");

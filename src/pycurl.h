@@ -485,6 +485,10 @@ PYCURL_INTERNAL PyObject *
 do_curl_setopt_string(CurlObject *self, PyObject *args);
 PYCURL_INTERNAL PyObject *
 do_curl_unsetopt(CurlObject *self, PyObject *args);
+#if defined(HAVE_CURL_OPENSSL)
+PYCURL_INTERNAL PyObject *
+do_curl_set_ca_certs(CurlObject *self, PyObject *args);
+#endif
 PYCURL_INTERNAL PyObject *
 do_curl_perform(CurlObject *self);
 PYCURL_INTERNAL PyObject *
