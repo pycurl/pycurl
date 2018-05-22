@@ -28,6 +28,8 @@ class FailonerrorTest(unittest.TestCase):
         except pycurl.error as e:
             self.assertEqual(pycurl.E_HTTP_RETURNED_ERROR, e.args[0])
             self.assertEqual('The requested URL returned error: 403 Forbidden', e.args[1])
+            self.assertEqual(util.u('The requested URL returned error: 403 Forbidden'), self.curl.errstr())
+            self.assertEqual(util.b('The requested URL returned error: 403 Forbidden'), self.curl.errstr_raw())
         else:
             self.fail('Should have raised pycurl.error')
     
@@ -43,6 +45,8 @@ class FailonerrorTest(unittest.TestCase):
         except pycurl.error as e:
             self.assertEqual(pycurl.E_HTTP_RETURNED_ERROR, e.args[0])
             self.assertEqual('The requested URL returned error: 555 \xb3\xd2\xda\xcd\xd7', e.args[1])
+            self.assertEqual('The requested URL returned error: 555 \xb3\xd2\xda\xcd\xd7', self.curl.errstr())
+            self.assertEqual('The requested URL returned error: 555 \xb3\xd2\xda\xcd\xd7', self.curl.errstr_raw())
         else:
             self.fail('Should have raised pycurl.error')
 
@@ -58,5 +62,12 @@ class FailonerrorTest(unittest.TestCase):
         except pycurl.error as e:
             self.assertEqual(pycurl.E_HTTP_RETURNED_ERROR, e.args[0])
             assert e.args[1].startswith('The requested URL returned error: 555 ')
+            try:
+                self.curl.errstr()
+            except UnicodeDecodeError:
+                pass
+            else:
+                self.fail('Should have raised')
+            self.assertEqual(util.b('The requested URL returned error: 555 \xb3\xd2\xda\xcd\xd7'), self.curl.errstr_raw())
         else:
             self.fail('Should have raised pycurl.error')

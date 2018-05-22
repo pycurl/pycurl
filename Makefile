@@ -48,6 +48,7 @@ DOCSTRINGS_SOURCES = \
 	doc/docstrings/curl.rst \
 	doc/docstrings/curl_close.rst \
 	doc/docstrings/curl_errstr.rst \
+	doc/docstrings/curl_errstr_raw.rst \
 	doc/docstrings/curl_getinfo.rst \
 	doc/docstrings/curl_getinfo_raw.rst \
 	doc/docstrings/curl_pause.rst \
