@@ -20,7 +20,13 @@ The following are exceptions to option constant naming convention:
 - ``CURLOPT_FILETIME`` is mapped as ``pycurl.OPT_FILETIME``
 - ``CURLOPT_CERTINFO`` is mapped as ``pycurl.OPT_CERTINFO``
 - ``CURLOPT_COOKIELIST`` is mapped as ``pycurl.COOKIELIST``
-  and, as of PycURL 7.43.0.2, also as ``pycurl.OPT_COOKIELIST``.
+  and, as of PycURL 7.43.0.2, also as ``pycurl.OPT_COOKIELIST``
+- ``CURLOPT_RTSP_CLIENT_CSEQ`` is mapped as ``pycurl.OPT_RTSP_CLIENT_CSEQ``
+- ``CURLOPT_RTSP_REQUEST`` is mapped as ``pycurl.OPT_RTSP_REQUEST``
+- ``CURLOPT_RTSP_SERVER_CSEQ`` is mapped as ``pycurl.OPT_RTSP_SERVER_CSEQ``
+- ``CURLOPT_RTSP_SESSION_ID`` is mapped as ``pycurl.OPT_RTSP_SESSION_ID``
+- ``CURLOPT_RTSP_STREAM_URI`` is mapped as ``pycurl.OPT_RTSP_STREAM_URI``
+- ``CURLOPT_RTSP_TRANSPORT`` is mapped as ``pycurl.OPT_RTSP_TRANSPORT``
 
 *value* specifies the value to set the option to. Different options accept
 values of different types:
