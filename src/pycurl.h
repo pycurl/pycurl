@@ -494,6 +494,11 @@ do_curl_perform(CurlObject *self);
 PYCURL_INTERNAL PyObject *
 do_curl_pause(CurlObject *self, PyObject *args);
 
+PYCURL_INTERNAL int
+check_curl_state(const CurlObject *self, int flags, const char *name);
+PYCURL_INTERNAL void
+util_curl_xdecref(CurlObject *self, int flags, CURL *handle);
+
 PYCURL_INTERNAL PyObject *
 do_curl_getinfo_raw(CurlObject *self, PyObject *args);
 #if PY_MAJOR_VERSION >= 3

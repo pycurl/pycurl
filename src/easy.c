@@ -19,7 +19,7 @@ assert_curl_state(const CurlObject *self)
 
 
 /* check state for methods */
-static int
+PYCURL_INTERNAL int
 check_curl_state(const CurlObject *self, int flags, const char *name)
 {
     assert_curl_state(self);
@@ -131,7 +131,7 @@ error:
 
 
 /* util function shared by close() and clear() */
-static void
+PYCURL_INTERNAL void
 util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
 {
     if (flags & PYCURL_MEMGROUP_ATTRDICT) {
