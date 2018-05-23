@@ -27,6 +27,10 @@ Curl Object
 
     .. automethod:: pycurl.Curl.pause
 
+    .. _errstr:
     .. automethod:: pycurl.Curl.errstr
+
+    .. _errstr_raw:
+    .. automethod:: pycurl.Curl.errstr_raw
 
     .. automethod:: pycurl.Curl.setopt_string

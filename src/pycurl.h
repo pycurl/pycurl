@@ -267,23 +267,23 @@ PYCURL_INTERNAL char *
 PyText_AsString_NoNUL(PyObject *obj, PyObject **encoded_obj);
 PYCURL_INTERNAL int
 PyText_Check(PyObject *o);
+PYCURL_INTERNAL PyObject *
+PyText_FromString_Ignore(const char *string);
+
+struct CurlObject;
+
+PYCURL_INTERNAL void
+create_and_set_error_object(struct CurlObject *self, int code);
 
 
 /* Raise exception based on return value `res' and `self->error' */
 #define CURLERROR_RETVAL() do {\
-    PyObject *v; \
-    self->error[sizeof(self->error) - 1] = 0; \
-    v = Py_BuildValue("(is)", (int) (res), self->error); \
-    if (v != NULL) { PyErr_SetObject(ErrorObject, v); Py_DECREF(v); } \
+    create_and_set_error_object((self), (int) (res)); \
     return NULL; \
 } while (0)
 
-#define CURLERROR_SET_RETVAL() do {\
-    PyObject *v; \
-    self->error[sizeof(self->error) - 1] = 0; \
-    v = Py_BuildValue("(is)", (int) (res), self->error); \
-    if (v != NULL) { PyErr_SetObject(ErrorObject, v); Py_DECREF(v); } \
-} while (0)
+#define CURLERROR_SET_RETVAL() \
+    create_and_set_error_object((self), (int) (res));
 
 #define CURLERROR_RETVAL_MULTI_DONE() do {\
     PyObject *v; \
@@ -293,6 +293,7 @@ PyText_Check(PyObject *o);
 } while (0)
 
 /* Raise exception based on return value `res' and custom message */
+/* msg should be ASCII */
 #define CURLERROR_MSG(msg) do {\
     PyObject *v; const char *m = (msg); \
     v = Py_BuildValue("(is)", (int) (res), (m)); \

@@ -544,6 +544,22 @@ do_curl_errstr(CurlObject *self)
 }
 
 
+#if PY_MAJOR_VERSION >= 3
+static PyObject *
+do_curl_errstr_raw(CurlObject *self)
+{
+    if (check_curl_state(self, 1 | 2, "errstr") != 0) {
+        return NULL;
+    }
+    self->error[sizeof(self->error) - 1] = 0;
+
+    return PyByteStr_FromString(self->error);
+}
+#else
+#define do_curl_errstr_raw do_curl_errstr
+#endif
+
+
 /* --------------- GC support --------------- */
 
 /* Drop references that may have created reference cycles. */
@@ -2978,6 +2994,7 @@ static PyObject *do_curl_setstate(CurlObject *self, PyObject *args)
 PYCURL_INTERNAL PyMethodDef curlobject_methods[] = {
     {"close", (PyCFunction)do_curl_close, METH_NOARGS, curl_close_doc},
     {"errstr", (PyCFunction)do_curl_errstr, METH_NOARGS, curl_errstr_doc},
+    {"errstr_raw", (PyCFunction)do_curl_errstr_raw, METH_NOARGS, curl_errstr_raw_doc},
     {"getinfo", (PyCFunction)do_curl_getinfo, METH_VARARGS, curl_getinfo_doc},
     {"getinfo_raw", (PyCFunction)do_curl_getinfo_raw, METH_VARARGS, curl_getinfo_raw_doc},
     {"pause", (PyCFunction)do_curl_pause, METH_VARARGS, curl_pause_doc},
