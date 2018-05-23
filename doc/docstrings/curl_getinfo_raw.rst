@@ -15,6 +15,10 @@ removed, for example ``CURLINFO_CONTENT_TYPE`` is accessible as
 - ``CURLINFO_FILETIME`` is mapped as ``pycurl.INFO_FILETIME``
 - ``CURLINFO_COOKIELIST`` is mapped as ``pycurl.INFO_COOKIELIST``
 - ``CURLINFO_CERTINFO`` is mapped as ``pycurl.INFO_CERTINFO``
+- ``CURLINFO_RTSP_CLIENT_CSEQ`` is mapped as ``pycurl.INFO_RTSP_CLIENT_CSEQ``
+- ``CURLINFO_RTSP_CSEQ_RECV`` is mapped as ``pycurl.INFO_RTSP_CSEQ_RECV``
+- ``CURLINFO_RTSP_SERVER_CSEQ`` is mapped as ``pycurl.INFO_RTSP_SERVER_CSEQ``
+- ``CURLINFO_RTSP_SESSION_ID`` is mapped as ``pycurl.INFO_RTSP_SESSION_ID``
 
 The type of return value depends on the option, as follows:
 

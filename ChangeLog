@@ -1,6 +1,9 @@
 master
 ------
 
+        * Added OPT_COOKIELIST constant for consistency with other
+          option constants.
+
         * PycURL is now able to report errors triggered by libcurl
           via CURLOPT_FAILONERROR mechanism when the error messages are
           not decodable in Python's default encoding (GitHub issue #259).

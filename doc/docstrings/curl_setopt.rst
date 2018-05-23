@@ -5,7 +5,8 @@ Set curl session option. Corresponds to `curl_easy_setopt`_ in libcurl.
 *option* specifies which option to set. PycURL defines constants
 corresponding to ``CURLOPT_*`` constants in libcurl, except that
 the ``CURLOPT_`` prefix is removed. For example, ``CURLOPT_URL`` is
-exposed in PycURL as ``pycurl.URL``. For convenience, ``CURLOPT_*``
+exposed in PycURL as ``pycurl.URL``, with some exceptions as detailed below.
+For convenience, ``CURLOPT_*``
 constants are also exposed on the Curl objects themselves::
 
     import pycurl
@@ -14,11 +15,18 @@ constants are also exposed on the Curl objects themselves::
     # Same as:
     c.setopt(c.URL, "http://www.python.org/")
 
-In order to distinguish between similarly-named CURLOPT and CURLINFO
-constants, some have CURLOPT constants have ``OPT_`` prefixes.
-These are ``OPT_FILETIME`` and ``OPT_CERTINFO``.
-As an exception to the exception, ``COOKIELIST`` does not have an ``OPT_``
-prefix but the corresponding CURLINFO option is ``INFO_COOKIELIST``.
+The following are exceptions to option constant naming convention:
+
+- ``CURLOPT_FILETIME`` is mapped as ``pycurl.OPT_FILETIME``
+- ``CURLOPT_CERTINFO`` is mapped as ``pycurl.OPT_CERTINFO``
+- ``CURLOPT_COOKIELIST`` is mapped as ``pycurl.COOKIELIST``
+  and, as of PycURL 7.43.0.2, also as ``pycurl.OPT_COOKIELIST``
+- ``CURLOPT_RTSP_CLIENT_CSEQ`` is mapped as ``pycurl.OPT_RTSP_CLIENT_CSEQ``
+- ``CURLOPT_RTSP_REQUEST`` is mapped as ``pycurl.OPT_RTSP_REQUEST``
+- ``CURLOPT_RTSP_SERVER_CSEQ`` is mapped as ``pycurl.OPT_RTSP_SERVER_CSEQ``
+- ``CURLOPT_RTSP_SESSION_ID`` is mapped as ``pycurl.OPT_RTSP_SESSION_ID``
+- ``CURLOPT_RTSP_STREAM_URI`` is mapped as ``pycurl.OPT_RTSP_STREAM_URI``
+- ``CURLOPT_RTSP_TRANSPORT`` is mapped as ``pycurl.OPT_RTSP_TRANSPORT``
 
 *value* specifies the value to set the option to. Different options accept
 values of different types:
