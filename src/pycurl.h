@@ -479,6 +479,84 @@ do_global_cleanup(PyObject *dummy);
 PYCURL_INTERNAL PyObject *
 do_version_info(PyObject *dummy, PyObject *args);
 
+PYCURL_INTERNAL PyObject *
+do_curl_setopt(CurlObject *self, PyObject *args);
+PYCURL_INTERNAL PyObject *
+do_curl_setopt_string(CurlObject *self, PyObject *args);
+PYCURL_INTERNAL PyObject *
+do_curl_unsetopt(CurlObject *self, PyObject *args);
+#if defined(HAVE_CURL_OPENSSL)
+PYCURL_INTERNAL PyObject *
+do_curl_set_ca_certs(CurlObject *self, PyObject *args);
+#endif
+PYCURL_INTERNAL PyObject *
+do_curl_perform(CurlObject *self);
+PYCURL_INTERNAL PyObject *
+do_curl_pause(CurlObject *self, PyObject *args);
+
+PYCURL_INTERNAL int
+check_curl_state(const CurlObject *self, int flags, const char *name);
+PYCURL_INTERNAL void
+util_curl_xdecref(CurlObject *self, int flags, CURL *handle);
+
+PYCURL_INTERNAL PyObject *
+do_curl_getinfo_raw(CurlObject *self, PyObject *args);
+#if PY_MAJOR_VERSION >= 3
+PYCURL_INTERNAL PyObject *
+do_curl_getinfo(CurlObject *self, PyObject *args);
+#else
+# define do_curl_getinfo do_curl_getinfo_raw
+#endif
+PYCURL_INTERNAL PyObject *
+do_curl_errstr(CurlObject *self);
+#if PY_MAJOR_VERSION >= 3
+PYCURL_INTERNAL PyObject *
+do_curl_errstr_raw(CurlObject *self);
+#else
+# define do_curl_errstr_raw do_curl_errstr
+#endif
+
+PYCURL_INTERNAL size_t
+write_callback(char *ptr, size_t size, size_t nmemb, void *stream);
+PYCURL_INTERNAL size_t
+header_callback(char *ptr, size_t size, size_t nmemb, void *stream);
+PYCURL_INTERNAL curl_socket_t
+opensocket_callback(void *clientp, curlsocktype purpose,
+                    struct curl_sockaddr *address);
+PYCURL_INTERNAL int
+sockopt_cb(void *clientp, curl_socket_t curlfd, curlsocktype purpose);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
+PYCURL_INTERNAL int
+closesocket_callback(void *clientp, curl_socket_t curlfd);
+#endif
+#ifdef HAVE_CURL_7_19_6_OPTS
+PYCURL_INTERNAL int
+ssh_key_cb(CURL *easy, const struct curl_khkey *knownkey,
+    const struct curl_khkey *foundkey, int khmatch, void *clientp);
+#endif
+PYCURL_INTERNAL int
+seek_callback(void *stream, curl_off_t offset, int origin);
+PYCURL_INTERNAL size_t
+read_callback(char *ptr, size_t size, size_t nmemb, void *stream);
+PYCURL_INTERNAL int
+progress_callback(void *stream,
+                  double dltotal, double dlnow, double ultotal, double ulnow);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 32, 0)
+PYCURL_INTERNAL int
+xferinfo_callback(void *stream,
+    curl_off_t dltotal, curl_off_t dlnow,
+    curl_off_t ultotal, curl_off_t ulnow);
+#endif
+PYCURL_INTERNAL int
+debug_callback(CURL *curlobj, curl_infotype type,
+               char *buffer, size_t total_size, void *stream);
+PYCURL_INTERNAL curlioerr
+ioctl_callback(CURL *curlobj, int cmd, void *stream);
+#if defined(HAVE_CURL_OPENSSL)
+PYCURL_INTERNAL CURLcode
+ssl_ctx_callback(CURL *curl, void *ssl_ctx, void *ptr);
+#endif
+
 #if !defined(PYCURL_SINGLE_FILE)
 /* Type objects */
 extern PyTypeObject Curl_Type;
