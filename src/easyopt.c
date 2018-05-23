@@ -947,7 +947,7 @@ do_curl_setopt_share(CurlObject *self, PyObject *obj)
 }
 
 
-static PyObject *
+PYCURL_INTERNAL PyObject *
 do_curl_setopt_filelike(CurlObject *self, int option, PyObject *obj)
 {
     const char *method_name;

@@ -492,12 +492,23 @@ do_curl_set_ca_certs(CurlObject *self, PyObject *args);
 PYCURL_INTERNAL PyObject *
 do_curl_perform(CurlObject *self);
 PYCURL_INTERNAL PyObject *
+do_curl_perform_rb(CurlObject *self);
+#if PY_MAJOR_VERSION >= 3
+PYCURL_INTERNAL PyObject *
+do_curl_perform_rs(CurlObject *self);
+#else
+# define do_curl_perform_rs do_curl_perform_rb
+#endif
+
+PYCURL_INTERNAL PyObject *
 do_curl_pause(CurlObject *self, PyObject *args);
 
 PYCURL_INTERNAL int
 check_curl_state(const CurlObject *self, int flags, const char *name);
 PYCURL_INTERNAL void
 util_curl_xdecref(CurlObject *self, int flags, CURL *handle);
+PYCURL_INTERNAL PyObject *
+do_curl_setopt_filelike(CurlObject *self, int option, PyObject *obj);
 
 PYCURL_INTERNAL PyObject *
 do_curl_getinfo_raw(CurlObject *self, PyObject *args);
@@ -577,6 +588,8 @@ extern PyObject *curlshareobject_constants;
 extern char *g_pycurl_useragent;
 
 extern PYCURL_INTERNAL char *empty_keywords[];
+extern PYCURL_INTERNAL PyObject *bytesio;
+extern PYCURL_INTERNAL PyObject *stringio;
 
 #if PY_MAJOR_VERSION >= 3
 extern PyMethodDef curlobject_methods[];

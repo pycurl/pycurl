@@ -1,6 +1,9 @@
 master
 ------
 
+        * Added perform_rb and perform_rs methods to Curl objects to
+          return response body as byte string and string, respectively.
+
         * Added OPT_COOKIELIST constant for consistency with other
           option constants.
 

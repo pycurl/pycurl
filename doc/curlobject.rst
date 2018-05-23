@@ -12,7 +12,14 @@ Curl Object
     .. _setopt:
     .. automethod:: pycurl.Curl.setopt
 
+    .. _perform:
     .. automethod:: pycurl.Curl.perform
+
+    .. _perform_rb:
+    .. automethod:: pycurl.Curl.perform_rb
+
+    .. _perform_rs:
+    .. automethod:: pycurl.Curl.perform_rs
 
     .. _getinfo:
     .. automethod:: pycurl.Curl.getinfo
