@@ -23,6 +23,50 @@ do_curl_perform(CurlObject *self)
 }
 
 
+PYCURL_INTERNAL PyObject *
+do_curl_perform_rb(CurlObject *self)
+{
+    PyObject *v, *io;
+    
+    io = PyEval_CallObject(bytesio, NULL);
+    if (io == NULL) {
+        return NULL;
+    }
+    
+    v = do_curl_setopt_filelike(self, CURLOPT_WRITEDATA, io);
+    if (v == NULL) {
+        Py_DECREF(io);
+        return NULL;
+    }
+    
+    v = do_curl_perform(self);
+    if (v == NULL) {
+        return NULL;
+    }
+    
+    v = PyObject_CallMethod(io, "getvalue", NULL);
+    Py_DECREF(io);
+    return v;
+}
+
+#if PY_MAJOR_VERSION >= 3
+PYCURL_INTERNAL PyObject *
+do_curl_perform_rs(CurlObject *self)
+{
+    PyObject *v, *decoded;
+    
+    v = do_curl_perform_rb(self);
+    if (v == NULL) {
+        return NULL;
+    }
+    
+    decoded = PyUnicode_FromEncodedObject(v, NULL, NULL);
+    Py_DECREF(v);
+    return decoded;
+}
+#endif
+
+
 /* --------------- pause --------------- */
 
 

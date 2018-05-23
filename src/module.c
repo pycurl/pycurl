@@ -13,6 +13,9 @@
 
 PYCURL_INTERNAL char *empty_keywords[] = { NULL };
 
+PYCURL_INTERNAL PyObject *bytesio = NULL;
+PYCURL_INTERNAL PyObject *stringio = NULL;
+
 /* Initialized during module init */
 PYCURL_INTERNAL char *g_pycurl_useragent = NULL;
 
@@ -321,6 +324,7 @@ initpycurl(void)
     const curl_version_info_data *vi;
     const char *libcurl_version, *runtime_ssl_lib;
     size_t libcurl_version_len, pycurl_version_len;
+    PyObject *xio_module = NULL;
     PyObject *collections_module = NULL;
     PyObject *named_tuple = NULL;
     PyObject *arglist = NULL;
@@ -1336,6 +1340,36 @@ initpycurl(void)
     }
 #endif
 
+#if PY_MAJOR_VERSION >= 3
+    xio_module = PyImport_ImportModule("io");
+    if (xio_module == NULL) {
+        goto error;
+    }
+    bytesio = PyObject_GetAttrString(xio_module, "BytesIO");
+    if (bytesio == NULL) {
+        goto error;
+    }
+    stringio = PyObject_GetAttrString(xio_module, "StringIO");
+    if (stringio == NULL) {
+        goto error;
+    }
+#else
+    xio_module = PyImport_ImportModule("cStringIO");
+    if (xio_module == NULL) {
+        PyErr_Clear();
+        xio_module = PyImport_ImportModule("StringIO");
+        if (xio_module == NULL) {
+            goto error;
+        }
+    }
+    stringio = PyObject_GetAttrString(xio_module, "StringIO");
+    if (stringio == NULL) {
+        goto error;
+    }
+    bytesio = stringio;
+    Py_INCREF(bytesio);
+#endif
+
     collections_module = PyImport_ImportModule("collections");
     if (collections_module == NULL) {
         goto error;
@@ -1386,6 +1420,9 @@ error:
     Py_XDECREF(ErrorObject);
     Py_XDECREF(collections_module);
     Py_XDECREF(named_tuple);
+    Py_XDECREF(xio_module);
+    Py_XDECREF(bytesio);
+    Py_XDECREF(stringio);
     Py_XDECREF(arglist);
 #ifdef HAVE_CURL_7_19_6_OPTS
     Py_XDECREF(khkey_type);
