@@ -17,6 +17,9 @@ class FailonerrorTest(unittest.TestCase):
     def tearDown(self):
         self.curl.close()
 
+    # not sure what the actual min is but 7.26 is too old
+    # and does not include status text, only the status code
+    @util.min_libcurl(7, 38, 0)
     def test_failonerror(self):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/status/403')
         sio = util.BytesIO()
@@ -34,6 +37,9 @@ class FailonerrorTest(unittest.TestCase):
             self.fail('Should have raised pycurl.error')
     
     @util.only_python2
+    # not sure what the actual min is but 7.26 is too old
+    # and does not include status text, only the status code
+    @util.min_libcurl(7, 38, 0)
     def test_failonerror_status_line_invalid_utf8_python2(self):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/status_invalid_utf8')
         sio = util.BytesIO()
@@ -51,6 +57,9 @@ class FailonerrorTest(unittest.TestCase):
             self.fail('Should have raised pycurl.error')
 
     @util.only_python3
+    # not sure what the actual min is but 7.26 is too old
+    # and does not include status text, only the status code
+    @util.min_libcurl(7, 38, 0)
     def test_failonerror_status_line_invalid_utf8_python3(self):
         self.curl.setopt(pycurl.URL, 'http://localhost:8380/status_invalid_utf8')
         sio = util.BytesIO()
