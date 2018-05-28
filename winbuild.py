@@ -426,11 +426,24 @@ class Builder(object):
     def vc_tag(self):
         return '%s-%s' % (self.vc_version, self.bitness)
 
-class ZlibBuilder(Builder):
+class StandardBuilder(Builder):
     @property
     def state_tag(self):
-        return 'zlib-%s-%s' % (self.config.zlib_version, self.vc_tag)
+        return self.output_dir_path
 
+    @property
+    def bin_path(self):
+        return os.path.join(config.archives_path, self.output_dir_path, 'bin')
+
+    @property
+    def include_path(self):
+        return os.path.join(config.archives_path, self.output_dir_path, 'include')
+
+    @property
+    def lib_path(self):
+        return os.path.join(config.archives_path, self.output_dir_path, 'lib')
+
+class ZlibBuilder(StandardBuilder):
     def build(self):
         fetch('http://downloads.sourceforge.net/project/libpng/zlib/%s/zlib-%s.tar.gz' % (self.config.zlib_version, self.config.zlib_version))
         untar('zlib-%s' % self.config.zlib_version)
@@ -440,6 +453,12 @@ class ZlibBuilder(Builder):
                 b.add("nmake /f win32/Makefile.msc")
                 # libcurl loves its _a suffixes on static library names
                 b.add("cp zlib.lib zlib_a.lib")
+                
+                # assemble dist
+                b.add('mkdir dist dist\\include dist\\lib dist\\bin')
+                b.add('cp *.lib *.exp dist/lib')
+                b.add('cp *.dll dist/bin')
+                b.add('cp *.h dist/include')
 
     @property
     def output_dir_path(self):
@@ -448,16 +467,8 @@ class ZlibBuilder(Builder):
     @property
     def dll_paths(self):
         return [
-            os.path.join(self.output_dir_path, 'zlib1.dll'),
+            os.path.join(self.bin_path, 'zlib1.dll'),
         ]
-
-    @property
-    def include_path(self):
-        return os.path.join(config.archives_path, self.output_dir_path)
-
-    @property
-    def lib_path(self):
-        return os.path.join(config.archives_path, self.output_dir_path)
 
 class OpensslBuilder(Builder):
     @property
