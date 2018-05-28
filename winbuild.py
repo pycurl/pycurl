@@ -273,7 +273,7 @@ class Batch(object):
             # I don't know why vcvars doesn't configure this under vc14
             windows_sdk_path = 'c:\\program files (x86)\\microsoft sdks\\windows\\v7.1a'
             self.add('set include=%s\\include;%%include%%' % windows_sdk_path)
-            if self.bitness == 32:
+            if self.bc.bitness == 32:
                 self.add('set lib=%s\\lib;%%lib%%' % windows_sdk_path)
                 self.add('set path=%s\\bin;%%path%%' % windows_sdk_path)
             else:
@@ -759,7 +759,7 @@ def build_dependencies(bitnesses=(32, 64)):
     mkdir_p(config.archives_path)
     with in_dir(config.archives_path):
         for bitness in bitnesses:
-            for vc_version in needed_vc_versions(python_versions):
+            for vc_version in needed_vc_versions(config.python_versions):
                 if opts.verbose:
                     print('Builddep for %s, %s-bit' % (vc_version, bitness))
                 if config.use_zlib:
@@ -919,7 +919,7 @@ if opts.python:
         if not ok:
             print('Invalid python %s' % python)
             exit(2)
-    python_versions = chosen_python_versions
+    config.python_versions = chosen_python_versions
 
 # https://stackoverflow.com/questions/35569042/python-3-ssl-certificate-verify-failed
 import ssl
