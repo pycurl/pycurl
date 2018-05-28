@@ -102,6 +102,13 @@ try:
 except ImportError:
     from urllib import urlopen
 
+# https://stackoverflow.com/questions/35569042/python-3-ssl-certificate-verify-failed
+import ssl
+try:
+    ssl._create_default_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
+
 def short_python_versions(python_versions):
     return ['.'.join(python_version.split('.')[:2])
         for python_version in python_versions]
@@ -138,6 +145,10 @@ def check_call(cmd):
         raise Exception('Failed to execute ' + str(cmd) + ': ' + str(type(e)) + ': ' +str(e))
 
 class ExtendedConfig(Config):
+    def __init__(self, **kwargs):
+        for k in kwargs:
+            setattr(self, k, kwargs[k])
+            
     @property
     def nasm_path(self):
         return select_existing_path(Config.nasm_path)
@@ -194,8 +205,6 @@ class ExtendedConfig(Config):
     def python_releases(self):
         return [PythonRelease('.'.join(version.split('.')[:2]))
             for version in self.python_versions]
-
-config = ExtendedConfig()
 
 PYTHON_VC_VERSIONS = {
     '2.6': 'vc9',
@@ -667,6 +676,12 @@ class LibcurlBuilder(Builder):
                     extra_options += ' MAKE="NMAKE /e" SSL_LIBS="libssl.lib libcrypto.lib crypt32.lib"'
                 b.add("nmake /f Makefile.vc ENABLE_IDN=no%s" % extra_options)
 
+    BITNESS_INDICATORS = {32: 'x86', 64: 'x64'}
+    
+    @property
+    def bitness_indicator(self):
+        return self.BITNESS_INDICATORS[self.bitness]
+
     @property
     def output_dir_name(self):
         if self.use_dlls:
@@ -682,8 +697,6 @@ class LibcurlBuilder(Builder):
             spnego_part = '-spnego'
         else:
             spnego_part = ''
-        bitness_indicators = {32: 'x86', 64: 'x64'}
-        bitness_indicator = bitness_indicators[self.bitness]
         if self.config.use_openssl:
             winssl_part = ''
             openssl_part = '-ssl-%s' % dll_or_static
@@ -699,7 +712,7 @@ class LibcurlBuilder(Builder):
         else:
             libssh2_part = ''
         output_dir_name = 'libcurl-vc-%s-release-%s%s%s%s%s-ipv6-sspi%s%s' % (
-            bitness_indicator, dll_or_static, openssl_part, cares_part, zlib_part, libssh2_part, spnego_part, winssl_part)
+            self.bitness_indicator, dll_or_static, openssl_part, cares_part, zlib_part, libssh2_part, spnego_part, winssl_part)
         return output_dir_name
 
     @property
@@ -793,7 +806,9 @@ class PycurlBuilder(Builder):
                             member = src_zip.open(name)
                             dest_zip.writestr(new_name, member.read(), zipfile.ZIP_DEFLATED)
 
-def build_dependencies(bitnesses=(32, 64)):
+BITNESSES = (32, 64)
+
+def build_dependencies(config):
     if config.use_libssh2:
         if not config.use_zlib:
             # technically we can build libssh2 without zlib but I don't want to bother
@@ -805,7 +820,7 @@ def build_dependencies(bitnesses=(32, 64)):
         os.environ['PATH'] += ";%s" % config.git_bin_path
     mkdir_p(config.archives_path)
     with in_dir(config.archives_path):
-        for bitness in bitnesses:
+        for bitness in config.bitnesses:
             for vc_version in needed_vc_versions(config.python_versions):
                 if opts.verbose:
                     print('Builddep for %s, %s-bit' % (vc_version, bitness))
@@ -825,11 +840,9 @@ def build_dependencies(bitnesses=(32, 64)):
                     config=config)
                 step(libcurl_builder.build, (), libcurl_builder.state_tag)
 
-bitnesses = (32, 64)
-
-def build():
+def build(config):
     # note: adds git_bin_path to PATH if necessary, and creates archives_path
-    build_dependencies(bitnesses)
+    build_dependencies(config)
     with in_dir(config.archives_path):
         def prepare_pycurl():
             #fetch('https://dl.bintray.com/pycurl/pycurl/pycurl-%s.tar.gz' % pycurl_version)
@@ -848,7 +861,7 @@ def build():
 
         prepare_pycurl()
 
-        for bitness in bitnesses:
+        for bitness in config.bitnesses:
             for python_release in config.python_releases:
                 targets = ['bdist', 'bdist_wininst', 'bdist_msi']
                 vc_version = PYTHON_VC_VERSIONS[python_release]
@@ -949,10 +962,11 @@ opts, args = parser.parse_args()
 if opts.bitness:
     chosen_bitnesses = [int(bitness) for bitness in opts.bitness.split(',')]
     for bitness in chosen_bitnesses:
-        if bitness not in bitnesses:
+        if bitness not in BITNESSES:
             print('Invalid bitness %d' % bitness)
             exit(2)
-    bitnesses = chosen_bitnesses
+else:
+    chosen_bitnesses = BITNESSES
 
 if opts.python:
     chosen_pythons = opts.python.split(',')
@@ -961,37 +975,36 @@ if opts.python:
         python = python.replace('.', '')
         python = python[0] + '.' + python[1] + '.'
         ok = False
-        for python_version in config.python_versions:
+        for python_version in Config.python_versions:
             if python_version.startswith(python):
                 chosen_python_versions.append(python_version)
                 ok = True
         if not ok:
             print('Invalid python %s' % python)
             exit(2)
-    config.python_versions = chosen_python_versions
+else:
+    chosen_python_versions = Config.python_versions
 
-# https://stackoverflow.com/questions/35569042/python-3-ssl-certificate-verify-failed
-import ssl
-try:
-    ssl._create_default_https_context = ssl._create_unverified_context
-except AttributeError:
-    pass
+config = ExtendedConfig(
+    bitnesses=chosen_bitnesses,
+    python_versions=chosen_python_versions,
+)
 
 if len(args) > 0:
     if args[0] == 'download':
-        download_pythons()
+        download_pythons(config)
     elif args[0] == 'bootstrap':
         download_bootstrap_python()
     elif args[0] == 'installpy':
-        install_pythons()
+        install_pythons(config)
     elif args[0] == 'builddeps':
-        build_dependencies(bitnesses)
+        build_dependencies(config)
     elif args[0] == 'installvirtualenv':
-        install_virtualenv()
+        install_virtualenv(config)
     elif args[0] == 'createvirtualenvs':
-        create_virtualenvs()
+        create_virtualenvs(config)
     else:
         print('Unknown command: %s' % args[0])
         exit(2)
 else:
-    build()
+    build(config)
