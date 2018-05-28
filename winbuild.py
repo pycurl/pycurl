@@ -32,6 +32,11 @@ class Config:
     root = 'c:/dev/build-pycurl'
     # where msysgit is installed
     git_root = 'c:/program files/git'
+    msysgit_bin_paths = [
+        "c:\\Program Files\\Git\\bin",
+        "c:\\Program Files\\Git\\usr\\bin",
+        #"c:\\Program Files\\Git\\mingw64\\bin",
+    ]
     # where NASM is installed, for building OpenSSL
     nasm_path = ('c:/dev/nasm', 'c:/program files/nasm', 'c:/program files (x86)/nasm')
     # where ActiveState Perl is installed, for building 64-bit OpenSSL
@@ -114,6 +119,18 @@ def select_existing_path(paths):
     else:
         return paths
 
+def find_in_paths(binary, paths):
+    for path in paths:
+        if os.path.exists(os.path.join(path, binary)) or os.path.exists(os.path.join(path, binary + '.exe')):
+            return os.path.join(path, binary)
+    raise Exception('Could not find %s' % binary)
+
+def check_call(cmd):
+    try:
+        subprocess.check_call(cmd)
+    except Exception as e:
+        raise Exception('Failed to execute ' + str(cmd) + ': ' + str(type(e)) + ': ' +str(e))
+
 class ExtendedConfig(Config):
     @property
     def nasm_path(self):
@@ -142,11 +159,15 @@ class ExtendedConfig(Config):
         
     @property
     def rm_path(self):
-        return os.path.join(self.git_bin_path, 'rm')
+        return find_in_paths('rm', self.msysgit_bin_paths)
+        
+    @property
+    def sed_path(self):
+        return find_in_paths('sed', self.msysgit_bin_paths)
         
     @property
     def tar_path(self):
-        return os.path.join(self.git_bin_path, 'tar')
+        return find_in_paths('tar', self.msysgit_bin_paths)
         
     @property
     def activestate_perl_bin_path(self):
@@ -233,7 +254,7 @@ def step(step_fn, args, target_dir):
 def untar(basename):
     if os.path.exists(basename):
         shutil.rmtree(basename)
-    subprocess.check_call([config.tar_path, 'xf', '%s.tar.gz' % basename])
+    check_call([config.tar_path, 'xf', '%s.tar.gz' % basename])
 
 def rename_for_vc(basename, suffix):
     suffixed_dir = '%s-%s' % (basename, suffix)
@@ -269,6 +290,7 @@ class Batch(object):
         self.commands = []
         
         self.add(self.vcvars_cmd)
+        self.add('echo on')
         if self.bc.vc_version == 'vc14':
             # I don't know why vcvars doesn't configure this under vc14
             windows_sdk_path = 'c:\\program files (x86)\\microsoft sdks\\windows\\v7.1a'
@@ -283,6 +305,11 @@ class Batch(object):
         
     def add(self, cmd):
         self.commands.append(cmd)
+        
+    ERROR_CHECK = 'IF %ERRORLEVEL% NEQ 0 exit %errorlevel%'
+
+    def batch_text(self):
+        return ("\n" + self.ERROR_CHECK + "\n").join(self.commands)
 
     @property
     def vcvars_bitness_parameter(self):
@@ -344,7 +371,7 @@ class Builder(object):
         batch = Batch(BuildConfig(vc_version=self.vc_version, bitness=self.bitness))
         yield batch
         with open('doit.bat', 'w') as f:
-            f.write("\n".join(batch.commands))
+            f.write(batch.batch_text())
         if False:
             print("Executing:")
             with open('doit.bat', 'r') as f:
@@ -415,7 +442,7 @@ class OpensslBuilder(Builder):
         # however being a reserved file name this file is not deletable by
         # ordinary tools.
         nul_file = "openssl-%s-%s\\NUL" % (self.config.openssl_version, self.vc_tag)
-        subprocess.check_call(['rm', '-f', nul_file])
+        check_call(['rm', '-f', nul_file])
         openssl_dir = rename_for_vc('openssl-%s' % self.config.openssl_version, self.vc_tag)
         with in_dir(openssl_dir):
             with self.execute_batch() as b:
@@ -789,13 +816,15 @@ def build():
         def prepare_pycurl():
             #fetch('https://dl.bintray.com/pycurl/pycurl/pycurl-%s.tar.gz' % pycurl_version)
             if os.path.exists('pycurl-%s' % config.pycurl_version):
-                #shutil.rmtree('pycurl-%s' % pycurl_version)
-                subprocess.check_call([config.rm_path, '-rf', 'pycurl-%s' % config.pycurl_version])
-            #subprocess.check_call([tar_path, 'xf', 'pycurl-%s.tar.gz' % pycurl_version])
+                # shutil.rmtree is incapable of removing .git directory because it contains
+                # files marked read-only (tested on python 2.7 and 3.6)
+                #shutil.rmtree('pycurl-%s' % config.pycurl_version)
+                check_call([config.rm_path, '-rf', 'pycurl-%s' % config.pycurl_version])
+            #check_call([tar_path, 'xf', 'pycurl-%s.tar.gz' % pycurl_version])
             shutil.copytree('c:/dev/pycurl', 'pycurl-%s' % config.pycurl_version)
             if config.build_wheels:
                 with in_dir('pycurl-%s' % config.pycurl_version):
-                    subprocess.check_call(['sed', '-i',
+                    check_call([config.sed_path, '-i',
                         's/from distutils.core import setup/from setuptools import setup/',
                         'setup.py'])
 
@@ -859,7 +888,7 @@ def install_python(meta, bitness):
     sys.stdout.write('Installing python %s (%d bit)\n' % (meta['version'], bitness))
     print(' '.join(cmd))
     sys.stdout.flush()
-    subprocess.check_call(cmd)
+    check_call(cmd)
 
 def download_bootstrap_python():
     version = python_versions[-2]
@@ -878,7 +907,7 @@ def install_virtualenv():
                 with in_dir('virtualenv-%s' % virtualenv_version):
                     python_binary = PythonBinary(python_release, bitness)
                     cmd = [python_binary.executable_path, 'setup.py', 'install']
-                    subprocess.check_call(cmd)
+                    check_call(cmd)
 
 def create_virtualenvs():
     for bitness in bitnesses:
@@ -889,7 +918,7 @@ def create_virtualenvs():
                 python_binary = PythonBinary(python_release, bitness)
                 venv_basename = 'venv-%s-%s' % (python_release, bitness)
                 cmd = [python_binary.executable_path, '-m', 'virtualenv', venv_basename]
-                subprocess.check_call(cmd)
+                check_call(cmd)
 
 import optparse
 
