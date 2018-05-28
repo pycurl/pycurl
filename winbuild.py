@@ -443,6 +443,10 @@ class StandardBuilder(Builder):
     def lib_path(self):
         return os.path.join(config.archives_path, self.output_dir_path, 'lib')
 
+    @property
+    def dll_paths(self):
+        raise NotImplementedError
+
 class ZlibBuilder(StandardBuilder):
     def build(self):
         fetch('http://downloads.sourceforge.net/project/libpng/zlib/%s/zlib-%s.tar.gz' % (self.config.zlib_version, self.config.zlib_version))
@@ -563,11 +567,7 @@ class OpensslBuilder(Builder):
     def lib_path(self):
         return os.path.join(config.archives_path, self.output_dir_path, 'lib')
 
-class CaresBuilder(Builder):
-    @property
-    def state_tag(self):
-        return 'c-ares-%s-%s' % (self.config.cares_version, self.vc_tag)
-
+class CaresBuilder(StandardBuilder):
     def build(self):
         fetch('http://c-ares.haxx.se/download/c-ares-%s.tar.gz' % (self.config.cares_version))
         untar('c-ares-%s' % self.config.cares_version)
@@ -583,27 +583,19 @@ class CaresBuilder(Builder):
                     b.add("patch -p1 < %s" %
                         require_file_exists(os.path.join(config.winbuild_patch_root, 'c-ares-vs2015.patch')))
                 b.add("nmake -f Makefile.msvc")
+                
+                # assemble dist
+                b.add('mkdir dist dist\\include dist\\lib')
+                if map(int, self.config.cares_version.split('.')) < [1, 14]:
+                    subdir = 'ms%s0' % self.vc_version
+                else:
+                    subdir = 'msvc'
+                b.add('cp %s/cares/lib-release/*.lib dist/lib' % subdir)
+                b.add('cp *.h dist/include')
 
     @property
     def output_dir_path(self):
         return 'c-ares-%s-%s' % (self.config.cares_version, self.vc_tag)
-
-    @property
-    def dll_paths(self):
-        raise NotImplementedError
-
-    @property
-    def include_path(self):
-        return os.path.join(config.archives_path, self.output_dir_path)
-
-    @property
-    def lib_path(self):
-        if map(int, self.config.cares_version.split('.')) < [1, 14]:
-            subdir = 'ms%s0' % self.vc_version
-        else:
-            subdir = 'msvc'
-        return os.path.join(config.archives_path, self.output_dir_path,
-            subdir, 'cares', 'lib-release')
 
 class Libssh2Builder(Builder):
     @property
