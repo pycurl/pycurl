@@ -474,11 +474,7 @@ class ZlibBuilder(StandardBuilder):
             os.path.join(self.bin_path, 'zlib1.dll'),
         ]
 
-class OpensslBuilder(Builder):
-    @property
-    def state_tag(self):
-        return 'openssl-%s-%s' % (self.config.openssl_version, self.vc_tag)
-
+class OpensslBuilder(StandardBuilder):
     def build(self):
         fetch('https://www.openssl.org/source/openssl-%s.tar.gz' % self.config.openssl_version)
         try:
@@ -550,22 +546,14 @@ class OpensslBuilder(Builder):
                     # openssl 1.1.0
                     b.add("nmake")
                     b.add("nmake install")
+                
+                # assemble dist
+                b.add('mkdir dist')
+                b.add('cp -r build/include build/lib dist')
 
     @property
     def output_dir_path(self):
-        return 'openssl-%s-%s/build' % (self.config.openssl_version, self.vc_tag)
-
-    @property
-    def dll_paths(self):
-        raise NotImplementedError
-
-    @property
-    def include_path(self):
-        return os.path.join(config.archives_path, self.output_dir_path, 'include')
-
-    @property
-    def lib_path(self):
-        return os.path.join(config.archives_path, self.output_dir_path, 'lib')
+        return 'openssl-%s-%s' % (self.config.openssl_version, self.vc_tag)
 
 class CaresBuilder(StandardBuilder):
     def build(self):
@@ -640,11 +628,7 @@ BUILD_STATIC_LIB=1
     def output_dir_path(self):
         return 'libssh2-%s-%s' % (self.config.libssh2_version, self.vc_tag)
 
-class LibcurlBuilder(Builder):
-    @property
-    def state_tag(self):
-        return 'curl-%s-%s' % (self.config.libcurl_version, self.vc_tag)
-
+class LibcurlBuilder(StandardBuilder):
     def build(self):
         fetch('https://curl.haxx.se/download/curl-%s.tar.gz' % self.config.libcurl_version)
         untar('curl-%s' % self.config.libcurl_version)
@@ -685,6 +669,12 @@ class LibcurlBuilder(Builder):
                     # crypt32.lib: http://stackoverflow.com/questions/37522654/linking-with-openssl-lib-statically
                     extra_options += ' MAKE="NMAKE /e" SSL_LIBS="libssl.lib libcrypto.lib crypt32.lib"'
                 b.add("nmake /f Makefile.vc ENABLE_IDN=no%s" % extra_options)
+                
+                # assemble dist
+                b.add('cd ..')
+                b.add('mkdir dist')
+                b.add('cp -r builds/%s/bin builds/%s/include builds/%s/lib dist' % (
+                    self.output_dir_name, self.output_dir_name, self.output_dir_name))
 
     BITNESS_INDICATORS = {32: 'x86', 64: 'x64'}
     
@@ -727,14 +717,12 @@ class LibcurlBuilder(Builder):
 
     @property
     def output_dir_path(self):
-        curl_dir = 'curl-%s-%s/builds/%s' % (
-            self.config.libcurl_version, self.vc_tag, self.output_dir_name)
-        return curl_dir
+        return 'curl-%s-%s' % (self.config.libcurl_version, self.vc_tag)
 
     @property
     def dll_paths(self):
         return [
-            os.path.join(self.output_dir_path, 'bin', 'libcurl.dll'),
+            os.path.join(self.bin_path, 'libcurl.dll'),
         ]
 
 class PycurlBuilder(Builder):
@@ -760,7 +748,7 @@ class PycurlBuilder(Builder):
         libcurl_builder = LibcurlBuilder(bitness=self.bitness,
             vc_version=self.vc_version,
             config=self.config)
-        libcurl_dir = os.path.abspath(libcurl_builder.output_dir_path)
+        libcurl_dir = os.path.join(os.path.abspath(libcurl_builder.output_dir_path), 'dist')
         dll_paths = libcurl_builder.dll_paths
         if self.config.use_zlib:
             zlib_builder = ZlibBuilder(bitness=self.bitness,
