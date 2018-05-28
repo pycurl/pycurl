@@ -433,15 +433,15 @@ class StandardBuilder(Builder):
 
     @property
     def bin_path(self):
-        return os.path.join(config.archives_path, self.output_dir_path, 'bin')
+        return os.path.join(config.archives_path, self.output_dir_path, 'dist', 'bin')
 
     @property
     def include_path(self):
-        return os.path.join(config.archives_path, self.output_dir_path, 'include')
+        return os.path.join(config.archives_path, self.output_dir_path, 'dist', 'include')
 
     @property
     def lib_path(self):
-        return os.path.join(config.archives_path, self.output_dir_path, 'lib')
+        return os.path.join(config.archives_path, self.output_dir_path, 'dist', 'lib')
 
     @property
     def dll_paths(self):
@@ -597,11 +597,7 @@ class CaresBuilder(StandardBuilder):
     def output_dir_path(self):
         return 'c-ares-%s-%s' % (self.config.cares_version, self.vc_tag)
 
-class Libssh2Builder(Builder):
-    @property
-    def state_tag(self):
-        return 'libssh2-%s-%s' % (self.config.libssh2_version, self.vc_tag)
-
+class Libssh2Builder(StandardBuilder):
     def build(self):
         fetch('http://www.libssh2.org/download/libssh2-%s.tar.gz' % (self.config.libssh2_version))
         untar('libssh2-%s' % self.config.libssh2_version)
@@ -634,23 +630,15 @@ BUILD_STATIC_LIB=1
                 b.add("nmake -f NMakefile")
                 # libcurl loves its _a suffixes on static library names
                 b.add("cp Release\\src\\libssh2.lib Release\\src\\libssh2_a.lib")
+                
+                # assemble dist
+                b.add('mkdir dist dist\\include dist\\lib')
+                b.add('cp Release/src/*.lib dist/lib')
+                b.add('cp -r include dist')
 
     @property
     def output_dir_path(self):
         return 'libssh2-%s-%s' % (self.config.libssh2_version, self.vc_tag)
-
-    @property
-    def dll_paths(self):
-        raise NotImplementedError
-
-    @property
-    def include_path(self):
-        return os.path.join(config.archives_path, self.output_dir_path, 'include')
-
-    @property
-    def lib_path(self):
-        return os.path.join(config.archives_path, self.output_dir_path,
-            'Release', 'src')
 
 class LibcurlBuilder(Builder):
     @property
