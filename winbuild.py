@@ -374,6 +374,8 @@ class ZlibBuilder(Builder):
         with in_dir(zlib_dir):
             with self.execute_batch() as b:
                 b.add("nmake /f win32/Makefile.msc")
+                # libcurl loves its _a suffixes on static library names
+                b.add("cp zlib.lib zlib_a.lib")
 
     @property
     def output_dir_path(self):
