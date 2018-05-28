@@ -60,15 +60,15 @@ class Config:
     # whether to use openssl instead of winssl
     use_openssl = True
     # which version of openssl to use, will be downloaded from internet
-    openssl_version = '1.1.0g'
+    openssl_version = '1.1.0h'
     # whether to use c-ares
     use_cares = True
-    cares_version = '1.13.0'
+    cares_version = '1.14.0'
     # whether to use libssh2
     use_libssh2 = True
     libssh2_version = '1.8.0'
     # which version of libcurl to use, will be downloaded from internet
-    libcurl_version = '7.57.0'
+    libcurl_version = '7.59.0'
     # virtualenv version
     virtualenv_version = '15.1.0'
     # whether to build binary wheels
@@ -557,8 +557,12 @@ class CaresBuilder(Builder):
 
     @property
     def lib_path(self):
+        if map(int, self.config.cares_version.split('.')) < [1, 14]:
+            subdir = 'ms%s0' % self.vc_version
+        else:
+            subdir = 'msvc'
         return os.path.join(config.archives_path, self.output_dir_path,
-            'ms%s0' % self.vc_version, 'cares', 'lib-release')
+            subdir, 'cares', 'lib-release')
 
 class Libssh2Builder(Builder):
     @property
