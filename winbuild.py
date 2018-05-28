@@ -251,8 +251,8 @@ def fetch(url, archive=None):
         os.rename(tmp_path, archive)
 
 def fetch_to_archives(url):
-    mkdir_p(archives_path)
-    path = os.path.join(archives_path, os.path.basename(url))
+    mkdir_p(config.archives_path)
+    path = os.path.join(config.archives_path, os.path.basename(url))
     fetch(url, path)
 
 @contextlib.contextmanager
@@ -309,7 +309,7 @@ class PythonBinary(object):
 
     @property
     def executable_path(self):
-        return python_path_template % dict(
+        return config.python_path_template % dict(
             python_release=self.python_release.dotless,
             bitness=self.bitness)
 
@@ -357,7 +357,7 @@ class Batch(object):
     @property
     def vc_path(self):
         if self.bc.vc_version in config.vc_paths and config.vc_paths[self.bc.vc_version]:
-            path = vc_paths[self.bc.vc_version]
+            path = config.vc_paths[self.bc.vc_version]
             if not os.path.join(path, self.vcvars_relative_path):
                 raise Exception('vcvars not found in specified path')
             return path
@@ -869,7 +869,7 @@ def build(config):
 
 def python_metas():
     metas = []
-    for version in python_versions:
+    for version in config.python_versions:
         parts = [int(part) for part in version.split('.')]
         if parts[0] >= 3 and parts[1] >= 5:
             ext = 'exe'
@@ -888,23 +888,23 @@ def python_metas():
         metas.append(meta)
     return metas
 
-def download_pythons():
+def download_pythons(config):
     for meta in python_metas():
-        for bitness in bitnesses:
+        for bitness in config.bitnesses:
             fetch_to_archives(meta['url_%d' % bitness])
 
-def install_pythons():
+def install_pythons(config):
     for meta in python_metas():
-        for bitness in bitnesses:
+        for bitness in config.bitnesses:
             if not os.path.exists(meta['installed_path_%d' % bitness]):
-                install_python(meta, bitness)
+                install_python(config, meta, bitness)
 
 def fix_slashes(path):
     return path.replace('/', '\\')
 
 # http://eddiejackson.net/wp/?p=10276
-def install_python(meta, bitness):
-    archive_path = fix_slashes(os.path.join(archives_path, os.path.basename(meta['url_%d' % bitness])))
+def install_python(config, meta, bitness):
+    archive_path = fix_slashes(os.path.join(config.archives_path, os.path.basename(meta['url_%d' % bitness])))
     if meta['ext'] == 'exe':
         cmd = [archive_path]
     else:
@@ -919,31 +919,31 @@ def install_python(meta, bitness):
     sys.stdout.flush()
     check_call(cmd)
 
-def download_bootstrap_python():
-    version = python_versions[-2]
+def download_bootstrap_python(config):
+    version = config.python_versions[-2]
     url = 'https://www.python.org/ftp/python/%s/python-%s.msi' % (version, version)
     fetch(url)
 
-def install_virtualenv():
-    with in_dir(archives_path):
+def install_virtualenv(config):
+    with in_dir(config.archives_path):
         #fetch('https://pypi.python.org/packages/source/v/virtualenv/virtualenv-%s.tar.gz' % virtualenv_version)
         fetch('https://pypi.python.org/packages/d4/0c/9840c08189e030873387a73b90ada981885010dd9aea134d6de30cd24cb8/virtualenv-15.1.0.tar.gz')
-        for bitness in bitnesses:
-            for python_release in python_releases():
-                print('Installing virtualenv %s for Python %s (%s bit)' % (virtualenv_version, python_release, bitness))
+        for bitness in config.bitnesses:
+            for python_release in config.python_releases:
+                print('Installing virtualenv %s for Python %s (%s bit)' % (config.virtualenv_version, python_release, bitness))
                 sys.stdout.flush()
-                untar('virtualenv-%s' % virtualenv_version)
-                with in_dir('virtualenv-%s' % virtualenv_version):
+                untar('virtualenv-%s' % config.virtualenv_version)
+                with in_dir('virtualenv-%s' % config.virtualenv_version):
                     python_binary = PythonBinary(python_release, bitness)
                     cmd = [python_binary.executable_path, 'setup.py', 'install']
                     check_call(cmd)
 
-def create_virtualenvs():
-    for bitness in bitnesses:
-        for python_release in python_releases():
+def create_virtualenvs(config):
+    for bitness in config.bitnesses:
+        for python_release in config.python_releases:
             print('Creating a virtualenv for Python %s (%s bit)' % (python_release, bitness))
             sys.stdout.flush()
-            with in_dir(archives_path):
+            with in_dir(config.archives_path):
                 python_binary = PythonBinary(python_release, bitness)
                 venv_basename = 'venv-%s-%s' % (python_release, bitness)
                 cmd = [python_binary.executable_path, '-m', 'virtualenv', venv_basename]
@@ -992,7 +992,7 @@ if len(args) > 0:
     if args[0] == 'download':
         download_pythons(config)
     elif args[0] == 'bootstrap':
-        download_bootstrap_python()
+        download_bootstrap_python(config)
     elif args[0] == 'installpy':
         install_pythons(config)
     elif args[0] == 'builddeps':
