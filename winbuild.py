@@ -28,6 +28,13 @@
 # http://www.activestate.com/activeperl/downloads
 
 class Config:
+    '''User-adjustable configuration.
+    
+    This class contains version numbers for dependencies,
+    which dependencies to use,
+    and where various binaries, headers and libraries are located in the filesystem.
+    '''
+    
     # work directory for downloading dependencies and building everything
     root = 'c:/dev/build-pycurl'
     # where msysgit is installed
@@ -145,6 +152,12 @@ def check_call(cmd):
         raise Exception('Failed to execute ' + str(cmd) + ': ' + str(type(e)) + ': ' +str(e))
 
 class ExtendedConfig(Config):
+    '''Global configuration that specifies what the entire process will do.
+    
+    Unlike Config, this class contains also various derived properties
+    for convenience.
+    '''
+    
     def __init__(self, **kwargs):
         for k in kwargs:
             setattr(self, k, kwargs[k])
@@ -371,7 +384,13 @@ class Batch(object):
         return "set path=%s;%%path%%\n" % config.nasm_path
 
 class BuildConfig(ExtendedConfig):
+    '''Parameters for a particular build configuration.
+    
+    Unlike ExtendedConfig, this class fixes bitness and Python version.
+    '''
+    
     def __init__(self, **kwargs):
+        ExtendedConfig.__init__(self, **kwargs)
         for k in kwargs:
             setattr(self, k, kwargs[k])
 
