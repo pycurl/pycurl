@@ -263,14 +263,26 @@ class PythonBinary(object):
             python_release=self.python_release.dotless,
             bitness=self.bitness)
 
-class Builder(object):
-    def __init__(self, **kwargs):
-        bitness = kwargs.pop('bitness')
-        assert bitness in (32, 64)
-        self.bitness = bitness
-        self.vc_version = kwargs.pop('vc_version')
-        self.config = kwargs.pop('config')
-        self.use_dlls = False
+class Batch(object):
+    def __init__(self, bc):
+        self.bc = bc
+        self.commands = []
+        
+        self.add(self.vcvars_cmd)
+        if self.bc.vc_version == 'vc14':
+            # I don't know why vcvars doesn't configure this under vc14
+            windows_sdk_path = 'c:\\program files (x86)\\microsoft sdks\\windows\\v7.1a'
+            self.add('set include=%s\\include;%%include%%' % windows_sdk_path)
+            if self.bitness == 32:
+                self.add('set lib=%s\\lib;%%lib%%' % windows_sdk_path)
+                self.add('set path=%s\\bin;%%path%%' % windows_sdk_path)
+            else:
+                self.add('set lib=%s\\lib\\x64;%%lib%%' % windows_sdk_path)
+                self.add('set path=%s\\bin\\x64;%%path%%' % windows_sdk_path)
+        self.add(self.nasm_cmd)
+        
+    def add(self, cmd):
+        self.commands.append(cmd)
 
     @property
     def vcvars_bitness_parameter(self):
@@ -278,7 +290,7 @@ class Builder(object):
             32: 'x86',
             64: 'amd64',
         }
-        return params[self.bitness]
+        return params[self.bc.bitness]
 
     @property
     def vcvars_relative_path(self):
@@ -286,13 +298,13 @@ class Builder(object):
 
     @property
     def vc_path(self):
-        if self.vc_version in config.vc_paths and config.vc_paths[self.vc_version]:
-            path = vc_paths[self.vc_version]
+        if self.bc.vc_version in config.vc_paths and config.vc_paths[self.bc.vc_version]:
+            path = vc_paths[self.bc.vc_version]
             if not os.path.join(path, self.vcvars_relative_path):
                 raise Exception('vcvars not found in specified path')
             return path
         else:
-            for path in config.default_vc_paths[self.vc_version]:
+            for path in config.default_vc_paths[self.bc.vc_version]:
                 if os.path.exists(os.path.join(path, self.vcvars_relative_path)):
                     return path
             raise Exception('No usable vc path found')
@@ -304,7 +316,7 @@ class Builder(object):
     @property
     def vcvars_cmd(self):
         # https://msdn.microsoft.com/en-us/library/x4d2c09s.aspx
-        return "call \"%s\" %s\n" % (
+        return "call \"%s\" %s" % (
             self.vcvars_path,
             self.vcvars_bitness_parameter,
         )
@@ -313,22 +325,26 @@ class Builder(object):
     def nasm_cmd(self):
         return "set path=%s;%%path%%\n" % config.nasm_path
 
+class BuildConfig(ExtendedConfig):
+    def __init__(self, **kwargs):
+        for k in kwargs:
+            setattr(self, k, kwargs[k])
+
+class Builder(object):
+    def __init__(self, **kwargs):
+        bitness = kwargs.pop('bitness')
+        assert bitness in (32, 64)
+        self.bitness = bitness
+        self.vc_version = kwargs.pop('vc_version')
+        self.config = kwargs.pop('config')
+        self.use_dlls = False
+
     @contextlib.contextmanager
     def execute_batch(self):
+        batch = Batch(BuildConfig(vc_version=self.vc_version, bitness=self.bitness))
+        yield batch
         with open('doit.bat', 'w') as f:
-            f.write(self.vcvars_cmd)
-            if self.vc_version == 'vc14':
-                # I don't know why vcvars doesn't configure this under vc14
-                windows_sdk_path = 'c:\\program files (x86)\\microsoft sdks\\windows\\v7.1a'
-                f.write('set include=%s\\include;%%include%%\n' % windows_sdk_path)
-                if self.bitness == 32:
-                    f.write('set lib=%s\\lib;%%lib%%\n' % windows_sdk_path)
-                    f.write('set path=%s\\bin;%%path%%\n' % windows_sdk_path)
-                else:
-                    f.write('set lib=%s\\lib\\x64;%%lib%%\n' % windows_sdk_path)
-                    f.write('set path=%s\\bin\\x64;%%path%%\n' % windows_sdk_path)
-            f.write(self.nasm_cmd)
-            yield f
+            f.write("\n".join(batch.commands))
         if False:
             print("Executing:")
             with open('doit.bat', 'r') as f:
@@ -356,8 +372,8 @@ class ZlibBuilder(Builder):
         untar('zlib-%s' % self.config.zlib_version)
         zlib_dir = rename_for_vc('zlib-%s' % self.config.zlib_version, self.vc_tag)
         with in_dir(zlib_dir):
-            with self.execute_batch() as f:
-                f.write("nmake /f win32/Makefile.msc\n")
+            with self.execute_batch() as b:
+                b.add("nmake /f win32/Makefile.msc")
 
     @property
     def output_dir_path(self):
@@ -400,13 +416,13 @@ class OpensslBuilder(Builder):
         subprocess.check_call(['rm', '-f', nul_file])
         openssl_dir = rename_for_vc('openssl-%s' % self.config.openssl_version, self.vc_tag)
         with in_dir(openssl_dir):
-            with self.execute_batch() as f:
+            with self.execute_batch() as b:
                 if self.config.openssl_version_tuple < (1, 1):
                     # openssl 1.0.2
-                    f.write("patch -p0 < %s\n" % os.path.join(config.winbuild_patch_root, 'openssl-fix-crt-1.0.2.patch'))
+                    b.add("patch -p0 < %s" % os.path.join(config.winbuild_patch_root, 'openssl-fix-crt-1.0.2.patch'))
                 else:
                     # openssl 1.1.0
-                    f.write("patch -p0 < %s\n" % os.path.join(config.winbuild_patch_root, 'openssl-fix-crt-1.1.0.patch'))
+                    b.add("patch -p0 < %s" % os.path.join(config.winbuild_patch_root, 'openssl-fix-crt-1.1.0.patch'))
                 if self.bitness == 64:
                     target = 'VC-WIN64A'
                     batch_file = 'do_win64a'
@@ -422,8 +438,8 @@ class OpensslBuilder(Builder):
                     raise ValueError('activestate_perl_bin_path refers to a nonexisting path')
                 if not os.path.exists(os.path.join(config.activestate_perl_bin_path, 'perl.exe')):
                     raise ValueError('No perl binary in activestate_perl_bin_path')
-                f.write("set path=%s;%%path%%\n" % config.activestate_perl_bin_path)
-                f.write("perl -v\n")
+                b.add("set path=%s;%%path%%" % config.activestate_perl_bin_path)
+                b.add("perl -v")
 
                 openssl_prefix = os.path.join(os.path.realpath('.'), 'build')
                 # Do not want compression:
@@ -440,17 +456,17 @@ class OpensslBuilder(Builder):
                     # and like 1.0.2 does; provide a relative openssl dir
                     # manually
                     extras += ['--openssldir=ssl']
-                f.write("perl Configure %s %s --prefix=%s\n" % (target, ' '.join(extras), openssl_prefix))
+                b.add("perl Configure %s %s --prefix=%s" % (target, ' '.join(extras), openssl_prefix))
                 
                 if config.openssl_version_tuple < (1, 1):
                     # openssl 1.0.2
-                    f.write("call ms\\%s\n" % batch_file)
-                    f.write("nmake -f ms\\nt.mak\n")
-                    f.write("nmake -f ms\\nt.mak install\n")
+                    b.add("call ms\\%s" % batch_file)
+                    b.add("nmake -f ms\\nt.mak")
+                    b.add("nmake -f ms\\nt.mak install")
                 else:
                     # openssl 1.1.0
-                    f.write("nmake\n")
-                    f.write("nmake install\n")
+                    b.add("nmake")
+                    b.add("nmake install")
 
     @property
     def output_dir_path(self):
@@ -483,10 +499,10 @@ class CaresBuilder(Builder):
                   archive='c-ares-1.12.0/msvc_ver.inc')
         cares_dir = rename_for_vc('c-ares-%s' % self.config.cares_version, self.vc_tag)
         with in_dir(cares_dir):
-            with self.execute_batch() as f:
+            with self.execute_batch() as b:
                 if self.config.cares_version == '1.10.0':
-                    f.write("patch -p1 < %s\n" % os.path.join(config.winbuild_patch_root, 'c-ares-vs2015.patch'))
-                f.write("nmake -f Makefile.msvc\n")
+                    b.add("patch -p1 < %s" % os.path.join(config.winbuild_patch_root, 'c-ares-vs2015.patch'))
+                b.add("nmake -f Makefile.msvc")
 
     @property
     def output_dir_path(self):
@@ -515,9 +531,9 @@ class Libssh2Builder(Builder):
         untar('libssh2-%s' % self.config.libssh2_version)
         libssh2_dir = rename_for_vc('libssh2-%s' % self.config.libssh2_version, self.vc_tag)
         with in_dir(libssh2_dir):
-            with self.execute_batch() as f:
+            with self.execute_batch() as b:
                 if self.vc_version == 'vc14':
-                    f.write("patch -p0 < %s\n" % os.path.join(config.winbuild_patch_root, 'libssh2-vs2015.patch'))
+                    b.add("patch -p0 < %s" % os.path.join(config.winbuild_patch_root, 'libssh2-vs2015.patch'))
                 zlib_builder = ZlibBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
                 openssl_builder = OpensslBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
                 vars = '''
@@ -538,9 +554,9 @@ BUILD_STATIC_LIB=1
                     cf.seek(0)
                     cf.write(vars)
                     cf.write(contents)
-                f.write("nmake -f NMakefile\n")
+                b.add("nmake -f NMakefile")
                 # libcurl loves its _a suffixes on static library names
-                f.write("cp Release\\src\\libssh2.lib Release\\src\\libssh2_a.lib\n")
+                b.add("cp Release\\src\\libssh2.lib Release\\src\\libssh2_a.lib")
 
     @property
     def output_dir_path(self):
@@ -569,8 +585,8 @@ class LibcurlBuilder(Builder):
         untar('curl-%s' % self.config.libcurl_version)
         curl_dir = rename_for_vc('curl-%s' % self.config.libcurl_version, self.vc_tag)
         with in_dir(os.path.join(curl_dir, 'winbuild')):
-            with self.execute_batch() as f:
-                f.write("patch -p1 < %s\n" % os.path.join(config.winbuild_patch_root, 'libcurl-fix-zlib-references.patch'))
+            with self.execute_batch() as b:
+                b.add("patch -p1 < %s" % os.path.join(config.winbuild_patch_root, 'libcurl-fix-zlib-references.patch'))
                 if self.use_dlls:
                     dll_or_static = 'dll'
                 else:
@@ -578,23 +594,23 @@ class LibcurlBuilder(Builder):
                 extra_options = ' mode=%s' % dll_or_static
                 if self.config.use_zlib:
                     zlib_builder = ZlibBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
-                    f.write("set include=%%include%%;%s\n" % zlib_builder.include_path)
-                    f.write("set lib=%%lib%%;%s\n" % zlib_builder.lib_path)
+                    b.add("set include=%%include%%;%s" % zlib_builder.include_path)
+                    b.add("set lib=%%lib%%;%s" % zlib_builder.lib_path)
                     extra_options += ' WITH_ZLIB=%s' % dll_or_static
                 if self.config.use_openssl:
                     openssl_builder = OpensslBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
-                    f.write("set include=%%include%%;%s\n" % openssl_builder.include_path)
-                    f.write("set lib=%%lib%%;%s\n" % openssl_builder.lib_path)
+                    b.add("set include=%%include%%;%s" % openssl_builder.include_path)
+                    b.add("set lib=%%lib%%;%s" % openssl_builder.lib_path)
                     extra_options += ' WITH_SSL=%s' % dll_or_static
                 if self.config.use_cares:
                     cares_builder = CaresBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
-                    f.write("set include=%%include%%;%s\n" % cares_builder.include_path)
-                    f.write("set lib=%%lib%%;%s\n" % cares_builder.lib_path)
+                    b.add("set include=%%include%%;%s" % cares_builder.include_path)
+                    b.add("set lib=%%lib%%;%s" % cares_builder.lib_path)
                     extra_options += ' WITH_CARES=%s' % dll_or_static
                 if self.config.use_libssh2:
                     libssh2_builder = Libssh2Builder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
-                    f.write("set include=%%include%%;%s\n" % libssh2_builder.include_path)
-                    f.write("set lib=%%lib%%;%s\n" % libssh2_builder.lib_path)
+                    b.add("set include=%%include%%;%s" % libssh2_builder.include_path)
+                    b.add("set lib=%%lib%%;%s" % libssh2_builder.lib_path)
                     extra_options += ' WITH_SSH2=%s' % dll_or_static
                 if config.openssl_version_tuple >= (1, 1):
                     # openssl 1.1.0
@@ -602,7 +618,7 @@ class LibcurlBuilder(Builder):
                     # https://github.com/curl/curl/issues/984
                     # crypt32.lib: http://stackoverflow.com/questions/37522654/linking-with-openssl-lib-statically
                     extra_options += ' MAKE="NMAKE /e" SSL_LIBS="libssl.lib libcrypto.lib crypt32.lib"'
-                f.write("nmake /f Makefile.vc ENABLE_IDN=no%s\n" % extra_options)
+                b.add("nmake /f Makefile.vc ENABLE_IDN=no%s" % extra_options)
 
     @property
     def output_dir_name(self):
@@ -691,8 +707,8 @@ class PycurlBuilder(Builder):
             if self.use_dlls:
                 for dll_path in dll_paths:
                     shutil.copy(dll_path, dest_lib_path)
-            with self.execute_batch() as f:
-                f.write("%s setup.py docstrings\n" % (self.python_path,))
+            with self.execute_batch() as b:
+                b.add("%s setup.py docstrings" % (self.python_path,))
                 if self.use_dlls:
                     libcurl_arg = '--use-libcurl-dll'
                 else:
@@ -702,13 +718,13 @@ class PycurlBuilder(Builder):
                     if config.openssl_version_tuple >= (1, 1):
                         libcurl_arg += ' --openssl-lib-name=""'
                     openssl_builder = OpensslBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
-                    f.write("set include=%%include%%;%s\n" % openssl_builder.include_path)
-                    f.write("set lib=%%lib%%;%s\n" % openssl_builder.lib_path)
+                    b.add("set include=%%include%%;%s" % openssl_builder.include_path)
+                    b.add("set lib=%%lib%%;%s" % openssl_builder.lib_path)
                 #if build_wheels:
-                    #f.write("call %s\n" % os.path.join('..', 'venv-%s-%s' % (self.python_release, self.bitness), 'Scripts', 'activate'))
+                    #b.add("call %s" % os.path.join('..', 'venv-%s-%s' % (self.python_release, self.bitness), 'Scripts', 'activate'))
                 if config.build_wheels:
                     targets = targets + ['bdist_wheel']
-                f.write("%s setup.py %s --curl-dir=%s %s\n" % (
+                b.add("%s setup.py %s --curl-dir=%s %s" % (
                     self.python_path, ' '.join(targets), libcurl_dir, libcurl_arg))
             if 'bdist' in targets:
                 zip_basename_orig = 'pycurl-%s.%s.zip' % (
