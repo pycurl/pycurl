@@ -955,9 +955,9 @@ if opts.python:
 # https://stackoverflow.com/questions/35569042/python-3-ssl-certificate-verify-failed
 import ssl
 try:
-	ssl._create_default_https_context = ssl._create_unverified_context
+    ssl._create_default_https_context = ssl._create_unverified_context
 except AttributeError:
-	pass
+    pass
 
 if len(args) > 0:
     if args[0] == 'download':
