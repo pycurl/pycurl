@@ -119,6 +119,10 @@ def select_existing_path(paths):
     else:
         return paths
 
+# This must be at top level as __file__ can be a relative path
+# and changing current directory will break it
+DIR_HERE = os.path.abspath(os.path.dirname(__file__))
+
 def find_in_paths(binary, paths):
     for path in paths:
         if os.path.exists(os.path.join(path, binary)) or os.path.exists(os.path.join(path, binary + '.exe')):
@@ -172,14 +176,10 @@ class ExtendedConfig(Config):
     @property
     def activestate_perl_bin_path(self):
         return os.path.join(self.activestate_perl_path, 'bin')
-
-    @property
-    def dir_here(self):
-        return os.path.abspath(os.path.dirname(__file__))
         
     @property
     def winbuild_patch_root(self):
-        return os.path.join(self.dir_here, 'winbuild')
+        return os.path.join(DIR_HERE, 'winbuild')
 
     @property
     def openssl_version_tuple(self):
@@ -263,6 +263,11 @@ def rename_for_vc(basename, suffix):
     os.rename(basename, suffixed_dir)
     return suffixed_dir
 
+def require_file_exists(path):
+    if not os.path.exists(path):
+        raise Exception('Path %s does not exist!' % path)
+    return path
+
 class PythonRelease(str):
     @property
     def dotless(self):
@@ -306,6 +311,8 @@ class Batch(object):
     def add(self, cmd):
         self.commands.append(cmd)
         
+    # if patch fails to apply hunks, it exits with nonzero code.
+    # if patch doesn't find the patch file to apply, it exits with a zero code!
     ERROR_CHECK = 'IF %ERRORLEVEL% NEQ 0 exit %errorlevel%'
 
     def batch_text(self):
@@ -448,10 +455,12 @@ class OpensslBuilder(Builder):
             with self.execute_batch() as b:
                 if self.config.openssl_version_tuple < (1, 1):
                     # openssl 1.0.2
-                    b.add("patch -p0 < %s" % os.path.join(config.winbuild_patch_root, 'openssl-fix-crt-1.0.2.patch'))
+                    b.add("patch -p0 < %s" % 
+                        require_file_exists(os.path.join(config.winbuild_patch_root, 'openssl-fix-crt-1.0.2.patch')))
                 else:
                     # openssl 1.1.0
-                    b.add("patch -p0 < %s" % os.path.join(config.winbuild_patch_root, 'openssl-fix-crt-1.1.0.patch'))
+                    b.add("patch -p0 < %s" %
+                        require_file_exists(os.path.join(config.winbuild_patch_root, 'openssl-fix-crt-1.1.0.patch')))
                 if self.bitness == 64:
                     target = 'VC-WIN64A'
                     batch_file = 'do_win64a'
@@ -530,7 +539,8 @@ class CaresBuilder(Builder):
         with in_dir(cares_dir):
             with self.execute_batch() as b:
                 if self.config.cares_version == '1.10.0':
-                    b.add("patch -p1 < %s" % os.path.join(config.winbuild_patch_root, 'c-ares-vs2015.patch'))
+                    b.add("patch -p1 < %s" %
+                        require_file_exists(os.path.join(config.winbuild_patch_root, 'c-ares-vs2015.patch')))
                 b.add("nmake -f Makefile.msvc")
 
     @property
@@ -562,7 +572,8 @@ class Libssh2Builder(Builder):
         with in_dir(libssh2_dir):
             with self.execute_batch() as b:
                 if self.vc_version == 'vc14':
-                    b.add("patch -p0 < %s" % os.path.join(config.winbuild_patch_root, 'libssh2-vs2015.patch'))
+                    b.add("patch -p0 < %s" %
+                        require_file_exists(os.path.join(config.winbuild_patch_root, 'libssh2-vs2015.patch')))
                 zlib_builder = ZlibBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
                 openssl_builder = OpensslBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
                 vars = '''
@@ -615,7 +626,8 @@ class LibcurlBuilder(Builder):
         curl_dir = rename_for_vc('curl-%s' % self.config.libcurl_version, self.vc_tag)
         with in_dir(os.path.join(curl_dir, 'winbuild')):
             with self.execute_batch() as b:
-                b.add("patch -p1 < %s" % os.path.join(config.winbuild_patch_root, 'libcurl-fix-zlib-references.patch'))
+                b.add("patch -p1 < %s" %
+                    require_file_exists(os.path.join(config.winbuild_patch_root, 'libcurl-fix-zlib-references.patch')))
                 if self.use_dlls:
                     dll_or_static = 'dll'
                 else:
