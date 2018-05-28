@@ -215,6 +215,10 @@ class ExtendedConfig(Config):
         )
 
     @property
+    def libssh2_version_tuple(self):
+        return tuple(int(part) for part in self.libssh2_version.split('.'))
+
+    @property
     def python_releases(self):
         return [PythonRelease('.'.join(version.split('.')[:2]))
             for version in self.python_versions]
@@ -592,7 +596,7 @@ class Libssh2Builder(StandardBuilder):
         libssh2_dir = rename_for_vc('libssh2-%s' % self.config.libssh2_version, self.vc_tag)
         with in_dir(libssh2_dir):
             with self.execute_batch() as b:
-                if self.vc_version == 'vc14':
+                if self.config.libssh2_version_tuple < (1, 8, 0) and self.vc_version == 'vc14':
                     b.add("patch -p0 < %s" %
                         require_file_exists(os.path.join(config.winbuild_patch_root, 'libssh2-vs2015.patch')))
                 zlib_builder = ZlibBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
