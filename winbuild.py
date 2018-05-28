@@ -42,7 +42,9 @@ class Config:
     # where ActiveState Perl is installed, for building 64-bit OpenSSL
     activestate_perl_path = ('c:/perl64', r'c:\dev\perl64')
     # which versions of python to build against
-    python_versions = ['2.7.10', '3.2.5', '3.3.5', '3.4.3', '3.5.4', '3.6.2']
+    #python_versions = ['2.7.10', '3.2.5', '3.3.5', '3.4.3', '3.5.4', '3.6.2']
+    # these require only vc9 and vc14
+    python_versions = ['2.7.10', '3.5.4', '3.6.2']
     # where pythons are installed
     python_path_template = 'c:/dev/%(bitness)s/python%(python_release)s/python'
     vc_paths = {
