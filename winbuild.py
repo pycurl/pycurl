@@ -46,6 +46,7 @@ class Config:
     ]
     # where NASM is installed, for building OpenSSL
     nasm_path = ('c:/dev/nasm', 'c:/program files/nasm', 'c:/program files (x86)/nasm')
+    cmake_path = r"c:\Program Files\CMake\bin\cmake.exe"
     # where ActiveState Perl is installed, for building 64-bit OpenSSL
     activestate_perl_path = ('c:/perl64', r'c:\dev\perl64')
     # which versions of python to build against
@@ -76,6 +77,8 @@ class Config:
     # whether to use libssh2
     use_libssh2 = True
     libssh2_version = '1.8.0'
+    use_nghttp2 = True
+    nghttp2_version = '1.32.0'
     # which version of libcurl to use, will be downloaded from internet
     libcurl_version = '7.59.0'
     # virtualenv version
@@ -632,6 +635,52 @@ BUILD_STATIC_LIB=1
     def output_dir_path(self):
         return 'libssh2-%s-%s' % (self.config.libssh2_version, self.vc_tag)
 
+class Nghttp2Builder(StandardBuilder):
+    def build(self):
+        fetch('https://github.com/nghttp2/nghttp2/releases/download/v%s/nghttp2-%s.tar.gz' % (self.config.nghttp2_version, self.config.nghttp2_version))
+        untar('nghttp2-%s' % self.config.nghttp2_version)
+        nghttp2_dir = rename_for_vc('nghttp2-%s' % self.config.nghttp2_version, self.vc_tag)
+        assert config.use_zlib
+        zlib_builder = ZlibBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+        assert config.use_openssl
+        openssl_builder = OpensslBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+        assert config.use_cares
+        cares_builder = CaresBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+        with in_dir(nghttp2_dir):
+            with self.execute_batch() as b:
+                cmd = ' '.join([
+                    '"%s"' % config.cmake_path,
+                    # I don't know if this does anything, build type/config
+                    # must be specified with --build option below.
+                    '-DCMAKE_BUILD_TYPE=Release',
+                    # This configures libnghttp2 only which is what we want.
+                    # However, configure step still complains about all of the
+                    # missing dependencies for nghttp2 server.
+                    # And there is no indication whatsoever from configure step
+                    # that this option is enabled, or that the missing
+                    # dependency complaints can be ignored.
+                    '-DENABLE_LIB_ONLY=1',
+                    # This is required to get a static library built.
+                    # However, even with this turned on there is still a DLL
+                    # built - without an import library for it.
+                    '-DENABLE_STATIC_LIB=1',
+                ])
+                b.add('%s .' % cmd)
+                # --config Release here is what produces a release build
+                b.add('"%s" --build . --config Release' % config.cmake_path)
+                
+                # libcurl and its library name expectations
+                b.add('cp lib/Release/nghttp2.lib lib/Release/nghttp2_static.lib')
+                
+                # assemble dist
+                b.add('mkdir dist dist\\include dist\\include\\nghttp2 dist\\lib')
+                b.add('cp lib/Release/*.lib dist/lib')
+                b.add('cp lib/includes/nghttp2/*.h dist/include/nghttp2')
+
+    @property
+    def output_dir_path(self):
+        return 'nghttp2-%s-%s' % (self.config.nghttp2_version, self.vc_tag)
+
 class LibcurlBuilder(StandardBuilder):
     def build(self):
         fetch('https://curl.haxx.se/download/curl-%s.tar.gz' % self.config.libcurl_version)
@@ -666,6 +715,11 @@ class LibcurlBuilder(StandardBuilder):
                     b.add("set include=%%include%%;%s" % libssh2_builder.include_path)
                     b.add("set lib=%%lib%%;%s" % libssh2_builder.lib_path)
                     extra_options += ' WITH_SSH2=%s' % dll_or_static
+                if self.config.use_nghttp2:
+                    nghttp2_builder = Nghttp2Builder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                    b.add("set include=%%include%%;%s" % nghttp2_builder.include_path)
+                    b.add("set lib=%%lib%%;%s" % nghttp2_builder.lib_path)
+                    extra_options += ' WITH_NGHTTP2=%s' % dll_or_static
                 if config.openssl_version_tuple >= (1, 1):
                     # openssl 1.1.0
                     # https://curl.haxx.se/mail/lib-2016-08/0104.html
@@ -715,8 +769,12 @@ class LibcurlBuilder(StandardBuilder):
             libssh2_part = '-ssh2-%s' % dll_or_static
         else:
             libssh2_part = ''
-        output_dir_name = 'libcurl-vc-%s-release-%s%s%s%s%s-ipv6-sspi%s%s' % (
-            self.bitness_indicator, dll_or_static, openssl_part, cares_part, zlib_part, libssh2_part, spnego_part, winssl_part)
+        if self.config.use_nghttp2:
+            nghttp2_part = '-nghttp2-%s' % dll_or_static
+        else:
+            nghttp2_part = ''
+        output_dir_name = 'libcurl-vc-%s-release-%s%s%s%s%s-ipv6-sspi%s%s%s' % (
+            self.bitness_indicator, dll_or_static, openssl_part, cares_part, zlib_part, libssh2_part, nghttp2_part, spnego_part, winssl_part)
         return output_dir_name
 
     @property
@@ -838,6 +896,9 @@ def build_dependencies(config):
                 if config.use_libssh2:
                     libssh2_builder = Libssh2Builder(bitness=bitness, vc_version=vc_version, config=config)
                     step(libssh2_builder.build, (), libssh2_builder.state_tag)
+                if config.use_nghttp2:
+                    nghttp2_builder = Nghttp2Builder(bitness=bitness, vc_version=vc_version, config=config)
+                    step(nghttp2_builder.build, (), nghttp2_builder.state_tag)
                 libcurl_builder = LibcurlBuilder(bitness=bitness, vc_version=vc_version,
                     config=config)
                 step(libcurl_builder.build, (), libcurl_builder.state_tag)
