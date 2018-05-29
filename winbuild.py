@@ -709,8 +709,19 @@ class Nghttp2Builder(StandardBuilder):
                     '-G', '"%s"' % generator,
                 ])
                 b.add('%s .' % cmd)
-                # --config Release here is what produces a release build
-                b.add('"%s" --build . --config Release' % config.cmake_path)
+                b.add(' '.join([
+                    '"%s"' % config.cmake_path,
+                    '--build', '.',
+                    # this is what produces a release build
+                    '--config', 'Release',
+                    # this builds the static library.
+                    # without this option cmake configures itself to be capable
+                    # of building a static library but sometimes builds a DLL
+                    # and sometimes builds a static library
+                    # depending on compiler in use (vc9/vc14) or, possibly,
+                    # phase of the moon.
+                    '--target', 'nghttp2_static',
+                ]))
                 
                 # libcurl and its library name expectations
                 b.add('cp lib/Release/nghttp2.lib lib/Release/nghttp2_static.lib')
@@ -809,7 +820,7 @@ class LibcurlBuilder(StandardBuilder):
                     nghttp2_builder = Nghttp2Builder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
                     b.add("set include=%%include%%;%s" % nghttp2_builder.include_path)
                     b.add("set lib=%%lib%%;%s" % nghttp2_builder.lib_path)
-                    extra_options += ' WITH_NGHTTP2=%s' % dll_or_static
+                    extra_options += ' WITH_NGHTTP2=%s NGHTTP2_STATICLIB=1' % dll_or_static
                 if self.config.use_libidn:
                     libidn_builder = LibidnBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
                     b.add("set include=%%include%%;%s" % libidn_builder.include_path)
