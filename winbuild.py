@@ -46,6 +46,7 @@ class Config:
     ]
     # where NASM is installed, for building OpenSSL
     nasm_path = ('c:/dev/nasm', 'c:/program files/nasm', 'c:/program files (x86)/nasm')
+    cmake_path = r"c:\Program Files\CMake\bin\cmake.exe"
     # where ActiveState Perl is installed, for building 64-bit OpenSSL
     activestate_perl_path = ('c:/perl64', r'c:\dev\perl64')
     # which versions of python to build against
@@ -76,6 +77,8 @@ class Config:
     # whether to use libssh2
     use_libssh2 = True
     libssh2_version = '1.8.0'
+    use_nghttp2 = True
+    nghttp2_version = '1.32.0'
     # which version of libcurl to use, will be downloaded from internet
     libcurl_version = '7.59.0'
     # virtualenv version
@@ -219,6 +222,10 @@ class ExtendedConfig(Config):
         return tuple(int(part) for part in self.libssh2_version.split('.'))
 
     @property
+    def cares_version_tuple(self):
+        return tuple(int(part) for part in self.cares_version.split('.'))
+
+    @property
     def python_releases(self):
         return [PythonRelease('.'.join(version.split('.')[:2]))
             for version in self.python_versions]
@@ -290,7 +297,7 @@ def rename_for_vc(basename, suffix):
         shutil.rmtree(suffixed_dir)
     os.rename(basename, suffixed_dir)
     return suffixed_dir
-
+    
 def require_file_exists(path):
     if not os.path.exists(path):
         raise Exception('Path %s does not exist!' % path)
@@ -578,7 +585,7 @@ class CaresBuilder(StandardBuilder):
                 
                 # assemble dist
                 b.add('mkdir dist dist\\include dist\\lib')
-                if map(int, self.config.cares_version.split('.')) < [1, 14]:
+                if self.config.cares_version_tuple < (1, 14, 0):
                     subdir = 'ms%s0' % self.vc_version
                 else:
                     subdir = 'msvc'
@@ -632,6 +639,74 @@ BUILD_STATIC_LIB=1
     def output_dir_path(self):
         return 'libssh2-%s-%s' % (self.config.libssh2_version, self.vc_tag)
 
+class Nghttp2Builder(StandardBuilder):
+    CMAKE_GENERATORS = {
+        # Thanks cmake for requiring both version number and year,
+        # necessitating this additional map
+        'vc9': 'Visual Studio 9 2008',
+        'vc14': 'Visual Studio 14 2015',
+    }
+    
+    def build(self):
+        fetch('https://github.com/nghttp2/nghttp2/releases/download/v%s/nghttp2-%s.tar.gz' % (self.config.nghttp2_version, self.config.nghttp2_version))
+        untar('nghttp2-%s' % self.config.nghttp2_version)
+        nghttp2_dir = rename_for_vc('nghttp2-%s' % self.config.nghttp2_version, self.vc_tag)
+                
+        # nghttp2 uses stdint.h which msvc9 does not ship.
+        # Amazingly, nghttp2 can seemingly build successfully without this
+        # file existing, but libcurl build subsequently fails
+        # when it tries to include stdint.h.
+        # Well, the reason why nghttp2 builds correctly is because it is built
+        # with the wrong compiler - msvc14 when 9 and 14 are both installed.
+        # nghttp2 build with msvc9 does fail without stdint.h existing.
+        if self.vc_version == 'vc9':
+            # https://stackoverflow.com/questions/126279/c99-stdint-h-header-and-ms-visual-studio
+            fetch('https://raw.githubusercontent.com/mattn/gntp-send/master/include/msinttypes/stdint.h')
+            with in_dir(nghttp2_dir):
+                shutil.copy('../stdint.h', 'lib/includes/stdint.h')
+        
+        with in_dir(nghttp2_dir):
+            with self.execute_batch() as b:
+                cmd = ' '.join([
+                    '"%s"' % config.cmake_path,
+                    # I don't know if this does anything, build type/config
+                    # must be specified with --build option below.
+                    '-DCMAKE_BUILD_TYPE=Release',
+                    # This configures libnghttp2 only which is what we want.
+                    # However, configure step still complains about all of the
+                    # missing dependencies for nghttp2 server.
+                    # And there is no indication whatsoever from configure step
+                    # that this option is enabled, or that the missing
+                    # dependency complaints can be ignored.
+                    '-DENABLE_LIB_ONLY=1',
+                    # This is required to get a static library built.
+                    # However, even with this turned on there is still a DLL
+                    # built - without an import library for it.
+                    '-DENABLE_STATIC_LIB=1',
+                    # And cmake ignores all visual studio environment variables
+                    # and uses the newest compiler by default, which is great
+                    # if one doesn't care what compiler their code is compiled with.
+                    # https://stackoverflow.com/questions/6430251/what-is-the-default-generator-for-cmake-in-windows
+                    '-G', '"%s"' % self.CMAKE_GENERATORS[self.vc_version],
+                ])
+                b.add('%s .' % cmd)
+                # --config Release here is what produces a release build
+                b.add('"%s" --build . --config Release' % config.cmake_path)
+                
+                # libcurl and its library name expectations
+                b.add('cp lib/Release/nghttp2.lib lib/Release/nghttp2_static.lib')
+                
+                # assemble dist
+                b.add('mkdir dist dist\\include dist\\include\\nghttp2 dist\\lib')
+                b.add('cp lib/Release/*.lib dist/lib')
+                b.add('cp lib/includes/nghttp2/*.h dist/include/nghttp2')
+                # stdint.h
+                b.add('cp lib/includes/*.h dist/include')
+
+    @property
+    def output_dir_path(self):
+        return 'nghttp2-%s-%s' % (self.config.nghttp2_version, self.vc_tag)
+
 class LibcurlBuilder(StandardBuilder):
     def build(self):
         fetch('https://curl.haxx.se/download/curl-%s.tar.gz' % self.config.libcurl_version)
@@ -666,6 +741,11 @@ class LibcurlBuilder(StandardBuilder):
                     b.add("set include=%%include%%;%s" % libssh2_builder.include_path)
                     b.add("set lib=%%lib%%;%s" % libssh2_builder.lib_path)
                     extra_options += ' WITH_SSH2=%s' % dll_or_static
+                if self.config.use_nghttp2:
+                    nghttp2_builder = Nghttp2Builder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                    b.add("set include=%%include%%;%s" % nghttp2_builder.include_path)
+                    b.add("set lib=%%lib%%;%s" % nghttp2_builder.lib_path)
+                    extra_options += ' WITH_NGHTTP2=%s' % dll_or_static
                 if config.openssl_version_tuple >= (1, 1):
                     # openssl 1.1.0
                     # https://curl.haxx.se/mail/lib-2016-08/0104.html
@@ -673,51 +753,19 @@ class LibcurlBuilder(StandardBuilder):
                     # crypt32.lib: http://stackoverflow.com/questions/37522654/linking-with-openssl-lib-statically
                     extra_options += ' MAKE="NMAKE /e" SSL_LIBS="libssl.lib libcrypto.lib crypt32.lib"'
                 b.add("nmake /f Makefile.vc ENABLE_IDN=no%s" % extra_options)
-                
-                # assemble dist
-                b.add('cd ..')
-                b.add('mkdir dist')
-                b.add('cp -r builds/%s/bin builds/%s/include builds/%s/lib dist' % (
-                    self.output_dir_name, self.output_dir_name, self.output_dir_name))
-
-    BITNESS_INDICATORS = {32: 'x86', 64: 'x64'}
-    
-    @property
-    def bitness_indicator(self):
-        return self.BITNESS_INDICATORS[self.bitness]
-
-    @property
-    def output_dir_name(self):
-        if self.use_dlls:
-            dll_or_static = 'dll'
-        else:
-            dll_or_static = 'static'
-        if self.config.use_zlib:
-            zlib_part = '-zlib-%s' % dll_or_static
-        else:
-            zlib_part = ''
-        # don't know when spnego is on and when it is off yet
-        if False:
-            spnego_part = '-spnego'
-        else:
-            spnego_part = ''
-        if self.config.use_openssl:
-            winssl_part = ''
-            openssl_part = '-ssl-%s' % dll_or_static
-        else:
-            winssl_part = '-winssl'
-            openssl_part = ''
-        if self.config.use_cares:
-            cares_part = '-cares-%s' % dll_or_static
-        else:
-            cares_part = ''
-        if self.config.use_libssh2:
-            libssh2_part = '-ssh2-%s' % dll_or_static
-        else:
-            libssh2_part = ''
-        output_dir_name = 'libcurl-vc-%s-release-%s%s%s%s%s-ipv6-sspi%s%s' % (
-            self.bitness_indicator, dll_or_static, openssl_part, cares_part, zlib_part, libssh2_part, spnego_part, winssl_part)
-        return output_dir_name
+        
+        # assemble dist - figure out where libcurl put its files
+        # and move them to a more reasonable location
+        with in_dir(curl_dir):
+            subdirs = sorted(os.listdir('builds'))
+            if len(subdirs) != 3:
+                raise Exception('Should be 3 directories here')
+            expected_dir = subdirs.pop(0)
+            for dir in subdirs:
+                if not dir.startswith(expected_dir):
+                    raise Exception('%s does not start with %s' % (dir, expected_dir))
+                    
+            os.rename(os.path.join('builds', expected_dir), 'dist')
 
     @property
     def output_dir_path(self):
@@ -838,6 +886,9 @@ def build_dependencies(config):
                 if config.use_libssh2:
                     libssh2_builder = Libssh2Builder(bitness=bitness, vc_version=vc_version, config=config)
                     step(libssh2_builder.build, (), libssh2_builder.state_tag)
+                if config.use_nghttp2:
+                    nghttp2_builder = Nghttp2Builder(bitness=bitness, vc_version=vc_version, config=config)
+                    step(nghttp2_builder.build, (), nghttp2_builder.state_tag)
                 libcurl_builder = LibcurlBuilder(bitness=bitness, vc_version=vc_version,
                     config=config)
                 step(libcurl_builder.build, (), libcurl_builder.state_tag)
