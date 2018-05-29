@@ -92,6 +92,11 @@ class Config:
     # pycurl version to build, we should know this ourselves
     pycurl_version = '7.43.0.1'
 
+    # sometimes vc14 does not include windows sdk path in vcvars which breaks stuff.
+    # another application for this is to supply normaliz.lib for vc9
+    # which has an older version that doesn't have the symbols we need
+    windows_sdk_path = 'c:\\program files (x86)\\microsoft sdks\\windows\\v7.1a'
+
     default_vc_paths = {
         # where msvc 9 is installed, for python 2.6-3.2
         'vc9': [
@@ -341,14 +346,13 @@ class Batch(object):
         self.add('echo on')
         if self.bc.vc_version == 'vc14':
             # I don't know why vcvars doesn't configure this under vc14
-            windows_sdk_path = 'c:\\program files (x86)\\microsoft sdks\\windows\\v7.1a'
-            self.add('set include=%s\\include;%%include%%' % windows_sdk_path)
+            self.add('set include=%s\\include;%%include%%' % self.bc.windows_sdk_path)
             if self.bc.bitness == 32:
-                self.add('set lib=%s\\lib;%%lib%%' % windows_sdk_path)
-                self.add('set path=%s\\bin;%%path%%' % windows_sdk_path)
+                self.add('set lib=%s\\lib;%%lib%%' % self.bc.windows_sdk_path)
+                self.add('set path=%s\\bin;%%path%%' % self.bc.windows_sdk_path)
             else:
-                self.add('set lib=%s\\lib\\x64;%%lib%%' % windows_sdk_path)
-                self.add('set path=%s\\bin\\x64;%%path%%' % windows_sdk_path)
+                self.add('set lib=%s\\lib\\x64;%%lib%%' % self.bc.windows_sdk_path)
+                self.add('set path=%s\\bin\\x64;%%path%%' % self.bc.windows_sdk_path)
         self.add(self.nasm_cmd)
         
     def add(self, cmd):
@@ -755,7 +759,21 @@ class LibcurlBuilder(StandardBuilder):
         fetch('https://curl.haxx.se/download/curl-%s.tar.gz' % self.config.libcurl_version)
         untar('curl-%s' % self.config.libcurl_version)
         curl_dir = rename_for_vc('curl-%s' % self.config.libcurl_version, self.vc_tag)
+    
         with in_dir(os.path.join(curl_dir, 'winbuild')):
+            if self.vc_version == 'vc9':
+                # normaliz.lib in vc9 does not have the symbols libcurl
+                # needs for winidn.
+                # Handily we have a working normaliz.lib in vc14.
+                # Let's take the working one and copy it locally.
+                os.mkdir('support')
+                if self.bitness == 32:
+                    shutil.copy(os.path.join(self.config.windows_sdk_path, 'lib', 'normaliz.lib'),
+                        os.path.join('support', 'normaliz.lib'))
+                else:
+                    shutil.copy(os.path.join(self.config.windows_sdk_path, 'lib', 'x64', 'normaliz.lib'),
+                        os.path.join('support', 'normaliz.lib'))
+            
             with self.execute_batch() as b:
                 b.add("patch -p1 < %s" %
                     require_file_exists(os.path.join(config.winbuild_patch_root, 'libcurl-fix-zlib-references.patch')))
@@ -764,6 +782,9 @@ class LibcurlBuilder(StandardBuilder):
                 else:
                     dll_or_static = 'static'
                 extra_options = ' mode=%s' % dll_or_static
+                if self.vc_version == 'vc9':
+                    # use normaliz.lib from msvc14/more recent windows sdk
+                    b.add("set lib=%s;%%lib%%" % os.path.abspath('support'))
                 if self.config.use_zlib:
                     zlib_builder = ZlibBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
                     b.add("set include=%%include%%;%s" % zlib_builder.include_path)
@@ -802,12 +823,13 @@ class LibcurlBuilder(StandardBuilder):
                     extra_options += ' MAKE="NMAKE /e" SSL_LIBS="libssl.lib libcrypto.lib crypt32.lib"'
                 # https://github.com/curl/curl/issues/1863
                 extra_options += ' VC=%s' % self.vc_version[2:]
-                if self.vc_version == 'vc9':
-                    # curl uses winidn APIs that do not exist in msvc9:
-                    # https://github.com/curl/curl/issues/1863
-                    extra_options += ' ENABLE_IDN=no'
-                else:
-                    extra_options += ' ENABLE_IDN=yes'
+                
+                # curl uses winidn APIs that do not exist in msvc9:
+                # https://github.com/curl/curl/issues/1863
+                # We work around the msvc9 deficiency by using
+                # msvc14 normaliz.lib on vc9.
+                extra_options += ' ENABLE_IDN=yes'
+                
                 b.add("nmake /f Makefile.vc %s" % extra_options)
         
         # assemble dist - figure out where libcurl put its files
@@ -822,6 +844,9 @@ class LibcurlBuilder(StandardBuilder):
                     raise Exception('%s does not start with %s' % (dir, expected_dir))
                     
             os.rename(os.path.join('builds', expected_dir), 'dist')
+            if self.vc_version == 'vc9':
+                # need this normaliz.lib to build pycurl later on
+                shutil.copy('winbuild/support/normaliz.lib', 'dist/lib/normaliz.lib')
 
     @property
     def output_dir_path(self):
@@ -923,8 +948,13 @@ class PycurlBuilder(Builder):
                         nghttp2_builder = Nghttp2Builder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
                         libcurl_arg += ' --link-arg=/LIBPATH:%s' % nghttp2_builder.lib_path
                         libcurl_arg += ' --link-arg=nghttp2.lib'
-                    if self.vc_version != 'vc9':
-                        libcurl_arg += ' --link-arg=normaliz.lib'
+                    if self.vc_version == 'vc9':
+                        # this is for normaliz.lib
+                        libcurl_builder = LibcurlBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                        libcurl_arg += ' --link-arg=/LIBPATH:%s' % libcurl_builder.lib_path
+                    # We always use normaliz.lib, but it may come from
+                    # "standard" msvc location or from libcurl's lib dir for msvc9
+                    libcurl_arg += ' --link-arg=normaliz.lib'
                     libcurl_arg += ' --link-arg=user32.lib'
                 b.add("%s setup.py %s --curl-dir=%s %s" % (
                     self.python_path, ' '.join(targets), libcurl_dir, libcurl_arg))

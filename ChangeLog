@@ -1,12 +1,8 @@
 master
 ------
 
-        * Official Python 3.x Windows builds now include international
-          domain name support via WINIDN. Official Python 2.x builds
-          do not have international domain name support at this time.
-
         * Official Windows builds now include HTTP 2 support via
-          libnghttp2.
+          libnghttp2 and international domain name support via WINIDN.
 
         * Added perform_rb and perform_rs methods to Curl objects to
           return response body as byte string and string, respectively.
