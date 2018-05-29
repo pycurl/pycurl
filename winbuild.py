@@ -47,6 +47,7 @@ class Config:
     # where NASM is installed, for building OpenSSL
     nasm_path = ('c:/dev/nasm', 'c:/program files/nasm', 'c:/program files (x86)/nasm')
     cmake_path = r"c:\Program Files\CMake\bin\cmake.exe"
+    gmake_path = r"c:\Program Files (x86)\GnuWin32\bin\make.exe"
     # where ActiveState Perl is installed, for building 64-bit OpenSSL
     activestate_perl_path = ('c:/perl64', r'c:\dev\perl64')
     # which versions of python to build against
@@ -79,14 +80,22 @@ class Config:
     libssh2_version = '1.8.0'
     use_nghttp2 = True
     nghttp2_version = '1.32.0'
+    use_libidn = False
+    libiconv_version = '1.15'
+    libidn_version = '1.35'
     # which version of libcurl to use, will be downloaded from internet
-    libcurl_version = '7.59.0'
+    libcurl_version = '7.60.0'
     # virtualenv version
     virtualenv_version = '15.1.0'
     # whether to build binary wheels
     build_wheels = True
     # pycurl version to build, we should know this ourselves
     pycurl_version = '7.43.0.1'
+
+    # sometimes vc14 does not include windows sdk path in vcvars which breaks stuff.
+    # another application for this is to supply normaliz.lib for vc9
+    # which has an older version that doesn't have the symbols we need
+    windows_sdk_path = 'c:\\program files (x86)\\microsoft sdks\\windows\\v7.1a'
 
     default_vc_paths = {
         # where msvc 9 is installed, for python 2.6-3.2
@@ -226,6 +235,10 @@ class ExtendedConfig(Config):
         return tuple(int(part) for part in self.cares_version.split('.'))
 
     @property
+    def libcurl_version_tuple(self):
+        return tuple(int(part) for part in self.libcurl_version.split('.'))
+
+    @property
     def python_releases(self):
         return [PythonRelease('.'.join(version.split('.')[:2]))
             for version in self.python_versions]
@@ -333,14 +346,13 @@ class Batch(object):
         self.add('echo on')
         if self.bc.vc_version == 'vc14':
             # I don't know why vcvars doesn't configure this under vc14
-            windows_sdk_path = 'c:\\program files (x86)\\microsoft sdks\\windows\\v7.1a'
-            self.add('set include=%s\\include;%%include%%' % windows_sdk_path)
+            self.add('set include=%s\\include;%%include%%' % self.bc.windows_sdk_path)
             if self.bc.bitness == 32:
-                self.add('set lib=%s\\lib;%%lib%%' % windows_sdk_path)
-                self.add('set path=%s\\bin;%%path%%' % windows_sdk_path)
+                self.add('set lib=%s\\lib;%%lib%%' % self.bc.windows_sdk_path)
+                self.add('set path=%s\\bin;%%path%%' % self.bc.windows_sdk_path)
             else:
-                self.add('set lib=%s\\lib\\x64;%%lib%%' % windows_sdk_path)
-                self.add('set path=%s\\bin\\x64;%%path%%' % windows_sdk_path)
+                self.add('set lib=%s\\lib\\x64;%%lib%%' % self.bc.windows_sdk_path)
+                self.add('set path=%s\\bin\\x64;%%path%%' % self.bc.windows_sdk_path)
         self.add(self.nasm_cmd)
         
     def add(self, cmd):
@@ -666,6 +678,13 @@ class Nghttp2Builder(StandardBuilder):
                 shutil.copy('../stdint.h', 'lib/includes/stdint.h')
         
         with in_dir(nghttp2_dir):
+            generator = self.CMAKE_GENERATORS[self.vc_version]
+            # Cmake also couldn't care less about the bitness I have configured in the
+            # environment since it ignores the environment entirely.
+            # Educate it on the required bitness by hand.
+            # https://stackoverflow.com/questions/28350214/how-to-build-x86-and-or-x64-on-windows-from-command-line-with-cmake#28370892
+            if self.bitness == 64:
+                generator += ' Win64'
             with self.execute_batch() as b:
                 cmd = ' '.join([
                     '"%s"' % config.cmake_path,
@@ -687,11 +706,22 @@ class Nghttp2Builder(StandardBuilder):
                     # and uses the newest compiler by default, which is great
                     # if one doesn't care what compiler their code is compiled with.
                     # https://stackoverflow.com/questions/6430251/what-is-the-default-generator-for-cmake-in-windows
-                    '-G', '"%s"' % self.CMAKE_GENERATORS[self.vc_version],
+                    '-G', '"%s"' % generator,
                 ])
                 b.add('%s .' % cmd)
-                # --config Release here is what produces a release build
-                b.add('"%s" --build . --config Release' % config.cmake_path)
+                b.add(' '.join([
+                    '"%s"' % config.cmake_path,
+                    '--build', '.',
+                    # this is what produces a release build
+                    '--config', 'Release',
+                    # this builds the static library.
+                    # without this option cmake configures itself to be capable
+                    # of building a static library but sometimes builds a DLL
+                    # and sometimes builds a static library
+                    # depending on compiler in use (vc9/vc14) or, possibly,
+                    # phase of the moon.
+                    '--target', 'nghttp2_static',
+                ]))
                 
                 # libcurl and its library name expectations
                 b.add('cp lib/Release/nghttp2.lib lib/Release/nghttp2_static.lib')
@@ -700,19 +730,61 @@ class Nghttp2Builder(StandardBuilder):
                 b.add('mkdir dist dist\\include dist\\include\\nghttp2 dist\\lib')
                 b.add('cp lib/Release/*.lib dist/lib')
                 b.add('cp lib/includes/nghttp2/*.h dist/include/nghttp2')
-                # stdint.h
-                b.add('cp lib/includes/*.h dist/include')
+                if self.vc_version == 'vc9':
+                    # stdint.h
+                    b.add('cp lib/includes/*.h dist/include')
 
     @property
     def output_dir_path(self):
         return 'nghttp2-%s-%s' % (self.config.nghttp2_version, self.vc_tag)
+
+class LibiconvBuilder(StandardBuilder):
+    def build(self):
+        fetch('https://ftp.gnu.org/pub/gnu/libiconv/libiconv-%s.tar.gz' % self.config.libiconv_version)
+        untar('libiconv-%s' % self.config.libiconv_version)
+        libiconv_dir = rename_for_vc('libiconv-%s' % self.config.libiconv_version, self.vc_tag)
+        with in_dir(libiconv_dir):
+            with self.execute_batch() as b:
+                b.add("env LD=link bash ./configure")
+                b.add(config.gmake_path)
+
+    @property
+    def output_dir_path(self):
+        return 'libiconv-%s-%s' % (self.config.libiconv_version, self.vc_tag)
+
+class LibidnBuilder(StandardBuilder):
+    def build(self):
+        fetch('https://ftp.gnu.org/gnu/libidn/libidn-%s.tar.gz' % self.config.libidn_version)
+        untar('libidn-%s' % self.config.libidn_version)
+        libidn_dir = rename_for_vc('libidn-%s' % self.config.libidn_version, self.vc_tag)
+        with in_dir(libidn_dir):
+            with self.execute_batch() as b:
+                b.add("env LD=link bash ./configure")
+
+    @property
+    def output_dir_path(self):
+        return 'libidn-%s-%s' % (self.config.libidn_version, self.vc_tag)
 
 class LibcurlBuilder(StandardBuilder):
     def build(self):
         fetch('https://curl.haxx.se/download/curl-%s.tar.gz' % self.config.libcurl_version)
         untar('curl-%s' % self.config.libcurl_version)
         curl_dir = rename_for_vc('curl-%s' % self.config.libcurl_version, self.vc_tag)
+    
         with in_dir(os.path.join(curl_dir, 'winbuild')):
+            if self.vc_version == 'vc9':
+                # normaliz.lib in vc9 does not have the symbols libcurl
+                # needs for winidn.
+                # Handily we have a working normaliz.lib in vc14.
+                # Let's take the working one and copy it locally.
+                os.mkdir('support')
+                if self.bitness == 32:
+                    shutil.copy(os.path.join(self.config.windows_sdk_path, 'lib', 'normaliz.lib'),
+                        os.path.join('support', 'normaliz.lib'))
+                else:
+                    shutil.copy(os.path.join(self.config.windows_sdk_path, 'lib', 'x64', 'normaliz.lib'),
+                        os.path.join('support', 'normaliz.lib'))
+            
             with self.execute_batch() as b:
                 b.add("patch -p1 < %s" %
                     require_file_exists(os.path.join(config.winbuild_patch_root, 'libcurl-fix-zlib-references.patch')))
@@ -721,6 +793,9 @@ class LibcurlBuilder(StandardBuilder):
                 else:
                     dll_or_static = 'static'
                 extra_options = ' mode=%s' % dll_or_static
+                if self.vc_version == 'vc9':
+                    # use normaliz.lib from msvc14/more recent windows sdk
+                    b.add("set lib=%s;%%lib%%" % os.path.abspath('support'))
                 if self.config.use_zlib:
                     zlib_builder = ZlibBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
                     b.add("set include=%%include%%;%s" % zlib_builder.include_path)
@@ -745,14 +820,28 @@ class LibcurlBuilder(StandardBuilder):
                     nghttp2_builder = Nghttp2Builder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
                     b.add("set include=%%include%%;%s" % nghttp2_builder.include_path)
                     b.add("set lib=%%lib%%;%s" % nghttp2_builder.lib_path)
-                    extra_options += ' WITH_NGHTTP2=%s' % dll_or_static
+                    extra_options += ' WITH_NGHTTP2=%s NGHTTP2_STATICLIB=1' % dll_or_static
+                if self.config.use_libidn:
+                    libidn_builder = LibidnBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                    b.add("set include=%%include%%;%s" % libidn_builder.include_path)
+                    b.add("set lib=%%lib%%;%s" % libidn_builder.lib_path)
+                    extra_options += ' WITH_LIBIDN=%s' % dll_or_static
                 if config.openssl_version_tuple >= (1, 1):
                     # openssl 1.1.0
                     # https://curl.haxx.se/mail/lib-2016-08/0104.html
                     # https://github.com/curl/curl/issues/984
                     # crypt32.lib: http://stackoverflow.com/questions/37522654/linking-with-openssl-lib-statically
                     extra_options += ' MAKE="NMAKE /e" SSL_LIBS="libssl.lib libcrypto.lib crypt32.lib"'
-                b.add("nmake /f Makefile.vc ENABLE_IDN=no%s" % extra_options)
+                # https://github.com/curl/curl/issues/1863
+                extra_options += ' VC=%s' % self.vc_version[2:]
+                
+                # curl uses winidn APIs that do not exist in msvc9:
+                # https://github.com/curl/curl/issues/1863
+                # We work around the msvc9 deficiency by using
+                # msvc14 normaliz.lib on vc9.
+                extra_options += ' ENABLE_IDN=yes'
+                
+                b.add("nmake /f Makefile.vc %s" % extra_options)
         
         # assemble dist - figure out where libcurl put its files
         # and move them to a more reasonable location
@@ -766,6 +855,9 @@ class LibcurlBuilder(StandardBuilder):
                     raise Exception('%s does not start with %s' % (dir, expected_dir))
                     
             os.rename(os.path.join('builds', expected_dir), 'dist')
+            if self.vc_version == 'vc9':
+                # need this normaliz.lib to build pycurl later on
+                shutil.copy('winbuild/support/normaliz.lib', 'dist/lib/normaliz.lib')
 
     @property
     def output_dir_path(self):
@@ -834,6 +926,47 @@ class PycurlBuilder(Builder):
                     #b.add("call %s" % os.path.join('..', 'venv-%s-%s' % (self.python_release, self.bitness), 'Scripts', 'activate'))
                 if config.build_wheels:
                     targets = targets + ['bdist_wheel']
+                if config.libcurl_version_tuple >= (7, 60, 0):
+                    # As of 7.60.0 libcurl does not include its dependencies into
+                    # its static libraries.
+                    # libcurl_a.lib in 7.59.0 is 30 mb.
+                    # libcurl_a.lib in 7.60.0 is 2 mb.
+                    # https://github.com/curl/curl/pull/2474 is most likely culprit.
+                    # As a result we need to specify all of the libraries that
+                    # libcurl depends on here, plus the library paths,
+                    # plus even windows standard libraries for good measure.
+                    if self.config.use_zlib:
+                        zlib_builder = ZlibBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                        libcurl_arg += ' --link-arg=/LIBPATH:%s' % zlib_builder.lib_path
+                        libcurl_arg += ' --link-arg=zlib.lib'
+                    if self.config.use_openssl:
+                        openssl_builder = OpensslBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                        libcurl_arg += ' --link-arg=/LIBPATH:%s' % openssl_builder.lib_path
+                        # openssl 1.1
+                        libcurl_arg += ' --link-arg=libcrypto.lib'
+                        libcurl_arg += ' --link-arg=libssl.lib'
+                        libcurl_arg += ' --link-arg=crypt32.lib'
+                        libcurl_arg += ' --link-arg=advapi32.lib'
+                    if self.config.use_cares:
+                        cares_builder = CaresBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                        libcurl_arg += ' --link-arg=/LIBPATH:%s' % cares_builder.lib_path
+                        libcurl_arg += ' --link-arg=libcares.lib'
+                    if self.config.use_libssh2:
+                        libssh2_builder = Libssh2Builder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                        libcurl_arg += ' --link-arg=/LIBPATH:%s' % libssh2_builder.lib_path
+                        libcurl_arg += ' --link-arg=libssh2.lib'
+                    if self.config.use_nghttp2:
+                        nghttp2_builder = Nghttp2Builder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                        libcurl_arg += ' --link-arg=/LIBPATH:%s' % nghttp2_builder.lib_path
+                        libcurl_arg += ' --link-arg=nghttp2.lib'
+                    if self.vc_version == 'vc9':
+                        # this is for normaliz.lib
+                        libcurl_builder = LibcurlBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                        libcurl_arg += ' --link-arg=/LIBPATH:%s' % libcurl_builder.lib_path
+                    # We always use normaliz.lib, but it may come from
+                    # "standard" msvc location or from libcurl's lib dir for msvc9
+                    libcurl_arg += ' --link-arg=normaliz.lib'
+                    libcurl_arg += ' --link-arg=user32.lib'
                 b.add("%s setup.py %s --curl-dir=%s %s" % (
                     self.python_path, ' '.join(targets), libcurl_dir, libcurl_arg))
             if 'bdist' in targets:
@@ -889,6 +1022,11 @@ def build_dependencies(config):
                 if config.use_nghttp2:
                     nghttp2_builder = Nghttp2Builder(bitness=bitness, vc_version=vc_version, config=config)
                     step(nghttp2_builder.build, (), nghttp2_builder.state_tag)
+                if config.use_libidn:
+                    libiconv_builder = LibiconvBuilder(bitness=bitness, vc_version=vc_version, config=config)
+                    step(libiconv_builder.build, (), libiconv_builder.state_tag)
+                    libidn_builder = LibidnBuilder(bitness=bitness, vc_version=vc_version, config=config)
+                    step(libidn_builder.build, (), libidn_builder.state_tag)
                 libcurl_builder = LibcurlBuilder(bitness=bitness, vc_version=vc_version,
                     config=config)
                 step(libcurl_builder.build, (), libcurl_builder.state_tag)

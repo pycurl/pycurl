@@ -1,6 +1,9 @@
 master
 ------
 
+        * Official Windows builds now include HTTP 2 support via
+          libnghttp2 and international domain name support via WINIDN.
+
         * Added perform_rb and perform_rs methods to Curl objects to
           return response body as byte string and string, respectively.
 
