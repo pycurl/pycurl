@@ -727,55 +727,19 @@ class LibcurlBuilder(StandardBuilder):
                     # crypt32.lib: http://stackoverflow.com/questions/37522654/linking-with-openssl-lib-statically
                     extra_options += ' MAKE="NMAKE /e" SSL_LIBS="libssl.lib libcrypto.lib crypt32.lib"'
                 b.add("nmake /f Makefile.vc ENABLE_IDN=no%s" % extra_options)
-                
-                # assemble dist
-                b.add('cd ..')
-                b.add('mkdir dist')
-                b.add('cp -r builds/%s/bin builds/%s/include builds/%s/lib dist' % (
-                    self.output_dir_name, self.output_dir_name, self.output_dir_name))
-
-    BITNESS_INDICATORS = {32: 'x86', 64: 'x64'}
-    
-    @property
-    def bitness_indicator(self):
-        return self.BITNESS_INDICATORS[self.bitness]
-
-    @property
-    def output_dir_name(self):
-        if self.use_dlls:
-            dll_or_static = 'dll'
-        else:
-            dll_or_static = 'static'
-        if self.config.use_zlib:
-            zlib_part = '-zlib-%s' % dll_or_static
-        else:
-            zlib_part = ''
-        # don't know when spnego is on and when it is off yet
-        if False:
-            spnego_part = '-spnego'
-        else:
-            spnego_part = ''
-        if self.config.use_openssl:
-            winssl_part = ''
-            openssl_part = '-ssl-%s' % dll_or_static
-        else:
-            winssl_part = '-winssl'
-            openssl_part = ''
-        if self.config.use_cares:
-            cares_part = '-cares-%s' % dll_or_static
-        else:
-            cares_part = ''
-        if self.config.use_libssh2:
-            libssh2_part = '-ssh2-%s' % dll_or_static
-        else:
-            libssh2_part = ''
-        if self.config.use_nghttp2:
-            nghttp2_part = '-nghttp2-%s' % dll_or_static
-        else:
-            nghttp2_part = ''
-        output_dir_name = 'libcurl-vc-%s-release-%s%s%s%s%s-ipv6-sspi%s%s%s' % (
-            self.bitness_indicator, dll_or_static, openssl_part, cares_part, zlib_part, libssh2_part, nghttp2_part, spnego_part, winssl_part)
-        return output_dir_name
+        
+        # assemble dist - figure out where libcurl put its files
+        # and move them to a more reasonable location
+        with in_dir(curl_dir):
+            subdirs = sorted(os.listdir('builds'))
+            if len(subdirs) != 3:
+                raise Exception('Should be 3 directories here')
+            expected_dir = subdirs.pop(0)
+            for dir in subdirs:
+                if not dir.startswith(expected_dir):
+                    raise Exception('%s does not start with %s' % (dir, expected_dir))
+                    
+            os.rename(os.path.join('builds', expected_dir), 'dist')
 
     @property
     def output_dir_path(self):
