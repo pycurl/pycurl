@@ -676,6 +676,15 @@ class Nghttp2Builder(StandardBuilder):
                 b.add('mkdir dist dist\\include dist\\include\\nghttp2 dist\\lib')
                 b.add('cp lib/Release/*.lib dist/lib')
                 b.add('cp lib/includes/nghttp2/*.h dist/include/nghttp2')
+                
+        # nghttp2 uses stdint.h which msvc9 does not ship.
+        # somehow nghttp2 builds successfully but libcurl build fails
+        # when it tries to include stdint.h.
+        if self.vc_version == 'vc9':
+            with in_dir(nghttp2_dir):
+                # https://stackoverflow.com/questions/126279/c99-stdint-h-header-and-ms-visual-studio
+                fetch('https://raw.githubusercontent.com/mattn/gntp-send/master/include/msinttypes/stdint.h')
+                os.rename('stdint.h', 'dist/include/stdint.h')
 
     @property
     def output_dir_path(self):
