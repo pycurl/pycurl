@@ -293,7 +293,7 @@ def rename_for_vc(basename, suffix):
         shutil.rmtree(suffixed_dir)
     os.rename(basename, suffixed_dir)
     return suffixed_dir
-
+    
 def require_file_exists(path):
     if not os.path.exists(path):
         raise Exception('Path %s does not exist!' % path)
@@ -681,10 +681,10 @@ class Nghttp2Builder(StandardBuilder):
         # somehow nghttp2 builds successfully but libcurl build fails
         # when it tries to include stdint.h.
         if self.vc_version == 'vc9':
+            # https://stackoverflow.com/questions/126279/c99-stdint-h-header-and-ms-visual-studio
+            fetch('https://raw.githubusercontent.com/mattn/gntp-send/master/include/msinttypes/stdint.h')
             with in_dir(nghttp2_dir):
-                # https://stackoverflow.com/questions/126279/c99-stdint-h-header-and-ms-visual-studio
-                fetch('https://raw.githubusercontent.com/mattn/gntp-send/master/include/msinttypes/stdint.h')
-                os.rename('stdint.h', 'dist/include/stdint.h')
+                shutil.copy('../stdint.h', 'dist/include/stdint.h')
 
     @property
     def output_dir_path(self):
