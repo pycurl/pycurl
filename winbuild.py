@@ -666,6 +666,13 @@ class Nghttp2Builder(StandardBuilder):
                 shutil.copy('../stdint.h', 'lib/includes/stdint.h')
         
         with in_dir(nghttp2_dir):
+            generator = self.CMAKE_GENERATORS[self.vc_version]
+            # Cmake also couldn't care less about the bitness I have configured in the
+            # environment since it ignores the environment entirely.
+            # Educate it on the required bitness by hand.
+            # https://stackoverflow.com/questions/28350214/how-to-build-x86-and-or-x64-on-windows-from-command-line-with-cmake#28370892
+            if self.bitness == 64:
+                generator += ' Win64'
             with self.execute_batch() as b:
                 cmd = ' '.join([
                     '"%s"' % config.cmake_path,
@@ -687,7 +694,7 @@ class Nghttp2Builder(StandardBuilder):
                     # and uses the newest compiler by default, which is great
                     # if one doesn't care what compiler their code is compiled with.
                     # https://stackoverflow.com/questions/6430251/what-is-the-default-generator-for-cmake-in-windows
-                    '-G', '"%s"' % self.CMAKE_GENERATORS[self.vc_version],
+                    '-G', '"%s"' % generator,
                 ])
                 b.add('%s .' % cmd)
                 # --config Release here is what produces a release build
