@@ -56,6 +56,7 @@ class Config:
     python_versions = ['2.7.10', '3.5.4', '3.6.2']
     # where pythons are installed
     python_path_template = 'c:/dev/%(bitness)s/python%(python_release)s/python'
+    # overrides only, defaults are given in default_vc_paths below
     vc_paths = {
         # where msvc 9/vs 2008 is installed, for python 2.6 through 3.2
         'vc9': None,
@@ -97,23 +98,9 @@ class Config:
     # which has an older version that doesn't have the symbols we need
     windows_sdk_path = 'c:\\program files (x86)\\microsoft sdks\\windows\\v7.1a'
 
-    default_vc_paths = {
-        # where msvc 9 is installed, for python 2.6-3.2
-        'vc9': [
-            'c:/program files (x86)/microsoft visual studio 9.0',
-            'c:/program files/microsoft visual studio 9.0',
-        ],
-        # where msvc 10 is installed, for python 3.3-3.4
-        'vc10': [
-            'c:/program files (x86)/microsoft visual studio 10.0',
-            'c:/program files/microsoft visual studio 10.0',
-        ],
-        # where msvc 14 is installed, for python 3.5-3.6
-        'vc14': [
-            'c:/program files (x86)/microsoft visual studio 14.0',
-            'c:/program files/microsoft visual studio 14.0',
-        ],
-    }
+# ***
+# No user-serviceable parts beyond this point
+# ***
 
 import os, os.path, sys, subprocess, shutil, contextlib, zipfile, re
 try:
@@ -173,6 +160,25 @@ class ExtendedConfig(Config):
     def __init__(self, **kwargs):
         for k in kwargs:
             setattr(self, k, kwargs[k])
+
+    # These are defaults, overrides can be specified as vc_paths in Config above
+    default_vc_paths = {
+        # where msvc 9 is installed, for python 2.6-3.2
+        'vc9': [
+            'c:/program files (x86)/microsoft visual studio 9.0',
+            'c:/program files/microsoft visual studio 9.0',
+        ],
+        # where msvc 10 is installed, for python 3.3-3.4
+        'vc10': [
+            'c:/program files (x86)/microsoft visual studio 10.0',
+            'c:/program files/microsoft visual studio 10.0',
+        ],
+        # where msvc 14 is installed, for python 3.5-3.6
+        'vc14': [
+            'c:/program files (x86)/microsoft visual studio 14.0',
+            'c:/program files/microsoft visual studio 14.0',
+        ],
+    }
             
     @property
     def nasm_path(self):
