@@ -700,8 +700,9 @@ class Nghttp2Builder(StandardBuilder):
                 b.add('mkdir dist dist\\include dist\\include\\nghttp2 dist\\lib')
                 b.add('cp lib/Release/*.lib dist/lib')
                 b.add('cp lib/includes/nghttp2/*.h dist/include/nghttp2')
-                # stdint.h
-                b.add('cp lib/includes/*.h dist/include')
+                if self.vc_version == 'vc9':
+                    # stdint.h
+                    b.add('cp lib/includes/*.h dist/include')
 
     @property
     def output_dir_path(self):
