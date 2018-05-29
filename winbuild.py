@@ -222,6 +222,10 @@ class ExtendedConfig(Config):
         return tuple(int(part) for part in self.libssh2_version.split('.'))
 
     @property
+    def cares_version_tuple(self):
+        return tuple(int(part) for part in self.cares_version.split('.'))
+
+    @property
     def python_releases(self):
         return [PythonRelease('.'.join(version.split('.')[:2]))
             for version in self.python_versions]
@@ -581,7 +585,7 @@ class CaresBuilder(StandardBuilder):
                 
                 # assemble dist
                 b.add('mkdir dist dist\\include dist\\lib')
-                if map(int, self.config.cares_version.split('.')) < [1, 14]:
+                if self.config.cares_version_tuple < (1, 14, 0):
                     subdir = 'ms%s0' % self.vc_version
                 else:
                     subdir = 'msvc'
