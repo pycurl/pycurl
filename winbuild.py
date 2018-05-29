@@ -640,10 +640,31 @@ BUILD_STATIC_LIB=1
         return 'libssh2-%s-%s' % (self.config.libssh2_version, self.vc_tag)
 
 class Nghttp2Builder(StandardBuilder):
+    CMAKE_GENERATORS = {
+        # Thanks cmake for requiring both version number and year,
+        # necessitating this additional map
+        'vc9': 'Visual Studio 9 2008',
+        'vc14': 'Visual Studio 14 2015',
+    }
+    
     def build(self):
         fetch('https://github.com/nghttp2/nghttp2/releases/download/v%s/nghttp2-%s.tar.gz' % (self.config.nghttp2_version, self.config.nghttp2_version))
         untar('nghttp2-%s' % self.config.nghttp2_version)
         nghttp2_dir = rename_for_vc('nghttp2-%s' % self.config.nghttp2_version, self.vc_tag)
+                
+        # nghttp2 uses stdint.h which msvc9 does not ship.
+        # Amazingly, nghttp2 can seemingly build successfully without this
+        # file existing, but libcurl build subsequently fails
+        # when it tries to include stdint.h.
+        # Well, the reason why nghttp2 builds correctly is because it is built
+        # with the wrong compiler - msvc14 when 9 and 14 are both installed.
+        # nghttp2 build with msvc9 does fail without stdint.h existing.
+        if self.vc_version == 'vc9':
+            # https://stackoverflow.com/questions/126279/c99-stdint-h-header-and-ms-visual-studio
+            fetch('https://raw.githubusercontent.com/mattn/gntp-send/master/include/msinttypes/stdint.h')
+            with in_dir(nghttp2_dir):
+                shutil.copy('../stdint.h', 'lib/includes/stdint.h')
+        
         assert config.use_zlib
         zlib_builder = ZlibBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
         assert config.use_openssl
@@ -668,6 +689,10 @@ class Nghttp2Builder(StandardBuilder):
                     # However, even with this turned on there is still a DLL
                     # built - without an import library for it.
                     '-DENABLE_STATIC_LIB=1',
+                    # And cmake ignores all visual studio environment variables
+                    # and uses the newest compiler by default, which is great
+                    # if one doesn't care what compiler their code is compiled with.
+                    '-G', '"%s"' % self.CMAKE_GENERATORS[self.vc_version],
                 ])
                 b.add('%s .' % cmd)
                 # --config Release here is what produces a release build
@@ -680,15 +705,8 @@ class Nghttp2Builder(StandardBuilder):
                 b.add('mkdir dist dist\\include dist\\include\\nghttp2 dist\\lib')
                 b.add('cp lib/Release/*.lib dist/lib')
                 b.add('cp lib/includes/nghttp2/*.h dist/include/nghttp2')
-                
-        # nghttp2 uses stdint.h which msvc9 does not ship.
-        # somehow nghttp2 builds successfully but libcurl build fails
-        # when it tries to include stdint.h.
-        if self.vc_version == 'vc9':
-            # https://stackoverflow.com/questions/126279/c99-stdint-h-header-and-ms-visual-studio
-            fetch('https://raw.githubusercontent.com/mattn/gntp-send/master/include/msinttypes/stdint.h')
-            with in_dir(nghttp2_dir):
-                shutil.copy('../stdint.h', 'dist/include/stdint.h')
+                # stdint.h
+                b.add('cp lib/includes/*.h dist/include')
 
     @property
     def output_dir_path(self):
