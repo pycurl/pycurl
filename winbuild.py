@@ -47,6 +47,7 @@ class Config:
     # where NASM is installed, for building OpenSSL
     nasm_path = ('c:/dev/nasm', 'c:/program files/nasm', 'c:/program files (x86)/nasm')
     cmake_path = r"c:\Program Files\CMake\bin\cmake.exe"
+    gmake_path = r"c:\Program Files (x86)\GnuWin32\bin\make.exe"
     # where ActiveState Perl is installed, for building 64-bit OpenSSL
     activestate_perl_path = ('c:/perl64', r'c:\dev\perl64')
     # which versions of python to build against
@@ -79,6 +80,9 @@ class Config:
     libssh2_version = '1.8.0'
     use_nghttp2 = True
     nghttp2_version = '1.32.0'
+    use_libidn = False
+    libiconv_version = '1.15'
+    libidn_version = '1.35'
     # which version of libcurl to use, will be downloaded from internet
     libcurl_version = '7.59.0'
     # virtualenv version
@@ -715,6 +719,33 @@ class Nghttp2Builder(StandardBuilder):
     def output_dir_path(self):
         return 'nghttp2-%s-%s' % (self.config.nghttp2_version, self.vc_tag)
 
+class LibiconvBuilder(StandardBuilder):
+    def build(self):
+        fetch('https://ftp.gnu.org/pub/gnu/libiconv/libiconv-%s.tar.gz' % self.config.libiconv_version)
+        untar('libiconv-%s' % self.config.libiconv_version)
+        libiconv_dir = rename_for_vc('libiconv-%s' % self.config.libiconv_version, self.vc_tag)
+        with in_dir(libiconv_dir):
+            with self.execute_batch() as b:
+                b.add("env LD=link bash ./configure")
+                b.add(config.gmake_path)
+
+    @property
+    def output_dir_path(self):
+        return 'libiconv-%s-%s' % (self.config.libiconv_version, self.vc_tag)
+
+class LibidnBuilder(StandardBuilder):
+    def build(self):
+        fetch('https://ftp.gnu.org/gnu/libidn/libidn-%s.tar.gz' % self.config.libidn_version)
+        untar('libidn-%s' % self.config.libidn_version)
+        libidn_dir = rename_for_vc('libidn-%s' % self.config.libidn_version, self.vc_tag)
+        with in_dir(libidn_dir):
+            with self.execute_batch() as b:
+                b.add("env LD=link bash ./configure")
+
+    @property
+    def output_dir_path(self):
+        return 'libidn-%s-%s' % (self.config.libidn_version, self.vc_tag)
+
 class LibcurlBuilder(StandardBuilder):
     def build(self):
         fetch('https://curl.haxx.se/download/curl-%s.tar.gz' % self.config.libcurl_version)
@@ -754,6 +785,11 @@ class LibcurlBuilder(StandardBuilder):
                     b.add("set include=%%include%%;%s" % nghttp2_builder.include_path)
                     b.add("set lib=%%lib%%;%s" % nghttp2_builder.lib_path)
                     extra_options += ' WITH_NGHTTP2=%s' % dll_or_static
+                if self.config.use_libidn:
+                    libidn_builder = LibidnBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                    b.add("set include=%%include%%;%s" % libidn_builder.include_path)
+                    b.add("set lib=%%lib%%;%s" % libidn_builder.lib_path)
+                    extra_options += ' WITH_LIBIDN=%s' % dll_or_static
                 if config.openssl_version_tuple >= (1, 1):
                     # openssl 1.1.0
                     # https://curl.haxx.se/mail/lib-2016-08/0104.html
@@ -905,6 +941,11 @@ def build_dependencies(config):
                 if config.use_nghttp2:
                     nghttp2_builder = Nghttp2Builder(bitness=bitness, vc_version=vc_version, config=config)
                     step(nghttp2_builder.build, (), nghttp2_builder.state_tag)
+                if config.use_libidn:
+                    libiconv_builder = LibiconvBuilder(bitness=bitness, vc_version=vc_version, config=config)
+                    step(libiconv_builder.build, (), libiconv_builder.state_tag)
+                    libidn_builder = LibidnBuilder(bitness=bitness, vc_version=vc_version, config=config)
+                    step(libidn_builder.build, (), libidn_builder.state_tag)
                 libcurl_builder = LibcurlBuilder(bitness=bitness, vc_version=vc_version,
                     config=config)
                 step(libcurl_builder.build, (), libcurl_builder.state_tag)
