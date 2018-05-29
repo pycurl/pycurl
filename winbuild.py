@@ -753,7 +753,15 @@ class LibcurlBuilder(StandardBuilder):
                     # https://github.com/curl/curl/issues/984
                     # crypt32.lib: http://stackoverflow.com/questions/37522654/linking-with-openssl-lib-statically
                     extra_options += ' MAKE="NMAKE /e" SSL_LIBS="libssl.lib libcrypto.lib crypt32.lib"'
-                b.add("nmake /f Makefile.vc ENABLE_IDN=no%s" % extra_options)
+                # https://github.com/curl/curl/issues/1863
+                extra_options += ' VC=%s' % self.vc_version[2:]
+                if self.vc_version == 'vc9':
+                    # curl uses winidn APIs that do not exist in msvc9:
+                    # https://github.com/curl/curl/issues/1863
+                    extra_options += ' ENABLE_IDN=no'
+                else:
+                    extra_options += ' ENABLE_IDN=yes'
+                b.add("nmake /f Makefile.vc %s" % extra_options)
         
         # assemble dist - figure out where libcurl put its files
         # and move them to a more reasonable location
