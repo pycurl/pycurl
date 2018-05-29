@@ -84,7 +84,7 @@ class Config:
     libiconv_version = '1.15'
     libidn_version = '1.35'
     # which version of libcurl to use, will be downloaded from internet
-    libcurl_version = '7.59.0'
+    libcurl_version = '7.60.0'
     # virtualenv version
     virtualenv_version = '15.1.0'
     # whether to build binary wheels
@@ -228,6 +228,10 @@ class ExtendedConfig(Config):
     @property
     def cares_version_tuple(self):
         return tuple(int(part) for part in self.cares_version.split('.'))
+
+    @property
+    def libcurl_version_tuple(self):
+        return tuple(int(part) for part in self.libcurl_version.split('.'))
 
     @property
     def python_releases(self):
@@ -886,6 +890,42 @@ class PycurlBuilder(Builder):
                     #b.add("call %s" % os.path.join('..', 'venv-%s-%s' % (self.python_release, self.bitness), 'Scripts', 'activate'))
                 if config.build_wheels:
                     targets = targets + ['bdist_wheel']
+                if config.libcurl_version_tuple >= (7, 60, 0):
+                    # As of 7.60.0 libcurl does not include its dependencies into
+                    # its static libraries.
+                    # libcurl_a.lib in 7.59.0 is 30 mb.
+                    # libcurl_a.lib in 7.60.0 is 2 mb.
+                    # https://github.com/curl/curl/pull/2474 is most likely culprit.
+                    # As a result we need to specify all of the libraries that
+                    # libcurl depends on here, plus the library paths,
+                    # plus even windows standard libraries for good measure.
+                    if self.config.use_zlib:
+                        zlib_builder = ZlibBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                        libcurl_arg += ' --link-arg=/LIBPATH:%s' % zlib_builder.lib_path
+                        libcurl_arg += ' --link-arg=zlib.lib'
+                    if self.config.use_openssl:
+                        openssl_builder = OpensslBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                        libcurl_arg += ' --link-arg=/LIBPATH:%s' % openssl_builder.lib_path
+                        # openssl 1.1
+                        libcurl_arg += ' --link-arg=libcrypto.lib'
+                        libcurl_arg += ' --link-arg=libssl.lib'
+                        libcurl_arg += ' --link-arg=crypt32.lib'
+                        libcurl_arg += ' --link-arg=advapi32.lib'
+                    if self.config.use_cares:
+                        cares_builder = CaresBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                        libcurl_arg += ' --link-arg=/LIBPATH:%s' % cares_builder.lib_path
+                        libcurl_arg += ' --link-arg=libcares.lib'
+                    if self.config.use_libssh2:
+                        libssh2_builder = Libssh2Builder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                        libcurl_arg += ' --link-arg=/LIBPATH:%s' % libssh2_builder.lib_path
+                        libcurl_arg += ' --link-arg=libssh2.lib'
+                    if self.config.use_nghttp2:
+                        nghttp2_builder = Nghttp2Builder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                        libcurl_arg += ' --link-arg=/LIBPATH:%s' % nghttp2_builder.lib_path
+                        libcurl_arg += ' --link-arg=nghttp2.lib'
+                    if self.vc_version != 'vc9':
+                        libcurl_arg += ' --link-arg=normaliz.lib'
+                    libcurl_arg += ' --link-arg=user32.lib'
                 b.add("%s setup.py %s --curl-dir=%s %s" % (
                     self.python_path, ' '.join(targets), libcurl_dir, libcurl_arg))
             if 'bdist' in targets:

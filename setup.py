@@ -54,6 +54,28 @@ def scan_argv(argv, s, default=None):
     return p
 
 
+def scan_argvs(argv, s):
+    p = []
+    i = 1
+    while i < len(argv):
+        arg = argv[i]
+        if str.find(arg, s) == 0:
+            if s.endswith('='):
+                # --option=value
+                p.append(arg[len(s):])
+                if s != '--openssl-lib-name=':
+                    assert p[-1], arg
+            else:
+                # --option
+                # set value to True
+                raise Exception('specification must end with =')
+            del argv[i]
+        else:
+            i = i + 1
+    ##print argv
+    return p
+
+
 class ExtensionConfiguration(object):
     def __init__(self, argv=[]):
         # we mutate argv, this is necessary because
@@ -367,6 +389,9 @@ specify the SSL backend manually.''')
         # at the same time they dropped thread locking callback interface,
         # meaning the correct usage of this option is --openssl-lib-name=""
         self.openssl_lib_name = scan_argv(self.argv, '--openssl-lib-name=', 'libeay32.lib')
+
+        for lib in scan_argvs(self.argv, '--link-arg='):
+            self.extra_link_args.append(lib)
 
         if scan_argv(self.argv, "--use-libcurl-dll") is not None:
             libcurl_lib_path = os.path.join(curl_dir, "lib", curl_lib_name)
@@ -851,6 +876,7 @@ PycURL Windows options:
  --libcurl-lib-name=libcurl_imp.lib    override libcurl import library name
  --with-openssl                        libcurl is linked against OpenSSL
  --with-ssl                            legacy alias for --with-openssl
+ --link-arg=foo.lib                    also link against specified library
 '''
 
 if __name__ == "__main__":
