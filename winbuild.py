@@ -665,12 +665,6 @@ class Nghttp2Builder(StandardBuilder):
             with in_dir(nghttp2_dir):
                 shutil.copy('../stdint.h', 'lib/includes/stdint.h')
         
-        assert config.use_zlib
-        zlib_builder = ZlibBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
-        assert config.use_openssl
-        openssl_builder = OpensslBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
-        assert config.use_cares
-        cares_builder = CaresBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
         with in_dir(nghttp2_dir):
             with self.execute_batch() as b:
                 cmd = ' '.join([
