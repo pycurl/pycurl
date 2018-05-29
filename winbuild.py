@@ -692,6 +692,7 @@ class Nghttp2Builder(StandardBuilder):
                     # And cmake ignores all visual studio environment variables
                     # and uses the newest compiler by default, which is great
                     # if one doesn't care what compiler their code is compiled with.
+                    # https://stackoverflow.com/questions/6430251/what-is-the-default-generator-for-cmake-in-windows
                     '-G', '"%s"' % self.CMAKE_GENERATORS[self.vc_version],
                 ])
                 b.add('%s .' % cmd)
