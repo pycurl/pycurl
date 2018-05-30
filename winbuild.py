@@ -254,7 +254,8 @@ class ExtendedConfig(Config):
             for bitness in self.bitnesses
             for vc_version in needed_vc_versions(self.python_versions)
         ]
-                
+
+BITNESSES = (32, 64)
 
 PYTHON_VC_VERSIONS = {
     '2.6': 'vc9',
@@ -998,7 +999,6 @@ class PycurlBuilder(Builder):
                             member = src_zip.open(name)
                             dest_zip.writestr(new_name, member.read(), zipfile.ZIP_DEFLATED)
 
-BITNESSES = (32, 64)
 
 def build_dependencies(config):
     if config.use_libssh2:
