@@ -485,10 +485,16 @@ class StandardBuilder(Builder):
         raise NotImplementedError
 
     @property
+    def builder_name(self):
+        return self.__class__.__name__.replace('Builder', '').lower()
+        
+    @property
+    def my_version(self):
+        return getattr(self.bconf, '%s_version' % self.builder_name)
+
+    @property
     def output_dir_path(self):
-        builder_name = self.__class__.__name__.replace('Builder', '').lower()
-        version = getattr(self.bconf, '%s_version' % builder_name)
-        return '%s-%s-%s' % (builder_name, version, self.vc_tag)
+        return '%s-%s-%s' % (self.builder_name, self.my_version, self.vc_tag)
 
 class ZlibBuilder(StandardBuilder):
     def build(self):
