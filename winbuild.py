@@ -484,6 +484,12 @@ class StandardBuilder(Builder):
     def dll_paths(self):
         raise NotImplementedError
 
+    @property
+    def output_dir_path(self):
+        builder_name = self.__class__.__name__.replace('Builder', '').lower()
+        version = getattr(self.bconf, '%s_version' % builder_name)
+        return '%s-%s-%s' % (builder_name, version, self.vc_tag)
+
 class ZlibBuilder(StandardBuilder):
     def build(self):
         fetch('http://downloads.sourceforge.net/project/libpng/zlib/%s/zlib-%s.tar.gz' % (self.bconf.zlib_version, self.bconf.zlib_version))
@@ -500,10 +506,6 @@ class ZlibBuilder(StandardBuilder):
                 b.add('cp *.lib *.exp dist/lib')
                 b.add('cp *.dll dist/bin')
                 b.add('cp *.h dist/include')
-
-    @property
-    def output_dir_path(self):
-        return 'zlib-%s-%s' % (self.bconf.zlib_version, self.vc_tag)
 
     @property
     def dll_paths(self):
@@ -588,10 +590,6 @@ class OpensslBuilder(StandardBuilder):
                 b.add('mkdir dist')
                 b.add('cp -r build/include build/lib dist')
 
-    @property
-    def output_dir_path(self):
-        return 'openssl-%s-%s' % (self.bconf.openssl_version, self.vc_tag)
-
 class CaresBuilder(StandardBuilder):
     def build(self):
         fetch('http://c-ares.haxx.se/download/c-ares-%s.tar.gz' % (self.bconf.cares_version))
@@ -618,10 +616,6 @@ class CaresBuilder(StandardBuilder):
                     subdir = 'msvc'
                 b.add('cp %s/cares/lib-release/*.lib dist/lib' % subdir)
                 b.add('cp *.h dist/include')
-
-    @property
-    def output_dir_path(self):
-        return 'cares-%s-%s' % (self.bconf.cares_version, self.vc_tag)
 
 class Libssh2Builder(StandardBuilder):
     def build(self):
@@ -661,10 +655,6 @@ BUILD_STATIC_LIB=1
                 b.add('mkdir dist dist\\include dist\\lib')
                 b.add('cp Release/src/*.lib dist/lib')
                 b.add('cp -r include dist')
-
-    @property
-    def output_dir_path(self):
-        return 'libssh2-%s-%s' % (self.bconf.libssh2_version, self.vc_tag)
 
 class Nghttp2Builder(StandardBuilder):
     CMAKE_GENERATORS = {
@@ -749,10 +739,6 @@ class Nghttp2Builder(StandardBuilder):
                     # stdint.h
                     b.add('cp lib/includes/*.h dist/include')
 
-    @property
-    def output_dir_path(self):
-        return 'nghttp2-%s-%s' % (self.bconf.nghttp2_version, self.vc_tag)
-
 class LibiconvBuilder(StandardBuilder):
     def build(self):
         fetch('https://ftp.gnu.org/pub/gnu/libiconv/libiconv-%s.tar.gz' % self.bconf.libiconv_version)
@@ -763,10 +749,6 @@ class LibiconvBuilder(StandardBuilder):
                 b.add("env LD=link bash ./configure")
                 b.add(config.gmake_path)
 
-    @property
-    def output_dir_path(self):
-        return 'libiconv-%s-%s' % (self.bconf.libiconv_version, self.vc_tag)
-
 class LibidnBuilder(StandardBuilder):
     def build(self):
         fetch('https://ftp.gnu.org/gnu/libidn/libidn-%s.tar.gz' % self.bconf.libidn_version)
@@ -775,10 +757,6 @@ class LibidnBuilder(StandardBuilder):
         with in_dir(libidn_dir):
             with self.execute_batch() as b:
                 b.add("env LD=link bash ./configure")
-
-    @property
-    def output_dir_path(self):
-        return 'libidn-%s-%s' % (self.bconf.libidn_version, self.vc_tag)
 
 class LibcurlBuilder(StandardBuilder):
     def build(self):
@@ -874,10 +852,6 @@ class LibcurlBuilder(StandardBuilder):
             if self.bconf.vc_version == 'vc9':
                 # need this normaliz.lib to build pycurl later on
                 shutil.copy('winbuild/support/normaliz.lib', 'dist/lib/normaliz.lib')
-
-    @property
-    def output_dir_path(self):
-        return 'curl-%s-%s' % (self.bconf.libcurl_version, self.vc_tag)
 
     @property
     def dll_paths(self):
