@@ -317,13 +317,6 @@ def untar(basename):
     if os.path.exists(basename):
         shutil.rmtree(basename)
     check_call([config.tar_path, 'xf', '%s.tar.gz' % basename])
-
-def rename_for_vc(basename, suffix):
-    suffixed_dir = '%s-%s' % (basename, suffix)
-    if os.path.exists(suffixed_dir):
-        shutil.rmtree(suffixed_dir)
-    os.rename(basename, suffixed_dir)
-    return suffixed_dir
     
 def require_file_exists(path):
     if not os.path.exists(path):
@@ -495,12 +488,26 @@ class StandardBuilder(Builder):
     @property
     def output_dir_path(self):
         return '%s-%s-%s' % (self.builder_name, self.my_version, self.vc_tag)
+        
+    def standard_fetch_extract(self, url_template):
+        url = url_template % dict(
+            my_version=self.my_version,
+        )
+        fetch(url)
+        archive_basename = os.path.basename(url)
+        archive_name = archive_basename.replace('.tar.gz', '')
+        untar(archive_name)
+        
+        suffixed_dir = self.output_dir_path
+        if os.path.exists(suffixed_dir):
+            shutil.rmtree(suffixed_dir)
+        os.rename(archive_name, suffixed_dir)
+        return suffixed_dir
 
 class ZlibBuilder(StandardBuilder):
     def build(self):
-        fetch('http://downloads.sourceforge.net/project/libpng/zlib/%s/zlib-%s.tar.gz' % (self.bconf.zlib_version, self.bconf.zlib_version))
-        untar('zlib-%s' % self.bconf.zlib_version)
-        zlib_dir = rename_for_vc('zlib-%s' % self.bconf.zlib_version, self.vc_tag)
+        zlib_dir = self.standard_fetch_extract(
+            'http://downloads.sourceforge.net/project/libpng/zlib/%(my_version)s/zlib-%(my_version)s.tar.gz')
         with in_dir(zlib_dir):
             with self.execute_batch() as b:
                 b.add("nmake /f win32/Makefile.msc")
@@ -521,22 +528,14 @@ class ZlibBuilder(StandardBuilder):
 
 class OpensslBuilder(StandardBuilder):
     def build(self):
-        fetch('https://www.openssl.org/source/openssl-%s.tar.gz' % self.bconf.openssl_version)
-        try:
-            untar('openssl-%s' % self.bconf.openssl_version)
-        except subprocess.CalledProcessError:
-            # openssl tarballs include symlinks which cannot be extracted on windows,
-            # and hence cause errors during extraction.
-            # apparently these symlinks will be regenerated at configure stage...
-            # makes one wonder why they are included in the first place.
-            pass
         # another openssl gem:
         # nasm output is redirected to NUL which ends up creating a file named NUL.
         # however being a reserved file name this file is not deletable by
         # ordinary tools.
         nul_file = "openssl-%s-%s\\NUL" % (self.bconf.openssl_version, self.vc_tag)
         check_call(['rm', '-f', nul_file])
-        openssl_dir = rename_for_vc('openssl-%s' % self.bconf.openssl_version, self.vc_tag)
+        openssl_dir = self.standard_fetch_extract(
+            'https://www.openssl.org/source/openssl-%(my_version)s.tar.gz')
         with in_dir(openssl_dir):
             with self.execute_batch() as b:
                 if self.bconf.openssl_version_tuple < (1, 1):
@@ -598,15 +597,13 @@ class OpensslBuilder(StandardBuilder):
 
 class CaresBuilder(StandardBuilder):
     def build(self):
-        fetch('http://c-ares.haxx.se/download/c-ares-%s.tar.gz' % (self.bconf.cares_version))
-        untar('c-ares-%s' % self.bconf.cares_version)
-        os.rename('c-ares-%s' % self.bconf.cares_version, 'cares-s' % self.bconf.cares_version)
+        cares_dir = self.standard_fetch_extract(
+            'http://c-ares.haxx.se/download/c-ares-%(my_version)s.tar.gz')
         if self.bconf.cares_version == '1.12.0':
             # msvc_ver.inc is missing in c-ares-1.12.0.tar.gz
             # https://github.com/c-ares/c-ares/issues/69
             fetch('https://raw.githubusercontent.com/c-ares/c-ares/cares-1_12_0/msvc_ver.inc',
-                  archive='c-ares-1.12.0/msvc_ver.inc')
-        cares_dir = rename_for_vc('cares-%s' % self.bconf.cares_version, self.vc_tag)
+                  archive='cares-1.12.0/msvc_ver.inc')
         with in_dir(cares_dir):
             with self.execute_batch() as b:
                 if self.bconf.cares_version == '1.10.0':
@@ -625,9 +622,8 @@ class CaresBuilder(StandardBuilder):
 
 class Libssh2Builder(StandardBuilder):
     def build(self):
-        fetch('http://www.libssh2.org/download/libssh2-%s.tar.gz' % (self.bconf.libssh2_version))
-        untar('libssh2-%s' % self.bconf.libssh2_version)
-        libssh2_dir = rename_for_vc('libssh2-%s' % self.bconf.libssh2_version, self.vc_tag)
+        libssh2_dir = self.standard_fetch_extract(
+            'http://www.libssh2.org/download/libssh2-%(my_version)s.tar.gz')
         with in_dir(libssh2_dir):
             with self.execute_batch() as b:
                 if self.bconf.libssh2_version_tuple < (1, 8, 0) and self.bconf.vc_version == 'vc14':
@@ -671,9 +667,8 @@ class Nghttp2Builder(StandardBuilder):
     }
     
     def build(self):
-        fetch('https://github.com/nghttp2/nghttp2/releases/download/v%s/nghttp2-%s.tar.gz' % (self.bconf.nghttp2_version, self.bconf.nghttp2_version))
-        untar('nghttp2-%s' % self.bconf.nghttp2_version)
-        nghttp2_dir = rename_for_vc('nghttp2-%s' % self.bconf.nghttp2_version, self.vc_tag)
+        nghttp2_dir = self.standard_fetch_extract(
+            'https://github.com/nghttp2/nghttp2/releases/download/v%(my_version)s/nghttp2-%(my_version)s.tar.gz')
                 
         # nghttp2 uses stdint.h which msvc9 does not ship.
         # Amazingly, nghttp2 can seemingly build successfully without this
@@ -747,9 +742,8 @@ class Nghttp2Builder(StandardBuilder):
 
 class LibiconvBuilder(StandardBuilder):
     def build(self):
-        fetch('https://ftp.gnu.org/pub/gnu/libiconv/libiconv-%s.tar.gz' % self.bconf.libiconv_version)
-        untar('libiconv-%s' % self.bconf.libiconv_version)
-        libiconv_dir = rename_for_vc('libiconv-%s' % self.bconf.libiconv_version, self.vc_tag)
+        libiconv_dir = self.standard_fetch_extract(
+            'https://ftp.gnu.org/pub/gnu/libiconv/libiconv-%(my_version)s.tar.gz')
         with in_dir(libiconv_dir):
             with self.execute_batch() as b:
                 b.add("env LD=link bash ./configure")
@@ -757,19 +751,16 @@ class LibiconvBuilder(StandardBuilder):
 
 class LibidnBuilder(StandardBuilder):
     def build(self):
-        fetch('https://ftp.gnu.org/gnu/libidn/libidn-%s.tar.gz' % self.bconf.libidn_version)
-        untar('libidn-%s' % self.bconf.libidn_version)
-        libidn_dir = rename_for_vc('libidn-%s' % self.bconf.libidn_version, self.vc_tag)
+        libidn_dir = self.standard_fetch_extract(
+            'https://ftp.gnu.org/gnu/libidn/libidn-%(my_version)s.tar.gz')
         with in_dir(libidn_dir):
             with self.execute_batch() as b:
                 b.add("env LD=link bash ./configure")
 
 class LibcurlBuilder(StandardBuilder):
     def build(self):
-        fetch('https://curl.haxx.se/download/curl-%s.tar.gz' % self.bconf.libcurl_version)
-        untar('curl-%s' % self.bconf.libcurl_version)
-        os.rename('curl-%s' % self.bconf.libcurl_version, 'libcurl-%s' % self.bconf.libcurl_version)
-        curl_dir = rename_for_vc('libcurl-%s' % self.bconf.libcurl_version, self.vc_tag)
+        curl_dir = self.standard_fetch_extract(
+            'https://curl.haxx.se/download/curl-%(my_version)s.tar.gz')
     
         with in_dir(os.path.join(curl_dir, 'winbuild')):
             if self.bconf.vc_version == 'vc9':
