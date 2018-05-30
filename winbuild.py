@@ -596,12 +596,13 @@ class CaresBuilder(StandardBuilder):
     def build(self):
         fetch('http://c-ares.haxx.se/download/c-ares-%s.tar.gz' % (self.bconf.cares_version))
         untar('c-ares-%s' % self.bconf.cares_version)
+        os.rename('c-ares-%s' % self.bconf.cares_version, 'cares-s' % self.bconf.cares_version)
         if self.bconf.cares_version == '1.12.0':
             # msvc_ver.inc is missing in c-ares-1.12.0.tar.gz
             # https://github.com/c-ares/c-ares/issues/69
             fetch('https://raw.githubusercontent.com/c-ares/c-ares/cares-1_12_0/msvc_ver.inc',
                   archive='c-ares-1.12.0/msvc_ver.inc')
-        cares_dir = rename_for_vc('c-ares-%s' % self.bconf.cares_version, self.vc_tag)
+        cares_dir = rename_for_vc('cares-%s' % self.bconf.cares_version, self.vc_tag)
         with in_dir(cares_dir):
             with self.execute_batch() as b:
                 if self.bconf.cares_version == '1.10.0':
@@ -620,7 +621,7 @@ class CaresBuilder(StandardBuilder):
 
     @property
     def output_dir_path(self):
-        return 'c-ares-%s-%s' % (self.bconf.cares_version, self.vc_tag)
+        return 'cares-%s-%s' % (self.bconf.cares_version, self.vc_tag)
 
 class Libssh2Builder(StandardBuilder):
     def build(self):
@@ -783,7 +784,8 @@ class LibcurlBuilder(StandardBuilder):
     def build(self):
         fetch('https://curl.haxx.se/download/curl-%s.tar.gz' % self.bconf.libcurl_version)
         untar('curl-%s' % self.bconf.libcurl_version)
-        curl_dir = rename_for_vc('curl-%s' % self.bconf.libcurl_version, self.vc_tag)
+        os.rename('curl-%s' % self.bconf.libcurl_version, 'libcurl-%s' % self.bconf.libcurl_version)
+        curl_dir = rename_for_vc('libcurl-%s' % self.bconf.libcurl_version, self.vc_tag)
     
         with in_dir(os.path.join(curl_dir, 'winbuild')):
             if self.bconf.vc_version == 'vc9':
