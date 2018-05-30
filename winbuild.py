@@ -859,9 +859,9 @@ class LibcurlBuilder(StandardBuilder):
 class PycurlBuilder(Builder):
     def __init__(self, **kwargs):
         self.python_release = kwargs.pop('python_release')
-        # vc_version is specified externally for bconf/BuildConfig
-        assert kwargs['vc_version'] == PYTHON_VC_VERSIONS[self.python_release]
         super(PycurlBuilder, self).__init__(**kwargs)
+        # vc_version is specified externally for bconf/BuildConfig
+        assert self.bconf.vc_version == PYTHON_VC_VERSIONS[self.python_release]
 
     @property
     def python_path(self):
