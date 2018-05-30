@@ -56,6 +56,7 @@ class Config:
     python_versions = ['2.7.10', '3.5.4', '3.6.2']
     # where pythons are installed
     python_path_template = 'c:/dev/%(bitness)s/python%(python_release)s/python'
+    # overrides only, defaults are given in default_vc_paths below
     vc_paths = {
         # where msvc 9/vs 2008 is installed, for python 2.6 through 3.2
         'vc9': None,
@@ -97,23 +98,9 @@ class Config:
     # which has an older version that doesn't have the symbols we need
     windows_sdk_path = 'c:\\program files (x86)\\microsoft sdks\\windows\\v7.1a'
 
-    default_vc_paths = {
-        # where msvc 9 is installed, for python 2.6-3.2
-        'vc9': [
-            'c:/program files (x86)/microsoft visual studio 9.0',
-            'c:/program files/microsoft visual studio 9.0',
-        ],
-        # where msvc 10 is installed, for python 3.3-3.4
-        'vc10': [
-            'c:/program files (x86)/microsoft visual studio 10.0',
-            'c:/program files/microsoft visual studio 10.0',
-        ],
-        # where msvc 14 is installed, for python 3.5-3.6
-        'vc14': [
-            'c:/program files (x86)/microsoft visual studio 14.0',
-            'c:/program files/microsoft visual studio 14.0',
-        ],
-    }
+# ***
+# No user-serviceable parts beyond this point
+# ***
 
 import os, os.path, sys, subprocess, shutil, contextlib, zipfile, re
 try:
@@ -173,6 +160,25 @@ class ExtendedConfig(Config):
     def __init__(self, **kwargs):
         for k in kwargs:
             setattr(self, k, kwargs[k])
+
+    # These are defaults, overrides can be specified as vc_paths in Config above
+    default_vc_paths = {
+        # where msvc 9 is installed, for python 2.6-3.2
+        'vc9': [
+            'c:/program files (x86)/microsoft visual studio 9.0',
+            'c:/program files/microsoft visual studio 9.0',
+        ],
+        # where msvc 10 is installed, for python 3.3-3.4
+        'vc10': [
+            'c:/program files (x86)/microsoft visual studio 10.0',
+            'c:/program files/microsoft visual studio 10.0',
+        ],
+        # where msvc 14 is installed, for python 3.5-3.6
+        'vc14': [
+            'c:/program files (x86)/microsoft visual studio 14.0',
+            'c:/program files/microsoft visual studio 14.0',
+        ],
+    }
             
     @property
     def nasm_path(self):
@@ -243,6 +249,14 @@ class ExtendedConfig(Config):
         return [PythonRelease('.'.join(version.split('.')[:2]))
             for version in self.python_versions]
 
+    def buildconfigs(self):
+        return [BuildConfig(bitness=bitness, vc_version=vc_version)
+            for bitness in self.bitnesses
+            for vc_version in needed_vc_versions(self.python_versions)
+        ]
+
+BITNESSES = (32, 64)
+
 PYTHON_VC_VERSIONS = {
     '2.6': 'vc9',
     '2.7': 'vc9',
@@ -303,13 +317,6 @@ def untar(basename):
     if os.path.exists(basename):
         shutil.rmtree(basename)
     check_call([config.tar_path, 'xf', '%s.tar.gz' % basename])
-
-def rename_for_vc(basename, suffix):
-    suffixed_dir = '%s-%s' % (basename, suffix)
-    if os.path.exists(suffixed_dir):
-        shutil.rmtree(suffixed_dir)
-    os.rename(basename, suffixed_dir)
-    return suffixed_dir
     
 def require_file_exists(path):
     if not os.path.exists(path):
@@ -338,21 +345,21 @@ class PythonBinary(object):
             bitness=self.bitness)
 
 class Batch(object):
-    def __init__(self, bc):
-        self.bc = bc
+    def __init__(self, bconf):
+        self.bconf = bconf
         self.commands = []
         
         self.add(self.vcvars_cmd)
         self.add('echo on')
-        if self.bc.vc_version == 'vc14':
+        if self.bconf.vc_version == 'vc14':
             # I don't know why vcvars doesn't configure this under vc14
-            self.add('set include=%s\\include;%%include%%' % self.bc.windows_sdk_path)
-            if self.bc.bitness == 32:
-                self.add('set lib=%s\\lib;%%lib%%' % self.bc.windows_sdk_path)
-                self.add('set path=%s\\bin;%%path%%' % self.bc.windows_sdk_path)
+            self.add('set include=%s\\include;%%include%%' % self.bconf.windows_sdk_path)
+            if self.bconf.bitness == 32:
+                self.add('set lib=%s\\lib;%%lib%%' % self.bconf.windows_sdk_path)
+                self.add('set path=%s\\bin;%%path%%' % self.bconf.windows_sdk_path)
             else:
-                self.add('set lib=%s\\lib\\x64;%%lib%%' % self.bc.windows_sdk_path)
-                self.add('set path=%s\\bin\\x64;%%path%%' % self.bc.windows_sdk_path)
+                self.add('set lib=%s\\lib\\x64;%%lib%%' % self.bconf.windows_sdk_path)
+                self.add('set path=%s\\bin\\x64;%%path%%' % self.bconf.windows_sdk_path)
         self.add(self.nasm_cmd)
         
     def add(self, cmd):
@@ -371,7 +378,7 @@ class Batch(object):
             32: 'x86',
             64: 'amd64',
         }
-        return params[self.bc.bitness]
+        return params[self.bconf.bitness]
 
     @property
     def vcvars_relative_path(self):
@@ -379,13 +386,13 @@ class Batch(object):
 
     @property
     def vc_path(self):
-        if self.bc.vc_version in config.vc_paths and config.vc_paths[self.bc.vc_version]:
-            path = config.vc_paths[self.bc.vc_version]
+        if self.bconf.vc_version in config.vc_paths and config.vc_paths[self.bconf.vc_version]:
+            path = config.vc_paths[self.bconf.vc_version]
             if not os.path.join(path, self.vcvars_relative_path):
                 raise Exception('vcvars not found in specified path')
             return path
         else:
-            for path in config.default_vc_paths[self.bc.vc_version]:
+            for path in config.default_vc_paths[self.bconf.vc_version]:
                 if os.path.exists(os.path.join(path, self.vcvars_relative_path)):
                     return path
             raise Exception('No usable vc path found')
@@ -416,19 +423,19 @@ class BuildConfig(ExtendedConfig):
         ExtendedConfig.__init__(self, **kwargs)
         for k in kwargs:
             setattr(self, k, kwargs[k])
+        
+        assert self.bitness
+        assert self.bitness in (32, 64)
+        assert self.vc_version
 
 class Builder(object):
     def __init__(self, **kwargs):
-        bitness = kwargs.pop('bitness')
-        assert bitness in (32, 64)
-        self.bitness = bitness
-        self.vc_version = kwargs.pop('vc_version')
-        self.config = kwargs.pop('config')
+        self.bconf = kwargs.pop('bconf')
         self.use_dlls = False
 
     @contextlib.contextmanager
     def execute_batch(self):
-        batch = Batch(BuildConfig(vc_version=self.vc_version, bitness=self.bitness))
+        batch = Batch(self.bconf)
         yield batch
         with open('doit.bat', 'w') as f:
             f.write(batch.batch_text())
@@ -447,7 +454,7 @@ class Builder(object):
 
     @property
     def vc_tag(self):
-        return '%s-%s' % (self.vc_version, self.bitness)
+        return '%s-%s' % (self.bconf.vc_version, self.bconf.bitness)
 
 class StandardBuilder(Builder):
     @property
@@ -470,11 +477,37 @@ class StandardBuilder(Builder):
     def dll_paths(self):
         raise NotImplementedError
 
+    @property
+    def builder_name(self):
+        return self.__class__.__name__.replace('Builder', '').lower()
+        
+    @property
+    def my_version(self):
+        return getattr(self.bconf, '%s_version' % self.builder_name)
+
+    @property
+    def output_dir_path(self):
+        return '%s-%s-%s' % (self.builder_name, self.my_version, self.vc_tag)
+        
+    def standard_fetch_extract(self, url_template):
+        url = url_template % dict(
+            my_version=self.my_version,
+        )
+        fetch(url)
+        archive_basename = os.path.basename(url)
+        archive_name = archive_basename.replace('.tar.gz', '')
+        untar(archive_name)
+        
+        suffixed_dir = self.output_dir_path
+        if os.path.exists(suffixed_dir):
+            shutil.rmtree(suffixed_dir)
+        os.rename(archive_name, suffixed_dir)
+        return suffixed_dir
+
 class ZlibBuilder(StandardBuilder):
     def build(self):
-        fetch('http://downloads.sourceforge.net/project/libpng/zlib/%s/zlib-%s.tar.gz' % (self.config.zlib_version, self.config.zlib_version))
-        untar('zlib-%s' % self.config.zlib_version)
-        zlib_dir = rename_for_vc('zlib-%s' % self.config.zlib_version, self.vc_tag)
+        zlib_dir = self.standard_fetch_extract(
+            'http://downloads.sourceforge.net/project/libpng/zlib/%(my_version)s/zlib-%(my_version)s.tar.gz')
         with in_dir(zlib_dir):
             with self.execute_batch() as b:
                 b.add("nmake /f win32/Makefile.msc")
@@ -488,10 +521,6 @@ class ZlibBuilder(StandardBuilder):
                 b.add('cp *.h dist/include')
 
     @property
-    def output_dir_path(self):
-        return 'zlib-%s-%s' % (self.config.zlib_version, self.vc_tag)
-
-    @property
     def dll_paths(self):
         return [
             os.path.join(self.bin_path, 'zlib1.dll'),
@@ -499,25 +528,17 @@ class ZlibBuilder(StandardBuilder):
 
 class OpensslBuilder(StandardBuilder):
     def build(self):
-        fetch('https://www.openssl.org/source/openssl-%s.tar.gz' % self.config.openssl_version)
-        try:
-            untar('openssl-%s' % self.config.openssl_version)
-        except subprocess.CalledProcessError:
-            # openssl tarballs include symlinks which cannot be extracted on windows,
-            # and hence cause errors during extraction.
-            # apparently these symlinks will be regenerated at configure stage...
-            # makes one wonder why they are included in the first place.
-            pass
         # another openssl gem:
         # nasm output is redirected to NUL which ends up creating a file named NUL.
         # however being a reserved file name this file is not deletable by
         # ordinary tools.
-        nul_file = "openssl-%s-%s\\NUL" % (self.config.openssl_version, self.vc_tag)
+        nul_file = "openssl-%s-%s\\NUL" % (self.bconf.openssl_version, self.vc_tag)
         check_call(['rm', '-f', nul_file])
-        openssl_dir = rename_for_vc('openssl-%s' % self.config.openssl_version, self.vc_tag)
+        openssl_dir = self.standard_fetch_extract(
+            'https://www.openssl.org/source/openssl-%(my_version)s.tar.gz')
         with in_dir(openssl_dir):
             with self.execute_batch() as b:
-                if self.config.openssl_version_tuple < (1, 1):
+                if self.bconf.openssl_version_tuple < (1, 1):
                     # openssl 1.0.2
                     b.add("patch -p0 < %s" % 
                         require_file_exists(os.path.join(config.winbuild_patch_root, 'openssl-fix-crt-1.0.2.patch')))
@@ -525,7 +546,7 @@ class OpensslBuilder(StandardBuilder):
                     # openssl 1.1.0
                     b.add("patch -p0 < %s" %
                         require_file_exists(os.path.join(config.winbuild_patch_root, 'openssl-fix-crt-1.1.0.patch')))
-                if self.bitness == 64:
+                if self.bconf.bitness == 64:
                     target = 'VC-WIN64A'
                     batch_file = 'do_win64a'
                 else:
@@ -574,52 +595,42 @@ class OpensslBuilder(StandardBuilder):
                 b.add('mkdir dist')
                 b.add('cp -r build/include build/lib dist')
 
-    @property
-    def output_dir_path(self):
-        return 'openssl-%s-%s' % (self.config.openssl_version, self.vc_tag)
-
 class CaresBuilder(StandardBuilder):
     def build(self):
-        fetch('http://c-ares.haxx.se/download/c-ares-%s.tar.gz' % (self.config.cares_version))
-        untar('c-ares-%s' % self.config.cares_version)
-        if self.config.cares_version == '1.12.0':
+        cares_dir = self.standard_fetch_extract(
+            'http://c-ares.haxx.se/download/c-ares-%(my_version)s.tar.gz')
+        if self.bconf.cares_version == '1.12.0':
             # msvc_ver.inc is missing in c-ares-1.12.0.tar.gz
             # https://github.com/c-ares/c-ares/issues/69
             fetch('https://raw.githubusercontent.com/c-ares/c-ares/cares-1_12_0/msvc_ver.inc',
-                  archive='c-ares-1.12.0/msvc_ver.inc')
-        cares_dir = rename_for_vc('c-ares-%s' % self.config.cares_version, self.vc_tag)
+                  archive='cares-1.12.0/msvc_ver.inc')
         with in_dir(cares_dir):
             with self.execute_batch() as b:
-                if self.config.cares_version == '1.10.0':
+                if self.bconf.cares_version == '1.10.0':
                     b.add("patch -p1 < %s" %
                         require_file_exists(os.path.join(config.winbuild_patch_root, 'c-ares-vs2015.patch')))
                 b.add("nmake -f Makefile.msvc")
                 
                 # assemble dist
                 b.add('mkdir dist dist\\include dist\\lib')
-                if self.config.cares_version_tuple < (1, 14, 0):
-                    subdir = 'ms%s0' % self.vc_version
+                if self.bconf.cares_version_tuple < (1, 14, 0):
+                    subdir = 'ms%s0' % self.bconf.vc_version
                 else:
                     subdir = 'msvc'
                 b.add('cp %s/cares/lib-release/*.lib dist/lib' % subdir)
                 b.add('cp *.h dist/include')
 
-    @property
-    def output_dir_path(self):
-        return 'c-ares-%s-%s' % (self.config.cares_version, self.vc_tag)
-
 class Libssh2Builder(StandardBuilder):
     def build(self):
-        fetch('http://www.libssh2.org/download/libssh2-%s.tar.gz' % (self.config.libssh2_version))
-        untar('libssh2-%s' % self.config.libssh2_version)
-        libssh2_dir = rename_for_vc('libssh2-%s' % self.config.libssh2_version, self.vc_tag)
+        libssh2_dir = self.standard_fetch_extract(
+            'http://www.libssh2.org/download/libssh2-%(my_version)s.tar.gz')
         with in_dir(libssh2_dir):
             with self.execute_batch() as b:
-                if self.config.libssh2_version_tuple < (1, 8, 0) and self.vc_version == 'vc14':
+                if self.bconf.libssh2_version_tuple < (1, 8, 0) and self.bconf.vc_version == 'vc14':
                     b.add("patch -p0 < %s" %
                         require_file_exists(os.path.join(config.winbuild_patch_root, 'libssh2-vs2015.patch')))
-                zlib_builder = ZlibBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
-                openssl_builder = OpensslBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                zlib_builder = ZlibBuilder(bconf=self.bconf)
+                openssl_builder = OpensslBuilder(bconf=self.bconf)
                 vars = '''
 OPENSSLINC=%(openssl_include_path)s
 OPENSSLLIB=%(openssl_lib_path)s
@@ -647,10 +658,6 @@ BUILD_STATIC_LIB=1
                 b.add('cp Release/src/*.lib dist/lib')
                 b.add('cp -r include dist')
 
-    @property
-    def output_dir_path(self):
-        return 'libssh2-%s-%s' % (self.config.libssh2_version, self.vc_tag)
-
 class Nghttp2Builder(StandardBuilder):
     CMAKE_GENERATORS = {
         # Thanks cmake for requiring both version number and year,
@@ -660,9 +667,8 @@ class Nghttp2Builder(StandardBuilder):
     }
     
     def build(self):
-        fetch('https://github.com/nghttp2/nghttp2/releases/download/v%s/nghttp2-%s.tar.gz' % (self.config.nghttp2_version, self.config.nghttp2_version))
-        untar('nghttp2-%s' % self.config.nghttp2_version)
-        nghttp2_dir = rename_for_vc('nghttp2-%s' % self.config.nghttp2_version, self.vc_tag)
+        nghttp2_dir = self.standard_fetch_extract(
+            'https://github.com/nghttp2/nghttp2/releases/download/v%(my_version)s/nghttp2-%(my_version)s.tar.gz')
                 
         # nghttp2 uses stdint.h which msvc9 does not ship.
         # Amazingly, nghttp2 can seemingly build successfully without this
@@ -671,19 +677,19 @@ class Nghttp2Builder(StandardBuilder):
         # Well, the reason why nghttp2 builds correctly is because it is built
         # with the wrong compiler - msvc14 when 9 and 14 are both installed.
         # nghttp2 build with msvc9 does fail without stdint.h existing.
-        if self.vc_version == 'vc9':
+        if self.bconf.vc_version == 'vc9':
             # https://stackoverflow.com/questions/126279/c99-stdint-h-header-and-ms-visual-studio
             fetch('https://raw.githubusercontent.com/mattn/gntp-send/master/include/msinttypes/stdint.h')
             with in_dir(nghttp2_dir):
                 shutil.copy('../stdint.h', 'lib/includes/stdint.h')
         
         with in_dir(nghttp2_dir):
-            generator = self.CMAKE_GENERATORS[self.vc_version]
+            generator = self.CMAKE_GENERATORS[self.bconf.vc_version]
             # Cmake also couldn't care less about the bitness I have configured in the
             # environment since it ignores the environment entirely.
             # Educate it on the required bitness by hand.
             # https://stackoverflow.com/questions/28350214/how-to-build-x86-and-or-x64-on-windows-from-command-line-with-cmake#28370892
-            if self.bitness == 64:
+            if self.bconf.bitness == 64:
                 generator += ' Win64'
             with self.execute_batch() as b:
                 cmd = ' '.join([
@@ -730,59 +736,44 @@ class Nghttp2Builder(StandardBuilder):
                 b.add('mkdir dist dist\\include dist\\include\\nghttp2 dist\\lib')
                 b.add('cp lib/Release/*.lib dist/lib')
                 b.add('cp lib/includes/nghttp2/*.h dist/include/nghttp2')
-                if self.vc_version == 'vc9':
+                if self.bconf.vc_version == 'vc9':
                     # stdint.h
                     b.add('cp lib/includes/*.h dist/include')
 
-    @property
-    def output_dir_path(self):
-        return 'nghttp2-%s-%s' % (self.config.nghttp2_version, self.vc_tag)
-
 class LibiconvBuilder(StandardBuilder):
     def build(self):
-        fetch('https://ftp.gnu.org/pub/gnu/libiconv/libiconv-%s.tar.gz' % self.config.libiconv_version)
-        untar('libiconv-%s' % self.config.libiconv_version)
-        libiconv_dir = rename_for_vc('libiconv-%s' % self.config.libiconv_version, self.vc_tag)
+        libiconv_dir = self.standard_fetch_extract(
+            'https://ftp.gnu.org/pub/gnu/libiconv/libiconv-%(my_version)s.tar.gz')
         with in_dir(libiconv_dir):
             with self.execute_batch() as b:
                 b.add("env LD=link bash ./configure")
                 b.add(config.gmake_path)
 
-    @property
-    def output_dir_path(self):
-        return 'libiconv-%s-%s' % (self.config.libiconv_version, self.vc_tag)
-
 class LibidnBuilder(StandardBuilder):
     def build(self):
-        fetch('https://ftp.gnu.org/gnu/libidn/libidn-%s.tar.gz' % self.config.libidn_version)
-        untar('libidn-%s' % self.config.libidn_version)
-        libidn_dir = rename_for_vc('libidn-%s' % self.config.libidn_version, self.vc_tag)
+        libidn_dir = self.standard_fetch_extract(
+            'https://ftp.gnu.org/gnu/libidn/libidn-%(my_version)s.tar.gz')
         with in_dir(libidn_dir):
             with self.execute_batch() as b:
                 b.add("env LD=link bash ./configure")
 
-    @property
-    def output_dir_path(self):
-        return 'libidn-%s-%s' % (self.config.libidn_version, self.vc_tag)
-
 class LibcurlBuilder(StandardBuilder):
     def build(self):
-        fetch('https://curl.haxx.se/download/curl-%s.tar.gz' % self.config.libcurl_version)
-        untar('curl-%s' % self.config.libcurl_version)
-        curl_dir = rename_for_vc('curl-%s' % self.config.libcurl_version, self.vc_tag)
+        curl_dir = self.standard_fetch_extract(
+            'https://curl.haxx.se/download/curl-%(my_version)s.tar.gz')
     
         with in_dir(os.path.join(curl_dir, 'winbuild')):
-            if self.vc_version == 'vc9':
+            if self.bconf.vc_version == 'vc9':
                 # normaliz.lib in vc9 does not have the symbols libcurl
                 # needs for winidn.
                 # Handily we have a working normaliz.lib in vc14.
                 # Let's take the working one and copy it locally.
                 os.mkdir('support')
-                if self.bitness == 32:
-                    shutil.copy(os.path.join(self.config.windows_sdk_path, 'lib', 'normaliz.lib'),
+                if self.bconf.bitness == 32:
+                    shutil.copy(os.path.join(self.bconf.windows_sdk_path, 'lib', 'normaliz.lib'),
                         os.path.join('support', 'normaliz.lib'))
                 else:
-                    shutil.copy(os.path.join(self.config.windows_sdk_path, 'lib', 'x64', 'normaliz.lib'),
+                    shutil.copy(os.path.join(self.bconf.windows_sdk_path, 'lib', 'x64', 'normaliz.lib'),
                         os.path.join('support', 'normaliz.lib'))
             
             with self.execute_batch() as b:
@@ -793,36 +784,36 @@ class LibcurlBuilder(StandardBuilder):
                 else:
                     dll_or_static = 'static'
                 extra_options = ' mode=%s' % dll_or_static
-                if self.vc_version == 'vc9':
+                if self.bconf.vc_version == 'vc9':
                     # use normaliz.lib from msvc14/more recent windows sdk
                     b.add("set lib=%s;%%lib%%" % os.path.abspath('support'))
-                if self.config.use_zlib:
-                    zlib_builder = ZlibBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                if self.bconf.use_zlib:
+                    zlib_builder = ZlibBuilder(bconf=self.bconf)
                     b.add("set include=%%include%%;%s" % zlib_builder.include_path)
                     b.add("set lib=%%lib%%;%s" % zlib_builder.lib_path)
                     extra_options += ' WITH_ZLIB=%s' % dll_or_static
-                if self.config.use_openssl:
-                    openssl_builder = OpensslBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                if self.bconf.use_openssl:
+                    openssl_builder = OpensslBuilder(bconf=self.bconf)
                     b.add("set include=%%include%%;%s" % openssl_builder.include_path)
                     b.add("set lib=%%lib%%;%s" % openssl_builder.lib_path)
                     extra_options += ' WITH_SSL=%s' % dll_or_static
-                if self.config.use_cares:
-                    cares_builder = CaresBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                if self.bconf.use_cares:
+                    cares_builder = CaresBuilder(bconf=self.bconf)
                     b.add("set include=%%include%%;%s" % cares_builder.include_path)
                     b.add("set lib=%%lib%%;%s" % cares_builder.lib_path)
                     extra_options += ' WITH_CARES=%s' % dll_or_static
-                if self.config.use_libssh2:
-                    libssh2_builder = Libssh2Builder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                if self.bconf.use_libssh2:
+                    libssh2_builder = Libssh2Builder(bconf=self.bconf)
                     b.add("set include=%%include%%;%s" % libssh2_builder.include_path)
                     b.add("set lib=%%lib%%;%s" % libssh2_builder.lib_path)
                     extra_options += ' WITH_SSH2=%s' % dll_or_static
-                if self.config.use_nghttp2:
-                    nghttp2_builder = Nghttp2Builder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                if self.bconf.use_nghttp2:
+                    nghttp2_builder = Nghttp2Builder(bconf=self.bconf)
                     b.add("set include=%%include%%;%s" % nghttp2_builder.include_path)
                     b.add("set lib=%%lib%%;%s" % nghttp2_builder.lib_path)
                     extra_options += ' WITH_NGHTTP2=%s NGHTTP2_STATICLIB=1' % dll_or_static
-                if self.config.use_libidn:
-                    libidn_builder = LibidnBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                if self.bconf.use_libidn:
+                    libidn_builder = LibidnBuilder(bconf=self.bconf)
                     b.add("set include=%%include%%;%s" % libidn_builder.include_path)
                     b.add("set lib=%%lib%%;%s" % libidn_builder.lib_path)
                     extra_options += ' WITH_LIBIDN=%s' % dll_or_static
@@ -833,7 +824,7 @@ class LibcurlBuilder(StandardBuilder):
                     # crypt32.lib: http://stackoverflow.com/questions/37522654/linking-with-openssl-lib-statically
                     extra_options += ' MAKE="NMAKE /e" SSL_LIBS="libssl.lib libcrypto.lib crypt32.lib"'
                 # https://github.com/curl/curl/issues/1863
-                extra_options += ' VC=%s' % self.vc_version[2:]
+                extra_options += ' VC=%s' % self.bconf.vc_version[2:]
                 
                 # curl uses winidn APIs that do not exist in msvc9:
                 # https://github.com/curl/curl/issues/1863
@@ -855,13 +846,9 @@ class LibcurlBuilder(StandardBuilder):
                     raise Exception('%s does not start with %s' % (dir, expected_dir))
                     
             os.rename(os.path.join('builds', expected_dir), 'dist')
-            if self.vc_version == 'vc9':
+            if self.bconf.vc_version == 'vc9':
                 # need this normaliz.lib to build pycurl later on
                 shutil.copy('winbuild/support/normaliz.lib', 'dist/lib/normaliz.lib')
-
-    @property
-    def output_dir_path(self):
-        return 'curl-%s-%s' % (self.config.libcurl_version, self.vc_tag)
 
     @property
     def dll_paths(self):
@@ -872,36 +859,32 @@ class LibcurlBuilder(StandardBuilder):
 class PycurlBuilder(Builder):
     def __init__(self, **kwargs):
         self.python_release = kwargs.pop('python_release')
-        kwargs['vc_version'] = PYTHON_VC_VERSIONS[self.python_release]
         super(PycurlBuilder, self).__init__(**kwargs)
+        # vc_version is specified externally for bconf/BuildConfig
+        assert self.bconf.vc_version == PYTHON_VC_VERSIONS[self.python_release]
 
     @property
     def python_path(self):
         if config.build_wheels:
-            python_path = os.path.join(config.archives_path, 'venv-%s-%s' % (self.python_release, self.bitness), 'scripts', 'python')
+            python_path = os.path.join(config.archives_path, 'venv-%s-%s' % (self.python_release, self.bconf.bitness), 'scripts', 'python')
         else:
-            python_path = PythonBinary(self.python_release, self.bitness).executable_path
+            python_path = PythonBinary(self.python_release, self.bconf.bitness).executable_path
         return python_path
 
     @property
     def platform_indicator(self):
         platform_indicators = {32: 'win32', 64: 'win-amd64'}
-        return platform_indicators[self.bitness]
+        return platform_indicators[self.bconf.bitness]
 
     def build(self, targets):
-        libcurl_builder = LibcurlBuilder(bitness=self.bitness,
-            vc_version=self.vc_version,
-            config=self.config)
+        libcurl_builder = LibcurlBuilder(bconf=self.bconf)
         libcurl_dir = os.path.join(os.path.abspath(libcurl_builder.output_dir_path), 'dist')
         dll_paths = libcurl_builder.dll_paths
-        if self.config.use_zlib:
-            zlib_builder = ZlibBuilder(bitness=self.bitness,
-                vc_version=self.vc_version,
-                config=self.config,
-            )
+        if self.bconf.use_zlib:
+            zlib_builder = ZlibBuilder(bconf=self.bconf)
             dll_paths += zlib_builder.dll_paths
         dll_paths = [os.path.abspath(dll_path) for dll_path in dll_paths]
-        with in_dir(os.path.join('pycurl-%s' % self.config.pycurl_version)):
+        with in_dir(os.path.join('pycurl-%s' % self.bconf.pycurl_version)):
             dest_lib_path = 'build/lib.%s-%s' % (self.platform_indicator,
                 self.python_release)
             # exists for building additional targets for the same python version
@@ -915,15 +898,15 @@ class PycurlBuilder(Builder):
                     libcurl_arg = '--use-libcurl-dll'
                 else:
                     libcurl_arg = '--libcurl-lib-name=libcurl_a.lib'
-                if self.config.use_openssl:
+                if self.bconf.use_openssl:
                     libcurl_arg += ' --with-openssl'
                     if config.openssl_version_tuple >= (1, 1):
                         libcurl_arg += ' --openssl-lib-name=""'
-                    openssl_builder = OpensslBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                    openssl_builder = OpensslBuilder(bconf=self.bconf)
                     b.add("set include=%%include%%;%s" % openssl_builder.include_path)
                     b.add("set lib=%%lib%%;%s" % openssl_builder.lib_path)
                 #if build_wheels:
-                    #b.add("call %s" % os.path.join('..', 'venv-%s-%s' % (self.python_release, self.bitness), 'Scripts', 'activate'))
+                    #b.add("call %s" % os.path.join('..', 'venv-%s-%s' % (self.python_release, self.bconf.bitness), 'Scripts', 'activate'))
                 if config.build_wheels:
                     targets = targets + ['bdist_wheel']
                 if config.libcurl_version_tuple >= (7, 60, 0):
@@ -935,33 +918,33 @@ class PycurlBuilder(Builder):
                     # As a result we need to specify all of the libraries that
                     # libcurl depends on here, plus the library paths,
                     # plus even windows standard libraries for good measure.
-                    if self.config.use_zlib:
-                        zlib_builder = ZlibBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                    if self.bconf.use_zlib:
+                        zlib_builder = ZlibBuilder(bconf=self.bconf)
                         libcurl_arg += ' --link-arg=/LIBPATH:%s' % zlib_builder.lib_path
                         libcurl_arg += ' --link-arg=zlib.lib'
-                    if self.config.use_openssl:
-                        openssl_builder = OpensslBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                    if self.bconf.use_openssl:
+                        openssl_builder = OpensslBuilder(bconf=self.bconf)
                         libcurl_arg += ' --link-arg=/LIBPATH:%s' % openssl_builder.lib_path
                         # openssl 1.1
                         libcurl_arg += ' --link-arg=libcrypto.lib'
                         libcurl_arg += ' --link-arg=libssl.lib'
                         libcurl_arg += ' --link-arg=crypt32.lib'
                         libcurl_arg += ' --link-arg=advapi32.lib'
-                    if self.config.use_cares:
-                        cares_builder = CaresBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                    if self.bconf.use_cares:
+                        cares_builder = CaresBuilder(bconf=self.bconf)
                         libcurl_arg += ' --link-arg=/LIBPATH:%s' % cares_builder.lib_path
                         libcurl_arg += ' --link-arg=libcares.lib'
-                    if self.config.use_libssh2:
-                        libssh2_builder = Libssh2Builder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                    if self.bconf.use_libssh2:
+                        libssh2_builder = Libssh2Builder(bconf=self.bconf)
                         libcurl_arg += ' --link-arg=/LIBPATH:%s' % libssh2_builder.lib_path
                         libcurl_arg += ' --link-arg=libssh2.lib'
-                    if self.config.use_nghttp2:
-                        nghttp2_builder = Nghttp2Builder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                    if self.bconf.use_nghttp2:
+                        nghttp2_builder = Nghttp2Builder(bconf=self.bconf)
                         libcurl_arg += ' --link-arg=/LIBPATH:%s' % nghttp2_builder.lib_path
                         libcurl_arg += ' --link-arg=nghttp2.lib'
-                    if self.vc_version == 'vc9':
+                    if self.bconf.vc_version == 'vc9':
                         # this is for normaliz.lib
-                        libcurl_builder = LibcurlBuilder(bitness=self.bitness, vc_version=self.vc_version, config=self.config)
+                        libcurl_builder = LibcurlBuilder(bconf=self.bconf)
                         libcurl_arg += ' --link-arg=/LIBPATH:%s' % libcurl_builder.lib_path
                     # We always use normaliz.lib, but it may come from
                     # "standard" msvc location or from libcurl's lib dir for msvc9
@@ -971,9 +954,9 @@ class PycurlBuilder(Builder):
                     self.python_path, ' '.join(targets), libcurl_dir, libcurl_arg))
             if 'bdist' in targets:
                 zip_basename_orig = 'pycurl-%s.%s.zip' % (
-                    self.config.pycurl_version, self.platform_indicator)
+                    self.bconf.pycurl_version, self.platform_indicator)
                 zip_basename_new = 'pycurl-%s.%s-py%s.zip' % (
-                    self.config.pycurl_version, self.platform_indicator, self.python_release)
+                    self.bconf.pycurl_version, self.platform_indicator, self.python_release)
                 with zipfile.ZipFile('dist/%s' % zip_basename_orig, 'r') as src_zip:
                     with zipfile.ZipFile('dist/%s' % zip_basename_new, 'w') as dest_zip:
                         for name in src_zip.namelist():
@@ -989,45 +972,43 @@ class PycurlBuilder(Builder):
                             member = src_zip.open(name)
                             dest_zip.writestr(new_name, member.read(), zipfile.ZIP_DEFLATED)
 
-BITNESSES = (32, 64)
 
 def build_dependencies(config):
     if config.use_libssh2:
         if not config.use_zlib:
             # technically we can build libssh2 without zlib but I don't want to bother
-            raise ValueError('use_zlib must be True if use_libssh2 is True')
+            raise ValueError('use_zlib must be true if use_libssh2 is true')
         if not config.use_openssl:
-            raise ValueError('use_openssl must be True if use_libssh2 is True')
+            raise ValueError('use_openssl must be true if use_libssh2 is true')
 
     if config.git_bin_path:
         os.environ['PATH'] += ";%s" % config.git_bin_path
     mkdir_p(config.archives_path)
     with in_dir(config.archives_path):
-        for bitness in config.bitnesses:
-            for vc_version in needed_vc_versions(config.python_versions):
+        for bconf in config.buildconfigs():
                 if opts.verbose:
-                    print('Builddep for %s, %s-bit' % (vc_version, bitness))
+                    print('Builddep for %s, %s-bit' % (bconf.vc_version, bconf.bitness))
                 if config.use_zlib:
-                    zlib_builder = ZlibBuilder(bitness=bitness, vc_version=vc_version, config=config)
+                    zlib_builder = ZlibBuilder(bconf=bconf)
                     step(zlib_builder.build, (), zlib_builder.state_tag)
                 if config.use_openssl:
-                    openssl_builder = OpensslBuilder(bitness=bitness, vc_version=vc_version, config=config)
+                    openssl_builder = OpensslBuilder(bconf=bconf)
                     step(openssl_builder.build, (), openssl_builder.state_tag)
                 if config.use_cares:
-                    cares_builder = CaresBuilder(bitness=bitness, vc_version=vc_version, config=config)
+                    cares_builder = CaresBuilder(bconf=bconf)
                     step(cares_builder.build, (), cares_builder.state_tag)
                 if config.use_libssh2:
-                    libssh2_builder = Libssh2Builder(bitness=bitness, vc_version=vc_version, config=config)
+                    libssh2_builder = Libssh2Builder(bconf=bconf)
                     step(libssh2_builder.build, (), libssh2_builder.state_tag)
                 if config.use_nghttp2:
-                    nghttp2_builder = Nghttp2Builder(bitness=bitness, vc_version=vc_version, config=config)
+                    nghttp2_builder = Nghttp2Builder(bconf=bconf)
                     step(nghttp2_builder.build, (), nghttp2_builder.state_tag)
                 if config.use_libidn:
-                    libiconv_builder = LibiconvBuilder(bitness=bitness, vc_version=vc_version, config=config)
+                    libiconv_builder = LibiconvBuilder(bconf=bconf)
                     step(libiconv_builder.build, (), libiconv_builder.state_tag)
-                    libidn_builder = LibidnBuilder(bitness=bitness, vc_version=vc_version, config=config)
+                    libidn_builder = LibidnBuilder(bconf=bconf)
                     step(libidn_builder.build, (), libidn_builder.state_tag)
-                libcurl_builder = LibcurlBuilder(bitness=bitness, vc_version=vc_version,
+                libcurl_builder = LibcurlBuilder(bconf=bconf,
                     config=config)
                 step(libcurl_builder.build, (), libcurl_builder.state_tag)
 
@@ -1056,8 +1037,8 @@ def build(config):
             for python_release in config.python_releases:
                 targets = ['bdist', 'bdist_wininst', 'bdist_msi']
                 vc_version = PYTHON_VC_VERSIONS[python_release]
-                builder = PycurlBuilder(bitness=bitness, vc_version=vc_version,
-                    python_release=python_release, config=config)
+                bconf = BuildConfig(bitness=bitness, vc_version=vc_version)
+                builder = PycurlBuilder(bconf=bconf, python_release=python_release)
                 builder.build(targets)
 
 def python_metas():
