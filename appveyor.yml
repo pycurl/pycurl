@@ -15,23 +15,26 @@ environment:
       PYTHON_VERSION: "2.7.x" # currently 2.7.15
       PYTHON_ARCH: "64"
 
-    - PYTHON: "C:\\Python34"
-      PYTHON_VERSION: "3.4.x" # currently 3.5.3
+#    - PYTHON: "C:\\Python35"
+#      PYTHON_VERSION: "3.5.x" # currently 3.5.3
+#      PYTHON_ARCH: "32"
+
+#    - PYTHON: "C:\\Python35-x64"
+#      PYTHON_VERSION: "3.5.x" # currently 3.5.3
+#      PYTHON_ARCH: "64"
+
+    - PYTHON: "C:\\Python36"
+      PYTHON_VERSION: "3.6.x" # currently 3.6.5
       PYTHON_ARCH: "32"
 
-    - PYTHON: "C:\\Python34-x64"
-      PYTHON_VERSION: "3.4.x" # currently 3.5.3
-      PYTHON_ARCH: "64"
-
-    - PYTHON: "C:\\Python35"
-      PYTHON_VERSION: "3.5.x" # currently 3.6.5
-      PYTHON_ARCH: "32"
-
-    - PYTHON: "C:\\Python35-x64"
-      PYTHON_VERSION: "3.5.x" # currently 3.6.5
+    - PYTHON: "C:\\Python36-x64"
+      PYTHON_VERSION: "3.6.x" # currently 3.6.5
       PYTHON_ARCH: "64"
 
 install:
+
+  #- "%CMD_IN_ENV% set"
+
   # If there is a newer build queued for the same PR, cancel this one.
   # The AppVeyor 'rollout builds' option is supposed to serve the same
   # purpose but it is problematic because it tends to cancel builds pushed
@@ -41,11 +44,11 @@ install:
         https://ci.appveyor.com/api/projects/$env:APPVEYOR_ACCOUNT_NAME/$env:APPVEYOR_PROJECT_SLUG/history?recordsNumber=50).builds | `
         Where-Object pullRequestId -eq $env:APPVEYOR_PULL_REQUEST_NUMBER)[0].buildNumber) { `
           throw "There are newer queued builds for this pull request, failing early." }
-  - ECHO "Filesystem root:"
-  - ps: "ls \"C:/\""
+  #- ECHO "Filesystem root:"
+  #- ps: "ls \"C:/\""
 
-  - ECHO "Installed SDKs:"
-  - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
+  #- ECHO "Installed SDKs:"
+  #- ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
 
   # Install Python (from the official .msi of http://python.org) and pip when
   # not already installed.
@@ -62,27 +65,35 @@ install:
 
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
-  - "python -m pip install --upgrade pip"
+  #- "python -m pip install --upgrade pip"
 
   # Install the build dependencies of the project. If some dependencies contain
   # compiled extensions and are not provided as pre-built wheel packages,
   # pip will build them from source using the MSVC compiler matching the
   # target Python version and architecture
-  - "%CMD_IN_ENV% pip install -r dev-requirements.txt"
+  - "%CMD_IN_ENV% pip install -r requirements-dev.txt"
+  - "%CMD_IN_ENV% pip install wheel"
+
+  # Build the compiled extension
+  - "%CMD_IN_ENV% python winbuild.py getdeps"
 
 build_script:
+  #-  call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86
   # Build the compiled extension
-  - "%CMD_IN_ENV% python setup.py build"
+  - "%CMD_IN_ENV% python setup.py docstrings"
+  - "%CMD_IN_ENV% python setup.py --with-openssl --libcurl-lib-name=libcurl_a.lib --openssl-lib-name=\"\" --curl-dir=deps bdist_wheel bdist_wininst bdist_msi --link-arg=/LIBPATH:deps/lib --link-arg=zlib.lib --link-arg=libcrypto.lib --link-arg=libssl.lib --link-arg=crypt32.lib --link-arg=advapi32.lib --link-arg=libcares.lib --link-arg=libssh2.lib --link-arg=nghttp2.lib --link-arg=normaliz.lib --link-arg=user32.lib"
 
 test_script:
   # Run the project tests
-  - "%CMD_IN_ENV% python setup.py nosetests"
+  - ps: $whl = get-childitem dist\*.whl;
+        pip install $whl
+  - nosetests
 
 after_test:
   # If tests are successful, create binary packages for the project.
-  - "%CMD_IN_ENV% python setup.py bdist_wheel"
-  - "%CMD_IN_ENV% python setup.py bdist_wininst"
-  - "%CMD_IN_ENV% python setup.py bdist_msi"
+  #- "%CMD_IN_ENV% python setup.py bdist_wheel"
+  #- "%CMD_IN_ENV% python setup.py bdist_wininst"
+  #- "%CMD_IN_ENV% python setup.py bdist_msi"
   - ps: "ls dist"
 
 artifacts:
