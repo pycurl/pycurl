@@ -1038,11 +1038,6 @@ def build(config):
                 rm_rf('pycurl-%s' % config.pycurl_version)
             #check_call([tar_path, 'xf', 'pycurl-%s.tar.gz' % pycurl_version])
             shutil.copytree('c:/dev/pycurl', 'pycurl-%s' % config.pycurl_version)
-            if config.build_wheels:
-                with in_dir('pycurl-%s' % config.pycurl_version):
-                    check_call([config.sed_path, '-i',
-                        's/from distutils.core import setup/from setuptools import setup/',
-                        'setup.py'])
 
         prepare_pycurl()
 

@@ -10,7 +10,11 @@ VERSION = "7.43.0.1"
 
 import glob, os, re, sys, subprocess
 import distutils
-from distutils.core import setup
+try:
+    import wheel
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
 from distutils.extension import Extension
 from distutils.util import split_quoted
 from distutils.version import LooseVersion
