@@ -91,6 +91,7 @@ class OpenSocketCbTest(unittest.TestCase):
         assert type(socket_open_address[3]) == int
 
     @util.min_libcurl(7, 40, 0)
+    @util.only_unix
     def test_socket_open_unix(self):
         self.curl.setopt(pycurl.OPENSOCKETFUNCTION, socket_open_unix)
         self.curl.setopt(self.curl.URL, 'http://localhost:8380/success')

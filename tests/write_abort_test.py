@@ -27,7 +27,7 @@ class WriteAbortTest(unittest.TestCase):
             pass
 
         # download the script itself through the file:// protocol into write_cb
-        self.curl.setopt(pycurl.URL, 'file://' + os.path.abspath(sys.argv[0]))
+        self.curl.setopt(pycurl.URL, 'file://' + os.path.abspath(__file__).replace('\\', '/'))
         self.curl.setopt(pycurl.WRITEFUNCTION, write_cb)
         try:
             self.curl.perform()

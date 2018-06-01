@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+import socket
 import os
 import unittest
 import pycurl
@@ -26,7 +27,10 @@ class CloseSocketCbTest(unittest.TestCase):
 
         def closesocketfunction(curlfd):
             called['called'] = True
-            os.close(curlfd)
+            # Unix only
+            #os.close(curlfd)
+            # Unix & Windows
+            socket.fromfd(curlfd, socket.AF_INET, socket.SOCK_STREAM).close()
             return 0
 
         self.curl.setopt(pycurl.CLOSESOCKETFUNCTION, closesocketfunction)
