@@ -2,6 +2,7 @@
 # https://github.com/bagder/curl/blob/master/docs/examples/smtp-mail.c
 # There are other SMTP examples in that directory that you may find helpful.
 
+from . import localhost
 import pycurl
 try:
     from io import BytesIO
@@ -11,7 +12,7 @@ import sys
 
 PY3 = sys.version_info[0] > 2
 
-mail_server = 'smtp://localhost'
+mail_server = 'smtp://%s' % localhost
 mail_from = 'sender@example.org'
 mail_to = 'addressee@example.net'
 

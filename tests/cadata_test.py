@@ -13,7 +13,7 @@ setup_module, teardown_module = appmanager.setup(('app', 8384, dict(ssl=True)))
 
 class CaCertsTest(unittest.TestCase):
     def setUp(self):
-        self.curl = util.DefaultCurl()
+        self.curl = util.DefaultCurlLocalhost(8384)
 
     def tearDown(self):
         self.curl.close()

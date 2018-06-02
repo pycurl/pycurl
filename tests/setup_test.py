@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+from . import util
 import setup as pycurl_setup
 import unittest
 import os, os.path, sys
@@ -60,17 +61,21 @@ def min_python_version(*spec):
     return decorator
 
 class SetupTest(unittest.TestCase):
+
+    @util.only_unix
     def test_sanity_check(self):
         config = pycurl_setup.ExtensionConfiguration()
         # we should link against libcurl, one would expect
         assert 'curl' in config.libraries
 
+    @util.only_unix
     @using_curl_config('curl-config-empty')
     def test_no_ssl(self):
         config = pycurl_setup.ExtensionConfiguration()
         # do not expect anything to do with ssl
         assert 'crypto' not in config.libraries
 
+    @util.only_unix
     @using_curl_config('curl-config-libs-and-static-libs')
     def test_does_not_use_static_libs(self):
         config = pycurl_setup.ExtensionConfiguration()
@@ -79,42 +84,49 @@ class SetupTest(unittest.TestCase):
         assert 'flurby' in config.libraries
         assert 'kzzert' not in config.libraries
 
+    @util.only_unix
     @using_curl_config('curl-config-ssl-in-libs')
     def test_ssl_in_libs(self):
         config = pycurl_setup.ExtensionConfiguration()
         # should link against openssl
         assert 'crypto' in config.libraries
 
+    @util.only_unix
     @using_curl_config('curl-config-ssl-in-static-libs')
     def test_ssl_in_static_libs(self):
         config = pycurl_setup.ExtensionConfiguration()
         # should link against openssl
         assert 'crypto' in config.libraries
 
+    @util.only_unix
     @using_curl_config('curl-config-empty')
     def test_no_ssl_define(self):
         config = pycurl_setup.ExtensionConfiguration()
         # ssl define should be off
         assert 'HAVE_CURL_SSL' not in config.define_symbols
 
+    @util.only_unix
     @using_curl_config('curl-config-ssl-in-libs')
     def test_ssl_in_libs_sets_ssl_define(self):
         config = pycurl_setup.ExtensionConfiguration()
         # ssl define should be on
         assert 'HAVE_CURL_SSL' in config.define_symbols
 
+    @util.only_unix
     @using_curl_config('curl-config-ssl-in-static-libs')
     def test_ssl_in_static_libs_sets_ssl_define(self):
         config = pycurl_setup.ExtensionConfiguration()
         # ssl define should be on
         assert 'HAVE_CURL_SSL' in config.define_symbols
 
+    @util.only_unix
     @using_curl_config('curl-config-ssl-in-libs')
     def test_ssl_feature_sets_ssl_define(self):
         config = pycurl_setup.ExtensionConfiguration()
         # ssl define should be on
         assert 'HAVE_CURL_SSL' in config.define_symbols
 
+    @util.only_unix
     @using_curl_config('curl-config-ssl-feature-only')
     def test_ssl_feature_only(self):
         try:
@@ -127,6 +139,7 @@ specify the SSL backend manually.''', str(e))
         else:
             self.fail('Should have raised')
 
+    @util.only_unix
     @using_curl_config('curl-config-ssl-feature-only')
     def test_libcurl_ssl_openssl(self):
         config = pycurl_setup.ExtensionConfiguration(['',
@@ -139,6 +152,7 @@ specify the SSL backend manually.''', str(e))
         assert 'HAVE_CURL_GNUTLS' not in config.define_symbols
         assert 'HAVE_CURL_NSS' not in config.define_symbols
 
+    @util.only_unix
     @using_curl_config('curl-config-ssl-feature-only')
     def test_libcurl_ssl_gnutls(self):
         config = pycurl_setup.ExtensionConfiguration(['',
@@ -151,6 +165,7 @@ specify the SSL backend manually.''', str(e))
         assert 'HAVE_CURL_OPENSSL' not in config.define_symbols
         assert 'HAVE_CURL_NSS' not in config.define_symbols
 
+    @util.only_unix
     @using_curl_config('curl-config-ssl-feature-only')
     def test_libcurl_ssl_nss(self):
         config = pycurl_setup.ExtensionConfiguration(['',
@@ -163,6 +178,7 @@ specify the SSL backend manually.''', str(e))
         assert 'HAVE_CURL_OPENSSL' not in config.define_symbols
         assert 'HAVE_CURL_GNUTLS' not in config.define_symbols
 
+    @util.only_unix
     @using_curl_config('curl-config-empty')
     def test_libcurl_ssl_unrecognized(self):
         config = pycurl_setup.ExtensionConfiguration(['',
@@ -172,6 +188,7 @@ specify the SSL backend manually.''', str(e))
         assert 'HAVE_CURL_GNUTLS' not in config.define_symbols
         assert 'HAVE_CURL_NSS' not in config.define_symbols
 
+    @util.only_unix
     @using_curl_config('curl-config-ssl-feature-only')
     def test_with_ssl_library(self):
         config = pycurl_setup.ExtensionConfiguration(['',
@@ -183,6 +200,7 @@ specify the SSL backend manually.''', str(e))
         assert 'HAVE_CURL_GNUTLS' not in config.define_symbols
         assert 'HAVE_CURL_NSS' not in config.define_symbols
 
+    @util.only_unix
     @using_curl_config('curl-config-ssl-feature-only')
     def test_with_openssl_library(self):
         config = pycurl_setup.ExtensionConfiguration(['',
@@ -194,6 +212,7 @@ specify the SSL backend manually.''', str(e))
         assert 'HAVE_CURL_GNUTLS' not in config.define_symbols
         assert 'HAVE_CURL_NSS' not in config.define_symbols
 
+    @util.only_unix
     @using_curl_config('curl-config-ssl-feature-only')
     def test_with_gnutls_library(self):
         config = pycurl_setup.ExtensionConfiguration(['',
@@ -205,6 +224,7 @@ specify the SSL backend manually.''', str(e))
         assert 'HAVE_CURL_OPENSSL' not in config.define_symbols
         assert 'HAVE_CURL_NSS' not in config.define_symbols
 
+    @util.only_unix
     @using_curl_config('curl-config-ssl-feature-only')
     def test_with_nss_library(self):
         config = pycurl_setup.ExtensionConfiguration(['',
@@ -216,6 +236,7 @@ specify the SSL backend manually.''', str(e))
         assert 'HAVE_CURL_OPENSSL' not in config.define_symbols
         assert 'HAVE_CURL_GNUTLS' not in config.define_symbols
 
+    @util.only_unix
     @using_curl_config('curl-config-empty')
     def test_no_ssl_feature_with_libcurl_dll(self):
         config = pycurl_setup.ExtensionConfiguration(['',
@@ -225,6 +246,7 @@ specify the SSL backend manually.''', str(e))
         assert 'HAVE_CURL_OPENSSL' not in config.define_symbols
         assert 'crypto' not in config.libraries
 
+    @util.only_unix
     @using_curl_config('curl-config-empty')
     def test_no_ssl_feature_with_ssl(self):
         old_stderr = sys.stderr

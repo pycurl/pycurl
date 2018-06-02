@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+from . import localhost
 import pycurl
 import unittest
 
@@ -24,7 +25,7 @@ class DebugTest(unittest.TestCase):
     def test_perform_get_with_debug_function(self):
         self.curl.setopt(pycurl.VERBOSE, 1)
         self.curl.setopt(pycurl.DEBUGFUNCTION, self.debug_function)
-        self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
+        self.curl.setopt(pycurl.URL, 'http://%s:8380/success' % localhost)
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
@@ -34,7 +35,7 @@ class DebugTest(unittest.TestCase):
         if util.pycurl_version_less_than(7, 24):
             self.check(0, util.b('connected'))
         else:
-            self.check(0, util.b('Connected to localhost'))
+            self.check(0, util.b('Connected to %s' % localhost))
         self.check(0, util.b('port 8380'))
         # request
         self.check(2, util.b('GET /success HTTP/1.1'))
@@ -48,7 +49,7 @@ class DebugTest(unittest.TestCase):
     def test_debug_unicode(self):
         self.curl.setopt(pycurl.VERBOSE, 1)
         self.curl.setopt(pycurl.DEBUGFUNCTION, self.debug_function)
-        self.curl.setopt(pycurl.URL, 'http://localhost:8380/utf8_body')
+        self.curl.setopt(pycurl.URL, 'http://%s:8380/utf8_body' % localhost)
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()

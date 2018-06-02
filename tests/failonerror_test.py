@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+from . import localhost
 import pycurl
 import unittest
 
@@ -21,7 +22,7 @@ class FailonerrorTest(unittest.TestCase):
     # and does not include status text, only the status code
     @util.min_libcurl(7, 38, 0)
     def test_failonerror(self):
-        self.curl.setopt(pycurl.URL, 'http://localhost:8380/status/403')
+        self.curl.setopt(pycurl.URL, 'http://%s:8380/status/403' % localhost)
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEDATA, sio)
         self.curl.setopt(pycurl.FAILONERROR, True)
@@ -41,7 +42,7 @@ class FailonerrorTest(unittest.TestCase):
     # and does not include status text, only the status code
     @util.min_libcurl(7, 38, 0)
     def test_failonerror_status_line_invalid_utf8_python2(self):
-        self.curl.setopt(pycurl.URL, 'http://localhost:8380/status_invalid_utf8')
+        self.curl.setopt(pycurl.URL, 'http://%s:8380/status_invalid_utf8' % localhost)
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEDATA, sio)
         self.curl.setopt(pycurl.FAILONERROR, True)
@@ -61,7 +62,7 @@ class FailonerrorTest(unittest.TestCase):
     # and does not include status text, only the status code
     @util.min_libcurl(7, 38, 0)
     def test_failonerror_status_line_invalid_utf8_python3(self):
-        self.curl.setopt(pycurl.URL, 'http://localhost:8380/status_invalid_utf8')
+        self.curl.setopt(pycurl.URL, 'http://%s:8380/status_invalid_utf8' % localhost)
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEDATA, sio)
         self.curl.setopt(pycurl.FAILONERROR, True)

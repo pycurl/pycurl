@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+from . import localhost
 import threading
 import pycurl
 import unittest
@@ -17,7 +18,7 @@ class WorkerThread(threading.Thread):
     def __init__(self, share):
         threading.Thread.__init__(self)
         self.curl = util.DefaultCurl()
-        self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
+        self.curl.setopt(pycurl.URL, 'http://%s:8380/success' % localhost)
         self.curl.setopt(pycurl.SHARE, share)
         self.sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, self.sio.write)

@@ -181,6 +181,18 @@ def only_ipv6(fn):
 
     return decorated
 
+def only_unix(fn):
+    import nose.plugins.skip
+
+    @functools.wraps(fn)
+    def decorated(*args, **kwargs):
+        if sys.platform == 'win32':
+            raise nose.plugins.skip.SkipTest('Unix only')
+
+        return fn(*args, **kwargs)
+
+    return decorated
+
 def guard_unknown_libcurl_option(fn):
     '''Converts curl error 48, CURLE_UNKNOWN_OPTION, into a SkipTest
     exception. This is meant to be used with tests exercising libcurl
@@ -270,10 +282,21 @@ def DefaultCurl():
     curl.setopt(curl.FORBID_REUSE, True)
     return curl
 
+def DefaultCurlLocalhost(port):
+    '''This is a default curl with localhost -> 127.0.0.1 name mapping
+    on windows systems, because they don't have it in the hosts file.
+    '''
+    
+    curl = DefaultCurl()
+    
+    if sys.platform == 'win32':
+        curl.setopt(curl.RESOLVE, ['localhost:%d:127.0.0.1' % port])
+    
+    return curl
+
 def with_real_write_file(fn):
     @functools.wraps(fn)
     def wrapper(*args):
         with tempfile.NamedTemporaryFile() as f:
-            with open(f.name, 'w+b') as real_f:
-                return fn(*(list(args) + [real_f]))
+            return fn(*(list(args) + [f.file]))
     return wrapper

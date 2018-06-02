@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+from . import localhost
 import pycurl
 import unittest
 import nose.plugins.attrib
@@ -73,7 +74,7 @@ class OptionConstantsTest(unittest.TestCase):
     @util.min_libcurl(7, 19, 4)
     def test_noproxy_setopt(self):
         curl = pycurl.Curl()
-        curl.setopt(curl.NOPROXY, 'localhost')
+        curl.setopt(curl.NOPROXY, localhost)
         curl.close()
 
     # CURLOPT_PROTOCOLS was introduced in libcurl-7.19.4
@@ -212,6 +213,7 @@ class OptionConstantsTest(unittest.TestCase):
         curl.setopt(curl.WILDCARDMATCH, '*')
         curl.close()
 
+    @util.only_unix
     @util.min_libcurl(7, 40, 0)
     def test_unix_socket_path(self):
         curl = pycurl.Curl()
@@ -464,6 +466,8 @@ class OptionConstantsSettingTest(unittest.TestCase):
         assert self.curl.PROTO_SMB is not None
         assert self.curl.PROTO_SMBS is not None
 
+    # Apparently TLSAUTH_TYPE=SRP is an unknown option on appveyor
+    @util.only_unix
     @util.min_libcurl(7, 21, 4)
     @util.only_ssl_backends('openssl', 'gnutls')
     def test_tlsauth(self):

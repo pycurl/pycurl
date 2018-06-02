@@ -210,6 +210,10 @@ class ExtendedConfig(Config):
         return find_in_paths('rm', self.msysgit_bin_paths)
         
     @property
+    def cp_path(self):
+        return find_in_paths('cp', self.msysgit_bin_paths)
+        
+    @property
     def sed_path(self):
         return find_in_paths('sed', self.msysgit_bin_paths)
         
@@ -270,6 +274,12 @@ PYTHON_VC_VERSIONS = {
 def mkdir_p(path):
     if not os.path.exists(path):
         os.makedirs(path)
+
+def rm_rf(path):
+    check_call([config.rm_path, '-rf', path])
+
+def cp_r(src, dest):
+    check_call([config.cp_path, '-r', src, dest])
 
 def fetch(url, archive=None):
     if archive is None:
@@ -428,6 +438,10 @@ class BuildConfig(ExtendedConfig):
         assert self.bitness in (32, 64)
         assert self.vc_version
 
+    @property
+    def vc_tag(self):
+        return '%s-%s' % (self.vc_version, self.bitness)
+
 class Builder(object):
     def __init__(self, **kwargs):
         self.bconf = kwargs.pop('bconf')
@@ -451,10 +465,6 @@ class Builder(object):
                 print(f.read())
             sys.stdout.flush()
             exit(3)
-
-    @property
-    def vc_tag(self):
-        return '%s-%s' % (self.bconf.vc_version, self.bconf.bitness)
 
 class StandardBuilder(Builder):
     @property
@@ -487,7 +497,7 @@ class StandardBuilder(Builder):
 
     @property
     def output_dir_path(self):
-        return '%s-%s-%s' % (self.builder_name, self.my_version, self.vc_tag)
+        return '%s-%s-%s' % (self.builder_name, self.my_version, self.bconf.vc_tag)
         
     def standard_fetch_extract(self, url_template):
         url = url_template % dict(
@@ -532,7 +542,7 @@ class OpensslBuilder(StandardBuilder):
         # nasm output is redirected to NUL which ends up creating a file named NUL.
         # however being a reserved file name this file is not deletable by
         # ordinary tools.
-        nul_file = "openssl-%s-%s\\NUL" % (self.bconf.openssl_version, self.vc_tag)
+        nul_file = "openssl-%s-%s\\NUL" % (self.bconf.openssl_version, self.bconf.vc_tag)
         check_call(['rm', '-f', nul_file])
         openssl_dir = self.standard_fetch_extract(
             'https://www.openssl.org/source/openssl-%(my_version)s.tar.gz')
@@ -849,6 +859,9 @@ class LibcurlBuilder(StandardBuilder):
             if self.bconf.vc_version == 'vc9':
                 # need this normaliz.lib to build pycurl later on
                 shutil.copy('winbuild/support/normaliz.lib', 'dist/lib/normaliz.lib')
+                
+            # need libcurl.lib to build pycurl with --curl-dir argument
+            shutil.copy('dist/lib/libcurl_a.lib', 'dist/lib/libcurl.lib')
 
     @property
     def dll_paths(self):
@@ -972,6 +985,27 @@ class PycurlBuilder(Builder):
                             member = src_zip.open(name)
                             dest_zip.writestr(new_name, member.read(), zipfile.ZIP_DEFLATED)
 
+def dep_builders(bconf):
+    builders = []
+    if config.use_zlib:
+        builders.append(ZlibBuilder)
+    if config.use_openssl:
+        builders.append(OpensslBuilder)
+    if config.use_cares:
+        builders.append(CaresBuilder)
+    if config.use_libssh2:
+        builders.append(Libssh2Builder)
+    if config.use_nghttp2:
+        builders.append(Nghttp2Builder)
+    if config.use_libidn:
+        builders.append(LibiconvBuilder)
+        builders.append(LibidnBuilder)
+    builders.append(LibcurlBuilder)
+    builders = [
+        cls(bconf=bconf)
+        for cls in builders
+    ]
+    return builders
 
 def build_dependencies(config):
     if config.use_libssh2:
@@ -988,29 +1022,8 @@ def build_dependencies(config):
         for bconf in config.buildconfigs():
                 if opts.verbose:
                     print('Builddep for %s, %s-bit' % (bconf.vc_version, bconf.bitness))
-                if config.use_zlib:
-                    zlib_builder = ZlibBuilder(bconf=bconf)
-                    step(zlib_builder.build, (), zlib_builder.state_tag)
-                if config.use_openssl:
-                    openssl_builder = OpensslBuilder(bconf=bconf)
-                    step(openssl_builder.build, (), openssl_builder.state_tag)
-                if config.use_cares:
-                    cares_builder = CaresBuilder(bconf=bconf)
-                    step(cares_builder.build, (), cares_builder.state_tag)
-                if config.use_libssh2:
-                    libssh2_builder = Libssh2Builder(bconf=bconf)
-                    step(libssh2_builder.build, (), libssh2_builder.state_tag)
-                if config.use_nghttp2:
-                    nghttp2_builder = Nghttp2Builder(bconf=bconf)
-                    step(nghttp2_builder.build, (), nghttp2_builder.state_tag)
-                if config.use_libidn:
-                    libiconv_builder = LibiconvBuilder(bconf=bconf)
-                    step(libiconv_builder.build, (), libiconv_builder.state_tag)
-                    libidn_builder = LibidnBuilder(bconf=bconf)
-                    step(libidn_builder.build, (), libidn_builder.state_tag)
-                libcurl_builder = LibcurlBuilder(bconf=bconf,
-                    config=config)
-                step(libcurl_builder.build, (), libcurl_builder.state_tag)
+                for builder in dep_builders(bconf):
+                    step(builder.build, (), builder.state_tag)
 
 def build(config):
     # note: adds git_bin_path to PATH if necessary, and creates archives_path
@@ -1022,14 +1035,9 @@ def build(config):
                 # shutil.rmtree is incapable of removing .git directory because it contains
                 # files marked read-only (tested on python 2.7 and 3.6)
                 #shutil.rmtree('pycurl-%s' % config.pycurl_version)
-                check_call([config.rm_path, '-rf', 'pycurl-%s' % config.pycurl_version])
+                rm_rf('pycurl-%s' % config.pycurl_version)
             #check_call([tar_path, 'xf', 'pycurl-%s.tar.gz' % pycurl_version])
             shutil.copytree('c:/dev/pycurl', 'pycurl-%s' % config.pycurl_version)
-            if config.build_wheels:
-                with in_dir('pycurl-%s' % config.pycurl_version):
-                    check_call([config.sed_path, '-i',
-                        's/from distutils.core import setup/from setuptools import setup/',
-                        'setup.py'])
 
         prepare_pycurl()
 
@@ -1123,6 +1131,35 @@ def create_virtualenvs(config):
                 cmd = [python_binary.executable_path, '-m', 'virtualenv', venv_basename]
                 check_call(cmd)
 
+def assemble_deps(config):
+    rm_rf('deps')
+    os.mkdir('deps')
+    for bconf in config.buildconfigs():
+        print(bconf.vc_tag)
+        sys.stdout.flush()
+        dest = os.path.join('deps', bconf.vc_tag)
+        os.mkdir(dest)
+        for builder in dep_builders(bconf):
+            cp_r(builder.include_path, dest)
+            cp_r(builder.lib_path, dest)
+            with zipfile.ZipFile(os.path.join('deps', bconf.vc_tag + '.zip'), 'w', zipfile.ZIP_DEFLATED) as zip:
+                for root, dirs, files in os.walk(dest):
+                    for file in files:
+                        path = os.path.join(root, file)
+                        zip_name = path[len(dest)+1:]
+                        zip.write(path, zip_name)
+
+def get_deps():
+    import struct
+    
+    python_release = sys.version_info[:2]
+    vc_version = PYTHON_VC_VERSIONS['.'.join(map(str, python_release))]
+    bitness = struct.calcsize('P') * 8
+    vc_tag = '%s-%d' % (vc_version, bitness)
+    fetch('https://dl.bintray.com/pycurl/deps/%s.zip' % vc_tag)
+    check_call(['unzip', '-d', 'deps', vc_tag + '.zip'])
+    
+
 import optparse
 
 parser = optparse.OptionParser()
@@ -1175,6 +1212,10 @@ if len(args) > 0:
         install_virtualenv(config)
     elif args[0] == 'createvirtualenvs':
         create_virtualenvs(config)
+    elif args[0] == 'assembledeps':
+        assemble_deps(config)
+    elif args[0] == 'getdeps':
+        get_deps()
     else:
         print('Unknown command: %s' % args[0])
         exit(2)

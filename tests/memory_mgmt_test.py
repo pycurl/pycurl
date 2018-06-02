@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+import sys
 import weakref
 import pycurl
 import unittest
@@ -215,12 +216,17 @@ class MemoryMgmtTest(unittest.TestCase):
             #print("Tracked objects:", len(gc.get_objects()))
 
     def test_refcounting_bug_in_reset(self):
+        if sys.platform == 'win32':
+            iters = 10000
+        else:
+            iters = 100000
+            
         try:
             range_generator = xrange
         except NameError:
             range_generator = range
         # Ensure that the refcounting error in "reset" is fixed:
-        for i in range_generator(100000):
+        for i in range_generator(iters):
             c = util.DefaultCurl()
             c.reset()
             c.close()
@@ -309,7 +315,11 @@ class MemoryMgmtTest(unittest.TestCase):
 
     def do_data_refcounting(self, option):
         c = util.DefaultCurl()
-        f = open('/dev/null', 'a+')
+        if sys.platform == 'win32':
+            path = 'NUL'
+        else:
+            path = '/dev/null'
+        f = open(path, 'a+')
         c.setopt(option, f)
         ref = weakref.ref(f)
         del f

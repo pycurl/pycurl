@@ -1,3 +1,4 @@
+from . import localhost
 import pycurl
 from io import BytesIO
 import socket
@@ -16,7 +17,7 @@ def socket_open(family, socktype, protocol, address):
 
 curl = pycurl.Curl()
 curl.setopt(pycurl.OPENSOCKETFUNCTION, socket_open)
-curl.setopt(curl.URL, 'http://localhost:8380/success')
+curl.setopt(curl.URL, 'http://%s:8380/success' % localhost)
 sio = BytesIO()
 curl.setopt(pycurl.WRITEFUNCTION, sio.write)
 print(1)

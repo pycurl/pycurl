@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+from . import localhost
 import unittest
 import pycurl
 import sys
@@ -38,7 +39,7 @@ class DefaultWriteCbTest(unittest.TestCase):
         # test_perform_get_with_default_write_function is the test
         # which exercises default curl write handler.
 
-        self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
+        self.curl.setopt(pycurl.URL, 'http://%s:8380/success' % localhost)
         self.curl.perform()
         # If this flush is not done, stdout output bleeds into the next test
         # that is executed (without nose output capture)
@@ -47,7 +48,7 @@ class DefaultWriteCbTest(unittest.TestCase):
 
     # I have a really hard time getting this to work with nose output capture
     def skip_perform_get_with_default_write_function(self):
-        self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
+        self.curl.setopt(pycurl.URL, 'http://%s:8380/success' % localhost)
         f = tempfile.NamedTemporaryFile()
         try:
         #with open('w', 'w+') as f:

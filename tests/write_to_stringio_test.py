@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+from . import localhost
 import pycurl
 import unittest
 import sys
@@ -19,7 +20,7 @@ class WriteToStringioTest(unittest.TestCase):
         self.curl.close()
 
     def test_write_to_bytesio(self):
-        self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
+        self.curl.setopt(pycurl.URL, 'http://%s:8380/success' % localhost)
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
@@ -27,7 +28,7 @@ class WriteToStringioTest(unittest.TestCase):
 
     @util.only_python3
     def test_write_to_stringio(self):
-        self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
+        self.curl.setopt(pycurl.URL, 'http://%s:8380/success' % localhost)
         # stringio in python 3
         sio = util.StringIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
