@@ -23,11 +23,11 @@ Release Process
 13. Build windows packages using winbuild.py.
 14. Add sdist and windows packages to downloads repo on github.
 15. Tag the new version.
-16. Register new version with pypi - ``python setup.py register``.
-17. Upload source distribution to pypi using twine.
-18. Upload windows wheels to pypi using twine.
-19. Upload windows exe installers to pypi using twine.
-20. Upload release files to bintray.
-21. Push tag to github pycurl repo.
-22. Announce release on mailing list.
-23. Link to announcement from website.
+16. Upload source distribution to pypi using twine.
+17. Upload windows wheels to pypi using twine.
+18. Upload windows exe installers to pypi using twine.
+19. Upload release files to bintray.
+20. Push tag to github pycurl repo.
+21. Generate and upload documentation to web site.
+22. Update web site home page.
+23. Announce release on mailing list.
