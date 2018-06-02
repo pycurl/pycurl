@@ -1,6 +1,6 @@
 Copyright (C) 2001-2008 by Kjetil Jacobsen <kjetilja at gmail.com>
 Copyright (C) 2001-2008 by Markus F.X.J. Oberhumer <markus at oberhumer.com>
-Copyright (C) 2013-2017 by Oleg Pudeyev <oleg at bsdpower.com>
+Copyright (C) 2013-2018 by Oleg Pudeyev <oleg at bsdpower.com>
 
 Please see README, COPYING-LGPL and COPYING-MIT for license information.
 
@@ -15,6 +15,7 @@ Arshad Khan <khan.m.arshad at gmail.com>
 Barry Warsaw <barry at python.org>
 Bastian Kleineidam
 Benjamin Peterson <benjamin at python.org>
+Casey Miller <camiller at linkedin.com>
 Christopher Warner <cwarner at kernelcode.com>
 Clint Clayton <clintclayton at me.com>
 Conrad Steenberg <conrad at hep.caltech.edu>
@@ -33,6 +34,7 @@ Hugo <hugovk at users.noreply.github.com>
 Iain R. Learmonth <irl at fsfe.org>
 ideal <idealities at gmail.com>
 Jakob Truelsen <jakob at scalgo.com>
+Jakub Wilk <jwilk at jwilk.net>
 Jan Kryl <jan.kryl at nexenta.com>
 Jayne <corvine at gmail.com>
 JiCiT <jason at infinitebubble.com>
@@ -66,6 +68,8 @@ Thomas Hunger <teh at camvine.org>
 Tino Lange <Tino.Lange at gmx.de>
 Tom Pierce <tom.pierce0 at gmail.com>
 Victor Lascurain <bittor at eleka.net>
+Vitaly Murashev <vitaly.murashev at gmail.com>
+Vitezslav Cizek <vcizek at suse.com>
 Wei C <gitsouler at users.noreply.github.com>
 Whitney Sorenson <wsorenson at gmail.com>
 Wim Lewis <wiml at users.sourceforge.net>

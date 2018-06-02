@@ -1,5 +1,5 @@
-master
-------
+Version 7.43.0.2 [requires libcurl-7.19.0 or better] - 2018-06-02
+-----------------------------------------------------------------
 
         * Official Windows builds now include HTTP 2 support via
           libnghttp2 and international domain name support via WINIDN.
