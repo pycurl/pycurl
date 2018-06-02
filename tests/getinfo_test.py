@@ -26,8 +26,6 @@ class GetinfoTest(unittest.TestCase):
         self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
         self.assertEqual(200, self.curl.getinfo(pycurl.RESPONSE_CODE))
         assert type(self.curl.getinfo(pycurl.TOTAL_TIME)) is float
-        assert self.curl.getinfo(pycurl.TOTAL_TIME) > 0
-        assert self.curl.getinfo(pycurl.TOTAL_TIME) < 1
         assert type(self.curl.getinfo(pycurl.SPEED_DOWNLOAD)) is float
         assert self.curl.getinfo(pycurl.SPEED_DOWNLOAD) > 0
         self.assertEqual(7, self.curl.getinfo(pycurl.SIZE_DOWNLOAD))
@@ -40,6 +38,18 @@ class GetinfoTest(unittest.TestCase):
         self.assertEqual(0, self.curl.getinfo(pycurl.REDIRECT_COUNT))
         # time not requested
         self.assertEqual(-1, self.curl.getinfo(pycurl.INFO_FILETIME))
+
+    # It seems that times are 0 on appveyor
+    @util.only_unix
+    @flaky.flaky(max_runs=3)
+    def test_getinfo_times(self):
+        self.make_request()
+
+        self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
+        self.assertEqual(200, self.curl.getinfo(pycurl.RESPONSE_CODE))
+        assert type(self.curl.getinfo(pycurl.TOTAL_TIME)) is float
+        assert self.curl.getinfo(pycurl.TOTAL_TIME) > 0
+        assert self.curl.getinfo(pycurl.TOTAL_TIME) < 1
 
     @util.min_libcurl(7, 21, 0)
     def test_primary_port_etc(self):

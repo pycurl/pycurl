@@ -466,6 +466,8 @@ class OptionConstantsSettingTest(unittest.TestCase):
         assert self.curl.PROTO_SMB is not None
         assert self.curl.PROTO_SMBS is not None
 
+    # Apparently TLSAUTH_TYPE=SRP is an unknown option on appveyor
+    @util.only_unix
     @util.min_libcurl(7, 21, 4)
     @util.only_ssl_backends('openssl', 'gnutls')
     def test_tlsauth(self):
