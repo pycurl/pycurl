@@ -282,6 +282,18 @@ def DefaultCurl():
     curl.setopt(curl.FORBID_REUSE, True)
     return curl
 
+def DefaultCurlLocalhost(port):
+    '''This is a default curl with localhost -> 127.0.0.1 name mapping
+    on windows systems, because they don't have it in the hosts file.
+    '''
+    
+    curl = DefaultCurl()
+    
+    if sys.platform == 'win32':
+        curl.setopt(curl.RESOLVE, ['localhost:%d:127.0.0.1' % port])
+    
+    return curl
+
 def with_real_write_file(fn):
     @functools.wraps(fn)
     def wrapper(*args):

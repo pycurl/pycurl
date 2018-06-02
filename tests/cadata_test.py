@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
-from . import localhost
 import os
 import pycurl
 import unittest
@@ -14,7 +13,7 @@ setup_module, teardown_module = appmanager.setup(('app', 8384, dict(ssl=True)))
 
 class CaCertsTest(unittest.TestCase):
     def setUp(self):
-        self.curl = util.DefaultCurl()
+        self.curl = util.DefaultCurlLocalhost(8384)
 
     def tearDown(self):
         self.curl.close()
@@ -23,7 +22,7 @@ class CaCertsTest(unittest.TestCase):
     def test_request_with_verifypeer(self):
         with open(os.path.join(os.path.dirname(__file__), 'certs', 'ca.crt'), 'rb') as stream:
             cadata = stream.read().decode('ASCII')
-        self.curl.setopt(pycurl.URL, 'https://%s:8384/success' % localhost)
+        self.curl.setopt(pycurl.URL, 'https://localhost:8384/success')
         sio = util.BytesIO()
         self.curl.set_ca_certs(cadata)
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)

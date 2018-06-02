@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
-from . import localhost
 import pycurl
 import unittest
 import nose.plugins.skip
@@ -14,7 +13,7 @@ setup_module, teardown_module = appmanager.setup(('app', 8383, dict(ssl=True)))
 
 class CertinfoTest(unittest.TestCase):
     def setUp(self):
-        self.curl = util.DefaultCurl()
+        self.curl = util.DefaultCurlLocalhost(8383)
 
     def tearDown(self):
         self.curl.close()
@@ -28,7 +27,7 @@ class CertinfoTest(unittest.TestCase):
     @util.min_libcurl(7, 19, 1)
     @util.only_ssl
     def test_request_without_certinfo(self):
-        self.curl.setopt(pycurl.URL, 'https://%s:8383/success' % localhost)
+        self.curl.setopt(pycurl.URL, 'https://localhost:8383/success')
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         # self signed certificate
@@ -47,7 +46,7 @@ class CertinfoTest(unittest.TestCase):
         if 'openssl' not in pycurl.version.lower():
             raise nose.plugins.skip.SkipTest('libcurl does not use openssl')
 
-        self.curl.setopt(pycurl.URL, 'https://%s:8383/success' % localhost)
+        self.curl.setopt(pycurl.URL, 'https://localhost:8383/success')
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.setopt(pycurl.OPT_CERTINFO, 1)
@@ -75,7 +74,7 @@ class CertinfoTest(unittest.TestCase):
         if 'openssl' not in pycurl.version.lower():
             raise nose.plugins.skip.SkipTest('libcurl does not use openssl')
 
-        self.curl.setopt(pycurl.URL, 'https://%s:8383/success' % localhost)
+        self.curl.setopt(pycurl.URL, 'https://localhost:8383/success')
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.setopt(pycurl.OPT_CERTINFO, 1)
