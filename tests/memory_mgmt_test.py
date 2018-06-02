@@ -264,6 +264,8 @@ class MemoryMgmtTest(unittest.TestCase):
     def test_seekfunction_collection(self):
         self.check_callback(pycurl.SEEKFUNCTION)
 
+    # This is failing too much on appveyor
+    @util.only_unix
     def check_callback(self, callback):
         # Note: extracting a context manager seems to result in
         # everything being garbage collected even if the C code
