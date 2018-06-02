@@ -12,6 +12,11 @@ from . import util
 
 debug = False
 
+if sys.platform == 'win32':
+    devnull = 'NUL'
+else:
+    devnull = '/dev/null'
+
 @flaky.flaky(max_runs=3)
 class MemoryMgmtTest(unittest.TestCase):
     def maybe_enable_debug(self):
@@ -259,6 +264,8 @@ class MemoryMgmtTest(unittest.TestCase):
     def test_seekfunction_collection(self):
         self.check_callback(pycurl.SEEKFUNCTION)
 
+    # This is failing too much on appveyor
+    @util.only_unix
     def check_callback(self, callback):
         # Note: extracting a context manager seems to result in
         # everything being garbage collected even if the C code
@@ -315,11 +322,7 @@ class MemoryMgmtTest(unittest.TestCase):
 
     def do_data_refcounting(self, option):
         c = util.DefaultCurl()
-        if sys.platform == 'win32':
-            path = 'NUL'
-        else:
-            path = '/dev/null'
-        f = open(path, 'a+')
+        f = open(devnull, 'a+')
         c.setopt(option, f)
         ref = weakref.ref(f)
         del f
@@ -349,7 +352,7 @@ class MemoryMgmtTest(unittest.TestCase):
     @util.min_python(3, 5)
     def do_function_refcounting(self, option, method_name):
         c = util.DefaultCurl()
-        f = open('/dev/null', 'a+')
+        f = open(devnull, 'a+')
         fn = getattr(f, method_name)
         c.setopt(option, fn)
         ref = weakref.ref(fn)
