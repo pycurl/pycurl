@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+from . import localhost
 import pycurl
 import unittest
 
@@ -25,9 +26,9 @@ def teardown_module(mod):
 class MultiSocketTest(unittest.TestCase):
     def test_multi_timer(self):
         urls = [
-            'http://localhost:8380/success',
-            'http://localhost:8381/success',
-            'http://localhost:8382/success',
+            'http://%s:8380/success' % localhost,
+            'http://%s:8381/success' % localhost,
+            'http://%s:8382/success' % localhost,
         ]
 
         timers = []

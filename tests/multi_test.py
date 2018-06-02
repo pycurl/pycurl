@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+from . import localhost
 import pycurl
 import unittest
 import nose.tools
@@ -32,9 +33,9 @@ class MultiTest(unittest.TestCase):
         handles = []
         c1 = util.DefaultCurl()
         c2 = util.DefaultCurl()
-        c1.setopt(c1.URL, 'http://localhost:8380/success')
+        c1.setopt(c1.URL, 'http://%s:8380/success' % localhost)
         c1.setopt(c1.WRITEFUNCTION, io1.write)
-        c2.setopt(c2.URL, 'http://localhost:8381/success')
+        c2.setopt(c2.URL, 'http://%s:8381/success' % localhost)
         c2.setopt(c1.WRITEFUNCTION, io2.write)
         m.add_handle(c1)
         m.add_handle(c2)
@@ -62,9 +63,9 @@ class MultiTest(unittest.TestCase):
         c1 = util.DefaultCurl()
         c2 = util.DefaultCurl()
         c3 = util.DefaultCurl()
-        c1.setopt(c1.URL, "http://localhost:8380/success")
-        c2.setopt(c2.URL, "http://localhost:8381/success")
-        c3.setopt(c3.URL, "http://localhost:8382/success")
+        c1.setopt(c1.URL, "http://%s:8380/success" % localhost)
+        c2.setopt(c2.URL, "http://%s:8381/success" % localhost)
+        c3.setopt(c3.URL, "http://%s:8382/success" % localhost)
         c1.body = util.BytesIO()
         c2.body = util.BytesIO()
         c3.body = util.BytesIO()
@@ -112,9 +113,9 @@ class MultiTest(unittest.TestCase):
         m = pycurl.CurlMulti()
         m.handles = []
         urls = [
-            'http://localhost:8380/success',
-            'http://localhost:8381/status/403',
-            'http://localhost:8382/status/404',
+            'http://%s:8380/success' % localhost,
+            'http://%s:8381/status/403' % localhost,
+            'http://%s:8382/status/404' % localhost,
         ]
         for url in urls:
             c = util.DefaultCurl()
@@ -163,9 +164,9 @@ class MultiTest(unittest.TestCase):
         m = pycurl.CurlMulti()
         m.handles = []
         urls = [
-            'http://localhost:8380/success',
-            'http://localhost:8381/status/403',
-            'http://localhost:8382/status/404',
+            'http://%s:8380/success' % localhost,
+            'http://%s:8381/status/403' % localhost,
+            'http://%s:8382/status/404' % localhost,
         ]
         for url in urls:
             c = util.DefaultCurl()
@@ -246,9 +247,9 @@ class MultiTest(unittest.TestCase):
         c1 = util.DefaultCurl()
         c2 = util.DefaultCurl()
         c3 = util.DefaultCurl()
-        c1.setopt(c1.URL, "http://localhost:8380/success")
-        c2.setopt(c2.URL, "http://localhost:8381/success")
-        c3.setopt(c3.URL, "http://localhost:8382/success")
+        c1.setopt(c1.URL, "http://%s:8380/success" % localhost)
+        c2.setopt(c2.URL, "http://%s:8381/success" % localhost)
+        c3.setopt(c3.URL, "http://%s:8382/success" % localhost)
         c1.body = util.BytesIO()
         c2.body = util.BytesIO()
         c3.body = util.BytesIO()
@@ -297,9 +298,9 @@ class MultiTest(unittest.TestCase):
         c1 = util.DefaultCurl()
         c2 = util.DefaultCurl()
         c3 = util.DefaultCurl()
-        c1.setopt(c1.URL, "http://localhost:8380/short_wait")
-        c2.setopt(c2.URL, "http://localhost:8381/short_wait")
-        c3.setopt(c3.URL, "http://localhost:8382/short_wait")
+        c1.setopt(c1.URL, "http://%s:8380/short_wait" % localhost)
+        c2.setopt(c2.URL, "http://%s:8381/short_wait" % localhost)
+        c3.setopt(c3.URL, "http://%s:8382/short_wait" % localhost)
         c1.body = util.BytesIO()
         c2.body = util.BytesIO()
         c3.body = util.BytesIO()

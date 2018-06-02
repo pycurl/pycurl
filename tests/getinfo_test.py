@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+from . import localhost
 import flaky
 import pycurl
 import unittest
@@ -30,7 +31,7 @@ class GetinfoTest(unittest.TestCase):
         assert type(self.curl.getinfo(pycurl.SPEED_DOWNLOAD)) is float
         assert self.curl.getinfo(pycurl.SPEED_DOWNLOAD) > 0
         self.assertEqual(7, self.curl.getinfo(pycurl.SIZE_DOWNLOAD))
-        self.assertEqual('http://localhost:8380/success', self.curl.getinfo(pycurl.EFFECTIVE_URL))
+        self.assertEqual('http://%s:8380/success' % localhost, self.curl.getinfo(pycurl.EFFECTIVE_URL))
         self.assertEqual('text/html; charset=utf-8', self.curl.getinfo(pycurl.CONTENT_TYPE).lower())
         assert type(self.curl.getinfo(pycurl.NAMELOOKUP_TIME)) is float
         assert self.curl.getinfo(pycurl.NAMELOOKUP_TIME) > 0
@@ -48,7 +49,7 @@ class GetinfoTest(unittest.TestCase):
         assert type(self.curl.getinfo(pycurl.LOCAL_PORT)) is int
 
     def make_request(self, path='/success', expected_body='success'):
-        self.curl.setopt(pycurl.URL, 'http://localhost:8380' + path)
+        self.curl.setopt(pycurl.URL, 'http://%s:8380' % localhost + path)
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
@@ -60,7 +61,7 @@ class GetinfoTest(unittest.TestCase):
         self.make_request('/set_cookie_invalid_utf8', 'cookie set')
         
         self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
-        expected = "localhost\tFALSE\t/\tFALSE\t0\t\xb3\xd2\xda\xcd\xd7\t%96%A6g%9Ay%B0%A5g%A7tm%7C%95%9A"
+        expected = "%s" % localhost + "\tFALSE\t/\tFALSE\t0\t\xb3\xd2\xda\xcd\xd7\t%96%A6g%9Ay%B0%A5g%A7tm%7C%95%9A"
         self.assertEqual([expected], self.curl.getinfo(pycurl.INFO_COOKIELIST))
 
     @util.only_python3
@@ -81,7 +82,7 @@ class GetinfoTest(unittest.TestCase):
         self.make_request('/set_cookie_invalid_utf8', 'cookie set')
         
         self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
-        expected = util.b("localhost\tFALSE\t/\tFALSE\t0\t\xb3\xd2\xda\xcd\xd7\t%96%A6g%9Ay%B0%A5g%A7tm%7C%95%9A")
+        expected = util.b("%s" % localhost + "\tFALSE\t/\tFALSE\t0\t\xb3\xd2\xda\xcd\xd7\t%96%A6g%9Ay%B0%A5g%A7tm%7C%95%9A")
         self.assertEqual([expected], self.curl.getinfo_raw(pycurl.INFO_COOKIELIST))
 
     @util.only_python2

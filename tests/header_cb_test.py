@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+from . import localhost
 import pycurl
 import unittest
 import time as _time
@@ -23,7 +24,7 @@ class HeaderCbTest(unittest.TestCase):
         self.header_lines.append(line.decode())
 
     def test_get(self):
-        self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
+        self.curl.setopt(pycurl.URL, 'http://%s:8380/success' % localhost)
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.setopt(pycurl.HEADERFUNCTION, self.header_function)

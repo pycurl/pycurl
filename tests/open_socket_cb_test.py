@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+from . import localhost
 import socket
 import pycurl
 import unittest
@@ -61,7 +62,7 @@ class OpenSocketCbTest(unittest.TestCase):
 
     def test_socket_open(self):
         self.curl.setopt(pycurl.OPENSOCKETFUNCTION, socket_open_ipv4)
-        self.curl.setopt(self.curl.URL, 'http://localhost:8380/success')
+        self.curl.setopt(self.curl.URL, 'http://%s:8380/success' % localhost)
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
@@ -94,7 +95,7 @@ class OpenSocketCbTest(unittest.TestCase):
     @util.only_unix
     def test_socket_open_unix(self):
         self.curl.setopt(pycurl.OPENSOCKETFUNCTION, socket_open_unix)
-        self.curl.setopt(self.curl.URL, 'http://localhost:8380/success')
+        self.curl.setopt(self.curl.URL, 'http://%s:8380/success' % localhost)
         self.curl.setopt(self.curl.UNIX_SOCKET_PATH, '/tmp/pycurl-test-path.sock')
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
@@ -124,7 +125,7 @@ class OpenSocketCbTest(unittest.TestCase):
 
     def test_socket_open_bad(self):
         self.curl.setopt(pycurl.OPENSOCKETFUNCTION, socket_open_bad)
-        self.curl.setopt(self.curl.URL, 'http://localhost:8380/success')
+        self.curl.setopt(self.curl.URL, 'http://%s:8380/success' % localhost)
         try:
             self.curl.perform()
         except pycurl.error as e:

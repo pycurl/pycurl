@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+from . import localhost
 import pycurl
 import unittest
 import nose.plugins.attrib
@@ -73,7 +74,7 @@ class OptionConstantsTest(unittest.TestCase):
     @util.min_libcurl(7, 19, 4)
     def test_noproxy_setopt(self):
         curl = pycurl.Curl()
-        curl.setopt(curl.NOPROXY, 'localhost')
+        curl.setopt(curl.NOPROXY, localhost)
         curl.close()
 
     # CURLOPT_PROTOCOLS was introduced in libcurl-7.19.4

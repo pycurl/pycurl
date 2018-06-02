@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+from . import localhost
 import os
 import pycurl
 import unittest
@@ -22,7 +23,7 @@ class CaCertsTest(unittest.TestCase):
     def test_request_with_verifypeer(self):
         with open(os.path.join(os.path.dirname(__file__), 'certs', 'ca.crt'), 'rb') as stream:
             cadata = stream.read().decode('ASCII')
-        self.curl.setopt(pycurl.URL, 'https://localhost:8384/success')
+        self.curl.setopt(pycurl.URL, 'https://%s:8384/success' % localhost)
         sio = util.BytesIO()
         self.curl.set_ca_certs(cadata)
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+from . import localhost
 import pycurl
 try:
     import unittest2 as unittest
@@ -55,7 +56,7 @@ class ReaddataTest(unittest.TestCase):
 
     def test_readdata_object(self):
         d = DataProvider(POSTSTRING)
-        self.curl.setopt(self.curl.URL, 'http://localhost:8380/postfields')
+        self.curl.setopt(self.curl.URL, 'http://%s:8380/postfields' % localhost)
         self.curl.setopt(self.curl.POST, 1)
         self.curl.setopt(self.curl.POSTFIELDSIZE, len(POSTSTRING))
         self.curl.setopt(self.curl.READDATA, d)
@@ -80,7 +81,7 @@ class ReaddataTest(unittest.TestCase):
         assert type(data) == util.binary_type
         d = DataProvider(data)
 
-        self.curl.setopt(self.curl.URL, 'http://localhost:8380/raw_utf8')
+        self.curl.setopt(self.curl.URL, 'http://%s:8380/raw_utf8' % localhost)
         self.curl.setopt(self.curl.POST, 1)
         self.curl.setopt(self.curl.HTTPHEADER, ['Content-Type: application/octet-stream'])
         # length of bytes
@@ -115,7 +116,7 @@ class ReaddataTest(unittest.TestCase):
         assert type(poststring) == util.text_type
         d = DataProvider(poststring)
 
-        self.curl.setopt(self.curl.URL, 'http://localhost:8380/raw_utf8')
+        self.curl.setopt(self.curl.URL, 'http://%s:8380/raw_utf8' % localhost)
         self.curl.setopt(self.curl.POST, 1)
         self.curl.setopt(self.curl.HTTPHEADER, ['Content-Type: application/octet-stream'])
         self.curl.setopt(self.curl.POSTFIELDSIZE, len(poststring))
@@ -132,7 +133,7 @@ class ReaddataTest(unittest.TestCase):
         # file opened in binary mode
         f = open(FORM_SUBMISSION_PATH, 'rb')
         try:
-            self.curl.setopt(self.curl.URL, 'http://localhost:8380/postfields')
+            self.curl.setopt(self.curl.URL, 'http://%s:8380/postfields' % localhost)
             self.curl.setopt(self.curl.POST, 1)
             self.curl.setopt(self.curl.POSTFIELDSIZE, os.stat(FORM_SUBMISSION_PATH).st_size)
             self.curl.setopt(self.curl.READDATA, f)
@@ -149,7 +150,7 @@ class ReaddataTest(unittest.TestCase):
         # file opened in text mode
         f = open(FORM_SUBMISSION_PATH, 'rt')
         try:
-            self.curl.setopt(self.curl.URL, 'http://localhost:8380/postfields')
+            self.curl.setopt(self.curl.URL, 'http://%s:8380/postfields' % localhost)
             self.curl.setopt(self.curl.POST, 1)
             self.curl.setopt(self.curl.POSTFIELDSIZE, os.stat(FORM_SUBMISSION_PATH).st_size)
             self.curl.setopt(self.curl.READDATA, f)
@@ -165,7 +166,7 @@ class ReaddataTest(unittest.TestCase):
     def test_readdata_file_like(self):
         data = 'hello=world'
         data_provider = DataProvider(data)
-        self.curl.setopt(self.curl.URL, 'http://localhost:8380/postfields')
+        self.curl.setopt(self.curl.URL, 'http://%s:8380/postfields' % localhost)
         self.curl.setopt(self.curl.POST, 1)
         self.curl.setopt(self.curl.POSTFIELDSIZE, len(data))
         self.curl.setopt(self.curl.READDATA, data_provider)
@@ -181,7 +182,7 @@ class ReaddataTest(unittest.TestCase):
         data_provider = DataProvider(data)
         # data must be the same length
         function_provider = DataProvider('aaaaa=bbbbb')
-        self.curl.setopt(self.curl.URL, 'http://localhost:8380/postfields')
+        self.curl.setopt(self.curl.URL, 'http://%s:8380/postfields' % localhost)
         self.curl.setopt(self.curl.POST, 1)
         self.curl.setopt(self.curl.POSTFIELDSIZE, len(data))
         self.curl.setopt(self.curl.READDATA, data_provider)
@@ -198,7 +199,7 @@ class ReaddataTest(unittest.TestCase):
         data_provider = DataProvider(data)
         # data must be the same length
         function_provider = DataProvider('aaaaa=bbbbb')
-        self.curl.setopt(self.curl.URL, 'http://localhost:8380/postfields')
+        self.curl.setopt(self.curl.URL, 'http://%s:8380/postfields' % localhost)
         self.curl.setopt(self.curl.POST, 1)
         self.curl.setopt(self.curl.POSTFIELDSIZE, len(data))
         self.curl.setopt(self.curl.READFUNCTION, function_provider.read)
@@ -214,7 +215,7 @@ class ReaddataTest(unittest.TestCase):
         # data must be the same length
         with open(FORM_SUBMISSION_PATH) as f:
             function_provider = DataProvider('aaa=bbb')
-            self.curl.setopt(self.curl.URL, 'http://localhost:8380/postfields')
+            self.curl.setopt(self.curl.URL, 'http://%s:8380/postfields' % localhost)
             self.curl.setopt(self.curl.POST, 1)
             self.curl.setopt(self.curl.POSTFIELDSIZE, os.stat(FORM_SUBMISSION_PATH).st_size)
             self.curl.setopt(self.curl.READDATA, f)
@@ -230,7 +231,7 @@ class ReaddataTest(unittest.TestCase):
         # data must be the same length
         with open(FORM_SUBMISSION_PATH) as f:
             function_provider = DataProvider('aaa=bbb')
-            self.curl.setopt(self.curl.URL, 'http://localhost:8380/postfields')
+            self.curl.setopt(self.curl.URL, 'http://%s:8380/postfields' % localhost)
             self.curl.setopt(self.curl.POST, 1)
             self.curl.setopt(self.curl.POSTFIELDSIZE, os.stat(FORM_SUBMISSION_PATH).st_size)
             self.curl.setopt(self.curl.READFUNCTION, function_provider.read)

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+from . import localhost
 import flaky
 import pycurl
 import unittest, signal
@@ -28,7 +29,7 @@ class PauseTest(unittest.TestCase):
 
     def check_pause(self, call):
         # the app sleeps for 0.5 seconds
-        self.curl.setopt(pycurl.URL, 'http://localhost:8380/pause')
+        self.curl.setopt(pycurl.URL, 'http://%s:8380/pause' % localhost)
         sio = util.BytesIO()
         state = dict(paused=False, resumed=False)
         if call:

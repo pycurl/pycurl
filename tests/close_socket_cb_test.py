@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+from . import localhost
 import socket
-import os
 import unittest
 import pycurl
 
@@ -15,7 +15,7 @@ setup_module, teardown_module = appmanager.setup(('app', 8380))
 class CloseSocketCbTest(unittest.TestCase):
     def setUp(self):
         self.curl = util.DefaultCurl()
-        self.curl.setopt(self.curl.URL, 'http://localhost:8380/success')
+        self.curl.setopt(self.curl.URL, 'http://%s:8380/success' % localhost)
         self.curl.setopt(pycurl.FORBID_REUSE, True)
 
     def tearDown(self):

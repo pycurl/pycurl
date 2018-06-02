@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+from . import localhost
 import flaky
 import os.path
 import pycurl
@@ -42,7 +43,7 @@ class PostTest(unittest.TestCase):
         self.urlencode_and_check(pf)
 
     def urlencode_and_check(self, pf):
-        self.curl.setopt(pycurl.URL, 'http://localhost:8380/postfields')
+        self.curl.setopt(pycurl.URL, 'http://%s:8380/postfields' % localhost)
         postfields = urllib_parse.urlencode(pf)
         self.curl.setopt(pycurl.POSTFIELDS, postfields)
 
@@ -81,7 +82,7 @@ class PostTest(unittest.TestCase):
         expect = {
             'field3': 'this is wei\000rd, but null-bytes are okay',
         }
-        self.check_post(send, expect, 'http://localhost:8380/postfields')
+        self.check_post(send, expect, 'http://%s:8380/postfields' % localhost)
 
     def test_post_file(self):
         path = os.path.join(os.path.dirname(__file__), '..', 'README.rst')
@@ -99,7 +100,7 @@ class PostTest(unittest.TestCase):
             'filename': 'README.rst',
             'data': contents,
         }]
-        self.check_post(send, expect, 'http://localhost:8380/files')
+        self.check_post(send, expect, 'http://%s:8380/files' % localhost)
 
     def test_post_byte_buffer(self):
         contents = util.b('hello, world!')
@@ -111,7 +112,7 @@ class PostTest(unittest.TestCase):
             'filename': 'uploaded.file',
             'data': 'hello, world!',
         }]
-        self.check_post(send, expect, 'http://localhost:8380/files')
+        self.check_post(send, expect, 'http://%s:8380/files' % localhost)
 
     def test_post_unicode_buffer(self):
         contents = util.u('hello, world!')
@@ -123,7 +124,7 @@ class PostTest(unittest.TestCase):
             'filename': 'uploaded.file',
             'data': 'hello, world!',
         }]
-        self.check_post(send, expect, 'http://localhost:8380/files')
+        self.check_post(send, expect, 'http://%s:8380/files' % localhost)
 
     def test_post_tuple_of_tuples_of_tuples(self):
         contents = util.u('hello, world!')
@@ -135,7 +136,7 @@ class PostTest(unittest.TestCase):
             'filename': 'uploaded.file',
             'data': 'hello, world!',
         }]
-        self.check_post(send, expect, 'http://localhost:8380/files')
+        self.check_post(send, expect, 'http://%s:8380/files' % localhost)
 
     def test_post_tuple_of_lists_of_tuples(self):
         contents = util.u('hello, world!')
@@ -147,7 +148,7 @@ class PostTest(unittest.TestCase):
             'filename': 'uploaded.file',
             'data': 'hello, world!',
         }]
-        self.check_post(send, expect, 'http://localhost:8380/files')
+        self.check_post(send, expect, 'http://%s:8380/files' % localhost)
 
     def test_post_tuple_of_tuple_of_lists(self):
         contents = util.u('hello, world!')
@@ -159,7 +160,7 @@ class PostTest(unittest.TestCase):
             'filename': 'uploaded.file',
             'data': 'hello, world!',
         }]
-        self.check_post(send, expect, 'http://localhost:8380/files')
+        self.check_post(send, expect, 'http://%s:8380/files' % localhost)
 
     def test_post_list_of_tuple_of_tuples(self):
         contents = util.u('hello, world!')
@@ -171,7 +172,7 @@ class PostTest(unittest.TestCase):
             'filename': 'uploaded.file',
             'data': 'hello, world!',
         }]
-        self.check_post(send, expect, 'http://localhost:8380/files')
+        self.check_post(send, expect, 'http://%s:8380/files' % localhost)
 
     def test_post_list_of_list_of_lists(self):
         contents = util.u('hello, world!')
@@ -183,7 +184,7 @@ class PostTest(unittest.TestCase):
             'filename': 'uploaded.file',
             'data': 'hello, world!',
         }]
-        self.check_post(send, expect, 'http://localhost:8380/files')
+        self.check_post(send, expect, 'http://%s:8380/files' % localhost)
 
     # XXX this test takes about a second to run, check keep-alives?
     def check_post(self, send, expect, endpoint):

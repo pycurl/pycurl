@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+import sys
 import weakref
 import pycurl
 import unittest
