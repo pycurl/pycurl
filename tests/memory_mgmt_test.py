@@ -12,6 +12,11 @@ from . import util
 
 debug = False
 
+if sys.platform == 'win32':
+    devnull = 'NUL'
+else:
+    devnull = '/dev/null'
+
 @flaky.flaky(max_runs=3)
 class MemoryMgmtTest(unittest.TestCase):
     def maybe_enable_debug(self):
@@ -315,11 +320,7 @@ class MemoryMgmtTest(unittest.TestCase):
 
     def do_data_refcounting(self, option):
         c = util.DefaultCurl()
-        if sys.platform == 'win32':
-            path = 'NUL'
-        else:
-            path = '/dev/null'
-        f = open(path, 'a+')
+        f = open(devnull, 'a+')
         c.setopt(option, f)
         ref = weakref.ref(f)
         del f
@@ -349,7 +350,7 @@ class MemoryMgmtTest(unittest.TestCase):
     @util.min_python(3, 5)
     def do_function_refcounting(self, option, method_name):
         c = util.DefaultCurl()
-        f = open('/dev/null', 'a+')
+        f = open(devnull, 'a+')
         fn = getattr(f, method_name)
         c.setopt(option, fn)
         ref = weakref.ref(fn)
