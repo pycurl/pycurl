@@ -12,7 +12,8 @@ import glob, os, re, sys, subprocess
 import distutils
 try:
     import wheel
-    from setuptools import setup
+    if wheel:
+        from setuptools import setup
 except ImportError:
     from distutils.core import setup
 from distutils.extension import Extension
