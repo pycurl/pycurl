@@ -315,7 +315,11 @@ class MemoryMgmtTest(unittest.TestCase):
 
     def do_data_refcounting(self, option):
         c = util.DefaultCurl()
-        f = open('/dev/null', 'a+')
+        if sys.platform == 'win32':
+            path = 'NUL'
+        else:
+            path = '/dev/null'
+        f = open(path, 'a+')
         c.setopt(option, f)
         ref = weakref.ref(f)
         del f

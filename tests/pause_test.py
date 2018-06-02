@@ -27,6 +27,7 @@ class PauseTest(unittest.TestCase):
     def test_pause_via_return(self):
         self.check_pause(False)
 
+    @util.only_unix
     def check_pause(self, call):
         # the app sleeps for 0.5 seconds
         self.curl.setopt(pycurl.URL, 'http://%s:8380/pause' % localhost)
