@@ -311,10 +311,11 @@ class ExtensionConfiguration(object):
             self.detect_ssl_backend()
 
             if not self.ssl_lib_detected:
-                raise ConfigurationError('''\
-Curl is configured to use SSL, but we have not been able to determine \
-which SSL backend it is using. Please see PycURL documentation for how to \
-specify the SSL backend manually.''')
+                sys.stderr.write('''\
+Warning: libcurl is configured to use SSL, but we have not been able to \
+determine which SSL backend it is using. If your Curl is built against \
+OpenSSL, LibreSSL, BoringSSL, GnuTLS or NSS please specify the SSL backend \
+manually. For other SSL backends please ignore this message.''')
         else:
             if self.detect_ssl_option():
                 sys.stderr.write("Warning: SSL backend specified manually but libcurl does not use SSL\n")

@@ -1,3 +1,14 @@
+master
+------
+
+        * Repaired inability to install PycURL when libcurl is using an SSL
+          backend other than the ones PycURL explicitly recognizes and
+          handles (OpenSSL, LibreSSL, BoringSSL, GnuTLS, NSS).
+          The requirement for setup.py to detect an SSL backend if libcurl
+          is configured to use SSL, added in 7.43.0.2, has been changed
+          to a warning to allow this.
+
+
 Version 7.43.0.2 [requires libcurl-7.19.0 or better] - 2018-06-02
 -----------------------------------------------------------------
 
