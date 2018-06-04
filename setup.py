@@ -42,38 +42,39 @@ def scan_argv(argv, s, default=None):
     i = 1
     while i < len(argv):
         arg = argv[i]
-        if str.find(arg, s) == 0:
-            if s.endswith('='):
+        if s.endswith('='):
+            if str.find(arg, s) == 0:
                 # --option=value
                 p = arg[len(s):]
                 if s != '--openssl-lib-name=':
                     assert p, arg
+                del argv[i]
             else:
+                i += 1
+        else:
+            if s == arg:
                 # --option
                 # set value to True
                 p = True
-            del argv[i]
-        else:
-            i = i + 1
+                del argv[i]
+            else:
+                i = i + 1
     ##print argv
     return p
 
 
 def scan_argvs(argv, s):
+    if not s.endswith('='):
+        raise Exception('specification must end with =')
     p = []
     i = 1
     while i < len(argv):
         arg = argv[i]
         if str.find(arg, s) == 0:
-            if s.endswith('='):
-                # --option=value
-                p.append(arg[len(s):])
-                if s != '--openssl-lib-name=':
-                    assert p[-1], arg
-            else:
-                # --option
-                # set value to True
-                raise Exception('specification must end with =')
+            # --option=value
+            p.append(arg[len(s):])
+            if s != '--openssl-lib-name=':
+                assert p[-1], arg
             del argv[i]
         else:
             i = i + 1
