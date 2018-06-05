@@ -69,6 +69,24 @@ class SetupTest(unittest.TestCase):
         assert 'curl' in config.libraries
 
     @util.only_unix
+    def test_valid_option_consumes_argv(self):
+        argv = ['', '--with-nss']
+        pycurl_setup.ExtensionConfiguration(argv)
+        self.assertEqual([''], argv)
+
+    @util.only_unix
+    def test_invalid_option_not_consumed(self):
+        argv = ['', '--bogus']
+        pycurl_setup.ExtensionConfiguration(argv)
+        self.assertEqual(['', '--bogus'], argv)
+
+    @util.only_unix
+    def test_invalid_option_suffix_not_consumed(self):
+        argv = ['', '--with-nss-bogus']
+        pycurl_setup.ExtensionConfiguration(argv)
+        self.assertEqual(['', '--with-nss-bogus'], argv)
+
+    @util.only_unix
     @using_curl_config('curl-config-empty')
     def test_no_ssl(self):
         config = pycurl_setup.ExtensionConfiguration()
@@ -129,15 +147,17 @@ class SetupTest(unittest.TestCase):
     @util.only_unix
     @using_curl_config('curl-config-ssl-feature-only')
     def test_ssl_feature_only(self):
+        saved_stderr = sys.stderr
+        sys.stderr = captured_stderr = StringIO()
         try:
-            pycurl_setup.ExtensionConfiguration()
-        except pycurl_setup.ConfigurationError as e:
-            self.assertEqual('''\
-Curl is configured to use SSL, but we have not been able to determine \
-which SSL backend it is using. Please see PycURL documentation for how to \
-specify the SSL backend manually.''', str(e))
-        else:
-            self.fail('Should have raised')
+            config = pycurl_setup.ExtensionConfiguration()
+        finally:
+            sys.stderr = saved_stderr
+        # ssl define should be on
+        assert 'HAVE_CURL_SSL' in config.define_symbols
+        # and a warning message
+        assert 'Warning: libcurl is configured to use SSL, but we have \
+not been able to determine which SSL backend it is using.' in captured_stderr.getvalue()
 
     @util.only_unix
     @using_curl_config('curl-config-ssl-feature-only')

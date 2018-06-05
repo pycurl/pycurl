@@ -42,38 +42,39 @@ def scan_argv(argv, s, default=None):
     i = 1
     while i < len(argv):
         arg = argv[i]
-        if str.find(arg, s) == 0:
-            if s.endswith('='):
+        if s.endswith('='):
+            if str.find(arg, s) == 0:
                 # --option=value
                 p = arg[len(s):]
                 if s != '--openssl-lib-name=':
                     assert p, arg
+                del argv[i]
             else:
+                i += 1
+        else:
+            if s == arg:
                 # --option
                 # set value to True
                 p = True
-            del argv[i]
-        else:
-            i = i + 1
+                del argv[i]
+            else:
+                i = i + 1
     ##print argv
     return p
 
 
 def scan_argvs(argv, s):
+    if not s.endswith('='):
+        raise Exception('specification must end with =')
     p = []
     i = 1
     while i < len(argv):
         arg = argv[i]
         if str.find(arg, s) == 0:
-            if s.endswith('='):
-                # --option=value
-                p.append(arg[len(s):])
-                if s != '--openssl-lib-name=':
-                    assert p[-1], arg
-            else:
-                # --option
-                # set value to True
-                raise Exception('specification must end with =')
+            # --option=value
+            p.append(arg[len(s):])
+            if s != '--openssl-lib-name=':
+                assert p[-1], arg
             del argv[i]
         else:
             i = i + 1
@@ -95,6 +96,7 @@ class ExtensionConfiguration(object):
         self.extra_objects = []
         self.extra_compile_args = []
         self.extra_link_args = []
+        self.ssl_lib_detected = None
 
         self.configure()
 
@@ -156,27 +158,26 @@ class ExtensionConfiguration(object):
                 return option
 
     def detect_ssl_backend(self):
-        ssl_lib_detected = False
+        ssl_lib_detected = None
         
         if 'PYCURL_SSL_LIBRARY' in os.environ:
             ssl_lib = os.environ['PYCURL_SSL_LIBRARY']
             if ssl_lib in ['openssl', 'gnutls', 'nss']:
-                ssl_lib_detected = True
+                ssl_lib_detected = ssl_lib
                 getattr(self, 'using_%s' % ssl_lib)()
             else:
                 raise ConfigurationError('Invalid value "%s" for PYCURL_SSL_LIBRARY' % ssl_lib)
         
         option = self.detect_ssl_option()
         if option:
-            ssl_lib_detected = True
+            ssl_lib_detected = option.replace('--with-', '')
             self.ssl_options()[option]()
 
         # ssl detection - ssl libraries are added
         if not ssl_lib_detected:
             libcurl_dll_path = scan_argv(self.argv, "--libcurl-dll=")
             if libcurl_dll_path is not None:
-                if self.detect_ssl_lib_from_libcurl_dll(libcurl_dll_path):
-                    ssl_lib_detected = True
+                ssl_lib_detected = self.detect_ssl_lib_from_libcurl_dll(libcurl_dll_path)
 
         if not ssl_lib_detected:
             # self.sslhintbuf is a hack
@@ -184,15 +185,15 @@ class ExtensionConfiguration(object):
                 if arg[:2] == "-l":
                     if arg[2:] == 'ssl':
                         self.using_openssl()
-                        ssl_lib_detected = True
+                        ssl_lib_detected = 'openssl'
                         break
                     if arg[2:] == 'gnutls':
                         self.using_gnutls()
-                        ssl_lib_detected = True
+                        ssl_lib_detected = 'gnutls'
                         break
                     if arg[2:] == 'ssl3':
                         self.using_nss()
-                        ssl_lib_detected = True
+                        ssl_lib_detected = 'nss'
                         break
 
         if not ssl_lib_detected and len(self.argv) == len(self.original_argv) \
@@ -306,14 +307,16 @@ class ExtensionConfiguration(object):
         self.sslhintbuf = sslhintbuf
 
         self.detect_features()
+        self.ssl_lib_detected = None
         if self.curl_has_ssl:
             self.detect_ssl_backend()
 
             if not self.ssl_lib_detected:
-                raise ConfigurationError('''\
-Curl is configured to use SSL, but we have not been able to determine \
-which SSL backend it is using. Please see PycURL documentation for how to \
-specify the SSL backend manually.''')
+                sys.stderr.write('''\
+Warning: libcurl is configured to use SSL, but we have not been able to \
+determine which SSL backend it is using. If your Curl is built against \
+OpenSSL, LibreSSL, BoringSSL, GnuTLS or NSS please specify the SSL backend \
+manually. For other SSL backends please ignore this message.''')
         else:
             if self.detect_ssl_option():
                 sys.stderr.write("Warning: SSL backend specified manually but libcurl does not use SSL\n")
@@ -339,7 +342,7 @@ specify the SSL backend manually.''')
         self.check_avoid_stdio()
 
     def detect_ssl_lib_from_libcurl_dll(self, libcurl_dll_path):
-        ssl_lib_detected = False
+        ssl_lib_detected = None
         curl_version_info = self.get_curl_version_info(libcurl_dll_path)
         ssl_version = curl_version_info.ssl_version
         if py3:
@@ -347,13 +350,13 @@ specify the SSL backend manually.''')
             ssl_version = ssl_version.decode('ascii')
         if ssl_version.startswith('OpenSSL/') or ssl_version.startswith('LibreSSL/'):
             self.using_openssl()
-            ssl_lib_detected = True
+            ssl_lib_detected = 'openssl'
         elif ssl_version.startswith('GnuTLS/'):
             self.using_gnutls()
-            ssl_lib_detected = True
+            ssl_lib_detected = 'gnutls'
         elif ssl_version.startswith('NSS/'):
             self.using_nss()
-            ssl_lib_detected = True
+            ssl_lib_detected = 'nss'
         return ssl_lib_detected
 
     def detect_ssl_lib_on_centos6(self):
@@ -553,6 +556,13 @@ def strip_pycurl_options(argv):
 
 ###############################################################################
 
+PRETTY_SSL_LIBS = {
+    # setup.py may be detecting BoringSSL properly, need to test
+    'openssl': 'OpenSSL/LibreSSL/BoringSSL',
+    'gnutls': 'GnuTLS',
+    'nss': 'NSS',
+}
+
 def get_extension(argv, split_extension_source=False):
     if split_extension_source:
         sources = [
@@ -580,6 +590,12 @@ def get_extension(argv, split_extension_source=False):
         ]
         depends = []
     ext_config = ExtensionConfiguration(argv)
+    
+    if ext_config.ssl_lib_detected:
+        print('Using SSL library: %s' % PRETTY_SSL_LIBS[ext_config.ssl_lib_detected])
+    else:
+        print('Not using an SSL library')
+        
     ext = Extension(
         name=PACKAGE,
         sources=sources,

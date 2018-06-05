@@ -7,7 +7,12 @@ http://pycurl.io/docs/dev/troubleshooting.html
 
 ## What happened?
 
-(include a code snippet and debugging output from `VERBOSE` flag)
+If reporting a problem with PycURL installation, include exact commands
+executed as well as complete output.
+
+If reporting a problem with using PycURL, include a SHORT code snippet
+which includes setting `pycurl.VERBOSE` to 1 and reproduces the problem
+and its complete output.
 
 
 ## What did you expect to happen?
@@ -23,7 +28,13 @@ http://pycurl.io/docs/dev/troubleshooting.html
 (output of `python -V`)
 
 
-## What is your operating system?
+## What is your operating system and its version?
+
+
+## Other versions
+
+If your report references any software besides PycURL, for example pip,
+what are the versions of this software? (`pip --version`, etc.)
 
 
 ## Is this the most recent PycURL release?
