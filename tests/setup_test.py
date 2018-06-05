@@ -71,19 +71,19 @@ class SetupTest(unittest.TestCase):
     @util.only_unix
     def test_valid_option_consumes_argv(self):
         argv = ['', '--with-nss']
-        config = pycurl_setup.ExtensionConfiguration(argv)
+        pycurl_setup.ExtensionConfiguration(argv)
         self.assertEqual([''], argv)
 
     @util.only_unix
     def test_invalid_option_not_consumed(self):
         argv = ['', '--bogus']
-        config = pycurl_setup.ExtensionConfiguration(argv)
+        pycurl_setup.ExtensionConfiguration(argv)
         self.assertEqual(['', '--bogus'], argv)
 
     @util.only_unix
     def test_invalid_option_suffix_not_consumed(self):
         argv = ['', '--with-nss-bogus']
-        config = pycurl_setup.ExtensionConfiguration(argv)
+        pycurl_setup.ExtensionConfiguration(argv)
         self.assertEqual(['', '--with-nss-bogus'], argv)
 
     @util.only_unix
