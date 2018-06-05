@@ -96,6 +96,7 @@ class ExtensionConfiguration(object):
         self.extra_objects = []
         self.extra_compile_args = []
         self.extra_link_args = []
+        self.ssl_lib_detected = None
 
         self.configure()
 
