@@ -1,6 +1,9 @@
 master
 ------
 
+        * Added CURLOPT_TCP_FASTOPEN and CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE
+          (patch by Khavish Anshudass Bhundoo).
+
         * Repaired inability to install PycURL when libcurl is using an SSL
           backend other than the ones PycURL explicitly recognizes and
           handles (OpenSSL, LibreSSL, BoringSSL, GnuTLS, NSS).
