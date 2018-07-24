@@ -410,7 +410,7 @@ manually. For other SSL backends please ignore this message.''')
         else:
             self.extra_compile_args.append("-DCURL_STATICLIB")
             libcurl_lib_path = os.path.join(curl_dir, "lib", curl_lib_name)
-            self.extra_link_args.extend(["gdi32.lib", "wldap32.lib", "winmm.lib", "ws2_32.lib", "advapi32.lib", "crypt32.lib"])
+            self.extra_link_args.extend(["gdi32.lib", "wldap32.lib", "winmm.lib", "ws2_32.lib", "advapi32.lib", "crypt32.lib", "Normaliz.lib"])
 
         if not os.path.exists(libcurl_lib_path):
             fail("libcurl.lib does not exist at %s.\nCurl directory must point to compiled libcurl (bin/include/lib subdirectories): %s" %(libcurl_lib_path, curl_dir))
