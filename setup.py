@@ -10,6 +10,7 @@ VERSION = "7.43.0.1"
 
 import glob, os, re, sys, subprocess
 import distutils
+import setuptools
 from distutils.core import setup
 from distutils.extension import Extension
 from distutils.util import split_quoted
@@ -338,7 +339,7 @@ class ExtensionConfiguration(object):
         else:
             self.extra_compile_args.append("-DCURL_STATICLIB")
             libcurl_lib_path = os.path.join(curl_dir, "lib", curl_lib_name)
-            self.extra_link_args.extend(["gdi32.lib", "wldap32.lib", "winmm.lib", "ws2_32.lib",])
+            self.extra_link_args.extend(["gdi32.lib", "wldap32.lib", "winmm.lib", "ws2_32.lib", "advapi32.lib", "crypt32.lib"])
 
         if not os.path.exists(libcurl_lib_path):
             fail("libcurl.lib does not exist at %s.\nCurl directory must point to compiled libcurl (bin/include/lib subdirectories): %s" %(libcurl_lib_path, curl_dir))
