@@ -74,6 +74,34 @@ the response body as in Python 3 version. The code for the combined
 example can be found in ``examples/quickstart/get.py``.
 
 
+Working With HTTPS
+------------------
+
+Most web sites today use HTTPS which is HTTP over TLS/SSL. In order to
+take advantage of security that HTTPS provides, PycURL needs to utilize
+a *certificate bundle*. As certificates change over time PycURL does not
+provide such a bundle; one may be supplied by your operating system, but
+if not, consider using the `certifi`_ Python package::
+
+    import pycurl
+    import certifi
+    from StringIO import StringIO
+
+    buffer = StringIO()
+    c = pycurl.Curl()
+    c.setopt(c.URL, 'https://python.org/')
+    c.setopt(c.WRITEDATA, buffer)
+    c.setopt(c.CAINFO, certifi.where())
+    c.perform()
+    c.close()
+
+    body = buffer.getvalue()
+    print(body)
+
+This code is available as ``examples/quickstart/get_python2_https.py`` and
+``examples/quickstart/get_python3_https.py``.
+
+
 Troubleshooting
 ---------------
 
@@ -314,11 +342,16 @@ methods can be specified via ``CUSTOMREQUEST`` option::
     c.setopt(c.CUSTOMREQUEST, 'PATCH')
 
 
-File Upload
------------
+File Upload - Multipart POST
+----------------------------
 
-To upload a file, use ``HTTPPOST`` option. To upload a physical file,
-use ``FORM_FILE`` as follows::
+To replicate the behavior of file upload in an HTML form (specifically,
+a multipart form),
+use ``HTTPPOST`` option. Such an upload is performed with a ``POST`` request.
+See the next example for how to upload a file with a ``PUT`` request.
+
+If the data to be uploaded is located in a physical file,
+use ``FORM_FILE``::
 
     import pycurl
 
@@ -381,4 +414,51 @@ If the file data is in memory, use ``BUFFER``/``BUFFERPTR`` as follows::
 
 This code is available as ``examples/quickstart/file_upload_buffer.py``.
 
+
+File Upload - PUT
+-----------------
+
+A file can also be uploaded in request body, via a ``PUT`` request.
+Here is how this can be arranged with a physical file::
+
+    import pycurl
+
+    c = pycurl.Curl()
+    c.setopt(c.URL, 'https://httpbin.org/put')
+
+    c.setopt(c.UPLOAD, 1)
+    file = open('body.json')
+    c.setopt(c.READDATA, file)
+
+    c.perform()
+    c.close()
+    # File must be kept open while Curl object is using it
+    file.close()
+
+This code is available as ``examples/quickstart/put_file.py``.
+
+And if the data is stored in a buffer::
+
+    import pycurl
+    try:
+        from io import BytesIO
+    except ImportError:
+        from StringIO import StringIO as BytesIO
+
+    c = pycurl.Curl()
+    c.setopt(c.URL, 'https://httpbin.org/put')
+
+    c.setopt(c.UPLOAD, 1)
+    data = '{"json":true}'
+    # READDATA requires an IO-like object; a string is not accepted
+    # encode() is necessary for Python 3
+    buffer = BytesIO(data.encode('utf-8'))
+    c.setopt(c.READDATA, buffer)
+
+    c.perform()
+    c.close()
+
+This code is available as ``examples/quickstart/put_buffer.py``.
+
 .. _curl_formadd page: https://curl.haxx.se/libcurl/c/curl_formadd.html
+.. _certifi: https://pypi.org/project/certifi/

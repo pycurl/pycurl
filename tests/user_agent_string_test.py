@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+from . import localhost
 import unittest
 import pycurl
 
@@ -12,13 +13,13 @@ setup_module, teardown_module = appmanager.setup(('app', 8380))
 
 class UserAgentStringTest(unittest.TestCase):
     def setUp(self):
-        self.curl = pycurl.Curl()
-    
+        self.curl = util.DefaultCurl()
+
     def tearDown(self):
         self.curl.close()
-    
+
     def test_pycurl_user_agent_string(self):
-        self.curl.setopt(pycurl.URL, 'http://localhost:8380/header?h=user-agent')
+        self.curl.setopt(pycurl.URL, 'http://%s:8380/header?h=user-agent' % localhost)
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()

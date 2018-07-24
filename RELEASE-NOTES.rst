@@ -1,10 +1,42 @@
 Release Notes
 =============
 
-PycURL 7.43.0.1 - 2017-01-31
+PycURL 7.43.0.2 - 2018-06-02
 ----------------------------
 
-This release collects fixes and improvements made over the past year,
+Highlights of this release:
+
+1. Experimental perform_rs and perform_rb methods have been added to Curl
+   objects. They return response body as a string and a byte string,
+   respectively. The goal of these methods is to improve PycURL's usability
+   for typical use cases, specifically removing the need to set up
+   StringIO/BytesIO objects to store the response body.
+
+2. getinfo_raw and errstr_raw methods have been added to Curl objects to
+   return transfer information as byte strings, permitting applications to
+   retrieve transfer information that is not decodable using Python's
+   default encoding.
+
+3. errstr and "fail or error" exceptions now replace undecodable bytes
+   so as to provide usable strings; use errstr_raw to retrieve original
+   byte strings.
+
+4. There is no longer a need to keep references to Curl objects when they
+   are used in CurlMulti objects - PycURL now maintains such references
+   internally.
+
+5. Official Windows builds now include HTTP/2 and international domain
+   name support.
+
+6. PycURL now officially supports BoringSSL.
+
+7. A number of smaller improvements have been made and bugs fixed.
+
+
+PycURL 7.43.0.1 - 2017-12-07
+----------------------------
+
+This release collects fixes and improvements made over the past two years,
 notably updating Windows dependencies to address DNS resolution and
 TLS connection issues.
 

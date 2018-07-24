@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+import sys
+import weakref
 import pycurl
 import unittest
 import gc
@@ -9,6 +11,11 @@ import flaky
 from . import util
 
 debug = False
+
+if sys.platform == 'win32':
+    devnull = 'NUL'
+else:
+    devnull = '/dev/null'
 
 @flaky.flaky(max_runs=3)
 class MemoryMgmtTest(unittest.TestCase):
@@ -39,7 +46,7 @@ class MemoryMgmtTest(unittest.TestCase):
         t = []
         searches = []
         for a in range(100):
-            curl = pycurl.Curl()
+            curl = util.DefaultCurl()
             multi.add_handle(curl)
             t.append(curl)
 
@@ -77,7 +84,7 @@ class MemoryMgmtTest(unittest.TestCase):
         t = []
         searches = []
         for a in range(100):
-            curl = pycurl.Curl()
+            curl = util.DefaultCurl()
             multi.add_handle(curl)
             t.append(curl)
 
@@ -109,7 +116,7 @@ class MemoryMgmtTest(unittest.TestCase):
         t = []
         searches = []
         for a in range(100):
-            curl = pycurl.Curl()
+            curl = util.DefaultCurl()
             curl.setopt(curl.SHARE, share)
             t.append(curl)
 
@@ -147,7 +154,7 @@ class MemoryMgmtTest(unittest.TestCase):
         t = []
         searches = []
         for a in range(100):
-            curl = pycurl.Curl()
+            curl = util.DefaultCurl()
             curl.setopt(curl.SHARE, share)
             t.append(curl)
 
@@ -173,7 +180,7 @@ class MemoryMgmtTest(unittest.TestCase):
 
     # basic check of reference counting (use a memory checker like valgrind)
     def test_reference_counting(self):
-        c = pycurl.Curl()
+        c = util.DefaultCurl()
         m = pycurl.CurlMulti()
         m.add_handle(c)
         del m
@@ -183,7 +190,7 @@ class MemoryMgmtTest(unittest.TestCase):
 
     def test_cyclic_gc(self):
         gc.collect()
-        c = pycurl.Curl()
+        c = util.DefaultCurl()
         c.m = pycurl.CurlMulti()
         c.m.add_handle(c)
         # create some nasty cyclic references
@@ -214,14 +221,20 @@ class MemoryMgmtTest(unittest.TestCase):
             #print("Tracked objects:", len(gc.get_objects()))
 
     def test_refcounting_bug_in_reset(self):
+        if sys.platform == 'win32':
+            iters = 10000
+        else:
+            iters = 100000
+            
         try:
             range_generator = xrange
         except NameError:
             range_generator = range
         # Ensure that the refcounting error in "reset" is fixed:
-        for i in range_generator(100000):
-            c = pycurl.Curl()
+        for i in range_generator(iters):
+            c = util.DefaultCurl()
             c.reset()
+            c.close()
 
     def test_writefunction_collection(self):
         self.check_callback(pycurl.WRITEFUNCTION)
@@ -251,6 +264,8 @@ class MemoryMgmtTest(unittest.TestCase):
     def test_seekfunction_collection(self):
         self.check_callback(pycurl.SEEKFUNCTION)
 
+    # This is failing too much on appveyor
+    @util.only_unix
     def check_callback(self, callback):
         # Note: extracting a context manager seems to result in
         # everything being garbage collected even if the C code
@@ -259,7 +274,7 @@ class MemoryMgmtTest(unittest.TestCase):
         gc.collect()
         object_count = len(gc.get_objects())
 
-        c = pycurl.Curl()
+        c = util.DefaultCurl()
         c.setopt(callback, lambda x: True)
         del c
 
@@ -273,7 +288,7 @@ class MemoryMgmtTest(unittest.TestCase):
         # this test passed even before the memory leak was fixed,
         # not sure why.
 
-        c = pycurl.Curl()
+        c = util.DefaultCurl()
         gc.collect()
         before_object_count = len(gc.get_objects())
 
@@ -283,9 +298,10 @@ class MemoryMgmtTest(unittest.TestCase):
         gc.collect()
         after_object_count = len(gc.get_objects())
         self.assert_(after_object_count <= before_object_count + 1000, 'Grew from %d to %d objects' % (before_object_count, after_object_count))
+        c.close()
 
     def test_form_bufferptr_memory_leak_gh267(self):
-        c = pycurl.Curl()
+        c = util.DefaultCurl()
         gc.collect()
         before_object_count = len(gc.get_objects())
 
@@ -302,3 +318,63 @@ class MemoryMgmtTest(unittest.TestCase):
         gc.collect()
         after_object_count = len(gc.get_objects())
         self.assert_(after_object_count <= before_object_count + 1000, 'Grew from %d to %d objects' % (before_object_count, after_object_count))
+        c.close()
+
+    def do_data_refcounting(self, option):
+        c = util.DefaultCurl()
+        f = open(devnull, 'a+')
+        c.setopt(option, f)
+        ref = weakref.ref(f)
+        del f
+        gc.collect()
+        assert ref()
+        
+        for i in range(100):
+            assert ref()
+            c.setopt(option, ref())
+        gc.collect()
+        assert ref()
+        
+        c.close()
+        gc.collect()
+        assert ref() is None
+
+    def test_readdata_refcounting(self):
+        self.do_data_refcounting(pycurl.READDATA)
+
+    def test_writedata_refcounting(self):
+        self.do_data_refcounting(pycurl.WRITEDATA)
+
+    def test_writeheader_refcounting(self):
+        self.do_data_refcounting(pycurl.WRITEHEADER)
+
+    # Python < 3.5 cannot create weak references to functions
+    @util.min_python(3, 5)
+    def do_function_refcounting(self, option, method_name):
+        c = util.DefaultCurl()
+        f = open(devnull, 'a+')
+        fn = getattr(f, method_name)
+        c.setopt(option, fn)
+        ref = weakref.ref(fn)
+        del f, fn
+        gc.collect()
+        assert ref()
+        
+        for i in range(100):
+            assert ref()
+            c.setopt(option, ref())
+        gc.collect()
+        assert ref()
+        
+        c.close()
+        gc.collect()
+        assert ref() is None
+
+    def test_readfunction_refcounting(self):
+        self.do_function_refcounting(pycurl.READFUNCTION, 'read')
+
+    def test_writefunction_refcounting(self):
+        self.do_function_refcounting(pycurl.WRITEFUNCTION, 'write')
+
+    def test_headerfunction_refcounting(self):
+        self.do_function_refcounting(pycurl.HEADERFUNCTION, 'write')

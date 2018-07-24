@@ -15,19 +15,19 @@ from . import util
 
 class InternalsTest(unittest.TestCase):
     def setUp(self):
-        self.curl = pycurl.Curl()
-    
+        self.curl = util.DefaultCurl()
+
     def tearDown(self):
         self.curl.close()
         del self.curl
-    
+
     # /***********************************************************************
     # // test misc
     # ************************************************************************/
-    
+
     def test_constant_aliasing(self):
         assert self.curl.URL is pycurl.URL
-    
+
     # /***********************************************************************
     # // test handles
     # ************************************************************************/
@@ -41,17 +41,17 @@ class InternalsTest(unittest.TestCase):
         else:
             assert False, "No exception when trying to remove a handle that is not in CurlMulti"
         del m
-    
+
     def test_remove_invalid_closed_handle(self):
         m = pycurl.CurlMulti()
-        c = pycurl.Curl()
+        c = util.DefaultCurl()
         c.close()
         m.remove_handle(c)
         del m, c
-    
+
     def test_add_closed_handle(self):
         m = pycurl.CurlMulti()
-        c = pycurl.Curl()
+        c = util.DefaultCurl()
         c.close()
         try:
             m.add_handle(c)
@@ -61,7 +61,7 @@ class InternalsTest(unittest.TestCase):
             assert 0, "No exception when trying to add a close handle to CurlMulti"
         m.close()
         del m, c
-    
+
     def test_add_handle_twice(self):
         m = pycurl.CurlMulti()
         m.add_handle(self.curl)
@@ -72,7 +72,7 @@ class InternalsTest(unittest.TestCase):
         else:
             assert 0, "No exception when trying to add the same handle twice"
         del m
-    
+
     def test_add_handle_on_multiple_stacks(self):
         m1 = pycurl.CurlMulti()
         m2 = pycurl.CurlMulti()
@@ -84,7 +84,7 @@ class InternalsTest(unittest.TestCase):
         else:
             assert 0, "No exception when trying to add the same handle on multiple stacks"
         del m1, m2
-    
+
     def test_move_handle(self):
         m1 = pycurl.CurlMulti()
         m2 = pycurl.CurlMulti()
@@ -92,7 +92,7 @@ class InternalsTest(unittest.TestCase):
         m1.remove_handle(self.curl)
         m2.add_handle(self.curl)
         del m1, m2
-    
+
     # /***********************************************************************
     # // test copying and pickling - copying and pickling of
     # // instances of Curl and CurlMulti is not allowed
@@ -106,7 +106,7 @@ class InternalsTest(unittest.TestCase):
             pass
         else:
             assert False, "No exception when trying to copy a Curl handle"
-    
+
     def test_copy_multi(self):
         m = pycurl.CurlMulti()
         try:
@@ -115,7 +115,7 @@ class InternalsTest(unittest.TestCase):
             pass
         else:
             assert False, "No exception when trying to copy a CurlMulti handle"
-    
+
     def test_copy_share(self):
         s = pycurl.CurlShare()
         try:
@@ -124,7 +124,7 @@ class InternalsTest(unittest.TestCase):
             pass
         else:
             assert False, "No exception when trying to copy a CurlShare handle"
-    
+
     def test_pickle_curl(self):
         fp = util.StringIO()
         p = pickle.Pickler(fp, 1)
@@ -136,7 +136,7 @@ class InternalsTest(unittest.TestCase):
         else:
             assert 0, "No exception when trying to pickle a Curl handle"
         del fp, p
-    
+
     def test_pickle_multi(self):
         m = pycurl.CurlMulti()
         fp = util.StringIO()
@@ -148,7 +148,7 @@ class InternalsTest(unittest.TestCase):
         else:
             assert 0, "No exception when trying to pickle a CurlMulti handle"
         del m, fp, p
-    
+
     def test_pickle_share(self):
         s = pycurl.CurlShare()
         fp = util.StringIO()
@@ -160,7 +160,7 @@ class InternalsTest(unittest.TestCase):
         else:
             assert 0, "No exception when trying to pickle a CurlShare handle"
         del s, fp, p
-    
+
     def test_pickle_dumps_curl(self):
         try:
             pickle.dumps(self.curl)
@@ -169,7 +169,7 @@ class InternalsTest(unittest.TestCase):
             pass
         else:
             self.fail("No exception when trying to pickle a Curl handle")
-    
+
     def test_pickle_dumps_multi(self):
         m = pycurl.CurlMulti()
         try:
@@ -178,7 +178,7 @@ class InternalsTest(unittest.TestCase):
             pass
         else:
             self.fail("No exception when trying to pickle a CurlMulti handle")
-    
+
     def test_pickle_dumps_share(self):
         s = pycurl.CurlShare()
         try:
@@ -187,7 +187,7 @@ class InternalsTest(unittest.TestCase):
             pass
         else:
             self.fail("No exception when trying to pickle a CurlShare handle")
-    
+
     if cPickle is not None:
         def test_cpickle_curl(self):
             fp = util.StringIO()
@@ -199,7 +199,7 @@ class InternalsTest(unittest.TestCase):
             else:
                 assert 0, "No exception when trying to pickle a Curl handle via cPickle"
             del fp, p
-        
+
         def test_cpickle_multi(self):
             m = pycurl.CurlMulti()
             fp = util.StringIO()
@@ -211,7 +211,7 @@ class InternalsTest(unittest.TestCase):
             else:
                 assert 0, "No exception when trying to pickle a CurlMulti handle via cPickle"
             del m, fp, p
-        
+
         def test_cpickle_share(self):
             s = pycurl.CurlMulti()
             fp = util.StringIO()

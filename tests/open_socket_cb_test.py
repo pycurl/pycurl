@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+from . import localhost
 import socket
 import pycurl
 import unittest
@@ -49,16 +50,21 @@ def socket_open_unix(purpose, curl_address):
     sockets[0].close()
     return sockets[1]
 
+def socket_open_bad(purpose, curl_address):
+    return pycurl.SOCKET_BAD
+
 class OpenSocketCbTest(unittest.TestCase):
     def setUp(self):
-        self.curl = pycurl.Curl()
+        self.curl = util.DefaultCurl()
 
     def tearDown(self):
         self.curl.close()
 
+    # This is failing too much on appveyor
+    @util.only_unix
     def test_socket_open(self):
         self.curl.setopt(pycurl.OPENSOCKETFUNCTION, socket_open_ipv4)
-        self.curl.setopt(self.curl.URL, 'http://localhost:8380/success')
+        self.curl.setopt(self.curl.URL, 'http://%s:8380/success' % localhost)
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
@@ -88,9 +94,10 @@ class OpenSocketCbTest(unittest.TestCase):
         assert type(socket_open_address[3]) == int
 
     @util.min_libcurl(7, 40, 0)
+    @util.only_unix
     def test_socket_open_unix(self):
         self.curl.setopt(pycurl.OPENSOCKETFUNCTION, socket_open_unix)
-        self.curl.setopt(self.curl.URL, 'http://localhost:8380/success')
+        self.curl.setopt(self.curl.URL, 'http://%s:8380/success' % localhost)
         self.curl.setopt(self.curl.UNIX_SOCKET_PATH, '/tmp/pycurl-test-path.sock')
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
@@ -114,3 +121,21 @@ class OpenSocketCbTest(unittest.TestCase):
 
     def test_unset_socket_open(self):
         self.curl.unsetopt(pycurl.OPENSOCKETFUNCTION)
+
+    def test_socket_bad(self):
+        self.assertEqual(-1, pycurl.SOCKET_BAD)
+
+    def test_socket_open_bad(self):
+        self.curl.setopt(pycurl.OPENSOCKETFUNCTION, socket_open_bad)
+        self.curl.setopt(self.curl.URL, 'http://%s:8380/success' % localhost)
+        try:
+            self.curl.perform()
+        except pycurl.error as e:
+            # libcurl 7.38.0 for some reason fails with a timeout
+            # (and spends 5 minutes on this test)
+            if pycurl.version_info()[1].split('.') == ['7', '38', '0']:
+                self.assertEqual(pycurl.E_OPERATION_TIMEDOUT, e.args[0])
+            else:
+                self.assertEqual(pycurl.E_COULDNT_CONNECT, e.args[0])
+        else:
+            self.fail('Should have raised')

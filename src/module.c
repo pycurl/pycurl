@@ -13,6 +13,9 @@
 
 PYCURL_INTERNAL char *empty_keywords[] = { NULL };
 
+PYCURL_INTERNAL PyObject *bytesio = NULL;
+PYCURL_INTERNAL PyObject *stringio = NULL;
+
 /* Initialized during module init */
 PYCURL_INTERNAL char *g_pycurl_useragent = NULL;
 
@@ -244,7 +247,11 @@ insint_worker(PyObject *d, PyObject *extra, char *name, long value)
     PyObject *v = PyInt_FromLong(value);
     if (v == NULL)
         return -1;
-    return insobj2(d, extra, name, v);
+    if (insobj2(d, extra, name, v) < 0) {
+        Py_DECREF(v);
+        return -1;
+    }
+    return 0;
 }
 
 #define insint(d, name, value) \
@@ -317,9 +324,14 @@ initpycurl(void)
     const curl_version_info_data *vi;
     const char *libcurl_version, *runtime_ssl_lib;
     size_t libcurl_version_len, pycurl_version_len;
+    PyObject *xio_module = NULL;
     PyObject *collections_module = NULL;
     PyObject *named_tuple = NULL;
     PyObject *arglist = NULL;
+    
+    assert(Curl_Type.tp_weaklistoffset > 0);
+    assert(CurlMulti_Type.tp_weaklistoffset > 0);
+    assert(CurlShare_Type.tp_weaklistoffset > 0);
 
     /* Check the version, as this has caused nasty problems in
      * some cases. */
@@ -336,7 +348,8 @@ initpycurl(void)
     /* Our compiled crypto locks should correspond to runtime ssl library. */
     if (vi->ssl_version == NULL) {
         runtime_ssl_lib = "none/other";
-    } else if (!strncmp(vi->ssl_version, "OpenSSL/", 8) || !strncmp(vi->ssl_version, "LibreSSL/", 9)) {
+    } else if (!strncmp(vi->ssl_version, "OpenSSL/", 8) || !strncmp(vi->ssl_version, "LibreSSL/", 9) ||
+               !strncmp(vi->ssl_version, "BoringSSL", 9)) {
         runtime_ssl_lib = "openssl";
     } else if (!strncmp(vi->ssl_version, "GnuTLS/", 7)) {
         runtime_ssl_lib = "gnutls";
@@ -421,7 +434,6 @@ initpycurl(void)
 #undef PYCURL_VERSION_PREFIX_SIZE
 
     insstr_modinit(d, "version", g_pycurl_useragent);
-    insstr_modinit(d, "COMPILE_DATE", __DATE__ " " __TIME__);
     insint(d, "COMPILE_PY_VERSION_HEX", PY_VERSION_HEX);
     insint(d, "COMPILE_LIBCURL_VERSION_NUM", LIBCURL_VERSION_NUM);
 
@@ -449,6 +461,9 @@ initpycurl(void)
     /* constants for ioctl callback argument values */
     insint_c(d, "IOCMD_NOP", CURLIOCMD_NOP);
     insint_c(d, "IOCMD_RESTARTREAD", CURLIOCMD_RESTARTREAD);
+    
+    /* opensocketfunction return value */
+    insint_c(d, "SOCKET_BAD", CURL_SOCKET_BAD);
 
     /* curl_infotype: the kind of data that is passed to information_callback */
 /* XXX do we actually need curl_infotype in pycurl ??? */
@@ -690,11 +705,11 @@ initpycurl(void)
     insint_c(d, "USERPWD", CURLOPT_USERPWD);
     insint_c(d, "WRITEFUNCTION", CURLOPT_WRITEFUNCTION);
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 20, 0)
-    insint_c(d, "OPT_RTSP_STREAM_URI", CURLOPT_RTSP_STREAM_URI);
-    insint_c(d, "OPT_RTSP_REQUEST", CURLOPT_RTSP_REQUEST);
-    insint_c(d, "OPT_RTSP_SESSION_ID", CURLOPT_RTSP_SESSION_ID);
     insint_c(d, "OPT_RTSP_CLIENT_CSEQ", CURLOPT_RTSP_CLIENT_CSEQ);
+    insint_c(d, "OPT_RTSP_REQUEST", CURLOPT_RTSP_REQUEST);
     insint_c(d, "OPT_RTSP_SERVER_CSEQ", CURLOPT_RTSP_SERVER_CSEQ);
+    insint_c(d, "OPT_RTSP_SESSION_ID", CURLOPT_RTSP_SESSION_ID);
+    insint_c(d, "OPT_RTSP_STREAM_URI", CURLOPT_RTSP_STREAM_URI);
     insint_c(d, "OPT_RTSP_TRANSPORT", CURLOPT_RTSP_TRANSPORT);
 #endif
 #ifdef HAVE_CURLOPT_USERNAME
@@ -829,6 +844,7 @@ initpycurl(void)
     insint_c(d, "FTP_ACCOUNT", CURLOPT_FTP_ACCOUNT);
     insint_c(d, "IGNORE_CONTENT_LENGTH", CURLOPT_IGNORE_CONTENT_LENGTH);
     insint_c(d, "COOKIELIST", CURLOPT_COOKIELIST);
+    insint_c(d, "OPT_COOKIELIST", CURLOPT_COOKIELIST);
     insint_c(d, "FTP_SKIP_PASV_IP", CURLOPT_FTP_SKIP_PASV_IP);
     insint_c(d, "FTP_FILEMETHOD", CURLOPT_FTP_FILEMETHOD);
     insint_c(d, "CONNECT_ONLY", CURLOPT_CONNECT_ONLY);
@@ -874,6 +890,13 @@ initpycurl(void)
 #endif
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 52, 0)
     insint_c(d, "PROXY_CAPATH", CURLOPT_PROXY_CAPATH);
+    insint_c(d, "PROXY_CAINFO", CURLOPT_PROXY_CAINFO);
+    insint_c(d, "PRE_PROXY", CURLOPT_PRE_PROXY);
+    insint_c(d, "PROXY_SSLCERT", CURLOPT_PROXY_SSLCERT);
+    insint_c(d, "PROXY_SSLCERTTYPE", CURLOPT_PROXY_SSLCERTTYPE);
+    insint_c(d, "PROXY_SSLKEY", CURLOPT_PROXY_SSLKEY);
+    insint_c(d, "PROXY_SSLKEYTYPE", CURLOPT_PROXY_SSLKEYTYPE);
+    insint_c(d, "PROXY_SSL_VERIFYPEER", CURLOPT_PROXY_SSL_VERIFYPEER);
 #endif
     insint_c(d, "COPYPOSTFIELDS", CURLOPT_COPYPOSTFIELDS);
     insint_c(d, "SSH_HOST_PUBLIC_KEY_MD5", CURLOPT_SSH_HOST_PUBLIC_KEY_MD5);
@@ -1016,6 +1039,10 @@ initpycurl(void)
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 47, 0)
     insint_c(d, "CURL_HTTP_VERSION_2TLS", CURL_HTTP_VERSION_2TLS);
 #endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 49, 0)
+    insint_c(d, "CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE", CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE);
+    insint_c(d, "TCP_FASTOPEN", CURLOPT_TCP_FASTOPEN);
+#endif
     insint_c(d, "CURL_HTTP_VERSION_LAST", CURL_HTTP_VERSION_LAST);
 
     /* CURL_NETRC_OPTION: constants for setopt(NETRC, x) */
@@ -1033,6 +1060,16 @@ initpycurl(void)
     insint_c(d, "SSLVERSION_TLSv1_1", CURL_SSLVERSION_TLSv1_1);
     insint_c(d, "SSLVERSION_TLSv1_2", CURL_SSLVERSION_TLSv1_2);
 #endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 52, 0)
+    insint_c(d, "SSLVERSION_TLSv1_3", CURL_SSLVERSION_TLSv1_3);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 54, 0)
+    insint_c(d, "SSLVERSION_MAX_DEFAULT", CURL_SSLVERSION_MAX_DEFAULT);
+    insint_c(d, "SSLVERSION_MAX_TLSv1_0", CURL_SSLVERSION_MAX_TLSv1_0);
+    insint_c(d, "SSLVERSION_MAX_TLSv1_1", CURL_SSLVERSION_MAX_TLSv1_1);
+    insint_c(d, "SSLVERSION_MAX_TLSv1_2", CURL_SSLVERSION_MAX_TLSv1_2);
+    insint_c(d, "SSLVERSION_MAX_TLSv1_3", CURL_SSLVERSION_MAX_TLSv1_3);
+#endif
 
     /* curl_TimeCond: constants for setopt(TIMECONDITION, x) */
     insint_c(d, "TIMECONDITION_NONE", CURL_TIMECOND_NONE);
@@ -1048,6 +1085,9 @@ initpycurl(void)
     insint_c(d, "SSH_AUTH_HOST", CURLSSH_AUTH_HOST);
     insint_c(d, "SSH_AUTH_KEYBOARD", CURLSSH_AUTH_KEYBOARD);
     insint_c(d, "SSH_AUTH_DEFAULT", CURLSSH_AUTH_DEFAULT);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 28, 0)
+    insint_c(d, "SSH_AUTH_AGENT", CURLSSH_AUTH_AGENT);
+#endif
 
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
     insint_c(d, "HEADER_UNIFIED", CURLHEADER_UNIFIED);
@@ -1185,6 +1225,14 @@ initpycurl(void)
     insint_c(d, "REDIR_POST_ALL", CURL_REDIR_POST_ALL);
 #endif
 
+#ifdef HAVE_CURLOPT_CONNECT_TO
+    insint_c(d, "CONNECT_TO", CURLOPT_CONNECT_TO);
+#endif
+
+#ifdef HAVE_CURLINFO_HTTP_VERSION
+    insint_c(d, "INFO_HTTP_VERSION", CURLINFO_HTTP_VERSION);
+#endif
+
     /* options for global_init() */
     insint(d, "GLOBAL_SSL", CURL_GLOBAL_SSL);
     insint(d, "GLOBAL_WIN32", CURL_GLOBAL_WIN32);
@@ -1296,6 +1344,36 @@ initpycurl(void)
     }
 #endif
 
+#if PY_MAJOR_VERSION >= 3
+    xio_module = PyImport_ImportModule("io");
+    if (xio_module == NULL) {
+        goto error;
+    }
+    bytesio = PyObject_GetAttrString(xio_module, "BytesIO");
+    if (bytesio == NULL) {
+        goto error;
+    }
+    stringio = PyObject_GetAttrString(xio_module, "StringIO");
+    if (stringio == NULL) {
+        goto error;
+    }
+#else
+    xio_module = PyImport_ImportModule("cStringIO");
+    if (xio_module == NULL) {
+        PyErr_Clear();
+        xio_module = PyImport_ImportModule("StringIO");
+        if (xio_module == NULL) {
+            goto error;
+        }
+    }
+    stringio = PyObject_GetAttrString(xio_module, "StringIO");
+    if (stringio == NULL) {
+        goto error;
+    }
+    bytesio = stringio;
+    Py_INCREF(bytesio);
+#endif
+
     collections_module = PyImport_ImportModule("collections");
     if (collections_module == NULL) {
         goto error;
@@ -1346,6 +1424,9 @@ error:
     Py_XDECREF(ErrorObject);
     Py_XDECREF(collections_module);
     Py_XDECREF(named_tuple);
+    Py_XDECREF(xio_module);
+    Py_XDECREF(bytesio);
+    Py_XDECREF(stringio);
     Py_XDECREF(arglist);
 #ifdef HAVE_CURL_7_19_6_OPTS
     Py_XDECREF(khkey_type);

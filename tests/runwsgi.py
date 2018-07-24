@@ -1,6 +1,5 @@
 # Run a WSGI application in a daemon thread
 
-import sys
 import bottle
 import threading
 import os.path
@@ -13,7 +12,7 @@ class Server(bottle.WSGIRefServer):
     def run(self, handler): # pragma: no cover
         self.srv = self.make_server(handler)
         self.serve()
-    
+
     def make_server(self, handler):
         from wsgiref.simple_server import make_server, WSGIRequestHandler
         if self.quiet:
@@ -24,22 +23,16 @@ class Server(bottle.WSGIRefServer):
             self.options['handler_class'] = QuietHandler
         srv = make_server(self.host, self.port, handler, **self.options)
         return srv
-    
+
     def serve(self):
-        if sys.version_info[0] == 2 and sys.version_info[1] < 6:
-            # python 2.5 has no poll_interval
-            # and thus no way to stop the server
-            while not global_stop:
-                self.srv.handle_request()
-        else:
-            self.srv.serve_forever(poll_interval=0.1)
+        self.srv.serve_forever(poll_interval=0.1)
 
 # http://www.socouldanyone.com/2014/01/bottle-with-ssl.html
 # https://github.com/mfm24/miscpython/blob/master/bottle_ssl.py
 class SslServer(Server):
     def run(self, handler): # pragma: no cover
         self.srv = self.make_server(handler)
-        
+
         import ssl
         cert_dir = os.path.join(os.path.dirname(__file__), 'certs')
         self.srv.socket = ssl.wrap_socket(
@@ -47,19 +40,19 @@ class SslServer(Server):
             keyfile=os.path.join(cert_dir, 'server.key'),
             certfile=os.path.join(cert_dir, 'server.crt'),
             server_side=True)
-        
+
         self.serve()
 
 def start_bottle_server(app, port, server, **kwargs):
     server_thread = ServerThread(app, port, server, kwargs)
     server_thread.daemon = True
     server_thread.start()
-    
+
     ok = util.wait_for_network_service(('127.0.0.1', port), 0.1, 10)
     if not ok:
         import warnings
         warnings.warn('Server did not start after 1 second')
-    
+
     return server_thread.server
 
 class ServerThread(threading.Thread):
@@ -69,7 +62,7 @@ class ServerThread(threading.Thread):
         self.port = port
         self.server_kwargs = server_kwargs
         self.server = server(host='127.0.0.1', port=self.port, **self.server_kwargs)
-    
+
     def run(self):
         bottle.run(self.app, server=self.server, quiet=True)
 
@@ -78,20 +71,20 @@ started_servers = {}
 def app_runner_setup(*specs):
     '''Returns setup and teardown methods for running a list of WSGI
     applications in a daemon thread.
-    
+
     Each argument is an (app, port) pair.
-    
+
     Return value is a (setup, teardown) function pair.
-    
+
     The setup and teardown functions expect to be called with an argument
     on which server state will be stored.
-    
+
     Example usage with nose:
-    
+
     >>> setup_module, teardown_module = \
         runwsgi.app_runner_setup((app_module.app, 8050))
     '''
-    
+
     def setup(self):
         self.servers = []
         for spec in specs:
@@ -113,17 +106,12 @@ def app_runner_setup(*specs):
                     del kwargs['ssl']
                 self.servers.append(start_bottle_server(app, port, server, **kwargs))
             started_servers[port] = (app, kwargs)
-    
+
     def teardown(self):
         return
         for server in self.servers:
             # if no tests from module were run, there is no server to shut down
             if hasattr(server, 'srv'):
-                if hasattr(server.srv, 'shutdown'):
-                    server.srv.shutdown()
-                else:
-                    # python 2.5
-                    global global_stop
-                    global_stop = True
-    
+                server.srv.shutdown()
+
     return [setup, teardown]

@@ -30,7 +30,7 @@ libcurl, including:
 Requirements
 ------------
 
-- Python 2.6, 2.7 or 3.1 through 3.5.
+- Python 2.7 or 3.4 through 3.6.
 - libcurl 7.19.0 or better.
 
 
@@ -57,7 +57,7 @@ Documentation for the most recent PycURL release is available on
 `PycURL website <http://pycurl.io/docs/latest/>`_.
 
 Documentation for the development version of PycURL
-is available `here <pycurl.io/docs/dev/>`.
+is available `here <http://pycurl.io/docs/dev/>`_.
 
 To build documentation from source, run ``make docs``.
 Building documentation requires `Sphinx <http://sphinx-doc.org/>`_ to
@@ -174,7 +174,7 @@ License
 
     Copyright (C) 2001-2008 by Kjetil Jacobsen <kjetilja at gmail.com>
     Copyright (C) 2001-2008 by Markus F.X.J. Oberhumer <markus at oberhumer.com>
-    Copyright (C) 2013-2017 by Oleg Pudeyev <oleg at bsdpower.com>
+    Copyright (C) 2013-2018 by Oleg Pudeyev <oleg at bsdpower.com>
 
     All rights reserved.
 

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+from . import localhost
 import flaky
 import pycurl
 import unittest, signal
@@ -15,20 +16,21 @@ setup_module, teardown_module = appmanager.setup(('app', 8380))
 @flaky.flaky(max_runs=3)
 class PauseTest(unittest.TestCase):
     def setUp(self):
-        self.curl = pycurl.Curl()
-    
+        self.curl = util.DefaultCurl()
+
     def tearDown(self):
         self.curl.close()
-    
+
     def test_pause_via_call(self):
         self.check_pause(True)
-    
+
     def test_pause_via_return(self):
         self.check_pause(False)
-    
+
+    @util.only_unix
     def check_pause(self, call):
         # the app sleeps for 0.5 seconds
-        self.curl.setopt(pycurl.URL, 'http://localhost:8380/pause')
+        self.curl.setopt(pycurl.URL, 'http://%s:8380/pause' % localhost)
         sio = util.BytesIO()
         state = dict(paused=False, resumed=False)
         if call:
@@ -57,7 +59,7 @@ class PauseTest(unittest.TestCase):
         signal.alarm(1)
         start = _time.time()
         self.curl.setopt(pycurl.WRITEFUNCTION, writefunc)
-        
+
         m = pycurl.CurlMulti()
         m.add_handle(self.curl)
 
@@ -82,14 +84,14 @@ class PauseTest(unittest.TestCase):
                 ret, num_handles = m.perform()
                 if ret != pycurl.E_CALL_MULTI_PERFORM:
                     break
-        
+
         # Cleanup
         m.remove_handle(self.curl)
         m.close()
-        
+
         self.assertEqual('part1part2', sio.getvalue().decode())
         end = _time.time()
         # check that client side waited
         self.assertTrue(end-start > 1)
-        
+
         assert state['resumed']

@@ -3,6 +3,7 @@
 # vi:ts=4:et
 
 import pycurl
+from . import localhost
 import unittest
 import nose.tools
 
@@ -13,13 +14,13 @@ setup_module, teardown_module = appmanager.setup(('app', 8380))
 
 class SetoptTest(unittest.TestCase):
     def setUp(self):
-        self.curl = pycurl.Curl()
+        self.curl = util.DefaultCurl()
 
     def tearDown(self):
         self.curl.close()
 
     def test_setopt_string(self):
-        self.curl.setopt_string(pycurl.URL, 'http://localhost:8380/success')
+        self.curl.setopt_string(pycurl.URL, 'http://%s:8380/success' % localhost)
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()

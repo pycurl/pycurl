@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+import tempfile
 import os, sys, socket
 import time as _time
-try:
-    import functools
-except ImportError:
-    import functools_backport as functools
+import functools
 
 py3 = sys.version_info[0] == 3
 
@@ -70,6 +68,18 @@ def pycurl_version_less_than(*spec):
     version = [int(part) for part in pycurl.version_info()[1].split('-')[0].split('.')]
     return version_less_than_spec(version, spec)
 
+def only_python2(fn):
+    import nose.plugins.skip
+
+    @functools.wraps(fn)
+    def decorated(*args, **kwargs):
+        if sys.version_info[0] >= 3:
+            raise nose.plugins.skip.SkipTest('python >= 3')
+
+        return fn(*args, **kwargs)
+
+    return decorated
+
 def only_python3(fn):
     import nose.plugins.skip
 
@@ -81,6 +91,21 @@ def only_python3(fn):
         return fn(*args, **kwargs)
 
     return decorated
+
+def min_python(major, minor):
+    import nose.plugins.skip
+
+    def decorator(fn):
+        @functools.wraps(fn)
+        def decorated(*args, **kwargs):
+            if sys.version_info[0:2] < (major, minor):
+                raise nose.plugins.skip.SkipTest('python < %d.%d' % (major, minor))
+
+            return fn(*args, **kwargs)
+
+        return decorated
+
+    return decorator
 
 def min_libcurl(major, minor, patch):
     import nose.plugins.skip
@@ -151,6 +176,18 @@ def only_ipv6(fn):
     def decorated(*args, **kwargs):
         if not pycurl.version_info()[4] & pycurl.VERSION_IPV6:
             raise nose.plugins.skip.SkipTest('libcurl does not support ipv6')
+
+        return fn(*args, **kwargs)
+
+    return decorated
+
+def only_unix(fn):
+    import nose.plugins.skip
+
+    @functools.wraps(fn)
+    def decorated(*args, **kwargs):
+        if sys.platform == 'win32':
+            raise nose.plugins.skip.SkipTest('Unix only')
 
         return fn(*args, **kwargs)
 
@@ -238,3 +275,28 @@ def get_sys_path(p=None):
     return p
 
 
+def DefaultCurl():
+    import pycurl
+
+    curl = pycurl.Curl()
+    curl.setopt(curl.FORBID_REUSE, True)
+    return curl
+
+def DefaultCurlLocalhost(port):
+    '''This is a default curl with localhost -> 127.0.0.1 name mapping
+    on windows systems, because they don't have it in the hosts file.
+    '''
+    
+    curl = DefaultCurl()
+    
+    if sys.platform == 'win32':
+        curl.setopt(curl.RESOLVE, ['localhost:%d:127.0.0.1' % port])
+    
+    return curl
+
+def with_real_write_file(fn):
+    @functools.wraps(fn)
+    def wrapper(*args):
+        with tempfile.NamedTemporaryFile() as f:
+            return fn(*(list(args) + [f.file]))
+    return wrapper

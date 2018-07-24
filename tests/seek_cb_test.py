@@ -8,7 +8,7 @@ import pycurl
 import unittest
 import os.path
 
-from . import procmgr, localhost
+from . import procmgr, localhost, util
 
 setup_module, teardown_module = procmgr.vsftpd_setup()
 
@@ -37,7 +37,7 @@ class PartialFileSource:
 
 class SeekCbTest(unittest.TestCase):
     def test_seek_function(self):
-        c = pycurl.Curl()
+        c = util.DefaultCurl()
         c.setopt(pycurl.UPLOAD, 1)
         c.setopt(pycurl.URL, "ftp://%s:8321/tests/tmp/upload.txt" % localhost)
         c.setopt(pycurl.RESUME_FROM, 0)
@@ -58,7 +58,7 @@ class SeekCbTest(unittest.TestCase):
         del c
         del upload_file
 
-        c = pycurl.Curl()
+        c = util.DefaultCurl()
         c.setopt(pycurl.URL, "ftp://%s:8321/tests/tmp/upload.txt" % localhost)
         c.setopt(pycurl.RESUME_FROM, -1)
         c.setopt(pycurl.UPLOAD, 1)

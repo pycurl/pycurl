@@ -9,6 +9,9 @@ while test -n "$1"; do
   --libs)
     echo '-lcurl -lssl'
     ;;
+  --features)
+    echo 'SSL'
+    ;;
   esac
   shift
 done

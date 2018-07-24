@@ -6,12 +6,16 @@
 
 PACKAGE = "pycurl"
 PY_PACKAGE = "curl"
-VERSION = "7.43.0.1"
+VERSION = "7.43.0.2"
 
 import glob, os, re, sys, subprocess
 import distutils
-import setuptools
-from distutils.core import setup
+try:
+    import wheel
+    if wheel:
+        from setuptools import setup
+except ImportError:
+    from distutils.core import setup
 from distutils.extension import Extension
 from distutils.util import split_quoted
 from distutils.version import LooseVersion
@@ -38,16 +42,39 @@ def scan_argv(argv, s, default=None):
     i = 1
     while i < len(argv):
         arg = argv[i]
-        if str.find(arg, s) == 0:
-            if s.endswith('='):
+        if s.endswith('='):
+            if str.find(arg, s) == 0:
                 # --option=value
                 p = arg[len(s):]
                 if s != '--openssl-lib-name=':
                     assert p, arg
+                del argv[i]
             else:
+                i += 1
+        else:
+            if s == arg:
                 # --option
                 # set value to True
                 p = True
+                del argv[i]
+            else:
+                i = i + 1
+    ##print argv
+    return p
+
+
+def scan_argvs(argv, s):
+    if not s.endswith('='):
+        raise Exception('specification must end with =')
+    p = []
+    i = 1
+    while i < len(argv):
+        arg = argv[i]
+        if str.find(arg, s) == 0:
+            # --option=value
+            p.append(arg[len(s):])
+            if s != '--openssl-lib-name=':
+                assert p[-1], arg
             del argv[i]
         else:
             i = i + 1
@@ -69,6 +96,7 @@ class ExtensionConfiguration(object):
         self.extra_objects = []
         self.extra_compile_args = []
         self.extra_link_args = []
+        self.ssl_lib_detected = None
 
         self.configure()
 
@@ -92,16 +120,107 @@ class ExtensionConfiguration(object):
             elif fatal:
                 fail("FATAL: bad directory %s in environment variable %s" % (dir, envvar))
 
+    def detect_features(self):
+        p = subprocess.Popen((self.curl_config(), '--features'),
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+        if p.wait() != 0:
+            msg = "Problem running `%s' --features" % self.curl_config()
+            if stderr:
+                msg += ":\n" + stderr.decode()
+            raise ConfigurationError(msg)
+        curl_has_ssl = False
+        for feature in split_quoted(stdout.decode()):
+            if feature == 'SSL':
+                # this means any ssl library, not just openssl.
+                # we set the ssl flag to check for ssl library mismatch
+                # at link time and run time
+                self.define_macros.append(('HAVE_CURL_SSL', 1))
+                curl_has_ssl = True
+        self.curl_has_ssl = curl_has_ssl
+
+    def ssl_options(self):
+        return {
+            '--with-openssl': self.using_openssl,
+            '--with-ssl': self.using_openssl,
+            '--with-gnutls': self.using_gnutls,
+            '--with-nss': self.using_nss,
+        }
+
+    def detect_ssl_option(self):
+        for option in self.ssl_options():
+            if scan_argv(self.argv, option) is not None:
+                for other_option in self.ssl_options():
+                    if option != other_option:
+                        if scan_argv(self.argv, other_option) is not None:
+                            raise ConfigurationError('Cannot give both %s and %s' % (option, other_option))
+                
+                return option
+
+    def detect_ssl_backend(self):
+        ssl_lib_detected = None
+        
+        if 'PYCURL_SSL_LIBRARY' in os.environ:
+            ssl_lib = os.environ['PYCURL_SSL_LIBRARY']
+            if ssl_lib in ['openssl', 'gnutls', 'nss']:
+                ssl_lib_detected = ssl_lib
+                getattr(self, 'using_%s' % ssl_lib)()
+            else:
+                raise ConfigurationError('Invalid value "%s" for PYCURL_SSL_LIBRARY' % ssl_lib)
+        
+        option = self.detect_ssl_option()
+        if option:
+            ssl_lib_detected = option.replace('--with-', '')
+            self.ssl_options()[option]()
+
+        # ssl detection - ssl libraries are added
+        if not ssl_lib_detected:
+            libcurl_dll_path = scan_argv(self.argv, "--libcurl-dll=")
+            if libcurl_dll_path is not None:
+                ssl_lib_detected = self.detect_ssl_lib_from_libcurl_dll(libcurl_dll_path)
+
+        if not ssl_lib_detected:
+            # self.sslhintbuf is a hack
+            for arg in split_quoted(self.sslhintbuf):
+                if arg[:2] == "-l":
+                    if arg[2:] == 'ssl':
+                        self.using_openssl()
+                        ssl_lib_detected = 'openssl'
+                        break
+                    if arg[2:] == 'gnutls':
+                        self.using_gnutls()
+                        ssl_lib_detected = 'gnutls'
+                        break
+                    if arg[2:] == 'ssl3':
+                        self.using_nss()
+                        ssl_lib_detected = 'nss'
+                        break
+
+        if not ssl_lib_detected and len(self.argv) == len(self.original_argv) \
+                and not os.environ.get('PYCURL_CURL_CONFIG') \
+                and not os.environ.get('PYCURL_SSL_LIBRARY'):
+            # this path should only be taken when no options or
+            # configuration environment variables are given to setup.py
+            ssl_lib_detected = self.detect_ssl_lib_on_centos6()
+            
+        self.ssl_lib_detected = ssl_lib_detected
+
+    def curl_config(self):
+        try:
+            return self._curl_config
+        except AttributeError:
+            curl_config = os.environ.get('PYCURL_CURL_CONFIG', "curl-config")
+            curl_config = scan_argv(self.argv, "--curl-config=", curl_config)
+            self._curl_config = curl_config
+            return curl_config
 
     def configure_unix(self):
         OPENSSL_DIR = scan_argv(self.argv, "--openssl-dir=")
         if OPENSSL_DIR is not None:
             self.include_dirs.append(os.path.join(OPENSSL_DIR, "include"))
             self.library_dirs.append(os.path.join(OPENSSL_DIR, "lib"))
-        CURL_CONFIG = os.environ.get('PYCURL_CURL_CONFIG', "curl-config")
-        CURL_CONFIG = scan_argv(self.argv, "--curl-config=", CURL_CONFIG)
         try:
-            p = subprocess.Popen((CURL_CONFIG, '--version'),
+            p = subprocess.Popen((self.curl_config(), '--version'),
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         except OSError:
             exc = sys.exc_info()[1]
@@ -109,17 +228,17 @@ class ExtensionConfiguration(object):
             raise ConfigurationError(msg)
         stdout, stderr = p.communicate()
         if p.wait() != 0:
-            msg = "`%s' not found -- please install the libcurl development files or specify --curl-config=/path/to/curl-config" % CURL_CONFIG
+            msg = "`%s' not found -- please install the libcurl development files or specify --curl-config=/path/to/curl-config" % self.curl_config()
             if stderr:
                 msg += ":\n" + stderr.decode()
             raise ConfigurationError(msg)
         libcurl_version = stdout.decode().strip()
-        print("Using %s (%s)" % (CURL_CONFIG, libcurl_version))
-        p = subprocess.Popen((CURL_CONFIG, '--cflags'),
+        print("Using %s (%s)" % (self.curl_config(), libcurl_version))
+        p = subprocess.Popen((self.curl_config(), '--cflags'),
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
         if p.wait() != 0:
-            msg = "Problem running `%s' --cflags" % CURL_CONFIG
+            msg = "Problem running `%s' --cflags" % self.curl_config()
             if stderr:
                 msg += ":\n" + stderr.decode()
             raise ConfigurationError(msg)
@@ -157,7 +276,7 @@ class ExtensionConfiguration(object):
         sslhintbuf = ''
         errtext = ''
         for option in ["--libs", "--static-libs"]:
-            p = subprocess.Popen((CURL_CONFIG, option),
+            p = subprocess.Popen((self.curl_config(), option),
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             stdout, stderr = p.communicate()
             if p.wait() == 0:
@@ -183,30 +302,24 @@ class ExtensionConfiguration(object):
             if errtext:
                 msg += ":\n" + errtext
             raise ConfigurationError(msg)
+            
+        # hack
+        self.sslhintbuf = sslhintbuf
 
-        ssl_lib_detected = False
-        if 'PYCURL_SSL_LIBRARY' in os.environ:
-            ssl_lib = os.environ['PYCURL_SSL_LIBRARY']
-            if ssl_lib in ['openssl', 'gnutls', 'nss']:
-                ssl_lib_detected = True
-                getattr(self, 'using_%s' % ssl_lib)()
-            else:
-                raise ConfigurationError('Invalid value "%s" for PYCURL_SSL_LIBRARY' % ssl_lib)
-        ssl_options = {
-            '--with-openssl': self.using_openssl,
-            '--with-ssl': self.using_openssl,
-            '--with-gnutls': self.using_gnutls,
-            '--with-nss': self.using_nss,
-        }
-        for option in ssl_options:
-            if scan_argv(self.argv, option) is not None:
-                for other_option in ssl_options:
-                    if option != other_option:
-                        if scan_argv(self.argv, other_option) is not None:
-                            raise ConfigurationError('Cannot give both %s and %s' % (option, other_option))
-                ssl_lib_detected = True
-                ssl_options[option]()
-                break
+        self.detect_features()
+        self.ssl_lib_detected = None
+        if self.curl_has_ssl:
+            self.detect_ssl_backend()
+
+            if not self.ssl_lib_detected:
+                sys.stderr.write('''\
+Warning: libcurl is configured to use SSL, but we have not been able to \
+determine which SSL backend it is using. If your Curl is built against \
+OpenSSL, LibreSSL, BoringSSL, GnuTLS or NSS please specify the SSL backend \
+manually. For other SSL backends please ignore this message.''')
+        else:
+            if self.detect_ssl_option():
+                sys.stderr.write("Warning: SSL backend specified manually but libcurl does not use SSL\n")
 
         # libraries and options - all libraries and options are forwarded
         # but if --libs succeeded, --static-libs output is ignored
@@ -217,52 +330,7 @@ class ExtensionConfiguration(object):
                 self.library_dirs.append(arg[2:])
             else:
                 self.extra_link_args.append(arg)
-
-        # ssl detection - ssl libraries are added
-        if not ssl_lib_detected:
-            libcurl_dll_path = scan_argv(self.argv, "--libcurl-dll=")
-            if libcurl_dll_path is not None:
-                if self.detect_ssl_lib_from_libcurl_dll(libcurl_dll_path):
-                    ssl_lib_detected = True
-
-        if not ssl_lib_detected:
-            for arg in split_quoted(sslhintbuf):
-                if arg[:2] == "-l":
-                    if arg[2:] == 'ssl':
-                        self.using_openssl()
-                        ssl_lib_detected = True
-                        break
-                    if arg[2:] == 'gnutls':
-                        self.using_gnutls()
-                        ssl_lib_detected = True
-                        break
-                    if arg[2:] == 'ssl3':
-                        self.using_nss()
-                        ssl_lib_detected = True
-                        break
-
-        if not ssl_lib_detected and len(self.argv) == len(self.original_argv) \
-                and not os.environ.get('PYCURL_CURL_CONFIG') \
-                and not os.environ.get('PYCURL_SSL_LIBRARY'):
-            # this path should only be taken when no options or
-            # configuration environment variables are given to setup.py
-            ssl_lib_detected = self.detect_ssl_lib_on_centos6()
-
-        if not ssl_lib_detected:
-            p = subprocess.Popen((CURL_CONFIG, '--features'),
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            stdout, stderr = p.communicate()
-            if p.wait() != 0:
-                msg = "Problem running `%s' --features" % CURL_CONFIG
-                if stderr:
-                    msg += ":\n" + stderr.decode()
-                raise ConfigurationError(msg)
-            for feature in split_quoted(stdout.decode()):
-                if feature == 'SSL':
-                    # this means any ssl library, not just openssl.
-                    # we set the ssl flag to check for ssl library mismatch
-                    # at link time and run time
-                    self.define_macros.append(('HAVE_CURL_SSL', 1))
+            
         if not self.libraries:
             self.libraries.append("curl")
 
@@ -274,7 +342,7 @@ class ExtensionConfiguration(object):
         self.check_avoid_stdio()
 
     def detect_ssl_lib_from_libcurl_dll(self, libcurl_dll_path):
-        ssl_lib_detected = False
+        ssl_lib_detected = None
         curl_version_info = self.get_curl_version_info(libcurl_dll_path)
         ssl_version = curl_version_info.ssl_version
         if py3:
@@ -282,13 +350,13 @@ class ExtensionConfiguration(object):
             ssl_version = ssl_version.decode('ascii')
         if ssl_version.startswith('OpenSSL/') or ssl_version.startswith('LibreSSL/'):
             self.using_openssl()
-            ssl_lib_detected = True
+            ssl_lib_detected = 'openssl'
         elif ssl_version.startswith('GnuTLS/'):
             self.using_gnutls()
-            ssl_lib_detected = True
+            ssl_lib_detected = 'gnutls'
         elif ssl_version.startswith('NSS/'):
             self.using_nss()
-            ssl_lib_detected = True
+            ssl_lib_detected = 'nss'
         return ssl_lib_detected
 
     def detect_ssl_lib_on_centos6(self):
@@ -329,6 +397,9 @@ class ExtensionConfiguration(object):
         # at the same time they dropped thread locking callback interface,
         # meaning the correct usage of this option is --openssl-lib-name=""
         self.openssl_lib_name = scan_argv(self.argv, '--openssl-lib-name=', 'libeay32.lib')
+
+        for lib in scan_argvs(self.argv, '--link-arg='):
+            self.extra_link_args.append(lib)
 
         if scan_argv(self.argv, "--use-libcurl-dll") is not None:
             libcurl_lib_path = os.path.join(curl_dir, "lib", curl_lib_name)
@@ -422,6 +493,9 @@ class ExtensionConfiguration(object):
             # link against crypto as of May 2014.
             # http://stackoverflow.com/questions/23687488/cant-get-pycurl-to-install-on-cygwin-missing-openssl-symbols-crypto-num-locks
             self.libraries.append('crypto')
+            # we also need ssl for the certificate functions
+            # (SSL_CTX_get_cert_store)
+            self.libraries.append('ssl')
         self.define_macros.append(('HAVE_CURL_SSL', 1))
 
     def using_gnutls(self):
@@ -482,11 +556,22 @@ def strip_pycurl_options(argv):
 
 ###############################################################################
 
+PRETTY_SSL_LIBS = {
+    # setup.py may be detecting BoringSSL properly, need to test
+    'openssl': 'OpenSSL/LibreSSL/BoringSSL',
+    'gnutls': 'GnuTLS',
+    'nss': 'NSS',
+}
+
 def get_extension(argv, split_extension_source=False):
     if split_extension_source:
         sources = [
             os.path.join("src", "docstrings.c"),
             os.path.join("src", "easy.c"),
+            os.path.join("src", "easycb.c"),
+            os.path.join("src", "easyinfo.c"),
+            os.path.join("src", "easyopt.c"),
+            os.path.join("src", "easyperform.c"),
             os.path.join("src", "module.c"),
             os.path.join("src", "multi.c"),
             os.path.join("src", "oscompat.c"),
@@ -494,6 +579,7 @@ def get_extension(argv, split_extension_source=False):
             os.path.join("src", "share.c"),
             os.path.join("src", "stringcompat.c"),
             os.path.join("src", "threadsupport.c"),
+            os.path.join("src", "util.c"),
         ]
         depends = [
             os.path.join("src", "pycurl.h"),
@@ -504,6 +590,12 @@ def get_extension(argv, split_extension_source=False):
         ]
         depends = []
     ext_config = ExtensionConfiguration(argv)
+    
+    if ext_config.ssl_lib_detected:
+        print('Using SSL library: %s' % PRETTY_SSL_LIBS[ext_config.ssl_lib_detected])
+    else:
+        print('Not using an SSL library')
+        
     ext = Extension(
         name=PACKAGE,
         sources=sources,
@@ -694,7 +786,7 @@ libcurl, including:
 Requirements
 ------------
 
-- Python 2.6, 2.7 or 3.1 through 3.5.
+- Python 2.7 or 3.4 through 3.6.
 - libcurl 7.19.0 or better.
 
 
@@ -765,7 +857,11 @@ in COPYING-LGPL_ and COPYING-MIT_ files in the source distribution.
         'Operating System :: Microsoft :: Windows',
         'Operating System :: POSIX',
         'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Topic :: Internet :: File Transfer Protocol (FTP)',
         'Topic :: Internet :: WWW/HTTP',
     ],
@@ -801,6 +897,7 @@ PycURL Windows options:
  --libcurl-lib-name=libcurl_imp.lib    override libcurl import library name
  --with-openssl                        libcurl is linked against OpenSSL
  --with-ssl                            legacy alias for --with-openssl
+ --link-arg=foo.lib                    also link against specified library
 '''
 
 if __name__ == "__main__":

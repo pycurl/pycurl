@@ -4,7 +4,6 @@
 
 import os.path
 import pycurl
-import sys
 import unittest
 
 class UnsetRangeTest(unittest.TestCase):
@@ -21,7 +20,7 @@ class UnsetRangeTest(unittest.TestCase):
 
         # download bytes 0-9 of the script itself through the file:// protocol
         self.read = 0
-        self.curl.setopt(pycurl.URL, 'file://' + os.path.abspath(sys.argv[0]))
+        self.curl.setopt(pycurl.URL, 'file://' + os.path.abspath(__file__).replace('\\', '/'))
         self.curl.setopt(pycurl.WRITEFUNCTION, write_cb)
         self.curl.setopt(pycurl.RANGE, '0-9')
         self.curl.perform()

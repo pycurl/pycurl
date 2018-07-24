@@ -1,29 +1,12 @@
-import os, os.path, subprocess, shutil, re
+import os, os.path, subprocess, shutil
 
 try:
     from urllib.request import urlopen
 except ImportError:
     from urllib import urlopen
 
-python_versions = ['2.4.6', '2.5.6', '2.6.8', '2.7.5', '3.1.5', '3.2.5', '3.3.5', '3.4.1']
+python_versions = ['2.6.8', '2.7.5', '3.1.5', '3.2.5', '3.3.5', '3.4.1']
 libcurl_versions = ['7.19.0', '7.46.0']
-
-# http://bsdpower.com/building-python-24-with-zlib/
-patch_python_for_zlib = "sed -e 's/^#zlib/zlib/g' Modules/Setup >Modules/Setup.patched && mv Modules/Setup.patched Modules/Setup"
-patch_python_for_ssl = "sed -e '/^#SSL/,/^$/s/^#//' -e 's/^#\*shared\*/*shared*/' Modules/Setup >Modules/Setup.patched && mv Modules/Setup.patched Modules/Setup"
-
-python_meta = {
-    '2.4.6': {
-        'post-configure': [patch_python_for_zlib, patch_python_for_ssl],
-    },
-    '2.5.6': {
-        'patches': ['python25.patch'],
-        'post-configure': [patch_python_for_zlib, patch_python_for_ssl],
-    },
-    '3.0.1': {
-        'patches': ['python25.patch', 'python30.patch'],
-    },
-}
 
 libcurl_meta = {
     '7.19.0': {
@@ -86,20 +69,6 @@ def build(archive, dir, prefix, meta=None):
             subprocess_check_call(['make'])
             subprocess_check_call(['make', 'install'])
 
-def patch_pycurl_for_24():
-    # change relative imports to old syntax as python 2.4 does not
-    # support relative imports
-    for root, dirs, files in os.walk('tests'):
-        for file in files:
-            if file.endswith('.py'):
-                path = os.path.join(root, file)
-                with open(path, 'r') as f:
-                    contents = f.read()
-                contents = re.compile(r'^(\s*)from \. import', re.M).sub(r'\1import', contents)
-                contents = re.compile(r'^(\s*)from \.(\w+) import', re.M).sub(r'\1from \2 import', contents)
-                with open(path, 'w') as f:
-                    f.write(contents)
-
 def run_matrix(python_versions, libcurl_versions):
     for python_version in python_versions:
         url = 'http://www.python.org/ftp/python/%s/Python-%s.tgz' % (python_version, python_version)
@@ -108,7 +77,7 @@ def run_matrix(python_versions, libcurl_versions):
 
         dir = archive.replace('.tgz', '')
         prefix = os.path.abspath('i/%s' % dir)
-        build(archive, dir, prefix, meta=python_meta.get(python_version))
+        build(archive, dir, prefix)
 
     for libcurl_version in libcurl_versions:
         url = 'https://curl.haxx.se/download/curl-%s.tar.gz' % libcurl_version
@@ -133,36 +102,21 @@ def run_matrix(python_versions, libcurl_versions):
             venv = os.path.abspath('venv/Python-%s-curl-%s' % (python_version, libcurl_version))
             if os.path.exists(venv):
                 shutil.rmtree(venv)
-            if python_version_pieces >= [2, 5]:
-                fetch('https://pypi.python.org/packages/2.5/s/setuptools/setuptools-0.6c11-py2.5.egg')
-                fetch('https://pypi.python.org/packages/2.6/s/setuptools/setuptools-0.6c11-py2.6.egg')
-                fetch('https://pypi.python.org/packages/2.7/s/setuptools/setuptools-0.6c11-py2.7.egg')
-                # I had virtualenv 1.8.2 installed systemwide which
-                # did not work with python 3.0:
-                # http://stackoverflow.com/questions/14224361/why-am-i-getting-this-error-related-to-pip-and-easy-install-when-trying-to-set
-                # so, use known versions everywhere
-                # md5=89e68df89faf1966bcbd99a0033fbf8e
-                fetch('https://pypi.python.org/packages/source/d/distribute/distribute-0.6.49.tar.gz')
-                subprocess_check_call(['python', 'virtualenv-1.9.1.py', venv, '-p', '%s/bin/python%d.%d' % (python_prefix, python_version_pieces[0], python_version_pieces[1]), '--no-site-packages', '--never-download'])
-            else:
-                # md5=bd639f9b0eac4c42497034dec2ec0c2b
-                fetch('https://pypi.python.org/packages/2.4/s/setuptools/setuptools-0.6c11-py2.4.egg')
-                # md5=6afbb46aeb48abac658d4df742bff714
-                fetch('https://pypi.python.org/packages/source/p/pip/pip-1.4.1.tar.gz')
-                subprocess_check_call(['python', 'virtualenv-1.7.py', venv, '-p', '%s/bin/python' % python_prefix, '--no-site-packages', '--never-download'])
+            fetch('https://pypi.python.org/packages/2.6/s/setuptools/setuptools-0.6c11-py2.6.egg')
+            fetch('https://pypi.python.org/packages/2.7/s/setuptools/setuptools-0.6c11-py2.7.egg')
+            # I had virtualenv 1.8.2 installed systemwide which
+            # did not work with python 3.0:
+            # http://stackoverflow.com/questions/1422361/why-am-i-getting-this-error-related-to-pip-and-easy-install-when-trying-to-set
+            # so, use known versions everywhere
+            # md5=89e68df89faf1966bcbd99a0033fbf8e
+            fetch('https://pypi.python.org/packages/source/d/distribute/distribute-0.6.49.tar.gz')
+            subprocess_check_call(['python', 'virtualenv-1.9.1.py', venv, '-p', '%s/bin/python%d.%d' % (python_prefix, python_version_pieces[0], python_version_pieces[1]), '--no-site-packages', '--never-download'])
             curl_config_path = os.path.join(libcurl_prefix, 'bin/curl-config')
             curl_lib_path = os.path.join(libcurl_prefix, 'lib')
             with in_dir('pycurl'):
                 extra_patches = []
                 extra_env = []
-                if python_version_pieces >= [2, 6]:
-                    deps_cmd = 'pip install -r requirements-dev.txt'
-                elif python_version_pieces >= [2, 5]:
-                    deps_cmd = 'pip install -r requirements-dev-2.5.txt'
-                else:
-                    deps_cmd = 'easy_install nose simplejson==2.1.0'
-                    patch_pycurl_for_24()
-                    extra_env.append('PYCURL_STANDALONE_APP=yes')
+                deps_cmd = 'pip install -r requirements-dev.txt'
                 extra_patches = ' && '.join(extra_patches)
                 extra_env = ' '.join(extra_env)
                 cmd = '''
@@ -208,7 +162,4 @@ if __name__ == '__main__':
             chosen_libcurl_versions = libcurl_versions
         run_matrix(chosen_python_versions, chosen_libcurl_versions)
 
-    if len(sys.argv) > 1 and sys.argv[1] == 'patch-24':
-        patch_pycurl_for_24()
-    else:
-        main()
+    main()

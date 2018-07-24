@@ -16,7 +16,7 @@ class SshKeyCbTest(unittest.TestCase):
     '''This test requires Internet access.'''
 
     def setUp(self):
-        self.curl = pycurl.Curl()
+        self.curl = util.DefaultCurl()
         self.curl.setopt(pycurl.URL, sftp_server)
         self.curl.setopt(pycurl.VERBOSE, True)
 
@@ -24,6 +24,9 @@ class SshKeyCbTest(unittest.TestCase):
         self.curl.close()
 
     @util.min_libcurl(7, 19, 6)
+    # curl compiled with libssh doesn't support
+    # CURLOPT_SSH_KNOWNHOSTS and CURLOPT_SSH_KEYFUNCTION
+    @util.guard_unknown_libcurl_option
     def test_keyfunction(self):
         # with keyfunction returning ok
 
@@ -54,6 +57,7 @@ class SshKeyCbTest(unittest.TestCase):
             self.assertEqual(pycurl.E_PEER_FAILED_VERIFICATION, e.args[0])
 
     @util.min_libcurl(7, 19, 6)
+    @util.guard_unknown_libcurl_option
     def test_keyfunction_bogus_return(self):
         def keyfunction(known_key, found_key, match):
             return 'bogus'
@@ -71,14 +75,16 @@ class SshKeyCbTest(unittest.TestCase):
 @nose.plugins.attrib.attr('ssh')
 class SshKeyCbUnsetTest(unittest.TestCase):
     def setUp(self):
-        self.curl = pycurl.Curl()
+        self.curl = util.DefaultCurl()
         self.curl.setopt(pycurl.URL, sftp_server)
         self.curl.setopt(pycurl.VERBOSE, True)
 
     @util.min_libcurl(7, 19, 6)
+    @util.guard_unknown_libcurl_option
     def test_keyfunction_none(self):
         self.curl.setopt(pycurl.SSH_KEYFUNCTION, None)
 
     @util.min_libcurl(7, 19, 6)
+    @util.guard_unknown_libcurl_option
     def test_keyfunction_unset(self):
         self.curl.unsetopt(pycurl.SSH_KEYFUNCTION)

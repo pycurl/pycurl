@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+from . import localhost
 import threading
 import pycurl
 import unittest
@@ -16,8 +17,8 @@ class WorkerThread(threading.Thread):
 
     def __init__(self, share):
         threading.Thread.__init__(self)
-        self.curl = pycurl.Curl()
-        self.curl.setopt(pycurl.URL, 'http://localhost:8380/success')
+        self.curl = util.DefaultCurl()
+        self.curl.setopt(pycurl.URL, 'http://%s:8380/success' % localhost)
         self.curl.setopt(pycurl.SHARE, share)
         self.sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, self.sio.write)
@@ -38,29 +39,29 @@ class ShareTest(unittest.TestCase):
 
         t1.start()
         t2.start()
-        
+
         t1.join()
         t2.join()
-        
+
         del s
-        
+
         self.assertEqual('success', t1.sio.getvalue().decode())
         self.assertEqual('success', t2.sio.getvalue().decode())
-    
+
     def test_share_close(self):
         s = pycurl.CurlShare()
         s.close()
-    
+
     def test_share_close_twice(self):
         s = pycurl.CurlShare()
         s.close()
         s.close()
-    
+
     # positional arguments are rejected
     @nose.tools.raises(TypeError)
     def test_positional_arguments(self):
         pycurl.CurlShare(1)
-    
+
     # keyword arguments are rejected
     @nose.tools.raises(TypeError)
     def test_keyword_arguments(self):

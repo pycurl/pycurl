@@ -149,12 +149,12 @@ from source.
 Currently official PycURL packages are built against the following Python
 versions:
 
-- 2.6.6
 - 2.7.10
 - 3.2.5
 - 3.3.5
 - 3.4.3
 - 3.5.2
+- 3.6.0
 
 If the C runtime library (MSVCRT.DLL) versions used by PycURL and Python
 do not match, you will receive a message
@@ -177,12 +177,14 @@ Building From Source
 ^^^^^^^^^^^^^^^^^^^^
 
 Building PycURL from source is not for the faint of heart due to the multitude
-of possible dependencies. Additionally different dependencies have different
+of possible dependencies and each of these dependencies having its own
+directory structure, configuration style, parameters and quirks.
+Additionally different dependencies have different
 settings for MSVCRT usage, and an application must have all of its parts
 agreeing on a single setting. If you decide to build PycURL from source
-you should familiarize yourself with the ``winbuild.py``
-script - it is used to build the official binaries and tweaking it for
-your environment is likely to be less work than starting from scratch.
+it is advisable to look through the ``winbuild.py``
+script - it is used to build the official binaries and contains a wealth
+of information for compiling PycURL's dependencies on Windows.
 
 If you are compiling PycURL from source it is recommended to compile all of its
 dependencies from source as well. Using precompiled libraries may lead to
@@ -256,7 +258,7 @@ Prerequisites:
 - `Git for Windows`_.
 - Appropriate `Python versions`_ installed.
 - MS Visual C++ 9/2008 for Python <= 3.2, MS Visual C++ 10/2010 for
-  Python 3.3 or 3.4, MS Visual C++ 14/2015 for Python 3.5.
+  Python 3.3 or 3.4, MS Visual C++ 14/2015 for Python 3.5 or 3.6.
   Express versions of Visual Studio work fine for this,
   although getting 64 bit compilers to wok in some Express versions involves
   jumping through several hoops.
@@ -270,7 +272,7 @@ Prerequisites:
 
 ``winbuild.py`` assumes all programs are installed in their default locations,
 if this is not the case edit it as needed. ``winbuild.py`` itself can be run
-with any Python it supports - 2.6, 2.7 or 3.2 through 3.5.
+with any Python it supports - 2.7 or 3.2 through 3.6.
 
 .. _`download area`: https://dl.bintray.com/pycurl/pycurl/
 

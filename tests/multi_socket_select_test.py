@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+from . import localhost
 import pycurl
 import unittest
 import select
@@ -34,9 +35,9 @@ class MultiSocketSelectTest(unittest.TestCase):
             # we need libcurl to actually wait on the handles,
             # and initiate polling.
             # thus use urls that sleep for a bit.
-            'http://localhost:8380/short_wait',
-            'http://localhost:8381/short_wait',
-            'http://localhost:8382/short_wait',
+            'http://%s:8380/short_wait' % localhost,
+            'http://%s:8381/short_wait' % localhost,
+            'http://%s:8382/short_wait' % localhost,
         ]
 
         socket_events = []
@@ -57,7 +58,7 @@ class MultiSocketSelectTest(unittest.TestCase):
         m.setopt(pycurl.M_SOCKETFUNCTION, socket)
         m.handles = []
         for url in urls:
-            c = pycurl.Curl()
+            c = util.DefaultCurl()
             # save info in standard Python attributes
             c.url = url
             c.body = util.BytesIO()

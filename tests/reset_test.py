@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+from . import localhost
 import pycurl
 import unittest
 
@@ -12,17 +13,17 @@ setup_module, teardown_module = appmanager.setup(('app', 8380))
 
 class ResetTest(unittest.TestCase):
     def test_reset(self):
-        c = pycurl.Curl()
+        c = util.DefaultCurl()
         c.setopt(pycurl.USERAGENT, 'Phony/42')
-        c.setopt(pycurl.URL, 'http://localhost:8380/header?h=user-agent')
+        c.setopt(pycurl.URL, 'http://%s:8380/header?h=user-agent' % localhost)
         sio = util.BytesIO()
         c.setopt(pycurl.WRITEFUNCTION, sio.write)
         c.perform()
         user_agent = sio.getvalue().decode()
         assert user_agent == 'Phony/42'
-        
+
         c.reset()
-        c.setopt(pycurl.URL, 'http://localhost:8380/header?h=user-agent')
+        c.setopt(pycurl.URL, 'http://%s:8380/header?h=user-agent' % localhost)
         sio = util.BytesIO()
         c.setopt(pycurl.WRITEFUNCTION, sio.write)
         c.perform()
@@ -30,17 +31,17 @@ class ResetTest(unittest.TestCase):
         # we also check that the request succeeded after curl
         # object has been reset
         assert user_agent.startswith('PycURL')
-    
+
     # XXX this test was broken when it was test_reset.py
     def skip_reset_with_multi(self):
         outf = util.BytesIO()
         cm = pycurl.CurlMulti()
 
-        eh = pycurl.Curl()
+        eh = util.DefaultCurl()
 
         for x in range(1, 20):
             eh.setopt(pycurl.WRITEFUNCTION, outf.write)
-            eh.setopt(pycurl.URL, 'http://localhost:8380/success')
+            eh.setopt(pycurl.URL, 'http://%s:8380/success' % localhost)
             cm.add_handle(eh)
 
             while 1:

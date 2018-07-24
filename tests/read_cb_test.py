@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+from . import localhost
 import pycurl
 import unittest
 import sys
@@ -42,14 +43,14 @@ class DataProvider(object):
 
 class ReadCbTest(unittest.TestCase):
     def setUp(self):
-        self.curl = pycurl.Curl()
+        self.curl = util.DefaultCurl()
 
     def tearDown(self):
         self.curl.close()
 
     def test_post_with_read_callback(self):
         d = DataProvider(POSTSTRING)
-        self.curl.setopt(self.curl.URL, 'http://localhost:8380/postfields')
+        self.curl.setopt(self.curl.URL, 'http://%s:8380/postfields' % localhost)
         self.curl.setopt(self.curl.POST, 1)
         self.curl.setopt(self.curl.POSTFIELDSIZE, len(POSTSTRING))
         self.curl.setopt(self.curl.READFUNCTION, d.read_cb)
@@ -75,7 +76,7 @@ class ReadCbTest(unittest.TestCase):
         assert type(data) == util.binary_type
         d = DataProvider(data)
 
-        self.curl.setopt(self.curl.URL, 'http://localhost:8380/raw_utf8')
+        self.curl.setopt(self.curl.URL, 'http://%s:8380/raw_utf8' % localhost)
         self.curl.setopt(self.curl.POST, 1)
         self.curl.setopt(self.curl.HTTPHEADER, ['Content-Type: application/octet-stream'])
         # length of bytes
@@ -111,7 +112,7 @@ class ReadCbTest(unittest.TestCase):
         assert type(poststring) == util.text_type
         d = DataProvider(poststring)
 
-        self.curl.setopt(self.curl.URL, 'http://localhost:8380/raw_utf8')
+        self.curl.setopt(self.curl.URL, 'http://%s:8380/raw_utf8' % localhost)
         self.curl.setopt(self.curl.POST, 1)
         self.curl.setopt(self.curl.HTTPHEADER, ['Content-Type: application/octet-stream'])
         self.curl.setopt(self.curl.POSTFIELDSIZE, len(poststring))

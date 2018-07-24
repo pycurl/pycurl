@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+from . import localhost
 import unittest
 import pycurl
 
@@ -12,8 +13,8 @@ setup_module, teardown_module = appmanager.setup(('app', 8380))
 
 class SockoptCbTest(unittest.TestCase):
     def setUp(self):
-        self.curl = pycurl.Curl()
-        self.curl.setopt(self.curl.URL, 'http://localhost:8380/success')
+        self.curl = util.DefaultCurl()
+        self.curl.setopt(self.curl.URL, 'http://%s:8380/success' % localhost)
 
     def tearDown(self):
         self.curl.close()
@@ -75,7 +76,7 @@ class SockoptCbTest(unittest.TestCase):
 
 class SockoptCbUnsetTest(unittest.TestCase):
     def setUp(self):
-        self.curl = pycurl.Curl()
+        self.curl = util.DefaultCurl()
 
     def test_sockoptfunction_none(self):
         self.curl.setopt(pycurl.SOCKOPTFUNCTION, None)

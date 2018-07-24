@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+from . import localhost
 import unittest
 import pycurl
 
@@ -12,8 +13,8 @@ setup_module, teardown_module = appmanager.setup(('app', 8380))
 
 class XferinfoCbTest(unittest.TestCase):
     def setUp(self):
-        self.curl = pycurl.Curl()
-        self.curl.setopt(self.curl.URL, 'http://localhost:8380/long_pause')
+        self.curl = util.DefaultCurl()
+        self.curl.setopt(self.curl.URL, 'http://%s:8380/long_pause' % localhost)
 
     def tearDown(self):
         self.curl.close()

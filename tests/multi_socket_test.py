@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # vi:ts=4:et
 
+from . import localhost
 import pycurl
 import unittest
 
@@ -28,9 +29,9 @@ class MultiSocketTest(unittest.TestCase):
             # not sure why requesting /success produces no events.
             # see multi_socket_select_test.py for a longer explanation
             # why short wait is used there.
-            'http://localhost:8380/short_wait',
-            'http://localhost:8381/short_wait',
-            'http://localhost:8382/short_wait',
+            'http://%s:8380/short_wait' % localhost,
+            'http://%s:8381/short_wait' % localhost,
+            'http://%s:8382/short_wait' % localhost,
         ]
 
         socket_events = []
@@ -45,7 +46,7 @@ class MultiSocketTest(unittest.TestCase):
         m.setopt(pycurl.M_SOCKETFUNCTION, socket)
         m.handles = []
         for url in urls:
-            c = pycurl.Curl()
+            c = util.DefaultCurl()
             # save info in standard Python attributes
             c.url = url
             c.body = util.BytesIO()
@@ -78,18 +79,18 @@ class MultiSocketTest(unittest.TestCase):
         for c in m.handles:
             self.assertEqual('success', c.body.getvalue().decode())
             self.assertEqual(200, c.http_code)
-            
+
             # multi, not curl handle
             self.check(pycurl.POLL_IN, m, socket_events)
             self.check(pycurl.POLL_REMOVE, m, socket_events)
-        
+
         # close handles
         for c in m.handles:
             # pycurl API calls
             m.remove_handle(c)
             c.close()
         m.close()
-    
+
     def check(self, event, multi, socket_events):
         for event_, multi_ in socket_events:
             if event == event_ and multi == multi_:

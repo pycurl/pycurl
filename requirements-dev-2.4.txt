@@ -1,3 +1,0 @@
-nose
-simplejson==2.1.0
-pyflakes

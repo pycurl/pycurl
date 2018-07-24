@@ -123,3 +123,22 @@ def long_pause():
 def utf8_body():
     # bottle encodes the body
     return 'Дружба народов'
+
+@app.route('/invalid_utf8_body')
+def invalid_utf8_body():
+    # bottle encodes the body
+    raise bottle.HTTPResponse(b'\xb3\xd2\xda\xcd\xd7', 200)
+
+@app.route('/set_cookie_invalid_utf8')
+def set_cookie_invalid_utf8():
+    bottle.response.set_header('Set-Cookie', '\xb3\xd2\xda\xcd\xd7=%96%A6g%9Ay%B0%A5g%A7tm%7C%95%9A')
+    return 'cookie set'
+
+@app.route('/content_type_invalid_utf8')
+def content_type_invalid_utf8():
+    bottle.response.set_header('Content-Type', '\xb3\xd2\xda\xcd\xd7')
+    return 'content type set'
+
+@app.route('/status_invalid_utf8')
+def status_invalid_utf8():
+    raise bottle.HTTPResponse('status set', '555 \xb3\xd2\xda\xcd\xd7')

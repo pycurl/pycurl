@@ -72,10 +72,6 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
 #define inet_ntop(fam,addr,string,size) pycurl_inet_ntop(fam,addr,string,size)
 #endif
 
-/* Ensure we have updated versions */
-#if !defined(PY_VERSION_HEX) || (PY_VERSION_HEX < 0x02040000)
-#  error "Need Python version 2.4 or greater to compile pycurl."
-#endif
 #if !defined(LIBCURL_VERSION_NUM) || (LIBCURL_VERSION_NUM < 0x071300)
 #  error "Need libcurl version 7.19.0 or greater to compile pycurl."
 #endif
@@ -149,14 +145,12 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
 #define HAVE_CURL_7_30_0_PIPELINE_OPTS
 #endif
 
-/* Python < 2.5 compat for Py_ssize_t */
-#if PY_VERSION_HEX < 0x02050000
-typedef int Py_ssize_t;
+#if LIBCURL_VERSION_NUM >= 0x073100 /* check for 7.49.0 or greater */
+#define HAVE_CURLOPT_CONNECT_TO
 #endif
 
-/* Py_TYPE is defined by Python 2.6+ */
-#if PY_VERSION_HEX < 0x02060000 && !defined(Py_TYPE)
-#  define Py_TYPE(x) (x)->ob_type
+#if LIBCURL_VERSION_NUM >= 0x073200 /* check for 7.50.0 or greater */
+#define HAVE_CURLINFO_HTTP_VERSION
 #endif
 
 #undef UNUSED
@@ -167,7 +161,8 @@ typedef int Py_ssize_t;
 # if defined(HAVE_CURL_OPENSSL)
 #   define PYCURL_NEED_SSL_TSL
 #   define PYCURL_NEED_OPENSSL_TSL
-#   include <openssl/crypto.h>
+#   include <openssl/ssl.h>
+#   include <openssl/err.h>
 #   define COMPILE_SSL_LIB "openssl"
 # elif defined(HAVE_CURL_GNUTLS)
 #   include <gnutls/gnutls.h>
@@ -254,11 +249,13 @@ PyListOrTuple_GetItem(PyObject *v, Py_ssize_t i, int which);
 #if PY_MAJOR_VERSION >= 3
 # define PyText_FromFormat(format, str) PyUnicode_FromFormat((format), (str))
 # define PyText_FromString(str) PyUnicode_FromString(str)
+# define PyByteStr_FromString(str) PyBytes_FromString(str)
 # define PyByteStr_Check(obj) PyBytes_Check(obj)
 # define PyByteStr_AsStringAndSize(obj, buffer, length) PyBytes_AsStringAndSize((obj), (buffer), (length))
 #else
 # define PyText_FromFormat(format, str) PyString_FromFormat((format), (str))
 # define PyText_FromString(str) PyString_FromString(str)
+# define PyByteStr_FromString(str) PyString_FromString(str)
 # define PyByteStr_Check(obj) PyString_Check(obj)
 # define PyByteStr_AsStringAndSize(obj, buffer, length) PyString_AsStringAndSize((obj), (buffer), (length))
 #endif
@@ -270,23 +267,23 @@ PYCURL_INTERNAL char *
 PyText_AsString_NoNUL(PyObject *obj, PyObject **encoded_obj);
 PYCURL_INTERNAL int
 PyText_Check(PyObject *o);
+PYCURL_INTERNAL PyObject *
+PyText_FromString_Ignore(const char *string);
+
+struct CurlObject;
+
+PYCURL_INTERNAL void
+create_and_set_error_object(struct CurlObject *self, int code);
 
 
 /* Raise exception based on return value `res' and `self->error' */
 #define CURLERROR_RETVAL() do {\
-    PyObject *v; \
-    self->error[sizeof(self->error) - 1] = 0; \
-    v = Py_BuildValue("(is)", (int) (res), self->error); \
-    if (v != NULL) { PyErr_SetObject(ErrorObject, v); Py_DECREF(v); } \
+    create_and_set_error_object((self), (int) (res)); \
     return NULL; \
 } while (0)
 
-#define CURLERROR_SET_RETVAL() do {\
-    PyObject *v; \
-    self->error[sizeof(self->error) - 1] = 0; \
-    v = Py_BuildValue("(is)", (int) (res), self->error); \
-    if (v != NULL) { PyErr_SetObject(ErrorObject, v); Py_DECREF(v); } \
-} while (0)
+#define CURLERROR_SET_RETVAL() \
+    create_and_set_error_object((self), (int) (res));
 
 #define CURLERROR_RETVAL_MULTI_DONE() do {\
     PyObject *v; \
@@ -296,6 +293,7 @@ PyText_Check(PyObject *o);
 } while (0)
 
 /* Raise exception based on return value `res' and custom message */
+/* msg should be ASCII */
 #define CURLERROR_MSG(msg) do {\
     PyObject *v; const char *m = (msg); \
     v = Py_BuildValue("(is)", (int) (res), (m)); \
@@ -323,10 +321,13 @@ PyText_Check(PyObject *o);
 #define PYCURL_MEMGROUP_HTTPPOST        32
 /* Postfields object */
 #define PYCURL_MEMGROUP_POSTFIELDS      64
+/* CA certs object */
+#define PYCURL_MEMGROUP_CACERTS         128
 
 #define PYCURL_MEMGROUP_EASY \
     (PYCURL_MEMGROUP_CALLBACK | PYCURL_MEMGROUP_FILE | \
-    PYCURL_MEMGROUP_HTTPPOST | PYCURL_MEMGROUP_POSTFIELDS)
+    PYCURL_MEMGROUP_HTTPPOST | PYCURL_MEMGROUP_POSTFIELDS | \
+    PYCURL_MEMGROUP_CACERTS)
 
 #define PYCURL_MEMGROUP_ALL \
     (PYCURL_MEMGROUP_ATTRDICT | PYCURL_MEMGROUP_EASY | \
@@ -335,6 +336,8 @@ PyText_Check(PyObject *o);
 typedef struct CurlObject {
     PyObject_HEAD
     PyObject *dict;                 /* Python attributes dictionary */
+    // https://docs.python.org/3/extending/newtypes.html
+    PyObject *weakreflist;
     CURL *handle;
 #ifdef WITH_THREAD
     PyThreadState *state;
@@ -359,6 +362,9 @@ typedef struct CurlObject {
 #ifdef HAVE_CURL_7_20_0_OPTS
     struct curl_slist *mail_rcpt;
 #endif
+#ifdef HAVE_CURLOPT_CONNECT_TO
+    struct curl_slist *connect_to;
+#endif
     /* callbacks */
     PyObject *w_cb;
     PyObject *h_cb;
@@ -382,6 +388,8 @@ typedef struct CurlObject {
     PyObject *writeheader_fp;
     /* reference to the object used for CURLOPT_POSTFIELDS */
     PyObject *postfields_obj;
+    /* reference to the object containing ca certs */
+    PyObject *ca_certs_obj;
     /* misc */
     char error[CURL_ERROR_SIZE+1];
 } CurlObject;
@@ -389,6 +397,8 @@ typedef struct CurlObject {
 typedef struct CurlMultiObject {
     PyObject_HEAD
     PyObject *dict;                 /* Python attributes dictionary */
+    // https://docs.python.org/3/extending/newtypes.html
+    PyObject *weakreflist;
     CURLM *multi_handle;
 #ifdef WITH_THREAD
     PyThreadState *state;
@@ -399,6 +409,8 @@ typedef struct CurlMultiObject {
     /* callbacks */
     PyObject *t_cb;
     PyObject *s_cb;
+
+    PyObject *easy_object_dict;
 } CurlMultiObject;
 
 typedef struct {
@@ -408,6 +420,8 @@ typedef struct {
 typedef struct CurlShareObject {
     PyObject_HEAD
     PyObject *dict;                 /* Python attributes dictionary */
+    // https://docs.python.org/3/extending/newtypes.html
+    PyObject *weakreflist;
     CURLSH *share_handle;
 #ifdef WITH_THREAD
     ShareLock *lock;                /* lock object to implement CURLSHOPT_LOCKFUNC */
@@ -465,6 +479,95 @@ do_global_cleanup(PyObject *dummy);
 PYCURL_INTERNAL PyObject *
 do_version_info(PyObject *dummy, PyObject *args);
 
+PYCURL_INTERNAL PyObject *
+do_curl_setopt(CurlObject *self, PyObject *args);
+PYCURL_INTERNAL PyObject *
+do_curl_setopt_string(CurlObject *self, PyObject *args);
+PYCURL_INTERNAL PyObject *
+do_curl_unsetopt(CurlObject *self, PyObject *args);
+#if defined(HAVE_CURL_OPENSSL)
+PYCURL_INTERNAL PyObject *
+do_curl_set_ca_certs(CurlObject *self, PyObject *args);
+#endif
+PYCURL_INTERNAL PyObject *
+do_curl_perform(CurlObject *self);
+PYCURL_INTERNAL PyObject *
+do_curl_perform_rb(CurlObject *self);
+#if PY_MAJOR_VERSION >= 3
+PYCURL_INTERNAL PyObject *
+do_curl_perform_rs(CurlObject *self);
+#else
+# define do_curl_perform_rs do_curl_perform_rb
+#endif
+
+PYCURL_INTERNAL PyObject *
+do_curl_pause(CurlObject *self, PyObject *args);
+
+PYCURL_INTERNAL int
+check_curl_state(const CurlObject *self, int flags, const char *name);
+PYCURL_INTERNAL void
+util_curl_xdecref(CurlObject *self, int flags, CURL *handle);
+PYCURL_INTERNAL PyObject *
+do_curl_setopt_filelike(CurlObject *self, int option, PyObject *obj);
+
+PYCURL_INTERNAL PyObject *
+do_curl_getinfo_raw(CurlObject *self, PyObject *args);
+#if PY_MAJOR_VERSION >= 3
+PYCURL_INTERNAL PyObject *
+do_curl_getinfo(CurlObject *self, PyObject *args);
+#else
+# define do_curl_getinfo do_curl_getinfo_raw
+#endif
+PYCURL_INTERNAL PyObject *
+do_curl_errstr(CurlObject *self);
+#if PY_MAJOR_VERSION >= 3
+PYCURL_INTERNAL PyObject *
+do_curl_errstr_raw(CurlObject *self);
+#else
+# define do_curl_errstr_raw do_curl_errstr
+#endif
+
+PYCURL_INTERNAL size_t
+write_callback(char *ptr, size_t size, size_t nmemb, void *stream);
+PYCURL_INTERNAL size_t
+header_callback(char *ptr, size_t size, size_t nmemb, void *stream);
+PYCURL_INTERNAL curl_socket_t
+opensocket_callback(void *clientp, curlsocktype purpose,
+                    struct curl_sockaddr *address);
+PYCURL_INTERNAL int
+sockopt_cb(void *clientp, curl_socket_t curlfd, curlsocktype purpose);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
+PYCURL_INTERNAL int
+closesocket_callback(void *clientp, curl_socket_t curlfd);
+#endif
+#ifdef HAVE_CURL_7_19_6_OPTS
+PYCURL_INTERNAL int
+ssh_key_cb(CURL *easy, const struct curl_khkey *knownkey,
+    const struct curl_khkey *foundkey, int khmatch, void *clientp);
+#endif
+PYCURL_INTERNAL int
+seek_callback(void *stream, curl_off_t offset, int origin);
+PYCURL_INTERNAL size_t
+read_callback(char *ptr, size_t size, size_t nmemb, void *stream);
+PYCURL_INTERNAL int
+progress_callback(void *stream,
+                  double dltotal, double dlnow, double ultotal, double ulnow);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 32, 0)
+PYCURL_INTERNAL int
+xferinfo_callback(void *stream,
+    curl_off_t dltotal, curl_off_t dlnow,
+    curl_off_t ultotal, curl_off_t ulnow);
+#endif
+PYCURL_INTERNAL int
+debug_callback(CURL *curlobj, curl_infotype type,
+               char *buffer, size_t total_size, void *stream);
+PYCURL_INTERNAL curlioerr
+ioctl_callback(CURL *curlobj, int cmd, void *stream);
+#if defined(HAVE_CURL_OPENSSL)
+PYCURL_INTERNAL CURLcode
+ssl_ctx_callback(CURL *curl, void *ssl_ctx, void *ptr);
+#endif
+
 #if !defined(PYCURL_SINGLE_FILE)
 /* Type objects */
 extern PyTypeObject Curl_Type;
@@ -485,6 +588,8 @@ extern PyObject *curlshareobject_constants;
 extern char *g_pycurl_useragent;
 
 extern PYCURL_INTERNAL char *empty_keywords[];
+extern PYCURL_INTERNAL PyObject *bytesio;
+extern PYCURL_INTERNAL PyObject *stringio;
 
 #if PY_MAJOR_VERSION >= 3
 extern PyMethodDef curlobject_methods[];
@@ -492,6 +597,12 @@ extern PyMethodDef curlshareobject_methods[];
 extern PyMethodDef curlmultiobject_methods[];
 #endif
 #endif /* !PYCURL_SINGLE_FILE */
+
+#if PY_MAJOR_VERSION >= 3
+# define PYCURL_TYPE_FLAGS Py_TPFLAGS_HAVE_GC
+#else
+# define PYCURL_TYPE_FLAGS Py_TPFLAGS_HAVE_GC | Py_TPFLAGS_HAVE_WEAKREFS
+#endif
 
 /* vi:ts=4:et:nowrap
  */
