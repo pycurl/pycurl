@@ -215,10 +215,13 @@ class ExtensionConfiguration(object):
             return curl_config
 
     def configure_unix(self):
+        ENABLE_RUNTIME_LIBS = scan_argv(self.argv, "--enable-runtime-libs")
         OPENSSL_DIR = scan_argv(self.argv, "--openssl-dir=")
         if OPENSSL_DIR is not None:
             self.include_dirs.append(os.path.join(OPENSSL_DIR, "include"))
             self.library_dirs.append(os.path.join(OPENSSL_DIR, "lib"))
+            if ENABLE_RUNTIME_LIBS:
+                self.runtime_library_dirs.append(os.path.join(OPENSSL_DIR, "lib"))
         try:
             p = subprocess.Popen((self.curl_config(), '--version'),
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -328,6 +331,8 @@ manually. For other SSL backends please ignore this message.''')
                 self.libraries.append(arg[2:])
             elif arg[:2] == "-L":
                 self.library_dirs.append(arg[2:])
+                if ENABLE_RUNTIME_LIBS:
+                    self.runtime_library_dirs.append(arg[2:])
             else:
                 self.extra_link_args.append(arg)
             
