@@ -34,16 +34,16 @@ else:
 
 class Curl:
     "High-level interface to pycurl functions."
-    def __init__(self, base_url="", fakeheaders=[]):
+    def __init__(self, base_url="", fakeheaders=None):
         self.handle = pycurl.Curl()
         # These members might be set.
         self.set_url(base_url)
         self.verbosity = 0
-        self.fakeheaders = fakeheaders
+        self.fakeheaders = fakeheaders or []
         # Nothing past here should be modified by the caller.
         self.payload = None
         self.payload_io = BytesIO()
-        self.hrd = ""
+        self.hdr = ""
         # Verify that we've got the right site; harmless on a non-SSL connect.
         self.set_option(pycurl.SSL_VERIFYHOST, 2)
         # Follow redirects in case it wants to take us to a CGI...
