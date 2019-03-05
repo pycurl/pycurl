@@ -145,6 +145,7 @@ class ExtensionConfiguration(object):
             '--with-ssl': self.using_openssl,
             '--with-gnutls': self.using_gnutls,
             '--with-nss': self.using_nss,
+            '--with-mbedtls': self.using_mbedtls,
         }
 
     def detect_ssl_option(self):
@@ -154,20 +155,20 @@ class ExtensionConfiguration(object):
                     if option != other_option:
                         if scan_argv(self.argv, other_option) is not None:
                             raise ConfigurationError('Cannot give both %s and %s' % (option, other_option))
-                
+
                 return option
 
     def detect_ssl_backend(self):
         ssl_lib_detected = None
-        
+
         if 'PYCURL_SSL_LIBRARY' in os.environ:
             ssl_lib = os.environ['PYCURL_SSL_LIBRARY']
-            if ssl_lib in ['openssl', 'gnutls', 'nss']:
+            if ssl_lib in ['openssl', 'gnutls', 'nss', 'mbedtls']:
                 ssl_lib_detected = ssl_lib
                 getattr(self, 'using_%s' % ssl_lib)()
             else:
                 raise ConfigurationError('Invalid value "%s" for PYCURL_SSL_LIBRARY' % ssl_lib)
-        
+
         option = self.detect_ssl_option()
         if option:
             ssl_lib_detected = option.replace('--with-', '')
@@ -195,6 +196,10 @@ class ExtensionConfiguration(object):
                         self.using_nss()
                         ssl_lib_detected = 'nss'
                         break
+                    if arg[2:] == 'mbedtls':
+                        self.using_mbedtls()
+                        ssl_lib_detected = 'mbedtls'
+                        break
 
         if not ssl_lib_detected and len(self.argv) == len(self.original_argv) \
                 and not os.environ.get('PYCURL_CURL_CONFIG') \
@@ -202,7 +207,7 @@ class ExtensionConfiguration(object):
             # this path should only be taken when no options or
             # configuration environment variables are given to setup.py
             ssl_lib_detected = self.detect_ssl_lib_on_centos6()
-            
+
         self.ssl_lib_detected = ssl_lib_detected
 
     def curl_config(self):
@@ -302,7 +307,7 @@ class ExtensionConfiguration(object):
             if errtext:
                 msg += ":\n" + errtext
             raise ConfigurationError(msg)
-            
+
         # hack
         self.sslhintbuf = sslhintbuf
 
@@ -315,7 +320,7 @@ class ExtensionConfiguration(object):
                 sys.stderr.write('''\
 Warning: libcurl is configured to use SSL, but we have not been able to \
 determine which SSL backend it is using. If your Curl is built against \
-OpenSSL, LibreSSL, BoringSSL, GnuTLS or NSS please specify the SSL backend \
+OpenSSL, LibreSSL, BoringSSL, GnuTLS, NSS or mbedTLS please specify the SSL backend \
 manually. For other SSL backends please ignore this message.''')
         else:
             if self.detect_ssl_option():
@@ -330,7 +335,7 @@ manually. For other SSL backends please ignore this message.''')
                 self.library_dirs.append(arg[2:])
             else:
                 self.extra_link_args.append(arg)
-            
+
         if not self.libraries:
             self.libraries.append("curl")
 
@@ -357,6 +362,9 @@ manually. For other SSL backends please ignore this message.''')
         elif ssl_version.startswith('NSS/'):
             self.using_nss()
             ssl_lib_detected = 'nss'
+        elif ssl_version.startswith('mbedTLS/'):
+            self.using_mbedtls()
+            ssl_lib_detected = 'mbedtls'
         return ssl_lib_detected
 
     def detect_ssl_lib_on_centos6(self):
@@ -508,6 +516,11 @@ manually. For other SSL backends please ignore this message.''')
         self.libraries.append('ssl3')
         self.define_macros.append(('HAVE_CURL_SSL', 1))
 
+    def using_mbedtls(self):
+        self.define_macros.append(('HAVE_CURL_MBEDTLS', 1))
+        self.libraries.append('mbedtls')
+        self.define_macros.append(('HAVE_CURL_SSL', 1))
+
 def get_bdist_msi_version_hack():
     # workaround for distutils/msi version requirement per
     # epydoc.sourceforge.net/stdlib/distutils.version.StrictVersion-class.html -
@@ -561,6 +574,7 @@ PRETTY_SSL_LIBS = {
     'openssl': 'OpenSSL/LibreSSL/BoringSSL',
     'gnutls': 'GnuTLS',
     'nss': 'NSS',
+    'mbedtls': 'mbedTLS',
 }
 
 def get_extension(argv, split_extension_source=False):
@@ -590,12 +604,12 @@ def get_extension(argv, split_extension_source=False):
         ]
         depends = []
     ext_config = ExtensionConfiguration(argv)
-    
+
     if ext_config.ssl_lib_detected:
         print('Using SSL library: %s' % PRETTY_SSL_LIBS[ext_config.ssl_lib_detected])
     else:
         print('Not using an SSL library')
-        
+
     ext = Extension(
         name=PACKAGE,
         sources=sources,
@@ -887,6 +901,7 @@ PycURL Unix options:
  --with-ssl                          legacy alias for --with-openssl
  --with-gnutls                       libcurl is linked against GnuTLS
  --with-nss                          libcurl is linked against NSS
+ --with-mbedtls                      libcurl is linked against mbedTLS
 '''
 
 windows_help = '''\

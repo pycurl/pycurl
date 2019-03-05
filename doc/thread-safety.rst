@@ -21,7 +21,7 @@ For Python programs using PycURL, this means:
   Python code *outside of a libcurl callback for the PycURL object in question*
   is unsafe.
 
-PycURL handles the necessary SSL locks for OpenSSL/LibreSSL, GnuTLS and NSS.
+PycURL handles the necessary SSL locks for OpenSSL/LibreSSL, GnuTLS, NSS and mbedTLS.
 
 A special situation exists when libcurl uses the standard C library
 name resolver (i.e., not threaded nor c-ares resolver). By default libcurl

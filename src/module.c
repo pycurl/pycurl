@@ -328,7 +328,7 @@ initpycurl(void)
     PyObject *collections_module = NULL;
     PyObject *named_tuple = NULL;
     PyObject *arglist = NULL;
-    
+
     assert(Curl_Type.tp_weaklistoffset > 0);
     assert(CurlMulti_Type.tp_weaklistoffset > 0);
     assert(CurlShare_Type.tp_weaklistoffset > 0);
@@ -355,6 +355,8 @@ initpycurl(void)
         runtime_ssl_lib = "gnutls";
     } else if (!strncmp(vi->ssl_version, "NSS/", 4)) {
         runtime_ssl_lib = "nss";
+    } else if (!strncmp(vi->ssl_version, "mbedTLS/", 2)) {
+        runtime_ssl_lib = "mbedtls";
     } else {
         runtime_ssl_lib = "none/other";
     }
@@ -461,7 +463,7 @@ initpycurl(void)
     /* constants for ioctl callback argument values */
     insint_c(d, "IOCMD_NOP", CURLIOCMD_NOP);
     insint_c(d, "IOCMD_RESTARTREAD", CURLIOCMD_RESTARTREAD);
-    
+
     /* opensocketfunction return value */
     insint_c(d, "SOCKET_BAD", CURL_SOCKET_BAD);
 
