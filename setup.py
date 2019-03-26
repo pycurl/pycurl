@@ -131,7 +131,7 @@ class ExtensionConfiguration(object):
             raise ConfigurationError(msg)
         curl_has_ssl = False
         for feature in split_quoted(stdout.decode()):
-            if feature == 'SSL':
+            if 'SSL' in feature:
                 # this means any ssl library, not just openssl.
                 # we set the ssl flag to check for ssl library mismatch
                 # at link time and run time
