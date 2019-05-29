@@ -65,14 +65,17 @@ install:
 
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
+  # Removed in favor of disabling version check. See below.
   #- "python -m pip install --upgrade pip"
 
   # Install the build dependencies of the project. If some dependencies contain
   # compiled extensions and are not provided as pre-built wheel packages,
   # pip will build them from source using the MSVC compiler matching the
   # target Python version and architecture
-  - "%CMD_IN_ENV% pip install -r requirements-dev.txt"
-  - "%CMD_IN_ENV% pip install wheel"
+  # Pip version check disabled to make Appveyor not print to stderr which is
+  # interpreted as an error.
+  - "%CMD_IN_ENV% pip --disable-pip-version-check install -r requirements-dev.txt"
+  - "%CMD_IN_ENV% pip --disable-pip-version-check install wheel"
 
   # Build the compiled extension
   - "%CMD_IN_ENV% python winbuild.py getdeps"
