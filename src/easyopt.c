@@ -521,7 +521,7 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
 
             if (PyText_AsStringAndSize(httppost_option, &cstr, &clen, &cencoded_obj)) {
                 PyText_EncodedDecref(nencoded_obj);
-                CURLERROR_SET_RETVAL();
+                create_and_set_error_object(self, CURLE_BAD_FUNCTION_ARGUMENT);
                 goto error;
             }
             /* INFO: curl_formadd() internally does memdup() the data, so
