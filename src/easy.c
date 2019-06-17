@@ -74,12 +74,6 @@ util_curl_init(CurlObject *self)
         return (-1);
     }
 
-    /* Set FTP_ACCOUNT to NULL by default */
-    res = curl_easy_setopt(self->handle, CURLOPT_FTP_ACCOUNT, NULL);
-    if (res != CURLE_OK) {
-        return (-1);
-    }
-
     /* Set default USERAGENT */
     assert(g_pycurl_useragent);
     res = curl_easy_setopt(self->handle, CURLOPT_USERAGENT, g_pycurl_useragent);
