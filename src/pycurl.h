@@ -174,6 +174,11 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
 #   define COMPILE_SSL_LIB "gnutls"
 # elif defined(HAVE_CURL_NSS)
 #   define COMPILE_SSL_LIB "nss"
+# elif defined(HAVE_CURL_MBEDTLS)
+#   include <mbedtls/ssl.h>
+#   define PYCURL_NEED_SSL_TSL
+#   define PYCURL_NEED_MBEDTLS_TSL
+#   define COMPILE_SSL_LIB "mbedtls"
 # else
 #  ifdef _MSC_VER
     /* sigh */
@@ -190,7 +195,7 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
    /* since we have no crypto callbacks for other ssl backends,
     * no reason to require users match those */
 #  define COMPILE_SSL_LIB "none/other"
-# endif /* HAVE_CURL_OPENSSL || HAVE_CURL_GNUTLS || HAVE_CURL_NSS */
+# endif /* HAVE_CURL_OPENSSL || HAVE_CURL_GNUTLS || HAVE_CURL_NSS || HAVE_CURL_MBEDTLS */
 #else
 # define COMPILE_SSL_LIB "none/other"
 #endif /* HAVE_CURL_SSL */

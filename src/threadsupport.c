@@ -232,6 +232,45 @@ pycurl_ssl_cleanup(void)
 }
 #endif
 
+/* mbedTLS */
+
+#ifdef PYCURL_NEED_MBEDTLS_TSL
+static int
+pycurl_ssl_mutex_create(void **m)
+{
+    if ((*((PyThread_type_lock *) m) = PyThread_allocate_lock()) == NULL) {
+        return -1;
+    } else {
+        return 0;
+    }
+}
+
+static int
+pycurl_ssl_mutex_destroy(void **m)
+{
+    PyThread_free_lock(*((PyThread_type_lock *) m));
+    return 0;
+}
+
+static int
+pycurl_ssl_mutex_lock(void **m)
+{
+    return !PyThread_acquire_lock(*((PyThread_type_lock *) m), 1);
+}
+
+PYCURL_INTERNAL int
+pycurl_ssl_init(void)
+{
+    return 0;
+}
+
+PYCURL_INTERNAL void
+pycurl_ssl_cleanup(void)
+{
+    return;
+}
+#endif
+
 /*************************************************************************
 // CurlShareObject
 **************************************************************************/
