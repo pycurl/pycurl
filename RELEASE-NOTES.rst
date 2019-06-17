@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+PycURL 7.43.0.3 - 2019-06-17
+----------------------------
+
+This release primarily fixes an OpenSSL-related installation issue, and
+repairs the ability to use PycURL with newer libcurls compiled without FTP
+support. Also, mbedTLS support has been contributed by Josef Schlehofer.
+
+
 PycURL 7.43.0.2 - 2018-06-02
 ----------------------------
 

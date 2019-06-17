@@ -1,9 +1,9 @@
-master
-------
+Version 7.43.0.3 [requires libcurl-7.19.0 or better] - 2019-06-17
+-----------------------------------------------------------------
 
         * Fixed use with libcurl 7.65+ when FTP support is disabled.
 
-        * Added support for mbedTLS
+        * Added support for mbedTLS (patch by Josef Schlehofer).
 
         * Fixed string processing on Python 3 (patch by Dmitriy Taychenachev).
 
