@@ -277,6 +277,7 @@ decode_string_list(PyObject *list)
         if (decoded_item == NULL) {
             goto err;
         }
+	PyList_SetItem(decoded_list, i, decoded_item);
     }
     
     return decoded_list;
