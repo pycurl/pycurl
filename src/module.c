@@ -355,7 +355,7 @@ initpycurl(void)
         runtime_ssl_lib = "gnutls";
     } else if (!strncmp(vi->ssl_version, "NSS/", 4)) {
         runtime_ssl_lib = "nss";
-    } else if (!strncmp(vi->ssl_version, "mbedTLS/", 2)) {
+    } else if (!strncmp(vi->ssl_version, "mbedTLS/", 8)) {
         runtime_ssl_lib = "mbedtls";
     } else {
         runtime_ssl_lib = "none/other";
