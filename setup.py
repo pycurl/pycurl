@@ -855,7 +855,7 @@ in COPYING-LGPL_ and COPYING-MIT_ files in the source distribution.
 .. _COPYING-MIT: https://raw.githubusercontent.com/pycurl/pycurl/master/COPYING-MIT
 ''',
     author="Kjetil Jacobsen, Markus F.X.J. Oberhumer, Oleg Pudeyev",
-    author_email="kjetilja at gmail.com, markus at oberhumer.com, oleg at bsdpower.com",
+    author_email="kjetilja@gmail.com, markus@oberhumer.com, oleg@bsdpower.com",
     maintainer="Oleg Pudeyev",
     maintainer_email="oleg@bsdpower.com",
     url="http://pycurl.io/",
