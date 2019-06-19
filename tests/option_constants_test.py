@@ -304,6 +304,13 @@ class OptionConstantsTest(unittest.TestCase):
         curl.setopt(curl.PROXY_SSL_VERIFYPEER, 1)
         curl.close()
 
+    @util.min_libcurl(7, 52, 0)
+    @util.only_ssl
+    def test_proxy_ssl_verifyhost(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.PROXY_SSL_VERIFYHOST, 1)
+        curl.close()
+
     @util.only_ssl
     def test_crlfile(self):
         curl = pycurl.Curl()
