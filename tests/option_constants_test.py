@@ -308,7 +308,7 @@ class OptionConstantsTest(unittest.TestCase):
     @util.only_ssl
     def test_proxy_ssl_verifyhost(self):
         curl = pycurl.Curl()
-        curl.setopt(curl.PROXY_SSL_VERIFYHOST, 1)
+        curl.setopt(curl.PROXY_SSL_VERIFYHOST, 2)
         curl.close()
 
     @util.only_ssl
