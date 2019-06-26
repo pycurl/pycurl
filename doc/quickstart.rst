@@ -288,7 +288,7 @@ accessible via ``getinfo`` call as follows::
     # HTTP response code, e.g. 200.
     print('Status: %d' % c.getinfo(c.RESPONSE_CODE))
     # Elapsed time for the transfer.
-    print('Status: %f' % c.getinfo(c.TOTAL_TIME))
+    print('Time: %f' % c.getinfo(c.TOTAL_TIME))
 
     # getinfo must be called before close.
     c.close()
