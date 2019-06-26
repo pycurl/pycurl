@@ -64,7 +64,7 @@ Python 3 version is slightly more complicated::
 
 This code is available as ``examples/quickstart/get_python3.py``.
 
-In Python 3, PycURL response the response body as a byte string.
+In Python 3, PycURL returns the response body as a byte string.
 This is handy if we are downloading a binary file, but for text documents
 we must decode the byte string. In the above example, we assume that the
 body is encoded in iso-8859-1.
