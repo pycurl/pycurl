@@ -56,7 +56,8 @@ To fix this, you need to tell ``setup.py`` what SSL backend is used::
     python setup.py --with-[openssl|gnutls|nss|mbedtls] install
 
 Note: as of PycURL 7.21.5, setup.py accepts ``--with-openssl`` option to
-indicate that libcurl is built against OpenSSL. ``--with-ssl`` is an alias
+indicate that libcurl is built against OpenSSL/LibreSSL/BoringSSL.
+``--with-ssl`` is an alias
 for ``--with-openssl`` and continues to be accepted for backwards compatibility.
 
 You can also ask ``setup.py`` to obtain SSL backend information from installed
@@ -216,8 +217,8 @@ Additional Windows setup.py options:
   import library. The default is ``libcurl.lib`` which is appropriate for
   static linking and is sometimes the correct choice for dynamic linking as
   well. The other possibility for dynamic linking is ``libcurl_imp.lib``.
-- ``--with-openssl``: use OpenSSL crypto locks when libcurl was built against
-  OpenSSL.
+- ``--with-openssl``: use OpenSSL/LibreSSL/BoringSSL crypto locks when libcurl
+  was built against these SSL backends.
 - ``--with-ssl``: legacy alias for ``--with-openssl``.
 - ``--openssl-lib-name=""``: specify a different name for OpenSSL import
   library containing CRYPTO_num_locks. For OpenSSL 1.1.0+ this should be set
