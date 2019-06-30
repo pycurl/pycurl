@@ -896,8 +896,8 @@ unix_help = '''\
 PycURL Unix options:
  --curl-config=/path/to/curl-config  use specified curl-config binary
  --libcurl-dll=[/path/to/]libcurl.so obtain SSL library from libcurl.so
- --openssl-dir=/path/to/openssl/dir  path to OpenSSL headers and libraries
- --with-openssl                      libcurl is linked against OpenSSL
+ --openssl-dir=/path/to/openssl/dir  path to OpenSSL/LibreSSL/BoringSSL headers and libraries
+ --with-openssl                      libcurl is linked against OpenSSL/LibreSSL/BoringSSL
  --with-ssl                          legacy alias for --with-openssl
  --with-gnutls                       libcurl is linked against GnuTLS
  --with-nss                          libcurl is linked against NSS
@@ -910,7 +910,7 @@ PycURL Windows options:
  --use-libcurl-dll                     link against libcurl DLL, if not given
                                        link against libcurl statically
  --libcurl-lib-name=libcurl_imp.lib    override libcurl import library name
- --with-openssl                        libcurl is linked against OpenSSL
+ --with-openssl                        libcurl is linked against OpenSSL/LibreSSL/BoringSSL
  --with-ssl                            legacy alias for --with-openssl
  --link-arg=foo.lib                    also link against specified library
 '''
