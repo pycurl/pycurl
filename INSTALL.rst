@@ -53,7 +53,7 @@ It will then fail at runtime as follows::
 
 To fix this, you need to tell ``setup.py`` what SSL backend is used::
 
-    python setup.py --with-[openssl|gnutls|nss|mbedtls] install
+    python setup.py --with-[openssl|gnutls|nss|mbedtls|wolfssl] install
 
 Note: as of PycURL 7.21.5, setup.py accepts ``--with-openssl`` option to
 indicate that libcurl is built against OpenSSL/LibreSSL/BoringSSL.

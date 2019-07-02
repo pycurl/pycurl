@@ -164,6 +164,28 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
 #   include <openssl/ssl.h>
 #   include <openssl/err.h>
 #   define COMPILE_SSL_LIB "openssl"
+# elif defined(HAVE_CURL_WOLFSSL)
+#   include <wolfssl/options.h>
+#   if defined(OPENSSL_EXTRA)
+#     define HAVE_CURL_OPENSSL
+#     define PYCURL_NEED_SSL_TSL
+#     define PYCURL_NEED_OPENSSL_TSL
+#     include <wolfssl/openssl/ssl.h>
+#     include <wolfssl/openssl/err.h>
+#   else
+#    ifdef _MSC_VER
+#     pragma message(\
+       "libcurl was compiled with wolfSSL, but the library was built without " \
+       "--enable-opensslextra; thus no SSL crypto locking callbacks will be set, " \
+       "which may cause random crashes on SSL requests")
+#    else
+#     warning \
+       "libcurl was compiled with wolfSSL, but the library was built without " \
+       "--enable-opensslextra; thus no SSL crypto locking callbacks will be set, " \
+       "which may cause random crashes on SSL requests"
+#    endif
+#   endif
+#   define COMPILE_SSL_LIB "wolfssl"
 # elif defined(HAVE_CURL_GNUTLS)
 #   include <gnutls/gnutls.h>
 #   if GNUTLS_VERSION_NUMBER <= 0x020b00
@@ -195,7 +217,7 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
    /* since we have no crypto callbacks for other ssl backends,
     * no reason to require users match those */
 #  define COMPILE_SSL_LIB "none/other"
-# endif /* HAVE_CURL_OPENSSL || HAVE_CURL_GNUTLS || HAVE_CURL_NSS || HAVE_CURL_MBEDTLS */
+# endif /* HAVE_CURL_OPENSSL || HAVE_CURL_WOLFSSL || HAVE_CURL_GNUTLS || HAVE_CURL_NSS || HAVE_CURL_MBEDTLS */
 #else
 # define COMPILE_SSL_LIB "none/other"
 #endif /* HAVE_CURL_SSL */

@@ -143,6 +143,7 @@ class ExtensionConfiguration(object):
         return {
             '--with-openssl': self.using_openssl,
             '--with-ssl': self.using_openssl,
+            '--with-wolfssl': self.using_wolfssl,
             '--with-gnutls': self.using_gnutls,
             '--with-nss': self.using_nss,
             '--with-mbedtls': self.using_mbedtls,
@@ -163,7 +164,7 @@ class ExtensionConfiguration(object):
 
         if 'PYCURL_SSL_LIBRARY' in os.environ:
             ssl_lib = os.environ['PYCURL_SSL_LIBRARY']
-            if ssl_lib in ['openssl', 'gnutls', 'nss', 'mbedtls']:
+            if ssl_lib in ['openssl', 'wolfssl', 'gnutls', 'nss', 'mbedtls']:
                 ssl_lib_detected = ssl_lib
                 getattr(self, 'using_%s' % ssl_lib)()
             else:
@@ -187,6 +188,10 @@ class ExtensionConfiguration(object):
                     if arg[2:] == 'ssl':
                         self.using_openssl()
                         ssl_lib_detected = 'openssl'
+                        break
+                    if arg[2:] == 'wolfssl':
+                        self.using_wolfssl()
+                        ssl_lib_detected = 'wolfssl'
                         break
                     if arg[2:] == 'gnutls':
                         self.using_gnutls()
@@ -506,6 +511,11 @@ manually. For other SSL backends please ignore this message.''')
             self.libraries.append('ssl')
         self.define_macros.append(('HAVE_CURL_SSL', 1))
 
+    def using_wolfssl(self):
+        self.define_macros.append(('HAVE_CURL_WOLFSSL', 1))
+        self.libraries.append('wolfssl')
+        self.define_macros.append(('HAVE_CURL_SSL', 1))
+
     def using_gnutls(self):
         self.define_macros.append(('HAVE_CURL_GNUTLS', 1))
         self.libraries.append('gnutls')
@@ -572,6 +582,7 @@ def strip_pycurl_options(argv):
 PRETTY_SSL_LIBS = {
     # setup.py may be detecting BoringSSL properly, need to test
     'openssl': 'OpenSSL/LibreSSL/BoringSSL',
+    'wolfssl': 'wolfSSL',
     'gnutls': 'GnuTLS',
     'nss': 'NSS',
     'mbedtls': 'mbedTLS',
@@ -902,6 +913,7 @@ PycURL Unix options:
  --with-gnutls                       libcurl is linked against GnuTLS
  --with-nss                          libcurl is linked against NSS
  --with-mbedtls                      libcurl is linked against mbedTLS
+ --with-wolfssl                      libcurl is linked against wolfSSL
 '''
 
 windows_help = '''\

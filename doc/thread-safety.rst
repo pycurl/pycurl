@@ -22,7 +22,7 @@ For Python programs using PycURL, this means:
   is unsafe.
 
 PycURL handles the necessary SSL locks for OpenSSL/LibreSSL/BoringSSL,
-GnuTLS, NSS and mbedTLS.
+GnuTLS, NSS, mbedTLS and wolfSSL.
 
 A special situation exists when libcurl uses the standard C library
 name resolver (i.e., not threaded nor c-ares resolver). By default libcurl
