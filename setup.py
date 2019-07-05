@@ -345,7 +345,7 @@ manually. For other SSL backends please ignore this message.''')
             self.libraries.append("curl")
 
         # Add extra compile flag for MacOS X
-        if sys.platform[:-1] == "darwin":
+        if sys.platform.startswith('darwin'):
             self.extra_link_args.append("-flat_namespace")
 
         # Recognize --avoid-stdio on Unix so that it can be tested
