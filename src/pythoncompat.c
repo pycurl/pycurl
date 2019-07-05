@@ -15,7 +15,7 @@ my_getattro(PyObject *co, PyObject *name, PyObject *dict1, PyObject *dict2, PyMe
         Py_INCREF(v);
         return v;
     }
-    PyErr_SetString(PyExc_AttributeError, "trying to obtain a non-existing attribute");
+    PyErr_Format(PyExc_AttributeError, "trying to obtain a non-existing attribute: %U", name);
     return NULL;
 }
 
@@ -35,7 +35,7 @@ my_setattro(PyObject **dict, PyObject *name, PyObject *v)
         if (v != 0) {
             /* need to convert KeyError to AttributeError */
             if (PyErr_ExceptionMatches(PyExc_KeyError)) {
-                PyErr_SetString(PyExc_AttributeError, "trying to delete a non-existing attribute");
+                PyErr_Format(PyExc_AttributeError, "trying to delete a non-existing attribute: %U", name);
             }
         }
         return v;
@@ -52,7 +52,7 @@ my_setattr(PyObject **dict, char *name, PyObject *v)
         if (*dict != NULL)
             rv = PyDict_DelItemString(*dict, name);
         if (rv < 0)
-            PyErr_SetString(PyExc_AttributeError, "delete non-existing attribute");
+            PyErr_Format(PyExc_AttributeError, "trying to delete a non-existing attribute: %s", name);
         return rv;
     }
     if (*dict == NULL) {
