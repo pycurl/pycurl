@@ -143,3 +143,15 @@ class CurlObjectTest(unittest.TestCase):
         # change does not affect objects created later
         obj3 = cls()
         self.assertEqual(old_value, getattr(obj3, name))
+        
+    # I would have liked to assert on the message of the exception,
+    # but it appears nose has no support for this.
+    @nose.tools.raises(AttributeError)
+    def test_bogus_attribute_access(self):
+        self.curl.foo
+        
+    # I would have liked to assert on the message of the exception,
+    # but it appears nose has no support for this.
+    @nose.tools.raises(AttributeError)
+    def test_bogus_attribute_delete(self):
+        del self.curl.foo
