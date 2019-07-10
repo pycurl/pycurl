@@ -46,6 +46,13 @@ def spawn(self, cmd):
                 t.start()
                 sources.remove(source)
                 break
+        else:
+            continue
+
+        break
+    else:
+        _spawn(cmd, dry_run=self.dry_run)
+        return
 
     if not sources:
         event.wait()
