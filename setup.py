@@ -892,6 +892,7 @@ in COPYING-LGPL_ and COPYING-MIT_ files in the source distribution.
     ],
     packages=[PY_PACKAGE],
     package_dir={ PY_PACKAGE: os.path.join('python', 'curl') },
+    options=dict(build_ext=dict(parallel=5))
 )
 
 if sys.platform == "win32":
