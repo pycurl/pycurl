@@ -776,6 +776,9 @@ def gen_docstrings_sources():
             sources += " \\\n\tdoc/docstrings/%s" % entry
     print(sources)
 
+
+from build_ext import build_ext # NOQA
+
 ###############################################################################
 
 setup_args = dict(
@@ -892,11 +895,11 @@ in COPYING-LGPL_ and COPYING-MIT_ files in the source distribution.
     ],
     packages=[PY_PACKAGE],
     package_dir={ PY_PACKAGE: os.path.join('python', 'curl') },
-    options=dict(build_ext=dict(parallel=5))
+    cmdclass=dict(build_ext=build_ext)
 )
 
 if sys.platform == "win32":
-    setup_args['cmdclass'] = {'bdist_msi': get_bdist_msi_version_hack()}
+    setup_args['cmdclass']['bdist_msi'] = get_bdist_msi_version_hack()
 
 ##print distutils.__version__
 if LooseVersion(distutils.__version__) > LooseVersion("1.0.1"):
