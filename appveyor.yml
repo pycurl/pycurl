@@ -77,6 +77,7 @@ install:
   # compiled extensions and are not provided as pre-built wheel packages,
   # pip will build them from source using the MSVC compiler matching the
   # target Python version and architecture
+  - "%CMD_IN_ENV% python -m pip install --upgrade setuptools"
   - "%CMD_IN_ENV% pip install -r requirements-dev.txt"
   - "%CMD_IN_ENV% pip install wheel"
 
@@ -87,7 +88,7 @@ build_script:
   #-  call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86
   # Build the compiled extension
   - "%CMD_IN_ENV% python setup.py docstrings"
-  - "%CMD_IN_ENV% python setup.py --with-openssl --libcurl-lib-name=libcurl_a.lib --openssl-lib-name=\"\" --curl-dir=deps bdist_wheel bdist_wininst bdist_msi --link-arg=/LIBPATH:deps/lib --link-arg=zlib.lib --link-arg=libcrypto.lib --link-arg=libssl.lib --link-arg=crypt32.lib --link-arg=advapi32.lib --link-arg=libcares.lib --link-arg=libssh2.lib --link-arg=nghttp2.lib --link-arg=normaliz.lib --link-arg=user32.lib"
+  - "%CMD_IN_ENV% python setup.py --with-openssl --libcurl-lib-name=libcurl_a.lib --openssl-lib-name=\"\" --curl-dir=deps bdist_wheel bdist_wininst bdist_msi bdist_egg --link-arg=/LIBPATH:deps/lib --link-arg=zlib.lib --link-arg=libcrypto.lib --link-arg=libssl.lib --link-arg=crypt32.lib --link-arg=advapi32.lib --link-arg=libcares.lib --link-arg=libssh2.lib --link-arg=nghttp2.lib --link-arg=normaliz.lib --link-arg=user32.lib"
 
 test_script:
   # Run the project tests
@@ -106,6 +107,18 @@ artifacts:
   # Archive the generated packages in the ci.appveyor.com build report.
   - path: dist\*
 
-#on_success:
-#  - TODO: upload the content of dist/*.whl to a public wheelhouse
-#
+on_success:
+  # below are 4 environment variables that you can set to allow twine to upload
+  # these should be set from the appveyor web gui and not in the script. and
+  # only set them when you are doing a release
+  # TWINE_USERNAME
+  # TWINE_PASSWORD
+  # TWINE_REPOSITORY_URL
+  # TWINE_CERT
+  - ps: >-
+      if (Test-Path 'ENV:TWINE_PASSWORD') {
+          pip install twine
+          python -m twine upload dist/*
+      } else {
+          "Skipping twine upload."
+      }
