@@ -75,7 +75,7 @@ class Config:
     openssl_version = '1.1.0h'
     # whether to use c-ares
     use_cares = True
-    cares_version = '1.14.0'
+    cares_version = '1.15.0'
     # whether to use libssh2
     use_libssh2 = True
     libssh2_version = '1.8.0'
