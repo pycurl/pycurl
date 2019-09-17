@@ -625,7 +625,9 @@ do_multi_add_handle(CurlMultiObject *self, PyObject *args)
     PyDict_SetItem(self->easy_object_dict, (PyObject *) obj, Py_True);
     
     assert(obj->multi_stack == NULL);
+    PYCURL_BEGIN_ALLOW_THREADS
     res = curl_multi_add_handle(self->multi_handle, obj->handle);
+    PYCURL_END_ALLOW_THREADS
     if (res != CURLM_OK) {
         PyDict_DelItem(self->easy_object_dict, (PyObject *) obj);
         CURLERROR_MSG("curl_multi_add_handle() failed due to internal errors");
