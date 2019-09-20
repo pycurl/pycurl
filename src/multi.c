@@ -95,7 +95,10 @@ util_multi_close(CurlMultiObject *self)
     if (self->multi_handle != NULL) {
         CURLM *multi_handle = self->multi_handle;
         self->multi_handle = NULL;
+        /* Allow threads because callbacks can be invoked */
+        PYCURL_BEGIN_ALLOW_THREADS
         curl_multi_cleanup(multi_handle);
+        PYCURL_END_ALLOW_THREADS
     }
 }
 
@@ -625,7 +628,10 @@ do_multi_add_handle(CurlMultiObject *self, PyObject *args)
     PyDict_SetItem(self->easy_object_dict, (PyObject *) obj, Py_True);
     
     assert(obj->multi_stack == NULL);
+    /* Allow threads because callbacks can be invoked */
+    PYCURL_BEGIN_ALLOW_THREADS
     res = curl_multi_add_handle(self->multi_handle, obj->handle);
+    PYCURL_END_ALLOW_THREADS
     if (res != CURLM_OK) {
         PyDict_DelItem(self->easy_object_dict, (PyObject *) obj);
         CURLERROR_MSG("curl_multi_add_handle() failed due to internal errors");
@@ -660,7 +666,10 @@ do_multi_remove_handle(CurlMultiObject *self, PyObject *args)
         PyErr_SetString(ErrorObject, "curl object not on this multi-stack");
         return NULL;
     }
+    /* Allow threads because callbacks can be invoked */
+    PYCURL_BEGIN_ALLOW_THREADS
     res = curl_multi_remove_handle(self->multi_handle, obj->handle);
+    PYCURL_END_ALLOW_THREADS
     if (res == CURLM_OK) {
         PyDict_DelItem(self->easy_object_dict, (PyObject *) obj);
         // if PyDict_DelItem fails, remove_handle call will also fail.
