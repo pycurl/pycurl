@@ -501,14 +501,14 @@ manually. For other SSL backends please ignore this message.''')
             # for openssl < 1.1.0; it is a noop for openssl >= 1.1.0
             self.extra_link_args.append(self.openssl_lib_name)
         else:
+            # we also need ssl for the certificate functions
+            # (SSL_CTX_get_cert_store)
+            self.libraries.append('ssl')
             # the actual library that defines CRYPTO_num_locks etc.
             # is crypto, and on cygwin linking against ssl does not
             # link against crypto as of May 2014.
             # http://stackoverflow.com/questions/23687488/cant-get-pycurl-to-install-on-cygwin-missing-openssl-symbols-crypto-num-locks
             self.libraries.append('crypto')
-            # we also need ssl for the certificate functions
-            # (SSL_CTX_get_cert_store)
-            self.libraries.append('ssl')
         self.define_macros.append(('HAVE_CURL_SSL', 1))
 
     def using_wolfssl(self):
