@@ -1,6 +1,7 @@
 #if (defined(_WIN32) || defined(__WIN32__)) && !defined(WIN32)
 #  define WIN32 1
 #endif
+#define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <pythread.h>
 #include <stddef.h>
