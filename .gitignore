@@ -1,4 +1,3 @@
-.gitignore
 *.pyc
 *.pyo
 /MANIFEST
@@ -9,7 +8,6 @@
 /src/docstrings.h
 /tests/tmp
 /tests/fake-curl/libcurl/*.so
-/.vscode
 /www/htdocs/download/*.bz2
 /www/htdocs/download/*.exe
 /www/htdocs/download/*.gz
