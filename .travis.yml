@@ -3,35 +3,35 @@ language: python
 matrix:
   include:
     # all supported Python versions
-    - python: 2.7
+    - python: 3.8
       env:
         - USECURL=7.60.0-openssl11-gssapi-libssh2
         - USESSL=openssl
         - USEOPENSSL=1.1.0h
         - TESTDOCSEXAMPLES=1
-    - python: 2.7
+    - python: 3.8
       env:
         - USECURL=7.60.0-openssl10-gssapi-libssh2
         - USESSL=openssl
         - USEOPENSSL=1.0.2o
         - TESTDOCSEXAMPLES=1
-    - python: 2.7
+    - python: 3.8
       env:
         - USECURL=7.60.0-libressl-gssapi-libssh2
         - USESSL=libressl
         - USELIBRESSL=2.7.3
-    - python: 2.7
+    - python: 3.8
       env:
         - USECURL=7.60.0-gnutls-gssapi-libssh2
         - USESSL=gnutls
         - TESTDOCSEXAMPLES=1
-    - python: 2.7
+    - python: 3.8
       env:
         - USECURL=7.60.0-nss-gssapi-libssh2
         - USESSL=nss
         # Examples fail with NSS due to CA certs not being explicitly given
         #- TESTDOCSEXAMPLES=1
-    - python: 2.7
+    - python: 3.8
       env:
         # this configuration should be without gssapi
         - USECURL=7.60.0-none
@@ -67,26 +67,12 @@ matrix:
         #- TESTDOCSEXAMPLES=1
 
     # minimum libcurl we support
-    - python: 2.7
+    - python: 3.8
       env:
         - USECURL=7.19.0-openssl-gssapi
         - USESSL=openssl
         - TESTDOCSEXAMPLES=1
 
-    # AVOIDSTDIO tested on one Python version, must be Python 2.x
-    - python: 2.7
-      env:
-        - USECURL=7.60.0-openssl10-gssapi-libssh2
-        - USESSL=openssl
-        - USEOPENSSL=1.0.2o
-        - AVOIDSTDIO=yes
-
-    # common distributions:
-    # Debian Wheezy
-    - python: 2.7
-      env:
-        - USECURL=7.26.0-gnutls-gssapi
-        - USESSL=gnutls
     # Debian Jessie
     # this takes 5 minutes and should not be last
     - python: 3.4
@@ -95,12 +81,12 @@ matrix:
         - USESSL=gnutls
     
     # libcurl development head with various SSL backends
-    - python: 2.7
+    - python: 3.8
       env:
         - USECURL=dev-openssl11-gssapi-libssh2
         - USEOPENSSL=1.1.0h
         - USESSL=openssl
-    - python: 2.7
+    - python: 3.8
       env:
         - USECURL=dev-nss-gssapi-libssh2
         - USESSL=nss
