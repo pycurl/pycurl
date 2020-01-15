@@ -5,9 +5,11 @@ set -x
 
 export PATH=$HOME/opt/bin:$PATH
 
-export PYCURL_VSFTPD_PATH=$HOME/opt/bin/vsftpd
-
 if test -n "$USECURL"; then
+  # FTP support no longer ships with libcurl by default.
+  # Thus, only run ftp tests against libcurls that we built.
+  export PYCURL_VSFTPD_PATH=$HOME/opt/bin/vsftpd
+  
   curldirname=curl-"$USECURL"
   export PYCURL_CURL_CONFIG="$HOME"/opt/$curldirname/bin/curl-config
   $PYCURL_CURL_CONFIG --features

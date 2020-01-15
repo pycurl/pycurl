@@ -18,7 +18,7 @@ wget_once() {
 }
 
 file_host=https://github.com/pycurl/deps/raw/master
-distro=trusty
+distro=bionic
 ldlp=$LD_LIBRARY_PATH
 
 ldlp_exec() {
@@ -28,7 +28,7 @@ ldlp_exec() {
 (cd &&
   mkdir -p opt &&
   cd opt &&
-  wget $file_host/bin-$distro-64.tar.xz &&
+  wget $file_host/travis-$distro/bin-$distro-64.tar.xz &&
   tar xfJ bin-$distro-64.tar.xz)
 
 export PATH=~/opt/bin:$PATH
@@ -38,13 +38,13 @@ pip install -r requirements-dev.txt
 if test -n "$USECURL"; then
   if test -n "$USEOPENSSL"; then
     (cd && mkdir -p opt && cd opt &&
-      wget $file_host/openssl-"$USEOPENSSL"-$distro-64.tar.xz &&
+      wget $file_host/travis-$distro/openssl-"$USEOPENSSL"-$distro-64.tar.xz &&
       tar xfJ openssl-"$USEOPENSSL"-$distro-64.tar.xz)
     ldlp=$ldlp:$HOME/opt/openssl-$USEOPENSSL/lib
   fi
   if test -n "$USELIBRESSL"; then
     (cd && mkdir -p opt && cd opt &&
-      wget $file_host/libressl-"$USELIBRESSL"-$distro-64.tar.xz &&
+      wget $file_host/travis-$distro/libressl-"$USELIBRESSL"-$distro-64.tar.xz &&
       tar xfJ libressl-"$USELIBRESSL"-$distro-64.tar.xz)
     ldlp=$ldlp:$HOME/opt/libressl-$USELIBRESSL/lib
   fi
@@ -55,7 +55,7 @@ if test -n "$USECURL"; then
   (cd &&
     mkdir -p opt &&
     cd opt &&
-    wget $file_host/"$name" &&
+    wget $file_host/travis-$distro/"$name" &&
     tar xfJ "$name")
   ldlp_exec "$HOME"/opt/$curldirname/bin/curl -V
 else
