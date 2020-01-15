@@ -1,3 +1,22 @@
+master
+------
+
+        * Python 2 is no longer officially supported.
+        
+        * Improved thread safety of multi code.
+        
+        * Added Python 3.8 support (patch by Michael Treanor).
+        
+        * Fixed link order when linking statically against OpenSSL (patch by
+          Ashley Whetter).
+        
+        * Fixed Darwin detection.
+        
+        * Added support for wolfSSL (patch by Eneas U de Queiroz).
+        
+        * Added PROXY_SSL_VERIFYHOST (patch by Amir Rossert).
+
+
 Version 7.43.0.3 [requires libcurl-7.19.0 or better] - 2019-06-17
 -----------------------------------------------------------------
 
