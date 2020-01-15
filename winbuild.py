@@ -62,7 +62,7 @@ class Config:
         'vc9': None,
         # where msvc 10/vs 2010 is installed, for python 3.3 through 3.4
         'vc10': None,
-        # where msvc 14/vs 2015 is installed, for python 3.5 through 3.6
+        # where msvc 14/vs 2015 is installed, for python 3.5 through 3.8
         'vc14': None,
     }
     # whether to link libcurl against zlib
@@ -173,7 +173,7 @@ class ExtendedConfig(Config):
             'c:/program files (x86)/microsoft visual studio 10.0',
             'c:/program files/microsoft visual studio 10.0',
         ],
-        # where msvc 14 is installed, for python 3.5-3.6
+        # where msvc 14 is installed, for python 3.5-3.8
         'vc14': [
             'c:/program files (x86)/microsoft visual studio 14.0',
             'c:/program files/microsoft visual studio 14.0',

@@ -1,6 +1,8 @@
 master
 ------
 
+        * Minimum supported Python 3 version is now 3.5.
+
         * Python 2 is no longer officially supported.
         
         * Improved thread safety of multi code.
