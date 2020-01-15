@@ -9,18 +9,18 @@ matrix:
         - USESSL=openssl
         - USEOPENSSL=1.1.0h
         - TESTDOCSEXAMPLES=1
-    - python: 3.8
+    - python: 3.7
       env:
         - USECURL=7.60.0-openssl10-gssapi-libssh2
         - USESSL=openssl
         - USEOPENSSL=1.0.2o
         - TESTDOCSEXAMPLES=1
-    - python: 3.8
+    - python: 3.6
       env:
         - USECURL=7.60.0-libressl-gssapi-libssh2
         - USESSL=libressl
         - USELIBRESSL=2.7.3
-    - python: 3.8
+    - python: 3.5
       env:
         - USECURL=7.60.0-gnutls-gssapi-libssh2
         - USESSL=gnutls
@@ -41,23 +41,6 @@ matrix:
         - USECURL=7.60.0-openssl10-gssapi-libssh2
         - USESSL=openssl
         - USEOPENSSL=1.0.2o
-        - TESTDOCSEXAMPLES=1
-    - python: 3.5
-      env:
-        - USECURL=7.60.0-openssl11-gssapi-libssh2
-        - USESSL=openssl
-        - USEOPENSSL=1.1.0h
-        - TESTDOCSEXAMPLES=1
-    - python: 3.6
-      env:
-        - USECURL=7.60.0-openssl11-gssapi-libssh2
-        - USESSL=openssl
-        - USEOPENSSL=1.1.0h
-        - TESTDOCSEXAMPLES=1
-    - python: 3.6
-      env:
-        - USECURL=7.60.0-gnutls-gssapi-libssh2
-        - USESSL=gnutls
         - TESTDOCSEXAMPLES=1
     - python: 3.6
       env:
@@ -86,7 +69,7 @@ matrix:
         - USECURL=dev-openssl11-gssapi-libssh2
         - USEOPENSSL=1.1.0h
         - USESSL=openssl
-    - python: 3.8
+    - python: 3.7
       env:
         - USECURL=dev-nss-gssapi-libssh2
         - USESSL=nss
