@@ -270,6 +270,7 @@ PYTHON_VC_VERSIONS = {
     '3.5': 'vc14',
     '3.6': 'vc14',
     '3.7': 'vc14',
+    '3.8': 'vc14',
 }
 
 def mkdir_p(path):

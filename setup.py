@@ -383,6 +383,7 @@ manually. For other SSL backends please ignore this message.''')
         if dist_name != 'centos' or dist_version != '6':
             return False
         libcurl_dll_path = find_library('curl')
+        print('libcurl_dll_path = "%s"' % libcurl_dll_path)
         return self.detect_ssl_lib_from_libcurl_dll(libcurl_dll_path)
 
     def configure_windows(self):
