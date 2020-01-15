@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+PycURL 7.43.0.4 - 2020-01-15
+----------------------------
+
+This release improves compatibility with Python 3.8 and removes support for
+Python 2 and Python 3.4. It also adds wolfSSL support and thread safety of
+the multi interface.
+
+
 PycURL 7.43.0.3 - 2019-06-17
 ----------------------------
 

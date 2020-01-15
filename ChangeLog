@@ -1,5 +1,5 @@
-master
-------
+Version 7.43.0.4 [requires libcurl-7.19.0 or better] - 2020-01-15
+-----------------------------------------------------------------
 
         * Minimum supported Python 3 version is now 3.5.
 
