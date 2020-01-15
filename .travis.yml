@@ -106,5 +106,4 @@ script: >
   ./tests/travis/run.sh
 addons:
   apt:
-    packages:
-      - libssh2-1
+    packages: [libssh2-1, libgnutls28-dev]
