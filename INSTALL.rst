@@ -147,16 +147,6 @@ If your Python build uses different MSVCRT settings or a different MSVC
 version from the official Python builds, you will need to compile PycURL
 from source.
 
-Currently official PycURL packages are built against the following Python
-versions:
-
-- 2.7.10
-- 3.2.5
-- 3.3.5
-- 3.4.3
-- 3.5.2
-- 3.6.0
-
 If the C runtime library (MSVCRT.DLL) versions used by PycURL and Python
 do not match, you will receive a message
 like the following one when trying to import ``pycurl`` module::
@@ -259,7 +249,7 @@ Prerequisites:
 - `Git for Windows`_.
 - Appropriate `Python versions`_ installed.
 - MS Visual C++ 9/2008 for Python <= 3.2, MS Visual C++ 10/2010 for
-  Python 3.3 or 3.4, MS Visual C++ 14/2015 for Python 3.5 or 3.6.
+  Python 3.3 or 3.4, MS Visual C++ 14/2015 for Python 3.5 through 3.8.
   Express versions of Visual Studio work fine for this,
   although getting 64 bit compilers to wok in some Express versions involves
   jumping through several hoops.
@@ -273,7 +263,7 @@ Prerequisites:
 
 ``winbuild.py`` assumes all programs are installed in their default locations,
 if this is not the case edit it as needed. ``winbuild.py`` itself can be run
-with any Python it supports - 2.7 or 3.2 through 3.6.
+with any Python it supports.
 
 .. _`download area`: https://dl.bintray.com/pycurl/pycurl/
 

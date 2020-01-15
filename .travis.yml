@@ -37,17 +37,11 @@ matrix:
         # this configuration should be without gssapi
         - USECURL=7.68.0-none
         - USESSL=none
-    - python: 3.4
+    - python: 3.5
       env:
         - USECURL=7.68.0-openssl10-gssapi-libssh2
         - USESSL=openssl
         - USEOPENSSL=1.0.2u
-        - TESTDOCSEXAMPLES=1
-    - python: 3.5
-      env:
-        - USECURL=7.68.0-openssl11-gssapi-libssh2
-        - USESSL=openssl
-        - USEOPENSSL=1.1.1d
         - TESTDOCSEXAMPLES=1
     - python: 3.6
       env:
@@ -72,14 +66,9 @@ matrix:
       env:
         - USECURL=7.19.0-openssl-gssapi
         - USESSL=openssl
-        - TESTDOCSEXAMPLES=1
-
-    # Debian Jessie
-    # this takes 5 minutes and should not be last
-    - python: 3.4
-      env:
-        - USECURL=7.38.0-gnutls-gssapi
-        - USESSL=gnutls
+        # Quickstart does not run on this curl because it is not built with
+        # SSL support.
+        #- TESTDOCSEXAMPLES=1
     
     # libcurl development head with various SSL backends
     - python: 3.8
@@ -87,19 +76,6 @@ matrix:
         - USECURL=dev-openssl11-gssapi-libssh2
         - USEOPENSSL=1.1.1d
         - USESSL=openssl
-    - python: 3.8
-      env:
-        - USECURL=dev-nss-gssapi-libssh2
-        - USESSL=nss
-    - python: 3.6
-      env:
-        - USECURL=dev-openssl11-gssapi-libssh2
-        - USEOPENSSL=1.1.1d
-        - USESSL=openssl
-    - python: 3.6
-      env:
-        - USECURL=dev-gnutls-gssapi-libssh2
-        - USESSL=gnutls
 install: >
   ./tests/travis/setup.sh
 script: >
