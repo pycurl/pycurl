@@ -376,7 +376,7 @@ manually. For other SSL backends please ignore this message.''')
         import platform
         from ctypes.util import find_library
         os_name = platform.system()
-        if os_name != 'Linux':
+        if os_name != 'Linux' or not hasattr(platform, 'dist'):
             return False
         dist_name, dist_version, _ = platform.dist()
         dist_version = dist_version.split('.')[0]
