@@ -2,7 +2,7 @@
 # https://www.python.org/ftp/python/3.8.0/python-3.8.0.exe
 # https://www.python.org/ftp/python/3.8.0/python-3.8.0-amd64.exe
 # Then execute:
-# c:\dev\python-3.8.0.exe /norestart /passive InstallAllUsers=1 Include_test=0 Include_doc=0 Include_launcher=0 Include_ckltk=0 TargetDir=c:\dev\32\python38
+# c:\dev\python-3.8.0.exe /norestart /passive InstallAllUsers=1 Include_test=0 Include_doc=0 Include_launcher=0 Include_tcltk=0 TargetDir=c:\dev\32\python38
 # msvc9/vs2008 express:
 # http://go.microsoft.com/?linkid=7729279
 # msvc10/vs2010 express:
@@ -54,7 +54,7 @@ class Config:
     # which versions of python to build against
     #python_versions = ['2.7.10', '3.2.5', '3.3.5', '3.4.3', '3.5.4', '3.6.2']
     # these require only vc9 and vc14
-    python_versions = ['2.7.10', '3.5.4', '3.6.2']
+    python_versions = ['3.7.6', '3.8.1']
     # where pythons are installed
     python_path_template = 'c:/dev/%(bitness)s/python%(python_release)s/python'
     # overrides only, defaults are given in default_vc_paths below
@@ -1096,7 +1096,7 @@ def install_python(config, meta, bitness):
         cmd = ['msiexec', '/i', archive_path, '/norestart']
     cmd += ['/passive', 'InstallAllUsers=1',
             'Include_test=0', 'Include_doc=0', 'Include_launcher=0',
-            'Include_ckltk=0',
+            'Include_tcltk=0',
             'TargetDir=%s' % meta['installed_path_%d' % bitness],
         ]
     sys.stdout.write('Installing python %s (%d bit)\n' % (meta['version'], bitness))
