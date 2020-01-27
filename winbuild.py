@@ -1,7 +1,8 @@
 # Bootstrap python binary:
-# http://www.python.org/ftp/python/3.3.5/python-3.3.5.msi
+# https://www.python.org/ftp/python/3.8.0/python-3.8.0.exe
+# https://www.python.org/ftp/python/3.8.0/python-3.8.0-amd64.exe
 # Then execute:
-# msiexec /i c:\dev\build-pycurl\archives\python-3.3.5.msi /norestart /passive InstallAllUsers=1 Include_test=0 Include_doc=0 Include_launcher=0 Include_ckltk=0 TargetDir=c:\dev\32\python33
+# c:\dev\python-3.8.0.exe /norestart /passive InstallAllUsers=1 Include_test=0 Include_doc=0 Include_launcher=0 Include_ckltk=0 TargetDir=c:\dev\32\python38
 # msvc9/vs2008 express:
 # http://go.microsoft.com/?linkid=7729279
 # msvc10/vs2010 express:
