@@ -23,14 +23,16 @@
 #     such that there is no reason to get an older version.
 #  5. You may need to install platform sdk/windows sdk, especially if you installed community edition of
 #     visual studio as opposed to a fuller edition. Try https://developer.microsoft.com/en-us/windows/downloads/windows-10-sdk.
-#  6. Download and install perl. This script is tested with activestate perl, although
+#  6. You may also need to install windows 8.1 sdk for building nghttp2.
+#     See https://developer.microsoft.com/en-us/windows/downloads/sdk-archive.
+#  7. Download and install perl. This script is tested with activestate perl, although
 #     other distributions may also work. activestate perl can be downloaded at http://www.activestate.com/activeperl/downloads,
 #     although it now requires registration to download thus using a third party download site may be preferable.
-#  7. Download and install nasm: https://www.nasm.us/pub/nasm/releasebuilds/?C=M;O=D
+#  8. Download and install nasm: https://www.nasm.us/pub/nasm/releasebuilds/?C=M;O=D
 #     (homepage: http://www.nasm.us/)
-#  8. Download and install cmake: https://cmake.org/download/
-#  9. Run `python winbuild.py builddeps` to compile all dependencies for all environments (32/64 bit and python versions).
-# 10. Run `python winbuild.py` to compile pycurl in all defined configurations.
+#  9. Download and install cmake: https://cmake.org/download/
+# 10. Run `python winbuild.py builddeps` to compile all dependencies for all environments (32/64 bit and python versions).
+# 11. Run `python winbuild.py` to compile pycurl in all defined configurations.
 
 class Config:
     '''User-adjustable configuration.
@@ -98,10 +100,19 @@ class Config:
     # pycurl version to build, we should know this ourselves
     pycurl_version = '7.43.0.4'
 
-    # sometimes vc14 does not include windows sdk path in vcvars which breaks stuff.
+    # Sometimes vc14 does not include windows sdk path in vcvars which breaks stuff.
     # another application for this is to supply normaliz.lib for vc9
     # which has an older version that doesn't have the symbols we need
     windows_sdk_path = 'c:\\program files (x86)\\microsoft sdks\\windows\\v7.1a'
+    
+    # See the note below about VCTargetsPath and
+    # https://stackoverflow.com/questions/16092169/why-does-msbuild-look-in-c-for-microsoft-cpp-default-props-instead-of-c-progr.
+    # Since we are targeting vc14, use the v140 path.
+    vc_targets_path = "c:\\Program Files (x86)\\MSBuild\\Microsoft.Cpp\\v4.0\\v140"
+    #vc_targets_path = "c:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\MSBuild\\Current"
+    
+    # Where the msbuild that is part of visual studio lives
+    msbuild_bin_path = "c:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\MSBuild\\Current\\Bin"
 
 # ***
 # No user-serviceable parts beyond this point.
@@ -713,14 +724,27 @@ class Nghttp2Builder(StandardBuilder):
         
         with in_dir(nghttp2_dir):
             generator = self.CMAKE_GENERATORS[self.bconf.vc_version]
-            # Cmake also couldn't care less about the bitness I have configured in the
-            # environment since it ignores the environment entirely.
-            # Educate it on the required bitness by hand.
-            # https://stackoverflow.com/questions/28350214/how-to-build-x86-and-or-x64-on-windows-from-command-line-with-cmake#28370892
-            if self.bconf.bitness == 64:
-                generator += ' Win64'
             with self.execute_batch() as b:
-                cmd = ' '.join([
+                # Workaround for VCTargetsPath issue that looks like this:
+                # C:\dev\build-pycurl\archives\nghttp2-1.40.0-vc14-32\CMakeFiles\3.16.3\VCTargetsPath.vcxproj(14,2): error MSB4019: The imported project "C:\Microsoft.Cpp.Default.props" was not found. Confirm that the path in the <Import> declaration is correct, and that the file exists on disk.
+                #
+                # Many solutions proposed on SO, including:
+                # https://stackoverflow.com/questions/41695251/c-microsoft-cpp-default-props-was-not-found
+                # https://stackoverflow.com/questions/16092169/why-does-msbuild-look-in-c-for-microsoft-cpp-default-props-instead-of-c-progr
+                if not os.path.exists(self.bconf.vc_targets_path):
+                    raise ValueError("VCTargetsPath does not exist: %s" % self.bconf.vc_targets_path)
+                b.add('SET VCTargetsPath=%s' % self.bconf.vc_targets_path)
+                
+                # The msbuild.exe in path could be v4.0 from .net sdk, whereas the
+                # vctargetspath ends up referencing the msbuild from visual studio...
+                # Put the visual studio msbuild into the path first.
+                if self.bconf.bitness == 64:
+                    msbuild_bin_path = os.path.join(self.bconf.msbuild_bin_path, 'amd64')
+                else:
+                    msbuild_bin_path = self.bconf.msbuild_bin_path
+                b.add("set path=%s;%%path%%" % msbuild_bin_path)
+                
+                parts = [
                     '"%s"' % config.cmake_path,
                     # I don't know if this does anything, build type/config
                     # must be specified with --build option below.
@@ -741,8 +765,19 @@ class Nghttp2Builder(StandardBuilder):
                     # if one doesn't care what compiler their code is compiled with.
                     # https://stackoverflow.com/questions/6430251/what-is-the-default-generator-for-cmake-in-windows
                     '-G', '"%s"' % generator,
-                ])
-                b.add('%s .' % cmd)
+                ]
+                
+                # Cmake also couldn't care less about the bitness I have configured in the
+                # environment since it ignores the environment entirely.
+                # Educate it on the required bitness by hand.
+                # https://stackoverflow.com/questions/28350214/how-to-build-x86-and-or-x64-on-windows-from-command-line-with-cmake#28370892
+                #
+                # New strategy:
+                # https://cmake.org/cmake/help/v3.14/generator/Visual%20Studio%2014%202015.html
+                if self.bconf.bitness == 64:
+                    parts += ['-A', 'x64']
+                
+                b.add('%s .' % ' '.join(parts))
                 b.add(' '.join([
                     '"%s"' % config.cmake_path,
                     '--build', '.',
@@ -757,9 +792,6 @@ class Nghttp2Builder(StandardBuilder):
                     '--target', 'nghttp2_static',
                 ]))
                 
-                # libcurl and its library name expectations
-                b.add('cp lib/Release/nghttp2.lib lib/Release/nghttp2_static.lib')
-                
                 # assemble dist
                 b.add('mkdir dist dist\\include dist\\include\\nghttp2 dist\\lib')
                 b.add('cp lib/Release/*.lib dist/lib')
@@ -767,6 +799,11 @@ class Nghttp2Builder(StandardBuilder):
                 if self.bconf.vc_version == 'vc9':
                     # stdint.h
                     b.add('cp lib/includes/*.h dist/include')
+            
+            # libcurl expects nghttp2_static.lib apparently, and depending on nghttp2 version/configuration(?)
+            # the library name is sometimes nghttp2.lib
+            if not os.path.exists('lib/Release/nghttp2_static.lib'):
+                shutil.copy('lib/Release/nghttp2.lib', 'lib/Release/nghttp2_static.lib')
 
 class LibiconvBuilder(StandardBuilder):
     def build(self):
