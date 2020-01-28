@@ -123,18 +123,8 @@ class Config:
 # https://wiki.openssl.org/index.php/Compilation_and_Installation
 # http://developer.covenanteyes.com/building-openssl-for-visual-studio/
 
-import os, os.path, sys, subprocess, shutil, contextlib, zipfile, re, glob
-try:
-    from urllib.request import urlopen
-except ImportError:
-    from urllib import urlopen
-
-# https://stackoverflow.com/questions/35569042/python-3-ssl-certificate-verify-failed
-import ssl
-try:
-    ssl._create_default_https_context = ssl._create_unverified_context
-except AttributeError:
-    pass
+import os, os.path, sys, subprocess, shutil, contextlib, zipfile, re
+from winbuild.utils import *
 
 def short_python_versions(python_versions):
     return ['.'.join(python_version.split('.')[:2])
@@ -146,30 +136,9 @@ def needed_vc_versions(python_versions):
             PYTHON_VC_VERSIONS[short_python_version]
             for short_python_version in short_python_versions(python_versions)]]
 
-def select_existing_path(paths):
-    if isinstance(paths, list) or isinstance(paths, tuple):
-        for path in paths:
-            if os.path.exists(path):
-                return path
-        return paths[0]
-    else:
-        return paths
-
 # This must be at top level as __file__ can be a relative path
 # and changing current directory will break it
 DIR_HERE = os.path.abspath(os.path.dirname(__file__))
-
-def find_in_paths(binary, paths):
-    for path in paths:
-        if os.path.exists(os.path.join(path, binary)) or os.path.exists(os.path.join(path, binary + '.exe')):
-            return os.path.join(path, binary)
-    raise Exception('Could not find %s' % binary)
-
-def check_call(cmd):
-    try:
-        subprocess.check_call(cmd)
-    except Exception as e:
-        raise Exception('Failed to execute ' + str(cmd) + ': ' + str(type(e)) + ': ' +str(e))
 
 class ExtendedConfig(Config):
     '''Global configuration that specifies what the entire process will do.
@@ -294,33 +263,6 @@ PYTHON_VC_VERSIONS = {
     '3.8': 'vc14',
 }
 
-def mkdir_p(path):
-    if not os.path.exists(path):
-        os.makedirs(path)
-
-def rm_rf(path):
-    check_call([config.rm_path, '-rf', path])
-
-def cp_r(src, dest):
-    check_call([config.cp_path, '-r', src, dest])
-
-def fetch(url, archive=None):
-    if archive is None:
-        archive = os.path.basename(url)
-    if not os.path.exists(archive):
-        sys.stdout.write("Fetching %s\n" % url)
-        sys.stdout.flush()
-        io = urlopen(url)
-        tmp_path = os.path.join(os.path.dirname(archive),
-            '.%s.part' % os.path.basename(archive))
-        with open(tmp_path, 'wb') as f:
-            while True:
-                chunk = io.read(65536)
-                if len(chunk) == 0:
-                    break
-                f.write(chunk)
-        os.rename(tmp_path, archive)
-
 def fetch_to_archives(url):
     mkdir_p(config.archives_path)
     path = os.path.join(config.archives_path, os.path.basename(url))
@@ -350,11 +292,6 @@ def untar(basename):
     if os.path.exists(basename):
         shutil.rmtree(basename)
     check_call([config.tar_path, 'xf', '%s.tar.gz' % basename])
-    
-def require_file_exists(path):
-    if not os.path.exists(path):
-        raise Exception('Path %s does not exist!' % path)
-    return path
 
 class PythonRelease(str):
     @property
@@ -1136,9 +1073,6 @@ def install_pythons(config):
             if not os.path.exists(meta['installed_path_%d' % bitness]):
                 install_python(config, meta, bitness)
 
-def fix_slashes(path):
-    return path.replace('/', '\\')
-
 # http://eddiejackson.net/wp/?p=10276
 def install_python(config, meta, bitness):
     archive_path = fix_slashes(os.path.join(config.archives_path, os.path.basename(meta['url_%d' % bitness])))
@@ -1213,24 +1147,6 @@ def get_deps():
     vc_tag = '%s-%d' % (vc_version, bitness)
     fetch('https://dl.bintray.com/pycurl/deps/%s.zip' % vc_tag)
     check_call(['unzip', '-d', 'deps', vc_tag + '.zip'])
-
-def glob_first(pattern):
-    # python's glob does not support {}
-    final_patterns = []
-    pattern_queue = [pattern]
-    while pattern_queue:
-        pattern = pattern_queue.pop()
-        if re.search(r'\{.*}', pattern):
-            match = re.match(r'(.*){(.*?)}(.*)', pattern, re.S)
-            for variant in match.group(2).split(','):
-                pattern_queue.append(match.group(1) + variant + match.group(3))
-        else:
-            final_patterns.append(pattern)
-    for pattern in final_patterns:
-        paths = glob.glob(pattern)
-        if paths:
-            return paths[0]
-    raise Exception("Not found: %s" % pattern)
 
 PATHS = {32: {}, 64: {}}
 
