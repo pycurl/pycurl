@@ -98,3 +98,17 @@ def glob_first(pattern, selector=None):
             else:
                 return paths[0]
     raise Exception("Not found: %s" % pattern)
+
+@contextlib.contextmanager
+def in_dir(dir):
+    old_cwd = os.getcwd()
+    try:
+        os.chdir(dir)
+        yield
+    finally:
+        os.chdir(old_cwd)
+
+def untar(basename):
+    if os.path.exists(basename):
+        shutil.rmtree(basename)
+    check_call([config.tar_path, 'xf', '%s.tar.gz' % basename])
