@@ -112,7 +112,7 @@ class Config:
 # https://wiki.openssl.org/index.php/Compilation_and_Installation
 # http://developer.covenanteyes.com/building-openssl-for-visual-studio/
 
-import os, os.path, sys, subprocess, shutil, contextlib, zipfile, re
+import os, os.path, sys, subprocess, shutil, contextlib, zipfile, re, glob
 try:
     from urllib.request import urlopen
 except ImportError:
@@ -383,6 +383,8 @@ class Batch(object):
                 self.add('set lib=%s\\lib\\x64;%%lib%%' % self.bconf.windows_sdk_path)
                 self.add('set path=%s\\bin\\x64;%%path%%' % self.bconf.windows_sdk_path)
         self.add(self.nasm_cmd)
+        
+        self.add('set path=%s;%%path%%' % PATHS[self.bconf.bitness]['rc_bin'])
         
     def add(self, cmd):
         self.commands.append(cmd)
@@ -1174,7 +1176,30 @@ def get_deps():
     vc_tag = '%s-%d' % (vc_version, bitness)
     fetch('https://dl.bintray.com/pycurl/deps/%s.zip' % vc_tag)
     check_call(['unzip', '-d', 'deps', vc_tag + '.zip'])
-    
+
+def glob_first(pattern):
+    # python's glob does not support {}
+    final_patterns = []
+    pattern_queue = [pattern]
+    while pattern_queue:
+        pattern = pattern_queue.pop()
+        if re.search(r'\{.*}', pattern):
+            match = re.match(r'(.*){(.*?)}(.*)', pattern, re.S)
+            for variant in match.group(2).split(','):
+                pattern_queue.append(match.group(1) + variant + match.group(3))
+        else:
+            final_patterns.append(pattern)
+    for pattern in final_patterns:
+        paths = glob.glob(pattern)
+        if paths:
+            return paths[0]
+    raise Exception("Not found: %s" % pattern)
+
+PATHS = {32: {}, 64: {}}
+
+# When using visual studio 2019 community, rc.exe is not in path for whatever reason - handle this manually.
+PATHS[32]['rc_bin'] = os.path.dirname(glob_first('c:/{program files,program files (x86)}/windows kits/*/bin/*/x86/rc.exe'))
+PATHS[64]['rc_bin'] = os.path.dirname(glob_first('c:/{program files,program files (x86)}/windows kits/*/bin/*/x64/rc.exe'))
 
 import optparse
 
