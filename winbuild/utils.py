@@ -78,7 +78,7 @@ def fix_slashes(path):
 # Returns the first path matching the pattern, where pattern is anything the
 # standard library glob module recognizes plus {a,b,c} alterations.
 # Raises an exception if no paths matched the pattern.
-def glob_first(pattern):
+def glob_first(pattern, selector=None):
     # python's glob does not support {}
     final_patterns = []
     pattern_queue = [pattern]
@@ -93,5 +93,8 @@ def glob_first(pattern):
     for pattern in final_patterns:
         paths = glob.glob(pattern)
         if paths:
-            return paths[0]
+            if selector:
+                return selector(paths)
+            else:
+                return paths[0]
     raise Exception("Not found: %s" % pattern)
