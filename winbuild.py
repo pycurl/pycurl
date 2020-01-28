@@ -73,20 +73,20 @@ class Config:
     # whether to use openssl instead of winssl
     use_openssl = True
     # which version of openssl to use, will be downloaded from internet
-    openssl_version = '1.1.0h'
+    openssl_version = '1.1.1d'
     # whether to use c-ares
     use_cares = True
     cares_version = '1.15.0'
     # whether to use libssh2
     use_libssh2 = True
-    libssh2_version = '1.8.0'
+    libssh2_version = '1.9.0'
     use_nghttp2 = True
-    nghttp2_version = '1.32.0'
+    nghttp2_version = '1.40.0'
     use_libidn = False
-    libiconv_version = '1.15'
+    libiconv_version = '1.16'
     libidn_version = '1.35'
     # which version of libcurl to use, will be downloaded from internet
-    libcurl_version = '7.60.0'
+    libcurl_version = '7.68.0'
     # virtualenv version
     virtualenv_version = '15.1.0'
     # whether to build binary wheels
@@ -555,10 +555,14 @@ class OpensslBuilder(StandardBuilder):
                     # openssl 1.0.2
                     b.add("patch -p0 < %s" % 
                         require_file_exists(os.path.join(config.winbuild_patch_root, 'openssl-fix-crt-1.0.2.patch')))
-                else:
+                elif self.bconf.openssl_version_tuple < (1, 1, 1):
                     # openssl 1.1.0
                     b.add("patch -p0 < %s" %
                         require_file_exists(os.path.join(config.winbuild_patch_root, 'openssl-fix-crt-1.1.0.patch')))
+                else:
+                    # openssl 1.1.1
+                    b.add("patch -p0 < %s" %
+                        require_file_exists(os.path.join(config.winbuild_patch_root, 'openssl-fix-crt-1.1.1.patch')))
                 if self.bconf.bitness == 64:
                     target = 'VC-WIN64A'
                     batch_file = 'do_win64a'
@@ -580,7 +584,7 @@ class OpensslBuilder(StandardBuilder):
                 openssl_prefix = os.path.join(os.path.realpath('.'), 'build')
                 # Do not want compression:
                 # https://en.wikipedia.org/wiki/CRIME
-                extras = ['no-comp']
+                extras = ['no-comp', 'no-unit-test', 'no-tests', 'no-external-tests']
                 if config.openssl_version_tuple >= (1, 1):
                     # openssl 1.1.0
                     # in 1.1.0 the static/shared selection is handled by
