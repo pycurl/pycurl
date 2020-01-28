@@ -681,6 +681,12 @@ class Nghttp2Builder(StandardBuilder):
                     msbuild_bin_path = self.bconf.msbuild_bin_path
                 b.add("set path=%s;%%path%%" % msbuild_bin_path)
                 
+                # When performing 64-bit build, ucrtd.lib is not in library path for whatever reason. Sigh.
+                # Superseded by https://stackoverflow.com/questions/56145118/cmake-cannot-open-ucrtd-lib instructions below.
+                if self.bconf.bitness == 64 and False:
+                    windows_sdk_lib_path = glob_first("c:\\Program Files (x86)\\Windows Kits\\10\\Lib\\*\\ucrt\\x64")
+                    b.add('set lib=%s;%%lib%%' % windows_sdk_lib_path)
+                
                 parts = [
                     '"%s"' % config.cmake_path,
                     # I don't know if this does anything, build type/config
@@ -711,8 +717,13 @@ class Nghttp2Builder(StandardBuilder):
                 #
                 # New strategy:
                 # https://cmake.org/cmake/help/v3.14/generator/Visual%20Studio%2014%202015.html
-                if self.bconf.bitness == 64:
+                if self.bconf.bitness == 64 and False:
                     parts += ['-A', 'x64']
+                    
+                    # And it does its own windows sdk selection, apparently, and botches it.
+                    # https://stackoverflow.com/questions/56145118/cmake-cannot-open-ucrtd-lib
+                    # TODO figure out which version is needed here, 8.1 or 10.0 or 10.0.10240.0
+                    parts.append('-DCMAKE_SYSTEM_VERSION=8.1')
                 
                 b.add('%s .' % ' '.join(parts))
                 b.add(' '.join([
