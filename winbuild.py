@@ -1,32 +1,36 @@
-# Bootstrap python binary:
-# https://www.python.org/ftp/python/3.8.0/python-3.8.0.exe
-# https://www.python.org/ftp/python/3.8.0/python-3.8.0-amd64.exe
-# Then execute:
-# c:\dev\python-3.8.0.exe /norestart /passive InstallAllUsers=1 Include_test=0 Include_doc=0 Include_launcher=0 Include_tcltk=0 TargetDir=c:\dev\32\python38
-# msvc9/vs2008 express:
-# http://go.microsoft.com/?linkid=7729279
-# msvc10/vs2010 express:
-# http://go.microsoft.com/?linkid=9709949
-# for 64 bit builds, then install 2010 sp1:
-# http://go.microsoft.com/fwlink/?LinkId=210710
-# ... and windows 7 sdk (because sp1 compiler update refuses to install
-# without it):
-# http://www.microsoft.com/en-us/download/details.aspx?id=8279
-# or http://www.microsoft.com/en-us/download/details.aspx?id=8442
-# then install sp1 compiler update:
-# https://www.microsoft.com/en-us/download/details.aspx?id=4422
-# msvc14/vs2015 community:
-# https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx
+# This file builds official Windows binaries of PycURL and all of its dependencies.
 #
-# OpenSSL build resources including 64-bit builds:
-# http://stackoverflow.com/questions/158232/how-do-you-compile-openssl-for-x64
-# https://wiki.openssl.org/index.php/Compilation_and_Installation
-# http://developer.covenanteyes.com/building-openssl-for-visual-studio/
+# It is written to be run on a system dedicated to building pycurl, but can be configured
+# for any system that has the required tools installed.
 #
-# NASM:
-# http://www.nasm.us/
-# ActiveState Perl:
-# http://www.activestate.com/activeperl/downloads
+# Generally, the workflow of building pycurl binaries is as follows:
+#  1. Install git for windows. Use it to check out pycurl repository on the build system.
+#  2. There must be a python installation already present on the build system
+#     in order to execute this file at all. It doesn't matter what the python
+#     version of the bootstrap python is. The first step is to install some
+#     version of python. It saves effort to install one of the versions that will be used
+#     to build pycurl later, however if this is done the target path should be
+#     in line with where all other pythons are going to be installed (i.e. c:/dev/{32,64}/pythonXY by default).
+#     Try these binaries:
+#     https://www.python.org/ftp/python/3.8.0/python-3.8.0.exe
+#     https://www.python.org/ftp/python/3.8.0/python-3.8.0-amd64.exe
+#     Then execute:
+#     c:\dev\python-3.8.0.exe /norestart /passive InstallAllUsers=1 Include_test=0 Include_doc=0 Include_launcher=0 Include_tcltk=0 TargetDir=c:\dev\32\python38
+#  3. Define python versions to build for in the configuration below, then
+#     run `python winbuild.py download` and `python winbuild.py installpy` to install them.
+#  4. Download and install visual studio. Any edition of 2015 or newer should work;
+#     2019 in particular (including community edition) provides batch files to set up a 2015 build environment,
+#     such that there is no reason to get an older version.
+#  5. You may need to install platform sdk/windows sdk, especially if you installed community edition of
+#     visual studio as opposed to a fuller edition. Try https://developer.microsoft.com/en-us/windows/downloads/windows-10-sdk.
+#  6. Download and install perl. This script is tested with activestate perl, although
+#     other distributions may also work. activestate perl can be downloaded at http://www.activestate.com/activeperl/downloads,
+#     although it now requires registration to download thus using a third party download site may be preferable.
+#  7. Download and install nasm: https://www.nasm.us/pub/nasm/releasebuilds/?C=M;O=D
+#     (homepage: http://www.nasm.us/)
+#  8. Download and install cmake: https://cmake.org/download/
+#  9. Run `python winbuild.py builddeps` to compile all dependencies for all environments (32/64 bit and python versions).
+# 10. Run `python winbuild.py` to compile pycurl in all defined configurations.
 
 class Config:
     '''User-adjustable configuration.
@@ -100,8 +104,13 @@ class Config:
     windows_sdk_path = 'c:\\program files (x86)\\microsoft sdks\\windows\\v7.1a'
 
 # ***
-# No user-serviceable parts beyond this point
+# No user-serviceable parts beyond this point.
 # ***
+
+# OpenSSL build resources including 64-bit builds:
+# http://stackoverflow.com/questions/158232/how-do-you-compile-openssl-for-x64
+# https://wiki.openssl.org/index.php/Compilation_and_Installation
+# http://developer.covenanteyes.com/building-openssl-for-visual-studio/
 
 import os, os.path, sys, subprocess, shutil, contextlib, zipfile, re
 try:
