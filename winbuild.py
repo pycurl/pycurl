@@ -30,7 +30,8 @@
 #     although it now requires registration to download thus using a third party download site may be preferable.
 #  8. Download and install nasm: https://www.nasm.us/pub/nasm/releasebuilds/?C=M;O=D
 #     (homepage: http://www.nasm.us/)
-#  9. Download and install cmake: https://cmake.org/download/
+# 9a. Download and install cmake: https://cmake.org/download/
+# 9b. Download and install gmake: http://gnuwin32.sourceforge.net/packages/make.htm
 # 10. Run `python winbuild.py builddeps` to compile all dependencies for all environments (32/64 bit and python versions).
 # 11. Run `python winbuild.py` to compile pycurl in all defined configurations.
 
@@ -127,7 +128,7 @@ import os, os.path, sys, subprocess, shutil, contextlib, zipfile, re
 from winbuild.utils import *
 from winbuild.config import *
 from winbuild.builder import *
-from winbuild.nghttp import *
+from winbuild.nghttp_gmake import *
 from winbuild.tools import *
 from winbuild.zlib import *
 from winbuild.openssl import *

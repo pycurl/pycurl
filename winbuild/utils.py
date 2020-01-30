@@ -1,4 +1,4 @@
-import os.path, subprocess, sys, os, glob, re, contextlib
+import os.path, subprocess, sys, os, glob, re, contextlib, shutil
 try:
     from urllib.request import urlopen
 except ImportError:
