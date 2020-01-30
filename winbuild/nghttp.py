@@ -55,7 +55,7 @@ class Nghttp2Builder(StandardBuilder):
                     b.add('set lib=%s;%%lib%%' % windows_sdk_lib_path)
                 
                 parts = [
-                    '"%s"' % config.cmake_path,
+                    '"%s"' % self.bconf.cmake_path,
                     # I don't know if this does anything, build type/config
                     # must be specified with --build option below.
                     '-DCMAKE_BUILD_TYPE=Release',
@@ -94,7 +94,7 @@ class Nghttp2Builder(StandardBuilder):
                 
                 b.add('%s .' % ' '.join(parts))
                 b.add(' '.join([
-                    '"%s"' % config.cmake_path,
+                    '"%s"' % self.bconf.cmake_path,
                     '--build', '.',
                     # this is what produces a release build
                     '--config', 'Release',

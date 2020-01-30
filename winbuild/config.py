@@ -107,6 +107,16 @@ class ExtendedConfig:
         return [PythonRelease('.'.join(version.split('.')[:2]))
             for version in self.python_versions]
 
+    @property
+    def extra_bin_paths(self):
+        paths = {32: {}, 64: {}}
+
+        # When using visual studio 2019 community, rc.exe is not in path for whatever reason - handle this manually.
+        paths[32]['rc_bin'] = os.path.dirname(glob_first('c:/{program files,program files (x86)}/windows kits/*/bin/*/x86/rc.exe'))
+        paths[64]['rc_bin'] = os.path.dirname(glob_first('c:/{program files,program files (x86)}/windows kits/*/bin/*/x64/rc.exe'))
+        
+        return paths
+
 BITNESSES = (32, 64)
 
 PYTHON_VC_VERSIONS = {

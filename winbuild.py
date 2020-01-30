@@ -332,12 +332,6 @@ def get_deps():
     fetch('https://dl.bintray.com/pycurl/deps/%s.zip' % vc_tag)
     check_call(['unzip', '-d', 'deps', vc_tag + '.zip'])
 
-PATHS = {32: {}, 64: {}}
-
-# When using visual studio 2019 community, rc.exe is not in path for whatever reason - handle this manually.
-PATHS[32]['rc_bin'] = os.path.dirname(glob_first('c:/{program files,program files (x86)}/windows kits/*/bin/*/x86/rc.exe'))
-PATHS[64]['rc_bin'] = os.path.dirname(glob_first('c:/{program files,program files (x86)}/windows kits/*/bin/*/x64/rc.exe'))
-
 import optparse
 
 parser = optparse.OptionParser()

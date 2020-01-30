@@ -20,7 +20,7 @@ class Batch(object):
                 self.add('set path=%s\\bin\\x64;%%path%%' % self.bconf.windows_sdk_path)
         self.add(self.nasm_cmd)
         
-        self.add('set path=%s;%%path%%' % PATHS[self.bconf.bitness]['rc_bin'])
+        self.add('set path=%s;%%path%%' % self.bconf.extra_bin_paths[self.bconf.bitness]['rc_bin'])
         
     def add(self, cmd):
         self.commands.append(cmd)
