@@ -104,15 +104,15 @@ class StandardBuilder(Builder):
 
     @property
     def bin_path(self):
-        return os.path.join(config.archives_path, self.output_dir_path, 'dist', 'bin')
+        return os.path.join(self.bconf.archives_path, self.output_dir_path, 'dist', 'bin')
 
     @property
     def include_path(self):
-        return os.path.join(config.archives_path, self.output_dir_path, 'dist', 'include')
+        return os.path.join(self.bconf.archives_path, self.output_dir_path, 'dist', 'include')
 
     @property
     def lib_path(self):
-        return os.path.join(config.archives_path, self.output_dir_path, 'dist', 'lib')
+        return os.path.join(self.bconf.archives_path, self.output_dir_path, 'dist', 'lib')
 
     @property
     def dll_paths(self):

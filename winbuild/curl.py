@@ -1,6 +1,11 @@
 import os.path, shutil, os
 from .utils import *
 from .builder import *
+from .zlib import *
+from .openssl import *
+from .cares import *
+from .ssh import *
+from .nghttp_gmake import *
 
 class LibcurlBuilder(StandardBuilder):
     def build(self):
@@ -23,7 +28,7 @@ class LibcurlBuilder(StandardBuilder):
             
             with self.execute_batch() as b:
                 b.add("patch -p1 < %s" %
-                    require_file_exists(os.path.join(config.winbuild_patch_root, 'libcurl-fix-zlib-references.patch')))
+                    require_file_exists(os.path.join(self.bconf.winbuild_patch_root, 'libcurl-fix-zlib-references.patch')))
                 if self.use_dlls:
                     dll_or_static = 'dll'
                 else:
@@ -62,7 +67,7 @@ class LibcurlBuilder(StandardBuilder):
                     b.add("set include=%%include%%;%s" % libidn_builder.include_path)
                     b.add("set lib=%%lib%%;%s" % libidn_builder.lib_path)
                     extra_options += ' WITH_LIBIDN=%s' % dll_or_static
-                if config.openssl_version_tuple >= (1, 1):
+                if self.bconf.openssl_version_tuple >= (1, 1):
                     # openssl 1.1.0
                     # https://curl.haxx.se/mail/lib-2016-08/0104.html
                     # https://github.com/curl/curl/issues/984
