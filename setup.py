@@ -511,26 +511,31 @@ manually. For other SSL backends please ignore this message.''')
             # http://stackoverflow.com/questions/23687488/cant-get-pycurl-to-install-on-cygwin-missing-openssl-symbols-crypto-num-locks
             self.libraries.append('crypto')
         self.define_macros.append(('HAVE_CURL_SSL', 1))
+        self.ssl_lib_detected = 'openssl'
 
     def using_wolfssl(self):
         self.define_macros.append(('HAVE_CURL_WOLFSSL', 1))
         self.libraries.append('wolfssl')
         self.define_macros.append(('HAVE_CURL_SSL', 1))
+        self.ssl_lib_detected = 'wolfssl'
 
     def using_gnutls(self):
         self.define_macros.append(('HAVE_CURL_GNUTLS', 1))
         self.libraries.append('gnutls')
         self.define_macros.append(('HAVE_CURL_SSL', 1))
+        self.ssl_lib_detected = 'gnutls'
 
     def using_nss(self):
         self.define_macros.append(('HAVE_CURL_NSS', 1))
         self.libraries.append('ssl3')
         self.define_macros.append(('HAVE_CURL_SSL', 1))
+        self.ssl_lib_detected = 'nss'
 
     def using_mbedtls(self):
         self.define_macros.append(('HAVE_CURL_MBEDTLS', 1))
         self.libraries.append('mbedtls')
         self.define_macros.append(('HAVE_CURL_SSL', 1))
+        self.ssl_lib_detected = 'mbedtls'
 
 def get_bdist_msi_version_hack():
     # workaround for distutils/msi version requirement per

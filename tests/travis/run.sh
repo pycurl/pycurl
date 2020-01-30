@@ -54,7 +54,7 @@ ldd build/lib*/pycurl*.so
 
 if test -n "$TESTDOCSEXAMPLES"; then
   which pyflakes
-  pyflakes python examples tests setup.py winbuild.py
+  pyflakes python examples tests setup.py
   ./tests/run-quickstart.sh
 
   # sphinx requires python 2.7+ or 3.3+
