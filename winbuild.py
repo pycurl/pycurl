@@ -33,7 +33,9 @@
 # 9a. Download and install cmake: https://cmake.org/download/
 # 9b. Download and install gmake: http://gnuwin32.sourceforge.net/packages/make.htm
 # 10. Run `python winbuild.py builddeps` to compile all dependencies for all environments (32/64 bit and python versions).
-# 11. Run `python winbuild.py` to compile pycurl in all defined configurations.
+# 11. Run `python winbuild.py installvirtualenv` to install virtualenv in all python interpreters.
+# 12. Run `python winbuild.py createvirtualenvs` to create virtualenvs used for pycurl compilation.
+# 13. Run `python winbuild.py` to compile pycurl in all defined configurations.
 
 class Config:
     '''User-adjustable configuration.
@@ -125,6 +127,7 @@ class Config:
 # http://developer.covenanteyes.com/building-openssl-for-visual-studio/
 
 import os, os.path, sys, subprocess, shutil, contextlib, zipfile, re
+import time as _time
 from winbuild.utils import *
 from winbuild.config import *
 from winbuild.builder import *
@@ -135,6 +138,7 @@ from winbuild.openssl import *
 from winbuild.cares import *
 from winbuild.ssh import *
 from winbuild.curl import *
+from winbuild.pycurl import *
 
 user_config = {}
 for attr in dir(Config):
@@ -212,7 +216,7 @@ def build(config):
                 # shutil.rmtree is incapable of removing .git directory because it contains
                 # files marked read-only (tested on python 2.7 and 3.6)
                 #shutil.rmtree('pycurl-%s' % config.pycurl_version)
-                rm_rf('pycurl-%s' % config.pycurl_version)
+                rm_rf(config, 'pycurl-%s' % config.pycurl_version)
             #check_call([tar_path, 'xf', 'pycurl-%s.tar.gz' % pycurl_version])
             shutil.copytree('c:/dev/pycurl', 'pycurl-%s' % config.pycurl_version)
 
@@ -222,9 +226,13 @@ def build(config):
             for python_release in config.python_releases:
                 targets = ['bdist', 'bdist_wininst', 'bdist_msi']
                 vc_version = PYTHON_VC_VERSIONS[python_release]
-                bconf = BuildConfig(bitness=bitness, vc_version=vc_version)
+                bconf = BuildConfig(config, bitness=bitness, vc_version=vc_version)
                 builder = PycurlBuilder(bconf=bconf, python_release=python_release)
                 builder.build(targets)
+                
+                # Seems like windows can have leftover processes hanging around
+                # which will prevent the next build from working as builds are in place
+                #_time.sleep(3)
 
 def python_metas():
     metas = []
@@ -288,10 +296,10 @@ def install_virtualenv(config):
             for python_release in config.python_releases:
                 print('Installing virtualenv %s for Python %s (%s bit)' % (config.virtualenv_version, python_release, bitness))
                 sys.stdout.flush()
-                untar('virtualenv-%s' % config.virtualenv_version)
+                untar(config, 'virtualenv-%s' % config.virtualenv_version)
                 with in_dir('virtualenv-%s' % config.virtualenv_version):
                     python_binary = PythonBinary(python_release, bitness)
-                    cmd = [python_binary.executable_path, 'setup.py', 'install']
+                    cmd = [python_binary.executable_path(config), 'setup.py', 'install']
                     check_call(cmd)
 
 def create_virtualenvs(config):
@@ -302,7 +310,7 @@ def create_virtualenvs(config):
             with in_dir(config.archives_path):
                 python_binary = PythonBinary(python_release, bitness)
                 venv_basename = 'venv-%s-%s' % (python_release, bitness)
-                cmd = [python_binary.executable_path, '-m', 'virtualenv', venv_basename]
+                cmd = [python_binary.executable_path(config), '-m', 'virtualenv', venv_basename]
                 check_call(cmd)
 
 def assemble_deps(config):

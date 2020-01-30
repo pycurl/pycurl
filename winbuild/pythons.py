@@ -14,8 +14,7 @@ class PythonBinary(object):
         self.python_release = python_release
         self.bitness = bitness
 
-    @property
-    def executable_path(self):
+    def executable_path(self, config):
         return config.python_path_template % dict(
             python_release=self.python_release.dotless,
             bitness=self.bitness)

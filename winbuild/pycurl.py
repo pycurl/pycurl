@@ -1,6 +1,7 @@
 import os.path, shutil, zipfile
 from .builder import *
 from .utils import *
+from .curl import *
 
 class PycurlBuilder(Builder):
     def __init__(self, **kwargs):
@@ -11,8 +12,8 @@ class PycurlBuilder(Builder):
 
     @property
     def python_path(self):
-        if config.build_wheels:
-            python_path = os.path.join(config.archives_path, 'venv-%s-%s' % (self.python_release, self.bconf.bitness), 'scripts', 'python')
+        if self.bconf.build_wheels:
+            python_path = os.path.join(self.bconf.archives_path, 'venv-%s-%s' % (self.python_release, self.bconf.bitness), 'scripts', 'python')
         else:
             python_path = PythonBinary(self.python_release, self.bconf.bitness).executable_path
         return python_path
@@ -46,16 +47,16 @@ class PycurlBuilder(Builder):
                     libcurl_arg = '--libcurl-lib-name=libcurl_a.lib'
                 if self.bconf.use_openssl:
                     libcurl_arg += ' --with-openssl'
-                    if config.openssl_version_tuple >= (1, 1):
+                    if self.bconf.openssl_version_tuple >= (1, 1):
                         libcurl_arg += ' --openssl-lib-name=""'
                     openssl_builder = OpensslBuilder(bconf=self.bconf)
                     b.add("set include=%%include%%;%s" % openssl_builder.include_path)
                     b.add("set lib=%%lib%%;%s" % openssl_builder.lib_path)
                 #if build_wheels:
                     #b.add("call %s" % os.path.join('..', 'venv-%s-%s' % (self.python_release, self.bconf.bitness), 'Scripts', 'activate'))
-                if config.build_wheels:
+                if self.bconf.build_wheels:
                     targets = targets + ['bdist_wheel']
-                if config.libcurl_version_tuple >= (7, 60, 0):
+                if self.bconf.libcurl_version_tuple >= (7, 60, 0):
                     # As of 7.60.0 libcurl does not include its dependencies into
                     # its static libraries.
                     # libcurl_a.lib in 7.59.0 is 30 mb.
@@ -87,7 +88,7 @@ class PycurlBuilder(Builder):
                     if self.bconf.use_nghttp2:
                         nghttp2_builder = Nghttp2Builder(bconf=self.bconf)
                         libcurl_arg += ' --link-arg=/LIBPATH:%s' % nghttp2_builder.lib_path
-                        libcurl_arg += ' --link-arg=nghttp2.lib'
+                        libcurl_arg += ' --link-arg=nghttp2_static.lib'
                     if self.bconf.vc_version == 'vc9':
                         # this is for normaliz.lib
                         libcurl_builder = LibcurlBuilder(bconf=self.bconf)
@@ -98,7 +99,9 @@ class PycurlBuilder(Builder):
                     libcurl_arg += ' --link-arg=user32.lib'
                 b.add("%s setup.py %s --curl-dir=%s %s" % (
                     self.python_path, ' '.join(targets), libcurl_dir, libcurl_arg))
-            if 'bdist' in targets:
+            # Fixing of bizarre paths in created zip archives,
+            # no longer relevant because we only keep wheels
+            if False and 'bdist' in targets:
                 zip_basename_orig = 'pycurl-%s.%s.zip' % (
                     self.bconf.pycurl_version, self.platform_indicator)
                 zip_basename_new = 'pycurl-%s.%s-py%s.zip' % (
