@@ -23,19 +23,21 @@
 #     such that there is no reason to get an older version.
 #  5. You may need to install platform sdk/windows sdk, especially if you installed community edition of
 #     visual studio as opposed to a fuller edition. Try https://developer.microsoft.com/en-us/windows/downloads/windows-10-sdk.
-#  6. You may also need to install windows 8.1 sdk for building nghttp2.
+#  6. You may also need to install windows 8.1 sdk for building nghttp2 with cmake.
 #     See https://developer.microsoft.com/en-us/windows/downloads/sdk-archive.
 #  7. Download and install perl. This script is tested with activestate perl, although
 #     other distributions may also work. activestate perl can be downloaded at http://www.activestate.com/activeperl/downloads,
 #     although it now requires registration to download thus using a third party download site may be preferable.
 #  8. Download and install nasm: https://www.nasm.us/pub/nasm/releasebuilds/?C=M;O=D
 #     (homepage: http://www.nasm.us/)
-# 9a. Download and install cmake: https://cmake.org/download/
+# 9a. Not needed since nghttp2 is currently built using gmake: download and install cmake: https://cmake.org/download/
 # 9b. Download and install gmake: http://gnuwin32.sourceforge.net/packages/make.htm
 # 10. Run `python winbuild.py builddeps` to compile all dependencies for all environments (32/64 bit and python versions).
-# 11. Run `python winbuild.py installvirtualenv` to install virtualenv in all python interpreters.
-# 12. Run `python winbuild.py createvirtualenvs` to create virtualenvs used for pycurl compilation.
-# 13. Run `python winbuild.py` to compile pycurl in all defined configurations.
+# 11. Optional: run `python winbuild.py assembledeps` to assemble all dependencies into archives suitable for use in appveyor.
+# 12. Run `python winbuild.py installvirtualenv` to install virtualenv in all python interpreters.
+# 13. Run `python winbuild.py createvirtualenvs` to create virtualenvs used for pycurl compilation.
+# 14. Run `python winbuild.py` to compile pycurl in all defined configurations.
+# 15. Optional: run `python winbuild.py assemble` to assemble all built versions of pycurl in the current directory.
 
 class Config:
     '''User-adjustable configuration.
@@ -218,6 +220,19 @@ def build(config):
                 builder.prepare_tree()
                 builder.build(targets)
 
+def assemble(config):
+    rm_rf(config, 'dist')
+    mkdir_p('dist')
+    for bitness in config.bitnesses:
+        for python_release in config.python_releases:
+            vc_version = PYTHON_VC_VERSIONS[python_release]
+            bconf = BuildConfig(config, bitness=bitness, vc_version=vc_version)
+            builder = PycurlBuilder(bconf=bconf, python_release=python_release)
+            print(builder.build_dir_name)
+            sys.stdout.flush()
+            src = os.path.join(config.archives_path, builder.build_dir_name, 'dist')
+            cp_r(config, src, '.')
+
 def python_metas():
     metas = []
     for version in config.python_versions:
@@ -386,6 +401,8 @@ if len(args) > 0:
         create_virtualenvs(config)
     elif args[0] == 'assembledeps':
         assemble_deps(config)
+    elif args[0] == 'assemble':
+        assemble(config)
     elif args[0] == 'getdeps':
         get_deps()
     else:
