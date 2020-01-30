@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+PycURL 7.43.0.5 - 2020-01-29
+----------------------------
+
+This release fixes a build issue on recent Pythons on CentOS/RHEL distributions.
+
+It also brings back Windows binaries. Special thank you to Gisle Vanem for
+contributing the nghttp2 makefile.
+
+
 PycURL 7.43.0.4 - 2020-01-15
 ----------------------------
 

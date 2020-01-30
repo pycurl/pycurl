@@ -6,7 +6,7 @@
 
 PACKAGE = "pycurl"
 PY_PACKAGE = "curl"
-VERSION = "7.43.0.4"
+VERSION = "7.43.0.5"
 
 import glob, os, re, sys, subprocess
 import distutils

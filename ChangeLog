@@ -1,3 +1,9 @@
+Version 7.43.0.5 [requires libcurl-7.19.0 or better] - 2020-01-29
+-----------------------------------------------------------------
+
+        * Fixed build with recent Pythons on RHEL/CentOS.
+
+
 Version 7.43.0.4 [requires libcurl-7.19.0 or better] - 2020-01-15
 -----------------------------------------------------------------
 
