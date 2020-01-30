@@ -46,13 +46,13 @@ class Batch(object):
 
     @property
     def vc_path(self):
-        if self.bconf.vc_version in config.vc_paths and config.vc_paths[self.bconf.vc_version]:
-            path = config.vc_paths[self.bconf.vc_version]
+        if self.bconf.vc_version in self.bconf.vc_paths and self.bconf.vc_paths[self.bconf.vc_version]:
+            path = self.bconf.vc_paths[self.bconf.vc_version]
             if not os.path.join(path, self.vcvars_relative_path):
                 raise Exception('vcvars not found in specified path')
             return path
         else:
-            for path in config.default_vc_paths[self.bconf.vc_version]:
+            for path in self.bconf.default_vc_paths[self.bconf.vc_version]:
                 if os.path.exists(os.path.join(path, self.vcvars_relative_path)):
                     return path
             raise Exception('No usable vc path found')
@@ -71,26 +71,7 @@ class Batch(object):
 
     @property
     def nasm_cmd(self):
-        return "set path=%s;%%path%%\n" % config.nasm_path
-
-class BuildConfig(ExtendedConfig):
-    '''Parameters for a particular build configuration.
-    
-    Unlike ExtendedConfig, this class fixes bitness and Python version.
-    '''
-    
-    def __init__(self, **kwargs):
-        ExtendedConfig.__init__(self, **kwargs)
-        for k in kwargs:
-            setattr(self, k, kwargs[k])
-        
-        assert self.bitness
-        assert self.bitness in (32, 64)
-        assert self.vc_version
-
-    @property
-    def vc_tag(self):
-        return '%s-%s' % (self.vc_version, self.bitness)
+        return "set path=%s;%%path%%\n" % self.bconf.nasm_path
 
 class Builder(object):
     def __init__(self, **kwargs):
@@ -156,7 +137,7 @@ class StandardBuilder(Builder):
         fetch(url)
         archive_basename = os.path.basename(url)
         archive_name = archive_basename.replace('.tar.gz', '')
-        untar(archive_name)
+        untar(self.bconf, archive_name)
         
         suffixed_dir = self.output_dir_path
         if os.path.exists(suffixed_dir):

@@ -1,11 +1,17 @@
-class ExtendedConfig(Config):
+import os
+from .utils import *
+from .pythons import *
+
+class ExtendedConfig:
     '''Global configuration that specifies what the entire process will do.
     
     Unlike Config, this class contains also various derived properties
     for convenience.
     '''
     
-    def __init__(self, **kwargs):
+    def __init__(self, user_config, **kwargs):
+        for k in user_config:
+            self.__dict__[k] = user_config[k]
         for k in kwargs:
             setattr(self, k, kwargs[k])
 
@@ -30,11 +36,11 @@ class ExtendedConfig(Config):
             
     @property
     def nasm_path(self):
-        return select_existing_path(Config.nasm_path)
+        return select_existing_path(self.__dict__['nasm_path'])
         
     @property
     def activestate_perl_path(self):
-        return select_existing_path(Config.activestate_perl_path)
+        return select_existing_path(self.__dict__['activestate_perl_path'])
         
     @property
     def archives_path(self):
@@ -75,7 +81,7 @@ class ExtendedConfig(Config):
         
     @property
     def winbuild_patch_root(self):
-        return os.path.join(DIR_HERE, 'winbuild')
+        return os.path.join(self.winbuild_root, 'winbuild')
 
     @property
     def openssl_version_tuple(self):
@@ -101,8 +107,38 @@ class ExtendedConfig(Config):
         return [PythonRelease('.'.join(version.split('.')[:2]))
             for version in self.python_versions]
 
-    def buildconfigs(self):
-        return [BuildConfig(bitness=bitness, vc_version=vc_version)
-            for bitness in self.bitnesses
-            for vc_version in needed_vc_versions(self.python_versions)
-        ]
+BITNESSES = (32, 64)
+
+PYTHON_VC_VERSIONS = {
+    '2.6': 'vc9',
+    '2.7': 'vc9',
+    '3.2': 'vc9',
+    '3.3': 'vc10',
+    '3.4': 'vc10',
+    '3.5': 'vc14',
+    '3.6': 'vc14',
+    '3.7': 'vc14',
+    '3.8': 'vc14',
+}
+
+class BuildConfig:
+    '''Parameters for a particular build configuration.
+    
+    Unlike ExtendedConfig, this class fixes bitness and Python version.
+    '''
+    
+    def __init__(self, ext_config, **kwargs):
+        for k in dir(ext_config):
+            if k.startswith('_'):
+                continue
+            self.__dict__[k] = getattr(ext_config, k)
+        for k in kwargs:
+            setattr(self, k, kwargs[k])
+        
+        assert self.bitness
+        assert self.bitness in (32, 64)
+        assert self.vc_version
+
+    @property
+    def vc_tag(self):
+        return '%s-%s' % (self.vc_version, self.bitness)

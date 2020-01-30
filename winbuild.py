@@ -128,34 +128,22 @@ from winbuild.utils import *
 from winbuild.config import *
 from winbuild.builder import *
 from winbuild.nghttp import *
+from winbuild.tools import *
+from winbuild.zlib import *
+from winbuild.openssl import *
+from winbuild.cares import *
+from winbuild.ssh import *
+from winbuild.curl import *
 
-def short_python_versions(python_versions):
-    return ['.'.join(python_version.split('.')[:2])
-        for python_version in python_versions]
-
-def needed_vc_versions(python_versions):
-    return [vc_version for vc_version in config.vc_paths.keys()
-        if vc_version in [
-            PYTHON_VC_VERSIONS[short_python_version]
-            for short_python_version in short_python_versions(python_versions)]]
+user_config = {}
+for attr in dir(Config):
+    if attr.startswith('_'):
+        continue
+    user_config[attr] = getattr(Config, attr)
 
 # This must be at top level as __file__ can be a relative path
 # and changing current directory will break it
 DIR_HERE = os.path.abspath(os.path.dirname(__file__))
-
-BITNESSES = (32, 64)
-
-PYTHON_VC_VERSIONS = {
-    '2.6': 'vc9',
-    '2.7': 'vc9',
-    '3.2': 'vc9',
-    '3.3': 'vc10',
-    '3.4': 'vc10',
-    '3.5': 'vc14',
-    '3.6': 'vc14',
-    '3.7': 'vc14',
-    '3.8': 'vc14',
-}
 
 def fetch_to_archives(url):
     mkdir_p(config.archives_path)
@@ -172,27 +160,6 @@ def step(step_fn, args, target_dir):
         step_fn(*args)
     with open(state_file_path, 'w'):
         pass
-
-class PythonRelease(str):
-    @property
-    def dotless(self):
-        return self.replace('.', '')
-
-class PythonVersion(str):
-    @property
-    def release(self):
-        return PythonRelease('.'.join(self.split('.')[:2]))
-
-class PythonBinary(object):
-    def __init__(self, python_release, bitness):
-        self.python_release = python_release
-        self.bitness = bitness
-
-    @property
-    def executable_path(self):
-        return config.python_path_template % dict(
-            python_release=self.python_release.dotless,
-            bitness=self.bitness)
 
 def dep_builders(bconf):
     builders = []
@@ -228,7 +195,7 @@ def build_dependencies(config):
         os.environ['PATH'] += ";%s" % config.git_bin_path
     mkdir_p(config.archives_path)
     with in_dir(config.archives_path):
-        for bconf in config.buildconfigs():
+        for bconf in buildconfigs():
                 if opts.verbose:
                     print('Builddep for %s, %s-bit' % (bconf.vc_version, bconf.bitness))
                 for builder in dep_builders(bconf):
@@ -405,10 +372,17 @@ if opts.python:
 else:
     chosen_python_versions = Config.python_versions
 
-config = ExtendedConfig(
+config = ExtendedConfig(user_config,
     bitnesses=chosen_bitnesses,
     python_versions=chosen_python_versions,
+    winbuild_root=DIR_HERE,
 )
+
+def buildconfigs():
+    return [BuildConfig(config, bitness=bitness, vc_version=vc_version)
+        for bitness in config.bitnesses
+        for vc_version in needed_vc_versions(config, config.python_versions)
+    ]
 
 if len(args) > 0:
     if args[0] == 'download':

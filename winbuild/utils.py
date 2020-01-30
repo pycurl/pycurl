@@ -1,4 +1,4 @@
-import os.path, subprocess, sys, os, glob, re
+import os.path, subprocess, sys, os, glob, re, contextlib
 try:
     from urllib.request import urlopen
 except ImportError:
@@ -40,10 +40,10 @@ def mkdir_p(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
-def rm_rf(path):
+def rm_rf(config, path):
     check_call([config.rm_path, '-rf', path])
 
-def cp_r(src, dest):
+def cp_r(config, src, dest):
     check_call([config.cp_path, '-r', src, dest])
 
 # Retrieves the file at the given url, saving it in the specified local filesystem path.
@@ -108,7 +108,7 @@ def in_dir(dir):
     finally:
         os.chdir(old_cwd)
 
-def untar(basename):
+def untar(config, basename):
     if os.path.exists(basename):
         shutil.rmtree(basename)
     check_call([config.tar_path, 'xf', '%s.tar.gz' % basename])
