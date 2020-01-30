@@ -31,7 +31,7 @@ class PycurlBuilder(Builder):
             zlib_builder = ZlibBuilder(bconf=self.bconf)
             dll_paths += zlib_builder.dll_paths
         dll_paths = [os.path.abspath(dll_path) for dll_path in dll_paths]
-        with in_dir(os.path.join('pycurl-%s' % self.bconf.pycurl_version)):
+        with in_dir(self.build_dir_name):
             dest_lib_path = 'build/lib.%s-%s' % (self.platform_indicator,
                 self.python_release)
             # exists for building additional targets for the same python version
@@ -120,3 +120,17 @@ class PycurlBuilder(Builder):
 
                             member = src_zip.open(name)
                             dest_zip.writestr(new_name, member.read(), zipfile.ZIP_DEFLATED)
+    
+    @property
+    def build_dir_name(self):
+        return 'pycurl-%s-py%s-%s' % (self.bconf.pycurl_version, self.python_release, self.bconf.vc_tag)
+    
+    def prepare_tree(self):
+        #fetch('https://dl.bintray.com/pycurl/pycurl/pycurl-%s.tar.gz' % pycurl_version)
+        if os.path.exists(self.build_dir_name):
+            # shutil.rmtree is incapable of removing .git directory because it contains
+            # files marked read-only (tested on python 2.7 and 3.6)
+            #shutil.rmtree('pycurl-%s' % config.pycurl_version)
+            rm_rf(self.bconf, self.build_dir_name)
+        #check_call([tar_path, 'xf', 'pycurl-%s.tar.gz' % pycurl_version])
+        shutil.copytree('c:/dev/pycurl', self.build_dir_name)

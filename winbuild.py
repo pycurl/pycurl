@@ -127,7 +127,6 @@ class Config:
 # http://developer.covenanteyes.com/building-openssl-for-visual-studio/
 
 import os, os.path, sys, subprocess, shutil, contextlib, zipfile, re
-import time as _time
 from winbuild.utils import *
 from winbuild.config import *
 from winbuild.builder import *
@@ -210,29 +209,14 @@ def build(config):
     # note: adds git_bin_path to PATH if necessary, and creates archives_path
     build_dependencies(config)
     with in_dir(config.archives_path):
-        def prepare_pycurl():
-            #fetch('https://dl.bintray.com/pycurl/pycurl/pycurl-%s.tar.gz' % pycurl_version)
-            if os.path.exists('pycurl-%s' % config.pycurl_version):
-                # shutil.rmtree is incapable of removing .git directory because it contains
-                # files marked read-only (tested on python 2.7 and 3.6)
-                #shutil.rmtree('pycurl-%s' % config.pycurl_version)
-                rm_rf(config, 'pycurl-%s' % config.pycurl_version)
-            #check_call([tar_path, 'xf', 'pycurl-%s.tar.gz' % pycurl_version])
-            shutil.copytree('c:/dev/pycurl', 'pycurl-%s' % config.pycurl_version)
-
-        prepare_pycurl()
-
         for bitness in config.bitnesses:
             for python_release in config.python_releases:
                 targets = ['bdist', 'bdist_wininst', 'bdist_msi']
                 vc_version = PYTHON_VC_VERSIONS[python_release]
                 bconf = BuildConfig(config, bitness=bitness, vc_version=vc_version)
                 builder = PycurlBuilder(bconf=bconf, python_release=python_release)
+                builder.prepare_tree()
                 builder.build(targets)
-                
-                # Seems like windows can have leftover processes hanging around
-                # which will prevent the next build from working as builds are in place
-                #_time.sleep(3)
 
 def python_metas():
     metas = []
