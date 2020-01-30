@@ -298,16 +298,16 @@ def create_virtualenvs(config):
                 check_call(cmd)
 
 def assemble_deps(config):
-    rm_rf('deps')
+    rm_rf(config, 'deps')
     os.mkdir('deps')
-    for bconf in config.buildconfigs():
+    for bconf in buildconfigs():
         print(bconf.vc_tag)
         sys.stdout.flush()
         dest = os.path.join('deps', bconf.vc_tag)
         os.mkdir(dest)
         for builder in dep_builders(bconf):
-            cp_r(builder.include_path, dest)
-            cp_r(builder.lib_path, dest)
+            cp_r(config, builder.include_path, dest)
+            cp_r(config, builder.lib_path, dest)
             with zipfile.ZipFile(os.path.join('deps', bconf.vc_tag + '.zip'), 'w', zipfile.ZIP_DEFLATED) as zip:
                 for root, dirs, files in os.walk(dest):
                     for file in files:
