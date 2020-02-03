@@ -228,9 +228,6 @@ Additional Windows setup.py options:
 
     PYCURL_SETUP_OPTIONS=--avoid-stdio pip install pycurl
 
-A good ``setup.py`` target to use is ``bdist_wininst`` which produces an
-executable installer that you can run to install PycURL.
-
 You may find the following mailing list posts helpful:
 
 - https://curl.haxx.se/mail/curlpython-2009-11/0010.html
