@@ -213,7 +213,7 @@ def build(config):
     with in_dir(config.archives_path):
         for bitness in config.bitnesses:
             for python_release in config.python_releases:
-                targets = ['bdist', 'bdist_wininst', 'bdist_msi']
+                targets = ['bdist', 'bdist_msi']
                 vc_version = PYTHON_VC_VERSIONS[python_release]
                 bconf = BuildConfig(config, bitness=bitness, vc_version=vc_version)
                 builder = PycurlBuilder(bconf=bconf, python_release=python_release)
