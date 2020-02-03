@@ -88,7 +88,7 @@ build_script:
   #-  call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86
   # Build the compiled extension
   - "%CMD_IN_ENV% python setup.py docstrings"
-  - "%CMD_IN_ENV% python setup.py --with-openssl --libcurl-lib-name=libcurl_a.lib --openssl-lib-name=\"\" --curl-dir=deps bdist_wheel bdist_wininst bdist_msi bdist_egg --link-arg=/LIBPATH:deps/lib --link-arg=zlib.lib --link-arg=libcrypto.lib --link-arg=libssl.lib --link-arg=crypt32.lib --link-arg=advapi32.lib --link-arg=libcares.lib --link-arg=libssh2.lib --link-arg=nghttp2_static.lib --link-arg=normaliz.lib --link-arg=user32.lib"
+  - "%CMD_IN_ENV% python setup.py --with-openssl --libcurl-lib-name=libcurl_a.lib --openssl-lib-name=\"\" --curl-dir=deps bdist_wheel bdist_msi bdist_egg --link-arg=/LIBPATH:deps/lib --link-arg=zlib.lib --link-arg=libcrypto.lib --link-arg=libssl.lib --link-arg=crypt32.lib --link-arg=advapi32.lib --link-arg=libcares.lib --link-arg=libssh2.lib --link-arg=nghttp2_static.lib --link-arg=normaliz.lib --link-arg=user32.lib"
 
 test_script:
   # Run the project tests
@@ -99,7 +99,6 @@ test_script:
 after_test:
   # If tests are successful, create binary packages for the project.
   #- "%CMD_IN_ENV% python setup.py bdist_wheel"
-  #- "%CMD_IN_ENV% python setup.py bdist_wininst"
   #- "%CMD_IN_ENV% python setup.py bdist_msi"
   - ps: "ls dist"
 
