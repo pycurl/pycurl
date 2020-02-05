@@ -817,7 +817,7 @@ libcurl, including:
 Requirements
 ------------
 
-- Python 2.7 or 3.4 through 3.6.
+- Python 3.5-3.8.
 - libcurl 7.19.0 or better.
 
 
@@ -897,6 +897,7 @@ in COPYING-LGPL_ and COPYING-MIT_ files in the source distribution.
     ],
     packages=[PY_PACKAGE],
     package_dir={ PY_PACKAGE: os.path.join('python', 'curl') },
+    python_requires='>=3.5',
 )
 
 if sys.platform == "win32":
