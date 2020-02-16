@@ -806,9 +806,14 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
         }
         else {
             /* Create a result tuple that will get added to err_list. */
-            PyObject *v = Py_BuildValue("(Ois)", (PyObject *)co, (int)msg->data.result, co->error);
+            PyObject *error_str = PyUnicode_DecodeLocale(co->error, "surrogateescape");
+            if (error_str == NULL) {
+                goto error;
+            }
+            PyObject *v = Py_BuildValue("(OiO)", (PyObject *)co, (int)msg->data.result, error_str);
             /* Append curl object to list of objects which failed */
             if (v == NULL || PyList_Append(err_list, v) != 0) {
+                Py_XDECREF(error_str);
                 Py_XDECREF(v);
                 goto error;
             }
