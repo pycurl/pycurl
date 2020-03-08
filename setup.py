@@ -211,7 +211,7 @@ class ExtensionConfiguration(object):
                 and not os.environ.get('PYCURL_SSL_LIBRARY'):
             # this path should only be taken when no options or
             # configuration environment variables are given to setup.py
-            ssl_lib_detected = self.detect_ssl_lib_on_centos6()
+            ssl_lib_detected = self.detect_ssl_lib_on_centos6_plus()
 
         self.ssl_lib_detected = ssl_lib_detected
 
@@ -372,7 +372,7 @@ manually. For other SSL backends please ignore this message.''')
             ssl_lib_detected = 'mbedtls'
         return ssl_lib_detected
 
-    def detect_ssl_lib_on_centos6(self):
+    def detect_ssl_lib_on_centos6_plus(self):
         import platform
         from ctypes.util import find_library
         os_name = platform.system()
@@ -380,7 +380,7 @@ manually. For other SSL backends please ignore this message.''')
             return False
         dist_name, dist_version, _ = platform.dist()
         dist_version = dist_version.split('.')[0]
-        if dist_name != 'centos' or dist_version != '6':
+        if dist_name != 'centos' or int(dist_version) < 6:
             return False
         libcurl_dll_path = find_library('curl')
         print('libcurl_dll_path = "%s"' % libcurl_dll_path)
