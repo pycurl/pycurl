@@ -1,9 +1,13 @@
-all: \
+ALL = \
 	with_gnutls.so \
 	with_nss.so \
 	with_openssl.so \
 	with_unknown_ssl.so \
 	without_ssl.so
+
+all: $(ALL)
+clean:
+	rm -f $(ALL)
 
 .SUFFIXES: .c .so
 
