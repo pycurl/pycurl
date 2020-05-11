@@ -7,8 +7,11 @@ all: \
 
 .SUFFIXES: .c .so
 
+CC = `curl-config --cc`
+CFLAGS += `curl-config --cflags`
+
 .c.so:
-	`curl-config --cc` `curl-config --cflags` -shared -fPIC \
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -shared -fPIC \
 		-Wl,-soname,$@ -o $@ $<
 
 show-targets:
