@@ -1075,6 +1075,9 @@ initpycurl(void)
     insint_c(d, "SSLVERSION_MAX_TLSv1_2", CURL_SSLVERSION_MAX_TLSv1_2);
     insint_c(d, "SSLVERSION_MAX_TLSv1_3", CURL_SSLVERSION_MAX_TLSv1_3);
 #endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 60, 0)
+    insint_c(d, "HAPROXYPROTOCOL", CURLOPT_HAPROXYPROTOCOL);
+#endif
 
     /* curl_TimeCond: constants for setopt(TIMECONDITION, x) */
     insint_c(d, "TIMECONDITION_NONE", CURL_TIMECOND_NONE);
