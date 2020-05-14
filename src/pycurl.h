@@ -154,6 +154,10 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
 #define HAVE_CURLINFO_HTTP_VERSION
 #endif
 
+#if LIBCURL_VERSION_NUM >= 0x073C00 /* check for 7.60.0 or greater */
+#define HAVE_CURLOPT_HAPROXYPROTOCOL
+#endif
+
 #undef UNUSED
 #define UNUSED(var)     ((void)&var)
 
