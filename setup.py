@@ -954,12 +954,6 @@ if __name__ == "__main__":
     elif len(sys.argv) > 1 and sys.argv[1] == 'docstrings-sources':
         gen_docstrings_sources()
     else:
-        # Generate docstrings before installing if we're installing directly
-        # from Git (eg. pip3 install git://github.com/repo/pycurl#egg=pycurl),
-        # otherwise we'll get a build error because src/docstrings.{c,h} do not
-        # exist
-        convert_docstrings()
-
         setup_args['data_files'] = get_data_files()
         if 'PYCURL_RELEASE' in os.environ and os.environ['PYCURL_RELEASE'].lower() in ['1', 'yes', 'true']:
             split_extension_source = False
