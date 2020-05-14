@@ -180,7 +180,15 @@ do_curlshare_setopt(CurlShareObject *self, PyObject *args)
     /* Handle the case of integer arguments */
     if (PyInt_Check(obj)) {
         long d = PyInt_AsLong(obj);
-        if (d != CURL_LOCK_DATA_COOKIE && d != CURL_LOCK_DATA_DNS && d != CURL_LOCK_DATA_SSL_SESSION) {
+        switch(d) {
+        case CURL_LOCK_DATA_COOKIE:
+        case CURL_LOCK_DATA_DNS:
+        case CURL_LOCK_DATA_SSL_SESSION:
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 57, 0)
+        case CURL_LOCK_DATA_CONNECT:
+#endif
+            break;
+        default:
             goto error;
         }
         switch(option) {

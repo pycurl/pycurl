@@ -1341,6 +1341,9 @@ initpycurl(void)
     insint_s(d, "LOCK_DATA_COOKIE", CURL_LOCK_DATA_COOKIE);
     insint_s(d, "LOCK_DATA_DNS", CURL_LOCK_DATA_DNS);
     insint_s(d, "LOCK_DATA_SSL_SESSION", CURL_LOCK_DATA_SSL_SESSION);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 57, 0)
+    insint_s(d, "LOCK_DATA_CONNECT", CURL_LOCK_DATA_CONNECT);
+#endif
 
     /* Initialize callback locks if ssl is enabled */
 #if defined(PYCURL_NEED_SSL_TSL)
