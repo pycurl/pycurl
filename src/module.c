@@ -791,6 +791,9 @@ initpycurl(void)
     insint_c(d, "OPT_FILETIME", CURLOPT_FILETIME);
     insint_c(d, "MAXREDIRS", CURLOPT_MAXREDIRS);
     insint_c(d, "MAXCONNECTS", CURLOPT_MAXCONNECTS);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 65, 0)
+    insint_c(d, "MAXAGE_CONN", CURLOPT_MAXAGE_CONN);
+#endif
     insint_c(d, "FRESH_CONNECT", CURLOPT_FRESH_CONNECT);
     insint_c(d, "FORBID_REUSE", CURLOPT_FORBID_REUSE);
     insint_c(d, "RANDOM_FILE", CURLOPT_RANDOM_FILE);
