@@ -5,7 +5,8 @@ Set curl share option.
 Corresponds to `curl_share_setopt`_ in libcurl, where *option* is
 specified with the ``CURLSHOPT_*`` constants in libcurl, except that the
 ``CURLSHOPT_`` prefix has been changed to ``SH_``. Currently, *value* must be
-either ``LOCK_DATA_COOKIE`` or ``LOCK_DATA_DNS``.
+one of: ``LOCK_DATA_COOKIE``, ``LOCK_DATA_DNS``, ``LOCK_DATA_SSL_SESSION`` or
+``LOCK_DATA_CONNECT``.
 
 Example usage::
 

@@ -791,6 +791,9 @@ initpycurl(void)
     insint_c(d, "OPT_FILETIME", CURLOPT_FILETIME);
     insint_c(d, "MAXREDIRS", CURLOPT_MAXREDIRS);
     insint_c(d, "MAXCONNECTS", CURLOPT_MAXCONNECTS);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 65, 0)
+    insint_c(d, "MAXAGE_CONN", CURLOPT_MAXAGE_CONN);
+#endif
     insint_c(d, "FRESH_CONNECT", CURLOPT_FRESH_CONNECT);
     insint_c(d, "FORBID_REUSE", CURLOPT_FORBID_REUSE);
     insint_c(d, "RANDOM_FILE", CURLOPT_RANDOM_FILE);
@@ -813,6 +816,9 @@ initpycurl(void)
     insint_c(d, "DNS_USE_GLOBAL_CACHE", CURLOPT_DNS_USE_GLOBAL_CACHE);
     insint_c(d, "DEBUGFUNCTION", CURLOPT_DEBUGFUNCTION);
     insint_c(d, "BUFFERSIZE", CURLOPT_BUFFERSIZE);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 62, 0)
+    insint_c(d, "UPLOAD_BUFFERSIZE", CURLOPT_UPLOAD_BUFFERSIZE);
+#endif
     insint_c(d, "NOSIGNAL", CURLOPT_NOSIGNAL);
     insint_c(d, "SHARE", CURLOPT_SHARE);
     insint_c(d, "PROXYTYPE", CURLOPT_PROXYTYPE);
@@ -1344,6 +1350,9 @@ initpycurl(void)
     insint_s(d, "LOCK_DATA_COOKIE", CURL_LOCK_DATA_COOKIE);
     insint_s(d, "LOCK_DATA_DNS", CURL_LOCK_DATA_DNS);
     insint_s(d, "LOCK_DATA_SSL_SESSION", CURL_LOCK_DATA_SSL_SESSION);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 57, 0)
+    insint_s(d, "LOCK_DATA_CONNECT", CURL_LOCK_DATA_CONNECT);
+#endif
 
     /* Initialize callback locks if ssl is enabled */
 #if defined(PYCURL_NEED_SSL_TSL)
