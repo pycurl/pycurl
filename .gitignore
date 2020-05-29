@@ -12,3 +12,4 @@
 /www/htdocs/download/*.exe
 /www/htdocs/download/*.gz
 /www/upload/*
+pycurl.egg-info
