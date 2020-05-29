@@ -11,6 +11,12 @@
 
 #define PYCURL_VERSION_PREFIX "PycURL/" PYCURL_VERSION_STRING
 
+/* Introduced in https://github.com/python/cpython/commit/d2ec81a8c99796b51fb8c49b77a7fe369863226f */
+#if PY_VERSION_HEX < 0x030900a4
+    #define Py_SET_TYPE(obj, typ) (Py_TYPE(obj) = typ)
+#endif
+
+
 PYCURL_INTERNAL char *empty_keywords[] = { NULL };
 
 PYCURL_INTERNAL PyObject *bytesio = NULL;
@@ -372,9 +378,9 @@ initpycurl(void)
     p_Curl_Type = &Curl_Type;
     p_CurlMulti_Type = &CurlMulti_Type;
     p_CurlShare_Type = &CurlShare_Type;
-    Py_TYPE(&Curl_Type) = &PyType_Type;
-    Py_TYPE(&CurlMulti_Type) = &PyType_Type;
-    Py_TYPE(&CurlShare_Type) = &PyType_Type;
+    Py_SET_TYPE(&Curl_Type, &PyType_Type);
+    Py_SET_TYPE(&CurlMulti_Type,  &PyType_Type);
+    Py_SET_TYPE(&CurlShare_Type,  &PyType_Type);
 
     /* Create the module and add the functions */
     if (PyType_Ready(&Curl_Type) < 0)
