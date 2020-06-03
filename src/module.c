@@ -13,7 +13,7 @@
 
 /* Introduced in https://github.com/python/cpython/commit/d2ec81a8c99796b51fb8c49b77a7fe369863226f */
 #if PY_VERSION_HEX < 0x030900a4
-    #define Py_SET_TYPE(obj, typ) (Py_TYPE(obj) = typ)
+    #define Py_SET_TYPE(obj, new_type) do { Py_TYPE(obj) = (new_type); } while (0)
 #endif
 
 
