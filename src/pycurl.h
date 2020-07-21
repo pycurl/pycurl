@@ -154,6 +154,10 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
 #define HAVE_CURLINFO_HTTP_VERSION
 #endif
 
+#if LIBCURL_VERSION_NUM >= 0x073800 /* check for 7.56.0 or greater */
+#define HAVE_CURL_GLOBAL_SSLSET
+#endif
+
 #if LIBCURL_VERSION_NUM >= 0x073C00 /* check for 7.60.0 or greater */
 #define HAVE_CURLOPT_HAPROXYPROTOCOL
 #endif
@@ -169,6 +173,7 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
 #   include <openssl/ssl.h>
 #   include <openssl/err.h>
 #   define COMPILE_SSL_LIB "openssl"
+#   define COMPILE_SUPPORTED_SSL_BACKEND_FOUND 1
 # elif defined(HAVE_CURL_WOLFSSL)
 #   include <wolfssl/options.h>
 #   if defined(OPENSSL_EXTRA)
@@ -191,6 +196,7 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
 #    endif
 #   endif
 #   define COMPILE_SSL_LIB "wolfssl"
+#   define COMPILE_SUPPORTED_SSL_BACKEND_FOUND 1
 # elif defined(HAVE_CURL_GNUTLS)
 #   include <gnutls/gnutls.h>
 #   if GNUTLS_VERSION_NUMBER <= 0x020b00
@@ -199,13 +205,16 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
 #     include <gcrypt.h>
 #   endif
 #   define COMPILE_SSL_LIB "gnutls"
+#   define COMPILE_SUPPORTED_SSL_BACKEND_FOUND 1
 # elif defined(HAVE_CURL_NSS)
 #   define COMPILE_SSL_LIB "nss"
+#   define COMPILE_SUPPORTED_SSL_BACKEND_FOUND 1
 # elif defined(HAVE_CURL_MBEDTLS)
 #   include <mbedtls/ssl.h>
 #   define PYCURL_NEED_SSL_TSL
 #   define PYCURL_NEED_MBEDTLS_TSL
 #   define COMPILE_SSL_LIB "mbedtls"
+#   define COMPILE_SUPPORTED_SSL_BACKEND_FOUND 1
 # else
 #  ifdef _MSC_VER
     /* sigh */
@@ -222,9 +231,11 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
    /* since we have no crypto callbacks for other ssl backends,
     * no reason to require users match those */
 #  define COMPILE_SSL_LIB "none/other"
+#  define COMPILE_SUPPORTED_SSL_BACKEND_FOUND 0
 # endif /* HAVE_CURL_OPENSSL || HAVE_CURL_WOLFSSL || HAVE_CURL_GNUTLS || HAVE_CURL_NSS || HAVE_CURL_MBEDTLS */
 #else
 # define COMPILE_SSL_LIB "none/other"
+# define COMPILE_SUPPORTED_SSL_BACKEND_FOUND 0
 #endif /* HAVE_CURL_SSL */
 
 #if defined(PYCURL_NEED_SSL_TSL)

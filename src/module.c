@@ -322,12 +322,21 @@ initpycurl(void)
 {
     PyObject *m, *d;
     const curl_version_info_data *vi;
-    const char *libcurl_version, *runtime_ssl_lib;
+    const char *libcurl_version;
     size_t libcurl_version_len, pycurl_version_len;
     PyObject *xio_module = NULL;
     PyObject *collections_module = NULL;
     PyObject *named_tuple = NULL;
     PyObject *arglist = NULL;
+#ifdef HAVE_CURL_GLOBAL_SSLSET
+    const curl_ssl_backend **ssllist = NULL;
+    CURLsslset sslset;
+    int i, runtime_supported_backend_found = 0;
+    char backends[200];
+    size_t backends_len = 0;
+#else
+    const char *runtime_ssl_lib;
+#endif
 
     assert(Curl_Type.tp_weaklistoffset > 0);
     assert(CurlMulti_Type.tp_weaklistoffset > 0);
@@ -346,6 +355,35 @@ initpycurl(void)
     }
 
     /* Our compiled crypto locks should correspond to runtime ssl library. */
+#ifdef HAVE_CURL_GLOBAL_SSLSET
+    sslset = curl_global_sslset(-1, COMPILE_SSL_LIB, &ssllist);
+    if (sslset != CURLSSLSET_OK) {
+        if (sslset == CURLSSLSET_NO_BACKENDS) {
+            strcpy(backends, "none");
+        } else {
+            for (i = 0; ssllist[i] != NULL; i++) {
+                switch (ssllist[i]->id) {
+                case CURLSSLBACKEND_OPENSSL:
+                case CURLSSLBACKEND_GNUTLS:
+                case CURLSSLBACKEND_NSS:
+                case CURLSSLBACKEND_WOLFSSL:
+                case CURLSSLBACKEND_MBEDTLS:
+                    runtime_supported_backend_found = 1;
+                    break;
+                default:
+                    break;
+                }
+                if (backends_len < sizeof(backends)) {
+                    backends_len += snprintf(backends + backends_len, sizeof(backends) - backends_len, "%s%s", (i > 0) ? ", " : "", ssllist[i]->name);
+                }
+            }
+        }
+        if (runtime_supported_backend_found == COMPILE_SUPPORTED_SSL_BACKEND_FOUND) {
+            PyErr_Format(PyExc_ImportError, "pycurl: libcurl link-time ssl backends (%s) do not include compile-time ssl backend (%s)", backends, COMPILE_SSL_LIB);
+            goto error;
+        }
+    }
+#else
     if (vi->ssl_version == NULL) {
         runtime_ssl_lib = "none/other";
     } else if (!strncmp(vi->ssl_version, "OpenSSL/", 8) || !strncmp(vi->ssl_version, "LibreSSL/", 9) ||
@@ -366,6 +404,7 @@ initpycurl(void)
         PyErr_Format(PyExc_ImportError, "pycurl: libcurl link-time ssl backend (%s) is different from compile-time ssl backend (%s)", runtime_ssl_lib, COMPILE_SSL_LIB);
         goto error;
     }
+#endif
 
     /* Initialize the type of the new type objects here; doing it here
      * is required for portability to Windows without requiring C++. */
