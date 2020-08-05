@@ -100,6 +100,10 @@ util_curl_unsetopt(CurlObject *self, int option)
     case CURLOPT_PASSWORD:
 #endif
     case CURLOPT_RANGE:
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 10, 0)
+    /* added by 0ff89b9c3c02a911e1e5ea9a4182c373a6e0f1c7 */
+    case CURLOPT_PROXY:
+#endif
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 43, 0)
     case CURLOPT_SERVICE_NAME:
     case CURLOPT_PROXY_SERVICE_NAME:
