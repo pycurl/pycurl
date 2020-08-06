@@ -154,12 +154,13 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
 #define HAVE_CURLINFO_HTTP_VERSION
 #endif
 
-#if LIBCURL_VERSION_NUM >= 0x073800 /* check for 7.56.0 or greater */
-#define HAVE_CURL_GLOBAL_SSLSET
-#endif
-
 #if LIBCURL_VERSION_NUM >= 0x073C00 /* check for 7.60.0 or greater */
 #define HAVE_CURLOPT_HAPROXYPROTOCOL
+#endif
+
+/* curl_global_sslset() was added in 7.56.0 but was buggy until 7.63.0 */
+#if LIBCURL_VERSION_NUM >= 0x073F00 /* check for 7.63.0 or greater */
+#define HAVE_CURL_GLOBAL_SSLSET
 #endif
 
 #undef UNUSED
