@@ -182,6 +182,9 @@ class ExtensionConfiguration(object):
                 ssl_lib_detected = self.detect_ssl_lib_from_libcurl_dll(libcurl_dll_path)
 
         if not ssl_lib_detected:
+            ssl_lib_detected = self.detect_ssl_lib_using_curl_config()
+
+        if not ssl_lib_detected:
             # self.sslhintbuf is a hack
             for arg in split_quoted(self.sslhintbuf):
                 if arg[:2] == "-l":
@@ -385,6 +388,29 @@ manually. For other SSL backends please ignore this message.''')
         libcurl_dll_path = find_library('curl')
         print('libcurl_dll_path = "%s"' % libcurl_dll_path)
         return self.detect_ssl_lib_from_libcurl_dll(libcurl_dll_path)
+
+    def detect_ssl_lib_using_curl_config(self):
+        ssl_lib_detected = None
+        p = subprocess.Popen((self.curl_config(), '--ssl-backends'),
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+        if p.wait() != 0:
+            # curl-config --ssl-backends is not supported on older curl versions
+            return None
+        ssl_version = stdout.decode()
+        if ssl_version.startswith('OpenSSL') or ssl_version.startswith('LibreSSL'):
+            self.using_openssl()
+            ssl_lib_detected = 'openssl'
+        elif ssl_version.startswith('GnuTLS'):
+            self.using_gnutls()
+            ssl_lib_detected = 'gnutls'
+        elif ssl_version.startswith('NSS'):
+            self.using_nss()
+            ssl_lib_detected = 'nss'
+        elif ssl_version.startswith('mbedTLS'):
+            self.using_mbedtls()
+            ssl_lib_detected = 'mbedtls'
+        return ssl_lib_detected
 
     def configure_windows(self):
         # Windows users have to pass --curl-dir parameter to specify path
