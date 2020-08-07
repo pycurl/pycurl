@@ -378,7 +378,8 @@ initpycurl(void)
                 }
             }
         }
-        if (runtime_supported_backend_found == COMPILE_SUPPORTED_SSL_BACKEND_FOUND) {
+        /* Don't error if both the curl library and pycurl itself is compiled without SSL */
+        if (runtime_supported_backend_found || COMPILE_SUPPORTED_SSL_BACKEND_FOUND) {
             PyErr_Format(PyExc_ImportError, "pycurl: libcurl link-time ssl backends (%s) do not include compile-time ssl backend (%s)", backends, COMPILE_SSL_LIB);
             goto error;
         }
