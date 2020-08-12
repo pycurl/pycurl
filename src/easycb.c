@@ -485,7 +485,7 @@ seek_callback(void *stream, curl_off_t offset, int origin)
     cb = self->seek_cb;
     if (cb == NULL)
         goto silent_error;
-    arglist = Py_BuildValue("(i,i)", offset, source);
+    arglist = Py_BuildValue("(L,i)", (PY_LONG_LONG) offset, source);
     if (arglist == NULL)
         goto verbose_error;
     result = PyEval_CallObject(cb, arglist);
