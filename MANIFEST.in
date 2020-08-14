@@ -51,3 +51,4 @@ include tests/run-quickstart.sh
 include tests/vsftpd.conf
 include winbuild.py
 include winbuild/*
+exclude tests/fake-curl/libcurl/*.so
