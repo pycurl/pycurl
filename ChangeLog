@@ -1,3 +1,33 @@
+Version 7.43.0.6 [requires libcurl-7.19.0 or better] - 2020-09-02
+-----------------------------------------------------------------
+
+        * Fixed offset parameter usage in seek callback (patch by Scott Talbert).
+
+        * Added support for libcurl SSL backend detection via
+          `curl-config --ssl-backends` (patch by Scott Talbert).
+
+        * Added support for libcurl MultiSSL (patch by Bo Anderson).
+
+        * Added ability to unset CURLOPT_PROXY.
+
+        * Added support for CURLOPT_UPLOAD_BUFFERSIZE (patch by Artur Sobierak).
+
+        * Added support for CURLOPT_MAXAGE_CONN (patch by Artur Sobierak).
+
+        * Added support for sharing connection cache in libcurl (patch by
+          Artur Sobierak).
+
+        * Added support for CURLOPT_HAPROXYPROTOCOL (patch by
+          Russell McConnachie).
+
+        * CC and CFLAGS environment variables are now respected when building
+          (patch by Michał Górny).
+
+        * Fixed OpenSSL detection on CentOS 7 and 8 (patch by Nicolas Pauss).
+
+        * surrogateescape error handler is used in multi_info_read to handle
+          invalid UTF-8.
+
 Version 7.43.0.5 [requires libcurl-7.19.0 or better] - 2020-01-29
 -----------------------------------------------------------------
 

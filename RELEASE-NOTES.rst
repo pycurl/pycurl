@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+PycURL 7.43.0.6 - 2020-09-02
+----------------------------
+
+This release improves SSL backend detection on various systems, adds support
+for libcurl's multiple SSL backend functionality and adds support for several
+libcurl options.
+
 PycURL 7.43.0.5 - 2020-01-29
 ----------------------------
 
