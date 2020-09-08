@@ -103,7 +103,7 @@ do-test:
 	cd tests/fake-curl/libcurl && make
 	./tests/run.sh
 	./tests/ext/test-suite.sh
-	$(PYFLAKES) python examples tests setup.py winbuild.py
+	$(PYFLAKES) python examples tests setup.py
 
 test: build do-test
 test-release: build-release do-test
