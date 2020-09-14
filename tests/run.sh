@@ -4,7 +4,7 @@ set -e
 set -x
 
 test -n "$PYTHON" || PYTHON=python
-test -n "$NOSETESTS" || NOSETESTS=nosetests
+test -n "$PYTEST" || PYTEST=pytest
 
 mkdir -p tests/tmp
 export PYTHONSUFFIX=$($PYTHON -V 2>&1 |awk '{print $2}' |awk -F. '{print $1 "." $2}')
@@ -25,5 +25,4 @@ if test "$CI" = true; then
 fi
 
 $PYTHON -c 'import pycurl; print(pycurl.version)'
-$NOSETESTS -a \!standalone"$extra_attrs" --with-flaky --show-skipped "$@"
-$NOSETESTS -a standalone --with-flaky --show-skipped "$@"
+$PYTEST

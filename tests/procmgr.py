@@ -3,7 +3,7 @@ import subprocess
 import os
 import sys
 import signal
-import nose.plugins.skip
+import unittest
 
 from . import util, localhost
 
@@ -47,7 +47,7 @@ def start_setup(cmd):
     return do_start
 
 # Example on FreeBSD:
-# PYCURL_VSFTPD_PATH=/usr/local/libexec/vsftpd nosetests
+# PYCURL_VSFTPD_PATH=/usr/local/libexec/vsftpd pytest
 
 if 'PYCURL_VSFTPD_PATH' in os.environ:
     vsftpd_path = os.environ['PYCURL_VSFTPD_PATH']
@@ -76,7 +76,7 @@ def vsftpd_setup():
     setup_module = start_setup(cmd)
     def do_setup_module():
         if vsftpd_path is None:
-            raise nose.plugins.skip.SkipTest('PYCURL_VSFTPD_PATH environment variable not set')
+            raise unittest.SkipTest('PYCURL_VSFTPD_PATH environment variable not set')
         try:
             setup_module()
         except OSError:

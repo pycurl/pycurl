@@ -4,8 +4,8 @@
 
 from . import localhost
 import pycurl
+import pytest
 import unittest
-import nose.tools
 import select
 
 from . import appmanager
@@ -370,11 +370,11 @@ class MultiTest(unittest.TestCase):
         m.close()
 
     # positional arguments are rejected
-    @nose.tools.raises(TypeError)
     def test_positional_arguments(self):
-        pycurl.CurlMulti(1)
+        with pytest.raises(TypeError):
+            pycurl.CurlMulti(1)
 
     # keyword arguments are rejected
-    @nose.tools.raises(TypeError)
     def test_keyword_arguments(self):
-        pycurl.CurlMulti(a=1)
+        with pytest.raises(TypeError):
+            pycurl.CurlMulti(a=1)

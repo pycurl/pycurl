@@ -3,9 +3,9 @@
 # vi:ts=4:et
 
 import pycurl
+import pytest
 from . import localhost
 import unittest
-import nose.tools
 
 from . import appmanager
 from . import util
@@ -26,6 +26,6 @@ class SetoptTest(unittest.TestCase):
         self.curl.perform()
         self.assertEqual('success', sio.getvalue().decode())
 
-    @nose.tools.raises(TypeError)
     def test_setopt_string_integer(self):
-        self.curl.setopt_string(pycurl.VERBOSE, True)
+        with pytest.raises(TypeError):
+            self.curl.setopt_string(pycurl.VERBOSE, True)

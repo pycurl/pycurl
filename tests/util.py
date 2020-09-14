@@ -5,6 +5,7 @@ import tempfile
 import os, sys, socket
 import time as _time
 import functools
+import unittest
 
 py3 = sys.version_info[0] == 3
 
@@ -69,37 +70,31 @@ def pycurl_version_less_than(*spec):
     return version_less_than_spec(version, spec)
 
 def only_python2(fn):
-    import nose.plugins.skip
-
     @functools.wraps(fn)
     def decorated(*args, **kwargs):
         if sys.version_info[0] >= 3:
-            raise nose.plugins.skip.SkipTest('python >= 3')
+            raise unittest.SkipTest('python >= 3')
 
         return fn(*args, **kwargs)
 
     return decorated
 
 def only_python3(fn):
-    import nose.plugins.skip
-
     @functools.wraps(fn)
     def decorated(*args, **kwargs):
         if sys.version_info[0] < 3:
-            raise nose.plugins.skip.SkipTest('python < 3')
+            raise unittest.SkipTest('python < 3')
 
         return fn(*args, **kwargs)
 
     return decorated
 
 def min_python(major, minor):
-    import nose.plugins.skip
-
     def decorator(fn):
         @functools.wraps(fn)
         def decorated(*args, **kwargs):
             if sys.version_info[0:2] < (major, minor):
-                raise nose.plugins.skip.SkipTest('python < %d.%d' % (major, minor))
+                raise unittest.SkipTest('python < %d.%d' % (major, minor))
 
             return fn(*args, **kwargs)
 
@@ -108,13 +103,11 @@ def min_python(major, minor):
     return decorator
 
 def min_libcurl(major, minor, patch):
-    import nose.plugins.skip
-
     def decorator(fn):
         @functools.wraps(fn)
         def decorated(*args, **kwargs):
             if pycurl_version_less_than(major, minor, patch):
-                raise nose.plugins.skip.SkipTest('libcurl < %d.%d.%d' % (major, minor, patch))
+                raise unittest.SkipTest('libcurl < %d.%d.%d' % (major, minor, patch))
 
             return fn(*args, **kwargs)
 
@@ -123,7 +116,6 @@ def min_libcurl(major, minor, patch):
     return decorator
 
 def only_ssl(fn):
-    import nose.plugins.skip
     import pycurl
 
     @functools.wraps(fn)
@@ -132,21 +124,20 @@ def only_ssl(fn):
         # theoretically it is not the same test.
         # pycurl.version_info()[8] is a tuple of protocols supported by libcurl
         if 'https' not in pycurl.version_info()[8]:
-            raise nose.plugins.skip.SkipTest('libcurl does not support ssl')
+            raise unittest.SkipTest('libcurl does not support ssl')
 
         return fn(*args, **kwargs)
 
     return decorated
 
 def only_telnet(fn):
-    import nose.plugins.skip
     import pycurl
 
     @functools.wraps(fn)
     def decorated(*args, **kwargs):
         # pycurl.version_info()[8] is a tuple of protocols supported by libcurl
         if 'telnet' not in pycurl.version_info()[8]:
-            raise nose.plugins.skip.SkipTest('libcurl does not support telnet')
+            raise unittest.SkipTest('libcurl does not support telnet')
 
         return fn(*args, **kwargs)
 
@@ -154,7 +145,6 @@ def only_telnet(fn):
 
 def only_ssl_backends(*backends):
     def decorator(fn):
-        import nose.plugins.skip
         import pycurl
 
         @functools.wraps(fn)
@@ -163,7 +153,7 @@ def only_ssl_backends(*backends):
             # theoretically it is not the same test.
             # pycurl.version_info()[8] is a tuple of protocols supported by libcurl
             if 'https' not in pycurl.version_info()[8]:
-                raise nose.plugins.skip.SkipTest('libcurl does not support ssl')
+                raise unittest.SkipTest('libcurl does not support ssl')
 
             # XXX move to pycurl library
             if 'OpenSSL/' in pycurl.version:
@@ -175,7 +165,7 @@ def only_ssl_backends(*backends):
             else:
                 current_backend = 'none'
             if current_backend not in backends:
-                raise nose.plugins.skip.SkipTest('SSL backend is %s' % current_backend)
+                raise unittest.SkipTest('SSL backend is %s' % current_backend)
 
             return fn(*args, **kwargs)
 
@@ -183,25 +173,22 @@ def only_ssl_backends(*backends):
     return decorator
 
 def only_ipv6(fn):
-    import nose.plugins.skip
     import pycurl
 
     @functools.wraps(fn)
     def decorated(*args, **kwargs):
         if not pycurl.version_info()[4] & pycurl.VERSION_IPV6:
-            raise nose.plugins.skip.SkipTest('libcurl does not support ipv6')
+            raise unittest.SkipTest('libcurl does not support ipv6')
 
         return fn(*args, **kwargs)
 
     return decorated
 
 def only_unix(fn):
-    import nose.plugins.skip
-
     @functools.wraps(fn)
     def decorated(*args, **kwargs):
         if sys.platform == 'win32':
-            raise nose.plugins.skip.SkipTest('Unix only')
+            raise unittest.SkipTest('Unix only')
 
         return fn(*args, **kwargs)
 
@@ -214,7 +201,6 @@ def guard_unknown_libcurl_option(fn):
     where libcurl does not provide a way of detecting whether the
     required libraries were compiled against.'''
 
-    import nose.plugins.skip
     import pycurl
 
     @functools.wraps(fn)
@@ -225,7 +211,7 @@ def guard_unknown_libcurl_option(fn):
             exc = sys.exc_info()[1]
             # E_UNKNOWN_OPTION is available as of libcurl 7.21.5
             if hasattr(pycurl, 'E_UNKNOWN_OPTION') and exc.args[0] == pycurl.E_UNKNOWN_OPTION:
-                raise nose.plugins.skip.SkipTest('CURLE_UNKNOWN_OPTION, skipping test')
+                raise unittest.SkipTest('CURLE_UNKNOWN_OPTION, skipping test')
 
     return decorated
 

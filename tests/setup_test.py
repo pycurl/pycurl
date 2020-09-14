@@ -6,7 +6,6 @@ from . import util
 import setup as pycurl_setup
 import unittest
 import os, os.path, sys
-import nose.plugins.skip
 import functools
 try:
     # Python 2
@@ -54,7 +53,7 @@ def min_python_version(*spec):
         @functools.wraps(fn)
         def decorated(*args, **kwargs):
             if sys.version_info < spec:
-                raise nose.plugins.skip.SkipTest('Minimum Python version %s required' % spec.join('.'))
+                raise unittest.SkipTest('Minimum Python version %s required' % spec.join('.'))
 
             return fn(*args, **kwargs)
         return decorated

@@ -4,9 +4,8 @@
 
 from . import localhost
 import pycurl
+import pytest
 import unittest
-import nose.plugins.attrib
-import nose.plugins.skip
 
 from . import util
 
@@ -100,7 +99,7 @@ class OptionConstantsTest(unittest.TestCase):
 
     # CURLOPT_SOCKS5_GSSAPI_SERVICE was introduced in libcurl-7.19.4
     @util.min_libcurl(7, 19, 4)
-    @nose.plugins.attrib.attr('gssapi')
+    @pytest.mark.gssapi
     def test_socks5_gssapi_service_setopt(self):
         curl = pycurl.Curl()
         curl.setopt(curl.SOCKS5_GSSAPI_SERVICE, 'helloworld')
@@ -108,7 +107,7 @@ class OptionConstantsTest(unittest.TestCase):
 
     # CURLOPT_SOCKS5_GSSAPI_NEC was introduced in libcurl-7.19.4
     @util.min_libcurl(7, 19, 4)
-    @nose.plugins.attrib.attr('gssapi')
+    @pytest.mark.gssapi
     def test_socks5_gssapi_nec_setopt(self):
         curl = pycurl.Curl()
         curl.setopt(curl.SOCKS5_GSSAPI_NEC, True)
@@ -151,7 +150,7 @@ class OptionConstantsTest(unittest.TestCase):
         curl.close()
 
     @util.min_libcurl(7, 22, 0)
-    @nose.plugins.attrib.attr('gssapi')
+    @pytest.mark.gssapi
     def test_gssapi_delegation_options(self):
         curl = pycurl.Curl()
         curl.setopt(curl.GSSAPI_DELEGATION, curl.GSSAPI_DELEGATION_FLAG)
@@ -187,14 +186,14 @@ class OptionConstantsTest(unittest.TestCase):
         curl.close()
 
     @util.min_libcurl(7, 43, 0)
-    @nose.plugins.attrib.attr('gssapi')
+    @pytest.mark.gssapi
     def test_proxy_service_name(self):
         curl = pycurl.Curl()
         curl.setopt(curl.PROXY_SERVICE_NAME, 'fakehttp')
         curl.close()
 
     @util.min_libcurl(7, 43, 0)
-    @nose.plugins.attrib.attr('gssapi')
+    @pytest.mark.gssapi
     def test_service_name(self):
         curl = pycurl.Curl()
         curl.setopt(curl.SERVICE_NAME, 'fakehttp')
@@ -220,15 +219,15 @@ class OptionConstantsTest(unittest.TestCase):
         curl.setopt(curl.UNIX_SOCKET_PATH, '/tmp/socket.sock')
         curl.close()
 
-    @nose.plugins.attrib.attr('http2')
     @util.min_libcurl(7, 36, 0)
+    @pytest.mark.http2
     def test_ssl_enable_alpn(self):
         curl = pycurl.Curl()
         curl.setopt(curl.SSL_ENABLE_ALPN, 1)
         curl.close()
 
-    @nose.plugins.attrib.attr('http2')
     @util.min_libcurl(7, 36, 0)
+    @pytest.mark.http2
     def test_ssl_enable_npn(self):
         curl = pycurl.Curl()
         curl.setopt(curl.SSL_ENABLE_NPN, 1)
@@ -450,23 +449,23 @@ class OptionConstantsSettingTest(unittest.TestCase):
         self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_1_0)
         self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_1_1)
 
-    @nose.plugins.attrib.attr('http2')
     @util.min_libcurl(7, 33, 0)
+    @pytest.mark.http2
     def test_http_version_2_0(self):
         self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_2_0)
 
-    @nose.plugins.attrib.attr('http2')
     @util.min_libcurl(7, 43, 0)
+    @pytest.mark.http2
     def test_http_version_2(self):
         self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_2)
 
-    @nose.plugins.attrib.attr('http2')
     @util.min_libcurl(7, 47, 0)
+    @pytest.mark.http2
     def test_http_version_2tls(self):
         self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_2TLS)
 
-    @nose.plugins.attrib.attr('http2')
     @util.min_libcurl(7, 49, 0)
+    @pytest.mark.http2
     def test_http_version_2prior_knowledge(self):
         self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE)
 
