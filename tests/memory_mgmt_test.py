@@ -282,7 +282,7 @@ class MemoryMgmtTest(unittest.TestCase):
         new_object_count = len(gc.get_objects())
         # it seems that GC sometimes collects something that existed
         # before this test ran, GH issues #273/#274
-        self.assertTrue(new_object_count in (object_count, object_count-1))
+        self.assertIn(new_object_count, (object_count, object_count-1))
 
     def test_postfields_unicode_memory_leak_gh252(self):
         # this test passed even before the memory leak was fixed,
