@@ -45,7 +45,7 @@ fi
 make gen
 python setup.py build $setup_args
 
-(cd tests/fake-curl/libcurl && make)
+make -C tests/fake-curl/libcurl
 
 ldd build/lib*/pycurl*.so
 
