@@ -145,9 +145,9 @@ run-quickstart:
 docs: build
 	mkdir -p build/docstrings
 	for file in doc/docstrings/*.rst; do tail -n +3 $$file >build/docstrings/`basename $$file`; done
-	PYTHONSUFFIX=$$(python -V 2>&1 |awk '{print $$2}' |awk -F. '{print $$1 "." $$2}') && \
+	PYTHONSUFFIX=$$($(PYTHON) -V 2>&1 |awk '{print $$2}' |awk -F. '{print $$1 "." $$2}') && \
 	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONSUFFIX):$$PYTHONPATH \
-	sphinx-build doc build/doc
+	$(PYTHON) -m sphinx doc build/doc
 	cp ChangeLog build/doc
 
 # Rebuild all documentation.
@@ -157,9 +157,9 @@ docs-force: build
 	# sphinx-docs has an -a option but it does not seem to always
 	# rebuild everything
 	rm -rf build/doc
-	PYTHONSUFFIX=$$(python -V 2>&1 |awk '{print $$2}' |awk -F. '{print $$1 "." $$2}') && \
+	PYTHONSUFFIX=$$($(PYTHON) -V 2>&1 |awk '{print $$2}' |awk -F. '{print $$1 "." $$2}') && \
 	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONSUFFIX):$$PYTHONPATH \
-	sphinx-build doc build/doc
+	$(PYTHON) -m sphinx doc build/doc
 	cp ChangeLog build/doc
 
 www: docs
