@@ -276,6 +276,9 @@ do_multi_setopt_int(CurlMultiObject *self, int option, PyObject *obj)
     case CURLMOPT_CONTENT_LENGTH_PENALTY_SIZE:
     case CURLMOPT_CHUNK_LENGTH_PENALTY_SIZE:
 #endif
+#ifdef HAVE_CURL_7_67_0_MULTI_STREAMS
+    case CURLMOPT_MAX_CONCURRENT_STREAMS:
+#endif
         curl_multi_setopt(self->multi_handle, option, d);
         break;
     default:
