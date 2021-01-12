@@ -77,6 +77,7 @@ class OpenSocketCbTest(unittest.TestCase):
     def test_socket_open_ipv6(self):
         self.curl.setopt(pycurl.OPENSOCKETFUNCTION, socket_open_ipv6)
         self.curl.setopt(self.curl.URL, 'http://[::1]:8380/success')
+        self.curl.setopt(self.curl.NOPROXY, '::1')
         sio = util.BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         try:
