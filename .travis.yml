@@ -4,6 +4,34 @@ language: python
 matrix:
   include:
     # all supported Python versions
+    - python: 3.9
+      env:
+        - USECURL=7.68.0-openssl11-gssapi-libssh2
+        - USESSL=openssl
+        - USEOPENSSL=1.1.1d
+        - TESTDOCSEXAMPLES=1
+    - python: 3.9
+      env:
+        - USECURL=7.68.0-openssl10-gssapi-libssh2
+        - USESSL=openssl
+        - USEOPENSSL=1.0.2u
+        - TESTDOCSEXAMPLES=1
+    - python: 3.9
+      env:
+        - USECURL=7.68.0-libressl-gssapi-libssh2
+        - USESSL=libressl
+        - USELIBRESSL=3.0.2
+    - python: 3.9
+      env:
+        - USECURL=7.68.0-gnutls-gssapi-libssh2
+        - USESSL=gnutls
+        - TESTDOCSEXAMPLES=1
+    - python: 3.9
+      env:
+        - USECURL=7.68.0-nss-gssapi-libssh2
+        - USESSL=nss
+        # Examples fail with NSS due to CA certs not being explicitly given
+        #- TESTDOCSEXAMPLES=1
     - python: 3.8
       env:
         - USECURL=7.68.0-openssl11-gssapi-libssh2
