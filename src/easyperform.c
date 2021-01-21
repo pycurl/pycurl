@@ -28,7 +28,7 @@ do_curl_perform_rb(CurlObject *self)
 {
     PyObject *v, *io;
     
-    io = PyEval_CallObject(bytesio, NULL);
+    io = PyObject_Call(bytesio, NULL, NULL);
     if (io == NULL) {
         return NULL;
     }

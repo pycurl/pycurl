@@ -42,7 +42,7 @@ util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *strea
 #endif
     if (arglist == NULL)
         goto verbose_error;
-    result = PyEval_CallObject(cb, arglist);
+    result = PyObject_Call(cb, arglist, NULL);
     Py_DECREF(arglist);
     if (result == NULL)
         goto verbose_error;
@@ -184,7 +184,7 @@ opensocket_callback(void *clientp, curlsocktype purpose,
         Py_DECREF(converted_address);
         goto verbose_error;
     }
-    python_address = PyEval_CallObject(curl_sockaddr_type, arglist);
+    python_address = PyObject_Call(curl_sockaddr_type, arglist, NULL);
     Py_DECREF(arglist);
     if (python_address == NULL) {
         goto verbose_error;
@@ -195,7 +195,7 @@ opensocket_callback(void *clientp, curlsocktype purpose,
         Py_DECREF(python_address);
         goto verbose_error;
     }
-    result = PyEval_CallObject(self->opensocket_cb, arglist);
+    result = PyObject_Call(self->opensocket_cb, arglist, NULL);
     Py_DECREF(arglist);
     if (result == NULL) {
         goto verbose_error;
@@ -257,7 +257,7 @@ sockopt_cb(void *clientp, curl_socket_t curlfd, curlsocktype purpose)
     if (arglist == NULL)
         goto verbose_error;
 
-    ret_obj = PyEval_CallObject(self->sockopt_cb, arglist);
+    ret_obj = PyObject_Call(self->sockopt_cb, arglist, NULL);
     Py_DECREF(arglist);
     if (!PyInt_Check(ret_obj) && !PyLong_Check(ret_obj)) {
         PyObject *ret_repr = PyObject_Repr(ret_obj);
@@ -309,7 +309,7 @@ closesocket_callback(void *clientp, curl_socket_t curlfd)
     if (arglist == NULL)
         goto verbose_error;
 
-    ret_obj = PyEval_CallObject(self->closesocket_cb, arglist);
+    ret_obj = PyObject_Call(self->closesocket_cb, arglist, NULL);
     Py_DECREF(arglist);
     if (!ret_obj)
        goto silent_error;
@@ -410,7 +410,7 @@ ssh_key_cb(CURL *easy, const struct curl_khkey *knownkey,
     if (arglist == NULL)
         goto verbose_error;
 
-    ret_obj = PyEval_CallObject(self->ssh_key_cb, arglist);
+    ret_obj = PyObject_Call(self->ssh_key_cb, arglist, NULL);
     Py_DECREF(arglist);
     if (!PyInt_Check(ret_obj) && !PyLong_Check(ret_obj)) {
         PyObject *ret_repr = PyObject_Repr(ret_obj);
@@ -488,7 +488,7 @@ seek_callback(void *stream, curl_off_t offset, int origin)
     arglist = Py_BuildValue("(L,i)", (PY_LONG_LONG) offset, source);
     if (arglist == NULL)
         goto verbose_error;
-    result = PyEval_CallObject(cb, arglist);
+    result = PyObject_Call(cb, arglist, NULL);
     Py_DECREF(arglist);
     if (result == NULL)
         goto verbose_error;
@@ -554,7 +554,7 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
     arglist = Py_BuildValue("(i)", total_size);
     if (arglist == NULL)
         goto verbose_error;
-    result = PyEval_CallObject(self->r_cb, arglist);
+    result = PyObject_Call(self->r_cb, arglist, NULL);
     Py_DECREF(arglist);
     if (result == NULL)
         goto verbose_error;
@@ -662,7 +662,7 @@ progress_callback(void *stream,
     arglist = Py_BuildValue("(dddd)", dltotal, dlnow, ultotal, ulnow);
     if (arglist == NULL)
         goto verbose_error;
-    result = PyEval_CallObject(self->pro_cb, arglist);
+    result = PyObject_Call(self->pro_cb, arglist, NULL);
     Py_DECREF(arglist);
     if (result == NULL)
         goto verbose_error;
@@ -715,7 +715,7 @@ xferinfo_callback(void *stream,
         (PY_LONG_LONG) ultotal, (PY_LONG_LONG) ulnow);
     if (arglist == NULL)
         goto verbose_error;
-    result = PyEval_CallObject(self->xferinfo_cb, arglist);
+    result = PyObject_Call(self->xferinfo_cb, arglist, NULL);
     Py_DECREF(arglist);
     if (result == NULL)
         goto verbose_error;
@@ -775,7 +775,7 @@ debug_callback(CURL *curlobj, curl_infotype type,
 #endif
     if (arglist == NULL)
         goto verbose_error;
-    result = PyEval_CallObject(self->debug_cb, arglist);
+    result = PyObject_Call(self->debug_cb, arglist, NULL);
     Py_DECREF(arglist);
     if (result == NULL)
         goto verbose_error;
@@ -816,7 +816,7 @@ ioctl_callback(CURL *curlobj, int cmd, void *stream)
     arglist = Py_BuildValue("(i)", cmd);
     if (arglist == NULL)
         goto verbose_error;
-    result = PyEval_CallObject(self->ioctl_cb, arglist);
+    result = PyObject_Call(self->ioctl_cb, arglist, NULL);
     Py_DECREF(arglist);
     if (result == NULL)
         goto verbose_error;
