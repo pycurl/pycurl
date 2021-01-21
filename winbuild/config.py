@@ -27,7 +27,7 @@ class ExtendedConfig:
             'c:/program files (x86)/microsoft visual studio 10.0',
             'c:/program files/microsoft visual studio 10.0',
         ],
-        # where msvc 14 is installed, for python 3.5-3.8
+        # where msvc 14 is installed, for python 3.5-3.9
         'vc14': [
             'c:/program files (x86)/microsoft visual studio 14.0',
             'c:/program files/microsoft visual studio 14.0',
@@ -129,6 +129,7 @@ PYTHON_VC_VERSIONS = {
     '3.6': 'vc14',
     '3.7': 'vc14',
     '3.8': 'vc14',
+    '3.9': 'vc14',
 }
 
 class BuildConfig:
