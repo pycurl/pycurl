@@ -43,7 +43,7 @@ check_curl_state(const CurlObject *self, int flags, const char *name)
 
 /* --------------- construct/destruct (i.e. open/close) --------------- */
 
-/* initializer - used to intialize curl easy handles for use with pycurl */
+/* initializer - used to initialize curl easy handles for use with pycurl */
 static int
 util_curl_init(CurlObject *self)
 {
