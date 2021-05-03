@@ -850,13 +850,12 @@ Requirements
 Installation
 ------------
 
-Download source and binary distributions from `PyPI`_ or `Bintray`_.
+Download source and binary distributions from `PyPI`_.
 Binary wheels are now available for 32 and 64 bit Windows versions.
 
 Please see `the installation documentation`_ for installation instructions.
 
 .. _PyPI: https://pypi.python.org/pypi/pycurl
-.. _Bintray: https://dl.bintray.com/pycurl/pycurl/
 .. _the installation documentation: http://pycurl.io/docs/latest/install.html
 
 

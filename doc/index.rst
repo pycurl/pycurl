@@ -78,11 +78,6 @@ On Windows, use pip to install a binary wheel for Python 2.7, 3.5 or 3.6::
 
     pip install pycurl
 
-If not using pip, binary distributions in other formats are available
-`on Bintray`_.
-
-.. _on Bintray: https://dl.bintray.com/pycurl/pycurl/
-
 
 Support
 -------
