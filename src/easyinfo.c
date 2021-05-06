@@ -157,7 +157,9 @@ do_curl_getinfo_raw(CurlObject *self, PyObject *args)
 #ifdef HAVE_CURLINFO_HTTP_VERSION
     case CURLINFO_HTTP_VERSION:
 #endif
-
+#ifdef HAVE_CURL_7_19_4_OPTS
+    case CURLINFO_CONDITION_UNMET:
+#endif
         {
             /* Return PyInt as result */
             long l_res = -1;
