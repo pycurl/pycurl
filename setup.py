@@ -511,6 +511,17 @@ manually. For other SSL backends please ignore this message.''')
                 ('libidn', ctypes.c_char_p),
                 ('iconv_ver_num', ctypes.c_int),
                 ('libssh_version', ctypes.c_char_p),
+                ('brotli_ver_num', ctypes.c_uint),
+                ('brotli_version', ctypes.c_char_p),
+                ('nghttp2_ver_num', ctypes.c_uint),
+                ('nghttp2_version', ctypes.c_char_p),
+                ('quic_version', ctypes.c_char_p),
+                ('cainfo', ctypes.c_char_p),
+                ('capath', ctypes.c_char_p),
+                ('zstd_ver_num', ctypes.c_uint),
+                ('zstd_version', ctypes.c_char_p),
+                ('hyper_version', ctypes.c_char_p),
+                ('gsasl_version', ctypes.c_char_p),
             ]
 
         dll = ctypes.CDLL(dll_path)
