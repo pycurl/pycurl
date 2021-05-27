@@ -34,13 +34,12 @@ urllib_ Python 모듈과 마찬가지로, PycURL 을 사용하여 Python프로�
 설치
 ----
 
-`PyPI`_ 또는 `Bintray`_ 에서 소스 및 바이너리 배포판을 다운로드 하십시오.
+`PyPI`_ 에서 소스 및 바이너리 배포판을 다운로드 하십시오.
 이제 바이너리 휘을 32 비트 및 64 비트 Windows 버전에서 사용할 수 있습니다.
 
 설치 지침은 `INSTALL.rst`_ 를 참조하십시오. Git checkout에서 설치하는 경우, INSTALL.rst 의 `Git Checkout`_ 섹션의 지침을 따르십시오.
 
 .. _PyPI: https://pypi.python.org/pypi/pycurl
-.. _Bintray: https://dl.bintray.com/pycurl/pycurl/
 .. _INSTALL.rst: http://pycurl.io/docs/latest/install.html
 .. _Git Checkout: http://pycurl.io/docs/latest/install.html#git-checkout
 
