@@ -4,7 +4,6 @@
 
 import pycurl
 import unittest
-import nose.plugins.skip
 
 from . import appmanager
 from . import util
@@ -44,7 +43,7 @@ class CertinfoTest(unittest.TestCase):
     def test_request_with_certinfo(self):
         # CURLOPT_CERTINFO only works with OpenSSL
         if 'openssl' not in pycurl.version.lower():
-            raise nose.plugins.skip.SkipTest('libcurl does not use openssl')
+            raise unittest.SkipTest('libcurl does not use openssl')
 
         self.curl.setopt(pycurl.URL, 'https://localhost:8383/success')
         sio = util.BytesIO()
@@ -72,7 +71,7 @@ class CertinfoTest(unittest.TestCase):
     def test_getinfo_raw_certinfo(self):
         # CURLOPT_CERTINFO only works with OpenSSL
         if 'openssl' not in pycurl.version.lower():
-            raise nose.plugins.skip.SkipTest('libcurl does not use openssl')
+            raise unittest.SkipTest('libcurl does not use openssl')
 
         self.curl.setopt(pycurl.URL, 'https://localhost:8383/success')
         sio = util.BytesIO()

@@ -4,8 +4,8 @@
 
 from . import localhost
 import pycurl
+import pytest
 import unittest
-import nose.tools
 
 from . import appmanager
 from . import util
@@ -22,9 +22,9 @@ class SetoptUnicodeTest(unittest.TestCase):
     def test_ascii_string(self):
         self.check('p=test', 'test')
 
-    @nose.tools.raises(UnicodeEncodeError)
     def test_unicode_string(self):
-        self.check(util.u('p=Москва'), util.u('Москва'))
+        with pytest.raises(UnicodeEncodeError):
+            self.check(util.u('p=Москва'), util.u('Москва'))
 
     def test_unicode_encoded(self):
         self.check(util.u('p=Москва').encode('utf8'), util.u('Москва'))

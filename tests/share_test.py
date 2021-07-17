@@ -5,8 +5,8 @@
 from . import localhost
 import threading
 import pycurl
+import pytest
 import unittest
-import nose.tools
 
 from . import appmanager
 from . import util
@@ -58,11 +58,11 @@ class ShareTest(unittest.TestCase):
         s.close()
 
     # positional arguments are rejected
-    @nose.tools.raises(TypeError)
     def test_positional_arguments(self):
-        pycurl.CurlShare(1)
+        with pytest.raises(TypeError):
+            pycurl.CurlShare(1)
 
     # keyword arguments are rejected
-    @nose.tools.raises(TypeError)
     def test_keyword_arguments(self):
-        pycurl.CurlShare(a=1)
+        with pytest.raises(TypeError):
+            pycurl.CurlShare(a=1)

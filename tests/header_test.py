@@ -3,9 +3,9 @@
 # vi:ts=4:et
 
 from . import localhost
+import pytest
 import pycurl
 import unittest
-import nose.tools
 
 from . import appmanager
 from . import util
@@ -30,13 +30,13 @@ class HeaderTest(unittest.TestCase):
 
     # on python 2 unicode is accepted in strings because strings are byte strings
     @util.only_python3
-    @nose.tools.raises(UnicodeEncodeError)
     def test_unicode_string_header(self):
-        self.check('x-test-header: Москва', 'Москва')
+        with pytest.raises(UnicodeEncodeError):
+            self.check('x-test-header: Москва', 'Москва')
 
-    @nose.tools.raises(UnicodeEncodeError)
     def test_unicode_unicode_header(self):
-        self.check(util.u('x-test-header: Москва'), util.u('Москва'))
+        with pytest.raises(UnicodeEncodeError):
+            self.check(util.u('x-test-header: Москва'), util.u('Москва'))
 
     def test_encoded_unicode_header(self):
         self.check(util.u('x-test-header: Москва').encode('utf-8'), util.u('Москва'))

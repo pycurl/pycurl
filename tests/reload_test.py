@@ -3,11 +3,11 @@
 # vi:ts=4:et
 
 import pycurl
+import pytest
 import unittest
-import nose.plugins.attrib
 
 class ReloadTest(unittest.TestCase):
-    @nose.plugins.attrib.attr('standalone')
+    @pytest.mark.standalone
     def test_reloading(self):
         try:
             # python 2

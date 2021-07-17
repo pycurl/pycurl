@@ -94,7 +94,7 @@ test_script:
   # Run the project tests
   - ps: $whl = get-childitem dist\*.whl;
         pip install $whl
-  - nosetests
+  - pytest
 
 after_test:
   # If tests are successful, create binary packages for the project.

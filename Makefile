@@ -6,7 +6,7 @@
 SHELL = /bin/sh
 
 PYTHON = python
-NOSETESTS = nosetests
+PYTEST = pytest
 PYFLAKES = pyflakes
 
 # -c on linux

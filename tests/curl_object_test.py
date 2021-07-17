@@ -3,8 +3,8 @@
 # vi:ts=4:et
 
 import pycurl
+import pytest
 import unittest
-import nose.tools
 
 class ExplicitConstructionCurlObjectTest(unittest.TestCase):
     def test_close(self):
@@ -17,14 +17,14 @@ class ExplicitConstructionCurlObjectTest(unittest.TestCase):
         c.close()
 
     # positional arguments are rejected
-    @nose.tools.raises(TypeError)
     def test_positional_arguments(self):
-        pycurl.Curl(1)
+        with pytest.raises(TypeError):
+           pycurl.Curl(1)
 
     # keyword arguments are rejected
-    @nose.tools.raises(TypeError)
     def test_keyword_arguments(self):
-        pycurl.Curl(a=1)
+        with pytest.raises(TypeError):
+            pycurl.Curl(a=1)
 
 class CurlObjectTest(unittest.TestCase):
     def setUp(self):
@@ -144,14 +144,10 @@ class CurlObjectTest(unittest.TestCase):
         obj3 = cls()
         self.assertEqual(old_value, getattr(obj3, name))
         
-    # I would have liked to assert on the message of the exception,
-    # but it appears nose has no support for this.
-    @nose.tools.raises(AttributeError)
     def test_bogus_attribute_access(self):
-        self.curl.foo
+        with pytest.raises(AttributeError, match='trying to obtain.*'):
+           self.curl.foo
         
-    # I would have liked to assert on the message of the exception,
-    # but it appears nose has no support for this.
-    @nose.tools.raises(AttributeError)
     def test_bogus_attribute_delete(self):
-        del self.curl.foo
+        with pytest.raises(AttributeError, match='trying to delete.*'):
+            del self.curl.foo
