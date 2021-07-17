@@ -128,9 +128,6 @@ install PycURL by running:
 
     pip install pycurl
 
-If you are not using pip, EXE and MSI installers are available in the
-`download area`_.
-
 Both 32-bit and 64-bit builds of PycURL are available for Windows.
 
 
@@ -264,8 +261,6 @@ Prerequisites:
 ``winbuild.py`` assumes all programs are installed in their default locations,
 if this is not the case edit it as needed. ``winbuild.py`` itself can be run
 with any Python it supports.
-
-.. _`download area`: https://dl.bintray.com/pycurl/pycurl/
 
 
 Git Checkout

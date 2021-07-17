@@ -163,6 +163,10 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
 #define HAVE_CURL_GLOBAL_SSLSET
 #endif
 
+#if LIBCURL_VERSION_NUM >= 0x074300 /* check for 7.67.0 or greater */
+#define HAVE_CURL_7_67_0_MULTI_STREAMS
+#endif
+
 #undef UNUSED
 #define UNUSED(var)     ((void)&var)
 

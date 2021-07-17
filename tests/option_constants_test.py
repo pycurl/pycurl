@@ -163,9 +163,16 @@ class OptionConstantsTest(unittest.TestCase):
     def test_sslversion_options(self):
         curl = pycurl.Curl()
         curl.setopt(curl.SSLVERSION, curl.SSLVERSION_DEFAULT)
+        curl.setopt(curl.SSLVERSION, curl.SSLVERSION_TLSv1)
+        curl.close()
+
+    # SSLVERSION_SSLv* return CURLE_BAD_FUNCTION_ARGUMENT with curl-7.77.0
+    @util.removed_in_libcurl(7, 77, 0)
+    @util.only_ssl
+    def test_legacy_sslversion_options(self):
+        curl = pycurl.Curl()
         curl.setopt(curl.SSLVERSION, curl.SSLVERSION_SSLv2)
         curl.setopt(curl.SSLVERSION, curl.SSLVERSION_SSLv3)
-        curl.setopt(curl.SSLVERSION, curl.SSLVERSION_TLSv1)
         curl.close()
 
     @util.min_libcurl(7, 34, 0)

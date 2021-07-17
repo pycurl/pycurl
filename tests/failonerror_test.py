@@ -21,6 +21,8 @@ class FailonerrorTest(unittest.TestCase):
     # not sure what the actual min is but 7.26 is too old
     # and does not include status text, only the status code
     @util.min_libcurl(7, 38, 0)
+    # no longer supported by libcurl: https://github.com/curl/curl/issues/6615
+    @util.removed_in_libcurl(7, 75, 0)
     def test_failonerror(self):
         self.curl.setopt(pycurl.URL, 'http://%s:8380/status/403' % localhost)
         sio = util.BytesIO()
@@ -41,6 +43,8 @@ class FailonerrorTest(unittest.TestCase):
     # not sure what the actual min is but 7.26 is too old
     # and does not include status text, only the status code
     @util.min_libcurl(7, 38, 0)
+    # no longer supported by libcurl: https://github.com/curl/curl/issues/6615
+    @util.removed_in_libcurl(7, 75, 0)
     def test_failonerror_status_line_invalid_utf8_python2(self):
         self.curl.setopt(pycurl.URL, 'http://%s:8380/status_invalid_utf8' % localhost)
         sio = util.BytesIO()
@@ -61,6 +65,8 @@ class FailonerrorTest(unittest.TestCase):
     # not sure what the actual min is but 7.26 is too old
     # and does not include status text, only the status code
     @util.min_libcurl(7, 38, 0)
+    # no longer supported by libcurl: https://github.com/curl/curl/issues/6615
+    @util.removed_in_libcurl(7, 75, 0)
     def test_failonerror_status_line_invalid_utf8_python3(self):
         self.curl.setopt(pycurl.URL, 'http://%s:8380/status_invalid_utf8' % localhost)
         sio = util.BytesIO()

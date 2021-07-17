@@ -115,6 +115,21 @@ def min_libcurl(major, minor, patch):
 
     return decorator
 
+def removed_in_libcurl(major, minor, patch):
+    import nose.plugins.skip
+
+    def decorator(fn):
+        @functools.wraps(fn)
+        def decorated(*args, **kwargs):
+            if not pycurl_version_less_than(major, minor, patch):
+                raise nose.plugins.skip.SkipTest('libcurl >= %d.%d.%d' % (major, minor, patch))
+
+            return fn(*args, **kwargs)
+
+        return decorated
+
+    return decorator
+
 def only_ssl(fn):
     import pycurl
 

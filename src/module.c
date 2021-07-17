@@ -11,6 +11,12 @@
 
 #define PYCURL_VERSION_PREFIX "PycURL/" PYCURL_VERSION_STRING
 
+/* needed for compatibility with python < 3.10, as suggested at:
+ * https://docs.python.org/3.10/whatsnew/3.10.html#id2 */
+#if PY_VERSION_HEX < 0x030900A4
+#  define Py_SET_TYPE(obj, type) ((Py_TYPE(obj) = (type)), (void)0)
+#endif
+
 PYCURL_INTERNAL char *empty_keywords[] = { NULL };
 
 PYCURL_INTERNAL PyObject *bytesio = NULL;
@@ -412,9 +418,9 @@ initpycurl(void)
     p_Curl_Type = &Curl_Type;
     p_CurlMulti_Type = &CurlMulti_Type;
     p_CurlShare_Type = &CurlShare_Type;
-    Py_TYPE(&Curl_Type) = &PyType_Type;
-    Py_TYPE(&CurlMulti_Type) = &PyType_Type;
-    Py_TYPE(&CurlShare_Type) = &PyType_Type;
+    Py_SET_TYPE(&Curl_Type, &PyType_Type);
+    Py_SET_TYPE(&CurlMulti_Type, &PyType_Type);
+    Py_SET_TYPE(&CurlShare_Type, &PyType_Type);
 
     /* Create the module and add the functions */
     if (PyType_Ready(&Curl_Type) < 0)
@@ -1065,6 +1071,9 @@ initpycurl(void)
     insint_m(d, "M_PIPELINING_SITE_BL", CURLMOPT_PIPELINING_SITE_BL);
     insint_m(d, "M_PIPELINING_SERVER_BL", CURLMOPT_PIPELINING_SERVER_BL);
 #endif
+#ifdef HAVE_CURL_7_67_0_MULTI_STREAMS
+    insint_m(d, "M_MAX_CONCURRENT_STREAMS", CURLMOPT_MAX_CONCURRENT_STREAMS);
+#endif
 
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 43, 0)
     insint_m(d, "PIPE_NOTHING", CURLPIPE_NOTHING);
@@ -1361,6 +1370,31 @@ initpycurl(void)
 #endif
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 47, 0)
     insint(d, "VERSION_PSL", CURL_VERSION_PSL);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 52, 0)
+    insint(d, "CURL_VERSION_HTTPS_PROXY", CURL_VERSION_HTTPS_PROXY);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 56, 0)
+    insint(d, "CURL_VERSION_MULTI_SSL", CURL_VERSION_MULTI_SSL);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 57, 0)
+    insint(d, "CURL_VERSION_BROTLI", CURL_VERSION_BROTLI);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 64, 1)
+    insint(d, "CURL_VERSION_ALTSVC", CURL_VERSION_ALTSVC);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 66, 0)
+    insint(d, "CURL_VERSION_HTTP3", CURL_VERSION_HTTP3);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 72, 0)
+    insint(d, "CURL_VERSION_UNICODE", CURL_VERSION_UNICODE);
+    insint(d, "CURL_VERSION_ZSTD", CURL_VERSION_ZSTD);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 74, 0)
+    insint(d, "CURL_VERSION_HSTS", CURL_VERSION_HSTS);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 76, 0)
+    insint(d, "CURL_VERSION_GSASL", CURL_VERSION_GSASL);
 #endif
 
     /**

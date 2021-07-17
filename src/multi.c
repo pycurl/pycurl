@@ -276,6 +276,9 @@ do_multi_setopt_int(CurlMultiObject *self, int option, PyObject *obj)
     case CURLMOPT_CONTENT_LENGTH_PENALTY_SIZE:
     case CURLMOPT_CHUNK_LENGTH_PENALTY_SIZE:
 #endif
+#ifdef HAVE_CURL_7_67_0_MULTI_STREAMS
+    case CURLMOPT_MAX_CONCURRENT_STREAMS:
+#endif
         curl_multi_setopt(self->multi_handle, option, d);
         break;
     default:
@@ -806,11 +809,17 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
         }
         else {
             /* Create a result tuple that will get added to err_list. */
-            PyObject *error_str = PyUnicode_DecodeLocale(co->error, "surrogateescape");
+            PyObject *error_str = NULL;
+            PyObject *v;
+#if PY_MAJOR_VERSION >= 3
+            error_str = PyUnicode_DecodeLocale(co->error, "surrogateescape");
             if (error_str == NULL) {
                 goto error;
             }
-            PyObject *v = Py_BuildValue("(OiO)", (PyObject *)co, (int)msg->data.result, error_str);
+            v = Py_BuildValue("(OiO)", (PyObject *)co, (int)msg->data.result, error_str);
+#else
+            v = Py_BuildValue("(Ois)", (PyObject *)co, (int)msg->data.result, co->error);
+#endif
             /* Append curl object to list of objects which failed */
             if (v == NULL || PyList_Append(err_list, v) != 0) {
                 Py_XDECREF(error_str);
