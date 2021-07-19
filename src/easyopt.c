@@ -298,6 +298,9 @@ do_curl_setopt_string_impl(CurlObject *self, int option, PyObject *obj)
     case CURLOPT_PROXY_SSLKEY:
     case CURLOPT_PROXY_SSLKEYTYPE:
 #endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 62, 0)
+    case CURLOPT_DOH_URL:
+#endif
     case CURLOPT_KRBLEVEL:
         str = PyText_AsString_NoNUL(obj, &encoded_obj);
         if (str == NULL)
