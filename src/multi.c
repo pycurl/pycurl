@@ -199,7 +199,7 @@ multi_socket_callback(CURL *easy,
     arglist = Py_BuildValue("(iiOO)", what, s, userp, (PyObject *)socketp);
     if (arglist == NULL)
         goto verbose_error;
-    result = PyEval_CallObject(self->s_cb, arglist);
+    result = PyObject_Call(self->s_cb, arglist, NULL);
     Py_DECREF(arglist);
     if (result == NULL)
         goto verbose_error;
@@ -243,7 +243,7 @@ multi_timer_callback(CURLM *multi,
     arglist = Py_BuildValue("(i)", timeout_ms);
     if (arglist == NULL)
         goto verbose_error;
-    result = PyEval_CallObject(self->t_cb, arglist);
+    result = PyObject_Call(self->t_cb, arglist, NULL);
     Py_DECREF(arglist);
     if (result == NULL)
         goto verbose_error;

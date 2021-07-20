@@ -28,7 +28,17 @@ do_curl_perform_rb(CurlObject *self)
 {
     PyObject *v, *io;
     
-    io = PyEval_CallObject(bytesio, NULL);
+    /* NOTE: this tuple is never freed. */
+    static PyObject *empty_tuple = NULL;
+    
+    if (empty_tuple == NULL) {
+        empty_tuple = PyTuple_New(0);
+        if (empty_tuple == NULL) {
+            return NULL;
+        }
+    }
+    
+    io = PyObject_Call(bytesio, empty_tuple, NULL);
     if (io == NULL) {
         return NULL;
     }
