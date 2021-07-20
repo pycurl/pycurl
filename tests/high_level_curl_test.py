@@ -18,6 +18,15 @@ class RelativeUrlTest(unittest.TestCase):
     def tearDown(self):
         self.curl.close()
 
+    def test_get(self):
+        result = self.curl.get('/success')
+        self.assertEqual('success', result.decode())
+
+    def test_head(self):
+        result = self.curl.head('/success')
+        self.assertEqual('', result.decode())
+        self.assertEqual(200, self.curl.info()['http-code'])
+
     def test_reuse(self):
         result = self.curl.get('/success')
         self.assertEqual('success', result.decode())

@@ -100,6 +100,13 @@ class Curl:
         self.set_option(pycurl.HTTPGET, 1)
         return self.__request(url)
 
+    def head(self, url="", params=None):
+        "Ship a HEAD request for a specified URL, capture the response."
+        if params:
+            url += "?" + urllib_parse.urlencode(params)
+        self.set_option(pycurl.NOBODY, 1)
+        return self.__request(url)
+
     def post(self, cgi, params):
         "Ship a POST request to a specified CGI, capture the response."
         self.set_option(pycurl.POST, 1)
