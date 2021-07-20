@@ -47,7 +47,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'PycURL'
-copyright = u'2001-2020 Kjetil Jacobsen, Markus F.X.J. Oberhumer, Oleg Pudeyev'
+copyright = u'2001-2021 Kjetil Jacobsen, Markus F.X.J. Oberhumer, Oleg Pudeyev'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
