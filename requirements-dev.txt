@@ -1,6 +1,6 @@
 # bottle 0.12.17 changed behavior
 # https://github.com/pycurl/pycurl/issues/573
-bottle==0.12.16
+bottle
 flaky
 pyflakes
 pytest>=5

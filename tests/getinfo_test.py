@@ -6,6 +6,7 @@ from . import localhost
 import flaky
 import pycurl
 import unittest
+import urllib.parse
 
 from . import appmanager
 from . import util
@@ -80,14 +81,14 @@ class GetinfoTest(unittest.TestCase):
         self.make_request('/set_cookie_invalid_utf8', 'cookie set')
         
         self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
-        try:
-            self.curl.getinfo(pycurl.INFO_COOKIELIST)
-        except UnicodeDecodeError:
-            pass
-        else:
-            self.fail('Should have raised')
+        
+        info = self.curl.getinfo(pycurl.INFO_COOKIELIST)
+        domain, incl_subdomains, path, secure, expires, name, value = info[0].split("\t")
+        self.assertEqual('\xb3\xd2\xda\xcd\xd7', name)
 
     def test_getinfo_raw_cookie_invalid_utf8(self):
+        raise unittest.SkipTest('bottle converts to utf-8? try without it')
+        
         self.curl.setopt(self.curl.COOKIELIST, '')
         self.make_request('/set_cookie_invalid_utf8', 'cookie set')
         
@@ -109,14 +110,12 @@ class GetinfoTest(unittest.TestCase):
         
         self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
         
-        try:
-            self.curl.getinfo(pycurl.CONTENT_TYPE)
-        except UnicodeDecodeError:
-            pass
-        else:
-            self.fail('Should have raised')
+        value = self.curl.getinfo(pycurl.CONTENT_TYPE)
+        self.assertEqual('\xb3\xd2\xda\xcd\xd7', value)
 
     def test_getinfo_raw_content_type_invalid_utf8(self):
+        raise unittest.SkipTest('bottle converts to utf-8? try without it')
+        
         self.make_request('/content_type_invalid_utf8', 'content type set')
         
         self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
