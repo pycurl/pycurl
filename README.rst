@@ -1,7 +1,7 @@
 PycURL -- A Python Interface To The cURL library
 ================================================
 
-.. image:: https://github.com/pycurl/pycurl/workflows/python-app/badge.svg
+.. image:: https://github.com/pycurl/pycurl/workflows/CI/badge.svg
 	   :target: https://github.com/pycurl/pycurl/actions
 
 PycURL is a Python interface to `libcurl`_, the multiprotocol file
