@@ -6,7 +6,6 @@ from . import localhost
 import flaky
 import pycurl
 import unittest
-import urllib.parse
 
 from . import appmanager
 from . import util
