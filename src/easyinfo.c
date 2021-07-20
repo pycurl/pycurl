@@ -329,15 +329,16 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 20, 0)
     case CURLINFO_RTSP_SESSION_ID:
 #endif
-        {
+        if (rv != Py_None) {
             PyObject *decoded;
-            
+        
             // Decode bytes into a Unicode string using default encoding
             decoded = PyUnicode_FromEncodedObject(rv, NULL, NULL);
             // success and failure paths both need to free bytes object
             Py_DECREF(rv);
             return decoded;
         }
+        return rv;
 
     case CURLINFO_SSL_ENGINES:
     case CURLINFO_COOKIELIST:
