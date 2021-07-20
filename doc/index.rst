@@ -23,6 +23,33 @@ libcurl, including:
 .. _Tornado: http://www.tornadoweb.org/
 
 
+PycURL vs Requests
+------------------
+
+`Requests <https://docs.python-requests.org/>`_ is another popular Python
+library that is frequently compared to PycURL.
+
+Advantages of PycURL:
+
+- PycURL can be `several times faster than Requests
+  <https://github.com/svanoort/python-client-benchmarks>`_.
+  The performance difference is larger when there are multiple requests
+  performed and connections are reused.
+- PycURL makes it possible to take advantage of I/O multiplexing via the
+  `libcurl multi interface <https://curl.haxx.se/libcurl/c/libcurl-multi.html>`_.
+- PycURL supports many protocols, not just HTTP.
+- PycURL generally provides more features, for example ability to use several
+  TLS backends, more authentication options, etc.
+
+Advantages of Requests:
+
+- Requests is written in pure Python and does not require C extensions.
+  As a result, Requests is trivial to install while PycURL's installation
+  can be complex (though operating system-specific packages, if available,
+  negate this drawback).
+- Requests' API is generally easier to learn and use than PycURL's.
+
+
 About libcurl
 -------------
 
