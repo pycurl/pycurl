@@ -861,8 +861,7 @@ Requirements
 Installation
 ------------
 
-Download source and binary distributions from `PyPI`_.
-Binary wheels are now available for 32 and 64 bit Windows versions.
+Download the source distribution from `PyPI`_.
 
 Please see `the installation documentation`_ for installation instructions.
 

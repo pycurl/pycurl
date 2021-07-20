@@ -118,47 +118,8 @@ To force pip to recompile pycurl, run::
 Windows
 -------
 
-Official Packages
-^^^^^^^^^^^^^^^^^
-
-As of version 7.43.0, PycURL provides binary wheels for Windows. If you are
-using an official distribution of Python (i.e., one downloaded from
-https://www.python.org/), and you are using pip, you should be able to
-install PycURL by running:
-
-    pip install pycurl
-
-Both 32-bit and 64-bit builds of PycURL are available for Windows.
-
-
-Using PycURL With Custom Python Builds
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-As of version 7.21.5, PycURL is linked statically against all of its
-dependencies except MSVCRT. This means that as long as your custom Python
-build uses the same version of MSVC as the corresponding official Python build
-as well as the same MSVCRT linking setting (/MD et. al.) you should be
-able to use an official PycURL package.
-
-If your Python build uses different MSVCRT settings or a different MSVC
-version from the official Python builds, you will need to compile PycURL
-from source.
-
-If the C runtime library (MSVCRT.DLL) versions used by PycURL and Python
-do not match, you will receive a message
-like the following one when trying to import ``pycurl`` module::
-
-    ImportError: DLL load failed: The specified procedure could not be found.
-
-To identify which MSVCRT version your Python uses use the
-`application profiling feature`_ of
-`Dependency Walker`_ and look for `msvcrt.dll variants`_ being loaded.
-You may find `the entire thread starting here`_ helpful.
-
-.. _application profiling feature: https://curl.haxx.se/mail/curlpython-2014-05/0007.html
-.. _Dependency Walker: http://www.dependencywalker.com/
-.. _msvcrt.dll variants: https://curl.haxx.se/mail/curlpython-2014-05/0010.html
-.. _the entire thread starting here: https://curl.haxx.se/mail/curlpython-2014-05/0000.html
+There are currently no official binary Windows packages. You can build PycURL
+from source or use third-party binary packages.
 
 
 Building From Source
@@ -261,6 +222,36 @@ Prerequisites:
 ``winbuild.py`` assumes all programs are installed in their default locations,
 if this is not the case edit it as needed. ``winbuild.py`` itself can be run
 with any Python it supports.
+
+
+Using PycURL With Custom Python Builds
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As of version 7.21.5, the official binary packages of PycURL are linked
+statically against all of its dependencies except MSVCRT. This means that
+as long as your custom Python build uses the same version of MSVC as the
+corresponding official Python build as well as the same MSVCRT linking setting
+(/MD et. al.), an official PycURL package should work.
+
+If your Python build uses different MSVCRT settings or a different MSVC
+version from the official Python builds, you will need to compile PycURL
+from source.
+
+If the C runtime library (MSVCRT.DLL) versions used by PycURL and Python
+do not match, you will receive a message
+like the following one when trying to import ``pycurl`` module::
+
+    ImportError: DLL load failed: The specified procedure could not be found.
+
+To identify which MSVCRT version your Python uses use the
+`application profiling feature`_ of
+`Dependency Walker`_ and look for `msvcrt.dll variants`_ being loaded.
+You may find `the entire thread starting here`_ helpful.
+
+.. _application profiling feature: https://curl.haxx.se/mail/curlpython-2014-05/0007.html
+.. _Dependency Walker: http://www.dependencywalker.com/
+.. _msvcrt.dll variants: https://curl.haxx.se/mail/curlpython-2014-05/0010.html
+.. _the entire thread starting here: https://curl.haxx.se/mail/curlpython-2014-05/0000.html
 
 
 Git Checkout

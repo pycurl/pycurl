@@ -57,7 +57,7 @@ About libcurl
 Requirements
 ------------
 
-- Python 2.7 or 3.4 through 3.6.
+- Python 3.
 - libcurl 7.19.0 or better.
 
 
@@ -74,9 +74,7 @@ Installation via easy_install and pip is also supported::
 
 If this does not work, please see :ref:`install`.
 
-On Windows, use pip to install a binary wheel for Python 2.7, 3.5 or 3.6::
-
-    pip install pycurl
+On Windows, build from source or use a third-party binary package.
 
 
 Support
