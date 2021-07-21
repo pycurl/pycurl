@@ -9,7 +9,7 @@ libcurl, including:
 
 - Speed - libcurl is very fast and PycURL, being a thin wrapper above
   libcurl, is very fast as well. PycURL `was benchmarked`_ to be several
-  times faster than requests_.
+  times faster than Requests_.
 - Features including multiple protocol support, SSL, authentication and
   proxy options. PycURL supports most of libcurl's callbacks.
 - Multi_ and share_ interfaces.
@@ -17,7 +17,7 @@ libcurl, including:
   into the application's I/O loop (e.g., using Tornado_).
 
 .. _was benchmarked: http://stackoverflow.com/questions/15461995/python-requests-vs-pycurl-performance
-.. _requests: http://python-requests.org/
+.. _Requests: http://python-requests.org/
 .. _Multi: https://curl.haxx.se/libcurl/c/libcurl-multi.html
 .. _share: https://curl.haxx.se/libcurl/c/libcurl-share.html
 .. _Tornado: http://www.tornadoweb.org/
@@ -26,8 +26,8 @@ libcurl, including:
 PycURL vs Requests
 ------------------
 
-`Requests <https://docs.python-requests.org/>`_ is another popular Python
-library that is frequently compared to PycURL.
+Requests_ is another popular Python library that is frequently compared to
+PycURL.
 
 Advantages of PycURL:
 

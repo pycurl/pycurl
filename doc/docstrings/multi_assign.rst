@@ -1,4 +1,4 @@
-assign(sockfd, object) -> None
+assign(sock_fd, object) -> None
 
 Creates an association in the multi handle between the given socket and
 a private object in the application.

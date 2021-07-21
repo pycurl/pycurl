@@ -13,7 +13,14 @@ CurlMulti Object
 
     .. automethod:: pycurl.CurlMulti.remove_handle
 
+    .. _multi-perform:
     .. automethod:: pycurl.CurlMulti.perform
+
+    .. _multi-socket_action:
+    .. automethod:: pycurl.CurlMulti.socket_action
+
+    .. _multi-socket_all:
+    .. automethod:: pycurl.CurlMulti.socket_all
 
     .. automethod:: pycurl.CurlMulti.setopt
 
@@ -25,4 +32,5 @@ CurlMulti Object
 
     .. automethod:: pycurl.CurlMulti.timeout
 
+    .. _multi-assign:
     .. automethod:: pycurl.CurlMulti.assign

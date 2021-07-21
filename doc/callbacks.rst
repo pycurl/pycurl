@@ -379,6 +379,48 @@ SSH_KEYFUNCTION
     `ssh_key_cb_test.py test`_ shows how to use ``SSH_KEYFUNCTION``.
 
 
+TIMERFUNCTION
+-------------
+
+.. function:: TIMERFUNCTION(timeout_ms) -> None
+
+    Callback for installing a timer requested by libcurl. Corresponds to
+    `CURLMOPT_TIMERFUNCTION`_.
+    
+    The application should arrange for a non-repeating timer to fire in
+    ``timeout_ms`` milliseconds, at which point the application should call
+    either :ref:`socket_action <multi-socket_action>` or
+    :ref:`perform <multi-perform>`.
+    
+    See ``examples/multi-socket_action-select.py`` for an example program
+    that uses the timer function and the socket function.
+
+
+SOCKETFUNCTION
+--------------
+
+.. function:: SOCKETFUNCTION(what, sock_fd, multi, socketp) -> None
+
+    Callback notifying the application about activity on libcurl sockets.
+    Corresponds to `CURLMOPT_SOCKETFUNCTION`_.
+    
+    Note that the PycURL callback takes ``what`` as the first argument and
+    ``sock_fd`` as the second argument, whereas the libcurl callback takes
+    ``sock_fd`` as the first argument and ``what`` as the second argument.
+    
+    The ``userp`` ("private callback pointer") argument, as described in the
+    ``CURLMOPT_SOCKETFUNCTION`` documentation, is set to the ``CurlMulti``
+    instance.
+    
+    The ``socketp`` ("private socket pointer") argument, as described in the
+    ``CURLMOPT_SOCKETFUNCTION`` documentation, is set to the value provided
+    to the :ref:`assign <multi-assign>` method for the corresponding
+    ``sock_fd``, or ``None`` if no value was assigned.
+    
+    See ``examples/multi-socket_action-select.py`` for an example program
+    that uses the timer function and the socket function.
+
+
 .. _CURLOPT_HEADERFUNCTION: https://curl.haxx.se/libcurl/c/CURLOPT_HEADERFUNCTION.html
 .. _CURLOPT_WRITEFUNCTION: https://curl.haxx.se/libcurl/c/CURLOPT_WRITEFUNCTION.html
 .. _CURLOPT_READFUNCTION: https://curl.haxx.se/libcurl/c/CURLOPT_READFUNCTION.html
@@ -401,3 +443,5 @@ SSH_KEYFUNCTION
 .. _CURLOPT_OPENSOCKETFUNCTION: https://curl.haxx.se/libcurl/c/CURLOPT_OPENSOCKETFUNCTION.html
 .. _open_socket_cb_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/open_socket_cb_test.py
 .. _socket module: https://docs.python.org/library/socket.html
+.. _CURLMOPT_TIMERFUNCTION: https://curl.se/libcurl/c/CURLMOPT_TIMERFUNCTION.html
+.. _CURLMOPT_SOCKETFUNCTION: https://curl.se/libcurl/c/CURLMOPT_SOCKETFUNCTION.html
