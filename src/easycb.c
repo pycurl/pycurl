@@ -212,11 +212,11 @@ opensocket_callback(void *clientp, curlsocktype purpose,
         }
         // normal operation:
         if (PyInt_Check(fileno_result)) {
-            int sockfd = PyInt_AsLong(fileno_result);
+            int sock_fd = PyInt_AsLong(fileno_result);
 #if defined(WIN32)
-            ret = dup_winsock(sockfd, address);
+            ret = dup_winsock(sock_fd, address);
 #else
-            ret = dup(sockfd);
+            ret = dup(sock_fd);
 #endif
             goto done;
         } else {
