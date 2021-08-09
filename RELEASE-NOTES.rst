@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+PycURL 7.44.0 - 2021-08-08
+--------------------------
+
+This release reinstates best effort Python 2 support, adds Python 3.9 and
+Python 3.10 alpha support and implements support for several libcurl options.
+
+Official Windows builds are currently not being produced.
+
 PycURL 7.43.0.6 - 2020-09-02
 ----------------------------
 

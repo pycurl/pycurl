@@ -1,3 +1,23 @@
+Version 7.44.0 [requires libcurl-7.19.0 or better] - 2021-08-08
+---------------------------------------------------------------
+
+        * getinfo(CURLINFO_FTP_ENTRY_PATH) now handles NULL return from
+          libcurl, returning None in this case.
+        
+        * Python 3.9 is now officially supported (patch by Bill Collins).
+        
+        * Added CURLOPT_DOH_URL (patch by resokou).
+        
+        * Best effort Python 2 support has been reinstated.
+        
+        * Added missing fields to curl_version_info struct (patch by Hasan).
+        
+        * Added CURLINFO_CONDITION_UNMET (patch by Dima Tisnek).
+        
+        * Exposed MAX_CONCURRENT_STREAMS in CurlMulti (patch by Alexandre Pion).
+        
+        * Compilation fixed against Python 3.10 alpha (patch by Kamil Dudka).
+
 Version 7.43.0.6 [requires libcurl-7.19.0 or better] - 2020-09-02
 -----------------------------------------------------------------
 
