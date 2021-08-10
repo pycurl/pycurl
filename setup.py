@@ -11,9 +11,7 @@ VERSION = "7.44.0"
 import glob, os, re, sys, subprocess
 import distutils
 try:
-    import wheel
-    if wheel:
-        from setuptools import setup
+    from setuptools import setup
 except ImportError:
     from distutils.core import setup
 from distutils.extension import Extension
