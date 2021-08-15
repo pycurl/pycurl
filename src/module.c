@@ -1500,7 +1500,7 @@ initpycurl(void)
     Py_DECREF(arglist);
     PyDict_SetItemString(d, "CurlSockAddr", curl_sockaddr_type);
 
-#if defined(WITH_THREAD) && (PY_MINOR_VERSION < 3 || PY_MINOR_VERSION == 3 && PY_MINOR_VERSION < 9)
+#if defined(WITH_THREAD) && (PY_MAJOR_VERSION < 3 || PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION < 9)
     /* Finally initialize global interpreter lock */
     PyEval_InitThreads();
 #endif
