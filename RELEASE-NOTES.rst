@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+PycURL 7.44.1 - 2021-08-15
+--------------------------
+
+This release repairs incorrect Python thread initialization logic which
+caused operations to hang.
+
 PycURL 7.44.0 - 2021-08-08
 --------------------------
 
