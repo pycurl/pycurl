@@ -17,6 +17,7 @@ from . import util
 setup_module, teardown_module = appmanager.setup(('app', 8380))
 
 class TestString(str):
+    __test__ = False
     def __del__(self):
         self.replace('1', '2')
         #print self

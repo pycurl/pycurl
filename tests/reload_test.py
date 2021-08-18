@@ -14,6 +14,6 @@ class ReloadTest(unittest.TestCase):
             reload_fn = reload
         except NameError:
             # python 3
-            import imp
-            reload_fn = imp.reload
+            import importlib
+            reload_fn = importlib.reload
         reload_fn(pycurl)
