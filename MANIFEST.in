@@ -10,6 +10,7 @@ include ChangeLog
 include INSTALL.rst
 include MANIFEST.in
 include Makefile
+include pytest.ini
 include README.rst
 include RELEASE-NOTES.rst
 include doc/*.py
