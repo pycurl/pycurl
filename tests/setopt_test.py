@@ -58,13 +58,13 @@ class SetoptTest(unittest.TestCase):
         io = util.BytesIO()
         self.curl.setopt(self.curl.WRITEDATA, io)
         self.curl.perform()
-        self.assertEquals(util.b('foo'), io.getvalue())
+        self.assertEqual(util.b('foo'), io.getvalue())
 
         self.curl.unsetopt(self.curl.HTTPHEADER)
         io = util.BytesIO()
         self.curl.setopt(self.curl.WRITEDATA, io)
         self.curl.perform()
-        self.assertEquals(util.b(''), io.getvalue())
+        self.assertEqual(util.b(''), io.getvalue())
 
     def test_set_httpheader_none(self):
         self.curl.setopt(self.curl.HTTPHEADER, ('x-test: foo',))
@@ -72,13 +72,13 @@ class SetoptTest(unittest.TestCase):
         io = util.BytesIO()
         self.curl.setopt(self.curl.WRITEDATA, io)
         self.curl.perform()
-        self.assertEquals(util.b('foo'), io.getvalue())
+        self.assertEqual(util.b('foo'), io.getvalue())
 
         self.curl.setopt(self.curl.HTTPHEADER, None)
         io = util.BytesIO()
         self.curl.setopt(self.curl.WRITEDATA, io)
         self.curl.perform()
-        self.assertEquals(util.b(''), io.getvalue())
+        self.assertEqual(util.b(''), io.getvalue())
 
     @util.min_libcurl(7, 37, 0)
     def test_proxyheader_list(self):

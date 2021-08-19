@@ -297,7 +297,7 @@ class MemoryMgmtTest(unittest.TestCase):
 
         gc.collect()
         after_object_count = len(gc.get_objects())
-        self.assert_(after_object_count <= before_object_count + 1000, 'Grew from %d to %d objects' % (before_object_count, after_object_count))
+        self.assertTrue(after_object_count <= before_object_count + 1000, 'Grew from %d to %d objects' % (before_object_count, after_object_count))
         c.close()
 
     def test_form_bufferptr_memory_leak_gh267(self):
@@ -317,7 +317,7 @@ class MemoryMgmtTest(unittest.TestCase):
 
         gc.collect()
         after_object_count = len(gc.get_objects())
-        self.assert_(after_object_count <= before_object_count + 1000, 'Grew from %d to %d objects' % (before_object_count, after_object_count))
+        self.assertTrue(after_object_count <= before_object_count + 1000, 'Grew from %d to %d objects' % (before_object_count, after_object_count))
         c.close()
 
     def do_data_refcounting(self, option):
