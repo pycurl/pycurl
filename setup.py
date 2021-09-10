@@ -988,7 +988,8 @@ if __name__ == "__main__":
     elif len(sys.argv) > 1 and sys.argv[1] == 'docstrings-sources':
         gen_docstrings_sources()
     else:
-        convert_docstrings()
+        if sys.argv[1] not in ['clean'] and (not os.path.exists('src/docstrings.c') or not os.path.exists('src/docstrings.h')):
+            convert_docstrings()
 
         setup_args['data_files'] = get_data_files()
         if 'PYCURL_RELEASE' in os.environ and os.environ['PYCURL_RELEASE'].lower() in ['1', 'yes', 'true']:
