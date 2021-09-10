@@ -175,6 +175,8 @@ def only_ssl_backends(*backends):
                 current_backend = 'gnutls'
             elif 'NSS/' in pycurl.version:
                 current_backend = 'nss'
+            elif 'SecureTransport' in pycurl.version:
+                current_backend = 'secure-transport'
             else:
                 current_backend = 'none'
             if current_backend not in backends:

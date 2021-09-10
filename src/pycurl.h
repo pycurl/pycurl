@@ -220,6 +220,9 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
 #   define PYCURL_NEED_MBEDTLS_TSL
 #   define COMPILE_SSL_LIB "mbedtls"
 #   define COMPILE_SUPPORTED_SSL_BACKEND_FOUND 1
+# elif defined(HAVE_CURL_SECTRANSP)
+#   define COMPILE_SSL_LIB "secure-transport"
+#   define COMPILE_SUPPORTED_SSL_BACKEND_FOUND 1
 # else
 #  ifdef _MSC_VER
     /* sigh */
@@ -237,7 +240,7 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
     * no reason to require users match those */
 #  define COMPILE_SSL_LIB "none/other"
 #  define COMPILE_SUPPORTED_SSL_BACKEND_FOUND 0
-# endif /* HAVE_CURL_OPENSSL || HAVE_CURL_WOLFSSL || HAVE_CURL_GNUTLS || HAVE_CURL_NSS || HAVE_CURL_MBEDTLS */
+# endif /* HAVE_CURL_OPENSSL || HAVE_CURL_WOLFSSL || HAVE_CURL_GNUTLS || HAVE_CURL_NSS || HAVE_CURL_MBEDTLS || HAVE_CURL_SECTRANSP */
 #else
 # define COMPILE_SSL_LIB "none/other"
 # define COMPILE_SUPPORTED_SSL_BACKEND_FOUND 0

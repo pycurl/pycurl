@@ -145,6 +145,7 @@ class ExtensionConfiguration(object):
             '--with-gnutls': self.using_gnutls,
             '--with-nss': self.using_nss,
             '--with-mbedtls': self.using_mbedtls,
+            '--with-sectransp': self.using_sectransp,
         }
 
     def detect_ssl_option(self):
@@ -162,7 +163,7 @@ class ExtensionConfiguration(object):
 
         if 'PYCURL_SSL_LIBRARY' in os.environ:
             ssl_lib = os.environ['PYCURL_SSL_LIBRARY']
-            if ssl_lib in ['openssl', 'wolfssl', 'gnutls', 'nss', 'mbedtls']:
+            if ssl_lib in ['openssl', 'wolfssl', 'gnutls', 'nss', 'mbedtls', 'sectransp']:
                 ssl_lib_detected = ssl_lib
                 getattr(self, 'using_%s' % ssl_lib)()
             else:
@@ -326,8 +327,9 @@ class ExtensionConfiguration(object):
                 sys.stderr.write('''\
 Warning: libcurl is configured to use SSL, but we have not been able to \
 determine which SSL backend it is using. If your Curl is built against \
-OpenSSL, LibreSSL, BoringSSL, GnuTLS, NSS or mbedTLS please specify the SSL backend \
-manually. For other SSL backends please ignore this message.''')
+OpenSSL, LibreSSL, BoringSSL, GnuTLS, NSS, mbedTLS, or Secure Transport \
+please specify the SSL backend manually. For other SSL backends please \
+ignore this message.''')
         else:
             if self.detect_ssl_option():
                 sys.stderr.write("Warning: SSL backend specified manually but libcurl does not use SSL\n")
@@ -371,6 +373,9 @@ manually. For other SSL backends please ignore this message.''')
         elif ssl_version.startswith('mbedTLS/'):
             self.using_mbedtls()
             ssl_lib_detected = 'mbedtls'
+        elif ssl_version.startswith('SecureTransport'):
+            self.using_sectransp()
+            ssl_lib_detected = 'sectransp'
         return ssl_lib_detected
 
     def detect_ssl_lib_on_centos6_plus(self):
@@ -572,6 +577,11 @@ manually. For other SSL backends please ignore this message.''')
         self.define_macros.append(('HAVE_CURL_SSL', 1))
         self.ssl_lib_detected = 'mbedtls'
 
+    def using_sectransp(self):
+        self.define_macros.append(('HAVE_CURL_SECTRANSP', 1))
+        self.define_macros.append(('HAVE_CURL_SSL', 1))
+        self.ssl_lib_detected = 'sectransp'
+
 def get_bdist_msi_version_hack():
     # workaround for distutils/msi version requirement per
     # epydoc.sourceforge.net/stdlib/distutils.version.StrictVersion-class.html -
@@ -627,6 +637,7 @@ PRETTY_SSL_LIBS = {
     'gnutls': 'GnuTLS',
     'nss': 'NSS',
     'mbedtls': 'mbedTLS',
+    'sectransp': 'Secure Transport',
 }
 
 def get_extension(argv, split_extension_source=False):
@@ -954,6 +965,7 @@ PycURL Unix options:
  --with-nss                          libcurl is linked against NSS
  --with-mbedtls                      libcurl is linked against mbedTLS
  --with-wolfssl                      libcurl is linked against wolfSSL
+ --with-sectransp                    libcurl is linked against Secure Transport
 '''
 
 windows_help = '''\
