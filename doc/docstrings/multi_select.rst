@@ -1,4 +1,4 @@
-select([timeout]) -> number of ready file descriptors or -1 on timeout
+select([timeout]) -> number of ready file descriptors or 0 on timeout
 
 Returns result from doing a select() on the curl multi file descriptor
 with the given timeout.
@@ -18,7 +18,7 @@ Example usage::
         if ret != pycurl.E_CALL_MULTI_PERFORM: break
     while num_handles:
         ret = m.select(1.0)
-        if ret == -1:  continue
+        if ret == 0:  continue
         while 1:
             ret, num_handles = m.perform()
             if ret != pycurl.E_CALL_MULTI_PERFORM: break
