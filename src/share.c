@@ -187,6 +187,9 @@ do_curlshare_setopt(CurlShareObject *self, PyObject *args)
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 57, 0)
         case CURL_LOCK_DATA_CONNECT:
 #endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 61, 0)
+        case CURL_LOCK_DATA_PSL:
+#endif
             break;
         default:
             goto error;
