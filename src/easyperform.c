@@ -100,7 +100,7 @@ do_curl_pause(CurlObject *self, PyObject *args)
 #ifdef WITH_THREAD
     /* Save handle to current thread (used as context for python callbacks) */
     saved_state = self->state;
-    PYCURL_BEGIN_ALLOW_THREADS
+    PYCURL_BEGIN_ALLOW_THREADS_EASY
 
     /* We must allow threads here because unpausing a handle can cause
        some of its callbacks to be invoked immediately, from inside
@@ -110,7 +110,7 @@ do_curl_pause(CurlObject *self, PyObject *args)
     res = curl_easy_pause(self->handle, bitmask);
 
 #ifdef WITH_THREAD
-    PYCURL_END_ALLOW_THREADS
+    PYCURL_END_ALLOW_THREADS_EASY
 
     /* Restore the thread-state to whatever it was on entry */
     self->state = saved_state;
