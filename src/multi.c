@@ -797,7 +797,7 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
             Py_DECREF(ok_list);
             CURLERROR_MSG("Unable to fetch curl handle from curl object");
         }
-        assert(Py_TYPE(co) == p_Curl_Type);
+        assert(PyObject_IsInstance((PyObject *) co, (PyObject *) p_Curl_Type) == 1);
         if (msg->msg != CURLMSG_DONE) {
             /* FIXME: what does this mean ??? */
         }

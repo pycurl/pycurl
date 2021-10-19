@@ -13,7 +13,7 @@ pycurl_get_thread_state(const CurlObject *self)
      */
     if (self == NULL)
         return NULL;
-    assert(Py_TYPE(self) == p_Curl_Type);
+    assert(PyObject_IsInstance((PyObject *) self, (PyObject *) p_Curl_Type) == 1);
     if (self->state != NULL)
     {
         /* inside perform() */
