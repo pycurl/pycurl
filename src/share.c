@@ -11,7 +11,7 @@ static void
 assert_share_state(const CurlShareObject *self)
 {
     assert(self != NULL);
-    assert(Py_TYPE(self) == p_CurlShare_Type);
+    assert(PyObject_IsInstance((PyObject *) self, (PyObject *) p_CurlShare_Type) == 1);
 #ifdef WITH_THREAD
     assert(self->lock != NULL);
 #endif
