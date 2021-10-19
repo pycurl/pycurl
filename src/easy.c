@@ -96,7 +96,7 @@ do_curl_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
     }
 
     /* Allocate python curl object */
-    self = (CurlObject *) p_Curl_Type->tp_alloc(p_Curl_Type, 0);
+    self = (CurlObject *) subtype->tp_alloc(subtype, 0);
     if (self == NULL)
         return NULL;
 
