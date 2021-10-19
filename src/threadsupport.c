@@ -43,7 +43,7 @@ pycurl_get_thread_state_multi(const CurlMultiObject *self)
      */
     if (self == NULL)
         return NULL;
-    assert(Py_TYPE(self) == p_CurlMulti_Type);
+    assert(PyObject_IsInstance((PyObject *) self, (PyObject *) p_CurlMulti_Type) == 1);
     if (self->state != NULL)
     {
         /* inside multi_perform() */

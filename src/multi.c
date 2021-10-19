@@ -11,7 +11,7 @@ static void
 assert_multi_state(const CurlMultiObject *self)
 {
     assert(self != NULL);
-    assert(Py_TYPE(self) == p_CurlMulti_Type);
+    assert(PyObject_IsInstance((PyObject *) self, (PyObject *) p_CurlMulti_Type) == 1);
 #ifdef WITH_THREAD
     if (self->state != NULL) {
         assert(self->multi_handle != NULL);
@@ -56,7 +56,7 @@ do_multi_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
     }
 
     /* Allocate python curl-multi object */
-    self = (CurlMultiObject *) p_CurlMulti_Type->tp_alloc(p_CurlMulti_Type, 0);
+    self = (CurlMultiObject *) subtype->tp_alloc(subtype, 0);
     if (!self) {
         return NULL;
     }
