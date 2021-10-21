@@ -51,7 +51,7 @@ do_multi_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
     CurlMultiObject *self;
     int *ptr;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "", empty_keywords)) {
+    if (subtype == p_CurlMulti_Type && !PyArg_ParseTupleAndKeywords(args, kwds, "", empty_keywords)) {
         return NULL;
     }
 

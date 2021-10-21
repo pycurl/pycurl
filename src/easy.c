@@ -91,7 +91,7 @@ do_curl_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
     int res;
     int *ptr;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "", empty_keywords)) {
+    if (subtype == p_Curl_Type && !PyArg_ParseTupleAndKeywords(args, kwds, "", empty_keywords)) {
         return NULL;
     }
 

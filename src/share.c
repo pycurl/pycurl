@@ -38,7 +38,7 @@ do_share_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
 #endif
     int *ptr;
     
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "", empty_keywords)) {
+    if (subtype == p_CurlShare_Type && !PyArg_ParseTupleAndKeywords(args, kwds, "", empty_keywords)) {
         return NULL;
     }
 
