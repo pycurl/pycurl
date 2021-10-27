@@ -419,18 +419,12 @@ do_multi_setopt_none(CurlMultiObject *self, int option, PyObject *obj)
     case CURLMOPT_SOCKETFUNCTION:
         curl_multi_setopt(self->multi_handle, CURLMOPT_SOCKETFUNCTION, NULL);
         curl_multi_setopt(self->multi_handle, CURLMOPT_SOCKETDATA, NULL);
-        if (self->s_cb != NULL) {
-            Py_DECREF(self->s_cb);
-            self->s_cb = NULL;
-        }
+        Py_CLEAR(self->s_cb);
         break;
     case CURLMOPT_TIMERFUNCTION:
         curl_multi_setopt(self->multi_handle, CURLMOPT_TIMERFUNCTION, NULL);
         curl_multi_setopt(self->multi_handle, CURLMOPT_TIMERDATA, NULL);
-        if (self->s_cb != NULL) {
-            Py_DECREF(self->s_cb);
-            self->s_cb = NULL;
-        }
+        Py_CLEAR(self->t_cb);
         break;
     default:
         PyErr_SetString(PyExc_TypeError, "unsetting is not supported for this option");
