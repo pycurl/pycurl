@@ -407,6 +407,40 @@ do_multi_setopt_callable(CurlMultiObject *self, int option, PyObject *obj)
 
 
 static PyObject *
+do_multi_setopt_none(CurlMultiObject *self, int option, PyObject *obj)
+{
+    switch(option) {
+#ifdef HAVE_CURL_7_30_0_PIPELINE_OPTS
+    case CURLMOPT_PIPELINING_SITE_BL:
+    case CURLMOPT_PIPELINING_SERVER_BL:
+        curl_multi_setopt(self->multi_handle, option, NULL);
+        break;
+#endif
+    case CURLMOPT_SOCKETFUNCTION:
+        curl_multi_setopt(self->multi_handle, CURLMOPT_SOCKETFUNCTION, NULL);
+        curl_multi_setopt(self->multi_handle, CURLMOPT_SOCKETDATA, NULL);
+        if (self->s_cb != NULL) {
+            Py_DECREF(self->s_cb);
+            self->s_cb = NULL;
+        }
+        break;
+    case CURLMOPT_TIMERFUNCTION:
+        curl_multi_setopt(self->multi_handle, CURLMOPT_TIMERFUNCTION, NULL);
+        curl_multi_setopt(self->multi_handle, CURLMOPT_TIMERDATA, NULL);
+        if (self->s_cb != NULL) {
+            Py_DECREF(self->s_cb);
+            self->s_cb = NULL;
+        }
+        break;
+    default:
+        PyErr_SetString(PyExc_TypeError, "unsetting is not supported for this option");
+        return NULL;
+    }
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
 do_multi_setopt(CurlMultiObject *self, PyObject *args)
 {
     int option, which;
@@ -424,6 +458,11 @@ do_multi_setopt(CurlMultiObject *self, PyObject *args)
         goto error;
     if (option % 10000 >= MOPTIONS_SIZE)
         goto error;
+
+    /* Handle unsetting of options */
+    if (obj == Py_None) {
+        return do_multi_setopt_none(self, option, obj);
+    }
 
     /* Handle the case of integer arguments */
     if (PyInt_Check(obj)) {
