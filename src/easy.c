@@ -124,6 +124,226 @@ error:
 }
 
 
+/* Py_NewRef and Py_XNewRef - only since Python 3.10 (Include/object.h) */
+static inline PyObject* my_Py_NewRef(PyObject *obj)
+{
+    Py_INCREF(obj);
+    return obj;
+}
+
+static inline PyObject* my_Py_XNewRef(PyObject *obj)
+{
+    Py_XINCREF(obj);
+    return obj;
+}
+
+/* From lib/slist.c - not part of include/curl.h */
+struct curl_slist *Curl_slist_duplicate(struct curl_slist *inlist)
+{
+  struct curl_slist *outlist = NULL;
+  struct curl_slist *tmp;
+
+  while(inlist) {
+    tmp = curl_slist_append(outlist, inlist->data);
+
+    if(!tmp) {
+      curl_slist_free_all(outlist);
+      return NULL;
+    }
+
+    outlist = tmp;
+    inlist = inlist->next;
+  }
+  return outlist;
+}
+
+PYCURL_INTERNAL CurlObject *
+do_curl_duphandle(CurlObject *self)
+{
+    CurlObject *dup;
+    int res;
+    int *ptr;
+
+    /* Allocate python curl object */
+    /* TODO: allocate subtype instead of Curl_Type */
+    dup = (CurlObject *) p_Curl_Type->tp_alloc(p_Curl_Type, 0);
+    if (dup == NULL)
+        return NULL;
+
+    /* tp_alloc is expected to return zeroed memory */
+    for (ptr = (int *) &dup->dict;
+        ptr < (int *) (((char *) dup) + sizeof(CurlObject));
+        ++ptr)
+            assert(*ptr == 0);
+
+    /* Clone the curl handle */
+    dup->handle = curl_easy_duphandle(self->handle);
+    if (dup->handle == NULL)
+        goto error;
+
+    /* Set curl error buffer and zero it */
+    res = curl_easy_setopt(dup->handle, CURLOPT_ERRORBUFFER, dup->error);
+    if (res != CURLE_OK) {
+        goto error;
+    }
+    memset(dup->error, 0, sizeof(dup->error));
+
+    /* Set backreference */
+    res = curl_easy_setopt(dup->handle, CURLOPT_PRIVATE, (char *) dup);
+    if (res != CURLE_OK) {
+        goto error;
+    }
+
+    /* Copy attribute dictionary */
+    if (self->dict != NULL) {
+        dup->dict = PyDict_Copy(self->dict);
+        if (dup->dict == NULL) {
+            goto error;
+        }
+    }
+
+    /* Copy httppost related references. */
+    if (self->httppost_ref_list != NULL) {
+        dup->httppost_ref_list = PyList_GetSlice(self->httppost_ref_list, 0, PyList_Size(self->httppost_ref_list));
+        if (dup->httppost_ref_list == NULL) {
+            goto error;
+        }
+    }
+
+    /* TODO: duplicate curl_httppost */
+
+    /* Checking for CURLE_OK is not required here.
+     * All values have already been successfuly setopt'ed with self->handle. */
+
+    /* Assign and incref python callback and update data pointers */
+    if (self->w_cb != NULL) {
+        dup->w_cb = my_Py_NewRef(self->w_cb);
+        curl_easy_setopt(dup->handle, CURLOPT_WRITEDATA, dup);
+    }
+    if (self->h_cb != NULL) {
+        dup->h_cb = my_Py_NewRef(self->h_cb);
+        curl_easy_setopt(dup->handle, CURLOPT_WRITEHEADER, dup);
+    }
+    if (self->r_cb != NULL) {
+        dup->r_cb = my_Py_NewRef(self->r_cb);
+        curl_easy_setopt(dup->handle, CURLOPT_READDATA, dup);
+    }
+    if (self->pro_cb != NULL) {
+        dup->pro_cb = my_Py_NewRef(self->pro_cb);
+        curl_easy_setopt(dup->handle, CURLOPT_PROGRESSDATA, dup);
+    }
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 32, 0)
+    if (self->xferinfo_cb != NULL) {
+        dup->xferinfo_cb = my_Py_NewRef(self->xferinfo_cb);
+        curl_easy_setopt(dup->handle, CURLOPT_XFERINFODATA, dup);
+    }
+#endif
+    if (self->debug_cb != NULL) {
+        dup->debug_cb = my_Py_NewRef(self->debug_cb);
+        curl_easy_setopt(dup->handle, CURLOPT_DEBUGDATA, dup);
+    }
+    if (self->ioctl_cb != NULL) {
+        dup->ioctl_cb = my_Py_NewRef(self->ioctl_cb);
+        curl_easy_setopt(dup->handle, CURLOPT_IOCTLDATA, dup);
+    }
+    if (self->opensocket_cb != NULL) {
+        dup->opensocket_cb = my_Py_NewRef(self->opensocket_cb);
+        curl_easy_setopt(dup->handle, CURLOPT_OPENSOCKETDATA, dup);
+    }
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
+    if (self->closesocket_cb != NULL) {
+        dup->closesocket_cb = my_Py_NewRef(self->closesocket_cb);
+        curl_easy_setopt(dup->handle, CURLOPT_CLOSESOCKETDATA, dup);
+    }
+#endif
+    if (self->sockopt_cb != NULL) {
+        dup->sockopt_cb = my_Py_NewRef(self->sockopt_cb);
+        curl_easy_setopt(dup->handle, CURLOPT_SOCKOPTDATA, dup);
+    }
+#ifdef HAVE_CURL_7_19_6_OPTS
+    if (self->ssh_key_cb != NULL) {
+        dup->ssh_key_cb = my_Py_NewRef(self->ssh_key_cb);
+        curl_easy_setopt(dup->handle, CURLOPT_SSH_KEYDATA, dup);
+    }
+#endif
+    if (self->seek_cb != NULL) {
+        dup->seek_cb = my_Py_NewRef(self->seek_cb);
+        curl_easy_setopt(dup->handle, CURLOPT_SEEKDATA, dup);
+    }
+
+    /* Assign and incref python file objects */
+    dup->readdata_fp = my_Py_XNewRef(self->readdata_fp);
+    dup->writedata_fp = my_Py_XNewRef(self->writedata_fp);
+    dup->writeheader_fp = my_Py_XNewRef(self->writeheader_fp);
+
+    /* Assign and incref postfields object */
+    dup->postfields_obj = my_Py_XNewRef(self->postfields_obj);
+
+    /* Assign and incref ca certs related references */
+    dup->ca_certs_obj = my_Py_XNewRef(self->ca_certs_obj);
+
+    /* Duplicate every curl_slist allocated by setopt */
+    if (self->httpheader != NULL) {
+        dup->httpheader = Curl_slist_duplicate(self->httpheader);
+        curl_easy_setopt(dup->handle, CURLOPT_HTTPHEADER, dup->httpheader);
+    }
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
+    if (self->proxyheader != NULL) {
+        dup->proxyheader = Curl_slist_duplicate(self->proxyheader);
+        curl_easy_setopt(dup->handle, CURLOPT_PROXYHEADER, dup->proxyheader);
+    }
+#endif
+    if (self->http200aliases != NULL) {
+        dup->http200aliases = Curl_slist_duplicate(self->http200aliases);
+        curl_easy_setopt(dup->handle, CURLOPT_HTTP200ALIASES, dup->http200aliases);
+    }
+    if (self->quote != NULL) {
+        dup->quote = Curl_slist_duplicate(self->quote);
+        curl_easy_setopt(dup->handle, CURLOPT_QUOTE, dup->quote);
+    }
+    if (self->postquote != NULL) {
+        dup->postquote = Curl_slist_duplicate(self->postquote);
+        curl_easy_setopt(dup->handle, CURLOPT_POSTQUOTE, dup->postquote);
+    }
+    if (self->prequote != NULL) {
+        dup->prequote = Curl_slist_duplicate(self->prequote);
+        curl_easy_setopt(dup->handle, CURLOPT_PREQUOTE, dup->prequote);
+    }
+    if (self->telnetoptions != NULL) {
+        dup->telnetoptions = Curl_slist_duplicate(self->telnetoptions);
+        curl_easy_setopt(dup->handle, CURLOPT_TELNETOPTIONS, dup->telnetoptions);
+    }
+#ifdef HAVE_CURLOPT_RESOLVE
+    if (self->resolve != NULL) {
+        dup->resolve = Curl_slist_duplicate(self->resolve);
+        curl_easy_setopt(dup->handle, CURLOPT_RESOLVE, dup->resolve);
+    }
+#endif
+#ifdef HAVE_CURL_7_20_0_OPTS
+    if (self->mail_rcpt != NULL) {
+        dup->mail_rcpt = Curl_slist_duplicate(self->mail_rcpt);
+        curl_easy_setopt(dup->handle, CURLOPT_MAIL_RCPT, dup->mail_rcpt);
+    }
+#endif
+#ifdef HAVE_CURLOPT_CONNECT_TO
+    if (self->connect_to != NULL) {
+        dup->connect_to = Curl_slist_duplicate(self->connect_to);
+        curl_easy_setopt(dup->handle, CURLOPT_CONNECT_TO, dup->connect_to);
+    }
+#endif
+
+    /* Success - return cloned object */
+    return dup;
+
+error:
+    Py_CLEAR(dup->dict);
+    Py_CLEAR(dup->httppost_ref_list);
+    Py_DECREF(dup);    /* this also closes dup->handle */
+    PyErr_SetString(ErrorObject, "cloning curl failed");
+    return NULL;
+}
+
+
 /* util function shared by close() and clear() */
 PYCURL_INTERNAL void
 util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
@@ -438,6 +658,7 @@ PYCURL_INTERNAL PyMethodDef curlobject_methods[] = {
     {"setopt_string", (PyCFunction)do_curl_setopt_string, METH_VARARGS, curl_setopt_string_doc},
     {"unsetopt", (PyCFunction)do_curl_unsetopt, METH_VARARGS, curl_unsetopt_doc},
     {"reset", (PyCFunction)do_curl_reset, METH_NOARGS, curl_reset_doc},
+    {"duphandle", (PyCFunction)do_curl_duphandle, METH_NOARGS, NULL},
 #if defined(HAVE_CURL_OPENSSL)
     {"set_ca_certs", (PyCFunction)do_curl_set_ca_certs, METH_VARARGS, curl_set_ca_certs_doc},
 #endif
