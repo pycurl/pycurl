@@ -273,26 +273,6 @@ static inline PyObject* my_Py_XNewRef(PyObject *obj)
     return obj;
 }
 
-/* From lib/slist.c - not part of include/curl.h */
-struct curl_slist *Curl_slist_duplicate(struct curl_slist *inlist)
-{
-  struct curl_slist *outlist = NULL;
-  struct curl_slist *tmp;
-
-  while(inlist) {
-    tmp = curl_slist_append(outlist, inlist->data);
-
-    if(!tmp) {
-      curl_slist_free_all(outlist);
-      return NULL;
-    }
-
-    outlist = tmp;
-    inlist = inlist->next;
-  }
-  return outlist;
-}
-
 PYCURL_INTERNAL CurlObject *
 do_curl_duphandle(CurlObject *self)
 {
@@ -337,16 +317,6 @@ do_curl_duphandle(CurlObject *self)
             goto error;
         }
     }
-
-    /* Copy httppost related references. */
-    if (self->httppost_ref_list != NULL) {
-        dup->httppost_ref_list = PyList_GetSlice(self->httppost_ref_list, 0, PyList_Size(self->httppost_ref_list));
-        if (dup->httppost_ref_list == NULL) {
-            goto error;
-        }
-    }
-
-    /* TODO: duplicate curl_httppost */
 
     /* Checking for CURLE_OK is not required here.
      * All values have already been successfuly setopt'ed with self->handle. */
@@ -418,62 +388,34 @@ do_curl_duphandle(CurlObject *self)
     /* Assign and incref ca certs related references */
     dup->ca_certs_obj = my_Py_XNewRef(self->ca_certs_obj);
 
-    /* Duplicate every curl_slist allocated by setopt */
-    if (self->httpheader != NULL) {
-        dup->httpheader = Curl_slist_duplicate(self->httpheader);
-        curl_easy_setopt(dup->handle, CURLOPT_HTTPHEADER, dup->httpheader);
-    }
+    /* Assign and incref every curl_slist allocated by setopt */
+    dup->httpheader = my_Py_XNewRef(self->httpheader);
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
-    if (self->proxyheader != NULL) {
-        dup->proxyheader = Curl_slist_duplicate(self->proxyheader);
-        curl_easy_setopt(dup->handle, CURLOPT_PROXYHEADER, dup->proxyheader);
-    }
+    dup->proxyheader = my_Py_XNewRef(self->proxyheader);
 #endif
-    if (self->http200aliases != NULL) {
-        dup->http200aliases = Curl_slist_duplicate(self->http200aliases);
-        curl_easy_setopt(dup->handle, CURLOPT_HTTP200ALIASES, dup->http200aliases);
-    }
-    if (self->quote != NULL) {
-        dup->quote = Curl_slist_duplicate(self->quote);
-        curl_easy_setopt(dup->handle, CURLOPT_QUOTE, dup->quote);
-    }
-    if (self->postquote != NULL) {
-        dup->postquote = Curl_slist_duplicate(self->postquote);
-        curl_easy_setopt(dup->handle, CURLOPT_POSTQUOTE, dup->postquote);
-    }
-    if (self->prequote != NULL) {
-        dup->prequote = Curl_slist_duplicate(self->prequote);
-        curl_easy_setopt(dup->handle, CURLOPT_PREQUOTE, dup->prequote);
-    }
-    if (self->telnetoptions != NULL) {
-        dup->telnetoptions = Curl_slist_duplicate(self->telnetoptions);
-        curl_easy_setopt(dup->handle, CURLOPT_TELNETOPTIONS, dup->telnetoptions);
-    }
+    dup->http200aliases = my_Py_XNewRef(self->http200aliases);
+    dup->quote = my_Py_XNewRef(self->quote);
+    dup->postquote = my_Py_XNewRef(self->postquote);
+    dup->prequote = my_Py_XNewRef(self->prequote);
+    dup->telnetoptions = my_Py_XNewRef(self->telnetoptions);
 #ifdef HAVE_CURLOPT_RESOLVE
-    if (self->resolve != NULL) {
-        dup->resolve = Curl_slist_duplicate(self->resolve);
-        curl_easy_setopt(dup->handle, CURLOPT_RESOLVE, dup->resolve);
-    }
+    dup->resolve = my_Py_XNewRef(self->resolve);
 #endif
 #ifdef HAVE_CURL_7_20_0_OPTS
-    if (self->mail_rcpt != NULL) {
-        dup->mail_rcpt = Curl_slist_duplicate(self->mail_rcpt);
-        curl_easy_setopt(dup->handle, CURLOPT_MAIL_RCPT, dup->mail_rcpt);
-    }
+    dup->mail_rcpt = my_Py_XNewRef(self->mail_rcpt);
 #endif
 #ifdef HAVE_CURLOPT_CONNECT_TO
-    if (self->connect_to != NULL) {
-        dup->connect_to = Curl_slist_duplicate(self->connect_to);
-        curl_easy_setopt(dup->handle, CURLOPT_CONNECT_TO, dup->connect_to);
-    }
+    dup->connect_to = my_Py_XNewRef(self->connect_to);
 #endif
+
+    /* Assign and incref httppost */
+    dup->httppost = my_Py_XNewRef(self->httppost);
 
     /* Success - return cloned object */
     return dup;
 
 error:
     Py_CLEAR(dup->dict);
-    Py_CLEAR(dup->httppost_ref_list);
     Py_DECREF(dup);    /* this also closes dup->handle */
     PyErr_SetString(ErrorObject, "cloning curl failed");
     return NULL;
