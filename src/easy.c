@@ -1,6 +1,142 @@
 #include "pycurl.h"
 #include "docstrings.h"
 
+#define PYCURL_TP_SLOTS_ZEROED \
+    0,      /* tp_print / tp_vectorcall_offset */ \
+    0,      /* tp_getattr */ \
+    0,      /* tp_setattr */ \
+    0,      /* tp_reserved / tp_as_async */ \
+    0,      /* tp_repr */ \
+    0,      /* tp_as_number */ \
+    0,      /* tp_as_sequence */ \
+    0,      /* tp_as_mapping */ \
+    0,      /* tp_hash */ \
+    0,      /* tp_call */ \
+    0,      /* tp_str */ \
+    0,      /* tp_getattro */ \
+    0,      /* tp_setattro */ \
+    0,      /* tp_as_buffer */ \
+    0,      /* tp_flags */ \
+    0,      /* tp_doc */ \
+    0,      /* tp_traverse */ \
+    0,      /* tp_clear */ \
+    0,      /* tp_richcompare */ \
+    0,      /* tp_weaklistoffset */ \
+    0,      /* tp_iter */ \
+    0,      /* tp_iternext */ \
+    0,      /* tp_methods */ \
+    0,      /* tp_members */ \
+    0,      /* tp_getset */ \
+    0,      /* tp_base */ \
+    0,      /* tp_dict */ \
+    0,      /* tp_descr_get */ \
+    0,      /* tp_descr_set */ \
+    0,      /* tp_dictoffset */ \
+    0,      /* tp_init */ \
+    0,      /* tp_alloc */ \
+    0,      /* tp_new */ \
+    0,      /* tp_free */ \
+    0,      /* tp_is_gc */ \
+    0,      /* tp_bases */ \
+    0,      /* tp_mro */ \
+    0,      /* tp_cache */ \
+    0,      /* tp_subclasses */ \
+    0,      /* tp_weaklist */
+
+/*************************************************************************
+// CurlSlistObject
+**************************************************************************/
+
+PYCURL_INTERNAL void
+util_curlslist_update(CurlSlistObject **old, struct curl_slist *slist)
+{
+    /* Decref previous object */
+    Py_XDECREF(*old);
+    /* Create a new object */
+    *old = PyObject_New(CurlSlistObject, p_CurlSlist_Type);
+    assert(*old != NULL);
+    /* Store curl_slist into the new object */
+    (*old)->slist = slist;
+}
+
+PYCURL_INTERNAL void
+do_curl_slist_dealloc(CurlSlistObject *self) {
+    if (self->slist != NULL) {
+        curl_slist_free_all(self->slist);
+        self->slist = NULL;
+    }
+    Py_TYPE(self)->tp_free((PyObject *) self);
+}
+
+PYCURL_INTERNAL PyTypeObject CurlSlist_Type = {
+#if PY_MAJOR_VERSION >= 3
+    PyVarObject_HEAD_INIT(NULL, 0)
+#else
+    PyObject_HEAD_INIT(NULL)
+    0,                          /* ob_size */
+#endif
+    "pycurl.CurlSlist",         /* tp_name */
+    sizeof(CurlSlistObject),    /* tp_basicsize */
+    0,                          /* tp_itemsize */
+    (destructor)do_curl_slist_dealloc, /* tp_dealloc */
+    PYCURL_TP_SLOTS_ZEROED
+#if PY_MAJOR_VERSION >= 3
+    0,                          /* tp_del */
+    0,                          /* tp_version_tag */
+    0,                          /* tp_finalize */
+    0,                          /* tp_vectorcall */
+#endif
+};
+
+
+/*************************************************************************
+// CurlHttppostObject
+**************************************************************************/
+
+PYCURL_INTERNAL void
+util_curlhttppost_update(CurlObject *obj, struct curl_httppost *httppost, PyObject *reflist)
+{
+    /* Decref previous object */
+    Py_XDECREF(obj->httppost);
+    /* Create a new object */
+    obj->httppost = PyObject_New(CurlHttppostObject, p_CurlHttppost_Type);
+    assert(obj->httppost != NULL);
+    /* Store curl_httppost and reflist into the new object */
+    obj->httppost->httppost = httppost;
+    obj->httppost->reflist = reflist;
+}
+
+PYCURL_INTERNAL void
+do_curl_httppost_dealloc(CurlHttppostObject *self) {
+    if (self->httppost != NULL) {
+        curl_formfree(self->httppost);
+        self->httppost = NULL;
+    }
+    Py_CLEAR(self->reflist);
+    Py_TYPE(self)->tp_free((PyObject *) self);
+}
+
+PYCURL_INTERNAL PyTypeObject CurlHttppost_Type = {
+#if PY_MAJOR_VERSION >= 3
+    PyVarObject_HEAD_INIT(NULL, 0)
+#else
+    PyObject_HEAD_INIT(NULL)
+    0,                          /* ob_size */
+#endif
+    "pycurl.CurlHttppost",      /* tp_name */
+    sizeof(CurlHttppostObject), /* tp_basicsize */
+    0,                          /* tp_itemsize */
+    (destructor)do_curl_httppost_dealloc, /* tp_dealloc */
+    PYCURL_TP_SLOTS_ZEROED
+#if PY_MAJOR_VERSION >= 3
+    0,                          /* tp_del */
+    0,                          /* tp_version_tag */
+    0,                          /* tp_finalize */
+    0,                          /* tp_vectorcall */
+#endif
+};
+
+
 /*************************************************************************
 // static utility functions
 **************************************************************************/
@@ -414,13 +550,35 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
     }
 
     if (flags & PYCURL_MEMGROUP_HTTPPOST) {
-        /* Decrement refcounts for httppost related references. */
-        Py_CLEAR(self->httppost_ref_list);
+        /* Decrement refcounts for httppost object. */
+        Py_CLEAR(self->httppost);
     }
 
     if (flags & PYCURL_MEMGROUP_CACERTS) {
         /* Decrement refcounts for ca certs related references. */
         Py_CLEAR(self->ca_certs_obj);
+    }
+
+    if (flags & PYCURL_MEMGROUP_SLIST) {
+        /* Decrement refcounts for slist objects. */
+        Py_CLEAR(self->httpheader);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
+        Py_CLEAR(self->proxyheader);
+#endif
+        Py_CLEAR(self->http200aliases);
+        Py_CLEAR(self->quote);
+        Py_CLEAR(self->postquote);
+        Py_CLEAR(self->prequote);
+        Py_CLEAR(self->telnetoptions);
+#ifdef HAVE_CURLOPT_RESOLVE
+        Py_CLEAR(self->resolve);
+#endif
+#ifdef HAVE_CURL_7_20_0_OPTS
+        Py_CLEAR(self->mail_rcpt);
+#endif
+#ifdef HAVE_CURLOPT_CONNECT_TO
+        Py_CLEAR(self->connect_to);
+#endif
     }
 }
 
@@ -467,32 +625,6 @@ util_curl_close(CurlObject *self)
     if (self->weakreflist != NULL) {
         PyObject_ClearWeakRefs((PyObject *) self);
     }
-
-    /* Free all variables allocated by setopt */
-#undef SFREE
-#define SFREE(v)   if ((v) != NULL) (curl_formfree(v), (v) = NULL)
-    SFREE(self->httppost);
-#undef SFREE
-#define SFREE(v)   if ((v) != NULL) (curl_slist_free_all(v), (v) = NULL)
-    SFREE(self->httpheader);
-#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
-    SFREE(self->proxyheader);
-#endif
-    SFREE(self->http200aliases);
-    SFREE(self->quote);
-    SFREE(self->postquote);
-    SFREE(self->prequote);
-    SFREE(self->telnetoptions);
-#ifdef HAVE_CURLOPT_RESOLVE
-    SFREE(self->resolve);
-#endif
-#ifdef HAVE_CURL_7_20_0_OPTS
-    SFREE(self->mail_rcpt);
-#endif
-#ifdef HAVE_CURLOPT_CONNECT_TO
-    SFREE(self->connect_to);
-#endif
-#undef SFREE
 }
 
 
@@ -571,6 +703,27 @@ do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
 
     VISIT(self->ca_certs_obj);
 
+    VISIT((PyObject *) self->httpheader);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
+    VISIT((PyObject *) self->proxyheader);
+#endif
+    VISIT((PyObject *) self->http200aliases);
+    VISIT((PyObject *) self->quote);
+    VISIT((PyObject *) self->postquote);
+    VISIT((PyObject *) self->prequote);
+    VISIT((PyObject *) self->telnetoptions);
+#ifdef HAVE_CURLOPT_RESOLVE
+    VISIT((PyObject *) self->resolve);
+#endif
+#ifdef HAVE_CURL_7_20_0_OPTS
+    VISIT((PyObject *) self->mail_rcpt);
+#endif
+#ifdef HAVE_CURLOPT_CONNECT_TO
+    VISIT((PyObject *) self->connect_to);
+#endif
+
+    VISIT((PyObject *) self->httppost);
+
     return 0;
 #undef VISIT
 }
@@ -588,31 +741,6 @@ do_curl_reset(CurlObject *self)
     /* Decref easy interface related objects */
     util_curl_xdecref(self, PYCURL_MEMGROUP_EASY, self->handle);
 
-    /* Free all variables allocated by setopt */
-#undef SFREE
-#define SFREE(v)   if ((v) != NULL) (curl_formfree(v), (v) = NULL)
-    SFREE(self->httppost);
-#undef SFREE
-#define SFREE(v)   if ((v) != NULL) (curl_slist_free_all(v), (v) = NULL)
-    SFREE(self->httpheader);
-#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
-    SFREE(self->proxyheader);
-#endif
-    SFREE(self->http200aliases);
-    SFREE(self->quote);
-    SFREE(self->postquote);
-    SFREE(self->prequote);
-    SFREE(self->telnetoptions);
-#ifdef HAVE_CURLOPT_RESOLVE
-    SFREE(self->resolve);
-#endif
-#ifdef HAVE_CURL_7_20_0_OPTS
-    SFREE(self->mail_rcpt);
-#endif
-#ifdef HAVE_CURLOPT_CONNECT_TO
-    SFREE(self->connect_to);
-#endif
-#undef SFREE
     res = util_curl_init(self);
     if (res < 0) {
         Py_DECREF(self);    /* this also closes self->handle */

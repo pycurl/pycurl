@@ -371,15 +371,29 @@ create_and_set_error_object(struct CurlObject *self, int code);
 #define PYCURL_MEMGROUP_POSTFIELDS      64
 /* CA certs object */
 #define PYCURL_MEMGROUP_CACERTS         128
+/* Curl slist objects */
+#define PYCURL_MEMGROUP_SLIST           256
 
 #define PYCURL_MEMGROUP_EASY \
     (PYCURL_MEMGROUP_CALLBACK | PYCURL_MEMGROUP_FILE | \
     PYCURL_MEMGROUP_HTTPPOST | PYCURL_MEMGROUP_POSTFIELDS | \
-    PYCURL_MEMGROUP_CACERTS)
+    PYCURL_MEMGROUP_CACERTS | PYCURL_MEMGROUP_SLIST)
 
 #define PYCURL_MEMGROUP_ALL \
     (PYCURL_MEMGROUP_ATTRDICT | PYCURL_MEMGROUP_EASY | \
     PYCURL_MEMGROUP_MULTI | PYCURL_MEMGROUP_SHARE)
+
+typedef struct CurlSlistObject {
+    PyObject_HEAD
+    struct curl_slist *slist;
+} CurlSlistObject;
+
+typedef struct CurlHttppostObject {
+    PyObject_HEAD
+    struct curl_httppost *httppost;
+    /* List of INC'ed references associated with httppost. */
+    PyObject *reflist;
+} CurlHttppostObject;
 
 typedef struct CurlObject {
     PyObject_HEAD
@@ -392,26 +406,24 @@ typedef struct CurlObject {
 #endif
     struct CurlMultiObject *multi_stack;
     struct CurlShareObject *share;
-    struct curl_httppost *httppost;
-    /* List of INC'ed references associated with httppost. */
-    PyObject *httppost_ref_list;
-    struct curl_slist *httpheader;
+    struct CurlHttppostObject *httppost;
+    struct CurlSlistObject *httpheader;
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
-    struct curl_slist *proxyheader;
+    struct CurlSlistObject *proxyheader;
 #endif
-    struct curl_slist *http200aliases;
-    struct curl_slist *quote;
-    struct curl_slist *postquote;
-    struct curl_slist *prequote;
-    struct curl_slist *telnetoptions;
+    struct CurlSlistObject *http200aliases;
+    struct CurlSlistObject *quote;
+    struct CurlSlistObject *postquote;
+    struct CurlSlistObject *prequote;
+    struct CurlSlistObject *telnetoptions;
 #ifdef HAVE_CURLOPT_RESOLVE
-    struct curl_slist *resolve;
+    struct CurlSlistObject *resolve;
 #endif
 #ifdef HAVE_CURL_7_20_0_OPTS
-    struct curl_slist *mail_rcpt;
+    struct CurlSlistObject *mail_rcpt;
 #endif
 #ifdef HAVE_CURLOPT_CONNECT_TO
-    struct curl_slist *connect_to;
+    struct CurlSlistObject *connect_to;
 #endif
     /* callbacks */
     PyObject *w_cb;
@@ -619,11 +631,15 @@ ssl_ctx_callback(CURL *curl, void *ssl_ctx, void *ptr);
 #if !defined(PYCURL_SINGLE_FILE)
 /* Type objects */
 extern PyTypeObject Curl_Type;
+extern PyTypeObject CurlSlist_Type;
+extern PyTypeObject CurlHttppost_Type;
 extern PyTypeObject CurlMulti_Type;
 extern PyTypeObject CurlShare_Type;
 
 extern PyObject *ErrorObject;
 extern PyTypeObject *p_Curl_Type;
+extern PyTypeObject *p_CurlSlist_Type;
+extern PyTypeObject *p_CurlHttppost_Type;
 extern PyTypeObject *p_CurlMulti_Type;
 extern PyTypeObject *p_CurlShare_Type;
 extern PyObject *khkey_type;

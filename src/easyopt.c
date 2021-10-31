@@ -67,8 +67,7 @@ util_curl_unsetopt(CurlObject *self, int option)
         break;
     case CURLOPT_HTTPPOST:
         SETOPT((void *) 0);
-        curl_formfree(self->httppost);
-        util_curl_xdecref(self, PYCURL_MEMGROUP_HTTPPOST, self->handle);
+        Py_CLEAR(self->httppost);
         self->httppost = NULL;
         /* FIXME: what about data->set.httpreq ?? */
         break;
@@ -690,16 +689,9 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
         CURLERROR_SET_RETVAL();
         goto error;
     }
-    /* Finally, free previously allocated httppost, ZAP any
-     * buffer references, and update */
-    curl_formfree(self->httppost);
-    util_curl_xdecref(self, PYCURL_MEMGROUP_HTTPPOST, self->handle);
-    self->httppost = post;
-
-    /* The previous list of INCed references was ZAPed above; save
-     * the new one so that we can clean it up on the next
-     * self->httppost free. */
-    self->httppost_ref_list = ref_params;
+    /* Finally, decref previous httppost object and replace it with a
+     * new one. */
+    util_curlhttppost_update(self, post, ref_params);
 
     Py_RETURN_NONE;
 
@@ -713,48 +705,48 @@ error:
 static PyObject *
 do_curl_setopt_list(CurlObject *self, int option, int which, PyObject *obj)
 {
-    struct curl_slist **old_slist = NULL;
+    CurlSlistObject **old_slist_obj = NULL;
     struct curl_slist *slist = NULL;
     Py_ssize_t len;
     int res;
 
     switch (option) {
     case CURLOPT_HTTP200ALIASES:
-        old_slist = &self->http200aliases;
+        old_slist_obj = &self->http200aliases;
         break;
     case CURLOPT_HTTPHEADER:
-        old_slist = &self->httpheader;
+        old_slist_obj = &self->httpheader;
         break;
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
     case CURLOPT_PROXYHEADER:
-        old_slist = &self->proxyheader;
+        old_slist_obj = &self->proxyheader;
         break;
 #endif
     case CURLOPT_POSTQUOTE:
-        old_slist = &self->postquote;
+        old_slist_obj = &self->postquote;
         break;
     case CURLOPT_PREQUOTE:
-        old_slist = &self->prequote;
+        old_slist_obj = &self->prequote;
         break;
     case CURLOPT_QUOTE:
-        old_slist = &self->quote;
+        old_slist_obj = &self->quote;
         break;
     case CURLOPT_TELNETOPTIONS:
-        old_slist = &self->telnetoptions;
+        old_slist_obj = &self->telnetoptions;
         break;
 #ifdef HAVE_CURLOPT_RESOLVE
     case CURLOPT_RESOLVE:
-        old_slist = &self->resolve;
+        old_slist_obj = &self->resolve;
         break;
 #endif
 #ifdef HAVE_CURL_7_20_0_OPTS
     case CURLOPT_MAIL_RCPT:
-        old_slist = &self->mail_rcpt;
+        old_slist_obj = &self->mail_rcpt;
         break;
 #endif
 #ifdef HAVE_CURLOPT_CONNECT_TO
     case CURLOPT_CONNECT_TO:
-        old_slist = &self->connect_to;
+        old_slist_obj = &self->connect_to;
         break;
 #endif
     default:
@@ -768,7 +760,7 @@ do_curl_setopt_list(CurlObject *self, int option, int which, PyObject *obj)
         Py_RETURN_NONE;
 
     /* Just to be sure we do not bug off here */
-    assert(old_slist != NULL && slist == NULL);
+    assert(old_slist_obj != NULL && slist == NULL);
 
     /* Handle regular list operations on the other options */
     slist = pycurl_list_or_tuple_to_slist(which, obj, len);
@@ -781,9 +773,9 @@ do_curl_setopt_list(CurlObject *self, int option, int which, PyObject *obj)
         curl_slist_free_all(slist);
         CURLERROR_RETVAL();
     }
-    /* Finally, free previously allocated list and update */
-    curl_slist_free_all(*old_slist);
-    *old_slist = slist;
+    /* Finally, decref previous slist object and replace it with a
+     * new one. */
+    util_curlslist_update(old_slist_obj, slist);
 
     Py_RETURN_NONE;
 }
