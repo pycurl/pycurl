@@ -389,27 +389,27 @@ do_curl_duphandle(CurlObject *self)
     dup->ca_certs_obj = my_Py_XNewRef(self->ca_certs_obj);
 
     /* Assign and incref every curl_slist allocated by setopt */
-    dup->httpheader = my_Py_XNewRef(self->httpheader);
+    dup->httpheader = (CurlSlistObject *)my_Py_XNewRef((PyObject *)self->httpheader);
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
-    dup->proxyheader = my_Py_XNewRef(self->proxyheader);
+    dup->proxyheader = (CurlSlistObject *)my_Py_XNewRef((PyObject *)self->proxyheader);
 #endif
-    dup->http200aliases = my_Py_XNewRef(self->http200aliases);
-    dup->quote = my_Py_XNewRef(self->quote);
-    dup->postquote = my_Py_XNewRef(self->postquote);
-    dup->prequote = my_Py_XNewRef(self->prequote);
-    dup->telnetoptions = my_Py_XNewRef(self->telnetoptions);
+    dup->http200aliases = (CurlSlistObject *)my_Py_XNewRef((PyObject *)self->http200aliases);
+    dup->quote = (CurlSlistObject *)my_Py_XNewRef((PyObject *)self->quote);
+    dup->postquote = (CurlSlistObject *)my_Py_XNewRef((PyObject *)self->postquote);
+    dup->prequote = (CurlSlistObject *)my_Py_XNewRef((PyObject *)self->prequote);
+    dup->telnetoptions = (CurlSlistObject *)my_Py_XNewRef((PyObject *)self->telnetoptions);
 #ifdef HAVE_CURLOPT_RESOLVE
-    dup->resolve = my_Py_XNewRef(self->resolve);
+    dup->resolve = (CurlSlistObject *)my_Py_XNewRef((PyObject *)self->resolve);
 #endif
 #ifdef HAVE_CURL_7_20_0_OPTS
-    dup->mail_rcpt = my_Py_XNewRef(self->mail_rcpt);
+    dup->mail_rcpt = (CurlSlistObject *)my_Py_XNewRef((PyObject *)self->mail_rcpt);
 #endif
 #ifdef HAVE_CURLOPT_CONNECT_TO
-    dup->connect_to = my_Py_XNewRef(self->connect_to);
+    dup->connect_to = (CurlSlistObject *)my_Py_XNewRef((PyObject *)self->connect_to);
 #endif
 
     /* Assign and incref httppost */
-    dup->httppost = my_Py_XNewRef(self->httppost);
+    dup->httppost = (CurlHttppostObject *)my_Py_XNewRef((PyObject *)self->httppost);
 
     /* Success - return cloned object */
     return dup;
