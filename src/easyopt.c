@@ -67,8 +67,7 @@ util_curl_unsetopt(CurlObject *self, int option)
         break;
     case CURLOPT_HTTPPOST:
         SETOPT((void *) 0);
-        curl_formfree(self->httppost);
-        util_curl_xdecref(self, PYCURL_MEMGROUP_HTTPPOST, self->handle);
+        Py_CLEAR(self->httppost);
         self->httppost = NULL;
         /* FIXME: what about data->set.httpreq ?? */
         break;
@@ -690,16 +689,9 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
         CURLERROR_SET_RETVAL();
         goto error;
     }
-    /* Finally, free previously allocated httppost, ZAP any
-     * buffer references, and update */
-    curl_formfree(self->httppost);
-    util_curl_xdecref(self, PYCURL_MEMGROUP_HTTPPOST, self->handle);
-    self->httppost = post;
-
-    /* The previous list of INCed references was ZAPed above; save
-     * the new one so that we can clean it up on the next
-     * self->httppost free. */
-    self->httppost_ref_list = ref_params;
+    /* Finally, decref previous httppost object and replace it with a
+     * new one. */
+    util_curlhttppost_update(self, post, ref_params);
 
     Py_RETURN_NONE;
 

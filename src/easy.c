@@ -37,6 +37,43 @@ PYCURL_INTERNAL PyTypeObject CurlSlist_Type = {
 
 
 /*************************************************************************
+// CurlHttppostObject
+**************************************************************************/
+
+PYCURL_INTERNAL void
+util_curlhttppost_update(CurlObject *obj, struct curl_httppost *httppost, PyObject *reflist)
+{
+    /* Decref previous object */
+    Py_XDECREF(obj->httppost);
+    /* Create a new object */
+    obj->httppost = PyObject_New(CurlHttppostObject, p_CurlHttppost_Type);
+    assert(obj->httppost != NULL);
+    /* Store curl_httppost and reflist into the new object */
+    obj->httppost->httppost = httppost;
+    obj->httppost->reflist = reflist;
+}
+
+PYCURL_INTERNAL void
+do_curl_httppost_dealloc(CurlHttppostObject *self) {
+    if (self->httppost != NULL) {
+        curl_formfree(self->httppost);
+        self->httppost = NULL;
+    }
+    Py_CLEAR(self->reflist);
+    Py_TYPE(self)->tp_free((PyObject *) self);
+}
+
+/* TODO: Python 2 compatible */
+PYCURL_INTERNAL PyTypeObject CurlHttppost_Type = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    .tp_name = "pycurl.CurlHttppost",
+    .tp_basicsize = sizeof(CurlHttppostObject),
+    .tp_itemsize = 0,
+    .tp_dealloc = (destructor) do_curl_httppost_dealloc,
+};
+
+
+/*************************************************************************
 // static utility functions
 **************************************************************************/
 
@@ -229,8 +266,8 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
     }
 
     if (flags & PYCURL_MEMGROUP_HTTPPOST) {
-        /* Decrement refcounts for httppost related references. */
-        Py_CLEAR(self->httppost_ref_list);
+        /* Decrement refcounts for httppost object. */
+        Py_CLEAR(self->httppost);
     }
 
     if (flags & PYCURL_MEMGROUP_CACERTS) {
@@ -400,6 +437,8 @@ do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
 #ifdef HAVE_CURLOPT_CONNECT_TO
     VISIT((PyObject *) self->connect_to);
 #endif
+
+    VISIT((PyObject *) self->httppost);
 
     return 0;
 #undef VISIT

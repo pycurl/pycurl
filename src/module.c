@@ -29,6 +29,7 @@ PYCURL_INTERNAL char *g_pycurl_useragent = NULL;
 PYCURL_INTERNAL PyObject *ErrorObject = NULL;
 PYCURL_INTERNAL PyTypeObject *p_Curl_Type = NULL;
 PYCURL_INTERNAL PyTypeObject *p_CurlSlist_Type = NULL;
+PYCURL_INTERNAL PyTypeObject *p_CurlHttppost_Type = NULL;
 PYCURL_INTERNAL PyTypeObject *p_CurlMulti_Type = NULL;
 PYCURL_INTERNAL PyTypeObject *p_CurlShare_Type = NULL;
 #ifdef HAVE_CURL_7_19_6_OPTS
@@ -418,10 +419,12 @@ initpycurl(void)
      * is required for portability to Windows without requiring C++. */
     p_Curl_Type = &Curl_Type;
     p_CurlSlist_Type = &CurlSlist_Type;
+    p_CurlHttppost_Type = &CurlHttppost_Type;
     p_CurlMulti_Type = &CurlMulti_Type;
     p_CurlShare_Type = &CurlShare_Type;
     Py_SET_TYPE(&Curl_Type, &PyType_Type);
     Py_SET_TYPE(&CurlSlist_Type, &PyType_Type);
+    Py_SET_TYPE(&CurlHttppost_Type, &PyType_Type);
     Py_SET_TYPE(&CurlMulti_Type, &PyType_Type);
     Py_SET_TYPE(&CurlShare_Type, &PyType_Type);
 
@@ -430,6 +433,9 @@ initpycurl(void)
         goto error;
 
     if (PyType_Ready(&CurlSlist_Type) < 0)
+        goto error;
+
+    if (PyType_Ready(&CurlHttppost_Type) < 0)
         goto error;
 
     if (PyType_Ready(&CurlMulti_Type) < 0)

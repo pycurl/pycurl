@@ -388,6 +388,13 @@ typedef struct CurlSlistObject {
     struct curl_slist *slist;
 } CurlSlistObject;
 
+typedef struct CurlHttppostObject {
+    PyObject_HEAD
+    struct curl_httppost *httppost;
+    /* List of INC'ed references associated with httppost. */
+    PyObject *reflist;
+} CurlHttppostObject;
+
 typedef struct CurlObject {
     PyObject_HEAD
     PyObject *dict;                 /* Python attributes dictionary */
@@ -399,9 +406,7 @@ typedef struct CurlObject {
 #endif
     struct CurlMultiObject *multi_stack;
     struct CurlShareObject *share;
-    struct curl_httppost *httppost;
-    /* List of INC'ed references associated with httppost. */
-    PyObject *httppost_ref_list;
+    struct CurlHttppostObject *httppost;
     struct CurlSlistObject *httpheader;
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
     struct CurlSlistObject *proxyheader;
@@ -627,12 +632,14 @@ ssl_ctx_callback(CURL *curl, void *ssl_ctx, void *ptr);
 /* Type objects */
 extern PyTypeObject Curl_Type;
 extern PyTypeObject CurlSlist_Type;
+extern PyTypeObject CurlHttppost_Type;
 extern PyTypeObject CurlMulti_Type;
 extern PyTypeObject CurlShare_Type;
 
 extern PyObject *ErrorObject;
 extern PyTypeObject *p_Curl_Type;
 extern PyTypeObject *p_CurlSlist_Type;
+extern PyTypeObject *p_CurlHttppost_Type;
 extern PyTypeObject *p_CurlMulti_Type;
 extern PyTypeObject *p_CurlShare_Type;
 extern PyObject *khkey_type;
