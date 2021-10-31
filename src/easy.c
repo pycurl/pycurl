@@ -1,6 +1,48 @@
 #include "pycurl.h"
 #include "docstrings.h"
 
+#define PYCURL_TP_SLOTS_ZEROED \
+    0,      /* tp_print / tp_vectorcall_offset */ \
+    0,      /* tp_getattr */ \
+    0,      /* tp_setattr */ \
+    0,      /* tp_reserved / tp_as_async */ \
+    0,      /* tp_repr */ \
+    0,      /* tp_as_number */ \
+    0,      /* tp_as_sequence */ \
+    0,      /* tp_as_mapping */ \
+    0,      /* tp_hash */ \
+    0,      /* tp_call */ \
+    0,      /* tp_str */ \
+    0,      /* tp_getattro */ \
+    0,      /* tp_setattro */ \
+    0,      /* tp_as_buffer */ \
+    0,      /* tp_flags */ \
+    0,      /* tp_doc */ \
+    0,      /* tp_traverse */ \
+    0,      /* tp_clear */ \
+    0,      /* tp_richcompare */ \
+    0,      /* tp_weaklistoffset */ \
+    0,      /* tp_iter */ \
+    0,      /* tp_iternext */ \
+    0,      /* tp_methods */ \
+    0,      /* tp_members */ \
+    0,      /* tp_getset */ \
+    0,      /* tp_base */ \
+    0,      /* tp_dict */ \
+    0,      /* tp_descr_get */ \
+    0,      /* tp_descr_set */ \
+    0,      /* tp_dictoffset */ \
+    0,      /* tp_init */ \
+    0,      /* tp_alloc */ \
+    0,      /* tp_new */ \
+    0,      /* tp_free */ \
+    0,      /* tp_is_gc */ \
+    0,      /* tp_bases */ \
+    0,      /* tp_mro */ \
+    0,      /* tp_cache */ \
+    0,      /* tp_subclasses */ \
+    0,      /* tp_weaklist */
+
 /*************************************************************************
 // CurlSlistObject
 **************************************************************************/
@@ -26,13 +68,24 @@ do_curl_slist_dealloc(CurlSlistObject *self) {
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
-/* TODO: Python 2 compatible */
 PYCURL_INTERNAL PyTypeObject CurlSlist_Type = {
+#if PY_MAJOR_VERSION >= 3
     PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "pycurl.CurlSlist",
-    .tp_basicsize = sizeof(CurlSlistObject),
-    .tp_itemsize = 0,
-    .tp_dealloc = (destructor) do_curl_slist_dealloc,
+#else
+    PyObject_HEAD_INIT(NULL)
+    0,                          /* ob_size */
+#endif
+    "pycurl.CurlSlist",         /* tp_name */
+    sizeof(CurlSlistObject),    /* tp_basicsize */
+    0,                          /* tp_itemsize */
+    (destructor)do_curl_slist_dealloc, /* tp_dealloc */
+    PYCURL_TP_SLOTS_ZEROED
+#if PY_MAJOR_VERSION >= 3
+    0,                          /* tp_del */
+    0,                          /* tp_version_tag */
+    0,                          /* tp_finalize */
+    0,                          /* tp_vectorcall */
+#endif
 };
 
 
@@ -63,13 +116,24 @@ do_curl_httppost_dealloc(CurlHttppostObject *self) {
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
-/* TODO: Python 2 compatible */
 PYCURL_INTERNAL PyTypeObject CurlHttppost_Type = {
+#if PY_MAJOR_VERSION >= 3
     PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "pycurl.CurlHttppost",
-    .tp_basicsize = sizeof(CurlHttppostObject),
-    .tp_itemsize = 0,
-    .tp_dealloc = (destructor) do_curl_httppost_dealloc,
+#else
+    PyObject_HEAD_INIT(NULL)
+    0,                          /* ob_size */
+#endif
+    "pycurl.CurlHttppost",      /* tp_name */
+    sizeof(CurlHttppostObject), /* tp_basicsize */
+    0,                          /* tp_itemsize */
+    (destructor)do_curl_httppost_dealloc, /* tp_dealloc */
+    PYCURL_TP_SLOTS_ZEROED
+#if PY_MAJOR_VERSION >= 3
+    0,                          /* tp_del */
+    0,                          /* tp_version_tag */
+    0,                          /* tp_finalize */
+    0,                          /* tp_vectorcall */
+#endif
 };
 
 
