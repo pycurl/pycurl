@@ -276,13 +276,14 @@ static inline PyObject* my_Py_XNewRef(PyObject *obj)
 PYCURL_INTERNAL CurlObject *
 do_curl_duphandle(CurlObject *self)
 {
+    PyTypeObject *subtype;
     CurlObject *dup;
     int res;
     int *ptr;
 
     /* Allocate python curl object */
-    /* TODO: allocate subtype instead of Curl_Type */
-    dup = (CurlObject *) p_Curl_Type->tp_alloc(p_Curl_Type, 0);
+    subtype = Py_TYPE(self);
+    dup = (CurlObject *) subtype->tp_alloc(subtype, 0);
     if (dup == NULL)
         return NULL;
 
