@@ -416,7 +416,9 @@ do_curl_duphandle(CurlObject *self)
     return dup;
 
 error:
-    Py_CLEAR(dup->dict);
+    if (dup != NULL) {
+        Py_CLEAR(dup->dict);
+    }
     Py_DECREF(dup);    /* this also closes dup->handle */
     PyErr_SetString(ErrorObject, "cloning curl failed");
     return NULL;
