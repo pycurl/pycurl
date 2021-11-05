@@ -65,10 +65,57 @@ util_curl_unsetopt(CurlObject *self, int option)
         Py_XDECREF(self->share);
         self->share = NULL;
         break;
+    case CURLOPT_HTTPHEADER:
+        SETOPT((void *) 0);
+        Py_CLEAR(self->httpheader);
+        break;
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
+    case CURLOPT_PROXYHEADER:
+        SETOPT((void *) 0);
+        Py_CLEAR(self->proxyheader);
+        break;
+#endif
+    case CURLOPT_HTTP200ALIASES:
+        SETOPT((void *) 0);
+        Py_CLEAR(self->http200aliases);
+        break;
+    case CURLOPT_QUOTE:
+        SETOPT((void *) 0);
+        Py_CLEAR(self->quote);
+        break;
+    case CURLOPT_POSTQUOTE:
+        SETOPT((void *) 0);
+        Py_CLEAR(self->postquote);
+        break;
+    case CURLOPT_PREQUOTE:
+        SETOPT((void *) 0);
+        Py_CLEAR(self->prequote);
+        break;
+    case CURLOPT_TELNETOPTIONS:
+        SETOPT((void *) 0);
+        Py_CLEAR(self->telnetoptions);
+        break;
+#ifdef HAVE_CURLOPT_RESOLVE
+    case CURLOPT_RESOLVE:
+        SETOPT((void *) 0);
+        Py_CLEAR(self->resolve);
+        break;
+#endif
+#ifdef HAVE_CURL_7_20_0_OPTS
+    case CURLOPT_MAIL_RCPT:
+        SETOPT((void *) 0);
+        Py_CLEAR(self->mail_rcpt);
+        break;
+#endif
+#ifdef HAVE_CURLOPT_CONNECT_TO
+    case CURLOPT_CONNECT_TO:
+        SETOPT((void *) 0);
+        Py_CLEAR(self->connect_to);
+        break;
+#endif
     case CURLOPT_HTTPPOST:
         SETOPT((void *) 0);
         Py_CLEAR(self->httppost);
-        self->httppost = NULL;
         /* FIXME: what about data->set.httpreq ?? */
         break;
     case CURLOPT_INFILESIZE:
@@ -106,10 +153,6 @@ util_curl_unsetopt(CurlObject *self, int option)
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 43, 0)
     case CURLOPT_SERVICE_NAME:
     case CURLOPT_PROXY_SERVICE_NAME:
-#endif
-    case CURLOPT_HTTPHEADER:
-#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
-    case CURLOPT_PROXYHEADER:
 #endif
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 52, 0)
     case CURLOPT_PROXY_CAPATH:
