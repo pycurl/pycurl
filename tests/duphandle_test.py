@@ -5,6 +5,8 @@
 from . import localhost
 import pycurl
 import unittest
+import gc
+import weakref
 try:
     import json
 except ImportError:
@@ -17,78 +19,126 @@ setup_module, teardown_module = appmanager.setup(('app', 8380))
 
 class DuphandleTest(unittest.TestCase):
     def setUp(self):
-        self.curl = util.DefaultCurl()
-        self.dup = None
-
-    def tearDown(self):
-        if self.dup:
-            self.dup.close()
+        self.orig = util.DefaultCurl()
 
     def test_duphandle_attribute_dict(self):
-        self.curl.original_attr = 'original-value'
+        self.orig.orig_attr = 'orig-value'
         # attribute dict should be copied - the *object*, not the reference
-        self.dup = self.curl.duphandle()
-        assert self.dup.original_attr == 'original-value'
+        dup = self.orig.duphandle()
+        assert dup.orig_attr == 'orig-value'
         # cloned dict should be a separate object
-        self.dup.clone_attr = 'clone-value'
+        dup.dup_attr = 'dup-value'
         try:
-            self.curl.clone_attr == 'does not exist'
+            self.orig.dup_attr == 'does not exist'
         except AttributeError as error:
-            assert 'trying to obtain a non-existing attribute: clone_attr' in str(error.args)
+            assert 'trying to obtain a non-existing attribute: dup_attr' in str(error.args)
         else:
             self.fail('should have raised AttributeError')
-        # decref - original dict is freed from memory
-        self.curl.close()
-        del self.curl
+        # dealloc self.orig - original dict is freed from memory
+        self.orig.close()
+        del self.orig
         # cloned dict should still exist
-        assert self.dup.original_attr == 'original-value'
-        assert self.dup.clone_attr == 'clone-value'
+        assert dup.orig_attr == 'orig-value'
+        assert dup.dup_attr == 'dup-value'
+        dup.close()
 
-    def test_duphandle_slist(self):
-        self.curl.setopt(pycurl.HTTPHEADER, ['x-test-header: original-slist'])
-        # slist *reference* should be copied and incremented
-        self.dup = self.curl.duphandle()
-        # decref
-        self.curl.close()
-        del self.curl
-        # slist object should still exist
+    def slist_check(self, handle, value, persistance=True):
         body = util.BytesIO()
-        self.dup.setopt(pycurl.WRITEFUNCTION, body.write)
-        self.dup.setopt(pycurl.URL, 'http://%s:8380/header_utf8?h=x-test-header' % localhost)
-        self.dup.perform()
+        handle.setopt(pycurl.WRITEFUNCTION, body.write)
+        handle.setopt(pycurl.URL, 'http://%s:8380/header_utf8?h=x-test-header' % localhost)
+        handle.perform()
         result = body.getvalue().decode('utf-8')
-        assert result == 'original-slist'
+        assert (result == value) == persistance
 
-    def test_duphandle_httppost(self):
-        self.curl.setopt(pycurl.HTTPPOST, [
-            ('field', (pycurl.FORM_CONTENTS, 'original-httppost')),
-        ])
-        # httppost *reference* should be copied and incremented
-        self.dup = self.curl.duphandle()
-        # decref
-        self.curl.close()
-        del self.curl
-        # httppost object should still exist
+    def slist_test(self, clear_func, *args):
+        # new slist object is created with ref count = 1
+        self.orig.setopt(pycurl.HTTPHEADER, ['x-test-header: orig-slist'])
+        # ref is copied and object incref'ed
+        dup1 = self.orig.duphandle()
+        # slist object is decref'ed and ref set to null
+        clear_func(*args)
+        # null ref is copied - no effect
+        dup2 = self.orig.duphandle()
+        # check slist object persistance
+        self.slist_check(dup1, 'orig-slist', True)
+        self.slist_check(dup2, 'orig-slist', False)
+        # check overwriting - orig slist is decref'ed to 0 and finally deallocated
+        # util_curlslist_update() and util_curlslist_dealloc()
+        dup1.setopt(pycurl.HTTPHEADER, ['x-test-header: dup-slist'])
+        self.slist_check(dup1, 'dup-slist', True)
+        # cleanup
+        dup1.close()
+        dup2.close()
+        self.orig.close()
+
+    def test_duphandle_slist_xdecref(self):
+        # util_curl_xdecref()
+        self.slist_test(self.orig.reset)
+
+    def test_duphandle_slist_unsetopt(self):
+        # util_curl_unsetopt()
+        self.slist_test(self.orig.unsetopt, pycurl.HTTPHEADER)
+
+    def httppost_check(self, handle, value, persistance=True):
         body = util.BytesIO()
-        self.dup.setopt(pycurl.WRITEFUNCTION, body.write)
-        self.dup.setopt(pycurl.URL, 'http://%s:8380/postfields' % localhost)
-        self.dup.perform()
+        handle.setopt(pycurl.WRITEFUNCTION, body.write)
+        handle.setopt(pycurl.URL, 'http://%s:8380/postfields' % localhost)
+        handle.perform()
         result = json.loads(body.getvalue())
-        assert result == {'field': 'original-httppost'}
+        assert (result == value) == persistance
 
-    def test_duphandle_callback(self):
+    def httppost_test(self, clear_func, *args):
+        self.orig.setopt(pycurl.HTTPPOST, [
+            ('field', (pycurl.FORM_CONTENTS, 'orig-httppost')),
+        ])
+        dup1 = self.orig.duphandle()
+        clear_func(*args)
+        dup2 = self.orig.duphandle()
+        self.httppost_check(dup1, {'field': 'orig-httppost'}, True)
+        self.httppost_check(dup2, {'field': 'orig-httppost'}, False)
+        # util_curlhttppost_update() and util_curlhttppost_dealloc()
+        dup1.setopt(pycurl.HTTPPOST, [
+            ('field', (pycurl.FORM_CONTENTS, 'dup-httppost')),
+        ])
+        self.httppost_check(dup1, {'field': 'dup-httppost'}, True)
+        dup1.close()
+        dup2.close()
+        self.orig.close()
+
+    def test_duphandle_httppost_xdecref(self):
+        # util_curl_xdecref()
+        self.httppost_test(self.orig.reset)
+
+    def test_duphandle_httppost_unsetopt(self):
+        # util_curl_unsetopt()
+        self.httppost_test(self.orig.unsetopt, pycurl.HTTPPOST)
+
+    def test_duphandle_references(self):
         body = util.BytesIO()
         def callback(data):
             body.write(data)
-        self.curl.setopt(pycurl.WRITEFUNCTION, callback)
-        # callback *reference* should be copied and incremented
-        self.dup = self.curl.duphandle()
-        # decref
-        self.curl.close()
-        del self.curl
+        callback_ref = weakref.ref(callback)
+        # preliminary checks of gc and weakref working as expected
+        assert gc.get_referrers(callback) == []
+        assert callback_ref() is not None
+        # setopt - callback ref is copied and callback incref'ed
+        self.orig.setopt(pycurl.WRITEFUNCTION, callback)
+        assert gc.get_referrers(callback) == [self.orig]
+        # duphandle - callback ref is copied and callback incref'ed
+        dup = self.orig.duphandle()
+        assert set(gc.get_referrers(callback)) == {self.orig, dup}
+        # dealloc self.orig and decref callback
+        self.orig.close()
+        del self.orig
+        assert gc.get_referrers(callback) == [dup]
+        # decref callback again - back to ref count = 1
         del callback
-        # callback object should still exist
-        self.dup.setopt(pycurl.URL, 'http://%s:8380/success' % localhost)
-        self.dup.perform()
+        assert callback_ref() is not None
+        # check that callback object still exists and is invoked
+        dup.setopt(pycurl.URL, 'http://%s:8380/success' % localhost)
+        dup.perform()
         result = body.getvalue().decode('utf-8')
         assert result == 'success'
+        # final decref - callback is deallocated
+        dup.close()
+        assert callback_ref() is None
