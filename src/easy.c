@@ -65,7 +65,7 @@ do_curl_slist_dealloc(CurlSlistObject *self) {
         curl_slist_free_all(self->slist);
         self->slist = NULL;
     }
-    Py_TYPE(self)->tp_free((PyObject *) self);
+    CurlSlist_Type.tp_free(self);
 }
 
 PYCURL_INTERNAL PyTypeObject CurlSlist_Type = {
@@ -113,7 +113,7 @@ do_curl_httppost_dealloc(CurlHttppostObject *self) {
         self->httppost = NULL;
     }
     Py_CLEAR(self->reflist);
-    Py_TYPE(self)->tp_free((PyObject *) self);
+    CurlHttppost_Type.tp_free(self);
 }
 
 PYCURL_INTERNAL PyTypeObject CurlHttppost_Type = {
