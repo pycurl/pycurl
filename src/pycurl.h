@@ -318,6 +318,10 @@ PyText_Check(PyObject *o);
 PYCURL_INTERNAL PyObject *
 PyText_FromString_Ignore(const char *string);
 
+/* Py_NewRef and Py_XNewRef - not part of Python's C API before 3.10 */
+static inline PyObject* my_Py_NewRef(PyObject *obj) { Py_INCREF(obj); return obj; }
+static inline PyObject* my_Py_XNewRef(PyObject *obj) { Py_XINCREF(obj); return obj; }
+
 struct CurlObject;
 
 PYCURL_INTERNAL void
