@@ -46,6 +46,12 @@ util_curl_unsetopt(CurlObject *self, int option)
 #define SETOPT2(o,x) \
     if ((res = curl_easy_setopt(self->handle, (o), (x))) != CURLE_OK) goto error
 #define SETOPT(x)   SETOPT2((CURLoption)option, (x))
+#define CLEAR_OBJECT(object_option, object_field) \
+    case object_option: \
+        if ((res = curl_easy_setopt(self->handle, object_option, NULL)) != CURLE_OK) \
+            goto error; \
+        Py_CLEAR(object_field); \
+        break
 #define CLEAR_CALLBACK(callback_option, data_option, callback_field) \
     case callback_option: \
         if ((res = curl_easy_setopt(self->handle, callback_option, NULL)) != CURLE_OK) \
@@ -64,59 +70,6 @@ util_curl_unsetopt(CurlObject *self, int option)
         SETOPT((CURLSH *) NULL);
         Py_XDECREF(self->share);
         self->share = NULL;
-        break;
-    case CURLOPT_HTTPHEADER:
-        SETOPT((void *) 0);
-        Py_CLEAR(self->httpheader);
-        break;
-#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
-    case CURLOPT_PROXYHEADER:
-        SETOPT((void *) 0);
-        Py_CLEAR(self->proxyheader);
-        break;
-#endif
-    case CURLOPT_HTTP200ALIASES:
-        SETOPT((void *) 0);
-        Py_CLEAR(self->http200aliases);
-        break;
-    case CURLOPT_QUOTE:
-        SETOPT((void *) 0);
-        Py_CLEAR(self->quote);
-        break;
-    case CURLOPT_POSTQUOTE:
-        SETOPT((void *) 0);
-        Py_CLEAR(self->postquote);
-        break;
-    case CURLOPT_PREQUOTE:
-        SETOPT((void *) 0);
-        Py_CLEAR(self->prequote);
-        break;
-    case CURLOPT_TELNETOPTIONS:
-        SETOPT((void *) 0);
-        Py_CLEAR(self->telnetoptions);
-        break;
-#ifdef HAVE_CURLOPT_RESOLVE
-    case CURLOPT_RESOLVE:
-        SETOPT((void *) 0);
-        Py_CLEAR(self->resolve);
-        break;
-#endif
-#ifdef HAVE_CURL_7_20_0_OPTS
-    case CURLOPT_MAIL_RCPT:
-        SETOPT((void *) 0);
-        Py_CLEAR(self->mail_rcpt);
-        break;
-#endif
-#ifdef HAVE_CURLOPT_CONNECT_TO
-    case CURLOPT_CONNECT_TO:
-        SETOPT((void *) 0);
-        Py_CLEAR(self->connect_to);
-        break;
-#endif
-    case CURLOPT_HTTPPOST:
-        SETOPT((void *) 0);
-        Py_CLEAR(self->httppost);
-        /* FIXME: what about data->set.httpreq ?? */
         break;
     case CURLOPT_INFILESIZE:
         SETOPT((long) -1);
@@ -171,6 +124,27 @@ util_curl_unsetopt(CurlObject *self, int option)
         SETOPT((long) 0);
         break;
 #endif
+
+    CLEAR_OBJECT(CURLOPT_HTTPHEADER, self->httpheader);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
+    CLEAR_OBJECT(CURLOPT_PROXYHEADER, self->proxyheader);
+#endif
+    CLEAR_OBJECT(CURLOPT_HTTP200ALIASES, self->http200aliases);
+    CLEAR_OBJECT(CURLOPT_QUOTE, self->quote);
+    CLEAR_OBJECT(CURLOPT_POSTQUOTE, self->postquote);
+    CLEAR_OBJECT(CURLOPT_PREQUOTE, self->prequote);
+    CLEAR_OBJECT(CURLOPT_TELNETOPTIONS, self->telnetoptions);
+#ifdef HAVE_CURLOPT_RESOLVE
+    CLEAR_OBJECT(CURLOPT_RESOLVE, self->resolve);
+#endif
+#ifdef HAVE_CURL_7_20_0_OPTS
+    CLEAR_OBJECT(CURLOPT_MAIL_RCPT, self->mail_rcpt);
+#endif
+#ifdef HAVE_CURLOPT_CONNECT_TO
+    CLEAR_OBJECT(CURLOPT_CONNECT_TO, self->connect_to);
+#endif
+    /* FIXME: what about data->set.httpreq ?? */
+    CLEAR_OBJECT(CURLOPT_HTTPPOST, self->httppost);
 
     CLEAR_CALLBACK(CURLOPT_OPENSOCKETFUNCTION, CURLOPT_OPENSOCKETDATA, self->opensocket_cb);
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
