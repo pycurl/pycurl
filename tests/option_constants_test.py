@@ -241,7 +241,7 @@ class OptionConstantsTest(unittest.TestCase):
         curl.close()
 
     @util.min_libcurl(7, 42, 0)
-    @util.only_ssl_backends('nss')
+    @util.only_ssl_backends('nss', 'secure-transport')
     def test_ssl_falsestart(self):
         curl = pycurl.Curl()
         curl.setopt(curl.SSL_FALSESTART, 1)
@@ -263,7 +263,7 @@ class OptionConstantsTest(unittest.TestCase):
         curl.setopt(curl.ISSUERCERT, '/bogus-issuercert')
         curl.close()
 
-    @util.only_ssl
+    @util.only_ssl_backends('openssl', 'gnutls', 'nss')
     def test_capath(self):
         curl = pycurl.Curl()
         curl.setopt(curl.CAPATH, '/bogus-capath')
@@ -271,7 +271,7 @@ class OptionConstantsTest(unittest.TestCase):
 
     # CURLOPT_PROXY_CAPATH was introduced in libcurl-7.52.0
     @util.min_libcurl(7, 52, 0)
-    @util.only_ssl
+    @util.only_ssl_backends('openssl', 'gnutls', 'nss')
     def test_proxy_capath(self):
         curl = pycurl.Curl()
         curl.setopt(curl.PROXY_CAPATH, '/bogus-capath')
@@ -331,7 +331,7 @@ class OptionConstantsTest(unittest.TestCase):
         curl.setopt(curl.RANDOM_FILE, '/bogus-random')
         curl.close()
 
-    @util.only_ssl_backends('openssl', 'gnutls')
+    @util.only_ssl_backends('openssl', 'gnutls', 'secure-transport')
     def test_egdsocket(self):
         curl = pycurl.Curl()
         curl.setopt(curl.EGDSOCKET, '/bogus-egdsocket')

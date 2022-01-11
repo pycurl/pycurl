@@ -374,6 +374,7 @@ initpycurl(void)
                 case CURLSSLBACKEND_NSS:
                 case CURLSSLBACKEND_WOLFSSL:
                 case CURLSSLBACKEND_MBEDTLS:
+                case CURLSSLBACKEND_SECURETRANSPORT:
                     runtime_supported_backend_found = 1;
                     break;
                 default:
@@ -404,6 +405,8 @@ initpycurl(void)
         runtime_ssl_lib = "nss";
     } else if (!strncmp(vi->ssl_version, "mbedTLS/", 8)) {
         runtime_ssl_lib = "mbedtls";
+    } else if (!strncmp(vi->ssl_version, "Secure Transport", 16)) {
+        runtime_ssl_lib = "secure-transport";
     } else {
         runtime_ssl_lib = "none/other";
     }
