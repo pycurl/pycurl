@@ -63,6 +63,7 @@ class MultiOptionConstantsTest(unittest.TestCase):
         input = (util.u('test1'), util.u('test2'))
         self.m.setopt(option, input)
         self.m.setopt(option, ())
+        self.m.setopt(option, None)
 
         try:
             self.m.setopt(option, 1)
@@ -70,3 +71,19 @@ class MultiOptionConstantsTest(unittest.TestCase):
         except TypeError:
             exc = sys.exc_info()[1]
             assert 'integers are not supported for this option' in str(exc)
+
+    def test_multi_callback_opts(self):
+        def callback(*args, **kwargs):
+            pass
+        self.m.setopt(pycurl.M_SOCKETFUNCTION, callback)
+        self.m.setopt(pycurl.M_TIMERFUNCTION, callback)
+        self.m.setopt(pycurl.M_SOCKETFUNCTION, None)
+        self.m.setopt(pycurl.M_TIMERFUNCTION, None)
+
+    def test_multi_unsetopt_unsupported(self):
+        try:
+            self.m.setopt(pycurl.M_MAXCONNECTS, None)
+            self.fail('expected to raise')
+        except TypeError:
+            exc = sys.exc_info()[1]
+            assert 'unsetting is not supported for this option' in str(exc)
