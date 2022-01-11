@@ -30,6 +30,7 @@ def forbidden():
 def not_found():
     return bottle.HTTPResponse('not found', 404)
 
+@app.route('/postfields', method='get')
 @app.route('/postfields', method='post')
 def postfields():
     return json.dumps(dict(bottle.request.forms))
@@ -88,7 +89,7 @@ def header():
 # Thanks to bdarnell for the idea: https://github.com/pycurl/pycurl/issues/124
 @app.route('/header_utf8')
 def header_utf8():
-    header_value = bottle.request.headers[bottle.request.query['h']]
+    header_value = bottle.request.headers.get(bottle.request.query['h'], '' if py3 else b'')
     if py3:
         # header_value is a string, headers are decoded in latin1
         header_value = header_value.encode('latin1').decode('utf8')
