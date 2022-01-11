@@ -266,6 +266,19 @@ PYCURL_INTERNAL void pycurl_ssl_cleanup(void);
 #  define PYCURL_END_ALLOW_THREADS \
        Py_END_ALLOW_THREADS \
        self->state = NULL;
+#  define PYCURL_BEGIN_ALLOW_THREADS_EASY \
+       if (self->multi_stack == NULL) { \
+           self->state = PyThreadState_Get(); \
+           assert(self->state != NULL); \
+       } else { \
+           self->multi_stack->state = PyThreadState_Get(); \
+           assert(self->multi_stack->state != NULL); \
+       } \
+       Py_BEGIN_ALLOW_THREADS
+#  define PYCURL_END_ALLOW_THREADS_EASY \
+       PYCURL_END_ALLOW_THREADS \
+       if (self->multi_stack != NULL) \
+           self->multi_stack->state = NULL;
 #else
 #  define PYCURL_DECLARE_THREAD_STATE
 #  define PYCURL_ACQUIRE_THREAD() (1)

@@ -94,11 +94,11 @@ util_multi_close(CurlMultiObject *self)
     
     if (self->multi_handle != NULL) {
         CURLM *multi_handle = self->multi_handle;
-        self->multi_handle = NULL;
         /* Allow threads because callbacks can be invoked */
         PYCURL_BEGIN_ALLOW_THREADS
         curl_multi_cleanup(multi_handle);
         PYCURL_END_ALLOW_THREADS
+        self->multi_handle = NULL;
     }
 }
 
