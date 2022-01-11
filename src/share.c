@@ -11,7 +11,7 @@ static void
 assert_share_state(const CurlShareObject *self)
 {
     assert(self != NULL);
-    assert(Py_TYPE(self) == p_CurlShare_Type);
+    assert(PyObject_IsInstance((PyObject *) self, (PyObject *) p_CurlShare_Type) == 1);
 #ifdef WITH_THREAD
     assert(self->lock != NULL);
 #endif
@@ -38,7 +38,7 @@ do_share_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
 #endif
     int *ptr;
     
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "", empty_keywords)) {
+    if (subtype == p_CurlShare_Type && !PyArg_ParseTupleAndKeywords(args, kwds, "", empty_keywords)) {
         return NULL;
     }
 

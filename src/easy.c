@@ -11,7 +11,7 @@ PYCURL_INTERNAL void
 assert_curl_state(const CurlObject *self)
 {
     assert(self != NULL);
-    assert(Py_TYPE(self) == p_Curl_Type);
+    assert(PyObject_IsInstance((PyObject *) self, (PyObject *) p_Curl_Type) == 1);
 #ifdef WITH_THREAD
     (void) pycurl_get_thread_state(self);
 #endif
@@ -91,12 +91,12 @@ do_curl_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
     int res;
     int *ptr;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "", empty_keywords)) {
+    if (subtype == p_Curl_Type && !PyArg_ParseTupleAndKeywords(args, kwds, "", empty_keywords)) {
         return NULL;
     }
 
     /* Allocate python curl object */
-    self = (CurlObject *) p_Curl_Type->tp_alloc(p_Curl_Type, 0);
+    self = (CurlObject *) subtype->tp_alloc(subtype, 0);
     if (self == NULL)
         return NULL;
 
@@ -216,7 +216,7 @@ util_curl_close(CurlObject *self)
     /* Zero handle and thread-state to disallow any operations to be run
      * from now on */
     assert(self != NULL);
-    assert(Py_TYPE(self) == p_Curl_Type);
+    assert(PyObject_IsInstance((PyObject *) self, (PyObject *) p_Curl_Type) == 1);
     handle = self->handle;
     self->handle = NULL;
     if (handle == NULL) {

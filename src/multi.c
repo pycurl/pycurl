@@ -11,7 +11,7 @@ static void
 assert_multi_state(const CurlMultiObject *self)
 {
     assert(self != NULL);
-    assert(Py_TYPE(self) == p_CurlMulti_Type);
+    assert(PyObject_IsInstance((PyObject *) self, (PyObject *) p_CurlMulti_Type) == 1);
 #ifdef WITH_THREAD
     if (self->state != NULL) {
         assert(self->multi_handle != NULL);
@@ -51,12 +51,12 @@ do_multi_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
     CurlMultiObject *self;
     int *ptr;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "", empty_keywords)) {
+    if (subtype == p_CurlMulti_Type && !PyArg_ParseTupleAndKeywords(args, kwds, "", empty_keywords)) {
         return NULL;
     }
 
     /* Allocate python curl-multi object */
-    self = (CurlMultiObject *) p_CurlMulti_Type->tp_alloc(p_CurlMulti_Type, 0);
+    self = (CurlMultiObject *) subtype->tp_alloc(subtype, 0);
     if (!self) {
         return NULL;
     }
@@ -797,7 +797,7 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
             Py_DECREF(ok_list);
             CURLERROR_MSG("Unable to fetch curl handle from curl object");
         }
-        assert(Py_TYPE(co) == p_Curl_Type);
+        assert(PyObject_IsInstance((PyObject *) co, (PyObject *) p_Curl_Type) == 1);
         if (msg->msg != CURLMSG_DONE) {
             /* FIXME: what does this mean ??? */
         }
