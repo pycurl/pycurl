@@ -183,8 +183,12 @@ multi_socket_callback(CURL *easy,
 
     /* acquire thread */
     self = (CurlMultiObject *)userp;
-    if (!PYCURL_ACQUIRE_THREAD_MULTI())
+    if (!PYCURL_ACQUIRE_THREAD_MULTI()) {
+        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
+        PyErr_WarnEx(PyExc_RuntimeWarning, "multi_socket_callback failed to acquire thread", 1);
+        PyGILState_Release(tmp_warn_state);
         return 0;
+    }
 
     /* check args */
     if (self->s_cb == NULL)
@@ -232,8 +236,12 @@ multi_timer_callback(CURLM *multi,
 
     /* acquire thread */
     self = (CurlMultiObject *)userp;
-    if (!PYCURL_ACQUIRE_THREAD_MULTI())
+    if (!PYCURL_ACQUIRE_THREAD_MULTI()) {
+        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
+        PyErr_WarnEx(PyExc_RuntimeWarning, "multi_timer_callback failed to acquire thread", 1);
+        PyGILState_Release(tmp_warn_state);
         return ret;
+    }
 
     /* check args */
     if (self->t_cb == NULL)
