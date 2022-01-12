@@ -1,0 +1,43 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: CI-macOS
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: macOS-11
+    env:
+      PYCURL_CURL_CONFIG: /usr/bin/curl-config
+      PYCURL_SSL_LIBRARY: sectransp
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Select Xcode version
+      # Note: had to select a Version of Xcode that has macOS 11.x SDK
+      run: sudo xcode-select -s '/Applications/Xcode_13.0.app/Contents/Developer'
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 pytest
+        if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+    - name: Build
+      run: |
+        make
+    - name: Test with pytest
+      run: |
+        make test
