@@ -416,6 +416,10 @@ ignore this message.''')
         return ssl_lib_detected
 
     def configure_windows(self):
+        OPENSSL_DIR = scan_argv(self.argv, "--openssl-dir=")
+        if OPENSSL_DIR is not None:
+            self.include_dirs.append(os.path.join(OPENSSL_DIR, "include"))
+            self.library_dirs.append(os.path.join(OPENSSL_DIR, "lib"))
         # Windows users have to pass --curl-dir parameter to specify path
         # to libcurl, because there is no curl-config on windows at all.
         curl_dir = scan_argv(self.argv, "--curl-dir=")
@@ -620,7 +624,7 @@ def strip_pycurl_options(argv):
     if sys.platform == 'win32':
         options = [
             '--curl-dir=', '--libcurl-lib-name=', '--use-libcurl-dll',
-            '--avoid-stdio', '--with-openssl',
+            '--avoid-stdio', '--with-openssl', '--openssl-dir=',
         ]
     else:
         options = ['--openssl-dir=', '--curl-config=', '--avoid-stdio']
@@ -974,6 +978,7 @@ PycURL Windows options:
  --use-libcurl-dll                     link against libcurl DLL, if not given
                                        link against libcurl statically
  --libcurl-lib-name=libcurl_imp.lib    override libcurl import library name
+ --openssl-dir=/path/to/openssl/dir    path to OpenSSL/LibreSSL/BoringSSL headers and libraries
  --with-openssl                        libcurl is linked against OpenSSL/LibreSSL/BoringSSL
  --with-ssl                            legacy alias for --with-openssl
  --link-arg=foo.lib                    also link against specified library
