@@ -1,0 +1,58 @@
+name: CI-Windows
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+    env:
+      VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'
+    strategy:
+      matrix:
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
+      fail-fast: false
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ./.github/actions/msvc-dev-cmd
+      with:
+        arch: 'x86'
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+        architecture: 'x86'
+    - name: 'Setup NuGet credentials'
+      shell: 'bash'
+      run: >
+        `vcpkg fetch nuget | tail -n 1`
+        sources add
+        -source "https://nuget.pkg.github.com/pycurl/index.json"
+        -storepasswordincleartext
+        -name "GitHub"
+        -username "pycurl"
+        -password "${{ secrets.GITHUB_TOKEN }}"
+    - name: Install packages
+      run: |
+        vcpkg install curl[core,http2,non-http,openssl,ssh]:x86-windows
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 pytest wheel delvewheel
+        pip install -r requirements-dev.txt
+    - name: Build
+      run: |
+        python setup.py bdist_wheel --with-openssl --curl-dir=$env:VCPKG_INSTALLATION_ROOT/packages/curl_x86-windows --openssl-dir=$env:VCPKG_INSTALLATION_ROOT/packages/openssl_x86-windows --openssl-lib-name=libssl.lib --link-arg=libcrypto.lib
+    - name: Repair & install built wheel
+      run: |
+        delvewheel repair --add-path $VCPKG_INSTALLATION_ROOT/installed/x86-windows/bin dist/*.whl
+        pip install wheelhouse/*.whl
+      shell: bash
+    - name: Test with pytest
+      run: |
+        pytest -v
