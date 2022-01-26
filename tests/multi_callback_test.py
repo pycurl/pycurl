@@ -4,6 +4,8 @@
 
 from . import localhost
 import pycurl
+import pytest
+import sys
 import unittest
 
 from . import appmanager
@@ -72,6 +74,7 @@ class MultiCallbackTest(unittest.TestCase):
     
     # (mid-transfer) easy.pause(PAUSE_ALL) must call SOCKETFUNCTION to remove sockets
     # (mid-transfer) easy.pause(PAUSE_CONT) must call TIMERFUNCTION to resume
+    @pytest.mark.xfail(sys.platform == 'darwin', reason='https://github.com/pycurl/pycurl/issues/729')
     def test_easy_pause_unpause(self):
         self.multi.add_handle(self.easy)
         while self.multi.socket_action(*self.socket_action)[1]:
