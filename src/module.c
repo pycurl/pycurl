@@ -376,7 +376,11 @@ initpycurl(void)
                 case CURLSSLBACKEND_NSS:
                 case CURLSSLBACKEND_WOLFSSL:
                 case CURLSSLBACKEND_MBEDTLS:
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 64, 1)
                 case CURLSSLBACKEND_SECURETRANSPORT:
+#else
+                case CURLSSLBACKEND_DARWINSSL:
+#endif
                     runtime_supported_backend_found = 1;
                     break;
                 default:
