@@ -86,7 +86,7 @@ class PostTest(unittest.TestCase):
 
     def test_post_file(self):
         path = os.path.join(os.path.dirname(__file__), '..', 'README.rst')
-        f = open(path)
+        f = open(path, newline='')
         try:
             contents = f.read()
         finally:

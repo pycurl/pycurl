@@ -1,3 +1,21 @@
+Version 7.45.0 [requires libcurl-7.19.0 or better] - 2022-03-09
+---------------------------------------------------------------
+
+        * Add CURLOPT_MAXLIFETIME_CONN (patch by fsbs).
+
+        * Easy handle duplication support (patch by fsbs).
+
+        * Support for unsetting a number of multi options (patch by fsbs).
+
+        * pycurl classes can now be subclassed (patch by fsbs).
+
+        * Multi callbacks' thread state management fixed (patch by fsbs).
+
+        * Add CURL_LOCK_DATA_PSL (patch by fsbs).
+
+        * Add support for SecureTransport SSL backend (MacOS)
+          (patch by Scott Talbert).
+
 Version 7.44.1 [requires libcurl-7.19.0 or better] - 2021-08-15
 ---------------------------------------------------------------
 

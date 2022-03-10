@@ -6,6 +6,7 @@ import os.path
 import pycurl
 import sys
 import unittest
+import urllib.request
 
 class WriteAbortTest(unittest.TestCase):
     def setUp(self):
@@ -28,7 +29,8 @@ class WriteAbortTest(unittest.TestCase):
 
     def check(self, write_cb):
         # download the script itself through the file:// protocol into write_cb
-        self.curl.setopt(pycurl.URL, 'file://' + os.path.abspath(__file__).replace('\\', '/'))
+        url = 'file:' + urllib.request.pathname2url(os.path.abspath(__file__))
+        self.curl.setopt(pycurl.URL, url)
         self.curl.setopt(pycurl.WRITEFUNCTION, write_cb)
         try:
             self.curl.perform()

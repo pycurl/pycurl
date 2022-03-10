@@ -27,7 +27,7 @@ urllib_ Python 모듈과 마찬가지로, PycURL 을 사용하여 Python프로�
 요구 사항
 ---------
 
-- Python 3.5-3.8.
+- Python 3.5-3.10.
 - libcurl 7.19.0 이상.
 
 
@@ -162,7 +162,7 @@ License
 
     Copyright (C) 2001-2008 by Kjetil Jacobsen <kjetilja at gmail.com>
     Copyright (C) 2001-2008 by Markus F.X.J. Oberhumer <markus at oberhumer.com>
-    Copyright (C) 2013-2021 by Oleg Pudeyev <oleg at bsdpower.com>
+    Copyright (C) 2013-2022 by Oleg Pudeyev <code at olegp.name>
 
     All rights reserved.
 
