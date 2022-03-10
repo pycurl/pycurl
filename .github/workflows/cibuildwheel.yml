@@ -13,12 +13,13 @@ jobs:
       fail-fast: false
       matrix:
         arch: [x86_64, aarch64]
+        python-version: [3.7, 3.8, 3.9, 3.10]
 
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.7
+          python-version: ${{ matrix.python-version }}
       - name: Set up QEMU
         if: ${{ matrix.arch == 'aarch64' }}
         uses: docker/setup-qemu-action@v1          
