@@ -29,14 +29,18 @@ jobs:
         architecture: 'x86'
     - name: 'Setup NuGet credentials'
       shell: 'bash'
-      run: >
-        `vcpkg fetch nuget | tail -n 1`
-        sources add
-        -source "https://nuget.pkg.github.com/pycurl/index.json"
-        -storepasswordincleartext
-        -name "GitHub"
-        -username "pycurl"
-        -password "${{ secrets.GITHUB_TOKEN }}"
+      run: |
+        nuget="$(vcpkg fetch nuget | tail -n 1)"
+        "${nuget}" \
+          sources add \
+          -source "https://nuget.pkg.github.com/${GITHUB_REPOSITORY_OWNER}/index.json" \
+          -storepasswordincleartext \
+          -name "GitHub" \
+          -username "${GITHUB_REPOSITORY_OWNER}" \
+          -password "${{ secrets.GITHUB_TOKEN }}"
+        "${nuget}" \
+          setapikey "${{ secrets.GITHUB_TOKEN }}" \
+          -source "https://nuget.pkg.github.com/${GITHUB_REPOSITORY_OWNER}/index.json"
     - name: Install packages
       run: vcpkg install curl[core,http2,non-http,openssl,ssh]:x86-windows
     - name: Install dependencies
