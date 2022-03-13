@@ -1,6 +1,11 @@
 Release Notes
 =============
 
+PycURL 7.45.1 - 2022-03-13
+--------------------------
+
+This release fixes build when libcurl < 7.64.1 is used.
+
 PycURL 7.45.0 - 2022-03-09
 --------------------------
 
