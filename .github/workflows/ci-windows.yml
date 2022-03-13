@@ -19,7 +19,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - uses: ./.github/actions/msvc-dev-cmd
+    - uses: ilammy/msvc-dev-cmd@v1
       with:
         arch: 'x86'
     - name: Set up Python ${{ matrix.python-version }}
