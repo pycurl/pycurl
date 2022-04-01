@@ -59,3 +59,7 @@ jobs:
       shell: bash
     - name: Test with pytest
       run: pytest -v
+    - name: Upload wheel
+      uses: actions/upload-artifact@v3
+      with:
+        path: wheelhouse/*.whl
