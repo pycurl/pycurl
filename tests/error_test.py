@@ -29,7 +29,8 @@ class ErrorTest(unittest.TestCase):
             err, msg = exc.args
             self.assertEqual(pycurl.E_URL_MALFORMAT, err)
             # possibly fragile
-            self.assertEqual('No URL set!', msg)
+            # curl < 7.83.0 has an exclamation mark in this error message
+            self.assertIn(msg, ['No URL set!', 'No URL set'])
         else:
             self.fail('Expected pycurl.error to be raised')
     
@@ -43,9 +44,10 @@ class ErrorTest(unittest.TestCase):
             self.curl.perform()
         except pycurl.error:
             # might be fragile
-            self.assertEqual('No URL set!', self.curl.errstr())
+            # curl < 7.83.0 has an exclamation mark in this error message
+            self.assertIn(self.curl.errstr(), ['No URL set!', 'No URL set'])
             # repeated checks do not clear value
-            self.assertEqual('No URL set!', self.curl.errstr())
+            self.assertIn(self.curl.errstr(), ['No URL set!', 'No URL set'])
             # check the type - on all python versions
             self.assertEqual(str, type(self.curl.errstr()))
         else:
