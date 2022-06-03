@@ -547,7 +547,7 @@ Version 7.19.5 [requires libcurl-7.21.2 or better] - 2014-07-12
         * Added CURLE_NOT_BUILT_IN and CURLE_UNKNOWN_OPTION (libcurl 7.21.5+).
 
         * Added CURL_SEEKFUNC_OK, CURL_SEEKFUNC_FAIL and
-          CURL_SEEKFUNC_CANTSEEK. All contstants require libcurl 7.19.5+;
+          CURL_SEEKFUNC_CANTSEEK. All constants require libcurl 7.19.5+;
           numeric values of CURL_SEEKFUNC_OK and CURL_SEEKFUNC_FAIL were
           understood earlier but constants only exist as of libcurl 7.19.5.
 
@@ -1420,7 +1420,7 @@ Version 7.9.8.3
 2002-07-16  Markus F.X.J. Oberhumer <mfx>
 
         * Under Python 2.2 or better, Curl and CurlMulti objects now
-        automatically participate in cyclic garbarge collection
+        automatically participate in cyclic garbage collection
         (using the gc module).
 
 

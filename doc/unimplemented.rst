@@ -55,7 +55,7 @@ Undocumented symbols
 --------------------
 
 Some symbols are present in libcurl's `symbols in versions`_ document but
-are not documented by libcurl. These symbols are not impemented by PycURL.
+are not documented by libcurl. These symbols are not implemented by PycURL.
 
 As of this writing, the following symbols are thusly omitted:
 

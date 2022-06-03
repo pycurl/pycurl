@@ -280,7 +280,7 @@ class ExtensionConfiguration(object):
         # for hints as to which SSL library libcurl is linked against.
         # More information: https://github.com/pycurl/pycurl/pull/147
         #
-        # The final point is we should link agaist the SSL library in use
+        # The final point is we should link against the SSL library in use
         # even if libcurl does not tell us to, because *we* invoke functions
         # in that SSL library. This means any SSL libraries found in
         # --static-libs are forwarded to our libraries.

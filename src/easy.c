@@ -348,7 +348,7 @@ do_curl_duphandle(CurlObject *self)
     }
 
     /* Checking for CURLE_OK is not required here.
-     * All values have already been successfuly setopt'ed with self->handle. */
+     * All values have already been successfully setopt'ed with self->handle. */
 
     /* Assign and incref python callback and update data pointers */
     if (self->w_cb != NULL) {

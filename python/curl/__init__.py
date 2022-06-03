@@ -1,7 +1,7 @@
 '''A high-level interface to the pycurl extension'''
 
 # ** mfx NOTE: the CGI class uses "black magic" using COOKIEFILE in
-#    combination with a non-existant file name. See the libcurl docs
+#    combination with a non-existent file name. See the libcurl docs
 #    for more info.
 
 import sys, pycurl
