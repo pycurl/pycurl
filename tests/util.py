@@ -2,7 +2,7 @@
 # vi:ts=4:et
 
 import tempfile
-import os, sys, socket
+import sys, socket
 import time as _time
 import functools
 import unittest
@@ -255,40 +255,6 @@ def wait_for_network_service(netloc, check_interval, num_attempts):
             ok = True
             break
     return ok
-
-#
-# prepare sys.path in case we are still in the build directory
-# see also: distutils/command/build.py (build_platlib)
-#
-
-def get_sys_path(p=None):
-    if p is None:
-        p = sys.path
-    p = p[:]
-    try:
-        from distutils.util import get_platform
-    except ImportError:
-        return p
-    p0 = ""
-    if p:
-        p0 = p[0]
-    #
-    plat = get_platform()
-    plat_specifier = "%s-%s" % (plat, sys.version[:3])
-    ##print plat, plat_specifier
-    #
-    for prefix in (p0, os.curdir, os.pardir,):
-        if not prefix:
-            continue
-        d = os.path.join(prefix, "build")
-        for subdir in ("lib", "lib." + plat_specifier, "lib." + plat):
-            dir = os.path.normpath(os.path.join(d, subdir))
-            if os.path.isdir(dir):
-                if dir not in p:
-                    p.insert(1, dir)
-    #
-    return p
-
 
 def DefaultCurl():
     import pycurl

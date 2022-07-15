@@ -8,15 +8,9 @@ PACKAGE = "pycurl"
 PY_PACKAGE = "curl"
 VERSION = "7.45.1"
 
-import glob, os, re, sys, subprocess
-import distutils
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
-from distutils.extension import Extension
-from distutils.util import split_quoted
-from distutils.version import LooseVersion
+import glob, os, re, shlex, sys, subprocess
+from setuptools import setup
+from setuptools.extension import Extension
 
 py3 = sys.version_info[0] == 3
 
@@ -128,7 +122,7 @@ class ExtensionConfiguration(object):
                 msg += ":\n" + stderr.decode()
             raise ConfigurationError(msg)
         curl_has_ssl = False
-        for feature in split_quoted(stdout.decode()):
+        for feature in shlex.split(stdout.decode()):
             if feature == 'SSL':
                 # this means any ssl library, not just openssl.
                 # we set the ssl flag to check for ssl library mismatch
@@ -185,7 +179,7 @@ class ExtensionConfiguration(object):
 
         if not ssl_lib_detected:
             # self.sslhintbuf is a hack
-            for arg in split_quoted(self.sslhintbuf):
+            for arg in shlex.split(self.sslhintbuf):
                 if arg[:2] == "-l":
                     if arg[2:] == 'ssl':
                         self.using_openssl()
@@ -254,7 +248,7 @@ class ExtensionConfiguration(object):
             if stderr:
                 msg += ":\n" + stderr.decode()
             raise ConfigurationError(msg)
-        for arg in split_quoted(stdout.decode()):
+        for arg in shlex.split(stdout.decode()):
             if arg[:2] == "-I":
                 # do not add /usr/include
                 if not re.search(r"^\/+usr\/+include\/*$", arg[2:]):
@@ -336,7 +330,7 @@ ignore this message.''')
 
         # libraries and options - all libraries and options are forwarded
         # but if --libs succeeded, --static-libs output is ignored
-        for arg in split_quoted(optbuf):
+        for arg in shlex.split(optbuf):
             if arg[:2] == "-l":
                 self.libraries.append(arg[2:])
             elif arg[:2] == "-L":
@@ -585,39 +579,6 @@ ignore this message.''')
         self.define_macros.append(('HAVE_CURL_SECTRANSP', 1))
         self.define_macros.append(('HAVE_CURL_SSL', 1))
         self.ssl_lib_detected = 'sectransp'
-
-def get_bdist_msi_version_hack():
-    # workaround for distutils/msi version requirement per
-    # epydoc.sourceforge.net/stdlib/distutils.version.StrictVersion-class.html -
-    # only x.y.z version numbers are supported, whereas our versions might be x.y.z.p.
-    # bugs.python.org/issue6040#msg133094
-    from distutils.command.bdist_msi import bdist_msi
-    import inspect
-    import types
-    import re
-
-    class bdist_msi_version_hack(bdist_msi):
-        """ MSI builder requires version to be in the x.x.x format """
-        def run(self):
-            def monkey_get_version(self):
-                """ monkey patch replacement for metadata.get_version() that
-                        returns MSI compatible version string for bdist_msi
-                """
-                # get filename of the calling function
-                if inspect.stack()[1][1].endswith('bdist_msi.py'):
-                    # strip revision from version (if any), e.g. 11.0.0-r31546
-                    match = re.match(r'(\d+\.\d+\.\d+)', self.version)
-                    assert match
-                    return match.group(1)
-                else:
-                    return self.version
-
-            # monkeypatching get_version() call for DistributionMetadata
-            self.distribution.metadata.get_version = \
-                types.MethodType(monkey_get_version, self.distribution.metadata)
-            bdist_msi.run(self)
-
-    return bdist_msi_version_hack
 
 
 def strip_pycurl_options(argv):
@@ -948,16 +909,8 @@ in COPYING-LGPL_ and COPYING-MIT_ files in the source distribution.
     packages=[PY_PACKAGE],
     package_dir={ PY_PACKAGE: os.path.join('python', 'curl') },
     python_requires='>=3.5',
+    platforms='All',
 )
-
-if sys.platform == "win32":
-    setup_args['cmdclass'] = {'bdist_msi': get_bdist_msi_version_hack()}
-
-##print distutils.__version__
-if LooseVersion(distutils.__version__) > LooseVersion("1.0.1"):
-    setup_args["platforms"] = "All"
-if LooseVersion(distutils.__version__) < LooseVersion("1.0.3"):
-    setup_args["licence"] = setup_args["license"]
 
 unix_help = '''\
 PycURL Unix options:
