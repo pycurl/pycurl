@@ -373,6 +373,12 @@ class OptionConstantsTest(unittest.TestCase):
         curl.setopt(curl.SSL_OPTIONS, curl.SSLOPT_NO_REVOKE)
         curl.close()
 
+    @util.min_libcurl(7, 64, 0)
+    def test_http09_allowed_option(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.HTTP09_ALLOWED, 1)
+        curl.close()
+
 class OptionConstantsSettingTest(unittest.TestCase):
     def setUp(self):
         self.curl = pycurl.Curl()
