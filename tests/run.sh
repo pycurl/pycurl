@@ -7,8 +7,9 @@ test -n "$PYTHON" || PYTHON=python
 test -n "$PYTEST" || PYTEST=pytest
 
 mkdir -p tests/tmp
-export PYTHONSUFFIX=$($PYTHON -V 2>&1 |awk '{print $2}' |awk -F. '{print $1 "." $2}')
-export PYTHONPATH=$(ls -d build/lib.*$PYTHONSUFFIX):$PYTHONPATH
+export PYTHONMAJOR=$($PYTHON -V 2>&1 |awk '{print $2}' |awk -F. '{print $1}')
+export PYTHONMINOR=$($PYTHON -V 2>&1 |awk '{print $2}' |awk -F. '{print $2}')
+export PYTHONPATH=$(ls -d build/lib.*$PYTHONMAJOR*$PYTHONMINOR):$PYTHONPATH
 
 extra_attrs=
 if test "$CI" = true; then
