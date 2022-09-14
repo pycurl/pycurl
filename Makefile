@@ -9,6 +9,9 @@ PYTHON = python
 PYTEST = pytest
 PYFLAKES = pyflakes
 
+PYTHONMAJOR=$$($(PYTHON) -V 2>&1 |awk '{print $$2}' |awk -F. '{print $$1}')
+PYTHONMINOR=$$($(PYTHON) -V 2>&1 |awk '{print $$2}' |awk -F. '{print $$2}')
+
 # -c on linux
 # freebsd does not understand -c
 CHMOD_VERBOSE=-v
@@ -111,8 +114,7 @@ test-release: build-release do-test
 # rails-style alias
 c: console
 console:
-	PYTHONSUFFIX=$$(python -V 2>&1 |awk '{print $$2}' |awk -F. '{print $$1 "." $$2}') && \
-	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONSUFFIX):$$PYTHONPATH \
+	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONMAJOR*$$PYTHONMINOR):$$PYTHONPATH \
 	$(PYTHON)
 
 # (needs GNU binutils)
@@ -145,8 +147,7 @@ run-quickstart:
 docs: build
 	mkdir -p build/docstrings
 	for file in doc/docstrings/*.rst; do tail -n +3 $$file >build/docstrings/`basename $$file`; done
-	PYTHONSUFFIX=$$($(PYTHON) -V 2>&1 |awk '{print $$2}' |awk -F. '{print $$1 "." $$2}') && \
-	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONSUFFIX):$$PYTHONPATH \
+	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONMAJOR*$$PYTHONMINOR):$$PYTHONPATH \
 	$(PYTHON) -m sphinx doc build/doc
 	cp ChangeLog build/doc
 
@@ -157,8 +158,7 @@ docs-force: build
 	# sphinx-docs has an -a option but it does not seem to always
 	# rebuild everything
 	rm -rf build/doc
-	PYTHONSUFFIX=$$($(PYTHON) -V 2>&1 |awk '{print $$2}' |awk -F. '{print $$1 "." $$2}') && \
-	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONSUFFIX):$$PYTHONPATH \
+	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONMAJOR*$$PYTHONMINOR):$$PYTHONPATH \
 	$(PYTHON) -m sphinx doc build/doc
 	cp ChangeLog build/doc
 
