@@ -26,4 +26,4 @@ if test "$CI" = true; then
 fi
 
 $PYTHON -c 'import pycurl; print(pycurl.version)'
-$PYTEST
+$PYTEST -v

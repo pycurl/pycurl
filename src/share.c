@@ -119,7 +119,7 @@ PYCURL_INTERNAL void
 do_share_dealloc(CurlShareObject *self)
 {
     PyObject_GC_UnTrack(self);
-    Py_TRASHCAN_SAFE_BEGIN(self);
+    CPy_TRASHCAN_BEGIN(self, do_share_dealloc);
 
     Py_CLEAR(self->dict);
     util_share_close(self);
@@ -133,7 +133,7 @@ do_share_dealloc(CurlShareObject *self)
     }
      
     CurlShare_Type.tp_free(self);
-    Py_TRASHCAN_SAFE_END(self);
+    CPy_TRASHCAN_END(self);
 }
 
 

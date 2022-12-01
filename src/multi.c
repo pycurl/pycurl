@@ -117,7 +117,7 @@ PYCURL_INTERNAL void
 do_multi_dealloc(CurlMultiObject *self)
 {
     PyObject_GC_UnTrack(self);
-    Py_TRASHCAN_SAFE_BEGIN(self);
+    CPy_TRASHCAN_BEGIN(self, do_multi_dealloc);
 
     util_multi_xdecref(self);
     util_multi_close(self);
@@ -127,7 +127,7 @@ do_multi_dealloc(CurlMultiObject *self)
     }
 
     CurlMulti_Type.tp_free(self);
-    Py_TRASHCAN_SAFE_END(self);
+    CPy_TRASHCAN_END(self);
 }
 
 
