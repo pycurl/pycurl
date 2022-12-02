@@ -35,10 +35,12 @@ class SslServer(Server):
 
         import ssl
         cert_dir = os.path.join(os.path.dirname(__file__), 'certs')
-        self.srv.socket = ssl.wrap_socket(
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        context.load_cert_chain(
+            os.path.join(cert_dir, 'server.crt'),
+            keyfile=os.path.join(cert_dir, 'server.key'))
+        self.srv.socket = context.wrap_socket(
             self.srv.socket,
-            keyfile=os.path.join(cert_dir, 'server.key'),
-            certfile=os.path.join(cert_dir, 'server.crt'),
             server_side=True)
 
         self.serve()
