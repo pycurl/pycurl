@@ -94,7 +94,7 @@ do_global_init(PyObject *dummy, PyObject *args)
 
 
 PYCURL_INTERNAL PyObject *
-do_global_cleanup(PyObject *dummy)
+do_global_cleanup(PyObject *dummy, PyObject *Py_UNUSED(ignored))
 {
     UNUSED(dummy);
     curl_global_cleanup();
