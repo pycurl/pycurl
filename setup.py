@@ -737,7 +737,7 @@ def check_authors():
     authors_para = paras[AUTHORS_PARAGRAPH]
     authors = [author for author in authors_para.strip().split("\n")]
 
-    log = subprocess.check_output(['git', 'log', '--format=%an (%ae)'])
+    log = subprocess.check_output(['git', 'log', '--format=%an (%ae)']).decode()
     for author in log.strip().split("\n"):
         author = author.replace('@', ' at ').replace('(', '<').replace(')', '>')
         if author not in authors:
