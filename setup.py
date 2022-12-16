@@ -742,7 +742,7 @@ def check_authors():
         author = author.replace('@', ' at ').replace('(', '<').replace(')', '>')
         if author not in authors:
             authors.append(author)
-    authors.sort()
+    authors.sort(key=lambda s: s.lower())
     paras[AUTHORS_PARAGRAPH] = "\n".join(authors)
     f = open('AUTHORS', 'w')
     try:
