@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+PycURL 7.45.2 - 2022-12-16
+--------------------------
+
+This release fixes several minor issues and adds support for several libcurl
+options.
+
 PycURL 7.45.1 - 2022-03-13
 --------------------------
 

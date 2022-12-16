@@ -1,7 +1,20 @@
+Version 7.45.2 [requires libcurl-7.19.0 or better] - 2022-12-16
+---------------------------------------------------------------
+
+        * Python 3.9 compatibility for Py_TRASHCAN_SAFE_BEGIN
+          (patch by Scott Talbert).
+        * Add support for CURL_HTTP_VERSION_3 (patch by Scott Talbert).
+        * Add CURLOPT_TLS13_CIPHERS and CURLOPT_PROXY_TLS13_CIPHERS options
+          (patch by Scott Talbert).
+        * Added HTTP09_ALLOWED option (patch by Scott Talbert).
+        * Removed use of distutils (patch by Scott Talbert).
+
+
 Version 7.45.1 [requires libcurl-7.19.0 or better] - 2022-03-13
 ---------------------------------------------------------------
 
         * Fixed build against libcurl < 7.64.1 (patch by Scott Talbert).
+
 
 Version 7.45.0 [requires libcurl-7.64.1 or better] - 2022-03-09
 ---------------------------------------------------------------
@@ -21,11 +34,13 @@ Version 7.45.0 [requires libcurl-7.64.1 or better] - 2022-03-09
         * Add support for SecureTransport SSL backend (MacOS)
           (patch by Scott Talbert).
 
+
 Version 7.44.1 [requires libcurl-7.19.0 or better] - 2021-08-15
 ---------------------------------------------------------------
 
         * Fixed Python thread initialization causing hangs on operations
           (patch by Scott Talbert).
+
 
 Version 7.44.0 [requires libcurl-7.19.0 or better] - 2021-08-08
 ---------------------------------------------------------------
@@ -46,6 +61,7 @@ Version 7.44.0 [requires libcurl-7.19.0 or better] - 2021-08-08
         * Exposed MAX_CONCURRENT_STREAMS in CurlMulti (patch by Alexandre Pion).
         
         * Compilation fixed against Python 3.10 alpha (patch by Kamil Dudka).
+
 
 Version 7.43.0.6 [requires libcurl-7.19.0 or better] - 2020-09-02
 -----------------------------------------------------------------
@@ -76,6 +92,7 @@ Version 7.43.0.6 [requires libcurl-7.19.0 or better] - 2020-09-02
 
         * surrogateescape error handler is used in multi_info_read to handle
           invalid UTF-8.
+
 
 Version 7.43.0.5 [requires libcurl-7.19.0 or better] - 2020-01-29
 -----------------------------------------------------------------

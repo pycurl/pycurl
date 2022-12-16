@@ -103,7 +103,7 @@ class Config:
     # whether to build binary wheels
     build_wheels = True
     # pycurl version to build, we should know this ourselves
-    pycurl_version = '7.45.1'
+    pycurl_version = '7.45.2'
 
     # Sometimes vc14 does not include windows sdk path in vcvars which breaks stuff.
     # another application for this is to supply normaliz.lib for vc9
