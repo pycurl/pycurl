@@ -27,7 +27,7 @@ jobs:
       # Note: had to select a Version of Xcode that has macOS 11.x SDK
       run: sudo xcode-select -s '/Applications/Xcode_13.0.app/Contents/Developer'
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
