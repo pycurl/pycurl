@@ -314,6 +314,9 @@ do_curl_setopt_string_impl(CurlObject *self, int option, PyObject *obj)
     case CURLOPT_PROXY_SSLKEY:
     case CURLOPT_PROXY_SSLKEYTYPE:
 #endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 55, 0)
+    case CURLOPT_REQUEST_TARGET:
+#endif
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 61, 0)
     case CURLOPT_TLS13_CIPHERS:
     case CURLOPT_PROXY_TLS13_CIPHERS:
