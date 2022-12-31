@@ -138,7 +138,7 @@ do_share_dealloc(CurlShareObject *self)
 
 
 static PyObject *
-do_share_close(CurlShareObject *self)
+do_share_close(CurlShareObject *self, PyObject *Py_UNUSED(ignored))
 {
     if (check_share_state(self, 2, "close") != 0) {
         return NULL;
@@ -212,7 +212,7 @@ error:
 }
 
 
-static PyObject *do_curlshare_getstate(CurlShareObject *self)
+static PyObject *do_curlshare_getstate(CurlShareObject *self, PyObject *Py_UNUSED(ignored))
 {
     PyErr_SetString(PyExc_TypeError, "CurlShare objects do not support serialization");
     return NULL;

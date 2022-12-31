@@ -356,7 +356,7 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
 
 
 PYCURL_INTERNAL PyObject *
-do_curl_errstr(CurlObject *self)
+do_curl_errstr(CurlObject *self, PyObject *Py_UNUSED(ignored))
 {
     if (check_curl_state(self, 1 | 2, "errstr") != 0) {
         return NULL;
@@ -369,7 +369,7 @@ do_curl_errstr(CurlObject *self)
 
 #if PY_MAJOR_VERSION >= 3
 PYCURL_INTERNAL PyObject *
-do_curl_errstr_raw(CurlObject *self)
+do_curl_errstr_raw(CurlObject *self, PyObject *Py_UNUSED(ignored))
 {
     if (check_curl_state(self, 1 | 2, "errstr") != 0) {
         return NULL;

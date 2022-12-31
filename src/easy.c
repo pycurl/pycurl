@@ -302,7 +302,7 @@ error:
 
 /* duphandle */
 PYCURL_INTERNAL CurlObject *
-do_curl_duphandle(CurlObject *self)
+do_curl_duphandle(CurlObject *self, PyObject *Py_UNUSED(ignored))
 {
     PyTypeObject *subtype;
     CurlObject *dup;
@@ -617,7 +617,7 @@ do_curl_dealloc(CurlObject *self)
 
 
 static PyObject *
-do_curl_close(CurlObject *self)
+do_curl_close(CurlObject *self, PyObject *Py_UNUSED(ignored))
 {
     if (check_curl_state(self, 2, "close") != 0) {
         return NULL;
@@ -706,7 +706,7 @@ do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
 /* ------------------------ reset ------------------------ */
 
 static PyObject*
-do_curl_reset(CurlObject *self)
+do_curl_reset(CurlObject *self, PyObject *Py_UNUSED(ignored))
 {
     int res;
 
@@ -726,7 +726,7 @@ do_curl_reset(CurlObject *self)
 }
 
 
-static PyObject *do_curl_getstate(CurlObject *self)
+static PyObject *do_curl_getstate(CurlObject *self, PyObject *Py_UNUSED(ignored))
 {
     PyErr_SetString(PyExc_TypeError, "Curl objects do not support serialization");
     return NULL;

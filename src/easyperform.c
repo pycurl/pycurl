@@ -4,7 +4,7 @@
 /* --------------- perform --------------- */
 
 PYCURL_INTERNAL PyObject *
-do_curl_perform(CurlObject *self)
+do_curl_perform(CurlObject *self, PyObject *Py_UNUSED(ignored))
 {
     int res;
 
@@ -24,7 +24,7 @@ do_curl_perform(CurlObject *self)
 
 
 PYCURL_INTERNAL PyObject *
-do_curl_perform_rb(CurlObject *self)
+do_curl_perform_rb(CurlObject *self, PyObject *Py_UNUSED(ignored))
 {
     PyObject *v, *io;
     
@@ -49,7 +49,7 @@ do_curl_perform_rb(CurlObject *self)
         return NULL;
     }
     
-    v = do_curl_perform(self);
+    v = do_curl_perform(self, NULL);
     if (v == NULL) {
         return NULL;
     }
@@ -61,11 +61,11 @@ do_curl_perform_rb(CurlObject *self)
 
 #if PY_MAJOR_VERSION >= 3
 PYCURL_INTERNAL PyObject *
-do_curl_perform_rs(CurlObject *self)
+do_curl_perform_rs(CurlObject *self, PyObject *Py_UNUSED(ignored))
 {
     PyObject *v, *decoded;
     
-    v = do_curl_perform_rb(self);
+    v = do_curl_perform_rb(self, NULL);
     if (v == NULL) {
         return NULL;
     }

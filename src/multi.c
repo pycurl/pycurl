@@ -132,7 +132,7 @@ do_multi_dealloc(CurlMultiObject *self)
 
 
 static PyObject *
-do_multi_close(CurlMultiObject *self)
+do_multi_close(CurlMultiObject *self, PyObject *Py_UNUSED(ignored))
 {
     if (check_multi_state(self, 2, "close") != 0) {
         return NULL;
@@ -492,7 +492,7 @@ error:
 /* --------------- timeout --------------- */
 
 static PyObject *
-do_multi_timeout(CurlMultiObject *self)
+do_multi_timeout(CurlMultiObject *self, PyObject *Py_UNUSED(ignored))
 {
     CURLMcode res;
     long timeout;
@@ -565,7 +565,7 @@ do_multi_socket_action(CurlMultiObject *self, PyObject *args)
 /* --------------- socket_all --------------- */
 
 static PyObject *
-do_multi_socket_all(CurlMultiObject *self)
+do_multi_socket_all(CurlMultiObject *self, PyObject *Py_UNUSED(ignored))
 {
     CURLMcode res;
     int running = -1;
@@ -591,7 +591,7 @@ do_multi_socket_all(CurlMultiObject *self)
 /* --------------- perform --------------- */
 
 static PyObject *
-do_multi_perform(CurlMultiObject *self)
+do_multi_perform(CurlMultiObject *self, PyObject *Py_UNUSED(ignored))
 {
     CURLMcode res;
     int running = -1;
@@ -734,7 +734,7 @@ done:
 /* --------------- fdset ---------------------- */
 
 static PyObject *
-do_multi_fdset(CurlMultiObject *self)
+do_multi_fdset(CurlMultiObject *self, PyObject *Py_UNUSED(ignored))
 {
     CURLMcode res;
     int max_fd = -1, fd;
@@ -935,7 +935,7 @@ do_multi_select(CurlMultiObject *self, PyObject *args)
 }
 
 
-static PyObject *do_curlmulti_getstate(CurlMultiObject *self)
+static PyObject *do_curlmulti_getstate(CurlMultiObject *self, PyObject *Py_UNUSED(ignored))
 {
     PyErr_SetString(PyExc_TypeError, "CurlMulti objects do not support serialization");
     return NULL;
