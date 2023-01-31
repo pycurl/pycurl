@@ -399,6 +399,12 @@ class OptionConstantsTest(unittest.TestCase):
         curl.setopt(curl.PROXY_TLS13_CIPHERS, 'TLS_CHACHA20_POLY1305_SHA256')
         curl.close()
 
+    @util.min_libcurl(7, 75, 0)
+    def test_aws_sigv4(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.AWS_SIGV4, 'provider1:provider2')
+        curl.close()
+
 class OptionConstantsSettingTest(unittest.TestCase):
     def setUp(self):
         self.curl = pycurl.Curl()
