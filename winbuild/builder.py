@@ -2,6 +2,7 @@ import os, os.path, shutil, sys, subprocess
 from .utils import *
 from .config import *
 
+
 class Batch(object):
     def __init__(self, bconf):
         self.bconf = bconf
@@ -73,6 +74,7 @@ class Batch(object):
     def nasm_cmd(self):
         return "set path=%s;%%path%%\n" % self.bconf.nasm_path
 
+
 class Builder(object):
     def __init__(self, **kwargs):
         self.bconf = kwargs.pop('bconf')
@@ -84,11 +86,11 @@ class Builder(object):
         yield batch
         with open('doit.bat', 'w') as f:
             f.write(batch.batch_text())
-        if False:
-            print("Executing:")
-            with open('doit.bat', 'r') as f:
-                print(f.read())
-            sys.stdout.flush()
+        # if False:
+        #     print("Executing:")
+        #     with open('doit.bat', 'r') as f:
+        #         print(f.read())
+        #     sys.stdout.flush()
         rv = subprocess.call(['doit.bat'])
         if rv != 0:
             print("\nFailed to execute the following commands:\n")
@@ -96,6 +98,7 @@ class Builder(object):
                 print(f.read())
             sys.stdout.flush()
             exit(3)
+
 
 class StandardBuilder(Builder):
     @property

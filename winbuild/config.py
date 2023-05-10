@@ -2,6 +2,7 @@ import os
 from .utils import *
 from .pythons import *
 
+
 class ExtendedConfig:
     '''Global configuration that specifies what the entire process will do.
     
@@ -117,6 +118,7 @@ class ExtendedConfig:
         
         return paths
 
+
 BITNESSES = (32, 64)
 
 PYTHON_VC_VERSIONS = {
@@ -132,11 +134,12 @@ PYTHON_VC_VERSIONS = {
     '3.9': 'vc14',
 }
 
+
 class BuildConfig:
-    '''Parameters for a particular build configuration.
-    
+    """
+    Parameters for a particular build configuration.
     Unlike ExtendedConfig, this class fixes bitness and Python version.
-    '''
+    """
     
     def __init__(self, ext_config, **kwargs):
         for k in dir(ext_config):

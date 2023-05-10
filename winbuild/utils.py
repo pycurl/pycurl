@@ -11,6 +11,7 @@ try:
 except AttributeError:
     pass
 
+
 # Given a list of paths, return the first path that exists.
 def select_existing_path(paths):
     if isinstance(paths, list) or isinstance(paths, tuple):
@@ -21,6 +22,7 @@ def select_existing_path(paths):
     else:
         return paths
 
+
 # Find the given binary by its short name in the specified
 # list of directories.
 def find_in_paths(binary, paths):
@@ -30,21 +32,27 @@ def find_in_paths(binary, paths):
     raise Exception('Could not find %s' % binary)
 
 # Executes the specified command, raising an exception if execution failed.
+
+
 def check_call(cmd):
     try:
         subprocess.check_call(cmd)
     except Exception as e:
         raise Exception('Failed to execute ' + str(cmd) + ': ' + str(type(e)) + ': ' +str(e))
 
+
 def mkdir_p(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
+
 def rm_rf(config, path):
     check_call([config.rm_path, '-rf', path])
 
+
 def cp_r(config, src, dest):
     check_call([config.cp_path, '-r', src, dest])
+
 
 # Retrieves the file at the given url, saving it in the specified local filesystem path.
 # Does nothing if the local path already exists.
@@ -64,16 +72,19 @@ def fetch(url, archive=None):
                     break
                 f.write(chunk)
         os.rename(tmp_path, archive)
-    
+
+
 # Verifies that provided path exists, and returns it.
 def require_file_exists(path):
     if not os.path.exists(path):
         raise Exception('Path %s does not exist!' % path)
     return path
 
+
 # Converts forward slashes to backslashes.
 def fix_slashes(path):
     return path.replace('/', '\\')
+
 
 # Returns the first path matching the pattern, where pattern is anything the
 # standard library glob module recognizes plus {a,b,c} alterations.
@@ -99,6 +110,7 @@ def glob_first(pattern, selector=None):
                 return paths[0]
     raise Exception("Not found: %s" % pattern)
 
+
 @contextlib.contextmanager
 def in_dir(dir):
     old_cwd = os.getcwd()
@@ -107,6 +119,7 @@ def in_dir(dir):
         yield
     finally:
         os.chdir(old_cwd)
+
 
 def untar(config, basename):
     if os.path.exists(basename):
