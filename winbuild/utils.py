@@ -124,4 +124,4 @@ def in_dir(dir):
 def untar(config, basename):
     if os.path.exists(basename):
         shutil.rmtree(basename)
-    check_call([config.tar_path, 'xf', '%s.tar.gz' % basename])
+    check_call(["tar", 'xf', '%s.tar.gz' % basename])
