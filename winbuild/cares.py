@@ -1,6 +1,7 @@
 from .utils import *
 from .builder import *
 
+
 class CaresBuilder(StandardBuilder):
     def build(self):
         cares_dir = self.standard_fetch_extract(
@@ -14,7 +15,7 @@ class CaresBuilder(StandardBuilder):
             with self.execute_batch() as b:
                 if self.bconf.cares_version == '1.10.0':
                     b.add("patch -p1 < %s" %
-                        require_file_exists(os.path.join(config.winbuild_patch_root, 'c-ares-vs2015.patch')))
+                        require_file_exists(os.path.join(self.bconf.winbuild_patch_root, 'c-ares-vs2015.patch')))
                 b.add("nmake -f Makefile.msvc")
                 
                 # assemble dist

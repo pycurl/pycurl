@@ -1,5 +1,8 @@
 from .utils import *
 from .builder import *
+from .zlib import ZlibBuilder
+from .openssl import OpensslBuilder
+
 
 class Libssh2Builder(StandardBuilder):
     def build(self):
@@ -9,7 +12,7 @@ class Libssh2Builder(StandardBuilder):
             with self.execute_batch() as b:
                 if self.bconf.libssh2_version_tuple < (1, 8, 0) and self.bconf.vc_version == 'vc14':
                     b.add("patch -p0 < %s" %
-                        require_file_exists(os.path.join(config.winbuild_patch_root, 'libssh2-vs2015.patch')))
+                        require_file_exists(os.path.join(self.bconf.winbuild_patch_root, 'libssh2-vs2015.patch')))
                 zlib_builder = ZlibBuilder(bconf=self.bconf)
                 openssl_builder = OpensslBuilder(bconf=self.bconf)
                 vars = '''

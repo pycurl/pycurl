@@ -1,6 +1,7 @@
 from .utils import *
 from .builder import *
 
+
 class LibiconvBuilder(StandardBuilder):
     def build(self):
         libiconv_dir = self.standard_fetch_extract(
@@ -8,4 +9,4 @@ class LibiconvBuilder(StandardBuilder):
         with in_dir(libiconv_dir):
             with self.execute_batch() as b:
                 b.add("env LD=link bash ./configure")
-                b.add(config.gmake_path)
+                b.add(self.bconf.gmake_path)
