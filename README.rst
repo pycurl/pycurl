@@ -1,6 +1,6 @@
 PycURL -- A Python Interface To The cURL library
 ================================================
-
+TEST CI
 .. image:: https://github.com/pycurl/pycurl/workflows/CI/badge.svg
 	   :target: https://github.com/pycurl/pycurl/actions
 
