@@ -79,3 +79,34 @@ class VersionConstantsTest(unittest.TestCase):
     def test_psl(self):
         assert hasattr(pycurl, 'VERSION_PSL')
 
+    @util.min_libcurl(7, 52, 0)
+    def test_https_proxy(self):
+        assert hasattr(pycurl, 'VERSION_HTTPS_PROXY')
+
+    @util.min_libcurl(7, 56, 0)
+    def test_multi_ssl(self):
+        assert hasattr(pycurl, 'VERSION_MULTI_SSL')
+
+    @util.min_libcurl(7, 57, 0)
+    def test_brotli(self):
+        assert hasattr(pycurl, 'VERSION_BROTLI')
+
+    @util.min_libcurl(7, 64, 1)
+    def test_altsvc(self):
+        assert hasattr(pycurl, 'VERSION_ALTSVC')
+
+    @util.min_libcurl(7, 66, 0)
+    def test_http3(self):
+        assert hasattr(pycurl, 'VERSION_HTTP3')
+
+    @util.min_libcurl(7, 72, 0)
+    def test_unicode(self):
+        assert hasattr(pycurl, 'VERSION_UNICODE')
+
+    @util.min_libcurl(7, 72, 0)
+    def test_zstd(self):
+        assert hasattr(pycurl, 'VERSION_ZSTD')
+
+    @util.min_libcurl(7, 74, 0)
+    def test_hsts(self):
+        assert hasattr(pycurl, 'VERSION_HSTS')
