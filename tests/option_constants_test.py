@@ -509,6 +509,7 @@ class OptionConstantsSettingTest(unittest.TestCase):
         self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE)
 
     @util.min_libcurl(7, 66, 0)
+    @util.only_http3
     def test_http_version_3(self):
         self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_3)
 
