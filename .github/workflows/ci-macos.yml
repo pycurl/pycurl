@@ -6,8 +6,14 @@ name: CI-macOS
 on:
   push:
     branches: [ master ]
+    paths-ignore:
+    - '.github/workflows/ci.yml'
+    - '.github/workflows/ci-windows.yml'
   pull_request:
     branches: [ master ]
+    paths-ignore:
+    - '.github/workflows/ci.yml'
+    - '.github/workflows/ci-windows.yml'
 
 jobs:
   build:
