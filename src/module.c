@@ -506,6 +506,7 @@ initpycurl(void)
     insstr_modinit(d, "version", g_pycurl_useragent);
     insint(d, "COMPILE_PY_VERSION_HEX", PY_VERSION_HEX);
     insint(d, "COMPILE_LIBCURL_VERSION_NUM", LIBCURL_VERSION_NUM);
+    insstr_modinit(d, "COMPILE_SSL_LIB", COMPILE_SSL_LIB);
 
     /* Types */
     insobj2_modinit(d, NULL, "Curl", (PyObject *) p_Curl_Type);
