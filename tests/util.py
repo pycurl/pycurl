@@ -168,19 +168,8 @@ def only_ssl_backends(*backends):
             if 'https' not in pycurl.version_info()[8]:
                 raise unittest.SkipTest('libcurl does not support ssl')
 
-            # XXX move to pycurl library
-            if 'OpenSSL/' in pycurl.version:
-                current_backend = 'openssl'
-            elif 'GnuTLS/' in pycurl.version:
-                current_backend = 'gnutls'
-            elif 'NSS/' in pycurl.version:
-                current_backend = 'nss'
-            elif 'SecureTransport' in pycurl.version:
-                current_backend = 'secure-transport'
-            else:
-                current_backend = 'none'
-            if current_backend not in backends:
-                raise unittest.SkipTest('SSL backend is %s' % current_backend)
+            if pycurl.COMPILE_SSL_LIB not in backends:
+                raise unittest.SkipTest('SSL backend is %s' % pycurl.COMPILE_SSL_LIB)
 
             return fn(*args, **kwargs)
 
