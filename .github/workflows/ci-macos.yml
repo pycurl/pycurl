@@ -19,9 +19,7 @@ jobs:
 
     runs-on: macOS-12
     env:
-      ARCHFLAGS: "-arch x86_64"
-      MACOSX_DEPLOYMENT_TARGET: 12.0
-      PYCURL_CURL_CONFIG: /usr/local/opt/curl/bin/curl-config
+      PYCURL_CURL_CONFIG: /usr/bin/curl-config
       PYCURL_SSL_LIBRARY: sectransp
     strategy:
       fail-fast: false
