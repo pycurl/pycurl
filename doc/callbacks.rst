@@ -211,7 +211,7 @@ enabled for this callback to be invoked.
 ::
 
     def test(debug_type, debug_msg):
-        print "debug(%d): %s" % (debug_type, debug_msg)
+        print("debug(%d): %s" % (debug_type, debug_msg))
 
     c = pycurl.Curl()
     c.setopt(pycurl.URL, "https://curl.haxx.se/")
@@ -261,10 +261,10 @@ document, the arguments related to uploads are zero, and vice versa.
 
     ## Callback function invoked when download/upload has progress
     def progress(download_t, download_d, upload_t, upload_d):
-        print "Total to download", download_t
-        print "Total downloaded", download_d
-        print "Total to upload", upload_t
-        print "Total uploaded", upload_d
+        print("Total to download", download_t)
+        print("Total downloaded", download_d)
+        print("Total to upload", upload_t)
+        print("Total uploaded", upload_d)
 
     c = pycurl.Curl()
     c.setopt(c.URL, "http://slashdot.org/")
