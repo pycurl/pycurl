@@ -5,3 +5,4 @@ flaky
 pyflakes
 pytest>=5
 sphinx
+setuptools
