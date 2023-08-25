@@ -821,13 +821,12 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
     if ((ok_list = PyList_New((Py_ssize_t)0)) == NULL) goto error;
     if ((err_list = PyList_New((Py_ssize_t)0)) == NULL) goto error;
 
-    /* Loop through all messages */
-    while ((msg = curl_multi_info_read(self->multi_handle, &in_queue)) != NULL) {
+    /* Loop through up to 'num_results' messages */
+    while (num_results-- > 0) {
         CURLcode res;
         CurlObject *co = NULL;
 
-        /* Check for termination as specified by the user */
-        if (num_results-- <= 0) {
+        if ((msg = curl_multi_info_read(self->multi_handle, &in_queue)) == NULL) {
             break;
         }
 

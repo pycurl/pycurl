@@ -360,6 +360,50 @@ class MultiTest(unittest.TestCase):
         self.assertEqual('success', c2.body.getvalue().decode())
         self.assertEqual('success', c3.body.getvalue().decode())
 
+    def test_multi_info_read_some(self):
+        """
+        Check for missing messages from info_read when restricted to less than all messages
+
+        This is a regression check for an issue where the (n+1)'th queued message went
+        missing when (n < number of messages in the queue) and info_read(num_messages=n) was
+        called.
+        """
+        c1 = util.DefaultCurl()
+        c2 = util.DefaultCurl()
+        c3 = util.DefaultCurl()
+        c1.setopt(c1.URL, "http://%s:8380/short_wait" % localhost)
+        c2.setopt(c2.URL, "http://%s:8381/short_wait" % localhost)
+        c3.setopt(c3.URL, "http://%s:8382/short_wait" % localhost)
+        c1.body = util.BytesIO()
+        c2.body = util.BytesIO()
+        c3.body = util.BytesIO()
+        c1.setopt(c1.WRITEFUNCTION, c1.body.write)
+        c2.setopt(c2.WRITEFUNCTION, c2.body.write)
+        c3.setopt(c3.WRITEFUNCTION, c3.body.write)
+
+        m = pycurl.CurlMulti()
+        m.add_handle(c1)
+        m.add_handle(c2)
+        m.add_handle(c3)
+
+        # Complete all requests
+        num_handles = -1
+        ret = pycurl.E_CALL_MULTI_PERFORM
+        while num_handles:
+            if ret != pycurl.E_CALL_MULTI_PERFORM:
+                m.select(1.0)
+            ret, num_handles = m.perform()
+
+        # Three messages in the queue, read two
+        remaining, success, error = m.info_read(2)
+        assert remaining == 1
+        assert len(success) + len(error) == 2
+
+        # One message left in the queue
+        remaining, success, error = m.info_read()
+        assert remaining == 0
+        assert len(success) + len(error) == 1
+
     def test_multi_close(self):
         m = pycurl.CurlMulti()
         m.close()
