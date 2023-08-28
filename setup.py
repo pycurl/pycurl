@@ -410,13 +410,15 @@ ignore this message.''')
         return ssl_lib_detected
 
     def configure_windows(self):
-        OPENSSL_DIR = scan_argv(self.argv, "--openssl-dir=")
+        OPENSSL_DIR = os.environ.get('PYCURL_OPENSSL_DIR')
+        OPENSSL_DIR = scan_argv(self.argv, "--openssl-dir=", OPENSSL_DIR)
         if OPENSSL_DIR is not None:
             self.include_dirs.append(os.path.join(OPENSSL_DIR, "include"))
             self.library_dirs.append(os.path.join(OPENSSL_DIR, "lib"))
         # Windows users have to pass --curl-dir parameter to specify path
         # to libcurl, because there is no curl-config on windows at all.
-        curl_dir = scan_argv(self.argv, "--curl-dir=")
+        curl_dir = os.environ.get('PYCURL_CURL_DIR')
+        curl_dir = scan_argv(self.argv, "--curl-dir=", curl_dir)
         if curl_dir is None:
             fail("Please specify --curl-dir=/path/to/built/libcurl")
         if not os.path.exists(curl_dir):
@@ -431,18 +433,25 @@ ignore this message.''')
         # For libcurl 7.46.0, the library name is libcurl.lib.
         # And static library name is libcurl_a.lib by default as of libcurl 7.46.0.
         # override with: --libcurl-lib-name=libcurl_imp.lib
-        curl_lib_name = scan_argv(self.argv, '--libcurl-lib-name=', 'libcurl.lib')
+        curl_lib_name = os.environ.get('PYCURL_LIBCURL_LIB_NAME', 'libcurl.lib')
+        curl_lib_name = scan_argv(self.argv, '--libcurl-lib-name=', curl_lib_name)
 
         # openssl 1.1.0 changed its library names
         # from libeay32.lib/ssleay32.lib to libcrypto.lib/libssl.lib.
         # at the same time they dropped thread locking callback interface,
         # meaning the correct usage of this option is --openssl-lib-name=""
-        self.openssl_lib_name = scan_argv(self.argv, '--openssl-lib-name=', 'libeay32.lib')
+        self.openssl_lib_name = os.environ.get('PYCURL_OPENSSL_LIB_NAME', 'libeay32.lib')
+        self.openssl_lib_name = scan_argv(self.argv, '--openssl-lib-name=', self.openssl_lib_name)
 
+        try:
+            for lib in os.environ['PYCURL_LINK_ARG'].split(os.pathsep):
+                self.extra_link_args.append(lib)
+        except KeyError:
+            pass
         for lib in scan_argvs(self.argv, '--link-arg='):
             self.extra_link_args.append(lib)
 
-        if scan_argv(self.argv, "--use-libcurl-dll") is not None:
+        if scan_argv(self.argv, "--use-libcurl-dll") is not None or os.environ.get('PYCURL_USE_LIBCURL_DLL') is not None:
             libcurl_lib_path = os.path.join(curl_dir, "lib", curl_lib_name)
             self.extra_link_args.extend(["ws2_32.lib"])
             if str.find(sys.version, "MSC") >= 0:
@@ -457,7 +466,7 @@ ignore this message.''')
             fail("libcurl.lib does not exist at %s.\nCurl directory must point to compiled libcurl (bin/include/lib subdirectories): %s" %(libcurl_lib_path, curl_dir))
         self.extra_objects.append(libcurl_lib_path)
 
-        if scan_argv(self.argv, '--with-openssl') is not None or scan_argv(self.argv, '--with-ssl') is not None:
+        if scan_argv(self.argv, '--with-openssl') is not None or scan_argv(self.argv, '--with-ssl') is not None or os.environ.get('PYCURL_WITH_OPENSSL') is not None:
             self.using_openssl()
 
         self.check_avoid_stdio()
