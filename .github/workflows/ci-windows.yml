@@ -63,7 +63,14 @@ jobs:
         pip install wheel delvewheel
         pip install flake8 pytest -r requirements-dev.txt
     - name: Build
-      run: python setup.py bdist_wheel --with-openssl --curl-dir=$env:VCPKG_INSTALLATION_ROOT/packages/curl_x86-windows --openssl-dir=$env:VCPKG_INSTALLATION_ROOT/packages/openssl_x86-windows --openssl-lib-name=libssl.lib --link-arg=libcrypto.lib
+      env:
+        PYCURL_WITH_OPENSSL: true
+        PYCURL_CURL_DIR: 'C:/vcpkg/packages/curl_x86-windows'
+        PYCURL_OPENSSL_DIR: 'C:/vcpkg/packages/openssl_x86-windows'
+        PYCURL_OPENSSL_LIB_NAME: 'libssl.lib'
+        PYCURL_LINK_ARG: 'libcrypto.lib'
+      run: |
+        python setup.py bdist_wheel
     - name: Repair & install built wheel
       run: |
         delvewheel repair --add-path $VCPKG_INSTALLATION_ROOT/installed/x86-windows/bin dist/*.whl
