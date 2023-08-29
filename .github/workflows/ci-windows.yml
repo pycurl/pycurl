@@ -56,7 +56,7 @@ jobs:
           setapikey "${{ secrets.GITHUB_TOKEN }}" \
           -source "https://nuget.pkg.github.com/${GITHUB_REPOSITORY_OWNER}/index.json"
     - name: Install packages
-      run: vcpkg install curl[core,http2,non-http,openssl,ssh]:x86-windows
+      run: vcpkg install curl[core,non-http,schannel]:x86-windows
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -64,11 +64,8 @@ jobs:
         pip install flake8 pytest -r requirements-dev.txt
     - name: Build
       env:
-        PYCURL_WITH_OPENSSL: true
+        PYCURL_SSL_LIBRARY: schannel
         PYCURL_CURL_DIR: 'C:/vcpkg/packages/curl_x86-windows'
-        PYCURL_OPENSSL_DIR: 'C:/vcpkg/packages/openssl_x86-windows'
-        PYCURL_OPENSSL_LIB_NAME: 'libssl.lib'
-        PYCURL_LINK_ARG: 'libcrypto.lib'
       run: |
         python setup.py bdist_wheel
     - name: Repair & install built wheel

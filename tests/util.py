@@ -199,6 +199,18 @@ def only_unix(fn):
 
     return decorated
 
+def only_http2(fn):
+    import pycurl
+
+    @functools.wraps(fn)
+    def decorated(*args, **kwargs):
+        if not pycurl.version_info()[4] & pycurl.VERSION_HTTP2:
+            raise unittest.SkipTest('libcurl does not support HTTP version 2')
+
+        return fn(*args, **kwargs)
+
+    return decorated
+
 def only_http3(fn):
     import pycurl
 
