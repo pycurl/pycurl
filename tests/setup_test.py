@@ -161,8 +161,9 @@ not been able to determine which SSL backend it is using.' in captured_stderr.ge
     @util.only_unix
     @using_curl_config('curl-config-ssl-feature-only')
     def test_libcurl_ssl_openssl(self):
+        sopath = os.path.join(os.path.dirname(__file__), 'fake-curl', 'libcurl', 'with_openssl.so')
         config = pycurl_setup.ExtensionConfiguration(['',
-            '--libcurl-dll=tests/fake-curl/libcurl/with_openssl.so'])
+            '--libcurl-dll=' + sopath])
         # openssl should be detected
         assert 'HAVE_CURL_SSL' in config.define_symbols
         assert 'HAVE_CURL_OPENSSL' in config.define_symbols
@@ -174,8 +175,9 @@ not been able to determine which SSL backend it is using.' in captured_stderr.ge
     @util.only_unix
     @using_curl_config('curl-config-ssl-feature-only')
     def test_libcurl_ssl_gnutls(self):
+        sopath = os.path.join(os.path.dirname(__file__), 'fake-curl', 'libcurl', 'with_gnutls.so')
         config = pycurl_setup.ExtensionConfiguration(['',
-            '--libcurl-dll=tests/fake-curl/libcurl/with_gnutls.so'])
+            '--libcurl-dll=' + sopath])
         # gnutls should be detected
         assert 'HAVE_CURL_SSL' in config.define_symbols
         assert 'HAVE_CURL_GNUTLS' in config.define_symbols
@@ -187,8 +189,9 @@ not been able to determine which SSL backend it is using.' in captured_stderr.ge
     @util.only_unix
     @using_curl_config('curl-config-ssl-feature-only')
     def test_libcurl_ssl_nss(self):
+        sopath = os.path.join(os.path.dirname(__file__), 'fake-curl', 'libcurl', 'with_nss.so')
         config = pycurl_setup.ExtensionConfiguration(['',
-            '--libcurl-dll=tests/fake-curl/libcurl/with_nss.so'])
+            '--libcurl-dll=' + sopath])
         # nss should be detected
         assert 'HAVE_CURL_SSL' in config.define_symbols
         assert 'HAVE_CURL_NSS' in config.define_symbols
@@ -200,8 +203,9 @@ not been able to determine which SSL backend it is using.' in captured_stderr.ge
     @util.only_unix
     @using_curl_config('curl-config-empty')
     def test_libcurl_ssl_unrecognized(self):
+        sopath = os.path.join(os.path.dirname(__file__), 'fake-curl', 'libcurl', 'with_unknown.so')
         config = pycurl_setup.ExtensionConfiguration(['',
-            '--libcurl-dll=tests/fake-curl/libcurl/with_unknown_ssl.so'])
+            '--libcurl-dll=' + sopath])
         assert 'HAVE_CURL_SSL' not in config.define_symbols
         assert 'HAVE_CURL_OPENSSL' not in config.define_symbols
         assert 'HAVE_CURL_GNUTLS' not in config.define_symbols
@@ -258,8 +262,9 @@ not been able to determine which SSL backend it is using.' in captured_stderr.ge
     @util.only_unix
     @using_curl_config('curl-config-empty')
     def test_no_ssl_feature_with_libcurl_dll(self):
+        sopath = os.path.join(os.path.dirname(__file__), 'fake-curl', 'libcurl', 'with_openssl.so')
         config = pycurl_setup.ExtensionConfiguration(['',
-            '--libcurl-dll=tests/fake-curl/libcurl/with_openssl.so'])
+            '--libcurl-dll=' + sopath])
         # openssl should not be detected
         assert 'HAVE_CURL_SSL' not in config.define_symbols
         assert 'HAVE_CURL_OPENSSL' not in config.define_symbols
