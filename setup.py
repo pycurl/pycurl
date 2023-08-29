@@ -466,8 +466,14 @@ ignore this message.''')
             fail("libcurl.lib does not exist at %s.\nCurl directory must point to compiled libcurl (bin/include/lib subdirectories): %s" %(libcurl_lib_path, curl_dir))
         self.extra_objects.append(libcurl_lib_path)
 
-        if scan_argv(self.argv, '--with-openssl') is not None or scan_argv(self.argv, '--with-ssl') is not None or os.environ.get('PYCURL_WITH_OPENSSL') is not None:
+        if scan_argv(self.argv, '--with-openssl') is not None or scan_argv(self.argv, '--with-ssl') is not None:
             self.using_openssl()
+        elif 'PYCURL_SSL_LIBRARY' in os.environ:
+            ssl_lib = os.environ['PYCURL_SSL_LIBRARY']
+            if ssl_lib in ['openssl']:
+                getattr(self, 'using_%s' % ssl_lib)()
+            else:
+                raise ConfigurationError('Invalid value "%s" for PYCURL_SSL_LIBRARY' % ssl_lib)
 
         self.check_avoid_stdio()
 

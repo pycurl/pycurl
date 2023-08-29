@@ -64,7 +64,7 @@ jobs:
         pip install flake8 pytest -r requirements-dev.txt
     - name: Build
       env:
-        PYCURL_WITH_OPENSSL: true
+        PYCURL_SSL_LIBRARY: openssl
         PYCURL_CURL_DIR: 'C:/vcpkg/packages/curl_x86-windows'
         PYCURL_OPENSSL_DIR: 'C:/vcpkg/packages/openssl_x86-windows'
         PYCURL_OPENSSL_LIB_NAME: 'libssl.lib'
