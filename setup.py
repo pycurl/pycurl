@@ -468,9 +468,11 @@ ignore this message.''')
 
         if scan_argv(self.argv, '--with-openssl') is not None or scan_argv(self.argv, '--with-ssl') is not None:
             self.using_openssl()
+        elif scan_argv(self.argv, '--with-schannel') is not None:
+            self.using_schannel()
         elif 'PYCURL_SSL_LIBRARY' in os.environ:
             ssl_lib = os.environ['PYCURL_SSL_LIBRARY']
-            if ssl_lib in ['openssl']:
+            if ssl_lib in ['openssl', 'schannel']:
                 getattr(self, 'using_%s' % ssl_lib)()
             else:
                 raise ConfigurationError('Invalid value "%s" for PYCURL_SSL_LIBRARY' % ssl_lib)
@@ -595,12 +597,18 @@ ignore this message.''')
         self.define_macros.append(('HAVE_CURL_SSL', 1))
         self.ssl_lib_detected = 'sectransp'
 
+    def using_schannel(self):
+        self.define_macros.append(('HAVE_CURL_SCHANNEL', 1))
+        self.define_macros.append(('HAVE_CURL_SSL', 1))
+        self.ssl_lib_detected = 'schannel'
+
 
 def strip_pycurl_options(argv):
     if sys.platform == 'win32':
         options = [
             '--curl-dir=', '--libcurl-lib-name=', '--use-libcurl-dll',
             '--avoid-stdio', '--with-openssl', '--openssl-dir=',
+            '--with-schannel',
         ]
     else:
         options = ['--openssl-dir=', '--curl-config=', '--avoid-stdio']
@@ -618,6 +626,7 @@ PRETTY_SSL_LIBS = {
     'nss': 'NSS',
     'mbedtls': 'mbedTLS',
     'sectransp': 'Secure Transport',
+    'schannel': 'Schannel',
 }
 
 def get_extension(argv, split_extension_source=False):
@@ -953,6 +962,7 @@ PycURL Windows options:
  --with-openssl                        libcurl is linked against OpenSSL/LibreSSL/BoringSSL
  --with-ssl                            legacy alias for --with-openssl
  --link-arg=foo.lib                    also link against specified library
+ --with-schannel                       libcurl is linked against Schannel
 '''
 
 if __name__ == "__main__":

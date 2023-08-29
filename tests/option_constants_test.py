@@ -331,7 +331,7 @@ class OptionConstantsTest(unittest.TestCase):
         curl.setopt(curl.RANDOM_FILE, '/bogus-random')
         curl.close()
 
-    @util.only_ssl_backends('openssl', 'gnutls', 'secure-transport')
+    @util.only_ssl_backends('openssl', 'gnutls', 'secure-transport', 'schannel')
     def test_egdsocket(self):
         curl = pycurl.Curl()
         curl.setopt(curl.EGDSOCKET, '/bogus-egdsocket')
@@ -386,14 +386,14 @@ class OptionConstantsTest(unittest.TestCase):
         curl.close()
 
     @util.min_libcurl(7, 61, 0)
-    @util.only_ssl_backends('openssl')
+    @util.only_ssl_backends('openssl', 'schannel')
     def test_tls13_ciphers(self):
         curl = pycurl.Curl()
         curl.setopt(curl.TLS13_CIPHERS, 'TLS_CHACHA20_POLY1305_SHA256')
         curl.close()
 
     @util.min_libcurl(7, 61, 0)
-    @util.only_ssl_backends('openssl')
+    @util.only_ssl_backends('openssl', 'schannel')
     def test_proxy_tls13_ciphers(self):
         curl = pycurl.Curl()
         curl.setopt(curl.PROXY_TLS13_CIPHERS, 'TLS_CHACHA20_POLY1305_SHA256')
@@ -527,7 +527,7 @@ class OptionConstantsSettingTest(unittest.TestCase):
     # Apparently TLSAUTH_TYPE=SRP is an unknown option on appveyor
     @util.only_unix
     @util.min_libcurl(7, 21, 4)
-    @util.only_ssl_backends('openssl', 'gnutls')
+    @util.only_ssl_backends('openssl', 'gnutls', 'schannel')
     def test_tlsauth(self):
         self.curl.setopt(self.curl.TLSAUTH_TYPE, "SRP")
         self.curl.setopt(self.curl.TLSAUTH_USERNAME, "test")

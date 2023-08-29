@@ -375,6 +375,7 @@ initpycurl(void)
                 case CURLSSLBACKEND_GNUTLS:
                 case CURLSSLBACKEND_NSS:
                 case CURLSSLBACKEND_WOLFSSL:
+                case CURLSSLBACKEND_SCHANNEL:
                 case CURLSSLBACKEND_MBEDTLS:
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 64, 1)
                 case CURLSSLBACKEND_SECURETRANSPORT:
@@ -413,6 +414,8 @@ initpycurl(void)
         runtime_ssl_lib = "mbedtls";
     } else if (!strncmp(vi->ssl_version, "Secure Transport", 16)) {
         runtime_ssl_lib = "secure-transport";
+    } else if (!strncmp(vi->ssl_version, "Schannel", 8)) {
+        runtime_ssl_lib = "schannel";
     } else {
         runtime_ssl_lib = "none/other";
     }
