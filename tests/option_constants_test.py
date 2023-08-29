@@ -489,22 +489,22 @@ class OptionConstantsSettingTest(unittest.TestCase):
         self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_1_1)
 
     @util.min_libcurl(7, 33, 0)
-    @pytest.mark.http2
+    @util.only_http2
     def test_http_version_2_0(self):
         self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_2_0)
 
     @util.min_libcurl(7, 43, 0)
-    @pytest.mark.http2
+    @util.only_http2
     def test_http_version_2(self):
         self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_2)
 
     @util.min_libcurl(7, 47, 0)
-    @pytest.mark.http2
+    @util.only_http2
     def test_http_version_2tls(self):
         self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_2TLS)
 
     @util.min_libcurl(7, 49, 0)
-    @pytest.mark.http2
+    @util.only_http2
     def test_http_version_2prior_knowledge(self):
         self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE)
 
