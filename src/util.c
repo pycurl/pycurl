@@ -4,10 +4,17 @@ static PyObject *
 create_error_object(CurlObject *self, int code)
 {
     PyObject *s, *v;
-    
-    s = PyText_FromString_Ignore(self->error);
-    if (s == NULL) {
-        return NULL;
+
+    if (strlen(self->error)) {
+        s = PyText_FromString_Ignore(self->error);
+        if (s == NULL) {
+            return NULL;
+        }
+    } else {
+        s = PyText_FromString_Ignore(curl_easy_strerror(code));
+        if (s == NULL) {
+            return NULL;
+        }
     }
     v = Py_BuildValue("(iO)", code, s);
     if (v == NULL) {
