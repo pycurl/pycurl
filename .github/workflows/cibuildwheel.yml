@@ -1,59 +1,110 @@
-name: Linux Wheels
+name: Build Wheels
 
 on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+  workflow_dispatch:
+    inputs:
+      pypi-env:
+        description: 'PyPI Environment for Deployment'
+        options:
+        - prod
+        - test
+        required: true
+        default: test
 
 jobs:
   package-wheel:
-    runs-on: ubuntu-latest
+    name: Build wheels on ${{ matrix.os }} ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    env:
+      VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'
     strategy:
       fail-fast: false
       matrix:
-        arch: [x86_64, aarch64]
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        include:
+          - os: macOS-12
+          - os: ubuntu-22.04
+          - os: windows-2022
+            arch: x86
+          - os: windows-2022
+            arch: x64
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
-      - name: Set up QEMU
-        if: ${{ matrix.arch == 'aarch64' }}
-        uses: docker/setup-qemu-action@v1          
+          python-version: 3.11
+
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: runner.os == 'Windows'
+        with:
+          arch: ${{ matrix.arch }}
+
+      - name: 'Setup NuGet credentials'
+        if: runner.os == 'Windows'
+        shell: 'bash'
+        run: |
+          nuget="$(vcpkg fetch nuget | tail -n 1)"
+          "${nuget}" \
+            sources add \
+            -source "https://nuget.pkg.github.com/${GITHUB_REPOSITORY_OWNER}/index.json" \
+            -storepasswordincleartext \
+            -name "GitHub" \
+            -username "${GITHUB_REPOSITORY_OWNER}" \
+            -password "${{ secrets.GITHUB_TOKEN }}"
+          "${nuget}" \
+            setapikey "${{ secrets.GITHUB_TOKEN }}" \
+            -source "https://nuget.pkg.github.com/${GITHUB_REPOSITORY_OWNER}/index.json"
+
+      - name: Install packages (Windows)
+        if: runner.os == 'Windows'
+        run: vcpkg install curl[core,non-http,schannel]:${{ matrix.arch }}-windows
+
+      - name: Install cibuildwheel
+        run: python -m pip install cibuildwheel
+
       - name: Build wheels
         env:
-          CIBW_ARCHS: ${{matrix.arch}}
+          CIBW_ARCHS_LINUX: x86_64
+          CIBW_ARCHS_MACOS: universal2
+          CIBW_ARCHS_WINDOWS: ${{ matrix.arch == 'x86' && 'x86' || 'AMD64' }}
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
           CIBW_BUILD: cp3*
-          CIBW_SKIP: '*-musllinux*'
-          CIBW_BEFORE_ALL: yum install -y libcurl-devel
+          CIBW_SKIP: cp36-* cp37-* *-musllinux*
+          CIBW_BUILD_FRONTEND: build
+          CIBW_BUILD_VERBOSITY: 1
+          CIBW_BEFORE_ALL_LINUX: yum install -y libcurl-devel openssl-devel
+          CIBW_ENVIRONMENT_MACOS: PYCURL_CURL_CONFIG=/usr/bin/curl-config PYCURL_SSL_LIBRARY=sectransp
+          CIBW_ENVIRONMENT_WINDOWS: PYCURL_CURL_DIR=C:/vcpkg/packages/curl_${{ matrix.arch }}-windows PYCURL_SSL_LIBRARY=schannel
+          CIBW_BEFORE_BUILD_WINDOWS: pip install delvewheel
+          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: delvewheel repair --add-path C:/vcpkg/installed/${{ matrix.arch }}-windows/bin -w {dest_dir} {wheel}
+          CIBW_BEFORE_TEST_LINUX: >
+            pip install flake8 -r requirements-dev.txt &&
+            make -C {package}/tests/fake-curl/libcurl
+          CIBW_BEFORE_TEST_MACOS: >
+            pip install flake8 -r requirements-dev.txt &&
+            make -C {package}/tests/fake-curl/libcurl
+          CIBW_BEFORE_TEST_WINDOWS: >
+            pip install flake8 -r requirements-dev.txt
+          CIBW_TEST_COMMAND: pytest -v -rs {project}/tests
+          CIBW_TEST_COMMAND_LINUX: pytest -v -rs {project}/tests -k "not test_keyfunction"
         run: |
-          python -m pip install --upgrade pip setuptools
-          pip install cibuildwheel
-          cibuildwheel --output-dir dist
-        shell: bash
+          python -m cibuildwheel --output-dir wheelhouse
+
       - name: Upload wheels
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
-          name: dist
-          path: dist/
+          path: ./wheelhouse/*.whl
 
   deploy:
-
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: package-wheel
-
     steps:
-      - uses: actions/checkout@v2
       - name: Download distributions
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
-          name: dist
+          name: artifact
           path: dist/
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@master
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          user: ${{ secrets.PYPI_USERNAME }}
-          password: ${{ secrets.PYPI_PASSWORD }}
+          repository-url: ${{ github.event.inputs.pypi-env == 'prod' && 'https://upload.pypi.org/legacy/' || 'https://test.pypi.org/legacy/' }}
