@@ -66,7 +66,7 @@ PycURL 개발 버전에 대한 설명서는 `여기 <http://pycurl.io/docs/dev/>
 
 버그는 `GitHub`_를 통해 보고될 수 있습니다. 버그 보고서와 GitHub는 메일링 목록에 직접 문의하십시오.
 
-.. _curl-and-python 메일링 목록: http://cool.haxx.se/mailman/listinfo/curl-and-python
+.. _curl-and-python 메일링 목록: https://lists.haxx.se/listinfo/curl-and-python
 .. _Stack Overflow: http://stackoverflow.com/questions/tagged/pycurl
 .. _메일링 목록 보관소: https://curl.haxx.se/mail/list.cgi?list=curl-and-python
 .. _GitHub: https://github.com/pycurl/pycurl/issues
@@ -176,5 +176,5 @@ License
 .. _libcurl: https://curl.haxx.se/libcurl/
 .. _urllib: http://docs.python.org/library/urllib.html
 .. _`the repository`: https://github.com/pycurl/pycurl
-.. _`mailing list`: http://cool.haxx.se/mailman/listinfo/curl-and-python
+.. _`mailing list`: https://lists.haxx.se/listinfo/curl-and-python
 .. _`downloads repository`: https://github.com/pycurl/downloads

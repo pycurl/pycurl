@@ -76,7 +76,7 @@ popular with some PycURL users.
 Bugs can be reported `via GitHub`_. Please use GitHub only for bug
 reports and direct questions to our mailing list instead.
 
-.. _curl-and-python mailing list: http://cool.haxx.se/mailman/listinfo/curl-and-python
+.. _curl-and-python mailing list: https://lists.haxx.se/listinfo/curl-and-python
 .. _Stack Overflow: http://stackoverflow.com/questions/tagged/pycurl
 .. _Mailing list archives: https://curl.haxx.se/mail/list.cgi?list=curl-and-python
 .. _via GitHub: https://github.com/pycurl/pycurl/issues
@@ -186,5 +186,5 @@ License
 .. _libcurl: https://curl.haxx.se/libcurl/
 .. _urllib: http://docs.python.org/library/urllib.html
 .. _`the repository`: https://github.com/pycurl/pycurl
-.. _`mailing list`: http://cool.haxx.se/mailman/listinfo/curl-and-python
+.. _`mailing list`: https://lists.haxx.se/listinfo/curl-and-python
 .. _`downloads repository`: https://github.com/pycurl/downloads
