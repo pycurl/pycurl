@@ -12,7 +12,7 @@ request.
 
 Please send support requests to our mailing list:
 
-http://cool.haxx.se/mailman/listinfo/curl-and-python
+https://lists.haxx.se/listinfo/curl-and-python
 
 People have also had success with getting help at Stack Overflow.
 

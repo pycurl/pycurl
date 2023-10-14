@@ -118,7 +118,7 @@ certain you have found a bug in PycURL. If you do not have a patch to fix
 the bug, or at least a specific code fragment in PycURL that you believe is
 the cause, you should instead post your inquiry to the mailing list.
 
-.. _curl-and-python mailing list: http://cool.haxx.se/mailman/listinfo/curl-and-python
+.. _curl-and-python mailing list: https://lists.haxx.se/listinfo/curl-and-python
 .. _Stack Overflow: http://stackoverflow.com/questions/tagged/pycurl
 .. _Mailing list archives: https://curl.haxx.se/mail/list.cgi?list=curl-and-python
 .. _via GitHub: https://github.com/pycurl/pycurl/issues
