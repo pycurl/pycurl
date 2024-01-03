@@ -269,6 +269,16 @@ class OptionConstantsTest(unittest.TestCase):
         curl.setopt(curl.CAPATH, '/bogus-capath')
         curl.close()
 
+    @util.min_libcurl(7, 71, 0)
+    @util.only_ssl
+    def test_sslcert_blob(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.SSLCERT_BLOB, 'bogus-sslcert-blob-as-str')
+        curl.setopt(curl.SSLCERT_BLOB, None)
+        curl.setopt(curl.SSLCERT_BLOB, b'bogus-sslcert-blob-as-bytes')
+        curl.unsetopt(curl.SSLCERT_BLOB)
+        curl.close()
+
     # CURLOPT_PROXY_CAPATH was introduced in libcurl-7.52.0
     @util.min_libcurl(7, 52, 0)
     @util.only_ssl_backends('openssl', 'gnutls', 'nss')

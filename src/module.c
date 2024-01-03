@@ -822,6 +822,9 @@ initpycurl(void)
 #endif
     insint_c(d, "HTTPPOST", CURLOPT_HTTPPOST);
     insint_c(d, "SSLCERT", CURLOPT_SSLCERT);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 71, 0)
+    insint_c(d, "SSLCERT_BLOB", CURLOPT_SSLCERT_BLOB);
+#endif
     insint_c(d, "SSLCERTPASSWD", CURLOPT_SSLCERTPASSWD);
     insint_c(d, "CRLF", CURLOPT_CRLF);
     insint_c(d, "QUOTE", CURLOPT_QUOTE);

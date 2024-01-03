@@ -80,6 +80,9 @@ util_curl_unsetopt(CurlObject *self, int option)
         break;
     case CURLOPT_CAINFO:
     case CURLOPT_CAPATH:
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 71, 0)
+    case CURLOPT_SSLCERT_BLOB:
+#endif
     case CURLOPT_COOKIE:
     case CURLOPT_COOKIEJAR:
     case CURLOPT_CUSTOMREQUEST:
@@ -189,8 +192,13 @@ do_curl_unsetopt(CurlObject *self, PyObject *args)
     /* early checks of option value */
     if (option <= 0)
         goto error;
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 71, 0)
+    if (option >= (int)CURLOPTTYPE_BLOB + OPTIONS_SIZE)
+        goto error;
+#else
     if (option >= (int)CURLOPTTYPE_OFF_T + OPTIONS_SIZE)
         goto error;
+#endif
     if (option % 10000 >= OPTIONS_SIZE)
         goto error;
 
@@ -208,6 +216,9 @@ do_curl_setopt_string_impl(CurlObject *self, int option, PyObject *obj)
     char *str = NULL;
     Py_ssize_t len = -1;
     PyObject *encoded_obj;
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 71, 0)
+    struct curl_blob curlblob;
+#endif
     int res;
 
     /* Check that the option specified a string as well as the input */
@@ -357,6 +368,24 @@ do_curl_setopt_string_impl(CurlObject *self, int option, PyObject *obj)
             CURLERROR_RETVAL();
         }
         break;
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 71, 0)
+    case CURLOPT_SSLCERT_BLOB:
+        if (PyText_AsStringAndSize(obj, &str, &len, &encoded_obj) != 0)
+            return NULL;
+
+        curlblob.data = str;
+        curlblob.len = len;
+        curlblob.flags = CURL_BLOB_COPY;
+
+        res = curl_easy_setopt(self->handle, (CURLoption)option, &curlblob);
+        if (res != CURLE_OK) {
+            PyText_EncodedDecref(encoded_obj);
+            CURLERROR_RETVAL();
+        }
+        PyText_EncodedDecref(encoded_obj);
+        Py_RETURN_NONE;
+        break;
+#endif
     default:
         PyErr_SetString(PyExc_TypeError, "strings are not supported for this option");
         return NULL;
@@ -1051,8 +1080,13 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     /* early checks of option value */
     if (option <= 0)
         goto error;
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 71, 0)
+    if (option >= (int)CURLOPTTYPE_BLOB + OPTIONS_SIZE)
+        goto error;
+#else
     if (option >= (int)CURLOPTTYPE_OFF_T + OPTIONS_SIZE)
         goto error;
+#endif
     if (option % 10000 >= OPTIONS_SIZE)
         goto error;
 
