@@ -79,9 +79,14 @@ util_curl_unsetopt(CurlObject *self, int option)
         Py_CLEAR(self->writeheader_fp);
         break;
     case CURLOPT_CAINFO:
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 77, 0)
+    case CURLOPT_CAINFO_BLOB:
+#endif
     case CURLOPT_CAPATH:
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 71, 0)
     case CURLOPT_SSLCERT_BLOB:
+    case CURLOPT_SSLKEY_BLOB:
+    case CURLOPT_ISSUERCERT_BLOB:
 #endif
     case CURLOPT_COOKIE:
     case CURLOPT_COOKIEJAR:
@@ -119,6 +124,14 @@ util_curl_unsetopt(CurlObject *self, int option)
     case CURLOPT_PROXY_SSLKEY:
     case CURLOPT_PROXY_SSLKEYTYPE:
     case CURLOPT_PROXY_SSL_CIPHER_LIST:
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 77, 0)
+    case CURLOPT_PROXY_CAINFO_BLOB:
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 71, 0)
+    case CURLOPT_PROXY_SSLCERT_BLOB:
+    case CURLOPT_PROXY_SSLKEY_BLOB:
+    case CURLOPT_PROXY_ISSUERCERT_BLOB:
 #endif
         SETOPT((char *) NULL);
         break;
@@ -370,6 +383,15 @@ do_curl_setopt_string_impl(CurlObject *self, int option, PyObject *obj)
         break;
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 71, 0)
     case CURLOPT_SSLCERT_BLOB:
+    case CURLOPT_SSLKEY_BLOB:
+    case CURLOPT_PROXY_SSLCERT_BLOB:
+    case CURLOPT_PROXY_SSLKEY_BLOB:
+    case CURLOPT_ISSUERCERT_BLOB:
+    case CURLOPT_PROXY_ISSUERCERT_BLOB:
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 77, 0)
+    case CURLOPT_CAINFO_BLOB:
+    case CURLOPT_PROXY_CAINFO_BLOB:
+#endif
         if (PyText_AsStringAndSize(obj, &str, &len, &encoded_obj) != 0)
             return NULL;
 
