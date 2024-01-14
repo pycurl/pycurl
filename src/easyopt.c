@@ -115,6 +115,7 @@ util_curl_unsetopt(CurlObject *self, int option)
     case CURLOPT_PROXY_SSLCERTTYPE:
     case CURLOPT_PROXY_SSLKEY:
     case CURLOPT_PROXY_SSLKEYTYPE:
+    case CURLOPT_PROXY_SSL_CIPHER_LIST:
 #endif
         SETOPT((char *) NULL);
         break;
@@ -308,11 +309,18 @@ do_curl_setopt_string_impl(CurlObject *self, int option, PyObject *obj)
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 52, 0)
     case CURLOPT_PROXY_CAPATH:
     case CURLOPT_PROXY_CAINFO:
+    case CURLOPT_PROXY_CRLFILE:
     case CURLOPT_PRE_PROXY:
     case CURLOPT_PROXY_SSLCERT:
     case CURLOPT_PROXY_SSLCERTTYPE:
     case CURLOPT_PROXY_SSLKEY:
     case CURLOPT_PROXY_SSLKEYTYPE:
+    case CURLOPT_PROXY_KEYPASSWD:
+    case CURLOPT_PROXY_PINNEDPUBLICKEY:
+    case CURLOPT_PROXY_SSL_CIPHER_LIST:
+    case CURLOPT_PROXY_TLSAUTH_TYPE:
+    case CURLOPT_PROXY_TLSAUTH_USERNAME:
+    case CURLOPT_PROXY_TLSAUTH_PASSWORD:
 #endif
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 55, 0)
     case CURLOPT_REQUEST_TARGET:
@@ -323,6 +331,9 @@ do_curl_setopt_string_impl(CurlObject *self, int option, PyObject *obj)
 #endif
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 62, 0)
     case CURLOPT_DOH_URL:
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 71, 0)
+    case CURLOPT_PROXY_ISSUERCERT:
 #endif
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 75, 0)
     case CURLOPT_AWS_SIGV4:

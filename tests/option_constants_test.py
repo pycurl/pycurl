@@ -279,6 +279,13 @@ class OptionConstantsTest(unittest.TestCase):
 
     @util.min_libcurl(7, 52, 0)
     @util.only_ssl
+    def test_proxy_crlfile(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.PROXY_CRLFILE, '/bogus-crlfile')
+        curl.close()
+
+    @util.min_libcurl(7, 52, 0)
+    @util.only_ssl
     def test_proxy_sslcert(self):
         curl = pycurl.Curl()
         curl.setopt(curl.PROXY_SSLCERT, '/bogus-sslcert')
@@ -307,6 +314,13 @@ class OptionConstantsTest(unittest.TestCase):
 
     @util.min_libcurl(7, 52, 0)
     @util.only_ssl
+    def test_proxy_keypasswd(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.PROXY_KEYPASSWD, 'secret')
+        curl.close()
+
+    @util.min_libcurl(7, 52, 0)
+    @util.only_ssl
     def test_proxy_ssl_verifypeer(self):
         curl = pycurl.Curl()
         curl.setopt(curl.PROXY_SSL_VERIFYPEER, 1)
@@ -317,6 +331,67 @@ class OptionConstantsTest(unittest.TestCase):
     def test_proxy_ssl_verifyhost(self):
         curl = pycurl.Curl()
         curl.setopt(curl.PROXY_SSL_VERIFYHOST, 2)
+        curl.close()
+
+    @util.min_libcurl(7, 52, 0)
+    @util.only_ssl
+    def test_proxy_pinnedpublickey(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.PROXY_PINNEDPUBLICKEY, '/etc/publickey.der')
+        curl.close()
+
+    @util.min_libcurl(7, 52, 0)
+    @util.only_ssl
+    def test_proxy_sslversion_options(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.PROXY_SSLVERSION, curl.SSLVERSION_DEFAULT)
+        curl.setopt(curl.PROXY_SSLVERSION, curl.SSLVERSION_TLSv1)
+        curl.setopt(curl.PROXY_SSLVERSION, curl.SSLVERSION_TLSv1_0)
+        curl.setopt(curl.PROXY_SSLVERSION, curl.SSLVERSION_TLSv1_1)
+        curl.setopt(curl.PROXY_SSLVERSION, curl.SSLVERSION_TLSv1_2)
+        curl.close()
+ 
+    # SSLVERSION_SSLv* return CURLE_BAD_FUNCTION_ARGUMENT with curl-7.77.0
+    @util.min_libcurl(7, 52, 0)
+    @util.removed_in_libcurl(7, 77, 0)
+    @util.only_ssl
+    def test_legacy_proxy_sslversion_options(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.PROXY_SSLVERSION, curl.SSLVERSION_SSLv2)
+        curl.setopt(curl.PROXY_SSLVERSION, curl.SSLVERSION_SSLv3)
+        curl.close()
+
+    @util.min_libcurl(7, 52, 0)
+    @util.only_ssl
+    def test_proxy_ssl_cipher_list(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.PROXY_SSL_CIPHER_LIST, 'RC4-SHA:SHA1+DES')
+        curl.close()
+
+    @util.min_libcurl(7, 52, 0)
+    @util.only_ssl
+    def test_proxy_ssl_options(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.PROXY_SSL_OPTIONS, curl.SSLOPT_ALLOW_BEAST)
+        curl.setopt(curl.PROXY_SSL_OPTIONS, curl.SSLOPT_NO_REVOKE)
+        curl.close()
+
+    # Apparently TLSAUTH_TYPE=SRP is an unknown option on appveyor
+    @util.only_unix
+    @util.min_libcurl(7, 52, 0)
+    @util.only_ssl_backends('openssl', 'gnutls', 'schannel')
+    def test_proxy_tlsauth(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.PROXY_TLSAUTH_TYPE, "SRP")
+        curl.setopt(curl.PROXY_TLSAUTH_USERNAME, "test")
+        curl.setopt(curl.PROXY_TLSAUTH_PASSWORD, "test")
+        curl.close()
+
+    @util.min_libcurl(7, 71, 0)
+    @util.only_ssl
+    def test_proxy_issuercert(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.PROXY_ISSUERCERT, '/bogus-issuercert')
         curl.close()
 
     @util.only_ssl
