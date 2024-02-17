@@ -74,17 +74,3 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
-
-  deploy:
-    runs-on: ubuntu-22.04
-    needs: package-wheel
-    steps:
-      - name: Download distributions
-        uses: actions/download-artifact@v3
-        with:
-          name: artifact
-          path: dist/
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          repository-url: ${{ github.event.inputs.pypi-env == 'prod' && 'https://upload.pypi.org/legacy/' || 'https://test.pypi.org/legacy/' }}
