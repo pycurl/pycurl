@@ -64,29 +64,9 @@ jobs:
 
       - name: Build wheels
         env:
-          CIBW_ARCHS_LINUX: x86_64
-          CIBW_ARCHS_MACOS: universal2
           CIBW_ARCHS_WINDOWS: ${{ matrix.arch == 'x86' && 'x86' || 'AMD64' }}
-          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
-          CIBW_BUILD: cp3*
-          CIBW_SKIP: cp36-* cp37-* *-musllinux*
-          CIBW_BUILD_FRONTEND: build
-          CIBW_BUILD_VERBOSITY: 1
-          CIBW_BEFORE_ALL_LINUX: yum install -y libcurl-devel openssl-devel
-          CIBW_ENVIRONMENT_MACOS: PYCURL_CURL_CONFIG=/usr/bin/curl-config PYCURL_SSL_LIBRARY=sectransp
           CIBW_ENVIRONMENT_WINDOWS: PYCURL_CURL_DIR=C:/vcpkg/packages/curl_${{ matrix.arch }}-windows PYCURL_SSL_LIBRARY=schannel
-          CIBW_BEFORE_BUILD_WINDOWS: pip install delvewheel
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: delvewheel repair --add-path C:/vcpkg/installed/${{ matrix.arch }}-windows/bin -w {dest_dir} {wheel}
-          CIBW_BEFORE_TEST_LINUX: >
-            pip install flake8 -r requirements-dev.txt &&
-            make -C {package}/tests/fake-curl/libcurl
-          CIBW_BEFORE_TEST_MACOS: >
-            pip install flake8 -r requirements-dev.txt &&
-            make -C {package}/tests/fake-curl/libcurl
-          CIBW_BEFORE_TEST_WINDOWS: >
-            pip install flake8 -r requirements-dev.txt
-          CIBW_TEST_COMMAND: pytest -v -rs {project}/tests
-          CIBW_TEST_COMMAND_LINUX: pytest -v -rs {project}/tests -k "not test_keyfunction"
         run: |
           python -m cibuildwheel --output-dir wheelhouse
 

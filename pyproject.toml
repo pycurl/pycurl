@@ -1,0 +1,28 @@
+[tool.cibuildwheel]
+build = "cp3*"
+skip = ["cp36-*", "cp37-*", "*-musllinux*"]
+manylinux-x86_64-image = "manylinux_2_28"
+build-frontend = "build"
+build-verbosity = 1
+test-command = "pytest -v -rs {project}/tests"
+
+[tool.cibuildwheel.linux]
+archs = ["x86_64"]
+before-all = "yum install -y libcurl-devel openssl-devel"
+before-test = [
+    "pip install flake8 -r requirements-dev.txt",
+    "make -C {package}/tests/fake-curl/libcurl",
+]
+test-command = "pytest -v -rs {project}/tests -k \"not test_keyfunction\""
+
+[tool.cibuildwheel.macos]
+archs = ["universal2"]
+environment = "PYCURL_CURL_CONFIG=/usr/bin/curl-config PYCURL_SSL_LIBRARY=sectransp"
+before-test = [
+    "pip install flake8 -r requirements-dev.txt",
+    "make -C {package}/tests/fake-curl/libcurl",
+]
+
+[tool.cibuildwheel.windows]
+before-build = "pip install delvewheel"
+before-test = "pip install flake8 -r requirements-dev.txt"
