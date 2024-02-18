@@ -20,7 +20,7 @@ archs = ["all"]
 environment = "PYCURL_CURL_CONFIG=/usr/bin/curl-config PYCURL_SSL_LIBRARY=sectransp"
 before-test = [
     "pip install flake8 -r requirements-dev.txt",
-    "make -C {package}/tests/fake-curl/libcurl",
+    "CFLAGS=\"-arch x86_64 -arch arm64\" make -C {package}/tests/fake-curl/libcurl",
 ]
 
 [tool.cibuildwheel.windows]
