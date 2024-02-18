@@ -7,7 +7,7 @@ build-verbosity = 1
 test-command = "pytest -v -rs {project}/tests"
 
 [tool.cibuildwheel.linux]
-archs = ["x86_64"]
+archs = ["x86_64", "aarch64"]
 before-all = "yum install -y libcurl-devel openssl-devel"
 before-test = [
     "pip install flake8 -r requirements-dev.txt",

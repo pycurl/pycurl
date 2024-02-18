@@ -59,6 +59,12 @@ jobs:
         if: runner.os == 'Windows'
         run: vcpkg install curl[core,non-http,schannel]:${{ matrix.arch }}-windows
 
+      - name: Set up QEMU
+        if: runner.os == 'Linux'
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel
 
