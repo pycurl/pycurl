@@ -52,7 +52,7 @@ class MultiCallbackTest(unittest.TestCase):
 
     # multi.socket_action must call both SOCKETFUNCTION and TIMERFUNCTION at
     # various points during the transfer (at least at the start and end)
-    @pytest.mark.xfail(sys.platform == 'darwin', reason='https://github.com/pycurl/pycurl/issues/729')
+    @pytest.mark.xfail(sys.platform in ['darwin', 'win32'], reason='https://github.com/pycurl/pycurl/issues/729')
     def test_multi_socket_action(self):
         self.multi.add_handle(self.easy)
         self.timer_result = None
