@@ -29,7 +29,7 @@ def teardown_module(mod):
 
 @flaky.flaky(max_runs=3)
 class MultiSocketSelectTest(unittest.TestCase):
-    @pytest.mark.skipif(sys.platform == 'win32' and sys.maxsize > 2**32, reason='https://github.com/pycurl/pycurl/issues/819')
+    @pytest.mark.skipif(sys.platform == 'win32', reason='https://github.com/pycurl/pycurl/issues/819')
     def test_multi_socket_select(self):
         sockets = set()
         timeout = 0
