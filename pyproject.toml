@@ -16,6 +16,7 @@ before-test = [
 test-command = "pytest -v -rs {project}/tests -k \"not test_keyfunction\""
 
 [tool.cibuildwheel.macos]
+archs = ["all"]
 environment = "PYCURL_CURL_CONFIG=/usr/bin/curl-config PYCURL_SSL_LIBRARY=sectransp"
 before-test = [
     "pip install flake8 -r requirements-dev.txt",
