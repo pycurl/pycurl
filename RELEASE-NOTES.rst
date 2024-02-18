@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+PycURL 7.45.3 - 2024-02-17
+--------------------------
+
+This release fixes several minor issues and adds support for several libcurl
+options.  Additionally, we are now building wheels for Linux/macOS/Windows.
+
 PycURL 7.45.2 - 2022-12-16
 --------------------------
 

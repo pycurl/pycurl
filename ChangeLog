@@ -1,3 +1,45 @@
+Version 7.45.3 [requires libcurl-7.19.0 or better] - 2024-02-17
+---------------------------------------------------------------
+
+        * Add CURLOPT_REQUEST_TARGET option (patch by Marcel Brouwers).
+        * Add missing 2nd parameters to METH_NOARGS functions
+          (patch by Scott Talbert).
+        * Add CURLOPT_AWS_SIGV4 option (patch by Scott Talbert).
+        * Add consistent names for newer Curl version constants
+          (patch by Scott Talbert).
+        * Only run HTTP version 3 option constant test if curl supported
+          (patch by Scott Talbert).
+        * Expose COMPILE_SSL_LIB in Python and use for test filtering
+          (patch by Scott Talbert).
+        * Filter tests based on *compile* libcurl version not runtime version
+          (patch by Scott Talbert).
+        * Use print function in callbacks documentation
+          (patch by Scott Talbert).
+        * Add missing shebang to tests/ext/test-suite.sh
+          (patch by Scott Talbert).
+        * Officially declare support for Python 3.12
+          (patch by Scott Talbert).
+        * Fix curl_multi_info_read flow that loses messages
+          (patch by Dom Sekotill).
+        * Support using environment variables for setup on Windows
+          (patch by Scott Talbert).
+        * Add support for Schannel SSL backend (patch by Scott Talbert)
+        * Skip HTTP2 tests based on a curl support check
+          (patch by Scott Talbert).
+        * Fix fake-curl tests so they work when run out of tree
+          (patch by Scott Talbert).
+        * xfail test_easy_pause_unpause unconditionally
+          (patch by Scott Talbert).
+        * Provide generic error strings in pycurl.error objects
+          (patch by Scott Talbert).
+        * Change URLs to new curl mailing list (patch by Michael C).
+        * Add missing HTTPS proxy options (patch by Jean Hominal).
+        * Add support for setting CURLOPT_SSLCERT_BLOB
+          (patch by Vesa Jääskeläinen).
+        * Add support for setting rest of CURLOPTTYPE_BLOB fields
+          (patch by Vesa Jääskeläinen).
+        * Build wheels on Linux/macOS/Windows (patch by Scott Talbert).
+
 Version 7.45.2 [requires libcurl-7.19.0 or better] - 2022-12-16
 ---------------------------------------------------------------
 
