@@ -1,6 +1,7 @@
 [tool.cibuildwheel]
 build = "cp3*"
 skip = ["cp36-*", "cp37-*", "*-musllinux*"]
+manylinux-aarch64-image = "manylinux_2_28"
 manylinux-x86_64-image = "manylinux_2_28"
 build-frontend = "build"
 build-verbosity = 1
