@@ -462,7 +462,6 @@ class OptionConstantsTest(unittest.TestCase):
     @util.only_ssl_backends('openssl', 'gnutls', 'schannel')
     def test_proxy_tlsauth(self):
         curl = pycurl.Curl()
-        curl.setopt(curl.PROXY_TLSAUTH_TYPE, "SRP")
         curl.setopt(curl.PROXY_TLSAUTH_USERNAME, "test")
         curl.setopt(curl.PROXY_TLSAUTH_PASSWORD, "test")
         curl.close()
