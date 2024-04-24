@@ -1,6 +1,5 @@
 # Run a WSGI application in a daemon thread
 
-import bottle
 import threading
 import os.path
 
@@ -8,7 +7,14 @@ from . import util
 
 global_stop = False
 
-class Server(bottle.WSGIRefServer):
+class Server:
+    quiet = False
+
+    def __init__(self, host, port, **options):
+        self.options = options
+        self.host = host
+        self.port = int(port)
+
     def run(self, handler): # pragma: no cover
         self.srv = self.make_server(handler)
         self.serve()
@@ -66,7 +72,7 @@ class ServerThread(threading.Thread):
         self.server = server(host='127.0.0.1', port=self.port, **self.server_kwargs)
 
     def run(self):
-        bottle.run(self.app, server=self.server, quiet=True)
+        self.server.run(self.app)
 
 started_servers = {}
 
