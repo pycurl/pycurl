@@ -1,7 +1,5 @@
-# bottle 0.12.17 changed behavior
-# https://github.com/pycurl/pycurl/issues/573
-bottle
 flaky
+flask
 pyflakes
 pytest>=5
 sphinx
