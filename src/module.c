@@ -1203,6 +1203,9 @@ initpycurl(void)
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 60, 0)
     insint_c(d, "HAPROXYPROTOCOL", CURLOPT_HAPROXYPROTOCOL);
 #endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(8, 2, 0)
+    insint_c(d, "HAPROXY_CLIENT_IP", CURLOPT_HAPROXY_CLIENT_IP);
+#endif
 
     /* curl_TimeCond: constants for setopt(TIMECONDITION, x) */
     insint_c(d, "TIMECONDITION_NONE", CURL_TIMECOND_NONE);

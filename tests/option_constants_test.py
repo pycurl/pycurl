@@ -559,6 +559,12 @@ class OptionConstantsTest(unittest.TestCase):
         curl.setopt(curl.AWS_SIGV4, 'provider1:provider2')
         curl.close()
 
+    @util.min_libcurl(8, 2, 0)
+    def test_haproxy_client_ip(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.HAPROXY_CLIENT_IP, '192.0.2.22')
+        curl.close()
+
 class OptionConstantsSettingTest(unittest.TestCase):
     def setUp(self):
         self.curl = pycurl.Curl()
