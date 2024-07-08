@@ -223,6 +223,18 @@ def only_http3(fn):
 
     return decorated
 
+def only_gssapi(fn):
+    import pycurl
+
+    @functools.wraps(fn)
+    def decorated(*args, **kwargs):
+        if not pycurl.version_info()[4] & pycurl.VERSION_GSSAPI:
+            raise unittest.SkipTest('libcurl does not support GSS-API')
+
+        return fn(*args, **kwargs)
+
+    return decorated
+
 def guard_unknown_libcurl_option(fn):
     '''Converts curl error 48, CURLE_UNKNOWN_OPTION, into a SkipTest
     exception. This is meant to be used with tests exercising libcurl

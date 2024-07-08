@@ -503,11 +503,13 @@ class OptionConstantsTest(unittest.TestCase):
         curl.setopt(curl.SSL_SESSIONID_CACHE, True)
         curl.close()
 
+    @util.only_gssapi
     def test_krblevel(self):
         curl = pycurl.Curl()
         curl.setopt(curl.KRBLEVEL, 'clear')
         curl.close()
 
+    @util.only_gssapi
     def test_krb4level(self):
         curl = pycurl.Curl()
         curl.setopt(curl.KRB4LEVEL, 'clear')
