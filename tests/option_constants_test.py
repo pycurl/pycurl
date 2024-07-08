@@ -503,11 +503,13 @@ class OptionConstantsTest(unittest.TestCase):
         curl.setopt(curl.SSL_SESSIONID_CACHE, True)
         curl.close()
 
+    @util.only_gssapi
     def test_krblevel(self):
         curl = pycurl.Curl()
         curl.setopt(curl.KRBLEVEL, 'clear')
         curl.close()
 
+    @util.only_gssapi
     def test_krb4level(self):
         curl = pycurl.Curl()
         curl.setopt(curl.KRB4LEVEL, 'clear')
@@ -557,6 +559,12 @@ class OptionConstantsTest(unittest.TestCase):
     def test_aws_sigv4(self):
         curl = pycurl.Curl()
         curl.setopt(curl.AWS_SIGV4, 'provider1:provider2')
+        curl.close()
+
+    @util.min_libcurl(8, 2, 0)
+    def test_haproxy_client_ip(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.HAPROXY_CLIENT_IP, '192.0.2.22')
         curl.close()
 
 class OptionConstantsSettingTest(unittest.TestCase):
