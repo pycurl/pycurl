@@ -89,7 +89,7 @@ PycURL comes with an automated test suite. To run the tests, execute::
 
     make test
 
-The suite depends on packages `pytest`_ and `bottle`_, as well as `vsftpd`_.
+The suite depends on packages `pytest`_ and `flask`_, as well as `vsftpd`_.
 
 Some tests use vsftpd configured to accept anonymous uploads. These tests
 are not run by default. As configured, vsftpd will allow reads and writes to
@@ -103,7 +103,7 @@ vsftpd tests you must explicitly set PYCURL_VSFTPD_PATH variable like so::
     export PYCURL_VSFTPD_PATH=/usr/local/libexec/vsftpd
 
 .. _pytest: https://pytest.org/
-.. _bottle: http://bottlepy.org/
+.. _flask: https://flask.palletsprojects.com/
 .. _vsftpd: http://vsftpd.beasts.org/
 
 
