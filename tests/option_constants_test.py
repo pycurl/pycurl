@@ -675,6 +675,11 @@ class OptionConstantsSettingTest(unittest.TestCase):
     def test_http_version_3(self):
         self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_3)
 
+    @util.min_libcurl(7, 88, 0)
+    @util.only_http3
+    def test_http_version_3only(self):
+        self.curl.setopt(self.curl.HTTP_VERSION, self.curl.CURL_HTTP_VERSION_3ONLY)
+
     @util.min_libcurl(7, 21, 5)
     def test_sockopt_constants(self):
         assert self.curl.SOCKOPT_OK is not None
