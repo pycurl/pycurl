@@ -30,6 +30,7 @@ class GetinfoTest(unittest.TestCase):
         assert self.curl.getinfo(pycurl.SPEED_DOWNLOAD) > 0
         self.assertEqual(7, self.curl.getinfo(pycurl.SIZE_DOWNLOAD))
         self.assertEqual('http://%s:8380/success' % localhost, self.curl.getinfo(pycurl.EFFECTIVE_URL))
+        self.assertEqual("GET", self.curl.getinfo(pycurl.EFFECTIVE_METHOD))
         self.assertEqual('text/html; charset=utf-8', self.curl.getinfo(pycurl.CONTENT_TYPE).lower())
         assert type(self.curl.getinfo(pycurl.NAMELOOKUP_TIME)) is float
         assert self.curl.getinfo(pycurl.NAMELOOKUP_TIME) > 0
