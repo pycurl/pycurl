@@ -30,7 +30,6 @@ class GetinfoTest(unittest.TestCase):
         assert self.curl.getinfo(pycurl.SPEED_DOWNLOAD) > 0
         self.assertEqual(7, self.curl.getinfo(pycurl.SIZE_DOWNLOAD))
         self.assertEqual('http://%s:8380/success' % localhost, self.curl.getinfo(pycurl.EFFECTIVE_URL))
-        self.assertEqual("GET", self.curl.getinfo(pycurl.EFFECTIVE_METHOD))
         self.assertEqual('text/html; charset=utf-8', self.curl.getinfo(pycurl.CONTENT_TYPE).lower())
         assert type(self.curl.getinfo(pycurl.NAMELOOKUP_TIME)) is float
         assert self.curl.getinfo(pycurl.NAMELOOKUP_TIME) > 0
@@ -39,6 +38,11 @@ class GetinfoTest(unittest.TestCase):
         self.assertEqual(0, self.curl.getinfo(pycurl.REDIRECT_COUNT))
         # time not requested
         self.assertEqual(-1, self.curl.getinfo(pycurl.INFO_FILETIME))
+
+    @util.min_libcurl(7, 72, 0)
+    def test_getinfo_effective_method(self):
+        self.make_request()
+        self.assertEqual("GET", self.curl.getinfo(pycurl.EFFECTIVE_METHOD))
 
     # It seems that times are 0 on appveyor
     @util.only_unix
