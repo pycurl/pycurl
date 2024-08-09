@@ -1173,6 +1173,9 @@ initpycurl(void)
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 66, 0)
     insint_c(d, "CURL_HTTP_VERSION_3", CURL_HTTP_VERSION_3);
 #endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 88, 0)
+    insint_c(d, "CURL_HTTP_VERSION_3ONLY", CURL_HTTP_VERSION_3ONLY);
+#endif
     insint_c(d, "CURL_HTTP_VERSION_LAST", CURL_HTTP_VERSION_LAST);
 
     /* CURL_NETRC_OPTION: constants for setopt(NETRC, x) */
