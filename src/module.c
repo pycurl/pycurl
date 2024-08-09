@@ -1270,6 +1270,9 @@ initpycurl(void)
 
     /* CURLINFO: symbolic constants for getinfo(x) */
     insint_c(d, "EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 72, 0)
+    insint_c(d, "EFFECTIVE_METHOD", CURLINFO_EFFECTIVE_METHOD);
+#endif
     /* same as CURLINFO_RESPONSE_CODE */
     insint_c(d, "HTTP_CODE", CURLINFO_HTTP_CODE);
     insint_c(d, "RESPONSE_CODE", CURLINFO_RESPONSE_CODE);

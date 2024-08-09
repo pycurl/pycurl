@@ -174,6 +174,9 @@ do_curl_getinfo_raw(CurlObject *self, PyObject *args)
 
     case CURLINFO_CONTENT_TYPE:
     case CURLINFO_EFFECTIVE_URL:
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 72, 0)
+    case CURLINFO_EFFECTIVE_METHOD:
+#endif
     case CURLINFO_FTP_ENTRY_PATH:
     case CURLINFO_REDIRECT_URL:
     case CURLINFO_PRIMARY_IP:
@@ -320,6 +323,9 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
     switch (option) {
     case CURLINFO_CONTENT_TYPE:
     case CURLINFO_EFFECTIVE_URL:
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 72, 0)
+    case CURLINFO_EFFECTIVE_METHOD:
+#endif
     case CURLINFO_FTP_ENTRY_PATH:
     case CURLINFO_REDIRECT_URL:
     case CURLINFO_PRIMARY_IP:
