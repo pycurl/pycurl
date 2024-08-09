@@ -39,6 +39,11 @@ class GetinfoTest(unittest.TestCase):
         # time not requested
         self.assertEqual(-1, self.curl.getinfo(pycurl.INFO_FILETIME))
 
+    @util.min_libcurl(7, 72, 0)
+    def test_getinfo_effective_method(self):
+        self.make_request()
+        self.assertEqual("GET", self.curl.getinfo(pycurl.EFFECTIVE_METHOD))
+
     # It seems that times are 0 on appveyor
     @util.only_unix
     @flaky.flaky(max_runs=3)
