@@ -148,7 +148,8 @@ def timer_fn(timeout_ms):
         # libcurl passes a negative timeout value when no further
         # calls should be made.
         state['timeout'] = None
-    state['timeout'] = timeout_ms / 1000.0
+    else:
+        state['timeout'] = timeout_ms / 1000.0
 
 multi = pycurl.CurlMulti()
 multi.setopt(pycurl.M_SOCKETFUNCTION, socket_fn)
