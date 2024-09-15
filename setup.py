@@ -341,10 +341,6 @@ ignore this message.''')
         if not self.libraries:
             self.libraries.append("curl")
 
-        # Add extra compile flag for MacOS X
-        if sys.platform.startswith('darwin'):
-            self.extra_link_args.append("-flat_namespace")
-
         # Recognize --avoid-stdio on Unix so that it can be tested
         self.check_avoid_stdio()
 
