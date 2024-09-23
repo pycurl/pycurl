@@ -4,10 +4,8 @@
 
 from . import localhost
 import pycurl
-import pytest
 import unittest
 import select
-import sys
 import flaky
 
 from . import appmanager
@@ -29,7 +27,6 @@ def teardown_module(mod):
 
 @flaky.flaky(max_runs=3)
 class MultiSocketSelectTest(unittest.TestCase):
-    @pytest.mark.skipif(sys.platform == 'win32', reason='https://github.com/pycurl/pycurl/issues/819')
     def test_multi_socket_select(self):
         sockets = set()
         timeout = 0
@@ -79,6 +76,8 @@ class MultiSocketSelectTest(unittest.TestCase):
             pass
 
         timeout = m.timeout()
+        if timeout == -1:
+            timeout = 1000
 
         # timeout might be -1, indicating that all work is done
         # XXX make sure there is always work to be done here?
