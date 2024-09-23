@@ -19,7 +19,9 @@ def ok():
 
 @app.route('/short_wait')
 def short_wait():
+    print("BLAH start_short_wait")
     _time.sleep(0.1)
+    print("BLAH done_short_wait")
     return 'success'
 
 @app.route('/status/403')

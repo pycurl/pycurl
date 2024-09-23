@@ -45,11 +45,11 @@ class MultiSocketSelectTest(unittest.TestCase):
         # socket callback
         def socket(event, socket, multi, data):
             if event == pycurl.POLL_REMOVE:
-                #print("Remove Socket %d"%socket)
+                print("BLAH Remove Socket %d"%socket)
                 sockets.remove(socket)
             else:
                 if socket not in sockets:
-                    #print("Add socket %d"%socket)
+                    print("BLAH Add socket %d"%socket)
                     sockets.add(socket)
             socket_events.append((event, multi))
 
@@ -73,25 +73,33 @@ class MultiSocketSelectTest(unittest.TestCase):
         #num_handles = len(m.handles)
 
         while (pycurl.E_CALL_MULTI_PERFORM==m.socket_all()[0]):
+            print("BLAH1!!!")
             pass
 
         timeout = m.timeout()
         if timeout == -1:
             timeout = 1000
+        print("BLAH timeout", timeout)
 
         # timeout might be -1, indicating that all work is done
         # XXX make sure there is always work to be done here?
         while timeout >= 0:
+            print("BLAH 1A")
             (rr, wr, er) = select.select(sockets,sockets,sockets,timeout/1000.0)
+            print("BLAH 1B")
             socketSet = set(rr+wr+er)
             if socketSet:
                 for s in socketSet:
                     while True:
+                        print("BLAH 2A", s)
                         (ret,running) = m.socket_action(s,0)
+                        print("BLAH 2B", ret, running)
                         if ret!=pycurl.E_CALL_MULTI_PERFORM:
                             break
             else:
+                print("BLAH 3A")
                 (ret,running) = m.socket_action(pycurl.SOCKET_TIMEOUT,0)
+                print("BLAH 3B", ret, running)
             if running==0:
                 break
 
