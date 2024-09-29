@@ -4,11 +4,10 @@
 
 from . import localhost
 import pycurl
-import pytest
 import unittest
 import select
-import sys
 import flaky
+import time
 
 from . import appmanager
 from . import util
@@ -29,10 +28,10 @@ def teardown_module(mod):
 
 @flaky.flaky(max_runs=3)
 class MultiSocketSelectTest(unittest.TestCase):
-    @pytest.mark.skipif(sys.platform == 'win32', reason='https://github.com/pycurl/pycurl/issues/819')
     def test_multi_socket_select(self):
-        sockets = set()
-        timeout = 0
+        rd_sockets = set()
+        wr_sockets = set()
+        #timeout = 0
 
         urls = [
             # we need libcurl to actually wait on the handles,
@@ -48,12 +47,22 @@ class MultiSocketSelectTest(unittest.TestCase):
         # socket callback
         def socket(event, socket, multi, data):
             if event == pycurl.POLL_REMOVE:
-                #print("Remove Socket %d"%socket)
-                sockets.remove(socket)
+                print("BLAH Remove Socket %d"%socket)
+                rd_sockets.discard(socket)
+                wr_sockets.discard(socket)
+            elif event == pycurl.POLL_IN:
+                print("BLAH READ SOCKET", socket)
+                rd_sockets.add(socket)
+                wr_sockets.discard(socket)
+            elif event == pycurl.POLL_OUT:
+                print("BLAH WRITE SOCKET", socket)
+                rd_sockets.discard(socket)
+                wr_sockets.add(socket)
+            elif event == pycurl.POLL_INOUT:
+                rd_sockets.add(socket)
+                wr_sockets.add(socket)
             else:
-                if socket not in sockets:
-                    #print("Add socket %d"%socket)
-                    sockets.add(socket)
+                raise Exception("Unknown socket event")
             socket_events.append((event, multi))
 
         # init
@@ -72,29 +81,53 @@ class MultiSocketSelectTest(unittest.TestCase):
             c.setopt(c.WRITEFUNCTION, c.body.write)
             m.add_handle(c)
 
-        # get data
-        #num_handles = len(m.handles)
+        ret, running = m.socket_action(pycurl.SOCKET_TIMEOUT, 0)
+        print("BLAH running", ret, running)
 
-        while (pycurl.E_CALL_MULTI_PERFORM==m.socket_all()[0]):
-            pass
+        while running:
+            print("BLAH1A", running)
+            #(rr, wr, er) = select.select(rd_sockets, wr_sockets, rd_sockets | wr_sockets, timeout / 1000.0)
+            (rr, wr, er) = select.select(rd_sockets, wr_sockets, rd_sockets | wr_sockets)
+            print("BLAH", rr, wr, er)
+            socketSet = set(rr+wr+er)
+            print("BLAH1B", running, socketSet)
+            for s in socketSet:
+                (ret, running) = m.socket_action(s, 0)
+                print("BLAH1C", ret, running)
+            m.socket_action(pycurl.SOCKET_TIMEOUT, 0) ### BLAH ###
+            time.sleep(0.1) ### BLAH ###
 
-        timeout = m.timeout()
+        #while (pycurl.E_CALL_MULTI_PERFORM==m.socket_all()[0]):
+        #    print("BLAH1!!!")
+        #    pass
+
+        #timeout = m.timeout()
+        #if timeout == -1:
+        #    timeout = 1000
+        #print("BLAH timeout", timeout)
 
         # timeout might be -1, indicating that all work is done
         # XXX make sure there is always work to be done here?
-        while timeout >= 0:
-            (rr, wr, er) = select.select(sockets,sockets,sockets,timeout/1000.0)
-            socketSet = set(rr+wr+er)
-            if socketSet:
-                for s in socketSet:
-                    while True:
-                        (ret,running) = m.socket_action(s,0)
-                        if ret!=pycurl.E_CALL_MULTI_PERFORM:
-                            break
-            else:
-                (ret,running) = m.socket_action(pycurl.SOCKET_TIMEOUT,0)
-            if running==0:
-                break
+        #while timeout >= 0:
+        #while False:
+        #    print("BLAH 1A")
+        #    (rr, wr, er) = select.select(sockets,sockets,sockets,timeout/1000.0)
+        #    print("BLAH 1B")
+        #    socketSet = set(rr+wr+er)
+        #    if socketSet:
+        #        for s in socketSet:
+        #            while True:
+        #                print("BLAH 2A", s)
+        #                (ret,running) = m.socket_action(s,0)
+        #                print("BLAH 2B", ret, running)
+        #                if ret!=pycurl.E_CALL_MULTI_PERFORM:
+        #                    break
+        #    else:
+        #        print("BLAH 3A")
+        #        (ret,running) = m.socket_action(pycurl.SOCKET_TIMEOUT,0)
+        #        print("BLAH 3B", ret, running)
+        #    if running==0:
+        #        break
 
         for c in m.handles:
             # save info in standard Python attributes
