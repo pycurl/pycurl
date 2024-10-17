@@ -23,8 +23,11 @@ class MultiCallbackTest(unittest.TestCase):
         self.socket_result = None
         self.timer_result = None
         self.sockets = {}
+        self.handle_added = False
 
     def tearDown(self):
+        if self.handle_added:
+            self.multi.remove_handle(self.easy)
         self.multi.close()
         self.easy.close()
 
@@ -45,6 +48,7 @@ class MultiCallbackTest(unittest.TestCase):
             perform = False
         self.easy.setopt(pycurl.WRITEFUNCTION, write_callback)
         self.multi.add_handle(self.easy)
+        self.handle_added = True
         self.multi.socket_action(pycurl.SOCKET_TIMEOUT, 0)
         while self.sockets and perform:
             for socket, action in tuple(self.sockets.items()):
@@ -55,6 +59,7 @@ class MultiCallbackTest(unittest.TestCase):
     @pytest.mark.xfail(sys.platform in ['darwin', 'win32'], reason='https://github.com/pycurl/pycurl/issues/729')
     def test_multi_socket_action(self):
         self.multi.add_handle(self.easy)
+        self.handle_added = True
         self.timer_result = None
         self.socket_result = None
         self.multi.socket_action(pycurl.SOCKET_TIMEOUT, 0)
@@ -64,15 +69,18 @@ class MultiCallbackTest(unittest.TestCase):
     # multi.add_handle must call TIMERFUNCTION to schedule a kick-start
     def test_multi_add_handle(self):
         self.multi.add_handle(self.easy)
+        self.handle_added = True
         assert self.timer_result is not None
 
     # (mid-transfer) multi.remove_handle must call SOCKETFUNCTION to remove sockets
     @pytest.mark.xfail(sys.platform == 'darwin', reason='https://github.com/pycurl/pycurl/issues/729')
     def test_multi_remove_handle(self):
         self.multi.add_handle(self.easy)
+        self.handle_added = True
         self.multi.socket_action(pycurl.SOCKET_TIMEOUT, 0)
         self.socket_result = None
         self.multi.remove_handle(self.easy)
+        self.handle_added = False
         assert self.socket_result is not None
 
     # (mid-transfer) easy.pause(PAUSE_ALL) must call SOCKETFUNCTION to remove sockets

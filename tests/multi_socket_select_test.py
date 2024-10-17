@@ -29,6 +29,16 @@ def teardown_module(mod):
 
 @flaky.flaky(max_runs=3)
 class MultiSocketSelectTest(unittest.TestCase):
+    def setUp(self):
+        self.m = pycurl.CurlMulti()
+        self.m.handles = []
+
+    def tearDown(self):
+        for c in self.m.handles:
+            self.m.remove_handle(c)
+            c.close()
+        self.m.close()
+
     @pytest.mark.skipif(sys.platform == 'win32', reason='https://github.com/pycurl/pycurl/issues/819')
     def test_multi_socket_select(self):
         sockets = set()
@@ -57,9 +67,8 @@ class MultiSocketSelectTest(unittest.TestCase):
             socket_events.append((event, multi))
 
         # init
-        m = pycurl.CurlMulti()
+        m = self.m
         m.setopt(pycurl.M_SOCKETFUNCTION, socket)
-        m.handles = []
         for url in urls:
             c = util.DefaultCurl()
             # save info in standard Python attributes
@@ -111,13 +120,6 @@ class MultiSocketSelectTest(unittest.TestCase):
             # multi, not curl handle
             self.check(pycurl.POLL_IN, m, socket_events)
             self.check(pycurl.POLL_REMOVE, m, socket_events)
-
-        # close handles
-        for c in m.handles:
-            # pycurl API calls
-            m.remove_handle(c)
-            c.close()
-        m.close()
 
     def check(self, event, multi, socket_events):
         for event_, multi_ in socket_events:
