@@ -21,7 +21,7 @@ concurrency:
 jobs:
   build:
 
-    runs-on: macOS-12
+    runs-on: macOS-14
     env:
       PYCURL_CURL_CONFIG: /usr/bin/curl-config
       PYCURL_SSL_LIBRARY: sectransp
