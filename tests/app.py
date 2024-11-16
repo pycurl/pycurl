@@ -3,6 +3,7 @@
 
 import time as _time, sys
 import flask
+import werkzeug
 try:
     import json
 except ImportError:
@@ -127,6 +128,7 @@ def content_type_invalid_utf8():
     response.headers['Content-Type'] = '\xb3\xd2\xda\xcd\xd7'.encode('utf-8').decode('latin-1')
     return response
 
+werkzeug.http.HTTP_STATUS_CODES[555] = '\xb3\xd2\xda\xcd\xd7'
 @app.route('/status_invalid_utf8')
 def status_invalid_utf8():
-    raise flask.Response('status set', b'555 \xb3\xd2\xda\xcd\xd7')
+    return flask.Response(status=555)

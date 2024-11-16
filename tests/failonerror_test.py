@@ -33,9 +33,9 @@ class FailonerrorTest(unittest.TestCase):
             self.curl.perform()
         except pycurl.error as e:
             self.assertEqual(pycurl.E_HTTP_RETURNED_ERROR, e.args[0])
-            self.assertEqual('The requested URL returned error: 403 Forbidden', e.args[1])
-            self.assertEqual(util.u('The requested URL returned error: 403 Forbidden'), self.curl.errstr())
-            self.assertEqual(util.b('The requested URL returned error: 403 Forbidden'), self.curl.errstr_raw())
+            self.assertEqual('The requested URL returned error: 403 FORBIDDEN', e.args[1])
+            self.assertEqual(util.u('The requested URL returned error: 403 FORBIDDEN'), self.curl.errstr())
+            self.assertEqual(util.b('The requested URL returned error: 403 FORBIDDEN'), self.curl.errstr_raw())
         else:
             self.fail('Should have raised pycurl.error')
     
