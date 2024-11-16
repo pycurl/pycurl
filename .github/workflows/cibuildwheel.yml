@@ -5,9 +5,10 @@ on:
     inputs:
       pypi-env:
         description: 'PyPI Environment for Deployment'
+        type: choice
         options:
-        - prod
-        - test
+          - prod
+          - test
         required: true
         default: test
 
