@@ -172,7 +172,8 @@ opensocket_callback(void *clientp, curlsocktype purpose,
     PYCURL_DECLARE_THREAD_STATE;
 
     self = (CurlObject *)clientp;
-    PYCURL_ACQUIRE_THREAD();
+    if (!PYCURL_ACQUIRE_THREAD())
+        return ret;
 
     converted_address = convert_protocol_address(&address->addr, address->addrlen);
     if (converted_address == NULL) {
@@ -246,12 +247,13 @@ sockopt_cb(void *clientp, curl_socket_t curlfd, curlsocktype purpose)
 {
     PyObject *arglist;
     CurlObject *self;
-    int ret = -1;
+    int ret = CURL_SOCKOPT_ERROR;
     PyObject *ret_obj = NULL;
     PYCURL_DECLARE_THREAD_STATE;
 
     self = (CurlObject *)clientp;
-    PYCURL_ACQUIRE_THREAD();
+    if (!PYCURL_ACQUIRE_THREAD())
+        return ret;
 
     arglist = Py_BuildValue("(ii)", (int) curlfd, (int) purpose);
     if (arglist == NULL)
@@ -298,12 +300,13 @@ closesocket_callback(void *clientp, curl_socket_t curlfd)
 {
     PyObject *arglist;
     CurlObject *self;
-    int ret = -1;
+    int ret = 1;
     PyObject *ret_obj = NULL;
     PYCURL_DECLARE_THREAD_STATE;
 
     self = (CurlObject *)clientp;
-    PYCURL_ACQUIRE_THREAD();
+    if (!PYCURL_ACQUIRE_THREAD())
+        return ret;
 
     arglist = Py_BuildValue("(i)", (int) curlfd);
     if (arglist == NULL)
@@ -388,14 +391,15 @@ ssh_key_cb(CURL *easy, const struct curl_khkey *knownkey,
 {
     PyObject *arglist;
     CurlObject *self;
-    int ret = -1;
+    int ret = CURLKHSTAT_REJECT;
     PyObject *knownkey_obj = NULL;
     PyObject *foundkey_obj = NULL;
     PyObject *ret_obj = NULL;
     PYCURL_DECLARE_THREAD_STATE;
 
     self = (CurlObject *)clientp;
-    PYCURL_ACQUIRE_THREAD();
+    if (!PYCURL_ACQUIRE_THREAD())
+        return ret;
 
     knownkey_obj = khkey_to_object(knownkey);
     if (knownkey_obj == NULL) {
