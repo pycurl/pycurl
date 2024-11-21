@@ -19,8 +19,12 @@ util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *strea
 
     /* acquire thread */
     self = (CurlObject *)stream;
-    if (!PYCURL_ACQUIRE_THREAD())
+    if (!PYCURL_ACQUIRE_THREAD()) {
+        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
+        PyErr_WarnEx(PyExc_RuntimeWarning, "util_write_callback failed to acquire thread", 1);
+        PyGILState_Release(tmp_warn_state);
         return ret;
+    }
 
     /* check args */
     cb = flags ? self->h_cb : self->w_cb;
@@ -172,8 +176,12 @@ opensocket_callback(void *clientp, curlsocktype purpose,
     PYCURL_DECLARE_THREAD_STATE;
 
     self = (CurlObject *)clientp;
-    if (!PYCURL_ACQUIRE_THREAD())
+    if (!PYCURL_ACQUIRE_THREAD()) {
+        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
+        PyErr_WarnEx(PyExc_RuntimeWarning, "opensocket_callback failed to acquire thread", 1);
+        PyGILState_Release(tmp_warn_state);
         return ret;
+    }
 
     converted_address = convert_protocol_address(&address->addr, address->addrlen);
     if (converted_address == NULL) {
@@ -252,8 +260,12 @@ sockopt_cb(void *clientp, curl_socket_t curlfd, curlsocktype purpose)
     PYCURL_DECLARE_THREAD_STATE;
 
     self = (CurlObject *)clientp;
-    if (!PYCURL_ACQUIRE_THREAD())
+    if (!PYCURL_ACQUIRE_THREAD()) {
+        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
+        PyErr_WarnEx(PyExc_RuntimeWarning, "sockopt_cb failed to acquire thread", 1);
+        PyGILState_Release(tmp_warn_state);
         return ret;
+    }
 
     arglist = Py_BuildValue("(ii)", (int) curlfd, (int) purpose);
     if (arglist == NULL)
@@ -305,8 +317,12 @@ closesocket_callback(void *clientp, curl_socket_t curlfd)
     PYCURL_DECLARE_THREAD_STATE;
 
     self = (CurlObject *)clientp;
-    if (!PYCURL_ACQUIRE_THREAD())
+    if (!PYCURL_ACQUIRE_THREAD()) {
+        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
+        PyErr_WarnEx(PyExc_RuntimeWarning, "closesocket_callback failed to acquire thread", 1);
+        PyGILState_Release(tmp_warn_state);
         return ret;
+    }
 
     arglist = Py_BuildValue("(i)", (int) curlfd);
     if (arglist == NULL)
@@ -398,8 +414,12 @@ ssh_key_cb(CURL *easy, const struct curl_khkey *knownkey,
     PYCURL_DECLARE_THREAD_STATE;
 
     self = (CurlObject *)clientp;
-    if (!PYCURL_ACQUIRE_THREAD())
+    if (!PYCURL_ACQUIRE_THREAD()) {
+        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
+        PyErr_WarnEx(PyExc_RuntimeWarning, "ssh_key_cb failed to acquire thread", 1);
+        PyGILState_Release(tmp_warn_state);
         return ret;
+    }
 
     knownkey_obj = khkey_to_object(knownkey);
     if (knownkey_obj == NULL) {
@@ -465,8 +485,12 @@ seek_callback(void *stream, curl_off_t offset, int origin)
 
     /* acquire thread */
     self = (CurlObject *)stream;
-    if (!PYCURL_ACQUIRE_THREAD())
+    if (!PYCURL_ACQUIRE_THREAD()) {
+        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
+        PyErr_WarnEx(PyExc_RuntimeWarning, "seek_callback failed to acquire thread", 1);
+        PyGILState_Release(tmp_warn_state);
         return ret;
+    }
 
     /* check arguments */
     switch (origin)
@@ -540,8 +564,12 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
 
     /* acquire thread */
     self = (CurlObject *)stream;
-    if (!PYCURL_ACQUIRE_THREAD())
+    if (!PYCURL_ACQUIRE_THREAD()) {
+        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
+        PyErr_WarnEx(PyExc_RuntimeWarning, "read_callback failed to acquire thread", 1);
+        PyGILState_Release(tmp_warn_state);
         return ret;
+    }
 
     /* check args */
     if (self->r_cb == NULL)
@@ -655,8 +683,12 @@ progress_callback(void *stream,
 
     /* acquire thread */
     self = (CurlObject *)stream;
-    if (!PYCURL_ACQUIRE_THREAD())
+    if (!PYCURL_ACQUIRE_THREAD()) {
+        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
+        PyErr_WarnEx(PyExc_RuntimeWarning, "progress_callback failed to acquire thread", 1);
+        PyGILState_Release(tmp_warn_state);
         return ret;
+    }
 
     /* check args */
     if (self->pro_cb == NULL)
@@ -706,8 +738,12 @@ xferinfo_callback(void *stream,
 
     /* acquire thread */
     self = (CurlObject *)stream;
-    if (!PYCURL_ACQUIRE_THREAD())
+    if (!PYCURL_ACQUIRE_THREAD()) {
+        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
+        PyErr_WarnEx(PyExc_RuntimeWarning, "xferinfo_callback failed to acquire thread", 1);
+        PyGILState_Release(tmp_warn_state);
         return ret;
+    }
 
     /* check args */
     if (self->xferinfo_cb == NULL)
@@ -760,8 +796,12 @@ debug_callback(CURL *curlobj, curl_infotype type,
 
     /* acquire thread */
     self = (CurlObject *)stream;
-    if (!PYCURL_ACQUIRE_THREAD())
+    if (!PYCURL_ACQUIRE_THREAD()) {
+        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
+        PyErr_WarnEx(PyExc_RuntimeWarning, "debug_callback failed to acquire thread", 1);
+        PyGILState_Release(tmp_warn_state);
         return ret;
+    }
 
     /* check args */
     if (self->debug_cb == NULL)
@@ -809,8 +849,12 @@ ioctl_callback(CURL *curlobj, int cmd, void *stream)
 
     /* acquire thread */
     self = (CurlObject *)stream;
-    if (!PYCURL_ACQUIRE_THREAD())
+    if (!PYCURL_ACQUIRE_THREAD()) {
+        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
+        PyErr_WarnEx(PyExc_RuntimeWarning, "ioctl_callback failed to acquire thread", 1);
+        PyGILState_Release(tmp_warn_state);
         return (curlioerr) ret;
+    }
 
     /* check args */
     if (self->ioctl_cb == NULL)
@@ -929,8 +973,12 @@ ssl_ctx_callback(CURL *curl, void *ssl_ctx, void *ptr)
 
     /* acquire thread */
     self = (CurlObject *)ptr;
-    if (!PYCURL_ACQUIRE_THREAD())
+    if (!PYCURL_ACQUIRE_THREAD()) {
+        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
+        PyErr_WarnEx(PyExc_RuntimeWarning, "ssl_ctx_callback failed to acquire thread", 1);
+        PyGILState_Release(tmp_warn_state);
         return CURLE_FAILED_INIT;
+    }
 
     r = add_ca_certs((SSL_CTX*)ssl_ctx,
                          PyBytes_AS_STRING(self->ca_certs_obj),
