@@ -442,7 +442,7 @@ class OptionConstantsTest(unittest.TestCase):
         curl.close()
 
     @util.min_libcurl(7, 52, 0)
-    @util.only_ssl
+    @util.only_ssl_backends('openssl', 'schannel', 'secure-transport', 'mbedtls', 'wolfssl')
     def test_proxy_ssl_cipher_list(self):
         curl = pycurl.Curl()
         curl.setopt(curl.PROXY_SSL_CIPHER_LIST, 'RC4-SHA:SHA1+DES')
@@ -491,7 +491,7 @@ class OptionConstantsTest(unittest.TestCase):
         curl.setopt(curl.EGDSOCKET, '/bogus-egdsocket')
         curl.close()
 
-    @util.only_ssl
+    @util.only_ssl_backends('openssl', 'schannel', 'secure-transport', 'mbedtls', 'wolfssl')
     def test_ssl_cipher_list(self):
         curl = pycurl.Curl()
         curl.setopt(curl.SSL_CIPHER_LIST, 'RC4-SHA:SHA1+DES')
