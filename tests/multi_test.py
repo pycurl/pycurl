@@ -232,7 +232,7 @@ class MultiTest(unittest.TestCase):
 
     def _close_without_removing(self, m, c):
         # actually, remove_handle is called automatically on close
-        c.close
+        c.close()
 
     def test_adding_closed_handle_remove_then_close(self):
         self.check_adding_closed_handle(self._remove_then_close)
