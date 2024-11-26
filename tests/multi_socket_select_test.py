@@ -88,6 +88,8 @@ class MultiSocketSelectTest(unittest.TestCase):
             pass
 
         timeout = m.timeout()
+        if timeout == -1:
+            timeout = 1000
 
         # timeout might be -1, indicating that all work is done
         # XXX make sure there is always work to be done here?
