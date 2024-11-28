@@ -344,6 +344,12 @@ ignore this message.''')
         # Recognize --avoid-stdio on Unix so that it can be tested
         self.check_avoid_stdio()
 
+        try:
+            for dir in os.environ['PYCURL_RUNTIME_LIBRARY_DIRS'].split(os.pathsep):
+                self.runtime_library_dirs.append(dir)
+        except KeyError:
+            pass
+
     def detect_ssl_lib_from_libcurl_dll(self, libcurl_dll_path):
         ssl_lib_detected = None
         curl_version_info = self.get_curl_version_info(libcurl_dll_path)
