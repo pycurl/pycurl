@@ -350,6 +350,12 @@ ignore this message.''')
         except KeyError:
             pass
 
+        try:
+            for obj in os.environ['PYCURL_EXTRA_OBJECTS'].split(os.pathsep):
+                self.extra_objects.append(obj)
+        except KeyError:
+            pass
+
     def detect_ssl_lib_from_libcurl_dll(self, libcurl_dll_path):
         ssl_lib_detected = None
         curl_version_info = self.get_curl_version_info(libcurl_dll_path)
