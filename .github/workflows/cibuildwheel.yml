@@ -7,10 +7,11 @@ on:
         description: 'PyPI Environment for Deployment'
         type: choice
         options:
+          - none
           - prod
           - test
         required: true
-        default: test
+        default: none
 
 jobs:
   package-wheel:
