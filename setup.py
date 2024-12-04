@@ -222,7 +222,7 @@ class ExtensionConfiguration(object):
 
     def configure_unix(self):
         OPENSSL_DIR = os.environ.get('PYCURL_OPENSSL_DIR')
-        OPENSSL_DIR = scan_argv(self.argv, "--openssl-dir=")
+        OPENSSL_DIR = scan_argv(self.argv, "--openssl-dir=", OPENSSL_DIR)
         if OPENSSL_DIR is not None:
             self.include_dirs.append(os.path.join(OPENSSL_DIR, "include"))
             self.library_dirs.append(os.path.join(OPENSSL_DIR, "lib"))
