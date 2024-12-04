@@ -85,6 +85,7 @@ jobs:
           name: wheels-${{ matrix.os }}-${{ matrix.arch }}
 
   deploy:
+    name: Deploy wheels to PyPI
     runs-on: ubuntu-22.04
     if: ${{ github.event.inputs.pypi-env == 'prod' || github.event.inputs.pypi-env == 'test' }}
     needs: package-wheel
