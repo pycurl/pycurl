@@ -83,3 +83,19 @@ jobs:
         with:
           path: ./wheelhouse/*.whl
           name: wheels-${{ matrix.os }}-${{ matrix.arch }}
+
+  deploy:
+    runs-on: ubuntu-22.04
+    if: ${{ github.event.inputs.pypi-env == 'prod' || github.event.inputs.pypi-env == 'test' }}
+    needs: package-wheel
+    steps:
+      - name: Download wheels
+        uses: actions/download-artifact@v4
+        with:
+          pattern: wheels-*
+          path: dist/
+          merge-multiple: true
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: ${{ github.event.inputs.pypi-env == 'prod' && 'https://upload.pypi.org/legacy/' || 'https://test.pypi.org/legacy/' }}
