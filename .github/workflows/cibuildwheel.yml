@@ -23,12 +23,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - os: macOS-13
           - os: macOS-14
-          - os: ubuntu-22.04
-          - os: windows-2022
-            arch: x86
-          - os: windows-2022
-            arch: x64
+          #- os: ubuntu-22.04
+          #- os: windows-2022
+          #  arch: x86
+          #- os: windows-2022
+          #  arch: x64
 
     steps:
       - uses: actions/checkout@v4
