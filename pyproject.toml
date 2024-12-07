@@ -9,12 +9,37 @@ test-command = "pytest -v -rs {project}/tests"
 
 [tool.cibuildwheel.linux]
 archs = ["x86_64", "aarch64"]
-before-all = "yum install -y libcurl-devel openssl-devel"
+before-all = [
+    "dnf install -y git zip perl-IPC-Cmd",
+    "dnf copr enable -y swt2c/vcpkg-epel8",
+    "dnf install -y vcpkg",
+    "export VCPKG_ROOT=$HOME/.local/share/vcpkg",
+    "git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT",
+    "vcpkg install curl[core,http2,non-http,openssl,ssh]",
+]
 before-test = [
     "pip install flake8 -r requirements-dev.txt",
     "make -C {package}/tests/fake-curl/libcurl",
 ]
 test-command = "pytest -v -rs {project}/tests -k \"not test_keyfunction\""
+
+[tool.cibuildwheel.linux.environment]
+VCPKG_ROOT = "$HOME/.local/share/vcpkg"
+VCPKG_FORCE_SYSTEM_BINARIES = "true"
+PATH = "$VCPKG_ROOT/installed/$VCPKG_TRIPLET/tools/curl/bin:$PATH"
+DIR = "$VCPKG_ROOT/installed/$VCPKG_TRIPLET/lib"
+PYCURL_OPENSSL_DIR = "$VCPKG_ROOT/installed/$VCPKG_TRIPLET"
+PYCURL_EXTRA_OBJECTS = "$DIR/libcurl.a:$DIR/libssl.a:$DIR/libcrypto.a:$DIR/libnghttp2.a:$DIR/libssh2.a:$DIR/libz.a"
+
+[[tool.cibuildwheel.overrides]]
+select = "cp*-manylinux_x86_64"
+inherit.environment = "prepend"
+environment.VCPKG_TRIPLET = "x64-linux"
+
+[[tool.cibuildwheel.overrides]]
+select = "cp*-manylinux_aarch64"
+inherit.environment = "prepend"
+environment.VCPKG_TRIPLET = "arm64-linux"
 
 [tool.cibuildwheel.macos]
 archs = ["all"]
