@@ -21,14 +21,31 @@ concurrency:
 jobs:
   build:
 
-    runs-on: macOS-14
+    runs-on: ${{ matrix.runner }}
     env:
       PYCURL_CURL_CONFIG: /usr/bin/curl-config
       PYCURL_SSL_LIBRARY: sectransp
+      VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        curl-version: ["macos"]
+        #python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.12"]
+        runner: ["macOS-14"]
+        include:
+          - curl-version: "vcpkg"
+            python-version: "3.12"
+            runner: "macOS-13"
+            vcpkg-triplet: "x64-osx"
+            host-platform: "macosx-10.9-x86_64"
+          - curl-version: "vcpkg"
+            python-version: "3.13"
+            runner: "macOS-14"
+            vcpkg-triplet: "arm64-osx"
+            host-platform: "macosx-11.0-arm64"
+    permissions:
+      packages: write
 
     steps:
     - uses: actions/checkout@v4
@@ -36,12 +53,48 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+    - name: 'Install vcpkg'
+      if: matrix.curl-version == 'vcpkg'
+      run: |
+        if ! which vcpkg >/dev/null 2>&1; then
+            brew install vcpkg
+            git clone https://github.com/microsoft/vcpkg.git "$HOME/vcpkg"
+            echo "VCPKG_ROOT=$HOME/vcpkg" >> "$GITHUB_ENV"
+        else
+            echo "VCPKG_ROOT=/usr/local/share/vcpkg" >> "$GITHUB_ENV"
+        fi
+        echo "MACOSX_DEPLOYMENT_TARGET=10.9" >> "$GITHUB_ENV"
+        echo "_PYTHON_HOST_PLATFORM=${{ matrix.host-platform }}" >> "$GITHUB_ENV"
+        echo "ARCHFLAGS=-arch $(uname -m)" >> "$GITHUB_ENV"
+    - name: 'Setup NuGet credentials'
+      if: matrix.curl-version == 'vcpkg'
+      run: |
+        nuget="$(vcpkg fetch nuget | tail -n 1)"
+        mono "${nuget}" \
+          sources add \
+          -source "https://nuget.pkg.github.com/${GITHUB_REPOSITORY_OWNER}/index.json" \
+          -storepasswordincleartext \
+          -name "GitHub" \
+          -username "${GITHUB_REPOSITORY_OWNER}" \
+          -password "${{ secrets.GITHUB_TOKEN }}"
+        mono "${nuget}" \
+          setapikey "${{ secrets.GITHUB_TOKEN }}" \
+          -source "https://nuget.pkg.github.com/${GITHUB_REPOSITORY_OWNER}/index.json"
+    - name: Install packages
+      if: matrix.curl-version == 'vcpkg'
+      run: |
+        vcpkg install curl[core,http2,non-http,openssl,ssh]
+        echo "PYCURL_CURL_CONFIG=$VCPKG_ROOT/installed/${{ matrix.vcpkg-triplet }}/tools/curl/bin/curl-config" >> "$GITHUB_ENV"
+        echo "PYCURL_SSL_LIBRARY=openssl" >> "$GITHUB_ENV"
+        echo "PYCURL_OPENSSL_DIR=$VCPKG_ROOT/installed/${{ matrix.vcpkg-triplet }}" >> "$GITHUB_ENV"
+        DIR=$VCPKG_ROOT/installed/${{ matrix.vcpkg-triplet }}/lib
+        echo "PYCURL_EXTRA_OBJECTS=$DIR/libcurl.a:$DIR/libssl.a:$DIR/libcrypto.a:$DIR/libnghttp2.a:$DIR/libssh2.a:$DIR/libz.a" >> "$GITHUB_ENV"
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install flake8 pytest
         if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
     - name: Build
-      run: make
+      run: python setup.py build
     - name: Test with pytest
-      run: make test
+      run: make do-test
