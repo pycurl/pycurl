@@ -39,7 +39,6 @@ class MultiSocketSelectTest(unittest.TestCase):
             c.close()
         self.m.close()
 
-    @pytest.mark.skipif(sys.platform == 'win32', reason='https://github.com/pycurl/pycurl/issues/819')
     def test_multi_socket_select(self):
         sockets = set()
         timeout = 0
