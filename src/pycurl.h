@@ -704,5 +704,10 @@ extern PyMethodDef curlmultiobject_methods[];
 # define CPy_TRASHCAN_END(op) Py_TRASHCAN_SAFE_END(op)
 #endif
 
+#ifdef PYCURL_AUTODETECT_CA
+extern char *g_pycurl_autodetected_cainfo;
+extern char *g_pycurl_autodetected_capath;
+#endif
+
 /* vi:ts=4:et:nowrap
  */

@@ -257,6 +257,22 @@ util_curl_init(CurlObject *self)
     if (res != CURLE_OK) {
         return (-1);
     }
+
+    /* Set CAINFO or CAPATH if runtime autodetection enabled */
+    #ifdef PYCURL_AUTODETECT_CA
+    if (g_pycurl_autodetected_cainfo) {
+        res = curl_easy_setopt(self->handle, CURLOPT_CAINFO, g_pycurl_autodetected_cainfo);
+        if (res != CURLE_OK) {
+            return (-1);
+        }
+    } else if (g_pycurl_autodetected_capath) {
+        res = curl_easy_setopt(self->handle, CURLOPT_CAPATH, g_pycurl_autodetected_capath);
+        if (res != CURLE_OK) {
+            return (-1);
+        }
+    }
+    #endif
+
     return (0);
 }
 

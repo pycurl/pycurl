@@ -30,6 +30,7 @@ PATH = "$VCPKG_ROOT/installed/$VCPKG_TRIPLET/tools/curl/bin:$PATH"
 DIR = "$VCPKG_ROOT/installed/$VCPKG_TRIPLET/lib"
 PYCURL_OPENSSL_DIR = "$VCPKG_ROOT/installed/$VCPKG_TRIPLET"
 PYCURL_EXTRA_OBJECTS = "$DIR/libcurl.a:$DIR/libssl.a:$DIR/libcrypto.a:$DIR/libnghttp2.a:$DIR/libssh2.a:$DIR/libz.a"
+PYCURL_AUTODETECT_CA = "true"
 
 [[tool.cibuildwheel.overrides]]
 select = "cp*-manylinux_x86_64"

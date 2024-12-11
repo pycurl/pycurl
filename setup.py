@@ -357,6 +357,9 @@ ignore this message.''')
         except KeyError:
             pass
 
+        if 'PYCURL_AUTODETECT_CA' in os.environ:
+            self.extra_compile_args.append("-DPYCURL_AUTODETECT_CA")
+
     def detect_ssl_lib_from_libcurl_dll(self, libcurl_dll_path):
         ssl_lib_detected = None
         curl_version_info = self.get_curl_version_info(libcurl_dll_path)

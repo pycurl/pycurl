@@ -287,6 +287,48 @@ insint_worker(PyObject *d, PyObject *extra, char *name, long value)
     } while(0)
 
 
+#ifdef PYCURL_AUTODETECT_CA
+/* This autodetection of cainfo/capath is primarily intended for use in Linux
+   wheels where we build one copy of libcurl that is used on multiple Linux
+   distributions.
+*/
+PYCURL_INTERNAL char* g_pycurl_autodetected_cainfo = NULL;
+PYCURL_INTERNAL char* g_pycurl_autodetected_capath = NULL;
+static char *cainfos[] = {
+    "/etc/ssl/certs/ca-certificates.crt",
+    "/etc/pki/tls/certs/ca-bundle.crt",
+    "/usr/share/ssl/certs/ca-bundle.crt",
+    "/usr/local/share/certs/ca-root-nss.crt",
+    "/etc/ssl/cert.pem",
+};
+static char *capaths[] = {
+    "/etc/ssl/certs",
+};
+
+static void pycurl_autodetect_ca()
+{
+    size_t i;
+    size_t ninfos = sizeof(cainfos) / sizeof(cainfos[0]);
+    size_t npaths = sizeof(capaths) / sizeof(capaths[0]);
+    struct stat stat_buf;
+
+    for (i = 0; i < ninfos; i++) {
+        if (stat(cainfos[i], &stat_buf) == 0 && S_ISREG(stat_buf.st_mode)) {
+            g_pycurl_autodetected_cainfo = cainfos[i];
+            return;
+        }
+    }
+
+    for (i = 0; i < npaths; i++) {
+        if (stat(capaths[i], &stat_buf) == 0 && S_ISDIR(stat_buf.st_mode)) {
+            g_pycurl_autodetected_capath = capaths[i];
+            return;
+        }
+    }
+}
+#endif
+
+
 #if PY_MAJOR_VERSION >= 3
 /* Used in Python 3 only, and even then this function seems to never get
  * called. Python 2 has no module cleanup:
@@ -1591,6 +1633,10 @@ initpycurl(void)
 #if defined(WITH_THREAD) && (PY_MAJOR_VERSION < 3 || PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION < 9)
     /* Finally initialize global interpreter lock */
     PyEval_InitThreads();
+#endif
+
+#ifdef PYCURL_AUTODETECT_CA
+    pycurl_autodetect_ca();
 #endif
 
 #if PY_MAJOR_VERSION >= 3
