@@ -21,7 +21,6 @@ before-test = [
     "pip install flake8 -r requirements-dev.txt",
     "make -C {package}/tests/fake-curl/libcurl",
 ]
-test-command = "pytest -v -rs {project}/tests -k \"not test_keyfunction\""
 
 [tool.cibuildwheel.linux.environment]
 VCPKG_ROOT = "$HOME/.local/share/vcpkg"
