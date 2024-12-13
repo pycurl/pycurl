@@ -3,13 +3,13 @@ name: Build Wheels
 on:
   workflow_dispatch:
     inputs:
-      pypi-env:
+      environment:
         description: 'PyPI Environment for Deployment'
         type: choice
         options:
           - none
-          - prod
-          - test
+          - pypi
+          - testpypi
         required: true
         default: none
 
@@ -108,8 +108,11 @@ jobs:
   deploy:
     name: Deploy wheels to PyPI
     runs-on: ubuntu-22.04
-    if: ${{ github.event.inputs.pypi-env == 'prod' || github.event.inputs.pypi-env == 'test' }}
+    if: ${{ github.event.inputs.environment == 'pypi' || github.event.inputs.environment == 'testpypi' }}
     needs: [build-sdist, package-wheel]
+    environment: ${{ github.event.inputs.environment }}
+    permissions:
+      id-token: write
     steps:
       - name: Download wheels
         uses: actions/download-artifact@v4
@@ -119,4 +122,4 @@ jobs:
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          repository-url: ${{ github.event.inputs.pypi-env == 'prod' && 'https://upload.pypi.org/legacy/' || 'https://test.pypi.org/legacy/' }}
+          repository-url: ${{ github.event.inputs.environment == 'pypi' && 'https://upload.pypi.org/legacy/' || 'https://test.pypi.org/legacy/' }}
