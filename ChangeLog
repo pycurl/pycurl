@@ -1,3 +1,24 @@
+Version 7.45.4 [requires libcurl-7.19.0 or better] - 2024-12-12
+---------------------------------------------------------------
+
+        * Add support for CURLOPT_HAPROXY_CLIENT_IP (patch by Scott Talbert).
+        * Port tests from bottle to flask (patch by Miro Hrončok).
+        * Add constant for CURL_HTTP_VERSION_3ONLY (patch by Pavel Horáček).
+        * Add EFFECTIVE_METHOD info option (patch by Pavel Horáček).
+        * Don't use `-flat_namespace` on macOS (patch by Michael Cho).
+        * Add some missing GIL checks to callback functions
+          (patch by Scott Talbert).
+        * Fix assorted bugs in pycurl tests, including a segfault
+          (patch by Scott Talbert).  All tests should now pass on Linux and
+          macOS.
+        * Fix minor bug in examples/multi-socket_action-select.py
+          (patch by Oleg Broytman).
+        * Build all wheels using the latest version of libcurl and its
+          dependencies (patch by Scott Talbert).  All wheels should now have
+          openssl, HTTP2, and SSH support.
+        * Implement Certificate Authority path autodetection when building
+          Linux wheels (patch by Scott Talbert).
+
 Version 7.45.3 [requires libcurl-7.19.0 or better] - 2024-02-17
 ---------------------------------------------------------------
 
