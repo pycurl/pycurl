@@ -5,7 +5,7 @@ manylinux-aarch64-image = "manylinux_2_28"
 manylinux-x86_64-image = "manylinux_2_28"
 build-frontend = "build"
 build-verbosity = 1
-test-command = "pytest -v -rs {project}/tests"
+test-command = "pytest -v -ra {project}/tests"
 
 [tool.cibuildwheel.linux]
 archs = ["x86_64", "aarch64"]

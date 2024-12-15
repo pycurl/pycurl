@@ -75,7 +75,7 @@ jobs:
         pip install wheelhouse/*.whl
       shell: bash
     - name: Test with pytest
-      run: pytest -v -rs
+      run: pytest -v -ra
     - name: Upload wheel
       uses: actions/upload-artifact@v4
       with:
