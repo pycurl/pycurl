@@ -74,6 +74,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 pytest
         if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+        sudo apt-get install vsftpd
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
@@ -83,4 +84,6 @@ jobs:
     - name: Build
       run: make
     - name: Test with pytest
+      env:
+        PYCURL_VSFTPD_PATH: vsftpd
       run: make do-test

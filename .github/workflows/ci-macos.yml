@@ -93,7 +93,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 pytest
         if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+        brew install vsftpd
     - name: Build
       run: python setup.py build
     - name: Test with pytest
+      env:
+        PYCURL_VSFTPD_PATH: vsftpd
       run: make do-test
