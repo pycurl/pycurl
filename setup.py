@@ -357,6 +357,12 @@ ignore this message.''')
         except KeyError:
             pass
 
+        try:
+            for obj in os.environ['PYCURL_EXTRA_LIBRARIES'].split(os.pathsep):
+                self.libraries.append(obj)
+        except KeyError:
+            pass
+
         if 'PYCURL_AUTODETECT_CA' in os.environ:
             self.extra_compile_args.append("-DPYCURL_AUTODETECT_CA")
 
