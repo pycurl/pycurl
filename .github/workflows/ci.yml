@@ -63,10 +63,11 @@ jobs:
       if: matrix.curl-version == 'vcpkg'
     - name: Install packages
       run: |
-        vcpkg install curl[core,http2,non-http,openssl,ssh]
+        vcpkg install curl[core,gssapi,http2,non-http,openssl,ssh]
         echo "PATH=/usr/local/share/vcpkg/packages/curl_x64-linux/tools/curl/bin:$PATH" >> "$GITHUB_ENV"
         DIR=/usr/local/share/vcpkg/installed/x64-linux/lib
-        echo "PYCURL_EXTRA_OBJECTS=$DIR/libcurl.a:$DIR/libssl.a:$DIR/libcrypto.a:$DIR/libnghttp2.a:$DIR/libssh2.a:$DIR/libz.a" >> "$GITHUB_ENV"
+        echo "PYCURL_EXTRA_OBJECTS=$DIR/libcurl.a:$DIR/libssl.a:$DIR/libcrypto.a:$DIR/libnghttp2.a:$DIR/libssh2.a:$DIR/libgssapi_krb5.a:$DIR/libkrb5.a:$DIR/libk5crypto.a:$DIR/libcom_err.a:$DIR/libkrb5support.a:$DIR/libz.a" >> "$GITHUB_ENV"
+        echo "PYCURL_EXTRA_LIBRARIES=resolv" >> "$GITHUB_ENV"
       if: matrix.curl-version == 'vcpkg'
     - name: Install dependencies
       run: |
