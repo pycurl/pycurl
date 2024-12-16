@@ -8,7 +8,6 @@ build-verbosity = 1
 test-command = "pytest -v -ra {project}/tests"
 
 [tool.cibuildwheel.linux]
-archs = ["x86_64", "aarch64"]
 before-all = [
     "dnf install -y git zip perl-IPC-Cmd",
     "dnf copr enable -y swt2c/vcpkg-epel8",
