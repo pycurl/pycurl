@@ -14,7 +14,7 @@ before-all = [
     "dnf install -y vcpkg",
     "export VCPKG_ROOT=$HOME/.local/share/vcpkg",
     "git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT",
-    "vcpkg install curl[core,gssapi,http2,non-http,openssl,ssh]",
+    "vcpkg install curl[brotli,core,gssapi,http2,non-http,openssl,ssh]",
 ]
 before-test = [
     "pip install flake8 -r requirements-dev.txt",
@@ -27,7 +27,7 @@ VCPKG_FORCE_SYSTEM_BINARIES = "true"
 PATH = "$VCPKG_ROOT/installed/$VCPKG_TRIPLET/tools/curl/bin:$PATH"
 DIR = "$VCPKG_ROOT/installed/$VCPKG_TRIPLET/lib"
 PYCURL_OPENSSL_DIR = "$VCPKG_ROOT/installed/$VCPKG_TRIPLET"
-PYCURL_EXTRA_OBJECTS = "$DIR/libcurl.a:$DIR/libssl.a:$DIR/libcrypto.a:$DIR/libnghttp2.a:$DIR/libssh2.a:$DIR/libgssapi_krb5.a:$DIR/libkrb5.a:$DIR/libk5crypto.a:$DIR/libcom_err.a:$DIR/libkrb5support.a:$DIR/libz.a"
+PYCURL_EXTRA_OBJECTS = "$DIR/libcurl.a:$DIR/libssl.a:$DIR/libcrypto.a:$DIR/libnghttp2.a:$DIR/libssh2.a:$DIR/libgssapi_krb5.a:$DIR/libkrb5.a:$DIR/libk5crypto.a:$DIR/libcom_err.a:$DIR/libkrb5support.a:$DIR/libz.a:$DIR/libbrotlidec.a:$DIR/libbrotlicommon.a"
 PYCURL_EXTRA_LIBRARIES = "resolv"
 PYCURL_AUTODETECT_CA = "true"
 
@@ -44,7 +44,7 @@ environment.VCPKG_TRIPLET = "arm64-linux"
 [tool.cibuildwheel.macos]
 before-all = [
     "if ! which vcpkg >/dev/null 2>&1; then brew install vcpkg && git clone https://github.com/microsoft/vcpkg.git $HOME/vcpkg; fi",
-    "vcpkg install curl[core,http2,non-http,openssl,ssh]",
+    "vcpkg install curl[brotli,core,http2,non-http,openssl,ssh]",
 ]
 before-test = [
     "pip install flake8 -r requirements-dev.txt",
@@ -56,7 +56,7 @@ PYCURL_CURL_CONFIG = "$VCPKG_ROOT/installed/$VCPKG_TRIPLET/tools/curl/bin/curl-c
 PYCURL_SSL_LIBRARY = "openssl"
 PYCURL_OPENSSL_DIR = "$VCPKG_ROOT/installed/$VCPKG_TRIPLET"
 DIR = "$VCPKG_ROOT/installed/$VCPKG_TRIPLET/lib"
-PYCURL_EXTRA_OBJECTS = "$DIR/libcurl.a:$DIR/libssl.a:$DIR/libcrypto.a:$DIR/libnghttp2.a:$DIR/libssh2.a:$DIR/libz.a"
+PYCURL_EXTRA_OBJECTS = "$DIR/libcurl.a:$DIR/libssl.a:$DIR/libcrypto.a:$DIR/libnghttp2.a:$DIR/libssh2.a:$DIR/libz.a:$DIR/libbrotlidec.a:$DIR/libbrotlicommon.a"
 
 [[tool.cibuildwheel.overrides]]
 select = "cp*-macosx_x86_64"

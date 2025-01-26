@@ -83,7 +83,7 @@ jobs:
 
       - name: Install packages (Windows)
         if: runner.os == 'Windows'
-        run: vcpkg install curl[core,http2,non-http,schannel,ssh]:${{ matrix.arch }}-windows
+        run: vcpkg install curl[brotli,core,http2,non-http,schannel,ssh]:${{ matrix.arch }}-windows
 
       - name: Set up QEMU
         if: runner.os == 'Linux'

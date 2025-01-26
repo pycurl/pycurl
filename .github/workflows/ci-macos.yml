@@ -82,12 +82,12 @@ jobs:
     - name: Install packages
       if: matrix.curl-version == 'vcpkg'
       run: |
-        vcpkg install curl[core,http2,non-http,openssl,ssh]
+        vcpkg install curl[brotli,core,http2,non-http,openssl,ssh]
         echo "PYCURL_CURL_CONFIG=$VCPKG_ROOT/installed/${{ matrix.vcpkg-triplet }}/tools/curl/bin/curl-config" >> "$GITHUB_ENV"
         echo "PYCURL_SSL_LIBRARY=openssl" >> "$GITHUB_ENV"
         echo "PYCURL_OPENSSL_DIR=$VCPKG_ROOT/installed/${{ matrix.vcpkg-triplet }}" >> "$GITHUB_ENV"
         DIR=$VCPKG_ROOT/installed/${{ matrix.vcpkg-triplet }}/lib
-        echo "PYCURL_EXTRA_OBJECTS=$DIR/libcurl.a:$DIR/libssl.a:$DIR/libcrypto.a:$DIR/libnghttp2.a:$DIR/libssh2.a:$DIR/libz.a" >> "$GITHUB_ENV"
+        echo "PYCURL_EXTRA_OBJECTS=$DIR/libcurl.a:$DIR/libssl.a:$DIR/libcrypto.a:$DIR/libnghttp2.a:$DIR/libssh2.a:$DIR/libz.a:$DIR/libbrotlidec.a:$DIR/libbrotlicommon.a" >> "$GITHUB_ENV"
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
