@@ -133,3 +133,45 @@ class GetinfoTest(unittest.TestCase):
     def test_getinfo_raw_number(self):
         self.make_request()
         self.assertEqual(7, self.curl.getinfo_raw(pycurl.SIZE_DOWNLOAD))
+
+    @util.min_libcurl(7, 55, 0)
+    def test_getinfo_upload_download_t(self):
+        self.make_request()
+        self.assertEqual(7, self.curl.getinfo(pycurl.SIZE_DOWNLOAD_T))
+        assert type(self.curl.getinfo(pycurl.CONTENT_LENGTH_DOWNLOAD_T)) is int
+        assert type(self.curl.getinfo(pycurl.CONTENT_LENGTH_UPLOAD_T)) is int
+        assert type(self.curl.getinfo(pycurl.SIZE_DOWNLOAD_T)) is int
+        assert type(self.curl.getinfo(pycurl.SIZE_UPLOAD_T)) is int
+        assert type(self.curl.getinfo(pycurl.SPEED_DOWNLOAD_T)) is int
+        assert type(self.curl.getinfo(pycurl.SPEED_UPLOAD_T)) is int
+
+    @util.min_libcurl(7, 59, 0)
+    def test_getinfo_filetime_t(self):
+        self.make_request()
+        assert type(self.curl.getinfo(pycurl.FILETIME_T)) is int
+
+    @util.min_libcurl(7, 61, 0)
+    def test_getinfo_connect_transfer_t(self):
+        self.make_request()
+        assert type(self.curl.getinfo(pycurl.APPCONNECT_TIME_T)) is int
+        assert type(self.curl.getinfo(pycurl.CONNECT_TIME_T)) is int
+        assert type(self.curl.getinfo(pycurl.NAMELOOKUP_TIME_T)) is int
+        assert type(self.curl.getinfo(pycurl.PRETRANSFER_TIME_T)) is int
+        assert type(self.curl.getinfo(pycurl.REDIRECT_TIME_T)) is int
+        assert type(self.curl.getinfo(pycurl.STARTTRANSFER_TIME_T)) is int
+        assert type(self.curl.getinfo(pycurl.TOTAL_TIME_T)) is int
+
+    @util.min_libcurl(8, 6, 0)
+    def test_getinfo_queue_time_t(self):
+        self.make_request()
+        assert type(self.curl.getinfo(pycurl.QUEUE_TIME_T)) is int
+
+    @util.min_libcurl(8, 10, 0)
+    def test_getinfo_posttransfer_time_t(self):
+        self.make_request()
+        assert type(self.curl.getinfo(pycurl.POSTTRANSFER_TIME_T)) is int
+
+    @util.min_libcurl(8, 11, 0)
+    def test_getinfo_earlydata_sent_t(self):
+        self.make_request()
+        assert type(self.curl.getinfo(pycurl.EARLYDATA_SENT_T)) is int
