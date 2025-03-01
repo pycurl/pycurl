@@ -252,6 +252,48 @@ do_curl_getinfo_raw(CurlObject *self, PyObject *args)
             }
         }
 #endif
+
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 55, 0)
+    case CURLINFO_CONTENT_LENGTH_DOWNLOAD_T:
+    case CURLINFO_CONTENT_LENGTH_UPLOAD_T:
+    case CURLINFO_SIZE_DOWNLOAD_T:
+    case CURLINFO_SIZE_UPLOAD_T:
+    case CURLINFO_SPEED_DOWNLOAD_T:
+    case CURLINFO_SPEED_UPLOAD_T:
+/* endif for this section is after the block as this is the oldest _t */
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 59, 0)
+    case CURLINFO_FILETIME_T:
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 61, 0)
+    case CURLINFO_APPCONNECT_TIME_T:
+    case CURLINFO_CONNECT_TIME_T:
+    case CURLINFO_NAMELOOKUP_TIME_T:
+    case CURLINFO_PRETRANSFER_TIME_T:
+    case CURLINFO_REDIRECT_TIME_T:
+    case CURLINFO_STARTTRANSFER_TIME_T:
+    case CURLINFO_TOTAL_TIME_T:
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(8, 6, 0)
+    case CURLINFO_QUEUE_TIME_T:
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(8, 10, 0)
+    case CURLINFO_POSTTRANSFER_TIME_T:
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(8, 11, 0)
+    case CURLINFO_EARLYDATA_SENT_T:
+#endif
+        {
+            /* Return PyLong as result */
+            curl_off_t ot_res = 0;
+
+            res = curl_easy_getinfo(self->handle, (CURLINFO)option, &ot_res);
+            if (res != CURLE_OK) {
+                CURLERROR_RETVAL();
+            }
+            return PyLong_FromLongLong(ot_res);
+        }
+#endif
+
     }
 
     /* Got wrong option on the method call */
