@@ -456,10 +456,9 @@ class OptionConstantsTest(unittest.TestCase):
         curl.setopt(curl.PROXY_SSL_OPTIONS, curl.SSLOPT_NO_REVOKE)
         curl.close()
 
-    # Apparently TLSAUTH_TYPE=SRP is an unknown option on appveyor
-    @util.only_unix
     @util.min_libcurl(7, 52, 0)
-    @util.only_ssl_backends('openssl', 'gnutls', 'schannel')
+    @util.only_ssl_backends('openssl', 'gnutls')
+    @util.only_tls_srp
     def test_proxy_tlsauth(self):
         curl = pycurl.Curl()
         curl.setopt(curl.PROXY_TLSAUTH_USERNAME, "test")
@@ -691,10 +690,9 @@ class OptionConstantsSettingTest(unittest.TestCase):
         assert self.curl.PROTO_SMB is not None
         assert self.curl.PROTO_SMBS is not None
 
-    # Apparently TLSAUTH_TYPE=SRP is an unknown option on appveyor
-    @util.only_unix
     @util.min_libcurl(7, 21, 4)
-    @util.only_ssl_backends('openssl', 'gnutls', 'schannel')
+    @util.only_ssl_backends('openssl', 'gnutls')
+    @util.only_tls_srp
     def test_tlsauth(self):
         self.curl.setopt(self.curl.TLSAUTH_TYPE, "SRP")
         self.curl.setopt(self.curl.TLSAUTH_USERNAME, "test")

@@ -235,6 +235,18 @@ def only_gssapi(fn):
 
     return decorated
 
+def only_tls_srp(fn):
+    import pycurl
+
+    @functools.wraps(fn)
+    def decorated(*args, **kwargs):
+        if not pycurl.version_info()[4] & pycurl.VERSION_TLSAUTH_SRP:
+            raise unittest.SkipTest('libcurl does not support TLS-SRP')
+
+        return fn(*args, **kwargs)
+
+    return decorated
+
 def guard_unknown_libcurl_option(fn):
     '''Converts curl error 48, CURLE_UNKNOWN_OPTION, into a SkipTest
     exception. This is meant to be used with tests exercising libcurl
