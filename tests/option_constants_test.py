@@ -150,7 +150,7 @@ class OptionConstantsTest(unittest.TestCase):
         curl.close()
 
     @util.min_libcurl(7, 22, 0)
-    @pytest.mark.gssapi
+    @util.only_gssapi
     def test_gssapi_delegation_options(self):
         curl = pycurl.Curl()
         curl.setopt(curl.GSSAPI_DELEGATION, curl.GSSAPI_DELEGATION_FLAG)
