@@ -36,13 +36,11 @@ jobs:
           - curl-version: "vcpkg"
             python-version: "3.12"
             runner: "macOS-13"
-            vcpkg-triplet: "x64-osx"
-            host-platform: "macosx-10.9-x86_64"
+            cibw-build: "cp312-macosx_x86_64"
           - curl-version: "vcpkg"
             python-version: "3.13"
             runner: "macOS-14"
-            vcpkg-triplet: "arm64-osx"
-            host-platform: "macosx-11.0-arm64"
+            cibw-build: "cp313-macosx_arm64"
     permissions:
       packages: write
 
@@ -62,9 +60,6 @@ jobs:
         else
             echo "VCPKG_ROOT=/usr/local/share/vcpkg" >> "$GITHUB_ENV"
         fi
-        echo "MACOSX_DEPLOYMENT_TARGET=10.9" >> "$GITHUB_ENV"
-        echo "_PYTHON_HOST_PLATFORM=${{ matrix.host-platform }}" >> "$GITHUB_ENV"
-        echo "ARCHFLAGS=-arch $(uname -m)" >> "$GITHUB_ENV"
     - name: 'Setup NuGet credentials'
       if: matrix.curl-version == 'vcpkg'
       run: |
@@ -79,24 +74,23 @@ jobs:
         mono "${nuget}" \
           setapikey "${{ secrets.GITHUB_TOKEN }}" \
           -source "https://nuget.pkg.github.com/${GITHUB_REPOSITORY_OWNER}/index.json"
-    - name: Install packages
-      if: matrix.curl-version == 'vcpkg'
-      run: |
-        vcpkg install curl[brotli,core,http2,non-http,openssl,ssh]
-        echo "PYCURL_CURL_CONFIG=$VCPKG_ROOT/installed/${{ matrix.vcpkg-triplet }}/tools/curl/bin/curl-config" >> "$GITHUB_ENV"
-        echo "PYCURL_SSL_LIBRARY=openssl" >> "$GITHUB_ENV"
-        echo "PYCURL_OPENSSL_DIR=$VCPKG_ROOT/installed/${{ matrix.vcpkg-triplet }}" >> "$GITHUB_ENV"
-        DIR=$VCPKG_ROOT/installed/${{ matrix.vcpkg-triplet }}/lib
-        echo "PYCURL_EXTRA_OBJECTS=$DIR/libcurl.a:$DIR/libssl.a:$DIR/libcrypto.a:$DIR/libnghttp2.a:$DIR/libssh2.a:$DIR/libz.a:$DIR/libbrotlidec.a:$DIR/libbrotlicommon.a" >> "$GITHUB_ENV"
     - name: Install dependencies
+      if: matrix.curl-version == 'macos'
       run: |
         python -m pip install --upgrade pip
         pip install flake8 pytest
         if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
         brew install vsftpd
     - name: Build
+      if: matrix.curl-version == 'macos'
       run: python setup.py build
     - name: Test with pytest
+      if: matrix.curl-version == 'macos'
       env:
         PYCURL_VSFTPD_PATH: vsftpd
       run: make do-test
+    - name: Build & test with cibuildwheel
+      if: matrix.curl-version == 'vcpkg'
+      run: |
+        pip install cibuildwheel
+        cibuildwheel --only ${{ matrix.cibw-build }}
