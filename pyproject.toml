@@ -54,6 +54,7 @@ repair-wheel-command = "DYLD_LIBRARY_PATH=$VCPKG_ROOT/installed/$VCPKG_TRIPLET/l
 
 [tool.cibuildwheel.macos.environment]
 PYCURL_CURL_CONFIG = "$VCPKG_ROOT/installed/$VCPKG_TRIPLET/tools/curl/bin/curl-config"
+PYCURL_SSL_LIBRARY = "openssl"
 
 [[tool.cibuildwheel.overrides]]
 select = "cp*-macosx_x86_64"
