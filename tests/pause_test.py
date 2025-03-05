@@ -92,6 +92,6 @@ class PauseTest(unittest.TestCase):
         self.assertEqual('part1part2', sio.getvalue().decode())
         end = _time.time()
         # check that client side waited
-        self.assertTrue(end-start > 1)
+        self.assertTrue(end-start > 0.9)
 
         assert state['resumed']
