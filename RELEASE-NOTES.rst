@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+PycURL 7.45.6 - 2025-03-06
+--------------------------
+
+The previous release was accidentally built without CA bundle autodetection in
+Linux wheels - this restores that behavior (no changes to macOS or Linux).
+
 PycURL 7.45.5 - 2025-03-06
 --------------------------
 
