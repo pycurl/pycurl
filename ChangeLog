@@ -1,3 +1,13 @@
+Version 7.45.5 [requires libcurl-7.19.0 or better] - 2025-03-06
+---------------------------------------------------------------
+
+        * Enable GSS-API and brotli support in wheels (patch by Scott Talbert).
+        * Add support for calling getinfo with CURLOPT_*_T arguments
+          (patch by Scott Talbert)
+        * Change wheels to build using shared libraries (vice static libraries)
+          (patch by Scott Talbert)
+        * Build wheels with curl 8.12.1 (mainly for security fixes)
+
 Version 7.45.4 [requires libcurl-7.19.0 or better] - 2024-12-12
 ---------------------------------------------------------------
 

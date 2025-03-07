@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+PycURL 7.45.5 - 2025-03-06
+--------------------------
+
+This release is mainly to update the wheels to incorporate libcurl 8.12.1 for
+security fixes, as well as enable some additional libraries in wheel builds.
+
 PycURL 7.45.4 - 2024-12-12
 --------------------------
 
