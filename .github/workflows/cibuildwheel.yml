@@ -47,7 +47,7 @@ jobs:
           - os: macOS-14
           - os: ubuntu-22.04
             arch: x86_64
-          - os: ubuntu-22.04
+          - os: ubuntu-22.04-arm
             arch: aarch64
           - os: windows-2022
             arch: x86
@@ -84,12 +84,6 @@ jobs:
       - name: Install packages (Windows)
         if: runner.os == 'Windows'
         run: vcpkg install curl[brotli,core,http2,non-http,schannel,ssh]:${{ matrix.arch }}-windows
-
-      - name: Set up QEMU
-        if: runner.os == 'Linux'
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: all
 
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel
