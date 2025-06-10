@@ -111,3 +111,27 @@ class SetoptTest(unittest.TestCase):
         self.curl.setopt(self.curl.MAXFILESIZE, 3333858173)
         self.curl.setopt(self.curl.POSTFIELDSIZE, 3333858173)
         self.curl.setopt(self.curl.RESUME_FROM, 3333858173)
+
+    def test_set_writefunction_none(self):
+        self.curl.setopt(self.curl.WRITEFUNCTION, None)
+
+    def test_set_headerfunction_none(self):
+        self.curl.setopt(self.curl.HEADERFUNCTION, None)
+
+    def test_set_readfunction_none(self):
+        self.curl.setopt(self.curl.READFUNCTION, None)
+
+    def test_set_progressfunction_none(self):
+        self.curl.setopt(self.curl.PROGRESSFUNCTION, None)
+
+    def test_set_xferinfofunction_none(self):
+        self.curl.setopt(self.curl.XFERINFOFUNCTION, None)
+
+    def test_set_debugfunction_none(self):
+        self.curl.setopt(self.curl.DEBUGFUNCTION, None)
+
+    def test_set_ioctlfunction_none(self):
+        self.curl.setopt(self.curl.IOCTLFUNCTION, None)
+
+    def test_set_seekfunction_none(self):
+        self.curl.setopt(self.curl.SEEKFUNCTION, None)
