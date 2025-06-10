@@ -62,7 +62,7 @@ environment.VCPKG_TRIPLET = "x64-osx-dynamic"
 [[tool.cibuildwheel.overrides]]
 select = "cp*-macosx_arm64"
 inherit.environment = "prepend"
-environment.VCPKG_ROOT = "$HOME/vcpkg"
+environment.VCPKG_ROOT = "/usr/local/share/vcpkg"
 environment.VCPKG_TRIPLET = "arm64-osx-dynamic"
 
 [tool.cibuildwheel.windows]
