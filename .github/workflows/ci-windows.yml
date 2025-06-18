@@ -27,7 +27,7 @@ jobs:
     strategy:
       matrix:
         arch: ["x64"]
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
       fail-fast: false
     permissions:
       packages: write
@@ -42,6 +42,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
         architecture: ${{ matrix.arch }}
+        allow-prereleases: true
     - name: 'Setup NuGet credentials'
       shell: 'bash'
       run: |
