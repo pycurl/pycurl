@@ -21,8 +21,15 @@ else
 endif
 
 .c.so:
+
+#AIX linker don't support -soname flag
+ifeq ($(UNAME),AIX)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -shared -fPIC \
+               -o $@ $<
+else
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -shared -fPIC \
 		-Wl,$(SONAME_FLAG),$@ -o $@ $<
+endif
 
 show-targets:
 	ls *c |sed -e 's/.c$$/.so/' | awk '{print $$1 " \\"}'
