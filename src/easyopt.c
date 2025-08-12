@@ -181,6 +181,9 @@ util_curl_unsetopt(CurlObject *self, int option)
     CLEAR_CALLBACK(CURLOPT_SSH_KEYFUNCTION, CURLOPT_SSH_KEYDATA, self->ssh_key_cb);
 #endif
     CLEAR_CALLBACK(CURLOPT_SEEKFUNCTION, CURLOPT_SEEKDATA, self->seek_cb);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 80, 0)
+    CLEAR_CALLBACK(CURLOPT_PREREQFUNCTION, CURLOPT_PREREQDATA, self->prereq_cb);
+#endif
 
     /* info: we explicitly list unsupported options here */
     case CURLOPT_COOKIEFILE:
@@ -903,6 +906,9 @@ do_curl_setopt_callable(CurlObject *self, int option, PyObject *obj)
     const curl_closesocket_callback closesocket_cb = closesocket_callback;
 #endif
     const curl_seek_callback seek_cb = seek_callback;
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 80, 0)
+    const curl_prereq_callback prereq_cb = prereq_callback;
+#endif
 
     switch(option) {
     case CURLOPT_WRITEFUNCTION:
@@ -998,6 +1004,15 @@ do_curl_setopt_callable(CurlObject *self, int option, PyObject *obj)
         curl_easy_setopt(self->handle, CURLOPT_SEEKFUNCTION, seek_cb);
         curl_easy_setopt(self->handle, CURLOPT_SEEKDATA, self);
         break;
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 80, 0)
+    case CURLOPT_PREREQFUNCTION:
+        Py_INCREF(obj);
+        Py_CLEAR(self->prereq_cb);
+        self->prereq_cb = obj;
+        curl_easy_setopt(self->handle, CURLOPT_PREREQFUNCTION, prereq_cb);
+        curl_easy_setopt(self->handle, CURLOPT_PREREQDATA, self);
+        break;
+#endif
 
     default:
         /* None of the function options were recognized, raise exception */

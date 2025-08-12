@@ -991,3 +991,64 @@ ssl_ctx_callback(CURL *curl, void *ssl_ctx, void *ptr)
     return r == 0 ? CURLE_OK : CURLE_FAILED_INIT;
 }
 #endif
+
+
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 80, 0)
+PYCURL_INTERNAL int
+prereq_callback(void *clientp, char *conn_primary_ip, char *conn_local_ip,
+                int conn_primary_port, int conn_local_port)
+{
+    PyObject *arglist;
+    CurlObject *self;
+    int ret = CURL_PREREQFUNC_ABORT;
+    PyObject *ret_obj = NULL;
+    PYCURL_DECLARE_THREAD_STATE;
+
+    self = (CurlObject *)clientp;
+    if (!PYCURL_ACQUIRE_THREAD()) {
+        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
+        PyErr_WarnEx(PyExc_RuntimeWarning, "prereq_callback failed to acquire thread", 1);
+        PyGILState_Release(tmp_warn_state);
+        return ret;
+    }
+
+    arglist = Py_BuildValue("(ssii)", conn_primary_ip, conn_local_ip, conn_primary_port, conn_local_port);
+    if (arglist == NULL)
+        goto verbose_error;
+
+    ret_obj = PyObject_Call(self->prereq_cb, arglist, NULL);
+    Py_DECREF(arglist);
+    if (!ret_obj)
+       goto silent_error;
+    if (!PyInt_Check(ret_obj) && !PyLong_Check(ret_obj)) {
+        PyObject *ret_repr = PyObject_Repr(ret_obj);
+        if (ret_repr) {
+            PyObject *encoded_obj;
+            char *str = PyText_AsString_NoNUL(ret_repr, &encoded_obj);
+            fprintf(stderr, "prereq callback returned %s which is not an integer\n", str);
+            /* PyErr_Format(PyExc_TypeError, "prereq callback returned %s which is not an integer", str); */
+            Py_XDECREF(encoded_obj);
+            Py_DECREF(ret_repr);
+        }
+        goto silent_error;
+    }
+    if (PyInt_Check(ret_obj)) {
+        /* long to int cast */
+        ret = (int) PyInt_AsLong(ret_obj);
+    } else {
+        /* long to int cast */
+        ret = (int) PyLong_AsLong(ret_obj);
+    }
+    goto done;
+
+silent_error:
+    ret = -1;
+done:
+    Py_XDECREF(ret_obj);
+    PYCURL_RELEASE_THREAD();
+    return ret;
+verbose_error:
+    PyErr_Print();
+    goto silent_error;
+}
+#endif

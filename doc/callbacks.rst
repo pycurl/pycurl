@@ -7,8 +7,8 @@ For more fine-grained control, libcurl allows a number of callbacks to be
 associated with each connection. In pycurl, callbacks are defined using the
 ``setopt()`` method for Curl objects with options ``WRITEFUNCTION``,
 ``READFUNCTION``, ``HEADERFUNCTION``, ``PROGRESSFUNCTION``,
-``XFERINFOFUNCTION``, ``IOCTLFUNCTION``, or
-``DEBUGFUNCTION``. These options correspond to the libcurl options with ``CURLOPT_``
+``XFERINFOFUNCTION``, ``IOCTLFUNCTION``, ``DEBUGFUNCTION`` or
+``PREREQFUNCTION``. These options correspond to the libcurl options with ``CURLOPT_``
 prefix removed. A callback in pycurl must be either a regular Python
 function, a class method or an extension type function.
 
@@ -421,6 +421,30 @@ SOCKETFUNCTION
     that uses the timer function and the socket function.
 
 
+PREREQFUNCTION
+---------------
+
+.. function:: PREREQFUNCTION(conn_primary_ip, conn_local_ip, conn_primary_port, conn_local_port) -> int
+
+    Callback called when a connection has been established, but before a
+    request has been made. Corresponds to `CURLOPT_PREREQFUNCTION`_ in libcurl.
+
+    *conn_primary_ip* is the primary IP address of the remote server established with this connection (as a string).
+
+    *conn_local_ip* is the originating IP address for this connection (as a string).
+
+    *conn_primary_port* is the primary port number on the remote server established with this connection.
+
+    *conn_local_port* is the originating port number for this connection.
+
+    The callback should return an ``int``, which must be either ``PREREQFUNC_OK`` (on success) or ``PREREQFUNC_ABORT`` to cause the transfer to fail with result ``ABORTED_BY_CALLBACK``.
+
+    The callback may be unset by calling :ref:`setopt <setopt>` with ``None``
+    as the value or by calling :ref:`unsetopt <unsetopt>`.
+
+    `prereq_cb_test.py test`_ shows how to use ``PREREQFUNCTION``.
+
+
 .. _CURLOPT_HEADERFUNCTION: https://curl.haxx.se/libcurl/c/CURLOPT_HEADERFUNCTION.html
 .. _CURLOPT_WRITEFUNCTION: https://curl.haxx.se/libcurl/c/CURLOPT_WRITEFUNCTION.html
 .. _CURLOPT_READFUNCTION: https://curl.haxx.se/libcurl/c/CURLOPT_READFUNCTION.html
@@ -445,3 +469,5 @@ SOCKETFUNCTION
 .. _socket module: https://docs.python.org/library/socket.html
 .. _CURLMOPT_TIMERFUNCTION: https://curl.se/libcurl/c/CURLMOPT_TIMERFUNCTION.html
 .. _CURLMOPT_SOCKETFUNCTION: https://curl.se/libcurl/c/CURLMOPT_SOCKETFUNCTION.html
+.. _CURLOPT_PREREQFUNCTION: https://curl.se/libcurl/c/CURLOPT_PREREQFUNCTION.html
+.. _prereq_cb_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/prereq_cb_test.py

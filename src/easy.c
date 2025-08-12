@@ -421,6 +421,12 @@ do_curl_duphandle(CurlObject *self, PyObject *Py_UNUSED(ignored))
         dup->seek_cb = my_Py_NewRef(self->seek_cb);
         curl_easy_setopt(dup->handle, CURLOPT_SEEKDATA, dup);
     }
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 80, 0)
+    if (self->prereq_cb != NULL) {
+        dup->prereq_cb = my_Py_NewRef(self->prereq_cb);
+        curl_easy_setopt(dup->handle, CURLOPT_PREREQDATA, dup);
+    }
+#endif
 
     /* Assign and incref python file objects */
     dup->readdata_fp = my_Py_XNewRef(self->readdata_fp);
@@ -513,6 +519,9 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
 #endif
         Py_CLEAR(self->sockopt_cb);
         Py_CLEAR(self->ssh_key_cb);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 80, 0)
+        Py_CLEAR(self->prereq_cb);
+#endif
     }
 
     if (flags & PYCURL_MEMGROUP_FILE) {
@@ -684,6 +693,9 @@ do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
 #endif
     VISIT(self->sockopt_cb);
     VISIT(self->ssh_key_cb);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 80, 0)
+    VISIT(self->prereq_cb);
+#endif
 
     VISIT(self->readdata_fp);
     VISIT(self->writedata_fp);

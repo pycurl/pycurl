@@ -465,6 +465,9 @@ typedef struct CurlObject {
     PyObject *seek_cb;
     PyObject *sockopt_cb;
     PyObject *ssh_key_cb;
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 80, 0)
+    PyObject *prereq_cb;
+#endif
     /* file objects */
     PyObject *readdata_fp;
     PyObject *writedata_fp;
@@ -654,6 +657,11 @@ ioctl_callback(CURL *curlobj, int cmd, void *stream);
 #if defined(HAVE_CURL_OPENSSL)
 PYCURL_INTERNAL CURLcode
 ssl_ctx_callback(CURL *curl, void *ssl_ctx, void *ptr);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 80, 0)
+PYCURL_INTERNAL int
+prereq_callback(void *clientp, char *conn_primary_ip, char *conn_local_ip,
+                int conn_primary_port, int conn_local_port);
 #endif
 
 #if !defined(PYCURL_SINGLE_FILE)
