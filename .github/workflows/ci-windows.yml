@@ -58,7 +58,7 @@ jobs:
           setapikey "${{ secrets.GITHUB_TOKEN }}" \
           -source "https://nuget.pkg.github.com/${GITHUB_REPOSITORY_OWNER}/index.json"
     - name: Install packages
-      run: vcpkg install curl[brotli,core,http2,non-http,schannel,ssh]:${{ matrix.arch }}-windows
+      run: vcpkg install curl[brotli,core,http2,non-http,ssh,ssl]:${{ matrix.arch }}-windows
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
