@@ -34,8 +34,10 @@ class DebugTest(unittest.TestCase):
         self.check(0, util.b('Trying'))
         if util.pycurl_version_less_than(7, 24):
             self.check(0, util.b('connected'))
-        else:
+        elif util.pycurl_version_less_than(8, 16):
             self.check(0, util.b('Connected to %s' % localhost))
+        else:
+            self.check(0, util.b('Established connection to %s' % localhost))
         self.check(0, util.b('port 8380'))
         # request
         self.check(2, util.b('GET /success HTTP/1.1'))
