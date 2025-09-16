@@ -566,6 +566,15 @@ class OptionConstantsTest(unittest.TestCase):
         curl.setopt(curl.HAPROXY_CLIENT_IP, '192.0.2.22')
         curl.close()
 
+    @util.min_libcurl(8, 8, 0)
+    @util.only_ssl_ech
+    def test_ech(self):
+        curl = pycurl.Curl()
+        curl.setopt(curl.ECH, 'true')
+        curl.setopt(curl.ECH, 'hard')
+        curl.setopt(curl.ECH, 'false')
+        curl.close()
+
 class OptionConstantsSettingTest(unittest.TestCase):
     def setUp(self):
         self.curl = pycurl.Curl()

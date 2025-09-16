@@ -177,6 +177,27 @@ def only_ssl_backends(*backends):
         return decorated
     return decorator
 
+def only_ssl_ech(fn):
+    import pycurl
+
+    @functools.wraps(fn)
+    def decorated(*args, **kwargs):
+        # easier to check that pycurl supports https, although
+        # theoretically it is not the same test.
+        # pycurl.version_info()[8] is a tuple of protocols supported by libcurl
+        if 'https' not in pycurl.version_info()[8]:
+            raise unittest.SkipTest('libcurl does not support ssl')
+
+        # CURLOPT_ECH is experimental not yet supported by OpenSSL.
+        supported = ['BoringSSL', 'wolfSSL']
+        ssl_lib = pycurl.version_info()[5]
+        if not any(ssl_lib.startswith(lib) for lib in supported):
+            raise unittest.SkipTest('SSL runtime library is %s' % ssl_lib)
+
+        return fn(*args, **kwargs)
+
+    return decorated
+
 def only_ipv6(fn):
     import pycurl
 
