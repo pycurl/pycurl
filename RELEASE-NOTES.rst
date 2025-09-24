@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+PycURL 7.45.7 - 2025-09-23
+--------------------------
+
+This release fixes several minor issues and adds support for several libcurl
+options.  Additionally, it declares official Python 3.14 support (and provides
+wheels).
+
 PycURL 7.45.6 - 2025-03-06
 --------------------------
 

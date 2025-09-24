@@ -1,3 +1,13 @@
+Version 7.45.7 [requires libcurl-7.19.0 or better] - 2025-09-23
+---------------------------------------------------------------
+
+        * Support unsetting all callback functions (patch by Scott Talbert)
+        * Fix linking fake-curl on AIX (patch by Sumitra Dawn)
+        * Support PREREQFUNCTION callback (patch by Scott Talbert)
+        * Fix debug test with curl 8.16.0 (patch by Carlos Henrique Lima Melara)
+        * Support setting CURLOPT_ECH (patch by Tommi Rantala)
+        * Officially support Python 3.14 (patch by Scott Talbert)
+
 Version 7.45.6 [requires libcurl-7.19.0 or better] - 2025-03-06
 ---------------------------------------------------------------
 
