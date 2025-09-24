@@ -98,7 +98,7 @@ class MultiCallbackTest(unittest.TestCase):
         assert self.timer_result is not None
 
     # (mid-transfer) easy.close() must call SOCKETFUNCTION to remove sockets
-    @pytest.mark.skipif(sys.platform == 'win32', reason='https://github.com/pycurl/pycurl/issues/819')
+    @pytest.mark.skipif(sys.platform in ['win32', 'darwin'], reason='https://github.com/pycurl/pycurl/issues/819')
     def test_easy_close(self):
         self.partial_transfer()
         self.socket_result = None
