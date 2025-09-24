@@ -870,7 +870,7 @@ libcurl, including:
 Requirements
 ------------
 
-- Python 3.5-3.13.
+- Python 3.9-3.14.
 - libcurl 7.19.0 or better.
 
 
@@ -939,15 +939,12 @@ in COPYING-LGPL_ and COPYING-MIT_ files in the source distribution.
         'Operating System :: Microsoft :: Windows',
         'Operating System :: POSIX',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12',
         'Programming Language :: Python :: 3.13',
+        'Programming Language :: Python :: 3.14',
         'Topic :: Internet :: File Transfer Protocol (FTP)',
         'Topic :: Internet :: WWW/HTTP',
     ],
