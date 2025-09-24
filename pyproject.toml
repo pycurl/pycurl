@@ -9,7 +9,7 @@ test-command = "pytest -v -ra {project}/tests"
 
 [tool.cibuildwheel.linux]
 before-all = [
-    "dnf install -y git zip perl-IPC-Cmd",
+    "dnf install -y git zip perl-IPC-Cmd perl-Time-Piece",
     "dnf copr enable -y swt2c/vcpkg-epel8",
     "dnf install -y vcpkg",
     "export VCPKG_ROOT=$HOME/.local/share/vcpkg",
