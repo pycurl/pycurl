@@ -26,13 +26,14 @@ jobs:
       VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'
     strategy:
       matrix:
-        os: ["windows-2022"]
-        arch: ["x64"]
+        os: ["windows-2022", "windows-11-arm"]
+        arch: ["x64", "arm64"]
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
-        include:
-          - os: "windows-11-arm"
-            arch: "arm64"
         exclude:
+          - os: "windows-2022"
+            arch: "arm64"
+          - os: "windows-11-arm"
+            arch: "x64"
           - os: "windows-11-arm"
             python-version: "3.9"
           - os: "windows-11-arm"
