@@ -2,7 +2,7 @@ name: CI-Windows
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, arm64-runner ]
     paths-ignore:
     - '.github/workflows/ci.yml'
     - '.github/workflows/ci-macos.yml'
@@ -21,13 +21,22 @@ concurrency:
 jobs:
   build:
 
-    runs-on: windows-2022
+    runs-on: ${{ matrix.os }}
     env:
       VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'
     strategy:
       matrix:
+        os: ["windows-2022"]
         arch: ["x64"]
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        include:
+          - os: "windows-11-arm"
+            arch: "arm64"
+        exclude:
+          - os: "windows-11-arm"
+            python-version: "3.9"
+          - os: "windows-11-arm"
+            python-version: "3.10"
       fail-fast: false
     permissions:
       packages: write
