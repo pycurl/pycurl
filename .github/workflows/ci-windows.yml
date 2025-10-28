@@ -21,13 +21,18 @@ concurrency:
 jobs:
   build:
 
-    runs-on: windows-2022
+    runs-on: ${{ matrix.os }}
     env:
       VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'
     strategy:
       matrix:
+        os: ["windows-2022"]
         arch: ["x64"]
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        include:
+          - os: "windows-11-arm"
+            arch: "arm64"
+            python-version: "3.14"
       fail-fast: false
     permissions:
       packages: write
@@ -82,5 +87,5 @@ jobs:
     - name: Upload wheel
       uses: actions/upload-artifact@v4
       with:
-        name: wheel-${{ matrix.python-version }}
+        name: wheel-${{ matrix.arch }}-${{ matrix.python-version }}
         path: wheelhouse/*.whl
