@@ -768,6 +768,13 @@ static PyObject *do_curl_setstate(CurlObject *self, PyObject *args)
 }
 
 
+static PyObject *do_curl_enter(CurlObject *self, PyObject *Py_UNUSED(ignored))
+{
+    Py_INCREF(self);
+    return (PyObject *)self;
+}
+
+
 /*************************************************************************
 // type definitions
 **************************************************************************/
@@ -794,6 +801,8 @@ PYCURL_INTERNAL PyMethodDef curlobject_methods[] = {
 #endif
     {"__getstate__", (PyCFunction)do_curl_getstate, METH_NOARGS, NULL},
     {"__setstate__", (PyCFunction)do_curl_setstate, METH_VARARGS, NULL},
+    {"__enter__", (PyCFunction)do_curl_enter, METH_NOARGS, NULL},
+    {"__exit__", (PyCFunction)do_curl_close, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}
 };
 
