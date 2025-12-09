@@ -64,6 +64,9 @@ jobs:
     - name: 'Setup NuGet credentials'
       if: matrix.curl-version == 'vcpkg'
       run: |
+        if ! which mono >/dev/null 2>&1; then
+            brew install mono
+        fi
         nuget="$(vcpkg fetch nuget | tail -n 1)"
         mono "${nuget}" \
           sources add \
