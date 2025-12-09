@@ -35,7 +35,7 @@ jobs:
         include:
           - curl-version: "vcpkg"
             python-version: "3.12"
-            runner: "macOS-13"
+            runner: "macos-15-intel"
             cibw-build: "cp312-macosx_x86_64"
           - curl-version: "vcpkg"
             python-version: "3.13"
