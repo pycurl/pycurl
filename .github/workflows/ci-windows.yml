@@ -28,7 +28,7 @@ jobs:
       matrix:
         os: ["windows-2022"]
         arch: ["x64"]
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         include:
           - os: "windows-11-arm"
             arch: "arm64"

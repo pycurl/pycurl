@@ -28,7 +28,7 @@ jobs:
       fail-fast: false
       matrix:
         curl-version: ["ubuntu"]
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         include:
           - curl-version: "vcpkg"
             python-version: "3.12"
