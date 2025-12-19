@@ -56,6 +56,7 @@ class MultiCallbackTest(unittest.TestCase):
 
     # multi.socket_action must call both SOCKETFUNCTION and TIMERFUNCTION at
     # various points during the transfer (at least at the start and end)
+    @util.skip_in_libcurl_versions((8, 5, 0))
     def test_multi_socket_action(self):
         self.multi.add_handle(self.easy)
         self.handle_added = True
@@ -84,6 +85,7 @@ class MultiCallbackTest(unittest.TestCase):
     # (mid-transfer) easy.pause(PAUSE_ALL) must call SOCKETFUNCTION to remove sockets
     # (mid-transfer) easy.pause(PAUSE_CONT) must call TIMERFUNCTION to resume
     @pytest.mark.skipif(sys.platform == 'win32', reason='https://github.com/pycurl/pycurl/issues/819')
+    @util.skip_in_libcurl_versions((8, 5, 0))
     def test_easy_pause_unpause(self):
         self.partial_transfer()
         self.socket_result = None

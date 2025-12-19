@@ -129,6 +129,23 @@ def removed_in_libcurl(major, minor, patch):
 
     return decorator
 
+def skip_in_libcurl_versions(*versions):
+    import pycurl
+
+    def decorator(fn):
+        @functools.wraps(fn)
+        def decorated(*args, **kwargs):
+            c = pycurl.COMPILE_LIBCURL_VERSION_NUM
+            version = (c >> 16 & 0xFF, c >> 8 & 0xFF, c & 0xFF)
+            if version in versions:
+                raise unittest.SkipTest('libcurl == %d.%d.%d' % version)
+
+            return fn(*args, **kwargs)
+
+        return decorated
+
+    return decorator
+
 def only_ssl(fn):
     import pycurl
 
