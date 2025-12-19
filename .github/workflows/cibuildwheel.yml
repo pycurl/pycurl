@@ -16,7 +16,7 @@ on:
 jobs:
   build-sdist:
     name: Build sdist
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -45,9 +45,9 @@ jobs:
         include:
           - os: macos-15-intel
           - os: macOS-14
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             arch: x86_64
-          - os: ubuntu-22.04-arm
+          - os: ubuntu-24.04-arm
             arch: aarch64
           - os: windows-2022
             arch: x86
@@ -107,7 +107,7 @@ jobs:
 
   deploy:
     name: Deploy wheels to PyPI
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: ${{ github.event.inputs.environment == 'pypi' || github.event.inputs.environment == 'testpypi' }}
     needs: [build-sdist, package-wheel]
     environment: ${{ github.event.inputs.environment }}

@@ -21,7 +21,7 @@ concurrency:
 jobs:
   build:
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     env:
       VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'
     strategy:
@@ -48,6 +48,11 @@ jobs:
         sudo apt-get update
         sudo apt-get install libcurl4-gnutls-dev libgnutls28-dev
       if: matrix.curl-version == 'ubuntu'
+    - name: Install packages
+      run: |
+        sudo apt-get update
+        sudo apt-get install mono-complete
+      if: matrix.curl-version == 'vcpkg'
     - name: 'Setup NuGet credentials'
       shell: 'bash'
       run: |
