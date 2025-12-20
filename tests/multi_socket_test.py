@@ -60,10 +60,7 @@ class MultiSocketTest(unittest.TestCase):
         # get data
         num_handles = len(m.handles)
         while num_handles:
-            while 1:
-                ret, num_handles = m.socket_all()
-                if ret != pycurl.E_CALL_MULTI_PERFORM:
-                    break
+            _, num_handles = m.socket_all()
             # currently no more I/O is pending, could do something in the meantime
             # (display a progress bar, etc.)
             m.select(0.1)

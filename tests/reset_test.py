@@ -44,19 +44,13 @@ class ResetTest(unittest.TestCase):
             eh.setopt(pycurl.URL, 'http://%s:8380/success' % localhost)
             cm.add_handle(eh)
 
-            while 1:
-                ret, active_handles = cm.perform()
-                if ret != pycurl.E_CALL_MULTI_PERFORM:
-                    break
+            _, active_handles = cm.perform()
 
             while active_handles:
                 ret = cm.select(1.0)
                 if ret == -1:
                     continue
-                while 1:
-                    ret, active_handles = cm.perform()
-                    if ret != pycurl.E_CALL_MULTI_PERFORM:
-                        break
+                _, active_handles = cm.perform()
 
             count, good, bad = cm.info_read()
 

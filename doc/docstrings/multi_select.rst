@@ -13,12 +13,8 @@ Example usage::
     c.setopt(pycurl.URL, "https://curl.haxx.se")
     m = pycurl.CurlMulti()
     m.add_handle(c)
-    while 1:
-        ret, num_handles = m.perform()
-        if ret != pycurl.E_CALL_MULTI_PERFORM: break
+    _, num_handles = m.perform()
     while num_handles:
         ret = m.select(1.0)
         if ret == 0:  continue
-        while 1:
-            ret, num_handles = m.perform()
-            if ret != pycurl.E_CALL_MULTI_PERFORM: break
+        _, num_handles = m.perform()

@@ -84,8 +84,7 @@ class MultiSocketSelectTest(unittest.TestCase):
         # get data
         #num_handles = len(m.handles)
 
-        while (pycurl.E_CALL_MULTI_PERFORM==m.socket_all()[0]):
-            pass
+        m.socket_all()
 
         timeout = m.timeout()
         if timeout == -1:
@@ -98,12 +97,9 @@ class MultiSocketSelectTest(unittest.TestCase):
             socketSet = set(rr+wr+er)
             if socketSet:
                 for s in socketSet:
-                    while True:
-                        (ret,running) = m.socket_action(s,0)
-                        if ret!=pycurl.E_CALL_MULTI_PERFORM:
-                            break
+                    _ ,running = m.socket_action(s,0)
             else:
-                (ret,running) = m.socket_action(pycurl.SOCKET_TIMEOUT,0)
+                _, running = m.socket_action(pycurl.SOCKET_TIMEOUT,0)
             if running==0:
                 break
 

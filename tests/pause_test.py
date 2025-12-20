@@ -67,23 +67,17 @@ class PauseTest(unittest.TestCase):
         SELECT_TIMEOUT = 1.0
 
         # Stir the state machine into action
-        while 1:
-            ret, num_handles = m.perform()
-            if ret != pycurl.E_CALL_MULTI_PERFORM:
-                break
+        _, num_handles = m.perform()
 
         # Keep going until all the connections have terminated
         while num_handles:
             # The select method uses fdset internally to determine which file descriptors
             # to check.
             m.select(SELECT_TIMEOUT)
-            while 1:
-                if _time.time() - start > 2:
-                    # test is taking too long, fail
-                    assert False, 'Test is taking too long'
-                ret, num_handles = m.perform()
-                if ret != pycurl.E_CALL_MULTI_PERFORM:
-                    break
+            if _time.time() - start > 2:
+                # test is taking too long, fail
+                assert False, 'Test is taking too long'
+            _, num_handles = m.perform()
 
         # Cleanup
         m.remove_handle(self.curl)
