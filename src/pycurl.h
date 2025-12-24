@@ -497,6 +497,7 @@ typedef struct CurlMultiObject {
     PyObject *s_cb;
 
     PyObject *easy_object_dict;
+    int close_handles; /* boolean: False by default */
 } CurlMultiObject;
 
 typedef struct {
