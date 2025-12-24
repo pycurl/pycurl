@@ -51,7 +51,10 @@ do_multi_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
     CurlMultiObject *self;
     int *ptr;
 
-    if (subtype == p_CurlMulti_Type && !PyArg_ParseTupleAndKeywords(args, kwds, "", empty_keywords)) {
+    static char *kwlist[] = {"close_handles", NULL};
+    int close_handles = 0;
+
+    if (subtype == p_CurlMulti_Type && !PyArg_ParseTupleAndKeywords(args, kwds, "|$p", kwlist, &close_handles)) {
         return NULL;
     }
 
@@ -72,7 +75,7 @@ do_multi_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
         Py_DECREF(self);
         return NULL;
     }
-    
+
     /* Allocate libcurl multi handle */
     self->multi_handle = curl_multi_init();
     if (self->multi_handle == NULL) {
@@ -80,6 +83,8 @@ do_multi_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
         PyErr_SetString(ErrorObject, "initializing curl-multi failed");
         return NULL;
     }
+
+    self->close_handles = close_handles ? 1 : 0;
     return self;
 }
 
@@ -91,7 +96,7 @@ util_multi_close(CurlMultiObject *self)
 #ifdef WITH_THREAD
     self->state = NULL;
 #endif
-    
+
     if (self->multi_handle != NULL) {
         CURLM *multi_handle = self->multi_handle;
         /* Allow threads because callbacks can be invoked */
@@ -137,8 +142,60 @@ do_multi_close(CurlMultiObject *self, PyObject *Py_UNUSED(ignored))
     if (check_multi_state(self, 2, "close") != 0) {
         return NULL;
     }
+
+    if (self->easy_object_dict) {
+        PyObject *key, *value;
+        Py_ssize_t pos = 0;
+
+        PyObject *handles_to_remove = PyList_New(0);
+        if (!handles_to_remove)
+            return NULL;
+
+        while (PyDict_Next(self->easy_object_dict, &pos, &key, &value)) {
+            if (PyList_Append(handles_to_remove, key) < 0) {
+                Py_DECREF(handles_to_remove);
+                return NULL;
+            }
+        }
+
+        Py_ssize_t n = PyList_GET_SIZE(handles_to_remove);
+        for (Py_ssize_t i = 0; i < n; ++i) {
+            PyObject *handle = PyList_GET_ITEM(handles_to_remove, i);
+            PyObject *result = PyObject_CallMethod((PyObject *)self, "remove_handle", "O", handle);
+            if (!result) {
+                Py_DECREF(handles_to_remove);
+                return NULL;
+            }
+            Py_DECREF(result);
+        }
+
+        if (self->close_handles) {
+            for (Py_ssize_t i = 0; i < n; ++i) {
+                PyObject *handle = PyList_GET_ITEM(handles_to_remove, i);
+                PyObject *result = PyObject_CallMethod(handle, "close", NULL);
+                if (!result) {
+                    Py_DECREF(handles_to_remove);
+                    return NULL;
+                }
+                Py_DECREF(result);
+            }
+        }
+
+        Py_DECREF(handles_to_remove);
+    }
+
     util_multi_close(self);
     Py_RETURN_NONE;
+}
+
+
+static PyObject *do_multi_closed(CurlMultiObject *self, PyObject *Py_UNUSED(ignored))
+{
+    if (self->multi_handle == NULL) {
+        Py_RETURN_TRUE;
+    } else {
+        Py_RETURN_FALSE;
+    }
 }
 
 
@@ -668,9 +725,9 @@ do_multi_add_handle(CurlMultiObject *self, PyObject *args)
         PyErr_SetString(ErrorObject, "curl object already on this multi-stack");
         return NULL;
     }
-    
+
     PyDict_SetItem(self->easy_object_dict, (PyObject *) obj, Py_True);
-    
+
     assert(obj->multi_stack == NULL);
     /* Allow threads because callbacks can be invoked */
     PYCURL_BEGIN_ALLOW_THREADS
@@ -682,7 +739,7 @@ do_multi_add_handle(CurlMultiObject *self, PyObject *args)
     }
     obj->multi_stack = self;
     Py_INCREF(self);
-    
+
     Py_RETURN_NONE;
 }
 
@@ -948,6 +1005,30 @@ static PyObject *do_curlmulti_setstate(CurlMultiObject *self, PyObject *args)
 }
 
 
+static PyObject *do_curlmulti_enter(CurlObject *self, PyObject *Py_UNUSED(ignored))
+{
+    Py_INCREF(self);
+    return (PyObject *)self;
+}
+
+
+static PyObject *do_curlmulti_exit(CurlMultiObject *self, PyObject *args)
+{
+    PyObject *exc_type, *exc, *tb;
+
+    if (!PyArg_ParseTuple(args, "OOO:__exit__", &exc_type, &exc, &tb))
+        return NULL;
+
+    PyObject *result = PyObject_CallMethod((PyObject *)self, "close", NULL);
+    if (!result) {
+        return NULL;
+    }
+    Py_DECREF(result);
+
+    Py_RETURN_NONE;
+}
+
+
 /*************************************************************************
 // type definitions
 **************************************************************************/
@@ -957,6 +1038,7 @@ static PyObject *do_curlmulti_setstate(CurlMultiObject *self, PyObject *args)
 PYCURL_INTERNAL PyMethodDef curlmultiobject_methods[] = {
     {"add_handle", (PyCFunction)do_multi_add_handle, METH_VARARGS, multi_add_handle_doc},
     {"close", (PyCFunction)do_multi_close, METH_NOARGS, multi_close_doc},
+    {"closed", (PyCFunction)do_multi_closed, METH_NOARGS, multi_closed_doc},
     {"fdset", (PyCFunction)do_multi_fdset, METH_NOARGS, multi_fdset_doc},
     {"info_read", (PyCFunction)do_multi_info_read, METH_VARARGS, multi_info_read_doc},
     {"perform", (PyCFunction)do_multi_perform, METH_NOARGS, multi_perform_doc},
@@ -969,6 +1051,8 @@ PYCURL_INTERNAL PyMethodDef curlmultiobject_methods[] = {
     {"select", (PyCFunction)do_multi_select, METH_VARARGS, multi_select_doc},
     {"__getstate__", (PyCFunction)do_curlmulti_getstate, METH_NOARGS, NULL},
     {"__setstate__", (PyCFunction)do_curlmulti_setstate, METH_VARARGS, NULL},
+    {"__enter__", (PyCFunction)do_curlmulti_enter, METH_NOARGS, NULL},
+    {"__exit__", (PyCFunction)do_curlmulti_exit, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}
 };
 
