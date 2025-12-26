@@ -96,11 +96,27 @@ def pause_writer(interval):
 
 @app.route('/pause')
 def pause():
-    return pause_writer(0.5)
+    return flask.Response(
+        pause_writer(0.5),
+        mimetype='text/plain'
+    )
 
 @app.route('/long_pause')
 def long_pause():
-    return pause_writer(1)
+    return flask.Response(
+        pause_writer(1),
+        mimetype='text/plain'
+    )
+
+@app.route('/chunks')
+def chunks():
+    num_chunks = int(flask.request.args.get('num_chunks', 5))
+    delay = float(flask.request.args.get('delay', 0.1))
+    def gen():
+        for i in range(num_chunks):
+            yield f'chunk{i}\n'
+            _time.sleep(delay)
+    return flask.Response(gen(), mimetype='text/plain')
 
 @app.route('/utf8_body')
 def utf8_body():
