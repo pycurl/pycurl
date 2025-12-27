@@ -12,4 +12,4 @@ export PYTHONMINOR=$($PYTHON -V 2>&1 |awk '{print $2}' |awk -F. '{print $2}')
 export PYTHONPATH=$(ls -d build/lib.*$PYTHONMAJOR*$PYTHONMINOR):$PYTHONPATH
 
 $PYTHON -c 'import pycurl; print(pycurl.version)'
-$PYTEST -v -ra
+$PYTEST -v -ra "$@"
