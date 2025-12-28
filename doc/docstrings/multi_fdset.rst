@@ -13,14 +13,9 @@ Example usage::
     c.setopt(pycurl.URL, "https://curl.haxx.se")
     m = pycurl.CurlMulti()
     m.add_handle(c)
-    while 1:
-        ret, num_handles = m.perform()
-        if ret != pycurl.E_CALL_MULTI_PERFORM: break
+    _, num_handles = m.perform()
     while num_handles:
         apply(select.select, m.fdset() + (1,))
-        while 1:
-            ret, num_handles = m.perform()
-            if ret != pycurl.E_CALL_MULTI_PERFORM: break
-
+        _, num_handles = m.perform()
 .. _curl_multi_fdset:
     https://curl.haxx.se/libcurl/c/curl_multi_fdset.html

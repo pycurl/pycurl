@@ -85,10 +85,7 @@ while num_processed < num_urls:
         c.filename = filename
         c.url = url
     # Run the internal curl state machine for the multi stack
-    while 1:
-        ret, num_handles = m.perform()
-        if ret != pycurl.E_CALL_MULTI_PERFORM:
-            break
+    _, num_handles = m.perform()
     # Check for curl objects which have terminated, and add them to the freelist
     while 1:
         num_q, ok_list, err_list = m.info_read()

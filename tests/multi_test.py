@@ -44,10 +44,7 @@ class MultiTest(unittest.TestCase):
 
         num_handles = len(handles)
         while num_handles:
-            while 1:
-                ret, num_handles = m.perform()
-                if ret != pycurl.E_CALL_MULTI_PERFORM:
-                    break
+            _, num_handles = m.perform()
             m.select(1.0)
 
         m.remove_handle(c2)
@@ -82,18 +79,12 @@ class MultiTest(unittest.TestCase):
         SELECT_TIMEOUT = 0.1
 
         # Stir the state machine into action
-        while 1:
-            ret, num_handles = m.perform()
-            if ret != pycurl.E_CALL_MULTI_PERFORM:
-                break
+        _, num_handles = m.perform()
 
         # Keep going until all the connections have terminated
         while num_handles:
             select.select(*m.fdset() + (SELECT_TIMEOUT,))
-            while 1:
-                ret, num_handles = m.perform()
-                if ret != pycurl.E_CALL_MULTI_PERFORM:
-                    break
+            _, num_handles = m.perform()
 
         # Cleanup
         m.remove_handle(c3)
@@ -132,10 +123,7 @@ class MultiTest(unittest.TestCase):
         # get data
         num_handles = len(m.handles)
         while num_handles:
-            while 1:
-                ret, num_handles = m.perform()
-                if ret != pycurl.E_CALL_MULTI_PERFORM:
-                    break
+            _, num_handles = m.perform()
             # currently no more I/O is pending, could do something in the meantime
             # (display a progress bar, etc.)
             m.select(0.1)
@@ -189,10 +177,7 @@ class MultiTest(unittest.TestCase):
         # get data
         num_handles = len(m.handles)
         while num_handles:
-            while 1:
-                ret, num_handles = m.perform()
-                if ret != pycurl.E_CALL_MULTI_PERFORM:
-                    break
+            _, num_handles = m.perform()
             # currently no more I/O is pending, could do something in the meantime
             # (display a progress bar, etc.)
             m.select(0.1)
@@ -266,20 +251,14 @@ class MultiTest(unittest.TestCase):
         SELECT_TIMEOUT = 1.0
 
         # Stir the state machine into action
-        while 1:
-            ret, num_handles = m.perform()
-            if ret != pycurl.E_CALL_MULTI_PERFORM:
-                break
+        _, num_handles = m.perform()
 
         # Keep going until all the connections have terminated
         while num_handles:
             # The select method uses fdset internally to determine which file descriptors
             # to check.
             m.select(SELECT_TIMEOUT)
-            while 1:
-                ret, num_handles = m.perform()
-                if ret != pycurl.E_CALL_MULTI_PERFORM:
-                    break
+            _, num_handles = m.perform()
 
         # Cleanup
         m.remove_handle(c3)
@@ -317,10 +296,7 @@ class MultiTest(unittest.TestCase):
         SELECT_TIMEOUT = 1.0
 
         # Stir the state machine into action
-        while 1:
-            ret, num_handles = m.perform()
-            if ret != pycurl.E_CALL_MULTI_PERFORM:
-                break
+        _, num_handles = m.perform()
 
         infos = []
         # Keep going until all the connections have terminated
@@ -328,12 +304,9 @@ class MultiTest(unittest.TestCase):
             # The select method uses fdset internally to determine which file descriptors
             # to check.
             m.select(SELECT_TIMEOUT)
-            while 1:
-                ret, num_handles = m.perform()
-                info = m.info_read()
-                infos.append(info)
-                if ret != pycurl.E_CALL_MULTI_PERFORM:
-                    break
+            _, num_handles = m.perform()
+            info = m.info_read()
+            infos.append(info)
 
         all_handles = []
         for info in infos:
@@ -388,11 +361,9 @@ class MultiTest(unittest.TestCase):
 
         # Complete all requests
         num_handles = -1
-        ret = pycurl.E_CALL_MULTI_PERFORM
         while num_handles:
-            if ret != pycurl.E_CALL_MULTI_PERFORM:
-                m.select(1.0)
-            ret, num_handles = m.perform()
+            _, num_handles = m.perform()
+            m.select(1.0)
 
         # Three messages in the queue, read two
         remaining, success, error = m.info_read(2)
