@@ -652,6 +652,16 @@ do_curl_close(CurlObject *self, PyObject *Py_UNUSED(ignored))
 }
 
 
+static PyObject *do_curl_closed(CurlObject *self, PyObject *Py_UNUSED(ignored))
+{
+    if (self->handle == NULL) {
+        Py_RETURN_TRUE;
+    } else {
+        Py_RETURN_FALSE;
+    }
+}
+
+
 /* --------------- GC support --------------- */
 
 /* Drop references that may have created reference cycles. */
@@ -783,6 +793,7 @@ static PyObject *do_curl_enter(CurlObject *self, PyObject *Py_UNUSED(ignored))
 
 PYCURL_INTERNAL PyMethodDef curlobject_methods[] = {
     {"close", (PyCFunction)do_curl_close, METH_NOARGS, curl_close_doc},
+    {"closed", (PyCFunction)do_curl_closed, METH_NOARGS, curl_closed_doc},
     {"errstr", (PyCFunction)do_curl_errstr, METH_NOARGS, curl_errstr_doc},
     {"errstr_raw", (PyCFunction)do_curl_errstr_raw, METH_NOARGS, curl_errstr_raw_doc},
     {"getinfo", (PyCFunction)do_curl_getinfo, METH_VARARGS, curl_getinfo_doc},

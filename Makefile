@@ -51,6 +51,7 @@ RELEASE_SOURCES = src/allpycurl.c
 DOCSTRINGS_SOURCES = \
 	doc/docstrings/curl.rst \
 	doc/docstrings/curl_close.rst \
+	doc/docstrings/curl_closed.rst \
 	doc/docstrings/curl_errstr.rst \
 	doc/docstrings/curl_errstr_raw.rst \
 	doc/docstrings/curl_getinfo.rst \
@@ -65,6 +66,7 @@ DOCSTRINGS_SOURCES = \
 	doc/docstrings/multi_add_handle.rst \
 	doc/docstrings/multi_assign.rst \
 	doc/docstrings/multi_close.rst \
+	doc/docstrings/multi_closed.rst \
 	doc/docstrings/multi_fdset.rst \
 	doc/docstrings/multi_info_read.rst \
 	doc/docstrings/multi_perform.rst \

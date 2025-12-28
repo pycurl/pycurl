@@ -9,12 +9,17 @@ import unittest
 class ExplicitConstructionCurlObjectTest(unittest.TestCase):
     def test_close(self):
         c = pycurl.Curl()
+        assert not c.closed()
         c.close()
+        assert c.closed()
 
     def test_close_twice(self):
         c = pycurl.Curl()
+        assert not c.closed()
         c.close()
+        assert c.closed()
         c.close()
+        assert c.closed()
 
     # positional arguments are rejected
     def test_positional_arguments(self):
@@ -143,11 +148,11 @@ class CurlObjectTest(unittest.TestCase):
         # change does not affect objects created later
         obj3 = cls()
         self.assertEqual(old_value, getattr(obj3, name))
-        
+
     def test_bogus_attribute_access(self):
         with pytest.raises(AttributeError, match='trying to obtain.*'):
            self.curl.foo
-        
+
     def test_bogus_attribute_delete(self):
         with pytest.raises(AttributeError, match='trying to delete.*'):
             del self.curl.foo
