@@ -335,6 +335,27 @@ static void pycurl_autodetect_ca()
  * http://stackoverflow.com/questions/20741856/run-a-function-when-a-c-extension-module-is-freed-on-python-2
  */
 static void do_curlmod_free(void *unused) {
+    Py_XDECREF(bytesio);
+    bytesio = NULL;
+    Py_XDECREF(stringio);
+    stringio = NULL;
+    Py_XDECREF(ErrorObject);
+    ErrorObject = NULL;
+
+#ifdef HAVE_CURL_7_19_6_OPTS
+    Py_XDECREF(khkey_type);
+    khkey_type = NULL;
+#endif
+    Py_XDECREF(curl_sockaddr_type);
+    curl_sockaddr_type = NULL;
+
+    Py_XDECREF(curlobject_constants);
+    curlobject_constants = NULL;
+    Py_XDECREF(curlmultiobject_constants);
+    curlmultiobject_constants = NULL;
+    Py_XDECREF(curlshareobject_constants);
+    curlshareobject_constants = NULL;
+
     PyMem_Free(g_pycurl_useragent);
     g_pycurl_useragent = NULL;
 }
@@ -1656,7 +1677,9 @@ initpycurl(void)
         goto error;
     }
     Py_DECREF(arglist);
-    PyDict_SetItemString(d, "KhKey", khkey_type);
+    if (PyDict_SetItemString(d, "KhKey", khkey_type) < 0) {
+        goto error;
+    }
 #endif
 
     arglist = Py_BuildValue("ss", "CurlSockAddr", "family socktype protocol addr");
@@ -1668,7 +1691,9 @@ initpycurl(void)
         goto error;
     }
     Py_DECREF(arglist);
-    PyDict_SetItemString(d, "CurlSockAddr", curl_sockaddr_type);
+    if (PyDict_SetItemString(d, "CurlSockAddr", curl_sockaddr_type) < 0) {
+        goto error;
+    }
 
 #if defined(WITH_THREAD) && (PY_MAJOR_VERSION < 3 || PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION < 9)
     /* Finally initialize global interpreter lock */
@@ -1678,6 +1703,10 @@ initpycurl(void)
 #ifdef PYCURL_AUTODETECT_CA
     pycurl_autodetect_ca();
 #endif
+
+    Py_DECREF(named_tuple);
+    Py_DECREF(collections_module);
+    Py_DECREF(xio_module);
 
 #if PY_MAJOR_VERSION >= 3
     return m;
@@ -1698,8 +1727,8 @@ error:
     Py_XDECREF(arglist);
 #ifdef HAVE_CURL_7_19_6_OPTS
     Py_XDECREF(khkey_type);
+    #endif
     Py_XDECREF(curl_sockaddr_type);
-#endif
     PyMem_Free(g_pycurl_useragent);
     if (!PyErr_Occurred())
         PyErr_SetString(PyExc_ImportError, "curl module init failed");
