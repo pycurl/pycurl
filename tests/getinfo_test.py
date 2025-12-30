@@ -74,7 +74,7 @@ class GetinfoTest(unittest.TestCase):
     def test_getinfo_cookie_invalid_utf8_python2(self):
         self.curl.setopt(self.curl.COOKIELIST, '')
         self.make_request('/set_cookie_invalid_utf8', 'cookie set')
-        
+
         self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
         expected = "%s" % localhost + "\tFALSE\t/\tFALSE\t0\t\xb3\xd2\xda\xcd\xd7\t%96%A6g%9Ay%B0%A5g%A7tm%7C%95%9A"
         self.assertEqual([expected], self.curl.getinfo(pycurl.INFO_COOKIELIST))
@@ -83,19 +83,19 @@ class GetinfoTest(unittest.TestCase):
     def test_getinfo_cookie_invalid_utf8_python3(self):
         self.curl.setopt(self.curl.COOKIELIST, '')
         self.make_request('/set_cookie_invalid_utf8', 'cookie set')
-        
+
         self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
-        
+
         info = self.curl.getinfo(pycurl.INFO_COOKIELIST)
         domain, incl_subdomains, path, secure, expires, name, value = info[0].split("\t")
         self.assertEqual('\xb3\xd2\xda\xcd\xd7', name)
 
     def test_getinfo_raw_cookie_invalid_utf8(self):
         raise unittest.SkipTest('bottle converts to utf-8? try without it')
-        
+
         self.curl.setopt(self.curl.COOKIELIST, '')
         self.make_request('/set_cookie_invalid_utf8', 'cookie set')
-        
+
         self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
         expected = util.b("%s" % localhost + "\tFALSE\t/\tFALSE\t0\t\xb3\xd2\xda\xcd\xd7\t%96%A6g%9Ay%B0%A5g%A7tm%7C%95%9A")
         self.assertEqual([expected], self.curl.getinfo_raw(pycurl.INFO_COOKIELIST))
@@ -103,7 +103,7 @@ class GetinfoTest(unittest.TestCase):
     @util.only_python2
     def test_getinfo_content_type_invalid_utf8_python2(self):
         self.make_request('/content_type_invalid_utf8', 'content type set')
-        
+
         self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
         expected = '\xb3\xd2\xda\xcd\xd7'
         self.assertEqual(expected, self.curl.getinfo(pycurl.CONTENT_TYPE))
@@ -111,17 +111,17 @@ class GetinfoTest(unittest.TestCase):
     @util.only_python3
     def test_getinfo_content_type_invalid_utf8_python3(self):
         self.make_request('/content_type_invalid_utf8', 'content type set')
-        
+
         self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
-        
+
         value = self.curl.getinfo(pycurl.CONTENT_TYPE)
         self.assertEqual('\xb3\xd2\xda\xcd\xd7', value)
 
     def test_getinfo_raw_content_type_invalid_utf8(self):
         raise unittest.SkipTest('bottle converts to utf-8? try without it')
-        
+
         self.make_request('/content_type_invalid_utf8', 'content type set')
-        
+
         self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
         expected = util.b('\xb3\xd2\xda\xcd\xd7')
         self.assertEqual(expected, self.curl.getinfo_raw(pycurl.CONTENT_TYPE))
@@ -175,3 +175,16 @@ class GetinfoTest(unittest.TestCase):
     def test_getinfo_earlydata_sent_t(self):
         self.make_request()
         assert type(self.curl.getinfo(pycurl.EARLYDATA_SENT_T)) is int
+
+    @util.min_libcurl(7, 45, 0)
+    def test_active_socket(self):
+        self.curl.setopt(pycurl.FORBID_REUSE, False)
+        self.curl.setopt(pycurl.CONNECT_ONLY, True)
+        socket = self.curl.getinfo(pycurl.ACTIVESOCKET)
+        assert socket == -1
+        assert socket == self.curl.getinfo(pycurl.LASTSOCKET)
+        self.curl.setopt(pycurl.URL, f"http://{localhost}:8380")
+        self.curl.perform()
+        socket = self.curl.getinfo(pycurl.ACTIVESOCKET)
+        assert socket != -1
+        assert socket == self.curl.getinfo(pycurl.LASTSOCKET)

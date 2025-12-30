@@ -142,7 +142,9 @@ do_curl_getinfo_raw(CurlObject *self, PyObject *args)
     case CURLINFO_PROXYAUTH_AVAIL:
     case CURLINFO_OS_ERRNO:
     case CURLINFO_NUM_CONNECTS:
+#if LIBCURL_VERSION_NUM < MAKE_LIBCURL_VERSION(7, 45, 0)
     case CURLINFO_LASTSOCKET:
+#endif
 #ifdef HAVE_CURLINFO_LOCAL_PORT
     case CURLINFO_LOCAL_PORT:
 #endif
@@ -293,6 +295,28 @@ do_curl_getinfo_raw(CurlObject *self, PyObject *args)
             return PyLong_FromLongLong(ot_res);
         }
 #endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 45, 0)
+    /* CURLINFO_ACTIVESOCKET was added as a replacement for CURLINFO_LASTSOCKET
+     *  since that one is not working on all platforms.
+     */
+    case CURLINFO_LASTSOCKET:
+    case CURLINFO_ACTIVESOCKET:
+        {
+            /* Return PyLong as result */
+            curl_socket_t sockfd;
+
+            res = curl_easy_getinfo(self->handle, CURLINFO_ACTIVESOCKET, &sockfd);
+            if (res != CURLE_OK) {
+                CURLERROR_RETVAL();
+            }
+
+            /* Note that CURL_SOCKET_BAD returned by CURLINFO_ACTIVESOCKET equals
+             * -1, which is the value returned by CURLINFO_LASTSOCKET to indicate
+             * that the socket is no longer valid.
+             */
+            return PyLong_FromLongLong(sockfd);
+        }
+#endif
 
     }
 
@@ -309,26 +333,26 @@ decode_string_list(PyObject *list)
     PyObject *decoded_list = NULL;
     Py_ssize_t size = PyList_Size(list);
     int i;
-    
+
     decoded_list = PyList_New(size);
     if (decoded_list == NULL) {
         return NULL;
     }
-    
+
     for (i = 0; i < size; ++i) {
         PyObject *decoded_item = PyUnicode_FromEncodedObject(
             PyList_GET_ITEM(list, i),
             NULL,
             NULL);
-        
+
         if (decoded_item == NULL) {
             goto err;
         }
 	PyList_SetItem(decoded_list, i, decoded_item);
     }
-    
+
     return decoded_list;
-    
+
 err:
     Py_DECREF(decoded_list);
     return NULL;
@@ -343,7 +367,7 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "i:getinfo", &option)) {
         return NULL;
     }
-    
+
 #ifdef HAVE_CURLOPT_CERTINFO
     if (option == CURLINFO_CERTINFO) {
         /* Return a list of lists of 2-tuples */
@@ -356,12 +380,12 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
         }
     }
 #endif
-    
+
     rv = do_curl_getinfo_raw(self, args);
     if (rv == NULL) {
         return rv;
     }
-    
+
     switch (option) {
     case CURLINFO_CONTENT_TYPE:
     case CURLINFO_EFFECTIVE_URL:
@@ -379,7 +403,7 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
 #endif
         if (rv != Py_None) {
             PyObject *decoded;
-        
+
             // Decode bytes into a Unicode string using default encoding
             decoded = PyUnicode_FromEncodedObject(rv, NULL, NULL);
             // success and failure paths both need to free bytes object
@@ -395,7 +419,7 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
             Py_DECREF(rv);
             return decoded;
         }
-        
+
     default:
         return rv;
     }
