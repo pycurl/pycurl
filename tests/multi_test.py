@@ -375,14 +375,50 @@ class MultiTest(unittest.TestCase):
         assert remaining == 0
         assert len(success) + len(error) == 1
 
+    def test_multi_constructor(self):
+        pycurl.CurlMulti()
+        pycurl.CurlMulti(close_handles=True)
+
     def test_multi_close(self):
         m = pycurl.CurlMulti()
+        assert not m.closed()
         m.close()
+        assert m.closed()
 
     def test_multi_close_twice(self):
         m = pycurl.CurlMulti()
+        assert not m.closed()
         m.close()
+        assert m.closed()
         m.close()
+        assert m.closed()
+
+        m = pycurl.CurlMulti(close_handles=True)
+        assert not m.closed()
+        m.close()
+        assert m.closed()
+        m.close()
+        assert m.closed()
+
+    def test_close_handles_false(self):
+        easy1 = pycurl.Curl()
+        easy2 = pycurl.Curl()
+        m = pycurl.CurlMulti()
+        m.add_handle(easy1)
+        m.add_handle(easy2)
+        m.close()
+        assert not easy1.closed()
+        assert not easy2.closed()
+
+    def test_close_handles_true(self):
+        easy1 = pycurl.Curl()
+        easy2 = pycurl.Curl()
+        m = pycurl.CurlMulti(close_handles=True)
+        m.add_handle(easy1)
+        m.add_handle(easy2)
+        m.close()
+        assert easy1.closed()
+        assert easy2.closed()
 
     # positional arguments are rejected
     def test_positional_arguments(self):
@@ -393,3 +429,44 @@ class MultiTest(unittest.TestCase):
     def test_keyword_arguments(self):
         with pytest.raises(TypeError):
             pycurl.CurlMulti(a=1)
+
+    def test_context_manager_close_no_handles_false(self):
+        with pycurl.CurlMulti() as _:
+            pass
+
+    def test_context_manager_close_no_handles_true(self):
+        with pycurl.CurlMulti(close_handles=True) as _:
+            pass
+
+    def test_context_manager_close_handles_false(self):
+        easy1 = pycurl.Curl()
+        easy2 = pycurl.Curl()
+
+        with pycurl.CurlMulti() as m:
+            m.add_handle(easy1)
+            m.add_handle(easy2)
+
+        assert not easy1.closed()
+        assert not easy2.closed()
+
+        easy1.setopt(pycurl.URL, "https://example.com/")
+        easy2.setopt(pycurl.URL, "https://example.com/")
+
+        easy1.close()
+        easy2.close()
+
+    def test_context_manager_close_handles_true(self):
+        easy1 = pycurl.Curl()
+        easy2 = pycurl.Curl()
+
+        with pycurl.CurlMulti(close_handles=True) as m:
+            m.add_handle(easy1)
+            m.add_handle(easy2)
+
+        assert easy1.closed()
+        assert easy2.closed()
+
+        with pytest.raises(Exception):
+            easy1.setopt(pycurl.URL, "https://example.com/")
+        with pytest.raises(Exception):
+            easy2.setopt(pycurl.URL, "https://example.com/")

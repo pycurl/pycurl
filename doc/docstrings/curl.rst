@@ -7,3 +7,11 @@ CURLOPT_USERAGENT and setup CURLOPT_ERRORBUFFER to point to a
 private error buffer.
 
 Implicitly calls :py:func:`pycurl.global_init` if the latter has not yet been called.
+
+The ``Curl`` object can be used as a context manager. Exiting the
+context calls ``close()``.
+
+Example::
+
+    with pycurl.Curl() as c:
+        # perform operations
