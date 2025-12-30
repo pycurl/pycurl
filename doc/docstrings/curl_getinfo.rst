@@ -45,6 +45,8 @@ The type of return value depends on the option, as follows:
   strings. String encoding caveats apply; use :ref:`getinfo_raw <getinfo_raw>`
   to retrieve
   certificate data as byte strings.
+- For libcurl versions >= 7.45.0, ``CURLINFO_LASTSOCKET`` is aliased to
+  ``CURLINFO_ACTIVESOCKET`` to avoid unreliable results on some platforms.
 
 On Python 2, ``getinfo`` and ``getinfo_raw`` behave identically.
 

@@ -516,3 +516,19 @@
    Memcheck:Addr4
    fun:PyUnicode_FSConverter
 }
+
+# Rules taken from: https://github.com/GNOME/glib/blob/main/tools/glib.supp
+
+# One-time getaddrinfo() configuration loading
+{
+   g-threaded-resolver-getaddrinfo-config
+   Memcheck:Leak
+   match-leak-kinds:reachable,definite
+   fun:malloc
+   ...
+   fun:__resolv_conf_allocate
+   ...
+   fun:getaddrinfo
+   ...
+   fun:curl_version
+}

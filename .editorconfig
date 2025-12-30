@@ -26,3 +26,6 @@ indent_style = tab
 
 [*.{yml,yaml}]
 indent_size = 2
+
+[*.supp]
+indent_size = 3
