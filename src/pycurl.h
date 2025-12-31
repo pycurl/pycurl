@@ -427,6 +427,7 @@ typedef struct CurlObject {
 #ifdef WITH_THREAD
     PyThreadState *state;
 #endif
+    PyObject *multi_weakref;
     struct CurlMultiObject *multi_stack;
     struct CurlShareObject *share;
     struct CurlHttppostObject *httppost;

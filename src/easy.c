@@ -483,22 +483,9 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
     }
 
     if (flags & PYCURL_MEMGROUP_MULTI) {
-        /* Decrement refcount for multi_stack. */
-        if (self->multi_stack != NULL) {
-            CurlMultiObject *multi_stack = self->multi_stack;
-            if (multi_stack->multi_handle != NULL && handle != NULL) {
-                /* TODO this is where we could remove the easy object
-                from the multi object's easy_object_dict, but this
-                requires us to have a reference to the multi object
-                which right now we don't. */
-                /* Allow threads because callbacks can be invoked */
-                PYCURL_BEGIN_ALLOW_THREADS_EASY
-                (void) curl_multi_remove_handle(multi_stack->multi_handle, handle);
-                PYCURL_END_ALLOW_THREADS_EASY
-            }
-            self->multi_stack = NULL;
-            Py_DECREF(multi_stack);
-        }
+        /* multi_stack is borrowed; multi_weakref is owned */
+        self->multi_stack = NULL;
+        Py_CLEAR(self->multi_weakref);
     }
 
     if (flags & PYCURL_MEMGROUP_CALLBACK) {
@@ -583,6 +570,29 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
 
 
 static void
+util_easy_detach_from_multi(CurlObject *self, CURL *easy_handle)
+{
+    CurlMultiObject *multi;
+
+    assert(self != NULL);
+
+    multi = self->multi_stack;
+    if (multi == NULL || multi->multi_handle == NULL || easy_handle == NULL) {
+        return;
+    }
+
+    /* Allow threads because callbacks can be invoked */
+    PYCURL_BEGIN_ALLOW_THREADS_EASY
+    (void) curl_multi_remove_handle(multi->multi_handle, easy_handle);
+    PYCURL_END_ALLOW_THREADS_EASY
+
+    if (multi->easy_object_dict != NULL && PyDict_DelItem(multi->easy_object_dict, (PyObject *)self) < 0) {
+        PyErr_Clear();
+    }
+}
+
+
+static void
 util_curl_close(CurlObject *self)
 {
     CURL *handle;
@@ -600,6 +610,7 @@ util_curl_close(CurlObject *self)
         assert(self->state == NULL);
 #endif
         assert(self->multi_stack == NULL);
+        assert(self->multi_weakref == NULL);
         assert(self->share == NULL);
         return;             /* already closed */
     }
@@ -608,6 +619,9 @@ util_curl_close(CurlObject *self)
 #endif
 
     /* Decref multi stuff which uses this handle */
+    if (self->multi_stack != NULL) {
+        util_easy_detach_from_multi(self, handle);
+    }
     util_curl_xdecref(self, PYCURL_MEMGROUP_MULTI, handle);
     /* Decref share which uses this handle */
     util_curl_xdecref(self, PYCURL_MEMGROUP_SHARE, handle);
@@ -620,10 +634,6 @@ util_curl_close(CurlObject *self)
 
     /* Decref easy related objects */
     util_curl_xdecref(self, PYCURL_MEMGROUP_EASY, handle);
-
-    if (self->weakreflist != NULL) {
-        PyObject_ClearWeakRefs((PyObject *) self);
-    }
 }
 
 
@@ -635,6 +645,10 @@ do_curl_dealloc(CurlObject *self)
 
     Py_CLEAR(self->dict);
     util_curl_close(self);
+
+    if (self->weakreflist != NULL) {
+        PyObject_ClearWeakRefs((PyObject *) self);
+    }
 
     Curl_Type.tp_free(self);
     CPy_TRASHCAN_END(self);
@@ -684,7 +698,7 @@ do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
 #define VISIT(v)    if ((v) != NULL && ((err = visit(v, arg)) != 0)) return err
 
     VISIT(self->dict);
-    VISIT((PyObject *) self->multi_stack);
+    VISIT(self->multi_weakref);
     VISIT((PyObject *) self->share);
 
     VISIT(self->w_cb);
@@ -785,6 +799,45 @@ static PyObject *do_curl_enter(CurlObject *self, PyObject *Py_UNUSED(ignored))
 }
 
 
+static PyObject *
+do_curl_multi(CurlObject *self, PyObject *Py_UNUSED(ignored))
+{
+    PyObject *obj = NULL;;
+
+    assert_curl_state(self);
+
+    if (self->multi_weakref == NULL) {
+        Py_RETURN_NONE;
+    }
+
+#if PY_VERSION_HEX >= 0x030D0000  /* Python 3.13+ */
+    {
+        int rc = PyWeakref_GetRef(self->multi_weakref, &obj);
+        if (rc < 0) {
+            return NULL;
+        }
+        if (rc == 0 || obj == NULL) {
+            Py_RETURN_NONE;
+        }
+    }
+#else
+    obj = PyWeakref_GetObject(self->multi_weakref);
+    if (obj == Py_None) {
+        Py_RETURN_NONE;
+    }
+    Py_INCREF(obj);
+#endif
+
+    if (!PyObject_IsInstance(obj, (PyObject *)p_CurlMulti_Type)) {
+        Py_DECREF(obj);
+        PyErr_SetString(PyExc_TypeError, "multi object is not a CurlMulti");
+        return NULL;
+    }
+
+    return obj;
+}
+
+
 /*************************************************************************
 // type definitions
 **************************************************************************/
@@ -807,6 +860,7 @@ PYCURL_INTERNAL PyMethodDef curlobject_methods[] = {
     {"unsetopt", (PyCFunction)do_curl_unsetopt, METH_VARARGS, curl_unsetopt_doc},
     {"reset", (PyCFunction)do_curl_reset, METH_NOARGS, curl_reset_doc},
     {"duphandle", (PyCFunction)do_curl_duphandle, METH_NOARGS, curl_duphandle_doc},
+    {"multi", (PyCFunction)do_curl_multi, METH_NOARGS, curl_multi_doc},
 #if defined(HAVE_CURL_OPENSSL)
     {"set_ca_certs", (PyCFunction)do_curl_set_ca_certs, METH_VARARGS, curl_set_ca_certs_doc},
 #endif
