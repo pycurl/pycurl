@@ -38,6 +38,40 @@ check_multi_state(const CurlMultiObject *self, int flags, const char *name)
 }
 
 
+static int
+easy_set_multi_ref(CurlObject *easy, CurlMultiObject *multi)
+{
+    PyObject *wr;
+
+    assert(easy != NULL);
+    assert(multi != NULL);
+
+    wr = PyWeakref_NewRef((PyObject *) multi, NULL);
+    if (wr == NULL) {
+        return -1;
+    }
+
+    Py_CLEAR(easy->multi_weakref);
+    easy->multi_weakref = wr;
+
+    easy->multi_stack = multi;
+    return 0;
+}
+
+
+static void
+easy_clear_multi_ref(CurlObject *easy, CurlMultiObject *multi)
+{
+    assert(easy != NULL);
+
+    if (easy->multi_stack == multi) {
+        easy->multi_stack = NULL;
+    }
+
+    Py_CLEAR(easy->multi_weakref);
+}
+
+
 /*************************************************************************
 // CurlMultiObject
 **************************************************************************/
@@ -111,10 +145,52 @@ util_multi_close(CurlMultiObject *self)
 static void
 util_multi_xdecref(CurlMultiObject *self)
 {
-    Py_CLEAR(self->easy_object_dict);
     Py_CLEAR(self->dict);
     Py_CLEAR(self->t_cb);
     Py_CLEAR(self->s_cb);
+}
+
+
+static int
+util_multi_detach_easies(CurlMultiObject *self, int close_handles, int swallow_exceptions)
+{
+    if (!self->easy_object_dict) {
+        return 0;
+    }
+
+    PyObject *key, *value;
+    Py_ssize_t pos = 0;
+
+    while (PyDict_Next(self->easy_object_dict, &pos, &key, &value)) {
+        CurlObject *easy = (CurlObject *)key;
+
+        if (easy->multi_stack == NULL || easy->multi_stack != self) {
+            continue;
+        }
+
+        if (self->multi_handle && easy->handle) {
+            PYCURL_BEGIN_ALLOW_THREADS
+            (void)curl_multi_remove_handle(self->multi_handle, easy->handle);
+            PYCURL_END_ALLOW_THREADS
+        }
+
+        easy_clear_multi_ref(easy, self);
+
+        if (close_handles) {
+            PyObject *result = PyObject_CallMethod((PyObject *)easy, "close", NULL);
+            if (result) {
+                Py_DECREF(result);
+            } else if (swallow_exceptions) {
+                PyErr_Clear();
+            } else {
+                return -1;
+            }
+        }
+    }
+
+    Py_CLEAR(self->easy_object_dict);
+
+    return 0;
 }
 
 
@@ -123,6 +199,8 @@ do_multi_dealloc(CurlMultiObject *self)
 {
     PyObject_GC_UnTrack(self);
     CPy_TRASHCAN_BEGIN(self, do_multi_dealloc);
+
+    util_multi_detach_easies(self, 0, 1);
 
     util_multi_xdecref(self);
     util_multi_close(self);
@@ -143,45 +221,8 @@ do_multi_close(CurlMultiObject *self, PyObject *Py_UNUSED(ignored))
         return NULL;
     }
 
-    if (self->easy_object_dict) {
-        PyObject *key, *value;
-        Py_ssize_t pos = 0;
-
-        PyObject *handles_to_remove = PyList_New(0);
-        if (!handles_to_remove)
-            return NULL;
-
-        while (PyDict_Next(self->easy_object_dict, &pos, &key, &value)) {
-            if (PyList_Append(handles_to_remove, key) < 0) {
-                Py_DECREF(handles_to_remove);
-                return NULL;
-            }
-        }
-
-        Py_ssize_t n = PyList_GET_SIZE(handles_to_remove);
-        for (Py_ssize_t i = 0; i < n; ++i) {
-            PyObject *handle = PyList_GET_ITEM(handles_to_remove, i);
-            PyObject *result = PyObject_CallMethod((PyObject *)self, "remove_handle", "O", handle);
-            if (!result) {
-                Py_DECREF(handles_to_remove);
-                return NULL;
-            }
-            Py_DECREF(result);
-        }
-
-        if (self->close_handles) {
-            for (Py_ssize_t i = 0; i < n; ++i) {
-                PyObject *handle = PyList_GET_ITEM(handles_to_remove, i);
-                PyObject *result = PyObject_CallMethod(handle, "close", NULL);
-                if (!result) {
-                    Py_DECREF(handles_to_remove);
-                    return NULL;
-                }
-                Py_DECREF(result);
-            }
-        }
-
-        Py_DECREF(handles_to_remove);
+    if (util_multi_detach_easies(self, self->close_handles, 0) < 0) {
+        return NULL;
     }
 
     util_multi_close(self);
@@ -737,8 +778,15 @@ do_multi_add_handle(CurlMultiObject *self, PyObject *args)
         PyDict_DelItem(self->easy_object_dict, (PyObject *) obj);
         CURLERROR_MSG("curl_multi_add_handle() failed due to internal errors");
     }
-    obj->multi_stack = self;
-    Py_INCREF(self);
+
+    if (easy_set_multi_ref(obj, self) < 0) {
+        /* undo dict + libcurl add */
+        PYCURL_BEGIN_ALLOW_THREADS
+        (void) curl_multi_remove_handle(self->multi_handle, obj->handle);
+        PYCURL_END_ALLOW_THREADS
+        (void) PyDict_DelItem(self->easy_object_dict, (PyObject *) obj);
+        return NULL;
+    }
 
     Py_RETURN_NONE;
 }
@@ -758,8 +806,8 @@ do_multi_remove_handle(CurlMultiObject *self, PyObject *args)
     }
     if (obj->handle == NULL) {
         /* CurlObject handle already closed -- ignore */
-        if (PyDict_GetItem(self->easy_object_dict, (PyObject *) obj)) {
-            PyDict_DelItem(self->easy_object_dict, (PyObject *) obj);
+        if (PyDict_DelItem(self->easy_object_dict, (PyObject *)obj) < 0) {
+            PyErr_Clear();
         }
         goto done;
     }
@@ -781,8 +829,7 @@ do_multi_remove_handle(CurlMultiObject *self, PyObject *args)
         CURLERROR_MSG("curl_multi_remove_handle() failed due to internal errors");
     }
     assert(obj->multi_stack == self);
-    obj->multi_stack = NULL;
-    Py_DECREF(self);
+    easy_clear_multi_ref(obj, self);
 done:
     Py_RETURN_NONE;
 }
@@ -1029,6 +1076,29 @@ static PyObject *do_curlmulti_exit(CurlMultiObject *self, PyObject *args)
 }
 
 
+static int
+do_multi_sq_contains(PyObject *o, PyObject *obj)
+{
+    CurlMultiObject *self = (CurlMultiObject *)o;
+    int rc;
+
+    assert_multi_state(self);
+
+    if (!PyObject_TypeCheck(obj, p_Curl_Type)) {
+        PyErr_SetString(PyExc_TypeError,
+                        "__contains__ expects a Curl object");
+        return -1;
+    }
+
+    if (self->easy_object_dict == NULL) {
+        return 0;
+    }
+
+    rc = PyDict_Contains(self->easy_object_dict, obj);
+    return rc;
+}
+
+
 /*************************************************************************
 // type definitions
 **************************************************************************/
@@ -1054,6 +1124,23 @@ PYCURL_INTERNAL PyMethodDef curlmultiobject_methods[] = {
     {"__enter__", (PyCFunction)do_curlmulti_enter, METH_NOARGS, NULL},
     {"__exit__", (PyCFunction)do_curlmulti_exit, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}
+};
+
+
+/* --------------- Sequence methods --------------- */
+
+
+static PySequenceMethods curlmulti_as_sequence = {
+    0,                                  /* sq_length */
+    0,                                  /* sq_concat */
+    0,                                  /* sq_repeat */
+    0,                                  /* sq_item */
+    0,                                  /* was_sq_slice */
+    0,                                  /* sq_ass_item */
+    0,                                  /* was_sq_ass_slice */
+    (objobjproc)do_multi_sq_contains,   /* sq_contains */
+    0,                                  /* sq_inplace_concat */
+    0,                                  /* sq_inplace_repeat */
 };
 
 
@@ -1125,7 +1212,7 @@ PYCURL_INTERNAL PyTypeObject CurlMulti_Type = {
     0,                          /* tp_reserved */
     0,                          /* tp_repr */
     0,                          /* tp_as_number */
-    0,                          /* tp_as_sequence */
+    &curlmulti_as_sequence,     /* tp_as_sequence */
     0,                          /* tp_as_mapping */
     0,                          /* tp_hash  */
     0,                          /* tp_call */

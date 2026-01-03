@@ -191,6 +191,8 @@ class MultiCallbackTest(unittest.TestCase):
     def test_easy_close(self):
         self.partial_transfer()
         self.socket_result = None
+        assert self.easy.multi() == self.multi
         self.easy.close()
+        assert self.easy.multi() is None
         self._run_until(lambda: self.socket_result is not None, timeout=10.0)
         assert self.socket_result is not None

@@ -56,6 +56,7 @@ DOCSTRINGS_SOURCES = \
 	doc/docstrings/curl_errstr_raw.rst \
 	doc/docstrings/curl_getinfo.rst \
 	doc/docstrings/curl_getinfo_raw.rst \
+	doc/docstrings/curl_multi.rst \
 	doc/docstrings/curl_pause.rst \
 	doc/docstrings/curl_perform.rst \
 	doc/docstrings/curl_reset.rst \
@@ -67,6 +68,7 @@ DOCSTRINGS_SOURCES = \
 	doc/docstrings/multi_assign.rst \
 	doc/docstrings/multi_close.rst \
 	doc/docstrings/multi_closed.rst \
+	doc/docstrings/multi_contains.rst \
 	doc/docstrings/multi_fdset.rst \
 	doc/docstrings/multi_info_read.rst \
 	doc/docstrings/multi_perform.rst \
