@@ -61,6 +61,7 @@ DOCSTRINGS_SOURCES = \
 	doc/docstrings/curl_perform.rst \
 	doc/docstrings/curl_reset.rst \
 	doc/docstrings/curl_setopt.rst \
+	doc/docstrings/curl_share.rst \
 	doc/docstrings/curl_unsetopt.rst \
 	doc/docstrings/curl_set_ca_certs.rst \
 	doc/docstrings/multi.rst \
@@ -84,6 +85,7 @@ DOCSTRINGS_SOURCES = \
 	doc/docstrings/pycurl_version_info.rst \
 	doc/docstrings/share.rst \
 	doc/docstrings/share_close.rst \
+	doc/docstrings/share_closed.rst \
 	doc/docstrings/share_setopt.rst
 
 all: build

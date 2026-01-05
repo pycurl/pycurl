@@ -513,7 +513,11 @@ typedef struct CurlShareObject {
     CURLSH *share_handle;
 #ifdef WITH_THREAD
     ShareLock *lock;                /* lock object to implement CURLSHOPT_LOCKFUNC */
+    PyThread_type_lock easy_weakrefs_lock;  /* protects easy_weakrefs map */
 #endif
+    /* Set of weakref.ref(CurlObject) */
+    PyObject *easy_weakrefs;
+    int detach_on_close; /* boolean: True by default */
 } CurlShareObject;
 
 #ifdef WITH_THREAD
@@ -665,6 +669,9 @@ PYCURL_INTERNAL int
 prereq_callback(void *clientp, char *conn_primary_ip, char *conn_local_ip,
                 int conn_primary_port, int conn_local_port);
 #endif
+
+PYCURL_INTERNAL int share_register_easy(struct CurlShareObject *share, struct CurlObject *easy);
+PYCURL_INTERNAL void share_unregister_easy(struct CurlShareObject *share, struct CurlObject *easy);
 
 #if !defined(PYCURL_SINGLE_FILE)
 /* Type objects */

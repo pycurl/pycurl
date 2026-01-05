@@ -21,6 +21,13 @@ For Python programs using PycURL, this means:
   Python code *outside of a libcurl callback for the PycURL object in question*
   is unsafe.
 
+* Closing a ``CurlShare`` object with ``detach_on_close=True`` (the
+  default) is **not thread-safe** with respect to the associated
+  ``Curl`` objects. During ``CurlShare.close()``, PycURL automatically
+  detaches all associated ``Curl`` objects by clearing their ``SHARE``
+  option. The caller must ensure that no other thread is using the
+  associated ``Curl`` objects while ``CurlShare.close()`` is executing.
+
 PycURL handles the necessary SSL locks for OpenSSL/LibreSSL/BoringSSL,
 GnuTLS, NSS, mbedTLS and wolfSSL.
 
