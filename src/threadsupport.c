@@ -5,6 +5,29 @@
 PYCURL_INTERNAL PyThreadState *
 pycurl_get_thread_state(const CurlObject *self)
 {
+    PyThreadState **slot = pycurl_get_thread_state_slot((CurlObject *)self);
+    if (slot == NULL) {
+        return NULL;
+    } else {
+        return *slot;
+    }
+}
+
+
+PYCURL_INTERNAL PyThreadState *
+pycurl_get_thread_state_multi(const CurlMultiObject *self)
+{
+    PyThreadState **slot = pycurl_get_thread_state_slot_multi((CurlMultiObject *)self);
+    if (slot == NULL) {
+        return NULL;
+    } else {
+        return *slot;
+    }
+}
+
+PYCURL_INTERNAL PyThreadState **
+pycurl_get_thread_state_slot(CurlObject *self)
+{
     /* Get the thread state for callbacks to run in.
      * This is either `self->state' when running inside perform() or
      * `self->multi_stack->state' when running inside multi_perform().
@@ -21,7 +44,7 @@ pycurl_get_thread_state(const CurlObject *self)
         if (self->multi_stack != NULL) {
             assert(self->multi_stack->state == NULL);
         }
-        return self->state;
+        return &self->state;
     }
     if (self->multi_stack != NULL && self->multi_stack->state != NULL)
     {
@@ -29,14 +52,14 @@ pycurl_get_thread_state(const CurlObject *self)
         assert(self->handle != NULL);
         assert(self->multi_stack->multi_handle != NULL);
         assert(self->state == NULL);
-        return self->multi_stack->state;
+        return &self->multi_stack->state;
     }
     return NULL;
 }
 
 
-PYCURL_INTERNAL PyThreadState *
-pycurl_get_thread_state_multi(const CurlMultiObject *self)
+PYCURL_INTERNAL PyThreadState **
+pycurl_get_thread_state_slot_multi(CurlMultiObject *self)
 {
     /* Get the thread state for callbacks to run in when given
      * multi handles instead of regular handles
@@ -48,38 +71,31 @@ pycurl_get_thread_state_multi(const CurlMultiObject *self)
     {
         /* inside multi_perform() */
         assert(self->multi_handle != NULL);
-        return self->state;
+        return &self->state;
     }
     return NULL;
 }
 
 
 PYCURL_INTERNAL int
-pycurl_acquire_thread(const CurlObject *self, PyThreadState **state)
+pycurl_python_enter(PyThreadState **tstate)
 {
-    *state = pycurl_get_thread_state(self);
-    if (*state == NULL)
+    assert(tstate != NULL);
+    if (*tstate == NULL) {
         return 0;
-    PyEval_AcquireThread(*state);
-    return 1;
-}
-
-
-PYCURL_INTERNAL int
-pycurl_acquire_thread_multi(const CurlMultiObject *self, PyThreadState **state)
-{
-    *state = pycurl_get_thread_state_multi(self);
-    if (*state == NULL)
-        return 0;
-    PyEval_AcquireThread(*state);
+    }
+    assert(!PyGILState_Check());
+    PyEval_RestoreThread(*tstate);
     return 1;
 }
 
 
 PYCURL_INTERNAL void
-pycurl_release_thread(PyThreadState *state)
+pycurl_python_leave(PyThreadState **tstate)
 {
-    PyEval_ReleaseThread(state);
+    assert(tstate != NULL);
+    assert(PyGILState_Check());
+    *tstate = PyEval_SaveThread();
 }
 
 /*************************************************************************
