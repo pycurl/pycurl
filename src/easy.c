@@ -527,6 +527,7 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
         /* Decrement refcount for share objects. */
         if (self->share != NULL) {
             CurlShareObject *share = self->share;
+            share_unregister_easy(share, self);
             self->share = NULL;
             if (share->share_handle != NULL && handle != NULL) {
                 curl_easy_setopt(handle, CURLOPT_SHARE, NULL);
@@ -838,6 +839,25 @@ do_curl_multi(CurlObject *self, PyObject *Py_UNUSED(ignored))
 }
 
 
+static PyObject *
+do_curl_share(CurlObject *self, PyObject *Py_UNUSED(ignored))
+{
+    assert_curl_state(self);
+
+    if (self->share == NULL) {
+        Py_RETURN_NONE;
+    }
+
+    if (!PyObject_IsInstance((PyObject *)self->share, (PyObject *)p_CurlShare_Type)) {
+        PyErr_SetString(PyExc_TypeError, "share object is not a CurlShare");
+        return NULL;
+    }
+
+    Py_INCREF(self->share);
+    return (PyObject *)self->share;
+}
+
+
 /*************************************************************************
 // type definitions
 **************************************************************************/
@@ -861,6 +881,7 @@ PYCURL_INTERNAL PyMethodDef curlobject_methods[] = {
     {"reset", (PyCFunction)do_curl_reset, METH_NOARGS, curl_reset_doc},
     {"duphandle", (PyCFunction)do_curl_duphandle, METH_NOARGS, curl_duphandle_doc},
     {"multi", (PyCFunction)do_curl_multi, METH_NOARGS, curl_multi_doc},
+    {"share", (PyCFunction)do_curl_share, METH_NOARGS, curl_share_doc},
 #if defined(HAVE_CURL_OPENSSL)
     {"set_ca_certs", (PyCFunction)do_curl_set_ca_certs, METH_VARARGS, curl_set_ca_certs_doc},
 #endif

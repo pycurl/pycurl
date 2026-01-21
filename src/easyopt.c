@@ -42,6 +42,7 @@ static PyObject *
 util_curl_unsetopt(CurlObject *self, int option)
 {
     int res;
+    CurlShareObject *share;
 
 #define SETOPT2(o,x) \
     if ((res = curl_easy_setopt(self->handle, (o), (x))) != CURLE_OK) goto error
@@ -67,9 +68,13 @@ util_curl_unsetopt(CurlObject *self, int option)
     switch (option)
     {
     case CURLOPT_SHARE:
+        share = self->share;
         SETOPT((CURLSH *) NULL);
-        Py_XDECREF(self->share);
-        self->share = NULL;
+        if (share != NULL) {
+            share_unregister_easy(share, self);
+            Py_DECREF(share);
+            self->share = NULL;
+        }
         break;
     case CURLOPT_INFILESIZE:
         SETOPT((long) -1);
@@ -532,7 +537,7 @@ do_curl_setopt_file_passthrough(CurlObject *self, int option, PyObject *obj)
         PyErr_SetString(PyExc_TypeError, "second argument must be open file");
         return NULL;
     }
-    
+
     switch (option) {
     case CURLOPT_READDATA:
         res = curl_easy_setopt(self->handle, CURLOPT_READFUNCTION, fread);
@@ -1046,6 +1051,7 @@ do_curl_setopt_share(CurlObject *self, PyObject *obj)
             if (res != CURLE_OK) {
                 CURLERROR_RETVAL();
             }
+            share_unregister_easy(share, self);
             self->share = NULL;
             Py_DECREF(share);
             Py_RETURN_NONE;
@@ -1062,6 +1068,14 @@ do_curl_setopt_share(CurlObject *self, PyObject *obj)
     }
     self->share = share;
     Py_INCREF(share);
+
+    if (share_register_easy(share, self) < 0) {
+        curl_easy_setopt(self->handle, CURLOPT_SHARE, NULL);
+        self->share = NULL;
+        Py_DECREF(share);
+        return NULL;
+    }
+
     Py_RETURN_NONE;
 }
 
@@ -1199,7 +1213,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     Files in Python 3 are no longer FILE * instances and therefore cannot
     be directly given to curl, therefore this method handles all I/O to
     Python objects.
-    
+
     In Python 2 true file objects are FILE * instances and will be handled
     by stdio passthrough code invoked above, and file-like objects will
     be handled by this method.
