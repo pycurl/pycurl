@@ -6,9 +6,9 @@ from urllib.parse import urlencode
 from . import localhost
 import logging
 import pycurl
-import pytest
+#import pytest
 import select
-import sys
+#import sys
 import time
 import unittest
 
@@ -142,9 +142,9 @@ class MultiCallbackTest(unittest.TestCase):
         self.handle_added = False
         assert self.socket_result is not None
 
-    @pytest.mark.skipif(
-        sys.platform == "win32", reason="https://github.com/pycurl/pycurl/issues/819"
-    )
+    #@pytest.mark.skipif(
+    #    sys.platform == "win32", reason="https://github.com/pycurl/pycurl/issues/819"
+    #)
     def test_easy_pause_unpause(self):
         params = {
             "num_chunks": 10,
@@ -185,9 +185,9 @@ class MultiCallbackTest(unittest.TestCase):
         assert self.bytes_received == 70  # 10 chunks of 7 bytes each
 
     # (mid-transfer) easy.close() must call SOCKETFUNCTION to remove sockets
-    @pytest.mark.skipif(
-        sys.platform in ["win32"], reason="https://github.com/pycurl/pycurl/issues/819"
-    )
+    #@pytest.mark.skipif(
+    #    sys.platform in ["win32"], reason="https://github.com/pycurl/pycurl/issues/819"
+    #)
     def test_easy_close(self):
         self.partial_transfer()
         self.socket_result = None
