@@ -324,19 +324,28 @@ File Upload - Multipart POST
 ----------------------------
 
 To replicate the behavior of file upload in an HTML form (specifically,
-a multipart form),
-use ``HTTPPOST`` option. Such an upload is performed with a ``POST`` request.
-See the next example for how to upload a file with a ``PUT`` request.
+a multipart form), use ``MIMEPOST`` (preferred) or ``HTTPPOST`` (legacy).
 
-If the data to be uploaded is located in a physical file,
-use ``FORM_FILE``::
+Starting with **libcurl 7.56.0**, the preferred API for multipart form posts
+is ``CURLOPT_MIMEPOST``, which replaces and extends the deprecated
+``CURLOPT_HTTPPOST`` mechanism. When libcurl 7.56.0 or newer is available,
+PycURL uses libcurl’s MIME API internally; ``HTTPPOST`` and ``MIMEPOST``
+share a single internal implementation, and ``MIMEPOST`` is treated as an
+alias of ``HTTPPOST``. When built against older libcurl versions, PycURL
+falls back to the legacy form API.
+
+Such an upload is performed with a ``POST`` request. See the next example
+for how to upload a file with a ``PUT`` request.
+
+If the data to be uploaded is located in a physical file, use ``FORM_FILE``::
 
     import pycurl
 
     c = pycurl.Curl()
     c.setopt(c.URL, 'https://httpbin.org/post')
 
-    c.setopt(c.HTTPPOST, [
+    # HTTPPOST is kept for legacy compatibility with libcurl < 7.56.0
+    c.setopt(c.MIMEPOST, [
         ('fileupload', (
             # upload the contents of this file
             c.FORM_FILE, __file__,
@@ -349,15 +358,18 @@ use ``FORM_FILE``::
 This code is available as ``examples/quickstart/file_upload_real.py``.
 
 ``libcurl`` provides a number of options to tweak file uploads and multipart
-form submissions in general. These are documented on `curl_formadd page`_.
-For example, to set a different filename and content type::
+form submissions in general. For the modern API, see the
+`CURLOPT_MIMEPOST page`_. For legacy form options (used by ``FORM_*`` flags),
+see the `curl_formadd page`_. For example, to set a different filename and
+content type::
 
     import pycurl
 
     c = pycurl.Curl()
     c.setopt(c.URL, 'https://httpbin.org/post')
 
-    c.setopt(c.HTTPPOST, [
+    # HTTPPOST is kept for legacy compatibility with libcurl < 7.56.0
+    c.setopt(c.MIMEPOST, [
         ('fileupload', (
             # upload the contents of this file
             c.FORM_FILE, __file__,
@@ -380,7 +392,8 @@ If the file data is in memory, use ``BUFFER``/``BUFFERPTR`` as follows::
     c = pycurl.Curl()
     c.setopt(c.URL, 'https://httpbin.org/post')
 
-    c.setopt(c.HTTPPOST, [
+    # HTTPPOST is kept for legacy compatibility with libcurl < 7.56.0
+    c.setopt(c.MIMEPOST, [
         ('fileupload', (
             c.FORM_BUFFER, 'readme.txt',
             c.FORM_BUFFERPTR, 'This is a fancy readme file',

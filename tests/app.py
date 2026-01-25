@@ -63,6 +63,14 @@ def files():
     files = [convert_file(key, flask.request.files[key]) for key in flask.request.files]
     return json.dumps(files)
 
+@app.route('/form_and_files', methods=['POST'])
+def form_and_files():
+    files = [convert_file(key, flask.request.files[key]) for key in flask.request.files]
+    return json.dumps({
+        'form': dict(flask.request.form),
+        'files': files,
+    })
+
 @app.route('/header')
 def header():
     return flask.request.headers.get(flask.request.args['h'], '')
