@@ -158,11 +158,17 @@ util_multi_detach_easies(CurlMultiObject *self, int close_handles, int swallow_e
         return 0;
     }
 
-    PyObject *key, *value;
-    Py_ssize_t pos = 0;
+    /* Iterate over a snapshot since closing easies can mutate the dict. */
+    PyObject *keys = PyDict_Keys(self->easy_object_dict);
+    if (keys == NULL) {
+        return -1;
+    }
 
-    while (PyDict_Next(self->easy_object_dict, &pos, &key, &value)) {
-        CurlObject *easy = (CurlObject *)key;
+    Py_ssize_t i;
+    Py_ssize_t keys_len = PyList_Size(keys);
+    for (i = 0; i < keys_len; ++i) {
+        PyObject *key = PyList_GetItem(keys, i);
+        CurlObject *easy = (CurlObject *) key;
 
         if (easy->multi_stack == NULL || easy->multi_stack != self) {
             continue;
@@ -183,11 +189,13 @@ util_multi_detach_easies(CurlMultiObject *self, int close_handles, int swallow_e
             } else if (swallow_exceptions) {
                 PyErr_Clear();
             } else {
+                Py_DECREF(keys);
                 return -1;
             }
         }
     }
 
+    Py_DECREF(keys);
     Py_CLEAR(self->easy_object_dict);
 
     return 0;
@@ -767,7 +775,9 @@ do_multi_add_handle(CurlMultiObject *self, PyObject *args)
         return NULL;
     }
 
-    PyDict_SetItem(self->easy_object_dict, (PyObject *) obj, Py_True);
+    if (PyDict_SetItem(self->easy_object_dict, (PyObject *) obj, Py_True) < 0) {
+        return NULL;
+    }
 
     assert(obj->multi_stack == NULL);
     /* Allow threads because callbacks can be invoked */
