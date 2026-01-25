@@ -417,12 +417,40 @@ typedef struct CurlSlistObject {
     struct curl_slist *slist;
 } CurlSlistObject;
 
-typedef struct CurlHttppostObject {
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 56, 0)
+#  define HAVE_CURL_MIME 1
+#else
+#  define HAVE_CURL_MIME 0
+#endif
+
+#ifdef HAVE_CURL_MIME
+#  define PYCURL_POST_CURL_OPT       CURLOPT_MIMEPOST
+#  define PYCURL_POSTDATA_T          curl_mime
+#  define PYCURL_POSTOBJ_CLASSNAME   "pycurl.CurlMime"
+#  define PYCURL_POSTOBJ_T           CurlMimeObject
+#  define PYCURL_POSTOBJ_TYPE        CurlMime_Type
+#  define PYCURL_POSTOBJ_TYPE_PTR    p_CurlMime_Type
+#  define PYCURL_POSTOBJ_FIELD       mime
+#  define PYCURL_POSTNAME_STR        "mime"
+#  define PYCURL_POSTDATA_FREE(x)    curl_mime_free(x)
+#else
+#  define PYCURL_POST_CURL_OPT       CURLOPT_HTTPPOST
+#  define PYCURL_POSTDATA_T          struct curl_httppost
+#  define PYCURL_POSTOBJ_CLASSNAME   "pycurl.CurlHttppost"
+#  define PYCURL_POSTOBJ_T           CurlHttppostObject
+#  define PYCURL_POSTOBJ_TYPE        CurlHttppost_Type
+#  define PYCURL_POSTOBJ_TYPE_PTR    p_CurlHttppost_Type
+#  define PYCURL_POSTOBJ_FIELD       httppost
+#  define PYCURL_POSTNAME_STR        "httppost"
+#  define PYCURL_POSTDATA_FREE(x)    curl_formfree(x)
+#endif
+
+typedef struct PYCURL_POSTOBJ_T {
     PyObject_HEAD
-    struct curl_httppost *httppost;
+    PYCURL_POSTDATA_T *PYCURL_POSTOBJ_FIELD;
     /* List of INC'ed references associated with httppost. */
     PyObject *reflist;
-} CurlHttppostObject;
+} PYCURL_POSTOBJ_T;
 
 typedef struct CurlObject {
     PyObject_HEAD
@@ -436,7 +464,7 @@ typedef struct CurlObject {
     PyObject *multi_weakref;
     struct CurlMultiObject *multi_stack;
     struct CurlShareObject *share;
-    struct CurlHttppostObject *httppost;
+    struct PYCURL_POSTOBJ_T *PYCURL_POSTOBJ_FIELD;
     struct CurlSlistObject *httpheader;
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
     struct CurlSlistObject *proxyheader;
@@ -611,7 +639,7 @@ do_curl_setopt_filelike(CurlObject *self, int option, PyObject *obj);
 PYCURL_INTERNAL void
 util_curlslist_update(CurlSlistObject **old, struct curl_slist *slist);
 PYCURL_INTERNAL void
-util_curlhttppost_update(CurlObject *obj, struct curl_httppost *httppost, PyObject *reflist);
+util_curlpost_update(CurlObject *obj, PYCURL_POSTDATA_T *PYCURL_POSTOBJ_FIELD, PyObject *reflist);
 
 PYCURL_INTERNAL PyObject *
 do_curl_getinfo_raw(CurlObject *self, PyObject *args);
@@ -683,14 +711,14 @@ PYCURL_INTERNAL void share_unregister_easy(struct CurlShareObject *share, struct
 /* Type objects */
 extern PyTypeObject Curl_Type;
 extern PyTypeObject CurlSlist_Type;
-extern PyTypeObject CurlHttppost_Type;
+extern PyTypeObject PYCURL_POSTOBJ_TYPE;
 extern PyTypeObject CurlMulti_Type;
 extern PyTypeObject CurlShare_Type;
 
 extern PyObject *ErrorObject;
 extern PyTypeObject *p_Curl_Type;
 extern PyTypeObject *p_CurlSlist_Type;
-extern PyTypeObject *p_CurlHttppost_Type;
+extern PyTypeObject *PYCURL_POSTOBJ_TYPE_PTR;
 extern PyTypeObject *p_CurlMulti_Type;
 extern PyTypeObject *p_CurlShare_Type;
 extern PyObject *khkey_type;

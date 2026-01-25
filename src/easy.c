@@ -90,41 +90,41 @@ PYCURL_INTERNAL PyTypeObject CurlSlist_Type = {
 
 
 /*************************************************************************
-// CurlHttppostObject
+// CurlHttppostObject / CurlMimeObject
 **************************************************************************/
 
 PYCURL_INTERNAL void
-util_curlhttppost_update(CurlObject *obj, struct curl_httppost *httppost, PyObject *reflist)
+util_curlpost_update(CurlObject *obj, PYCURL_POSTDATA_T *PYCURL_POSTOBJ_FIELD, PyObject *reflist)
 {
     /* Decref previous object */
-    Py_XDECREF(obj->httppost);
+    Py_XDECREF(obj->PYCURL_POSTOBJ_FIELD);
     /* Create a new object */
-    obj->httppost = PyObject_New(CurlHttppostObject, p_CurlHttppost_Type);
-    assert(obj->httppost != NULL);
+    obj->PYCURL_POSTOBJ_FIELD = PyObject_New(PYCURL_POSTOBJ_T, PYCURL_POSTOBJ_TYPE_PTR);
+    assert(obj->PYCURL_POSTOBJ_FIELD != NULL);
     /* Store curl_httppost and reflist into the new object */
-    obj->httppost->httppost = httppost;
-    obj->httppost->reflist = reflist;
+    obj->PYCURL_POSTOBJ_FIELD->PYCURL_POSTOBJ_FIELD = PYCURL_POSTOBJ_FIELD;
+    obj->PYCURL_POSTOBJ_FIELD->reflist = reflist;
 }
 
 PYCURL_INTERNAL void
-do_curlhttppost_dealloc(CurlHttppostObject *self) {
-    if (self->httppost != NULL) {
-        curl_formfree(self->httppost);
-        self->httppost = NULL;
+do_curlhttppost_dealloc(PYCURL_POSTOBJ_T *self) {
+    if (self->PYCURL_POSTOBJ_FIELD != NULL) {
+        PYCURL_POSTDATA_FREE(self->PYCURL_POSTOBJ_FIELD);
+        self->PYCURL_POSTOBJ_FIELD = NULL;
     }
     Py_CLEAR(self->reflist);
-    CurlHttppost_Type.tp_free(self);
+    PYCURL_POSTOBJ_TYPE.tp_free(self);
 }
 
-PYCURL_INTERNAL PyTypeObject CurlHttppost_Type = {
+PYCURL_INTERNAL PyTypeObject PYCURL_POSTOBJ_TYPE = {
 #if PY_MAJOR_VERSION >= 3
     PyVarObject_HEAD_INIT(NULL, 0)
 #else
     PyObject_HEAD_INIT(NULL)
     0,                          /* ob_size */
 #endif
-    "pycurl.CurlHttppost",      /* tp_name */
-    sizeof(CurlHttppostObject), /* tp_basicsize */
+    PYCURL_POSTOBJ_CLASSNAME,   /* tp_name */
+    sizeof(PYCURL_POSTOBJ_T),   /* tp_basicsize */
     0,                          /* tp_itemsize */
     (destructor)do_curlhttppost_dealloc, /* tp_dealloc */
     0,                          /* tp_print / tp_vectorcall_offset */
@@ -460,7 +460,7 @@ do_curl_duphandle(CurlObject *self, PyObject *Py_UNUSED(ignored))
 #endif
 
     /* Assign and incref httppost */
-    dup->httppost = (CurlHttppostObject *)my_Py_XNewRef((PyObject *)self->httppost);
+    dup->PYCURL_POSTOBJ_FIELD = (PYCURL_POSTOBJ_T *)my_Py_XNewRef((PyObject *)self->PYCURL_POSTOBJ_FIELD);
 
     /* Success - return cloned object */
     return dup;
@@ -538,7 +538,7 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
 
     if (flags & PYCURL_MEMGROUP_HTTPPOST) {
         /* Decrement refcounts for httppost object. */
-        Py_CLEAR(self->httppost);
+        Py_CLEAR(self->PYCURL_POSTOBJ_FIELD);
     }
 
     if (flags & PYCURL_MEMGROUP_CACERTS) {
@@ -749,7 +749,7 @@ do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
     VISIT((PyObject *) self->connect_to);
 #endif
 
-    VISIT((PyObject *) self->httppost);
+    VISIT((PyObject *) self->PYCURL_POSTOBJ_FIELD);
 
     return 0;
 #undef VISIT
