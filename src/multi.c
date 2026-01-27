@@ -110,6 +110,12 @@ do_multi_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
         return NULL;
     }
 
+    self->socket_object_dict = PyDict_New();
+    if (self->socket_object_dict == NULL) {
+        Py_DECREF(self);
+        return NULL;
+    }
+
     /* Allocate libcurl multi handle */
     self->multi_handle = curl_multi_init();
     if (self->multi_handle == NULL) {
@@ -148,6 +154,7 @@ util_multi_xdecref(CurlMultiObject *self)
     Py_CLEAR(self->dict);
     Py_CLEAR(self->t_cb);
     Py_CLEAR(self->s_cb);
+    Py_CLEAR(self->socket_object_dict);
 }
 
 
@@ -234,6 +241,9 @@ do_multi_close(CurlMultiObject *self, PyObject *Py_UNUSED(ignored))
     }
 
     util_multi_close(self);
+    if (self->socket_object_dict) {
+        PyDict_Clear(self->socket_object_dict);
+    }
     Py_RETURN_NONE;
 }
 
@@ -267,6 +277,7 @@ do_multi_traverse(CurlMultiObject *self, visitproc visit, void *arg)
 
     VISIT(self->dict);
     VISIT(self->easy_object_dict);
+    VISIT(self->socket_object_dict);
 
     return 0;
 #undef VISIT
@@ -635,6 +646,9 @@ do_multi_assign(CurlMultiObject *self, PyObject *args)
     curl_socket_t socket;
     PyObject *socket_obj;
     PyObject *obj;
+    int clear;
+    PyObject *key = NULL;
+    PyObject *old = NULL;
 
     if (!PyArg_ParseTuple(args, "OO:assign", &socket_obj, &obj)) {
         return NULL;
@@ -645,13 +659,45 @@ do_multi_assign(CurlMultiObject *self, PyObject *args)
     if (check_multi_state(self, 1 | 2, "assign") != 0) {
         return NULL;
     }
-    Py_INCREF(obj);
 
-    res = curl_multi_assign(self->multi_handle, socket, obj);
-    if (res != CURLM_OK) {
-        CURLERROR_MSG("assign failed");
+    key = PyInt_FromLong((long)socket);
+    if (key == NULL) {
+        return NULL;
+    }
+    clear = (obj == Py_None);
+    old = PyDict_GetItem(self->socket_object_dict, key);
+    Py_XINCREF(old);
+    if (clear) {
+        if (PyDict_DelItem(self->socket_object_dict, key) < 0) {
+            PyErr_Clear();
+        }
+    } else {
+        if (PyDict_SetItem(self->socket_object_dict, key, obj) < 0) {
+            Py_DECREF(key);
+            Py_XDECREF(old);
+            return NULL;
+        }
     }
 
+    res = curl_multi_assign(self->multi_handle, socket, clear ? NULL : (void *)obj);
+    if (res != CURLM_OK) {
+        if (old) {
+            if (PyDict_SetItem(self->socket_object_dict, key, old) < 0) {
+                PyErr_Clear();
+            }
+        } else {
+            if (PyDict_DelItem(self->socket_object_dict, key) < 0) {
+                PyErr_Clear();
+            }
+        }
+        Py_DECREF(key);
+        Py_XDECREF(old);
+        CURLERROR_MSG("assign failed");
+        return NULL;
+    }
+
+    Py_DECREF(key);
+    Py_XDECREF(old);
     Py_RETURN_NONE;
 }
 

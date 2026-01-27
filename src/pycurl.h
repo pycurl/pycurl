@@ -503,6 +503,9 @@ typedef struct CurlMultiObject {
     PyObject *t_cb;
     PyObject *s_cb;
 
+    /* socket-to-object mappings for curl_multi_assign */
+    PyObject *socket_object_dict;
+
     PyObject *easy_object_dict;
     int close_handles; /* boolean: False by default */
 } CurlMultiObject;
