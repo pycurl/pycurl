@@ -262,9 +262,19 @@ share_cleanup_and_count_live_easies(CurlShareObject *self)
 
         if (it && to_remove) {
             PyObject *wr;
+            PyObject *obj = NULL;
 
             while ((wr = PyIter_Next(it))) {
-                PyObject *obj = PyWeakref_GetObject(wr);
+#if PY_VERSION_HEX >= 0x030D0000  /* Python 3.13+ */
+                int rc = PyWeakref_GetRef(wr, &obj);
+                if (rc < 0) {
+                // NOT CORRECTLY HANDLING THIS
+                }
+
+#else
+                obj = PyWeakref_GetObject(wr);
+                Py_INCREF(obj);
+#endif
                 if (obj != Py_None) {
                     CurlObject *easy = (CurlObject *)obj;
 
@@ -285,6 +295,7 @@ share_cleanup_and_count_live_easies(CurlShareObject *self)
                 }
 
                 Py_DECREF(wr);
+                Py_DECREF(obj);
             }
 
             Py_ssize_t i, n = PyList_GET_SIZE(to_remove);
