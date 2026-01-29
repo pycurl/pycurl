@@ -267,12 +267,19 @@ share_cleanup_and_count_live_easies(CurlShareObject *self)
             while ((wr = PyIter_Next(it))) {
 #if PY_VERSION_HEX >= 0x030D0000  /* Python 3.13+ */
                 int rc = PyWeakref_GetRef(wr, &obj);
-                if (rc < 0) {
-                // NOT CORRECTLY HANDLING THIS
+                // return -1 on error, 0 on dead object
+                // in either case, mark as removable and
+                // move to the next reference
+                if (rc < 1 || obj == NULL)  {
+                  PyList_Append(to_remove, wr);
+                  Py_DECREF(wr);
+                  continue;
                 }
 
 #else
+                // will borrowed reference, None if object dead
                 obj = PyWeakref_GetObject(wr);
+                // Either way we need to INCREF to keep it around
                 Py_INCREF(obj);
 #endif
                 if (obj != Py_None) {
