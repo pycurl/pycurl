@@ -1,7 +1,8 @@
 # Run a WSGI application in a daemon thread
 
-import threading
 import os.path
+import threading
+import socketserver
 
 from . import util
 
@@ -20,14 +21,21 @@ class Server:
         self.serve()
 
     def make_server(self, handler):
-        from wsgiref.simple_server import make_server, WSGIRequestHandler
+        from wsgiref.simple_server import make_server, WSGIRequestHandler, WSGIServer
         if self.quiet:
             base = self.options.get('handler_class', WSGIRequestHandler)
             class QuietHandler(base):
                 def log_request(*args, **kw):
                     pass
             self.options['handler_class'] = QuietHandler
-        srv = make_server(self.host, self.port, handler, **self.options)
+
+        server_class = self.options.pop('server_class', WSGIServer)
+        if self.options.pop('threaded', False):
+            class ThreadedWSGIServer(socketserver.ThreadingMixIn, WSGIServer):
+                daemon_threads = True
+            server_class = ThreadedWSGIServer
+
+        srv = make_server(self.host, self.port, handler, server_class=server_class, **self.options)
         return srv
 
     def serve(self):
@@ -101,6 +109,7 @@ def app_runner_setup(*specs):
                 kwargs = {}
             else:
                 app, port, kwargs = spec
+            kwargs.setdefault("threaded", True)
             if port in started_servers:
                 assert started_servers[port] == (app, kwargs)
             else:
