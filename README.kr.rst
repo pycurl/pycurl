@@ -27,7 +27,7 @@ urllib_ Python 모듈과 마찬가지로, PycURL 을 사용하여 Python프로�
 요구 사항
 ---------
 
-- Python 3.5-3.10.
+- Python 3.10-3.14.
 - libcurl 7.19.0 이상.
 
 
