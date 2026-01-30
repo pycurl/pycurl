@@ -949,7 +949,7 @@ in COPYING-LGPL_ and COPYING-MIT_ files in the source distribution.
     ],
     packages=[PY_PACKAGE],
     package_dir={ PY_PACKAGE: os.path.join('python', 'curl') },
-    python_requires='>=3.5',
+    python_requires='>=3.10',
     platforms='All',
 )
 
