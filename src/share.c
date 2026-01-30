@@ -271,31 +271,34 @@ share_cleanup_and_count_live_easies(CurlShareObject *self)
                 // in either case, mark as removable and
                 // move to the next reference
                 if (rc < 1 || obj == NULL)  {
-                  PyList_Append(to_remove, wr);
-                  Py_DECREF(wr);
-                  continue;
+                    PyList_Append(to_remove, wr);
+                    Py_DECREF(wr);
+                    continue;
                 }
 
 #else
                 // will borrowed reference, None if object dead
                 obj = PyWeakref_GetObject(wr);
-                // Either way we need to INCREF to keep it around
-                Py_INCREF(obj);
-#endif
                 if (obj != Py_None) {
-                    CurlObject *easy = (CurlObject *)obj;
+                    // If not None, real object, INCREF and carry on
+                    Py_INCREF(obj);
+                } else {
+                    // otherwise mark for removal and move to the next ref
+                    PyList_Append(to_remove, wr);
+                    Py_DECREF(wr);
+                    continue;
+                }
+#endif
+                CurlObject *easy = (CurlObject *)obj;
 
-                    if (easy && easy->share == self) {
-                        if (self->detach_on_close) {
-                            curl_easy_setopt(easy->handle, CURLOPT_SHARE, NULL);
-                            easy->share = NULL;
+                if (easy && easy->share == self) {
+                    if (self->detach_on_close) {
+                        curl_easy_setopt(easy->handle, CURLOPT_SHARE, NULL);
+                        easy->share = NULL;
 
-                            PyList_Append(to_remove, wr);
-                        } else {
-                            has_live += 1;
-                        }
-                    } else {
                         PyList_Append(to_remove, wr);
+                    } else {
+                        has_live += 1;
                     }
                 } else {
                     PyList_Append(to_remove, wr);
