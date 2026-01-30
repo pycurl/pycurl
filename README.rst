@@ -29,7 +29,7 @@ libcurl, including:
 Requirements
 ------------
 
-- Python 3.5-3.10.
+- Python 3.10-3.14.
 - libcurl 7.19.0 or better.
 
 
