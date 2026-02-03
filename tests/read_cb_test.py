@@ -91,6 +91,35 @@ class ReadCbTest(unittest.TestCase):
         actual = json.loads(sio.getvalue().decode('ascii'))
         self.assertEqual(poststring, actual)
 
+    def test_post_with_read_callback_returning_memoryview(self):
+        self.check_memoryview('world')
+
+    def test_post_with_read_callback_returning_memoryview_with_nulls(self):
+        self.check_memoryview("wor\0ld")
+
+    def test_post_with_read_callback_returning_memoryview_with_multibyte(self):
+        self.check_memoryview(util.u("Пушкин"))
+
+    def check_memoryview(self, poststring):
+        data = memoryview(poststring.encode('utf8'))
+        assert type(data) == memoryview
+        d = DataProvider(data)
+
+        self.curl.setopt(self.curl.URL, 'http://%s:8380/raw_utf8' % localhost)
+        self.curl.setopt(self.curl.POST, 1)
+        self.curl.setopt(self.curl.HTTPHEADER, ['Content-Type: application/octet-stream'])
+        # length of bytes
+        self.curl.setopt(self.curl.POSTFIELDSIZE, len(data))
+        self.curl.setopt(self.curl.READFUNCTION, d.read_cb)
+        #self.curl.setopt(self.curl.VERBOSE, 1)
+        sio = util.BytesIO()
+        self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
+        self.curl.perform()
+
+        # json should be ascii
+        actual = json.loads(sio.getvalue().decode('ascii'))
+        self.assertEqual(poststring, actual)
+
     def test_post_with_read_callback_returning_unicode(self):
         self.check_unicode(util.u('world'))
 
@@ -125,3 +154,57 @@ class ReadCbTest(unittest.TestCase):
         # json should be ascii
         actual = json.loads(sio.getvalue().decode('ascii'))
         self.assertEqual(poststring, actual)
+
+    def test_post_with_read_callback_returning_non_buffer(self):
+        def read_cb(size):
+            return object()
+
+        self.check_bad_read_callback(read_cb)
+
+    def test_post_with_read_callback_returning_overly_large_buffer(self):
+        def read_cb(size):
+            return " " * (size + 1)
+
+        self.check_bad_read_callback(read_cb, post_len=1)
+
+    def test_post_with_read_callback_that_throws(self):
+        def read_cb(size):
+            raise RuntimeError("Boom")
+
+        self.check_bad_read_callback(read_cb)
+
+    def test_post_with_read_callback_that_aborts(self):
+        def read_cb(size):
+            return pycurl.READFUNC_ABORT
+
+        self.check_bad_read_callback(read_cb)
+
+    def test_post_with_read_callback_that_returns_bad_integer(self):
+        def read_cb(size):
+            return 5000
+
+        self.check_bad_read_callback(read_cb)
+
+    def test_post_with_read_callback_taking_incorrect_args(self):
+        def read_cb(too, many, args):
+            pass
+
+        self.check_bad_read_callback(read_cb)
+
+    def test_post_with_read_callback_not_callable(self):
+        with self.assertRaises(TypeError):
+            self.curl.setopt(self.curl.READFUNCTION, object())
+
+    def check_bad_read_callback(self, read_cb, post_len=16, expect_code=pycurl.E_ABORTED_BY_CALLBACK):
+        self.curl.setopt(self.curl.URL, 'http://%s:8380/raw_utf8' % localhost)
+        self.curl.setopt(self.curl.POST, 1)
+        self.curl.setopt(self.curl.HTTPHEADER, ['Content-Type: application/octet-stream'])
+        self.curl.setopt(self.curl.POSTFIELDSIZE, post_len)
+        self.curl.setopt(self.curl.READFUNCTION, read_cb)
+        # self.curl.setopt(self.curl.VERBOSE, 1)
+
+        with self.assertRaises(pycurl.error) as context:
+            self.curl.perform()
+
+        err, msg = context.exception.args
+        self.assertEqual(expect_code, err)
