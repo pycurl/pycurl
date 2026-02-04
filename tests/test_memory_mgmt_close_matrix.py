@@ -38,15 +38,20 @@ class Tracker:
     def assert_all_gone(self, *, also_check_gc_objects: bool = True) -> None:
         gc_collect_hard()
 
-        for name, r, obj_id in self._items:
-            assert r() is None, f"{name} still alive (id={obj_id})"
-
+        # Only use gc.get_objects for live refs; ids can be reused after free.
+        live_ids: set[int] | None = None
         if also_check_gc_objects:
             live_ids = {id(o) for o in gc.get_objects()}
-            for name, _, obj_id in self._items:
-                assert obj_id not in live_ids, (
-                    f"{name} id still present in gc.get_objects() (id={obj_id})"
-                )
+
+        for name, r, obj_id in self._items:
+            obj = r()
+            if obj is None:
+                continue
+
+            tracked = (
+                " (gc-tracked)" if live_ids is not None and obj_id in live_ids else ""
+            )
+            raise AssertionError(f"{name} still alive{tracked} (id={obj_id})")
 
 
 @pytest.fixture(autouse=True)
