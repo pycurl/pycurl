@@ -168,9 +168,25 @@ util_curl_unsetopt(CurlObject *self, int option)
     /* FIXME: what about data->set.httpreq ?? */
     CLEAR_OBJECT(CURLOPT_HTTPPOST, self->httppost);
 
-    CLEAR_CALLBACK(CURLOPT_WRITEFUNCTION, CURLOPT_WRITEDATA, self->w_cb);
+    /* "If you do not use a write callback, you must make pointer a 'FILE*'
+     * as libcurl passes this to fwrite(3) when writing data" (default: stdout)
+     */
+    case CURLOPT_WRITEFUNCTION:
+        SETOPT(NULL);
+        if ((res = curl_easy_setopt(self->handle, CURLOPT_WRITEDATA, stdout)) != CURLE_OK)
+            goto error;
+        Py_CLEAR(self->w_cb);
+        break;
+
+    /* Same for READFUNCTION, with stdin as the default */
+    case CURLOPT_READFUNCTION:
+        SETOPT(NULL);
+        if ((res = curl_easy_setopt(self->handle, CURLOPT_READDATA, stdin)) != CURLE_OK)
+            goto error;
+        Py_CLEAR(self->r_cb);
+        break;
+
     CLEAR_CALLBACK(CURLOPT_HEADERFUNCTION, CURLOPT_WRITEHEADER, self->h_cb);
-    CLEAR_CALLBACK(CURLOPT_READFUNCTION, CURLOPT_READDATA, self->r_cb);
     CLEAR_CALLBACK(CURLOPT_PROGRESSFUNCTION, CURLOPT_PROGRESSDATA, self->pro_cb);
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 32, 0)
     CLEAR_CALLBACK(CURLOPT_XFERINFOFUNCTION, CURLOPT_XFERINFODATA, self->xferinfo_cb);
