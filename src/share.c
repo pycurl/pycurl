@@ -270,7 +270,10 @@ share_cleanup_and_count_live_easies(CurlShareObject *self)
                 // return -1 on error, 0 on dead object
                 // in either case, mark as removable and
                 // move to the next reference
-                if (rc < 1 || obj == NULL)  {
+                if (rc < 0)  {
+                    Py_DECREF(wr);
+                    return -1;
+                } else if (rc == 0 || obj == NULL) {
                     PyList_Append(to_remove, wr);
                     Py_DECREF(wr);
                     continue;
@@ -349,6 +352,9 @@ do_share_close(CurlShareObject *self, PyObject *Py_UNUSED(ignored))
             nlive,
             (nlive == 1 ? "" : "s")
         );
+        return NULL;
+    } else if (nlive < 0) {
+        // Error in share_cleanup_and_count_live_easies, propagate up
         return NULL;
     }
 
