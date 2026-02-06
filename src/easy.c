@@ -603,7 +603,6 @@ util_curl_close(CurlObject *self)
     assert(self != NULL);
     assert(PyObject_IsInstance((PyObject *) self, (PyObject *) p_Curl_Type) == 1);
     handle = self->handle;
-    self->handle = NULL;
     if (handle == NULL) {
         /* Some paranoia assertions just to make sure the object
          * deallocation problem is finally really fixed... */
@@ -628,9 +627,10 @@ util_curl_close(CurlObject *self)
     util_curl_xdecref(self, PYCURL_MEMGROUP_SHARE, handle);
 
     /* Cleanup curl handle - must be done without the gil */
-    Py_BEGIN_ALLOW_THREADS
+    PYCURL_BEGIN_ALLOW_THREADS
     curl_easy_cleanup(handle);
-    Py_END_ALLOW_THREADS
+    PYCURL_END_ALLOW_THREADS
+    self->handle = NULL;
     handle = NULL;
 
     /* Decref easy related objects */
