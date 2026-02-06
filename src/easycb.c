@@ -556,6 +556,7 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
     CurlObject *self;
     PyObject *arglist;
     PyObject *result = NULL;
+    Py_buffer buf;
 
     size_t ret = CURL_READFUNC_ABORT;     /* assume error, this actually works */
     int total_size;
@@ -592,19 +593,7 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
         goto verbose_error;
 
     /* handle result */
-    if (PyByteStr_Check(result)) {
-        char *buf = NULL;
-        Py_ssize_t obj_size = -1;
-        Py_ssize_t r;
-        r = PyByteStr_AsStringAndSize(result, &buf, &obj_size);
-        if (r != 0 || obj_size < 0 || obj_size > total_size) {
-            PyErr_Format(ErrorObject, "invalid return value for read callback (%ld bytes returned when at most %ld bytes were wanted)", (long)obj_size, (long)total_size);
-            goto verbose_error;
-        }
-        memcpy(ptr, buf, obj_size);
-        ret = obj_size;             /* success */
-    }
-    else if (PyUnicode_Check(result)) {
+    if (PyUnicode_Check(result)) {
         char *buf = NULL;
         Py_ssize_t obj_size = -1;
         Py_ssize_t r;
@@ -640,6 +629,20 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
         Py_DECREF(encoded);
         ret = obj_size;             /* success */
     }
+    else if (PyObject_GetBuffer(result, &buf, PyBUF_FULL_RO) == 0) {
+        if (buf.len < 0 || buf.len > total_size) {
+            PyErr_Format(ErrorObject, "invalid return value for read callback (%ld bytes returned when at most %ld bytes were wanted)", (long)buf.len, (long)total_size);
+            PyBuffer_Release(&buf);
+            goto verbose_error;
+        }
+        int r = PyBuffer_ToContiguous(ptr, &buf, buf.len, 'C');
+        if (r < 0) {
+            PyBuffer_Release(&buf);
+            goto verbose_error;
+        }
+        ret = buf.len;              /* success */
+        PyBuffer_Release(&buf);
+    }
 #if PY_MAJOR_VERSION < 3
     else if (PyInt_Check(result)) {
         long r = PyInt_AsLong(result);
@@ -656,7 +659,7 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
     }
     else {
     type_error:
-        PyErr_SetString(ErrorObject, "read callback must return a byte string or Unicode string with ASCII code points only");
+        PyErr_SetString(ErrorObject, "read callback must return an object supporting the buffer protocol (e.g. a byte string) or an ASCII-only Unicode string");
         goto verbose_error;
     }
 
