@@ -95,7 +95,7 @@ class WriteTest(unittest.TestCase):
         self.curl.setopt(pycurl.WRITEDATA, acceptor)
         self.curl.perform()
         self.assertEqual('success', acceptor.buffer)
-    
+
     @util.with_real_write_file
     def test_write_to_file_like_then_real_file(self, real_f):
         self.curl.setopt(pycurl.URL, 'http://%s:8380/success' % localhost)
@@ -172,6 +172,12 @@ class WriteTest(unittest.TestCase):
         self.curl.perform()
         self.assertEqual('success', data_acceptor.buffer)
         self.assertEqual('', function_acceptor.buffer)
+
+    def test_writefunction_unsetopt(self):
+        self.curl.setopt(pycurl.URL, 'http://%s:8380/success' % localhost)
+        self.curl.setopt(pycurl.WRITEFUNCTION, None)
+        self.curl.perform()
+        # does not crash
 
     @util.with_real_write_file
     def test_writefunction_and_writedata_real_file(self, real_f):

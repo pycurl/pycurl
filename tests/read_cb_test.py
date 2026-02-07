@@ -208,3 +208,16 @@ class ReadCbTest(unittest.TestCase):
 
         err, msg = context.exception.args
         self.assertEqual(expect_code, err)
+
+    def test_readfunction_unsetopt(self):
+        self.curl.setopt(self.curl.URL, 'http://%s:8380/raw_utf8' % localhost)
+        self.curl.setopt(self.curl.POST, 1)
+        # Body is not read unless HTTP Expect is disabled
+        self.curl.setopt(self.curl.HTTPHEADER, ['Content-Type: application/octet-stream', 'Expect: '])
+        self.curl.setopt(self.curl.READFUNCTION, None)
+        #self.curl.setopt(self.curl.VERBOSE, 1)
+        sio = util.BytesIO()
+        self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
+
+        self.curl.perform()
+        # did not crash
