@@ -262,29 +262,53 @@ share_cleanup_and_count_live_easies(CurlShareObject *self)
 
         if (it && to_remove) {
             PyObject *wr;
+            PyObject *obj = NULL;
 
             while ((wr = PyIter_Next(it))) {
-                PyObject *obj = PyWeakref_GetObject(wr);
+#if PY_VERSION_HEX >= 0x030D0000  /* Python 3.13+ */
+                int rc = PyWeakref_GetRef(wr, &obj);
+                // return -1 on error, 0 on dead object
+                // in either case, mark as removable and
+                // move to the next reference
+                if (rc < 0)  {
+                    Py_DECREF(wr);
+                    return -1;
+                } else if (rc == 0 || obj == NULL) {
+                    PyList_Append(to_remove, wr);
+                    Py_DECREF(wr);
+                    continue;
+                }
+
+#else
+                // will borrowed reference, None if object dead
+                obj = PyWeakref_GetObject(wr);
                 if (obj != Py_None) {
-                    CurlObject *easy = (CurlObject *)obj;
+                    // If not None, real object, INCREF and carry on
+                    Py_INCREF(obj);
+                } else {
+                    // otherwise mark for removal and move to the next ref
+                    PyList_Append(to_remove, wr);
+                    Py_DECREF(wr);
+                    continue;
+                }
+#endif
+                CurlObject *easy = (CurlObject *)obj;
 
-                    if (easy && easy->share == self) {
-                        if (self->detach_on_close) {
-                            curl_easy_setopt(easy->handle, CURLOPT_SHARE, NULL);
-                            easy->share = NULL;
+                if (easy && easy->share == self) {
+                    if (self->detach_on_close) {
+                        curl_easy_setopt(easy->handle, CURLOPT_SHARE, NULL);
+                        easy->share = NULL;
 
-                            PyList_Append(to_remove, wr);
-                        } else {
-                            has_live += 1;
-                        }
-                    } else {
                         PyList_Append(to_remove, wr);
+                    } else {
+                        has_live += 1;
                     }
                 } else {
                     PyList_Append(to_remove, wr);
                 }
 
                 Py_DECREF(wr);
+                Py_DECREF(obj);
             }
 
             Py_ssize_t i, n = PyList_GET_SIZE(to_remove);
@@ -328,6 +352,9 @@ do_share_close(CurlShareObject *self, PyObject *Py_UNUSED(ignored))
             nlive,
             (nlive == 1 ? "" : "s")
         );
+        return NULL;
+    } else if (nlive < 0) {
+        // Error in share_cleanup_and_count_live_easies, propagate up
         return NULL;
     }
 
