@@ -629,7 +629,10 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
         Py_DECREF(encoded);
         ret = obj_size;             /* success */
     }
-    else if (PyObject_GetBuffer(result, &buf, PyBUF_FULL_RO) == 0) {
+    else if (PyObject_CheckBuffer(result)) {
+        if (PyObject_GetBuffer(result, &buf, PyBUF_FULL_RO) != 0) {
+            goto verbose_error;
+        }
         if (buf.len < 0 || buf.len > total_size) {
             PyErr_Format(ErrorObject, "invalid return value for read callback (%ld bytes returned when at most %ld bytes were wanted)", (long)buf.len, (long)total_size);
             PyBuffer_Release(&buf);
