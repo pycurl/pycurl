@@ -137,6 +137,54 @@ class ReadCbTest(unittest.TestCase):
             self.assertEqual(pycurl.E_ABORTED_BY_CALLBACK, err)
             self.assertEqual('operation aborted by callback', msg)
 
+    def test_post_with_read_callback_pause(self):
+        data = b"field1=value1"
+        paused = False
+        resumed = False
+        offset = 0
+
+        def read_cb(size):
+            nonlocal paused, offset
+            if not paused:
+                paused = True
+                return pycurl.READFUNC_PAUSE
+            if offset < len(data):
+                take = min(size, len(data) - offset)
+                chunk = data[offset : offset + take]
+                offset += len(chunk)
+                return chunk
+            return b""
+
+        self.curl.setopt(self.curl.URL, 'http://%s:8380/raw_utf8' % localhost)
+        self.curl.setopt(self.curl.POST, 1)
+        self.curl.setopt(self.curl.HTTPHEADER, ['Content-Type: application/octet-stream'])
+        self.curl.setopt(self.curl.POSTFIELDSIZE, len(data))
+        self.curl.setopt(self.curl.READFUNCTION, read_cb)
+        #self.curl.setopt(self.curl.VERBOSE, 1)
+        sio = util.BytesIO()
+        self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
+
+        multi = pycurl.CurlMulti()
+        err_list = []
+        multi.add_handle(self.curl)
+        running = True
+        while running:
+            _, running = multi.perform()
+            if paused and not resumed:
+                resumed = True
+                self.curl.pause(pycurl.PAUSE_CONT)
+            if running:
+                multi.select(0.1)
+        while True:
+            queued, _, err = multi.info_read()
+            if err:
+                err_list.extend(err)
+            if not queued:
+                break
+
+        self.assertFalse(err_list)
+        self.assertTrue(resumed)
+
     def check_unicode(self, poststring):
         assert type(poststring) == util.text_type
         d = DataProvider(poststring)
