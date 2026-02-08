@@ -3,7 +3,7 @@ import pytest
 import time
 from typing import Generator
 
-from . import appmanager, localhost
+from . import appmanager, localhost, util
 
 
 def _get_free_port() -> int:
@@ -28,6 +28,13 @@ def wait_listening(host: str, port: int, timeout: float = 5.0) -> None:
 @pytest.fixture
 def free_port() -> int:
     return _get_free_port()
+
+
+@pytest.fixture
+def curl():
+    c = util.DefaultCurl()
+    yield c
+    c.close()
 
 
 @pytest.fixture(scope="module")
