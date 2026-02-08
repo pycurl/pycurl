@@ -20,7 +20,10 @@ def ok():
 
 @app.route('/short_wait')
 def short_wait():
-    _time.sleep(0.1)
+    delay = flask.request.args.get('delay', default=0.1, type=float)
+    if delay < 0:
+        delay = 0.1
+    _time.sleep(delay)
     return 'success'
 
 @app.route('/status/403')
