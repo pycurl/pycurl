@@ -31,7 +31,7 @@ jobs:
       matrix:
         curl-version: ["macos"]
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
-        runner: ["macOS-14"]
+        runner: ["macos-15"]
         include:
           - curl-version: "vcpkg"
             python-version: "3.12"
@@ -39,7 +39,7 @@ jobs:
             cibw-build: "cp312-macosx_x86_64"
           - curl-version: "vcpkg"
             python-version: "3.13"
-            runner: "macOS-14"
+            runner: "macos-15"
             cibw-build: "cp313-macosx_arm64"
     permissions:
       packages: write
