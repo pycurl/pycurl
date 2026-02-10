@@ -34,13 +34,16 @@ def _pause_on_first_write(curl, state, sink, mask=pycurl.PAUSE_ALL):
     return writefunc
 
 
-def _configure_unpause(curl, state, resume_after):
+def _configure_unpause(curl, state, resume_after, *, use_pause_cont=False):
     def progress(dltotal, dlnow, ultotal, ulnow):
         if state["paused"] and not state["resumed"]:
             if time.monotonic() - state["paused_at"] >= resume_after:
                 state["resumed"] = True
                 state["unpaused_at"] = time.monotonic()
-                curl.pause(pycurl.PAUSE_CONT)
+                if use_pause_cont:
+                    curl.pause(pycurl.PAUSE_CONT)
+                else:
+                    curl.unpause()
         return 0
 
     curl.setopt(pycurl.NOPROGRESS, False)
@@ -85,8 +88,8 @@ def _run_with_unpause_multi(curl, state, resume_after, timeout):
     return done_at, err_list
 
 
-def _run_with_unpause_easy(curl, state, resume_after, timeout):
-    _configure_unpause(curl, state, resume_after)
+def _run_with_unpause_easy(curl, state, resume_after, timeout, *, use_pause_cont=False):
+    _configure_unpause(curl, state, resume_after, use_pause_cont=use_pause_cont)
     curl.setopt(pycurl.TIMEOUT, int(timeout) + 1)
     err_list = []
     try:
@@ -316,13 +319,24 @@ def test_easy_send_mask(app, curl, mask):
 
 
 def test_multi_via_read_return(app, curl):
-    """Pause via READFUNC_PAUSE and ensure upload continues after unpause."""
+    """Pause via READFUNC_PAUSE and ensure upload continues after unpause()."""
     _assert_read_return(app, curl, _run_with_unpause_multi)
 
 
 def test_easy_via_read_return(app, curl):
     """Pause via READFUNC_PAUSE in easy interface and ensure upload resumes."""
     _assert_read_return(app, curl, _run_with_unpause_easy)
+
+
+def test_easy_via_read_return_pause_cont_compat(app, curl):
+    """Backwards-compat: READFUNC_PAUSE can still resume via pause(PAUSE_CONT)."""
+
+    def run_with_pause_cont(curl, state, resume_after, timeout):
+        return _run_with_unpause_easy(
+            curl, state, resume_after, timeout, use_pause_cont=True
+        )
+
+    _assert_read_return(app, curl, run_with_pause_cont)
 
 
 def test_multi_excludes_low_speed_limit_and_resets_timer(app, curl):

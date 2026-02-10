@@ -97,7 +97,8 @@ def partial_transfer(ctx: MultiCtx, skip_first_write: bool = False) -> None:
 
     ctx.multi.socket_action(pycurl.SOCKET_TIMEOUT, 0)
 
-    assert len(ctx.sockets) > 0
+    ok = _run_until(ctx, lambda: len(ctx.sockets) > 0, timeout=5.0)
+    assert ok, "Did not observe socket registration in time"
     assert ctx.socket_result is not None
     assert ctx.timer_result is not None
 
@@ -204,7 +205,7 @@ def test_easy_pause_unpause(multi_ctx: MultiCtx, app):
     assert multi_ctx.bytes_received == bytes_before
 
     logger.debug("Unpausing transfer...")
-    multi_ctx.easy.pause(pycurl.PAUSE_CONT)
+    multi_ctx.easy.unpause()
 
     finished = _run_until(multi_ctx, lambda: _is_done(multi_ctx), timeout=10.0)
     assert finished, "Transfer did not finish after sleeping"
