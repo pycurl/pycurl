@@ -37,8 +37,8 @@ def curl():
     c.close()
 
 
-@pytest.fixture(scope="module")
-def app(request) -> Generator[str, None, None]:
+@pytest.fixture(scope="session")
+def app() -> Generator[str, None, None]:
     port = _get_free_port()
     setup, teardown = appmanager.setup(
         (
@@ -46,7 +46,14 @@ def app(request) -> Generator[str, None, None]:
             port,
         )
     )
-    setup(request.module)
+
+    # appmanager.setup() stores server state on the object passed to setup/teardown.
+    # At session scope we don't have a module object, so use a tiny holder.
+    class _AppState:
+        pass
+
+    state = _AppState()
+    setup(state)
     wait_listening(localhost, port, timeout=10.0)
     yield f"http://{localhost}:{port}"
-    teardown(request.module)
+    teardown(state)
