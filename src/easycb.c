@@ -211,13 +211,12 @@ opensocket_callback(void *clientp, curlsocktype purpose,
     }
 
     if (PyInt_Check(result)) {
-        long ret_int = PyInt_AsLong(result);
-        if (ret_int == CURL_SOCKET_BAD && !PyErr_Occurred()) {
-            ret = CURL_SOCKET_BAD;
+        curl_socket_t sock_fd;
+        if (PyLong_AsCurlSocket(result, &sock_fd) == 0) {
+            ret = sock_fd;
             goto done;
         }
-        PyErr_Clear();
-        PyErr_SetString(ErrorObject, "Open socket callback's return value must be a socket");
+        /* PyLong_AsCurlSocket sets an exception on failure */
         ret = CURL_SOCKET_BAD;
         goto verbose_error;
     } else if (PyObject_HasAttrString(result, "fileno")) {
