@@ -310,11 +310,10 @@ do_curl_getinfo_raw(CurlObject *self, PyObject *args)
                 CURLERROR_RETVAL();
             }
 
-            /* Note that CURL_SOCKET_BAD returned by CURLINFO_ACTIVESOCKET equals
-             * -1, which is the value returned by CURLINFO_LASTSOCKET to indicate
-             * that the socket is no longer valid.
+            /* Expose CURL_SOCKET_BAD as -1 in Python so ACTIVESOCKET matches
+             * LASTSOCKET semantics for invalid sockets.
              */
-            return PyLong_FromLongLong(sockfd);
+            return PyLong_FromCurlSocket(sockfd);
         }
 #endif
 

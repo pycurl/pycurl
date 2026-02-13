@@ -10,7 +10,6 @@ import logging
 import pycurl
 import pytest
 import select
-import sys
 import time
 from . import util
 
@@ -178,9 +177,6 @@ def test_multi_remove_handle(multi_ctx: MultiCtx):
     assert multi_ctx.socket_result is not None
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32", reason="https://github.com/pycurl/pycurl/issues/819"
-)
 def test_easy_pause_unpause(multi_ctx: MultiCtx, app):
     params = {"num_chunks": 10, "delay": 0.2}
     query = urlencode(params)
@@ -217,9 +213,6 @@ def test_easy_pause_unpause(multi_ctx: MultiCtx, app):
 
 
 # (mid-transfer) easy.close() must call SOCKETFUNCTION to remove sockets
-@pytest.mark.skipif(
-    sys.platform in ["win32"], reason="https://github.com/pycurl/pycurl/issues/819"
-)
 def test_easy_close(multi_ctx: MultiCtx):
     partial_transfer(multi_ctx)
 

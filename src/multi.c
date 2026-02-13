@@ -284,6 +284,7 @@ multi_socket_callback(CURL *easy,
 {
     CurlMultiObject *self;
     PyObject *arglist;
+    PyObject *py_socket = NULL;
     PyObject *result = NULL;
     PYCURL_DECLARE_THREAD_STATE;
 
@@ -297,8 +298,9 @@ multi_socket_callback(CURL *easy,
     }
 
     /* check args */
-    if (self->s_cb == NULL)
+    if (self->s_cb == NULL) {
         goto silent_error;
+    }
 
     if (socketp == NULL) {
         Py_INCREF(Py_None);
@@ -306,13 +308,20 @@ multi_socket_callback(CURL *easy,
     }
 
     /* run callback */
-    arglist = Py_BuildValue("(iiOO)", what, s, userp, (PyObject *)socketp);
-    if (arglist == NULL)
+    py_socket = PyLong_FromCurlSocket(s);
+    if (py_socket == NULL) {
         goto verbose_error;
+    }
+    arglist = Py_BuildValue("(iOOO)", what, py_socket, userp, (PyObject *)socketp);
+    Py_DECREF(py_socket);
+    if (arglist == NULL) {
+        goto verbose_error;
+    }
     result = PyObject_Call(self->s_cb, arglist, NULL);
     Py_DECREF(arglist);
-    if (result == NULL)
+    if (result == NULL) {
         goto verbose_error;
+    }
 
     /* return values from socket callbacks should be ignored */
 
@@ -624,10 +633,15 @@ do_multi_assign(CurlMultiObject *self, PyObject *args)
 {
     CURLMcode res;
     curl_socket_t socket;
+    PyObject *socket_obj;
     PyObject *obj;
 
-    if (!PyArg_ParseTuple(args, "iO:assign", &socket, &obj))
+    if (!PyArg_ParseTuple(args, "OO:assign", &socket_obj, &obj)) {
         return NULL;
+    }
+    if (PyLong_AsCurlSocket(socket_obj, &socket) != 0) {
+        return NULL;
+    }
     if (check_multi_state(self, 1 | 2, "assign") != 0) {
         return NULL;
     }
@@ -648,11 +662,16 @@ do_multi_socket_action(CurlMultiObject *self, PyObject *args)
 {
     CURLMcode res;
     curl_socket_t socket;
+    PyObject *socket_obj;
     int ev_bitmask;
     int running = -1;
 
-    if (!PyArg_ParseTuple(args, "ii:socket_action", &socket, &ev_bitmask))
+    if (!PyArg_ParseTuple(args, "Oi:socket_action", &socket_obj, &ev_bitmask)) {
         return NULL;
+    }
+    if (PyLong_AsCurlSocket(socket_obj, &socket) != 0) {
+        return NULL;
+    }
     if (check_multi_state(self, 1 | 2, "socket_action") != 0) {
         return NULL;
     }
