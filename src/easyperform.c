@@ -81,19 +81,15 @@ do_curl_perform_rs(CurlObject *self, PyObject *Py_UNUSED(ignored))
 
 
 /* curl_easy_pause() can be called from inside a callback or outside */
-PYCURL_INTERNAL PyObject *
-do_curl_pause(CurlObject *self, PyObject *args)
+static PyObject *
+do_curl_pause_internal(CurlObject *self, int bitmask, const char *op_name)
 {
-    int bitmask;
     CURLcode res;
 #ifdef WITH_THREAD
     PyThreadState *saved_state;
 #endif
 
-    if (!PyArg_ParseTuple(args, "i:pause", &bitmask)) {
-        return NULL;
-    }
-    if (check_curl_state(self, 1, "pause") != 0) {
+    if (check_curl_state(self, 1, op_name) != 0) {
         return NULL;
     }
 
@@ -128,4 +124,24 @@ do_curl_pause(CurlObject *self, PyObject *args)
     } else {
         Py_RETURN_NONE;
     }
+}
+
+
+PYCURL_INTERNAL PyObject *
+do_curl_pause(CurlObject *self, PyObject *args)
+{
+    int bitmask;
+
+    if (!PyArg_ParseTuple(args, "i:pause", &bitmask)) {
+        return NULL;
+    }
+
+    return do_curl_pause_internal(self, bitmask, "pause");
+}
+
+
+PYCURL_INTERNAL PyObject *
+do_curl_unpause(CurlObject *self, PyObject *Py_UNUSED(ignored))
+{
+    return do_curl_pause_internal(self, CURLPAUSE_CONT, "unpause");
 }

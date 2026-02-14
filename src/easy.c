@@ -872,6 +872,7 @@ PYCURL_INTERNAL PyMethodDef curlobject_methods[] = {
     {"getinfo", (PyCFunction)do_curl_getinfo, METH_VARARGS, curl_getinfo_doc},
     {"getinfo_raw", (PyCFunction)do_curl_getinfo_raw, METH_VARARGS, curl_getinfo_raw_doc},
     {"pause", (PyCFunction)do_curl_pause, METH_VARARGS, curl_pause_doc},
+    {"unpause", (PyCFunction)do_curl_unpause, METH_NOARGS, curl_unpause_doc},
     {"perform", (PyCFunction)do_curl_perform, METH_NOARGS, curl_perform_doc},
     {"perform_rb", (PyCFunction)do_curl_perform_rb, METH_NOARGS, curl_perform_rb_doc},
     {"perform_rs", (PyCFunction)do_curl_perform_rs, METH_NOARGS, curl_perform_rs_doc},
