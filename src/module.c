@@ -600,7 +600,8 @@ initpycurl(void)
     insint_c(d, "IOCMD_RESTARTREAD", CURLIOCMD_RESTARTREAD);
 
     /* opensocketfunction return value */
-    insint_c(d, "SOCKET_BAD", CURL_SOCKET_BAD);
+    insobj2_modinit(d, curlobject_constants, "SOCKET_BAD",
+        PyLong_FromCurlSocket(CURL_SOCKET_BAD));
 
     /* curl_infotype: the kind of data that is passed to information_callback */
 /* XXX do we actually need curl_infotype in pycurl ??? */
@@ -1497,7 +1498,8 @@ initpycurl(void)
     insint(d, "CSELECT_IN", CURL_CSELECT_IN);
     insint(d, "CSELECT_OUT", CURL_CSELECT_OUT);
     insint(d, "CSELECT_ERR", CURL_CSELECT_ERR);
-    insint(d, "SOCKET_TIMEOUT", CURL_SOCKET_TIMEOUT);
+    insobj2_modinit(d, NULL, "SOCKET_TIMEOUT",
+        PyLong_FromCurlSocket(CURL_SOCKET_TIMEOUT));
     insint(d, "POLL_NONE", CURL_POLL_NONE);
     insint(d, "POLL_IN", CURL_POLL_IN);
     insint(d, "POLL_OUT", CURL_POLL_OUT);

@@ -160,8 +160,8 @@ error:
 }
 
 
-/* curl_socket_t is just an int on unix/windows (with limitations that
- * are not important here) */
+/* curl_socket_t is not always an int (e.g. SOCKET on Win64), so keep
+ * conversions explicit to avoid truncation. */
 PYCURL_INTERNAL curl_socket_t
 opensocket_callback(void *clientp, curlsocktype purpose,
                     struct curl_sockaddr *address)
@@ -170,7 +170,7 @@ opensocket_callback(void *clientp, curlsocktype purpose,
     PyObject *result = NULL;
     PyObject *fileno_result = NULL;
     CurlObject *self;
-    int ret = CURL_SOCKET_BAD;
+    curl_socket_t ret = CURL_SOCKET_BAD;
     PyObject *converted_address;
     PyObject *python_address;
     PYCURL_DECLARE_THREAD_STATE;
@@ -210,8 +210,15 @@ opensocket_callback(void *clientp, curlsocktype purpose,
         goto verbose_error;
     }
 
-    if (PyInt_Check(result) && PyInt_AsLong(result) == CURL_SOCKET_BAD) {
+    if (PyInt_Check(result)) {
+        curl_socket_t sock_fd;
+        if (PyLong_AsCurlSocket(result, &sock_fd) == 0) {
+            ret = sock_fd;
+            goto done;
+        }
+        /* PyLong_AsCurlSocket sets an exception on failure */
         ret = CURL_SOCKET_BAD;
+        goto verbose_error;
     } else if (PyObject_HasAttrString(result, "fileno")) {
         fileno_result = PyObject_CallMethod(result, "fileno", NULL);
 
@@ -221,11 +228,15 @@ opensocket_callback(void *clientp, curlsocktype purpose,
         }
         // normal operation:
         if (PyInt_Check(fileno_result)) {
-            int sock_fd = PyInt_AsLong(fileno_result);
+            curl_socket_t sock_fd;
+            if (PyLong_AsCurlSocket(fileno_result, &sock_fd) != 0) {
+                ret = CURL_SOCKET_BAD;
+                goto verbose_error;
+            }
 #if defined(WIN32)
             ret = dup_winsock(sock_fd, address);
 #else
-            ret = dup(sock_fd);
+            ret = dup((int) sock_fd);
 #endif
             goto done;
         } else {
@@ -254,6 +265,7 @@ PYCURL_INTERNAL int
 sockopt_cb(void *clientp, curl_socket_t curlfd, curlsocktype purpose)
 {
     PyObject *arglist;
+    PyObject *py_curlfd = NULL;
     CurlObject *self;
     int ret = CURL_SOCKOPT_ERROR;
     PyObject *ret_obj = NULL;
@@ -267,9 +279,15 @@ sockopt_cb(void *clientp, curl_socket_t curlfd, curlsocktype purpose)
         return ret;
     }
 
-    arglist = Py_BuildValue("(ii)", (int) curlfd, (int) purpose);
-    if (arglist == NULL)
+    py_curlfd = PyLong_FromCurlSocket(curlfd);
+    if (py_curlfd == NULL) {
         goto verbose_error;
+    }
+    arglist = Py_BuildValue("(Oi)", py_curlfd, (int) purpose);
+    Py_DECREF(py_curlfd);
+    if (arglist == NULL) {
+        goto verbose_error;
+    }
 
     ret_obj = PyObject_Call(self->sockopt_cb, arglist, NULL);
     Py_DECREF(arglist);
@@ -311,6 +329,7 @@ PYCURL_INTERNAL int
 closesocket_callback(void *clientp, curl_socket_t curlfd)
 {
     PyObject *arglist;
+    PyObject *py_curlfd = NULL;
     CurlObject *self;
     int ret = 1;
     PyObject *ret_obj = NULL;
@@ -324,14 +343,21 @@ closesocket_callback(void *clientp, curl_socket_t curlfd)
         return ret;
     }
 
-    arglist = Py_BuildValue("(i)", (int) curlfd);
-    if (arglist == NULL)
+    py_curlfd = PyLong_FromCurlSocket(curlfd);
+    if (py_curlfd == NULL) {
         goto verbose_error;
+    }
+    arglist = Py_BuildValue("(O)", py_curlfd);
+    Py_DECREF(py_curlfd);
+    if (arglist == NULL) {
+        goto verbose_error;
+    }
 
     ret_obj = PyObject_Call(self->closesocket_cb, arglist, NULL);
     Py_DECREF(arglist);
-    if (!ret_obj)
+    if (!ret_obj) {
        goto silent_error;
+    }
     if (!PyInt_Check(ret_obj) && !PyLong_Check(ret_obj)) {
         PyObject *ret_repr = PyObject_Repr(ret_obj);
         if (ret_repr) {

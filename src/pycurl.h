@@ -56,8 +56,8 @@
 #  define EAFNOSUPPORT 97
 # endif
 
-PYCURL_INTERNAL int
-dup_winsock(int sock, const struct curl_sockaddr *address);
+PYCURL_INTERNAL curl_socket_t
+dup_winsock(curl_socket_t sock, const struct curl_sockaddr *address);
 #endif
 
 /* The inet_ntop() was added in ws2_32.dll on Windows Vista [1]. Hence the
@@ -297,6 +297,12 @@ PYCURL_INTERNAL void pycurl_ssl_cleanup(void);
   #define PyInt_FromLong               PyLong_FromLong
   #define PyInt_AsLong                 PyLong_AsLong
 #endif
+
+/* Convert socket values without truncation on Win64 where curl_socket_t is SOCKET. */
+PYCURL_INTERNAL PyObject *
+PyLong_FromCurlSocket(curl_socket_t sockfd);
+PYCURL_INTERNAL int
+PyLong_AsCurlSocket(PyObject *obj, curl_socket_t *sockfd);
 
 #define PYLISTORTUPLE_LIST 1
 #define PYLISTORTUPLE_TUPLE 2
