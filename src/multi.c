@@ -660,7 +660,7 @@ do_multi_assign(CurlMultiObject *self, PyObject *args)
         return NULL;
     }
 
-    key = PyInt_FromLong((long)socket);
+    key = PyLong_FromCurlSocket(socket);
     if (key == NULL) {
         return NULL;
     }
