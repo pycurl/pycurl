@@ -34,6 +34,15 @@ Curl Object
 
     .. automethod:: pycurl.Curl.pause
 
+    .. _recv:
+    .. automethod:: pycurl.Curl.recv
+
+    .. _recv_into:
+    .. automethod:: pycurl.Curl.recv_into
+
+    .. _send:
+    .. automethod:: pycurl.Curl.send
+
     .. _errstr:
     .. automethod:: pycurl.Curl.errstr
 

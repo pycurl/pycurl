@@ -59,7 +59,10 @@ DOCSTRINGS_SOURCES = \
 	doc/docstrings/curl_multi.rst \
 	doc/docstrings/curl_pause.rst \
 	doc/docstrings/curl_perform.rst \
+	doc/docstrings/curl_recv.rst \
+	doc/docstrings/curl_recv_into.rst \
 	doc/docstrings/curl_reset.rst \
+	doc/docstrings/curl_send.rst \
 	doc/docstrings/curl_setopt.rst \
 	doc/docstrings/curl_share.rst \
 	doc/docstrings/curl_unsetopt.rst \
