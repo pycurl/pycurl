@@ -19,7 +19,8 @@ util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *strea
 
     /* acquire thread */
     self = (CurlObject *)stream;
-    if (!PYCURL_ACQUIRE_THREAD()) {
+    PYCURL_GET_THREAD_STATE;
+    if (!PYCURL_PYTHON_ENTER()) {
         PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
         PyErr_WarnEx(PyExc_RuntimeWarning, "util_write_callback failed to acquire thread", 1);
         PyGILState_Release(tmp_warn_state);
@@ -67,7 +68,7 @@ util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *strea
 done:
 silent_error:
     Py_XDECREF(result);
-    PYCURL_RELEASE_THREAD();
+    PYCURL_PYTHON_LEAVE();
     return ret;
 verbose_error:
     PyErr_Print();
@@ -176,7 +177,8 @@ opensocket_callback(void *clientp, curlsocktype purpose,
     PYCURL_DECLARE_THREAD_STATE;
 
     self = (CurlObject *)clientp;
-    if (!PYCURL_ACQUIRE_THREAD()) {
+    PYCURL_GET_THREAD_STATE;
+    if (!PYCURL_PYTHON_ENTER()) {
         PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
         PyErr_WarnEx(PyExc_RuntimeWarning, "opensocket_callback failed to acquire thread", 1);
         PyGILState_Release(tmp_warn_state);
@@ -253,7 +255,7 @@ silent_error:
 done:
     Py_XDECREF(result);
     Py_XDECREF(fileno_result);
-    PYCURL_RELEASE_THREAD();
+    PYCURL_PYTHON_LEAVE();
     return ret;
 verbose_error:
     PyErr_Print();
@@ -272,7 +274,8 @@ sockopt_cb(void *clientp, curl_socket_t curlfd, curlsocktype purpose)
     PYCURL_DECLARE_THREAD_STATE;
 
     self = (CurlObject *)clientp;
-    if (!PYCURL_ACQUIRE_THREAD()) {
+    PYCURL_GET_THREAD_STATE;
+    if (!PYCURL_PYTHON_ENTER()) {
         PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
         PyErr_WarnEx(PyExc_RuntimeWarning, "sockopt_cb failed to acquire thread", 1);
         PyGILState_Release(tmp_warn_state);
@@ -316,7 +319,7 @@ silent_error:
     ret = -1;
 done:
     Py_XDECREF(ret_obj);
-    PYCURL_RELEASE_THREAD();
+    PYCURL_PYTHON_LEAVE();
     return ret;
 verbose_error:
     PyErr_Print();
@@ -336,7 +339,8 @@ closesocket_callback(void *clientp, curl_socket_t curlfd)
     PYCURL_DECLARE_THREAD_STATE;
 
     self = (CurlObject *)clientp;
-    if (!PYCURL_ACQUIRE_THREAD()) {
+    PYCURL_GET_THREAD_STATE;
+    if (!PYCURL_PYTHON_ENTER()) {
         PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
         PyErr_WarnEx(PyExc_RuntimeWarning, "closesocket_callback failed to acquire thread", 1);
         PyGILState_Release(tmp_warn_state);
@@ -383,7 +387,7 @@ silent_error:
     ret = -1;
 done:
     Py_XDECREF(ret_obj);
-    PYCURL_RELEASE_THREAD();
+    PYCURL_PYTHON_LEAVE();
     return ret;
 verbose_error:
     PyErr_Print();
@@ -399,8 +403,7 @@ khkey_to_object(const struct curl_khkey *khkey)
     PyObject *arglist, *ret;
 
     if (khkey == NULL) {
-        Py_INCREF(Py_None);
-        return Py_None;
+        Py_RETURN_NONE;
     }
 
     if (khkey->len) {
@@ -440,7 +443,8 @@ ssh_key_cb(CURL *easy, const struct curl_khkey *knownkey,
     PYCURL_DECLARE_THREAD_STATE;
 
     self = (CurlObject *)clientp;
-    if (!PYCURL_ACQUIRE_THREAD()) {
+    PYCURL_GET_THREAD_STATE;
+    if (!PYCURL_PYTHON_ENTER()) {
         PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
         PyErr_WarnEx(PyExc_RuntimeWarning, "ssh_key_cb failed to acquire thread", 1);
         PyGILState_Release(tmp_warn_state);
@@ -489,7 +493,7 @@ done:
     Py_XDECREF(knownkey_obj);
     Py_XDECREF(foundkey_obj);
     Py_XDECREF(ret_obj);
-    PYCURL_RELEASE_THREAD();
+    PYCURL_PYTHON_LEAVE();
     return ret;
 verbose_error:
     PyErr_Print();
@@ -511,7 +515,8 @@ seek_callback(void *stream, curl_off_t offset, int origin)
 
     /* acquire thread */
     self = (CurlObject *)stream;
-    if (!PYCURL_ACQUIRE_THREAD()) {
+    PYCURL_GET_THREAD_STATE;
+    if (!PYCURL_PYTHON_ENTER()) {
         PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
         PyErr_WarnEx(PyExc_RuntimeWarning, "seek_callback failed to acquire thread", 1);
         PyGILState_Release(tmp_warn_state);
@@ -566,7 +571,7 @@ seek_callback(void *stream, curl_off_t offset, int origin)
 
 silent_error:
     Py_XDECREF(result);
-    PYCURL_RELEASE_THREAD();
+    PYCURL_PYTHON_LEAVE();
     return ret;
 verbose_error:
     PyErr_Print();
@@ -591,7 +596,8 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
 
     /* acquire thread */
     self = (CurlObject *)stream;
-    if (!PYCURL_ACQUIRE_THREAD()) {
+    PYCURL_GET_THREAD_STATE;
+    if (!PYCURL_PYTHON_ENTER()) {
         PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
         PyErr_WarnEx(PyExc_RuntimeWarning, "read_callback failed to acquire thread", 1);
         PyGILState_Release(tmp_warn_state);
@@ -695,7 +701,7 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
 done:
 silent_error:
     Py_XDECREF(result);
-    PYCURL_RELEASE_THREAD();
+    PYCURL_PYTHON_LEAVE();
     return ret;
 verbose_error:
     PyErr_Print();
@@ -715,7 +721,8 @@ progress_callback(void *stream,
 
     /* acquire thread */
     self = (CurlObject *)stream;
-    if (!PYCURL_ACQUIRE_THREAD()) {
+    PYCURL_GET_THREAD_STATE;
+    if (!PYCURL_PYTHON_ENTER()) {
         PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
         PyErr_WarnEx(PyExc_RuntimeWarning, "progress_callback failed to acquire thread", 1);
         PyGILState_Release(tmp_warn_state);
@@ -748,7 +755,7 @@ progress_callback(void *stream,
 
 silent_error:
     Py_XDECREF(result);
-    PYCURL_RELEASE_THREAD();
+    PYCURL_PYTHON_LEAVE();
     return ret;
 verbose_error:
     PyErr_Print();
@@ -770,7 +777,8 @@ xferinfo_callback(void *stream,
 
     /* acquire thread */
     self = (CurlObject *)stream;
-    if (!PYCURL_ACQUIRE_THREAD()) {
+    PYCURL_GET_THREAD_STATE;
+    if (!PYCURL_PYTHON_ENTER()) {
         PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
         PyErr_WarnEx(PyExc_RuntimeWarning, "xferinfo_callback failed to acquire thread", 1);
         PyGILState_Release(tmp_warn_state);
@@ -805,7 +813,7 @@ xferinfo_callback(void *stream,
 
 silent_error:
     Py_XDECREF(result);
-    PYCURL_RELEASE_THREAD();
+    PYCURL_PYTHON_LEAVE();
     return ret;
 verbose_error:
     PyErr_Print();
@@ -828,7 +836,8 @@ debug_callback(CURL *curlobj, curl_infotype type,
 
     /* acquire thread */
     self = (CurlObject *)stream;
-    if (!PYCURL_ACQUIRE_THREAD()) {
+    PYCURL_GET_THREAD_STATE;
+    if (!PYCURL_PYTHON_ENTER()) {
         PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
         PyErr_WarnEx(PyExc_RuntimeWarning, "debug_callback failed to acquire thread", 1);
         PyGILState_Release(tmp_warn_state);
@@ -860,7 +869,7 @@ debug_callback(CURL *curlobj, curl_infotype type,
 
 silent_error:
     Py_XDECREF(result);
-    PYCURL_RELEASE_THREAD();
+    PYCURL_PYTHON_LEAVE();
     return ret;
 verbose_error:
     PyErr_Print();
@@ -881,7 +890,8 @@ ioctl_callback(CURL *curlobj, int cmd, void *stream)
 
     /* acquire thread */
     self = (CurlObject *)stream;
-    if (!PYCURL_ACQUIRE_THREAD()) {
+    PYCURL_GET_THREAD_STATE;
+    if (!PYCURL_PYTHON_ENTER()) {
         PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
         PyErr_WarnEx(PyExc_RuntimeWarning, "ioctl_callback failed to acquire thread", 1);
         PyGILState_Release(tmp_warn_state);
@@ -915,7 +925,7 @@ ioctl_callback(CURL *curlobj, int cmd, void *stream)
 
 silent_error:
     Py_XDECREF(result);
-    PYCURL_RELEASE_THREAD();
+    PYCURL_PYTHON_LEAVE();
     return (curlioerr) ret;
 verbose_error:
     PyErr_Print();
@@ -1005,7 +1015,8 @@ ssl_ctx_callback(CURL *curl, void *ssl_ctx, void *ptr)
 
     /* acquire thread */
     self = (CurlObject *)ptr;
-    if (!PYCURL_ACQUIRE_THREAD()) {
+    PYCURL_GET_THREAD_STATE;
+    if (!PYCURL_PYTHON_ENTER()) {
         PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
         PyErr_WarnEx(PyExc_RuntimeWarning, "ssl_ctx_callback failed to acquire thread", 1);
         PyGILState_Release(tmp_warn_state);
@@ -1019,7 +1030,7 @@ ssl_ctx_callback(CURL *curl, void *ssl_ctx, void *ptr)
     if (r != 0)
         PyErr_Print();
 
-    PYCURL_RELEASE_THREAD();
+    PYCURL_PYTHON_LEAVE();
     return r == 0 ? CURLE_OK : CURLE_FAILED_INIT;
 }
 #endif
@@ -1037,7 +1048,8 @@ prereq_callback(void *clientp, char *conn_primary_ip, char *conn_local_ip,
     PYCURL_DECLARE_THREAD_STATE;
 
     self = (CurlObject *)clientp;
-    if (!PYCURL_ACQUIRE_THREAD()) {
+    PYCURL_GET_THREAD_STATE;
+    if (!PYCURL_PYTHON_ENTER()) {
         PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
         PyErr_WarnEx(PyExc_RuntimeWarning, "prereq_callback failed to acquire thread", 1);
         PyGILState_Release(tmp_warn_state);
@@ -1077,7 +1089,7 @@ silent_error:
     ret = -1;
 done:
     Py_XDECREF(ret_obj);
-    PYCURL_RELEASE_THREAD();
+    PYCURL_PYTHON_LEAVE();
     return ret;
 verbose_error:
     PyErr_Print();

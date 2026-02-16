@@ -28,33 +28,33 @@ PYCURL_INTERNAL PyObject *
 do_curl_perform_rb(CurlObject *self, PyObject *Py_UNUSED(ignored))
 {
     PyObject *v, *io;
-    
+
     /* NOTE: this tuple is never freed. */
     static PyObject *empty_tuple = NULL;
-    
+
     if (empty_tuple == NULL) {
         empty_tuple = PyTuple_New(0);
         if (empty_tuple == NULL) {
             return NULL;
         }
     }
-    
+
     io = PyObject_Call(bytesio, empty_tuple, NULL);
     if (io == NULL) {
         return NULL;
     }
-    
+
     v = do_curl_setopt_filelike(self, CURLOPT_WRITEDATA, io);
     if (v == NULL) {
         Py_DECREF(io);
         return NULL;
     }
-    
+
     v = do_curl_perform(self, NULL);
     if (v == NULL) {
         return NULL;
     }
-    
+
     v = PyObject_CallMethod(io, "getvalue", NULL);
     Py_DECREF(io);
     return v;
@@ -65,12 +65,12 @@ PYCURL_INTERNAL PyObject *
 do_curl_perform_rs(CurlObject *self, PyObject *Py_UNUSED(ignored))
 {
     PyObject *v, *decoded;
-    
+
     v = do_curl_perform_rb(self, NULL);
     if (v == NULL) {
         return NULL;
     }
-    
+
     decoded = PyUnicode_FromEncodedObject(v, NULL, NULL);
     Py_DECREF(v);
     return decoded;

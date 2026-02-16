@@ -287,10 +287,11 @@ multi_socket_callback(CURL *easy,
     PyObject *py_socket = NULL;
     PyObject *result = NULL;
     PYCURL_DECLARE_THREAD_STATE;
+    self = (CurlMultiObject *)userp;
 
     /* acquire thread */
-    self = (CurlMultiObject *)userp;
-    if (!PYCURL_ACQUIRE_THREAD_MULTI()) {
+    PYCURL_GET_THREAD_STATE_MULTI;
+    if (!PYCURL_PYTHON_ENTER()) {
         PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
         PyErr_WarnEx(PyExc_RuntimeWarning, "multi_socket_callback failed to acquire thread", 1);
         PyGILState_Release(tmp_warn_state);
@@ -327,7 +328,7 @@ multi_socket_callback(CURL *easy,
 
 silent_error:
     Py_XDECREF(result);
-    PYCURL_RELEASE_THREAD();
+    PYCURL_PYTHON_LEAVE();
     return 0;
 verbose_error:
     PyErr_Print();
@@ -351,7 +352,8 @@ multi_timer_callback(CURLM *multi,
 
     /* acquire thread */
     self = (CurlMultiObject *)userp;
-    if (!PYCURL_ACQUIRE_THREAD_MULTI()) {
+    PYCURL_GET_THREAD_STATE_MULTI;
+    if (!PYCURL_PYTHON_ENTER()) {
         PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
         PyErr_WarnEx(PyExc_RuntimeWarning, "multi_timer_callback failed to acquire thread", 1);
         PyGILState_Release(tmp_warn_state);
@@ -375,7 +377,7 @@ multi_timer_callback(CURLM *multi,
 
 silent_error:
     Py_XDECREF(result);
-    PYCURL_RELEASE_THREAD();
+    PYCURL_PYTHON_LEAVE();
     return ret;
 verbose_error:
     PyErr_Print();

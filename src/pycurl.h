@@ -255,38 +255,45 @@ PYCURL_INTERNAL void pycurl_ssl_cleanup(void);
 #endif
 
 #ifdef WITH_THREAD
-#  define PYCURL_DECLARE_THREAD_STATE PyThreadState *tmp_state
-#  define PYCURL_ACQUIRE_THREAD() pycurl_acquire_thread(self, &tmp_state)
-#  define PYCURL_ACQUIRE_THREAD_MULTI() pycurl_acquire_thread_multi(self, &tmp_state)
-#  define PYCURL_RELEASE_THREAD() pycurl_release_thread(tmp_state)
+#  define PYCURL_DECLARE_THREAD_STATE PyThreadState **tstate
+#  define PYCURL_GET_THREAD_STATE tstate = pycurl_get_thread_state_slot(self)
+#  define PYCURL_GET_THREAD_STATE_MULTI tstate = pycurl_get_thread_state_slot_multi(self)
+#  define PYCURL_PYTHON_ENTER() pycurl_python_enter(tstate)
+#  define PYCURL_PYTHON_LEAVE() pycurl_python_leave(tstate)
 /* Replacement for Py_BEGIN_ALLOW_THREADS/Py_END_ALLOW_THREADS when python
    callbacks are expected during blocking i/o operations: self->state will hold
    the handle to current thread to be used as context */
 #  define PYCURL_BEGIN_ALLOW_THREADS \
-       self->state = PyThreadState_Get(); \
-       assert(self->state != NULL); \
-       Py_BEGIN_ALLOW_THREADS
+       self->state = PyEval_SaveThread(); \
+       assert(self->state != NULL);
 #  define PYCURL_END_ALLOW_THREADS \
-       Py_END_ALLOW_THREADS \
+       assert(self->state != NULL); \
+       PyEval_RestoreThread(self->state); \
        self->state = NULL;
 #  define PYCURL_BEGIN_ALLOW_THREADS_EASY \
        if (self->multi_stack == NULL) { \
-           self->state = PyThreadState_Get(); \
+           self->state = PyEval_SaveThread(); \
            assert(self->state != NULL); \
        } else { \
-           self->multi_stack->state = PyThreadState_Get(); \
+           self->multi_stack->state = PyEval_SaveThread(); \
            assert(self->multi_stack->state != NULL); \
-       } \
-       Py_BEGIN_ALLOW_THREADS
+       }
 #  define PYCURL_END_ALLOW_THREADS_EASY \
-       PYCURL_END_ALLOW_THREADS \
-       if (self->multi_stack != NULL) \
-           self->multi_stack->state = NULL;
+       if (self->multi_stack == NULL) { \
+           assert(self->state != NULL); \
+           PyEval_RestoreThread(self->state); \
+           self->state = NULL; \
+       } else { \
+           assert(self->multi_stack->state != NULL); \
+           PyEval_RestoreThread(self->multi_stack->state); \
+           self->multi_stack->state = NULL; \
+       }
 #else
 #  define PYCURL_DECLARE_THREAD_STATE
-#  define PYCURL_ACQUIRE_THREAD() (1)
-#  define PYCURL_ACQUIRE_THREAD_MULTI() (1)
-#  define PYCURL_RELEASE_THREAD()
+#  define PYCURL_GET_THREAD_STATE
+#  define PYCURL_GET_THREAD_STATE_MULTI
+#  define PYCURL_PYTHON_ENTER() (1)
+#  define PYCURL_PYTHON_LEAVE()
 #  define PYCURL_BEGIN_ALLOW_THREADS
 #  define PYCURL_END_ALLOW_THREADS
 #endif
@@ -532,12 +539,14 @@ PYCURL_INTERNAL PyThreadState *
 pycurl_get_thread_state(const CurlObject *self);
 PYCURL_INTERNAL PyThreadState *
 pycurl_get_thread_state_multi(const CurlMultiObject *self);
+PYCURL_INTERNAL PyThreadState **
+pycurl_get_thread_state_slot(CurlObject *self);
+PYCURL_INTERNAL PyThreadState **
+pycurl_get_thread_state_slot_multi(CurlMultiObject *self);
 PYCURL_INTERNAL int
-pycurl_acquire_thread(const CurlObject *self, PyThreadState **state);
-PYCURL_INTERNAL int
-pycurl_acquire_thread_multi(const CurlMultiObject *self, PyThreadState **state);
+pycurl_python_enter(PyThreadState **tstate);
 PYCURL_INTERNAL void
-pycurl_release_thread(PyThreadState *state);
+pycurl_python_leave(PyThreadState **tstate);
 
 PYCURL_INTERNAL void
 share_lock_lock(ShareLock *lock, curl_lock_data data);
