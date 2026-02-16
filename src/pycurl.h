@@ -600,6 +600,12 @@ do_curl_perform_rs(CurlObject *self, PyObject *Py_UNUSED(ignored));
 
 PYCURL_INTERNAL PyObject *
 do_curl_pause(CurlObject *self, PyObject *args);
+PYCURL_INTERNAL PyObject *
+do_curl_send(CurlObject *self, PyObject *args);
+PYCURL_INTERNAL PyObject *
+do_curl_recv(CurlObject *self, PyObject *args);
+PYCURL_INTERNAL PyObject *
+do_curl_recv_into(CurlObject *self, PyObject *args, PyObject *kwds);
 
 PYCURL_INTERNAL int
 check_curl_state(const CurlObject *self, int flags, const char *name);

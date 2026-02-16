@@ -1,5 +1,6 @@
 flaky
 flask
+numpy
 pyflakes
 pytest>=5
 sphinx
