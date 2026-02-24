@@ -44,6 +44,10 @@ generic failure status, in turn failing the ``perform()`` operation.
 A failing ``perform()`` will raise ``pycurl.error``, but the error code
 used depends on the specific callback.
 
+``KeyboardInterrupt`` and other ``BaseException`` subclasses (for example, ``SystemExit``)
+are handled specially: if they are raised inside a callback, they are preserved and re-raised
+to the caller instead of being converted into a ``pycurl.error``.
+
 Rich context information like exception objects can be stored in various ways,
 for example the following example stores OPENSOCKET callback exception on the
 Curl object::
