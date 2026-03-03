@@ -77,3 +77,27 @@ class CloseSocketCbUnsetTest(unittest.TestCase):
     @util.min_libcurl(7, 21, 7)
     def test_closesocketfunction_unset(self):
         self.curl.unsetopt(pycurl.CLOSESOCKETFUNCTION)
+
+@util.min_libcurl(7, 21, 7)
+def test_closesocketfunction_on_close(app):
+    called = {}
+
+    def closesocketfunction(curlfd) -> int:
+        called["called"] = True
+        return 1
+
+    curl = util.DefaultCurl()
+    curl.setopt(curl.URL, f"{app}/success")
+    curl.setopt(pycurl.FORBID_REUSE, False)
+    curl.setopt(pycurl.CONNECT_ONLY, True)
+    curl.setopt(pycurl.CLOSESOCKETFUNCTION, closesocketfunction)
+
+    assert curl.getinfo(pycurl.ACTIVESOCKET) == -1
+
+    curl.perform()
+    assert curl.getinfo(pycurl.ACTIVESOCKET) != -1
+    assert not called.get("called", False)
+
+    curl.close()
+
+    assert called.get("called", False)
