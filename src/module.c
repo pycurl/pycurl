@@ -29,7 +29,7 @@ PYCURL_INTERNAL char *g_pycurl_useragent = NULL;
 PYCURL_INTERNAL PyObject *ErrorObject = NULL;
 PYCURL_INTERNAL PyTypeObject *p_Curl_Type = NULL;
 PYCURL_INTERNAL PyTypeObject *p_CurlSlist_Type = NULL;
-PYCURL_INTERNAL PyTypeObject *p_CurlHttppost_Type = NULL;
+PYCURL_INTERNAL PyTypeObject *PYCURL_POSTOBJ_TYPE_PTR = NULL;
 PYCURL_INTERNAL PyTypeObject *p_CurlMulti_Type = NULL;
 PYCURL_INTERNAL PyTypeObject *p_CurlShare_Type = NULL;
 #ifdef HAVE_CURL_7_19_6_OPTS
@@ -492,12 +492,12 @@ initpycurl(void)
      * is required for portability to Windows without requiring C++. */
     p_Curl_Type = &Curl_Type;
     p_CurlSlist_Type = &CurlSlist_Type;
-    p_CurlHttppost_Type = &CurlHttppost_Type;
+    PYCURL_POSTOBJ_TYPE_PTR = &PYCURL_POSTOBJ_TYPE;
     p_CurlMulti_Type = &CurlMulti_Type;
     p_CurlShare_Type = &CurlShare_Type;
     Py_SET_TYPE(&Curl_Type, &PyType_Type);
     Py_SET_TYPE(&CurlSlist_Type, &PyType_Type);
-    Py_SET_TYPE(&CurlHttppost_Type, &PyType_Type);
+    Py_SET_TYPE(&PYCURL_POSTOBJ_TYPE, &PyType_Type);
     Py_SET_TYPE(&CurlMulti_Type, &PyType_Type);
     Py_SET_TYPE(&CurlShare_Type, &PyType_Type);
 
@@ -508,7 +508,7 @@ initpycurl(void)
     if (PyType_Ready(&CurlSlist_Type) < 0)
         goto error;
 
-    if (PyType_Ready(&CurlHttppost_Type) < 0)
+    if (PyType_Ready(&PYCURL_POSTOBJ_TYPE) < 0)
         goto error;
 
     if (PyType_Ready(&CurlMulti_Type) < 0)
@@ -885,6 +885,9 @@ initpycurl(void)
     insint_c(d, "PIPEWAIT", CURLOPT_PIPEWAIT);
 #endif
     insint_c(d, "HTTPPOST", CURLOPT_HTTPPOST);
+#if HAVE_CURL_MIME
+    insint_c(d, "MIMEPOST", CURLOPT_MIMEPOST);
+#endif
     insint_c(d, "SSLCERT", CURLOPT_SSLCERT);
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 71, 0)
     insint_c(d, "SSLCERT_BLOB", CURLOPT_SSLCERT_BLOB);
