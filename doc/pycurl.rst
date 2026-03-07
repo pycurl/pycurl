@@ -31,4 +31,10 @@ pycurl Module Functionality
 .. autoclass:: pycurl.CurlShare
     :noindex:
 
+.. autoclass:: pycurl.Mime
+    :noindex:
+
+.. autoclass:: pycurl.MimePart
+    :noindex:
+
 .. _curl_version: https://curl.haxx.se/libcurl/c/curl_version.html

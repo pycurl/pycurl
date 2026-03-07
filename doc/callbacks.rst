@@ -175,6 +175,14 @@ SEEKFUNCTION
     Callback for seek operations. Corresponds to `CURLOPT_SEEKFUNCTION`_
     in libcurl.
 
+    ``origin`` is ``0`` (beginning), ``1`` (current position) or ``2`` (end).
+
+    Return one of:
+
+    - ``SEEKFUNC_OK`` (seek succeeded)
+    - ``SEEKFUNC_FAIL`` (hard failure)
+    - ``SEEKFUNC_CANTSEEK`` (seek not possible; libcurl may fall back)
+
 
 IOCTLFUNCTION
 -------------

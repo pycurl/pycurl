@@ -324,6 +324,34 @@ methods can be specified via ``CUSTOMREQUEST`` option::
     c.setopt(c.CUSTOMREQUEST, 'PATCH')
 
 
+Building Multipart Trees With Mime (Draft)
+------------------------------------------
+
+``Mime`` is a new object API for constructing multipart trees in a more
+Pythonic way than legacy ``HTTPPOST`` tuples.
+
+Example::
+
+    import pycurl
+
+    curl = pycurl.Curl()
+    mime = pycurl.Mime(curl)
+
+    mime.add_field("title", "example")
+    mime.add_file("upload", "/tmp/example.txt", content_type="text/plain")
+
+    nested = mime.add_multipart(name="attachments", subtype="mixed")
+    nested.add_field("meta", "nested-value")
+
+See :ref:`mime` for full API details.
+
+.. note::
+
+    This quick start section documents MIME tree construction. Full request
+    attachment examples are being documented as MIME option integration is
+    finalized.
+
+
 File Upload - Multipart POST
 ----------------------------
 

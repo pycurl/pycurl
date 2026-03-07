@@ -475,6 +475,18 @@ do_curl_duphandle(CurlObject *self, PyObject *Py_UNUSED(ignored))
 
     /* Assign and incref httppost */
     dup->httppost = (CurlHttppostObject *)my_Py_XNewRef((PyObject *)self->httppost);
+#ifdef HAVE_CURL_MIME
+    dup->mimepost_obj = my_Py_XNewRef(self->mimepost_obj);
+
+    if (self->mimepost_obj != NULL) {
+        /*
+         * libcurl duplicates curl_mime_data_cb userdata pointers as-is.
+         * Add one logical owner reference for every duplicated easy handle so
+         * free callbacks run exactly once on the final release path.
+         */
+        curlmime_duphandle_incref_data_cb_owners(self->mimepost_obj);
+    }
+#endif
 
     /* Success - return cloned object */
     return dup;
@@ -554,6 +566,16 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
         /* Decrement refcounts for httppost object. */
         Py_CLEAR(self->httppost);
     }
+
+#ifdef HAVE_CURL_MIME
+    if (flags & PYCURL_MEMGROUP_MIMEPOST) {
+        if (self->mimepost_obj != NULL && handle != NULL) {
+            (void)curl_easy_setopt(handle, CURLOPT_MIMEPOST, NULL);
+        }
+        /* Decrement refcounts for mimepost object. */
+        Py_CLEAR(self->mimepost_obj);
+    }
+#endif
 
     if (flags & PYCURL_MEMGROUP_CACERTS) {
         /* Decrement refcounts for ca certs related references. */
@@ -741,6 +763,10 @@ do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
     VISIT(self->writeheader_fp);
 
     VISIT(self->postfields_obj);
+
+#ifdef HAVE_CURL_MIME
+    VISIT(self->mimepost_obj);
+#endif
 
     VISIT(self->ca_certs_obj);
 
