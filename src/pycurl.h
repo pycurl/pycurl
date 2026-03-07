@@ -163,6 +163,10 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
 #define HAVE_CURL_GLOBAL_SSLSET
 #endif
 
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 56, 0)
+#define HAVE_CURL_MIME
+#endif
+
 #if LIBCURL_VERSION_NUM >= 0x074300 /* check for 7.67.0 or greater */
 #define HAVE_CURL_7_67_0_MULTI_STREAMS
 #endif
@@ -413,11 +417,14 @@ create_and_set_error_object(struct CurlObject *self, int code);
 #define PYCURL_MEMGROUP_CACERTS         128
 /* Curl slist objects */
 #define PYCURL_MEMGROUP_SLIST           256
+/* CurlMime object pinned via CURLOPT_MIMEPOST */
+#define PYCURL_MEMGROUP_MIMEPOST        512
 
 #define PYCURL_MEMGROUP_EASY \
     (PYCURL_MEMGROUP_CALLBACK | PYCURL_MEMGROUP_FILE | \
     PYCURL_MEMGROUP_HTTPPOST | PYCURL_MEMGROUP_POSTFIELDS | \
-    PYCURL_MEMGROUP_CACERTS | PYCURL_MEMGROUP_SLIST)
+    PYCURL_MEMGROUP_CACERTS | PYCURL_MEMGROUP_SLIST | \
+    PYCURL_MEMGROUP_MIMEPOST)
 
 #define PYCURL_MEMGROUP_ALL \
     (PYCURL_MEMGROUP_ATTRDICT | PYCURL_MEMGROUP_EASY | \
@@ -448,6 +455,9 @@ typedef struct CurlObject {
     struct CurlMultiObject *multi_stack;
     struct CurlShareObject *share;
     struct CurlHttppostObject *httppost;
+#ifdef HAVE_CURL_MIME
+    PyObject *mimepost_obj;
+#endif
     struct CurlSlistObject *httpheader;
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
     struct CurlSlistObject *proxyheader;
@@ -539,6 +549,28 @@ typedef struct CurlShareObject {
     PyObject *easy_weakrefs;
     int detach_on_close; /* boolean: True by default */
 } CurlShareObject;
+
+#ifdef HAVE_CURL_MIME
+typedef struct CurlMimeObject {
+    PyObject_HEAD
+    struct CurlObject *curl;
+    curl_mime *mime;
+    PyObject *parts;
+    PyObject *submimes;
+    PyObject *data_cb_owners;
+    int owns_mime;
+} CurlMimeObject;
+
+typedef struct CurlMimePartObject {
+    PyObject_HEAD
+    CurlMimeObject *mime;
+    curl_mimepart *part;
+    PyObject *data_cb_owner;
+} CurlMimePartObject;
+
+PYCURL_INTERNAL void
+curlmime_duphandle_incref_data_cb_owners(PyObject *mime_obj);
+#endif
 
 #ifdef WITH_THREAD
 
@@ -720,6 +752,10 @@ extern PyTypeObject CurlSlist_Type;
 extern PyTypeObject CurlHttppost_Type;
 extern PyTypeObject CurlMulti_Type;
 extern PyTypeObject CurlShare_Type;
+#ifdef HAVE_CURL_MIME
+extern PyTypeObject CurlMime_Type;
+extern PyTypeObject CurlMimePart_Type;
+#endif
 
 extern PyObject *ErrorObject;
 extern PyTypeObject *p_Curl_Type;
@@ -727,6 +763,10 @@ extern PyTypeObject *p_CurlSlist_Type;
 extern PyTypeObject *p_CurlHttppost_Type;
 extern PyTypeObject *p_CurlMulti_Type;
 extern PyTypeObject *p_CurlShare_Type;
+#ifdef HAVE_CURL_MIME
+extern PyTypeObject *p_CurlMime_Type;
+extern PyTypeObject *p_CurlMimePart_Type;
+#endif
 extern PyObject *khkey_type;
 extern PyObject *curl_sockaddr_type;
 
