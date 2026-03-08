@@ -380,3 +380,123 @@ def test_share_close_one_easy_does_not_keep_share_or_others_alive(
     assert share_ref() is None, "share still alive after cleanup"
     for i, r in enumerate(survivor_refs):
         assert r() is None, f"survivor[{i}] still alive after cleanup"
+
+
+def _make_tracking_mime(curl: pycurl.Curl):
+    class TrackingMime(pycurl.Mime):
+        __slots__ = ("__weakref__",)
+
+    return TrackingMime(curl)
+
+
+@pytest.mark.skipif(
+    not hasattr(pycurl, "MIMEPOST"),
+    reason="libcurl without CURLOPT_MIMEPOST support",
+)
+@pytest.mark.parametrize(
+    "order",
+    [
+        "close_mime_then_close_curl",
+        "close_curl_then_close_mime",
+        "unset_mimepost_then_close_both",
+        "close_mime_only_then_drop",
+        "close_curl_only_then_drop",
+    ],
+)
+def test_mimepost_close_matrix(order):
+    curl = pycurl.Curl()
+    mime = _make_tracking_mime(curl)
+    mime.add_field("field", "value")
+    curl.setopt(pycurl.MIMEPOST, mime)
+
+    curl_ref = weakref.ref(curl)
+    mime_ref = weakref.ref(mime)
+
+    if order == "close_mime_then_close_curl":
+        mime.close()
+        curl.close()
+    elif order == "close_curl_then_close_mime":
+        curl.close()
+        mime.close()
+    elif order == "unset_mimepost_then_close_both":
+        curl.unsetopt(pycurl.MIMEPOST)
+        mime.close()
+        curl.close()
+    elif order == "close_mime_only_then_drop":
+        mime.close()
+    elif order == "close_curl_only_then_drop":
+        curl.close()
+    else:
+        raise AssertionError(f"unknown order: {order}")
+
+    mime = None
+    curl = None
+    gc_collect_hard()
+
+    assert mime_ref() is None, "mime still alive after close/drop sequence"
+    assert curl_ref() is None, "curl still alive after close/drop sequence"
+
+
+@pytest.mark.skipif(
+    not hasattr(pycurl, "Mime"),
+    reason="libcurl without MIME support",
+)
+def test_mime_subparts_parent_owns_child_until_parent_close():
+    with pycurl.Curl() as curl:
+        parent = _make_tracking_mime(curl)
+        child = _make_tracking_mime(curl)
+
+        parent.addpart().subparts(child)
+        child_ref = weakref.ref(child)
+
+        child = None
+        gc_collect_hard()
+        assert child_ref() is not None, (
+            "attached child mime should stay alive via parent ownership"
+        )
+
+        parent.close()
+        gc_collect_hard()
+        assert child_ref() is None, "child mime leaked after parent close"
+
+
+@pytest.mark.skipif(
+    not hasattr(pycurl, "Mime"),
+    reason="libcurl without MIME support",
+)
+def test_mimepart_does_not_keep_parent_alive_after_parent_close():
+    with pycurl.Curl() as curl:
+        parent = _make_tracking_mime(curl)
+        part = parent.addpart()
+
+        parent_ref = weakref.ref(parent)
+        parent.close()
+        parent = None
+        gc_collect_hard()
+
+        assert parent_ref() is None, (
+            "part wrapper should not retain parent after parent close"
+        )
+        with pytest.raises(pycurl.error, match="no mime handle"):
+            part.name("field")
+
+
+@pytest.mark.skipif(
+    not hasattr(pycurl, "MIMEPOST"),
+    reason="libcurl without CURLOPT_MIMEPOST support",
+)
+def test_mimepost_cycle_gc_without_explicit_close():
+    tr = Tracker()
+
+    curl = tr.track("curl", pycurl.Curl())
+    mime = tr.track("mime", _make_tracking_mime(curl))
+    mime.add_field("field", "value")
+    curl.setopt(pycurl.MIMEPOST, mime)
+
+    # Curl <-> Mime already form a cycle via MIMEPOST pin + mime.curl.
+
+    curl = None
+    mime = None
+    gc_collect_hard()
+
+    tr.assert_all_gone()

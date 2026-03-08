@@ -32,6 +32,10 @@ PYCURL_INTERNAL PyTypeObject *p_CurlSlist_Type = NULL;
 PYCURL_INTERNAL PyTypeObject *p_CurlHttppost_Type = NULL;
 PYCURL_INTERNAL PyTypeObject *p_CurlMulti_Type = NULL;
 PYCURL_INTERNAL PyTypeObject *p_CurlShare_Type = NULL;
+#ifdef HAVE_CURL_MIME
+PYCURL_INTERNAL PyTypeObject *p_CurlMime_Type = NULL;
+PYCURL_INTERNAL PyTypeObject *p_CurlMimePart_Type = NULL;
+#endif
 #ifdef HAVE_CURL_7_19_6_OPTS
 PYCURL_INTERNAL PyObject *khkey_type = NULL;
 #endif
@@ -495,11 +499,19 @@ initpycurl(void)
     p_CurlHttppost_Type = &CurlHttppost_Type;
     p_CurlMulti_Type = &CurlMulti_Type;
     p_CurlShare_Type = &CurlShare_Type;
+#ifdef HAVE_CURL_MIME
+    p_CurlMime_Type = &CurlMime_Type;
+    p_CurlMimePart_Type = &CurlMimePart_Type;
+#endif
     Py_SET_TYPE(&Curl_Type, &PyType_Type);
     Py_SET_TYPE(&CurlSlist_Type, &PyType_Type);
     Py_SET_TYPE(&CurlHttppost_Type, &PyType_Type);
     Py_SET_TYPE(&CurlMulti_Type, &PyType_Type);
     Py_SET_TYPE(&CurlShare_Type, &PyType_Type);
+#ifdef HAVE_CURL_MIME
+    Py_SET_TYPE(&CurlMime_Type, &PyType_Type);
+    Py_SET_TYPE(&CurlMimePart_Type, &PyType_Type);
+#endif
 
     /* Create the module and add the functions */
     if (PyType_Ready(&Curl_Type) < 0)
@@ -516,6 +528,14 @@ initpycurl(void)
 
     if (PyType_Ready(&CurlShare_Type) < 0)
         goto error;
+
+#ifdef HAVE_CURL_MIME
+    if (PyType_Ready(&CurlMime_Type) < 0)
+        goto error;
+
+    if (PyType_Ready(&CurlMimePart_Type) < 0)
+        goto error;
+#endif
 
 
 #if PY_MAJOR_VERSION >= 3
@@ -578,6 +598,10 @@ initpycurl(void)
     insobj2_modinit(d, NULL, "Curl", (PyObject *) p_Curl_Type);
     insobj2_modinit(d, NULL, "CurlMulti", (PyObject *) p_CurlMulti_Type);
     insobj2_modinit(d, NULL, "CurlShare", (PyObject *) p_CurlShare_Type);
+#ifdef HAVE_CURL_MIME
+    insobj2_modinit(d, NULL, "Mime", (PyObject *) p_CurlMime_Type);
+    insobj2_modinit(d, NULL, "MimePart", (PyObject *) p_CurlMimePart_Type);
+#endif
 
     /**
      ** the order of these constants mostly follows <curl/curl.h>
@@ -885,6 +909,9 @@ initpycurl(void)
     insint_c(d, "PIPEWAIT", CURLOPT_PIPEWAIT);
 #endif
     insint_c(d, "HTTPPOST", CURLOPT_HTTPPOST);
+#ifdef HAVE_CURL_MIME
+    insint_c(d, "MIMEPOST", CURLOPT_MIMEPOST);
+#endif
     insint_c(d, "SSLCERT", CURLOPT_SSLCERT);
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 71, 0)
     insint_c(d, "SSLCERT_BLOB", CURLOPT_SSLCERT_BLOB);

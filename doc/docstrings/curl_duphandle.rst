@@ -8,6 +8,12 @@ The new handle will not inherit any state information, no connections,
 no SSL sessions and no cookies. It also will not inherit any share object
 states or options (it will be made as if SHARE was unset).
 
+When ``MIMEPOST`` includes parts configured with ``MimePart.data_cb()``,
+libcurl duplicates callback userdata pointers into the duplicated handle.
+Design callback state (especially any ``free`` hook side effects) so that
+multiple handle instances can release it safely.
+See also `curl_mime_data_cb`_ in libcurl.
+
 Corresponds to `curl_easy_duphandle`_ in libcurl.
 
 Example usage::
@@ -21,3 +27,6 @@ Example usage::
 
 .. _curl_easy_duphandle:
     https://curl.se/libcurl/c/curl_easy_duphandle.html
+
+.. _curl_mime_data_cb:
+    https://curl.se/libcurl/c/curl_mime_data_cb.html
