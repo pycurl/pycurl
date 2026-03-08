@@ -1,5 +1,39 @@
 #include "pycurl.h"
 
+PYCURL_INTERNAL int
+check_pending_python_signal(void)
+{
+    if (PyErr_CheckSignals() != 0) {
+        return -1;
+    }
+    return 0;
+}
+
+PYCURL_INTERNAL int
+check_pending_python_exception_or_signal(void)
+{
+    if (PyErr_Occurred()) {
+        return -1;
+    }
+    return check_pending_python_signal();
+}
+
+PYCURL_INTERNAL void
+warn_failed_to_acquire_thread(const char *warning_message)
+{
+    PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
+    PyErr_WarnEx(PyExc_RuntimeWarning, warning_message, 1);
+    PyGILState_Release(tmp_warn_state);
+}
+
+PYCURL_INTERNAL void
+print_callback_error_if_regular_exception(void)
+{
+    if (PyErr_ExceptionMatches(PyExc_Exception)) {
+        PyErr_Print();
+    }
+}
+
 PYCURL_INTERNAL PyObject *
 PyLong_FromCurlSocket(curl_socket_t sockfd)
 {

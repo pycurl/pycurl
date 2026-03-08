@@ -1,6 +1,9 @@
 #include "pycurl.h"
 #include "docstrings.h"
 
+#define PYCURL_BEGIN_MULTI_CALLBACK(callback_name, retval) \
+    PYCURL_BEGIN_CALLBACK_COMMON(PYCURL_ACQUIRE_THREAD_MULTI(), retval, callback_name)
+
 /*************************************************************************
 // static utility functions
 **************************************************************************/
@@ -301,12 +304,7 @@ multi_socket_callback(CURL *easy,
 
     /* acquire thread */
     self = (CurlMultiObject *)userp;
-    if (!PYCURL_ACQUIRE_THREAD_MULTI()) {
-        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
-        PyErr_WarnEx(PyExc_RuntimeWarning, "multi_socket_callback failed to acquire thread", 1);
-        PyGILState_Release(tmp_warn_state);
-        return 0;
-    }
+    PYCURL_BEGIN_MULTI_CALLBACK(multi_socket_callback, 0);
 
     /* check args */
     if (self->s_cb == NULL) {
@@ -338,12 +336,10 @@ multi_socket_callback(CURL *easy,
 
 silent_error:
     Py_XDECREF(result);
-    PYCURL_RELEASE_THREAD();
-    return 0;
+    PYCURL_END_CALLBACK(0);
 verbose_error:
-    PyErr_Print();
+    print_callback_error_if_regular_exception();
     goto silent_error;
-    return 0;
 }
 
 
@@ -362,12 +358,7 @@ multi_timer_callback(CURLM *multi,
 
     /* acquire thread */
     self = (CurlMultiObject *)userp;
-    if (!PYCURL_ACQUIRE_THREAD_MULTI()) {
-        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
-        PyErr_WarnEx(PyExc_RuntimeWarning, "multi_timer_callback failed to acquire thread", 1);
-        PyGILState_Release(tmp_warn_state);
-        return ret;
-    }
+    PYCURL_BEGIN_MULTI_CALLBACK(multi_timer_callback, ret);
 
     /* check args */
     if (self->t_cb == NULL)
@@ -386,14 +377,13 @@ multi_timer_callback(CURLM *multi,
 
 silent_error:
     Py_XDECREF(result);
-    PYCURL_RELEASE_THREAD();
-    return ret;
+    PYCURL_END_CALLBACK(ret);
 verbose_error:
-    PyErr_Print();
+    print_callback_error_if_regular_exception();
     goto silent_error;
-
-    return 0;
 }
+
+#undef PYCURL_BEGIN_MULTI_CALLBACK
 
 
 static PyObject *
@@ -721,6 +711,10 @@ do_multi_socket_action(CurlMultiObject *self, PyObject *args)
     res = curl_multi_socket_action(self->multi_handle, socket, ev_bitmask, &running);
     PYCURL_END_ALLOW_THREADS
 
+    if (check_pending_python_exception_or_signal() != 0) {
+        return NULL;
+    }
+
     if (res != CURLM_OK) {
         CURLERROR_MSG("multi_socket_action failed");
     }
@@ -743,6 +737,10 @@ do_multi_socket_all(CurlMultiObject *self, PyObject *Py_UNUSED(ignored))
     PYCURL_BEGIN_ALLOW_THREADS
     res = curl_multi_socket_all(self->multi_handle, &running);
     PYCURL_END_ALLOW_THREADS
+
+    if (check_pending_python_exception_or_signal() != 0) {
+        return NULL;
+    }
 
     /* We assume these errors are ok, otherwise raise exception */
     if (res != CURLM_OK && res != CURLM_CALL_MULTI_PERFORM) {
@@ -769,6 +767,10 @@ do_multi_perform(CurlMultiObject *self, PyObject *Py_UNUSED(ignored))
     PYCURL_BEGIN_ALLOW_THREADS
     res = curl_multi_perform(self->multi_handle, &running);
     PYCURL_END_ALLOW_THREADS
+
+    if (check_pending_python_exception_or_signal() != 0) {
+        return NULL;
+    }
 
     /* We assume these errors are ok, otherwise raise exception */
     if (res != CURLM_OK && res != CURLM_CALL_MULTI_PERFORM) {

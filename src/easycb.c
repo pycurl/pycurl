@@ -5,6 +5,34 @@
  * function without acquiring the thread state in the callback handlers.
  */
 
+#define PYCURL_BEGIN_CALLBACK(callback_name, retval) \
+    PYCURL_BEGIN_CALLBACK_COMMON(PYCURL_ACQUIRE_THREAD(), retval, callback_name)
+
+static int
+callback_return_value_to_int(PyObject *ret_obj, const char *callback_name, int *ret_out)
+{
+    if (ret_obj == NULL) {
+        return -1;
+    }
+    if (!PyInt_Check(ret_obj) && !PyLong_Check(ret_obj)) {
+        PyObject *ret_repr = PyObject_Repr(ret_obj);
+        if (ret_repr) {
+            PyObject *encoded_obj;
+            char *str = PyText_AsString_NoNUL(ret_repr, &encoded_obj);
+            fprintf(stderr, "%s callback returned %s which is not an integer\n", callback_name, str);
+            Py_XDECREF(encoded_obj);
+            Py_DECREF(ret_repr);
+        }
+        return -1;
+    }
+    if (PyInt_Check(ret_obj)) {
+        *ret_out = (int) PyInt_AsLong(ret_obj);
+    } else {
+        *ret_out = (int) PyLong_AsLong(ret_obj);
+    }
+    return 0;
+}
+
 
 static size_t
 util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *stream)
@@ -19,12 +47,8 @@ util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *strea
 
     /* acquire thread */
     self = (CurlObject *)stream;
-    if (!PYCURL_ACQUIRE_THREAD()) {
-        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
-        PyErr_WarnEx(PyExc_RuntimeWarning, "util_write_callback failed to acquire thread", 1);
-        PyGILState_Release(tmp_warn_state);
-        return ret;
-    }
+
+    PYCURL_BEGIN_CALLBACK(util_write_callback, ret);
 
     /* check args */
     cb = flags ? self->h_cb : self->w_cb;
@@ -67,10 +91,9 @@ util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *strea
 done:
 silent_error:
     Py_XDECREF(result);
-    PYCURL_RELEASE_THREAD();
-    return ret;
+    PYCURL_END_CALLBACK(ret);
 verbose_error:
-    PyErr_Print();
+    print_callback_error_if_regular_exception();
     goto silent_error;
 }
 
@@ -176,12 +199,8 @@ opensocket_callback(void *clientp, curlsocktype purpose,
     PYCURL_DECLARE_THREAD_STATE;
 
     self = (CurlObject *)clientp;
-    if (!PYCURL_ACQUIRE_THREAD()) {
-        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
-        PyErr_WarnEx(PyExc_RuntimeWarning, "opensocket_callback failed to acquire thread", 1);
-        PyGILState_Release(tmp_warn_state);
-        return ret;
-    }
+    
+    PYCURL_BEGIN_CALLBACK(opensocket_callback, ret);
 
     converted_address = convert_protocol_address(&address->addr, address->addrlen);
     if (converted_address == NULL) {
@@ -253,10 +272,9 @@ silent_error:
 done:
     Py_XDECREF(result);
     Py_XDECREF(fileno_result);
-    PYCURL_RELEASE_THREAD();
-    return ret;
+    PYCURL_END_CALLBACK(ret);
 verbose_error:
-    PyErr_Print();
+    print_callback_error_if_regular_exception();
     goto silent_error;
 }
 
@@ -272,12 +290,8 @@ sockopt_cb(void *clientp, curl_socket_t curlfd, curlsocktype purpose)
     PYCURL_DECLARE_THREAD_STATE;
 
     self = (CurlObject *)clientp;
-    if (!PYCURL_ACQUIRE_THREAD()) {
-        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
-        PyErr_WarnEx(PyExc_RuntimeWarning, "sockopt_cb failed to acquire thread", 1);
-        PyGILState_Release(tmp_warn_state);
-        return ret;
-    }
+
+    PYCURL_BEGIN_CALLBACK(sockopt_cb, ret);
 
     py_curlfd = PyLong_FromCurlSocket(curlfd);
     if (py_curlfd == NULL) {
@@ -291,24 +305,8 @@ sockopt_cb(void *clientp, curl_socket_t curlfd, curlsocktype purpose)
 
     ret_obj = PyObject_Call(self->sockopt_cb, arglist, NULL);
     Py_DECREF(arglist);
-    if (!PyInt_Check(ret_obj) && !PyLong_Check(ret_obj)) {
-        PyObject *ret_repr = PyObject_Repr(ret_obj);
-        if (ret_repr) {
-            PyObject *encoded_obj;
-            char *str = PyText_AsString_NoNUL(ret_repr, &encoded_obj);
-            fprintf(stderr, "sockopt callback returned %s which is not an integer\n", str);
-            /* PyErr_Format(PyExc_TypeError, "sockopt callback returned %s which is not an integer", str); */
-            Py_XDECREF(encoded_obj);
-            Py_DECREF(ret_repr);
-        }
+    if (callback_return_value_to_int(ret_obj, "sockopt", &ret) != 0) {
         goto silent_error;
-    }
-    if (PyInt_Check(ret_obj)) {
-        /* long to int cast */
-        ret = (int) PyInt_AsLong(ret_obj);
-    } else {
-        /* long to int cast */
-        ret = (int) PyLong_AsLong(ret_obj);
     }
     goto done;
 
@@ -316,10 +314,9 @@ silent_error:
     ret = -1;
 done:
     Py_XDECREF(ret_obj);
-    PYCURL_RELEASE_THREAD();
-    return ret;
+    PYCURL_END_CALLBACK(ret);
 verbose_error:
-    PyErr_Print();
+    print_callback_error_if_regular_exception();
     goto silent_error;
 }
 
@@ -336,12 +333,8 @@ closesocket_callback(void *clientp, curl_socket_t curlfd)
     PYCURL_DECLARE_THREAD_STATE;
 
     self = (CurlObject *)clientp;
-    if (!PYCURL_ACQUIRE_THREAD()) {
-        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
-        PyErr_WarnEx(PyExc_RuntimeWarning, "closesocket_callback failed to acquire thread", 1);
-        PyGILState_Release(tmp_warn_state);
-        return ret;
-    }
+
+    PYCURL_BEGIN_CALLBACK(closesocket_callback, ret);
 
     py_curlfd = PyLong_FromCurlSocket(curlfd);
     if (py_curlfd == NULL) {
@@ -355,27 +348,8 @@ closesocket_callback(void *clientp, curl_socket_t curlfd)
 
     ret_obj = PyObject_Call(self->closesocket_cb, arglist, NULL);
     Py_DECREF(arglist);
-    if (!ret_obj) {
-       goto silent_error;
-    }
-    if (!PyInt_Check(ret_obj) && !PyLong_Check(ret_obj)) {
-        PyObject *ret_repr = PyObject_Repr(ret_obj);
-        if (ret_repr) {
-            PyObject *encoded_obj;
-            char *str = PyText_AsString_NoNUL(ret_repr, &encoded_obj);
-            fprintf(stderr, "closesocket callback returned %s which is not an integer\n", str);
-            /* PyErr_Format(PyExc_TypeError, "closesocket callback returned %s which is not an integer", str); */
-            Py_XDECREF(encoded_obj);
-            Py_DECREF(ret_repr);
-        }
+    if (callback_return_value_to_int(ret_obj, "closesocket", &ret) != 0) {
         goto silent_error;
-    }
-    if (PyInt_Check(ret_obj)) {
-        /* long to int cast */
-        ret = (int) PyInt_AsLong(ret_obj);
-    } else {
-        /* long to int cast */
-        ret = (int) PyLong_AsLong(ret_obj);
     }
     goto done;
 
@@ -383,10 +357,9 @@ silent_error:
     ret = -1;
 done:
     Py_XDECREF(ret_obj);
-    PYCURL_RELEASE_THREAD();
-    return ret;
+    PYCURL_END_CALLBACK(ret);
 verbose_error:
-    PyErr_Print();
+    print_callback_error_if_regular_exception();
     goto silent_error;
 }
 #endif
@@ -440,12 +413,8 @@ ssh_key_cb(CURL *easy, const struct curl_khkey *knownkey,
     PYCURL_DECLARE_THREAD_STATE;
 
     self = (CurlObject *)clientp;
-    if (!PYCURL_ACQUIRE_THREAD()) {
-        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
-        PyErr_WarnEx(PyExc_RuntimeWarning, "ssh_key_cb failed to acquire thread", 1);
-        PyGILState_Release(tmp_warn_state);
-        return ret;
-    }
+
+    PYCURL_BEGIN_CALLBACK(ssh_key_cb, ret);
 
     knownkey_obj = khkey_to_object(knownkey);
     if (knownkey_obj == NULL) {
@@ -462,24 +431,8 @@ ssh_key_cb(CURL *easy, const struct curl_khkey *knownkey,
 
     ret_obj = PyObject_Call(self->ssh_key_cb, arglist, NULL);
     Py_DECREF(arglist);
-    if (!PyInt_Check(ret_obj) && !PyLong_Check(ret_obj)) {
-        PyObject *ret_repr = PyObject_Repr(ret_obj);
-        if (ret_repr) {
-            PyObject *encoded_obj;
-            char *str = PyText_AsString_NoNUL(ret_repr, &encoded_obj);
-            fprintf(stderr, "ssh key callback returned %s which is not an integer\n", str);
-            /* PyErr_Format(PyExc_TypeError, "ssh key callback returned %s which is not an integer", str); */
-            Py_XDECREF(encoded_obj);
-            Py_DECREF(ret_repr);
-        }
+    if (callback_return_value_to_int(ret_obj, "ssh key", &ret) != 0) {
         goto silent_error;
-    }
-    if (PyInt_Check(ret_obj)) {
-        /* long to int cast */
-        ret = (int) PyInt_AsLong(ret_obj);
-    } else {
-        /* long to int cast */
-        ret = (int) PyLong_AsLong(ret_obj);
     }
     goto done;
 
@@ -489,10 +442,9 @@ done:
     Py_XDECREF(knownkey_obj);
     Py_XDECREF(foundkey_obj);
     Py_XDECREF(ret_obj);
-    PYCURL_RELEASE_THREAD();
-    return ret;
+    PYCURL_END_CALLBACK(ret);
 verbose_error:
-    PyErr_Print();
+    print_callback_error_if_regular_exception();
     goto silent_error;
 }
 #endif
@@ -511,12 +463,8 @@ seek_callback(void *stream, curl_off_t offset, int origin)
 
     /* acquire thread */
     self = (CurlObject *)stream;
-    if (!PYCURL_ACQUIRE_THREAD()) {
-        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
-        PyErr_WarnEx(PyExc_RuntimeWarning, "seek_callback failed to acquire thread", 1);
-        PyGILState_Release(tmp_warn_state);
-        return ret;
-    }
+
+    PYCURL_BEGIN_CALLBACK(seek_callback, ret);
 
     /* check arguments */
     switch (origin)
@@ -566,10 +514,9 @@ seek_callback(void *stream, curl_off_t offset, int origin)
 
 silent_error:
     Py_XDECREF(result);
-    PYCURL_RELEASE_THREAD();
-    return ret;
+    PYCURL_END_CALLBACK(ret);
 verbose_error:
-    PyErr_Print();
+    print_callback_error_if_regular_exception();
     goto silent_error;
 }
 
@@ -591,12 +538,8 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
 
     /* acquire thread */
     self = (CurlObject *)stream;
-    if (!PYCURL_ACQUIRE_THREAD()) {
-        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
-        PyErr_WarnEx(PyExc_RuntimeWarning, "read_callback failed to acquire thread", 1);
-        PyGILState_Release(tmp_warn_state);
-        return ret;
-    }
+
+    PYCURL_BEGIN_CALLBACK(read_callback, ret);
 
     /* check args */
     if (self->r_cb == NULL)
@@ -695,10 +638,9 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
 done:
 silent_error:
     Py_XDECREF(result);
-    PYCURL_RELEASE_THREAD();
-    return ret;
+    PYCURL_END_CALLBACK(ret);
 verbose_error:
-    PyErr_Print();
+    print_callback_error_if_regular_exception();
     goto silent_error;
 }
 
@@ -715,12 +657,8 @@ progress_callback(void *stream,
 
     /* acquire thread */
     self = (CurlObject *)stream;
-    if (!PYCURL_ACQUIRE_THREAD()) {
-        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
-        PyErr_WarnEx(PyExc_RuntimeWarning, "progress_callback failed to acquire thread", 1);
-        PyGILState_Release(tmp_warn_state);
-        return ret;
-    }
+
+    PYCURL_BEGIN_CALLBACK(progress_callback, ret);
 
     /* check args */
     if (self->pro_cb == NULL)
@@ -748,10 +686,9 @@ progress_callback(void *stream,
 
 silent_error:
     Py_XDECREF(result);
-    PYCURL_RELEASE_THREAD();
-    return ret;
+    PYCURL_END_CALLBACK(ret);
 verbose_error:
-    PyErr_Print();
+    print_callback_error_if_regular_exception();
     goto silent_error;
 }
 
@@ -770,12 +707,8 @@ xferinfo_callback(void *stream,
 
     /* acquire thread */
     self = (CurlObject *)stream;
-    if (!PYCURL_ACQUIRE_THREAD()) {
-        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
-        PyErr_WarnEx(PyExc_RuntimeWarning, "xferinfo_callback failed to acquire thread", 1);
-        PyGILState_Release(tmp_warn_state);
-        return ret;
-    }
+
+    PYCURL_BEGIN_CALLBACK(xferinfo_callback, ret);
 
     /* check args */
     if (self->xferinfo_cb == NULL)
@@ -805,10 +738,9 @@ xferinfo_callback(void *stream,
 
 silent_error:
     Py_XDECREF(result);
-    PYCURL_RELEASE_THREAD();
-    return ret;
+    PYCURL_END_CALLBACK(ret);
 verbose_error:
-    PyErr_Print();
+    print_callback_error_if_regular_exception();
     goto silent_error;
 }
 #endif
@@ -828,12 +760,8 @@ debug_callback(CURL *curlobj, curl_infotype type,
 
     /* acquire thread */
     self = (CurlObject *)stream;
-    if (!PYCURL_ACQUIRE_THREAD()) {
-        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
-        PyErr_WarnEx(PyExc_RuntimeWarning, "debug_callback failed to acquire thread", 1);
-        PyGILState_Release(tmp_warn_state);
-        return ret;
-    }
+
+    PYCURL_BEGIN_CALLBACK(debug_callback, ret);
 
     /* check args */
     if (self->debug_cb == NULL)
@@ -860,10 +788,9 @@ debug_callback(CURL *curlobj, curl_infotype type,
 
 silent_error:
     Py_XDECREF(result);
-    PYCURL_RELEASE_THREAD();
-    return ret;
+    PYCURL_END_CALLBACK(ret);
 verbose_error:
-    PyErr_Print();
+    print_callback_error_if_regular_exception();
     goto silent_error;
 }
 
@@ -881,12 +808,8 @@ ioctl_callback(CURL *curlobj, int cmd, void *stream)
 
     /* acquire thread */
     self = (CurlObject *)stream;
-    if (!PYCURL_ACQUIRE_THREAD()) {
-        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
-        PyErr_WarnEx(PyExc_RuntimeWarning, "ioctl_callback failed to acquire thread", 1);
-        PyGILState_Release(tmp_warn_state);
-        return (curlioerr) ret;
-    }
+
+    PYCURL_BEGIN_CALLBACK(ioctl_callback, (curlioerr)ret);
 
     /* check args */
     if (self->ioctl_cb == NULL)
@@ -915,10 +838,9 @@ ioctl_callback(CURL *curlobj, int cmd, void *stream)
 
 silent_error:
     Py_XDECREF(result);
-    PYCURL_RELEASE_THREAD();
-    return (curlioerr) ret;
+    PYCURL_END_CALLBACK((curlioerr) ret);
 verbose_error:
-    PyErr_Print();
+    print_callback_error_if_regular_exception();
     goto silent_error;
 }
 
@@ -1005,22 +927,17 @@ ssl_ctx_callback(CURL *curl, void *ssl_ctx, void *ptr)
 
     /* acquire thread */
     self = (CurlObject *)ptr;
-    if (!PYCURL_ACQUIRE_THREAD()) {
-        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
-        PyErr_WarnEx(PyExc_RuntimeWarning, "ssl_ctx_callback failed to acquire thread", 1);
-        PyGILState_Release(tmp_warn_state);
-        return CURLE_FAILED_INIT;
-    }
+
+    PYCURL_BEGIN_CALLBACK(ssl_ctx_callback, CURLE_FAILED_INIT);
 
     r = add_ca_certs((SSL_CTX*)ssl_ctx,
                          PyBytes_AS_STRING(self->ca_certs_obj),
                          PyBytes_GET_SIZE(self->ca_certs_obj));
 
     if (r != 0)
-        PyErr_Print();
+        print_callback_error_if_regular_exception();
 
-    PYCURL_RELEASE_THREAD();
-    return r == 0 ? CURLE_OK : CURLE_FAILED_INIT;
+    PYCURL_END_CALLBACK(r == 0 ? CURLE_OK : CURLE_FAILED_INIT);
 }
 #endif
 
@@ -1037,12 +954,8 @@ prereq_callback(void *clientp, char *conn_primary_ip, char *conn_local_ip,
     PYCURL_DECLARE_THREAD_STATE;
 
     self = (CurlObject *)clientp;
-    if (!PYCURL_ACQUIRE_THREAD()) {
-        PyGILState_STATE tmp_warn_state = PyGILState_Ensure();
-        PyErr_WarnEx(PyExc_RuntimeWarning, "prereq_callback failed to acquire thread", 1);
-        PyGILState_Release(tmp_warn_state);
-        return ret;
-    }
+
+    PYCURL_BEGIN_CALLBACK(prereq_callback, ret);
 
     arglist = Py_BuildValue("(ssii)", conn_primary_ip, conn_local_ip, conn_primary_port, conn_local_port);
     if (arglist == NULL)
@@ -1050,26 +963,8 @@ prereq_callback(void *clientp, char *conn_primary_ip, char *conn_local_ip,
 
     ret_obj = PyObject_Call(self->prereq_cb, arglist, NULL);
     Py_DECREF(arglist);
-    if (!ret_obj)
-       goto silent_error;
-    if (!PyInt_Check(ret_obj) && !PyLong_Check(ret_obj)) {
-        PyObject *ret_repr = PyObject_Repr(ret_obj);
-        if (ret_repr) {
-            PyObject *encoded_obj;
-            char *str = PyText_AsString_NoNUL(ret_repr, &encoded_obj);
-            fprintf(stderr, "prereq callback returned %s which is not an integer\n", str);
-            /* PyErr_Format(PyExc_TypeError, "prereq callback returned %s which is not an integer", str); */
-            Py_XDECREF(encoded_obj);
-            Py_DECREF(ret_repr);
-        }
+    if (callback_return_value_to_int(ret_obj, "prereq", &ret) != 0) {
         goto silent_error;
-    }
-    if (PyInt_Check(ret_obj)) {
-        /* long to int cast */
-        ret = (int) PyInt_AsLong(ret_obj);
-    } else {
-        /* long to int cast */
-        ret = (int) PyLong_AsLong(ret_obj);
     }
     goto done;
 
@@ -1077,10 +972,11 @@ silent_error:
     ret = -1;
 done:
     Py_XDECREF(ret_obj);
-    PYCURL_RELEASE_THREAD();
-    return ret;
+    PYCURL_END_CALLBACK(ret);
 verbose_error:
-    PyErr_Print();
+    print_callback_error_if_regular_exception();
     goto silent_error;
 }
 #endif
+
+#undef PYCURL_BEGIN_CALLBACK

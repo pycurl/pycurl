@@ -1,7 +1,6 @@
 #include "pycurl.h"
 #include <errno.h>
 
-
 /* --------------- perform --------------- */
 
 PYCURL_INTERNAL PyObject *
@@ -16,6 +15,10 @@ do_curl_perform(CurlObject *self, PyObject *Py_UNUSED(ignored))
     PYCURL_BEGIN_ALLOW_THREADS
     res = curl_easy_perform(self->handle);
     PYCURL_END_ALLOW_THREADS
+
+    if (check_pending_python_exception_or_signal() != 0) {
+        return NULL;
+    }
 
     if (res != CURLE_OK) {
         CURLERROR_RETVAL();
@@ -111,6 +114,10 @@ perform_easy_send(CurlObject *self, const void *buf, size_t len, size_t *sent)
     res = curl_easy_send(self->handle, buf, len, sent);
     PYCURL_END_ALLOW_THREADS
 
+    if (check_pending_python_exception_or_signal() != 0) {
+        return -1;
+    }
+
     return check_easy_recv_send_result(self, res);
 }
 
@@ -122,6 +129,10 @@ perform_easy_recv(CurlObject *self, void *buf, size_t len, size_t *recvd)
     PYCURL_BEGIN_ALLOW_THREADS
     res = curl_easy_recv(self->handle, buf, len, recvd);
     PYCURL_END_ALLOW_THREADS
+
+    if (check_pending_python_exception_or_signal() != 0) {
+        return -1;
+    }
 
     return check_easy_recv_send_result(self, res);
 }
@@ -298,6 +309,10 @@ do_curl_pause_internal(CurlObject *self, int bitmask, const char *op_name)
         self->state = saved_state;
     }
 #endif
+
+    if (check_pending_python_exception_or_signal() != 0) {
+        return NULL;
+    }
 
     if (res != CURLE_OK) {
         CURLERROR_MSG("pause/unpause failed");
