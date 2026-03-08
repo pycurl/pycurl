@@ -259,6 +259,9 @@ PYCURL_INTERNAL void pycurl_ssl_cleanup(void);
 #  define PYCURL_ACQUIRE_THREAD() pycurl_acquire_thread(self, &tmp_state)
 #  define PYCURL_ACQUIRE_THREAD_MULTI() pycurl_acquire_thread_multi(self, &tmp_state)
 #  define PYCURL_RELEASE_THREAD() pycurl_release_thread(tmp_state)
+#  define PYCURL_END_CALLBACK(retval) \
+       PYCURL_RELEASE_THREAD(); \
+       return (retval)
 /* Replacement for Py_BEGIN_ALLOW_THREADS/Py_END_ALLOW_THREADS when python
    callbacks are expected during blocking i/o operations: self->state will hold
    the handle to current thread to be used as context */
@@ -287,9 +290,17 @@ PYCURL_INTERNAL void pycurl_ssl_cleanup(void);
 #  define PYCURL_ACQUIRE_THREAD() (1)
 #  define PYCURL_ACQUIRE_THREAD_MULTI() (1)
 #  define PYCURL_RELEASE_THREAD()
+#  define PYCURL_END_CALLBACK(retval) \
+       return (retval)
 #  define PYCURL_BEGIN_ALLOW_THREADS
 #  define PYCURL_END_ALLOW_THREADS
 #endif
+
+#define PYCURL_BEGIN_CALLBACK_COMMON(acquire_expr, retval, callback_name) \
+    if (!(acquire_expr)) { \
+        warn_failed_to_acquire_thread(#callback_name " failed to acquire thread"); \
+        return (retval); \
+    }
 
 #if PY_MAJOR_VERSION >= 3
   #define PyInt_Type                   PyLong_Type
@@ -572,6 +583,18 @@ my_getattr(PyObject *co, char *name, PyObject *dict1, PyObject *dict2, PyMethodD
 /* used by multi object */
 PYCURL_INTERNAL void
 assert_curl_state(const CurlObject *self);
+
+PYCURL_INTERNAL int
+check_pending_python_signal(void);
+
+PYCURL_INTERNAL int
+check_pending_python_exception_or_signal(void);
+
+PYCURL_INTERNAL void
+warn_failed_to_acquire_thread(const char *warning_message);
+
+PYCURL_INTERNAL void
+print_callback_error_if_regular_exception(void);
 
 PYCURL_INTERNAL PyObject *
 do_global_init(PyObject *dummy, PyObject *args);
