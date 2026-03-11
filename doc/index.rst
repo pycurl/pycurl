@@ -138,6 +138,7 @@ Documentation Contents
    curlobject
    curlmultiobject
    curlshareobject
+   mime
    callbacks
    curl
    unicode
