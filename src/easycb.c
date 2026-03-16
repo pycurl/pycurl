@@ -655,16 +655,6 @@ progress_callback(void *stream,
     int ret = 1;       /* assume error */
     PYCURL_DECLARE_THREAD_STATE;
 
-#if PY_MINOR_VERSION >= 13
-    if (Py_IsFinalizing()) {
-#else
-    if (_Py_IsFinalizing()) {
-#endif
-        /* cURL can invoke callbacks during the runtime finalization;
-           those must be ignored. */
-        return 0;
-    }
-
     /* acquire thread */
     self = (CurlObject *)stream;
 
@@ -714,16 +704,6 @@ xferinfo_callback(void *stream,
     PyObject *result = NULL;
     int ret = 1;       /* assume error */
     PYCURL_DECLARE_THREAD_STATE;
-
-#if PY_MINOR_VERSION >= 13
-    if (Py_IsFinalizing()) {
-#else
-    if (_Py_IsFinalizing()) {
-#endif
-        /* cURL can invoke callbacks during the runtime finalization;
-           those must be ignored. */
-        return 0;
-    }
 
     /* acquire thread */
     self = (CurlObject *)stream;

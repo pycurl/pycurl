@@ -296,7 +296,16 @@ PYCURL_INTERNAL void pycurl_ssl_cleanup(void);
 #  define PYCURL_END_ALLOW_THREADS
 #endif
 
+/* cURL can invoke callbacks during the runtime finalization;
+   those must be ignored. */
+#if PY_MINOR_VERSION < 13
+#  define Py_IsFinalizing _Py_IsFinalizing
+#endif
+
 #define PYCURL_BEGIN_CALLBACK_COMMON(acquire_expr, retval, callback_name) \
+    if (Py_IsFinalizing()) { \
+        return 0; \
+    } \
     if (!(acquire_expr)) { \
         warn_failed_to_acquire_thread(#callback_name " failed to acquire thread"); \
         return (retval); \
