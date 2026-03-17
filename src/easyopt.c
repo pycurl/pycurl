@@ -167,6 +167,13 @@ util_curl_unsetopt(CurlObject *self, int option)
 #endif
     /* FIXME: what about data->set.httpreq ?? */
     CLEAR_OBJECT(CURLOPT_HTTPPOST, self->httppost);
+#ifdef HAVE_CURL_MIME
+    case CURLOPT_MIMEPOST:
+        if ((res = curl_easy_setopt(self->handle, CURLOPT_MIMEPOST, NULL)) != CURLE_OK)
+            goto error;
+        Py_CLEAR(self->mimepost_obj);
+        break;
+#endif
 
     /* "If you do not use a write callback, you must make pointer a 'FILE*'
      * as libcurl passes this to fwrite(3) when writing data" (default: stdout)
@@ -812,6 +819,16 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
         }
         PyText_EncodedDecref(nencoded_obj);
     }
+#ifdef HAVE_CURL_MIME
+    if (self->mimepost_obj != NULL) {
+        res = curl_easy_setopt(self->handle, CURLOPT_MIMEPOST, NULL);
+        if (res != CURLE_OK) {
+            CURLERROR_SET_RETVAL();
+            goto error;
+        }
+    }
+#endif
+
     res = curl_easy_setopt(self->handle, CURLOPT_HTTPPOST, post);
     /* Check for errors */
     if (res != CURLE_OK) {
@@ -820,6 +837,14 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
     }
     /* Finally, decref previous httppost object and replace it with a
      * new one. */
+#ifdef HAVE_CURL_MIME
+    /*
+     * CURLOPT_HTTPPOST and CURLOPT_MIMEPOST are mutually exclusive in libcurl.
+     * Avoid resetting CURLOPT_MIMEPOST after CURLOPT_HTTPPOST succeeds because
+     * that can clear the newly-set HTTPPOST payload on some libcurl versions.
+     */
+    util_curl_xdecref(self, PYCURL_MEMGROUP_MIMEPOST, NULL);
+#endif
     util_curlhttppost_update(self, post, ref_params);
 
     Py_RETURN_NONE;
@@ -1095,6 +1120,49 @@ do_curl_setopt_share(CurlObject *self, PyObject *obj)
     Py_RETURN_NONE;
 }
 
+#ifdef HAVE_CURL_MIME
+static PyObject *
+do_curl_setopt_mimepost(CurlObject *self, PyObject *obj)
+{
+    CurlMimeObject *mime;
+    PyObject *old_mimepost_obj;
+    int res;
+
+    if (!PyObject_TypeCheck(obj, p_CurlMime_Type)) {
+        PyErr_SetString(PyExc_TypeError, "setopt(option=MIMEPOST) expects a CurlMime object");
+        return NULL;
+    }
+
+    mime = (CurlMimeObject *)obj;
+    if (mime->mime == NULL) {
+        PyErr_SetString(PyExc_ValueError, "setopt(option=MIMEPOST) received a closed mime object");
+        return NULL;
+    }
+    if (!mime->owns_mime) {
+        PyErr_SetString(PyExc_ValueError, "setopt(option=MIMEPOST) received a mime object already attached as subparts");
+        return NULL;
+    }
+    if (mime->curl != self) {
+        PyErr_SetString(PyExc_ValueError, "setopt(option=MIMEPOST) requires a CurlMime created with this Curl handle");
+        return NULL;
+    }
+
+    res = curl_easy_setopt(self->handle, CURLOPT_MIMEPOST, mime->mime);
+    if (res != CURLE_OK) {
+        CURLERROR_RETVAL();
+    }
+
+    old_mimepost_obj = self->mimepost_obj;
+    Py_INCREF(obj);
+    self->mimepost_obj = obj;
+    Py_XDECREF(old_mimepost_obj);
+
+    util_curl_xdecref(self, PYCURL_MEMGROUP_HTTPPOST, self->handle);
+
+    Py_RETURN_NONE;
+}
+#endif
+
 
 PYCURL_INTERNAL PyObject *
 do_curl_setopt_filelike(CurlObject *self, int option, PyObject *obj)
@@ -1219,6 +1287,12 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     if (option == CURLOPT_SHARE) {
         return do_curl_setopt_share(self, obj);
     }
+
+#ifdef HAVE_CURL_MIME
+    if (option == CURLOPT_MIMEPOST) {
+        return do_curl_setopt_mimepost(self, obj);
+    }
+#endif
 
     /*
     Handle the case of file-like objects.
