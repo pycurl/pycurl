@@ -1,4 +1,4 @@
-PycURL -- A Python Interface To The cURL library
+PycURL -- A Python Interface To The cURL library TEST
 ================================================
 
 .. image:: https://github.com/pycurl/pycurl/workflows/CI/badge.svg
