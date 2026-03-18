@@ -298,7 +298,7 @@ PYCURL_INTERNAL void pycurl_ssl_cleanup(void);
 
 /* cURL can invoke callbacks during the runtime finalization;
    those must be ignored. */
-#if PY_MINOR_VERSION < 13
+#if PY_VERSION_HEX < 0x030D0000  /* Python 3.12 and older */
 #  define Py_IsFinalizing _Py_IsFinalizing
 #endif
 
