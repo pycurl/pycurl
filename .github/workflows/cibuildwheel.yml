@@ -18,8 +18,8 @@ jobs:
     name: Build sdist
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: 3.11
       - name: Install libcurl (for curl-config)
@@ -29,7 +29,7 @@ jobs:
       - name: Build sdist
         run: python setup.py sdist
       - name: Upload sdist
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           path: dist/pycurl-*.tar.gz
           name: sdist
@@ -57,8 +57,8 @@ jobs:
             arch: arm64
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: 3.11
 
@@ -100,7 +100,7 @@ jobs:
           python -m cibuildwheel --output-dir wheelhouse
 
       - name: Upload wheels
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           path: ./wheelhouse/*.whl
           name: wheels-${{ matrix.os }}-${{ matrix.arch }}
@@ -115,7 +115,7 @@ jobs:
       id-token: write
     steps:
       - name: Download wheels
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: dist/
           merge-multiple: true
