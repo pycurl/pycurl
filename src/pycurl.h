@@ -304,7 +304,7 @@ PYCURL_INTERNAL void pycurl_ssl_cleanup(void);
 
 #define PYCURL_BEGIN_CALLBACK_COMMON(acquire_expr, retval, callback_name) \
     if (Py_IsFinalizing()) { \
-        return 0; \
+        return (retval); \
     } \
     if (!(acquire_expr)) { \
         warn_failed_to_acquire_thread(#callback_name " failed to acquire thread"); \
