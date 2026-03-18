@@ -3,9 +3,11 @@
 # vi:ts=4:et
 
 from . import localhost
+import gc
 import socket
 import unittest
 import pycurl
+import pytest
 
 from . import util
 from . import appmanager
@@ -77,3 +79,59 @@ class CloseSocketCbUnsetTest(unittest.TestCase):
     @util.min_libcurl(7, 21, 7)
     def test_closesocketfunction_unset(self):
         self.curl.unsetopt(pycurl.CLOSESOCKETFUNCTION)
+
+# test_closesocketfunction_on_close leaves the server in a weird state, so use
+# one specific to this test, rather than the session one.
+@pytest.fixture
+def app():
+    from .conftest import make_app
+    yield from make_app()
+
+@util.min_libcurl(7, 21, 7)
+def test_closesocketfunction_on_close(app):
+    called = {}
+
+    def closesocketfunction(curlfd) -> int:
+        called["called"] = True
+        return 1
+
+    curl = util.DefaultCurl()
+    curl.setopt(curl.URL, f"{app}/success")
+    curl.setopt(pycurl.FORBID_REUSE, False)
+    curl.setopt(pycurl.CONNECT_ONLY, True)
+    curl.setopt(pycurl.CLOSESOCKETFUNCTION, closesocketfunction)
+
+    assert curl.getinfo(pycurl.ACTIVESOCKET) == -1
+
+    curl.perform()
+    assert curl.getinfo(pycurl.ACTIVESOCKET) != -1
+    assert not called.get("called", False)
+
+    curl.close()
+
+    assert called.get("called", False)
+
+@util.min_libcurl(7, 21, 7)
+def test_closesocketfunction_on_dealloc(app):
+    called = {}
+
+    def closesocketfunction(curlfd) -> int:
+        called["called"] = True
+        return 1
+
+    curl = util.DefaultCurl()
+    curl.setopt(curl.URL, f"{app}/success")
+    curl.setopt(pycurl.FORBID_REUSE, False)
+    curl.setopt(pycurl.CONNECT_ONLY, True)
+    curl.setopt(pycurl.CLOSESOCKETFUNCTION, closesocketfunction)
+
+    assert curl.getinfo(pycurl.ACTIVESOCKET) == -1
+
+    curl.perform()
+    assert curl.getinfo(pycurl.ACTIVESOCKET) != -1
+    assert not called.get("called", False)
+
+    del curl
+    gc.collect()
+
+    assert called.get("called", False)

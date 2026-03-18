@@ -300,7 +300,14 @@ PYCURL_INTERNAL void pycurl_ssl_cleanup(void);
 #  define PYCURL_END_ALLOW_THREADS
 #endif
 
+#if PY_VERSION_HEX < 0x030D0000  /* Python 3.13 */
+#  define Py_IsFinalizing _Py_IsFinalizing
+#endif
+
 #define PYCURL_BEGIN_CALLBACK_COMMON(acquire_expr, retval, callback_name) \
+    if (Py_IsFinalizing()) { \
+        return (retval); \
+    } \
     if (!(acquire_expr)) { \
         warn_failed_to_acquire_thread(#callback_name " failed to acquire thread"); \
         return (retval); \
