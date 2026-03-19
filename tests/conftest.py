@@ -36,9 +36,11 @@ def curl():
     yield c
     c.close()
 
-
 @pytest.fixture(scope="session")
 def app() -> Generator[str, None, None]:
+    yield from make_app()
+
+def make_app() -> Generator[str, None, None]:
     port = _get_free_port()
     setup, teardown = appmanager.setup(
         (
