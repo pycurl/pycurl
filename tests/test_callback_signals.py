@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 import os
@@ -9,14 +8,10 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from io import BytesIO
 
 import pycurl
 import pytest
-
-if __package__:
-    from . import util
-else:
-    from tests import util
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 THIS_FILE = Path(__file__).resolve()
@@ -29,7 +24,7 @@ SIGINT_PROBE_SLEEP = 10.0
 @pytest.fixture
 def callback_curl(curl, app):
     curl.setopt(pycurl.URL, f"{app}/success")
-    body = util.BytesIO()
+    body = BytesIO()
     curl.setopt(pycurl.WRITEFUNCTION, body.write)
     return curl
 

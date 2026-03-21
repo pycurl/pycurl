@@ -1,23 +1,14 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 from . import localhost
-import pycurl
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
-import sys
+import json
 import os.path
-try:
-    import json
-except ImportError:
-    import simplejson as json
-try:
-    import urllib.parse as urllib_parse
-except ImportError:
-    import urllib as urllib_parse
+import urllib.parse as urllib_parse
+import pycurl
+import sys
+import unittest
+from io import BytesIO
 
 from . import appmanager
 from . import util
@@ -31,7 +22,7 @@ POSTFIELDS = {
 }
 POSTSTRING = urllib_parse.urlencode(POSTFIELDS)
 
-class DataProvider(object):
+class DataProvider:
     def __init__(self, data):
         self.data = data
         self.finished = False
@@ -60,7 +51,7 @@ class ReaddataTest(unittest.TestCase):
         self.curl.setopt(self.curl.POST, 1)
         self.curl.setopt(self.curl.POSTFIELDSIZE, len(POSTSTRING))
         self.curl.setopt(self.curl.READDATA, d)
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
 
@@ -78,7 +69,7 @@ class ReaddataTest(unittest.TestCase):
 
     def check_bytes(self, poststring):
         data = poststring.encode('utf8')
-        assert type(data) == util.binary_type
+        assert type(data) == bytes
         d = DataProvider(data)
 
         self.curl.setopt(self.curl.URL, 'http://%s:8380/raw_utf8' % localhost)
@@ -87,7 +78,7 @@ class ReaddataTest(unittest.TestCase):
         # length of bytes
         self.curl.setopt(self.curl.POSTFIELDSIZE, len(data))
         self.curl.setopt(self.curl.READDATA, d)
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
 
@@ -113,7 +104,7 @@ class ReaddataTest(unittest.TestCase):
             self.assertEqual('operation aborted by callback', msg)
 
     def check_unicode(self, poststring):
-        assert type(poststring) == util.text_type
+        assert type(poststring) == str
         d = DataProvider(poststring)
 
         self.curl.setopt(self.curl.URL, 'http://%s:8380/raw_utf8' % localhost)
@@ -121,7 +112,7 @@ class ReaddataTest(unittest.TestCase):
         self.curl.setopt(self.curl.HTTPHEADER, ['Content-Type: application/octet-stream'])
         self.curl.setopt(self.curl.POSTFIELDSIZE, len(poststring))
         self.curl.setopt(self.curl.READDATA, d)
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
 
@@ -137,7 +128,7 @@ class ReaddataTest(unittest.TestCase):
             self.curl.setopt(self.curl.POST, 1)
             self.curl.setopt(self.curl.POSTFIELDSIZE, os.stat(FORM_SUBMISSION_PATH).st_size)
             self.curl.setopt(self.curl.READDATA, f)
-            sio = util.BytesIO()
+            sio = BytesIO()
             self.curl.setopt(pycurl.WRITEDATA, sio)
             self.curl.perform()
 
@@ -154,7 +145,7 @@ class ReaddataTest(unittest.TestCase):
             self.curl.setopt(self.curl.POST, 1)
             self.curl.setopt(self.curl.POSTFIELDSIZE, os.stat(FORM_SUBMISSION_PATH).st_size)
             self.curl.setopt(self.curl.READDATA, f)
-            sio = util.BytesIO()
+            sio = BytesIO()
             self.curl.setopt(pycurl.WRITEDATA, sio)
             self.curl.perform()
 
@@ -170,7 +161,7 @@ class ReaddataTest(unittest.TestCase):
         self.curl.setopt(self.curl.POST, 1)
         self.curl.setopt(self.curl.POSTFIELDSIZE, len(data))
         self.curl.setopt(self.curl.READDATA, data_provider)
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEDATA, sio)
         self.curl.perform()
 
@@ -187,7 +178,7 @@ class ReaddataTest(unittest.TestCase):
         self.curl.setopt(self.curl.POSTFIELDSIZE, len(data))
         self.curl.setopt(self.curl.READDATA, data_provider)
         self.curl.setopt(self.curl.READFUNCTION, function_provider.read)
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEDATA, sio)
         self.curl.perform()
 
@@ -204,7 +195,7 @@ class ReaddataTest(unittest.TestCase):
         self.curl.setopt(self.curl.POSTFIELDSIZE, len(data))
         self.curl.setopt(self.curl.READFUNCTION, function_provider.read)
         self.curl.setopt(self.curl.READDATA, data_provider)
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEDATA, sio)
         self.curl.perform()
 
@@ -220,7 +211,7 @@ class ReaddataTest(unittest.TestCase):
             self.curl.setopt(self.curl.POSTFIELDSIZE, os.stat(FORM_SUBMISSION_PATH).st_size)
             self.curl.setopt(self.curl.READDATA, f)
             self.curl.setopt(self.curl.READFUNCTION, function_provider.read)
-            sio = util.BytesIO()
+            sio = BytesIO()
             self.curl.setopt(pycurl.WRITEDATA, sio)
             self.curl.perform()
 
@@ -236,7 +227,7 @@ class ReaddataTest(unittest.TestCase):
             self.curl.setopt(self.curl.POSTFIELDSIZE, os.stat(FORM_SUBMISSION_PATH).st_size)
             self.curl.setopt(self.curl.READFUNCTION, function_provider.read)
             self.curl.setopt(self.curl.READDATA, f)
-            sio = util.BytesIO()
+            sio = BytesIO()
             self.curl.setopt(pycurl.WRITEDATA, sio)
             self.curl.perform()
 

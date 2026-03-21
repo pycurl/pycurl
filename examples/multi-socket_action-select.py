@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 # Retrieves a single URL using the CurlMulti.socket_action calls, using

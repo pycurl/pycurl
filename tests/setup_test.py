@@ -1,18 +1,13 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
+
+from io import StringIO
 
 from . import util
 import setup as pycurl_setup
 import unittest
 import os, os.path, sys
 import functools
-try:
-    # Python 2
-    from StringIO import StringIO
-except ImportError:
-    # Python 3
-    from io import StringIO
 
 def set_env(key, new_value):
     old_value = os.environ.get(key)

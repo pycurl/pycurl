@@ -1,10 +1,10 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 import threading
 import pycurl
 import pytest
+from io import BytesIO
 
 from . import util
 
@@ -35,7 +35,7 @@ class WorkerThread(threading.Thread):
         self.curl = util.DefaultCurl()
         self.curl.setopt(pycurl.URL, url + "/success")
         self.curl.setopt(pycurl.SHARE, share)
-        self.sio = util.BytesIO()
+        self.sio = BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, self.sio.write)
 
     def run(self):
@@ -109,7 +109,7 @@ def test_easy_with_share_closed_before_perform(app, default_share):
         c.setopt(pycurl.URL, app + "/success")
         c.setopt(pycurl.SHARE, s)
 
-        sio = util.BytesIO()
+        sio = BytesIO()
         c.setopt(pycurl.WRITEFUNCTION, sio.write)
 
         easies.append((c, sio))
@@ -131,7 +131,7 @@ def test_easy_with_share_closed_before_perform_no_detach(app, default_share_no_d
         c.setopt(pycurl.URL, app + "/success")
         c.setopt(pycurl.SHARE, s)
 
-        sio = util.BytesIO()
+        sio = BytesIO()
         c.setopt(pycurl.WRITEFUNCTION, sio.write)
 
         easies.append((c, sio))
@@ -183,7 +183,7 @@ def test_easy_set_share_closed_raises(app):
 def test_share_context_manager_detaches_by_default(app):
     c = util.DefaultCurl()
     c.setopt(pycurl.URL, app + "/success")
-    sio = util.BytesIO()
+    sio = BytesIO()
     c.setopt(pycurl.WRITEFUNCTION, sio.write)
 
     with pycurl.CurlShare() as s:
@@ -204,7 +204,7 @@ def test_share_context_manager_detaches_by_default(app):
 def test_share_context_manager_strict_raises_if_live_easies(app):
     c = util.DefaultCurl()
     c.setopt(pycurl.URL, app + "/success")
-    sio = util.BytesIO()
+    sio = BytesIO()
     c.setopt(pycurl.WRITEFUNCTION, sio.write)
 
     with pytest.raises(pycurl.error):

@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 from . import localhost
@@ -257,7 +256,7 @@ class OptionConstantsTest(unittest.TestCase):
         curl.setopt(curl.CAINFO, '/bogus-cainfo')
         curl.close()
 
-    @util.only_ssl
+    @util.only_ssl_backends('openssl', 'gnutls')
     def test_issuercert(self):
         curl = pycurl.Curl()
         curl.setopt(curl.ISSUERCERT, '/bogus-issuercert')
@@ -479,7 +478,7 @@ class OptionConstantsTest(unittest.TestCase):
         curl.setopt(curl.PROXY_ISSUERCERT, '/bogus-issuercert')
         curl.close()
 
-    @util.only_ssl
+    @util.only_ssl_backends('openssl', 'gnutls', 'mbedtls', 'rustls')
     def test_crlfile(self):
         curl = pycurl.Curl()
         curl.setopt(curl.CRLFILE, '/bogus-crlfile')

@@ -158,17 +158,17 @@ do_version_info(PyObject *dummy, PyObject *args)
 
 #define SET(i, v) \
         tmp = (v); if (tmp == NULL) goto error; PyTuple_SET_ITEM(ret, i, tmp)
-    SET(0, PyInt_FromLong((long) vi->age));
+    SET(0, PyLong_FromLong((long) vi->age));
     SET(1, vi_str(vi->version));
-    SET(2, PyInt_FromLong(vi->version_num));
+    SET(2, PyLong_FromLong(vi->version_num));
     SET(3, vi_str(vi->host));
-    SET(4, PyInt_FromLong(vi->features));
+    SET(4, PyLong_FromLong(vi->features));
     SET(5, vi_str(vi->ssl_version));
-    SET(6, PyInt_FromLong(vi->ssl_version_num));
+    SET(6, PyLong_FromLong(vi->ssl_version_num));
     SET(7, vi_str(vi->libz_version));
     SET(8, protocols);
     SET(9, vi_str(vi->ares));
-    SET(10, PyInt_FromLong(vi->ares_num));
+    SET(10, PyLong_FromLong(vi->ares_num));
     SET(11, vi_str(vi->libidn));
 #undef SET
     return ret;
@@ -198,9 +198,6 @@ insobj2(PyObject *dict1, PyObject *dict2, char *name, PyObject *value)
 
     if (key == NULL)
         goto error;
-#if 0
-    PyString_InternInPlace(&key);   /* XXX Should we really? */
-#endif
     if (dict1 != NULL) {
 #if !defined(NDEBUG)
         if (PyDict_GetItem(dict1, key) != NULL) {
@@ -256,7 +253,7 @@ insstr(PyObject *d, char *name, char *value)
 static int
 insint_worker(PyObject *d, PyObject *extra, char *name, long value)
 {
-    PyObject *v = PyInt_FromLong(value);
+    PyObject *v = PyLong_FromLong(value);
     if (v == NULL)
         return -1;
     if (insobj2(d, extra, name, v) < 0) {
@@ -333,11 +330,6 @@ static void pycurl_autodetect_ca()
 #endif
 
 
-#if PY_MAJOR_VERSION >= 3
-/* Used in Python 3 only, and even then this function seems to never get
- * called. Python 2 has no module cleanup:
- * http://stackoverflow.com/questions/20741856/run-a-function-when-a-c-extension-module-is-freed-on-python-2
- */
 static void do_curlmod_free(void *unused) {
     Py_XDECREF(bytesio);
     bytesio = NULL;
@@ -375,25 +367,9 @@ static PyModuleDef curlmodule = {
     NULL,               /* m_clear */
     do_curlmod_free     /* m_free */
 };
-#endif
 
 
-#if PY_MAJOR_VERSION >= 3
-#define PYCURL_MODINIT_RETURN_NULL return NULL
 PyMODINIT_FUNC PyInit_pycurl(void)
-#else
-#define PYCURL_MODINIT_RETURN_NULL return
-/* Initialization function for the module */
-#if defined(PyMODINIT_FUNC)
-PyMODINIT_FUNC
-#else
-#if defined(__cplusplus)
-extern "C"
-#endif
-DL_EXPORT(void)
-#endif
-initpycurl(void)
-#endif
 {
     PyObject *m, *d;
     const curl_version_info_data *vi;
@@ -538,16 +514,9 @@ initpycurl(void)
 #endif
 
 
-#if PY_MAJOR_VERSION >= 3
     m = PyModule_Create(&curlmodule);
     if (m == NULL)
         goto error;
-#else
-    /* returns a borrowed reference, XDECREFing it crashes the interpreter */
-    m = Py_InitModule3("pycurl", curl_methods, pycurl_module_doc);
-    if (m == NULL || !PyModule_Check(m))
-        goto error;
-#endif
 
     /* Add error object to the module */
     d = PyModule_GetDict(m);
@@ -1661,7 +1630,6 @@ initpycurl(void)
     }
 #endif
 
-#if PY_MAJOR_VERSION >= 3
     xio_module = PyImport_ImportModule("io");
     if (xio_module == NULL) {
         goto error;
@@ -1674,22 +1642,6 @@ initpycurl(void)
     if (stringio == NULL) {
         goto error;
     }
-#else
-    xio_module = PyImport_ImportModule("cStringIO");
-    if (xio_module == NULL) {
-        PyErr_Clear();
-        xio_module = PyImport_ImportModule("StringIO");
-        if (xio_module == NULL) {
-            goto error;
-        }
-    }
-    stringio = PyObject_GetAttrString(xio_module, "StringIO");
-    if (stringio == NULL) {
-        goto error;
-    }
-    bytesio = stringio;
-    Py_INCREF(bytesio);
-#endif
 
     collections_module = PyImport_ImportModule("collections");
     if (collections_module == NULL) {
@@ -1727,7 +1679,7 @@ initpycurl(void)
         goto error;
     }
 
-#if defined(WITH_THREAD) && (PY_MAJOR_VERSION < 3 || PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION < 9)
+#if defined(WITH_THREAD) && PY_MINOR_VERSION < 9
     /* Finally initialize global interpreter lock */
     PyEval_InitThreads();
 #endif
@@ -1740,11 +1692,7 @@ initpycurl(void)
     Py_DECREF(collections_module);
     Py_DECREF(xio_module);
 
-#if PY_MAJOR_VERSION >= 3
     return m;
-#else
-    PYCURL_MODINIT_RETURN_NULL;
-#endif
 
 error:
     Py_XDECREF(curlobject_constants);
@@ -1764,5 +1712,5 @@ error:
     PyMem_Free(g_pycurl_useragent);
     if (!PyErr_Occurred())
         PyErr_SetString(PyExc_ImportError, "curl module init failed");
-    PYCURL_MODINIT_RETURN_NULL;
+    return NULL;
 }

@@ -1,11 +1,11 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 from . import localhost
 import pycurl
 import unittest
 import time as _time
+from io import BytesIO
 
 from . import appmanager
 from . import util
@@ -25,7 +25,7 @@ class HeaderCbTest(unittest.TestCase):
 
     def test_get(self):
         self.curl.setopt(pycurl.URL, 'http://%s:8380/success' % localhost)
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.setopt(pycurl.HEADERFUNCTION, self.header_function)
         self.curl.perform()

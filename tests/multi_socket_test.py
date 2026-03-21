@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 import gc
@@ -7,6 +6,7 @@ import select
 import sys
 import time
 import weakref
+from io import BytesIO
 
 import pycurl
 import pytest
@@ -114,7 +114,7 @@ def test_multi_socket(app, multi):
         c = util.DefaultCurl()
         # save info in standard Python attributes
         c.url = url
-        c.body = util.BytesIO()
+        c.body = BytesIO()
         c.http_code = -1
         handles.append(c)
         # pycurl API calls
@@ -175,7 +175,7 @@ def test_multi_assign_objects(app, multi, reassign):
     timer_state = _setup_timer(multi)
     multi.setopt(pycurl.M_SOCKETFUNCTION, socket)
     c = util.DefaultCurl()
-    c.body = util.BytesIO()
+    c.body = BytesIO()
     c.setopt(c.URL, url)
     c.setopt(c.WRITEFUNCTION, c.body.write)
     multi.add_handle(c)
@@ -242,7 +242,7 @@ def test_multi_assign_none_clears(app, multi):
     timer_state = _setup_timer(multi)
     multi.setopt(pycurl.M_SOCKETFUNCTION, socket)
     c = util.DefaultCurl()
-    c.body = util.BytesIO()
+    c.body = BytesIO()
     c.setopt(c.URL, url)
     c.setopt(c.WRITEFUNCTION, c.body.write)
     multi.add_handle(c)

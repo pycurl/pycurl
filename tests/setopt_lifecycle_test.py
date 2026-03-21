@@ -1,11 +1,11 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 from . import localhost
 import gc
 import pycurl
 import unittest
+from io import BytesIO
 try:
     import json
 except ImportError:
@@ -46,7 +46,7 @@ class SetoptLifecycleTest(unittest.TestCase):
         for i in range(100):
             curl = requests[i]
             #self.curl.setopt(pycurl.VERBOSE, 1)
-            sio = util.BytesIO()
+            sio = BytesIO()
             curl.setopt(pycurl.WRITEFUNCTION, sio.write)
             curl.perform()
             self.assertEqual(200, curl.getinfo(pycurl.HTTP_CODE))

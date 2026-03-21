@@ -1,11 +1,11 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 import pycurl
 import pytest
 from . import localhost
 import unittest
+from io import BytesIO
 
 from . import appmanager
 from . import util
@@ -21,7 +21,7 @@ class SetoptTest(unittest.TestCase):
 
     def test_setopt_string(self):
         self.curl.setopt_string(pycurl.URL, 'http://%s:8380/success' % localhost)
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
         self.assertEqual('success', sio.getvalue().decode())

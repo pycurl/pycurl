@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 #
 # sfquery -- Source Forge query script using the ClientCGI high-level interface

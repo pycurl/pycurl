@@ -1,11 +1,11 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 from . import localhost
 import pycurl
 import pytest
 import unittest
+from io import BytesIO
 
 from . import appmanager
 from . import util
@@ -31,7 +31,7 @@ class SetoptUnicodeTest(unittest.TestCase):
 
     def check(self, send, expected):
         self.curl.setopt(pycurl.URL, 'http://%s:8380/param_utf8_hack' % localhost)
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.setopt(pycurl.POSTFIELDS, send)
         self.curl.perform()

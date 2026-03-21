@@ -1,15 +1,9 @@
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
-import time as _time, sys
+import time as _time
+import json
 import flask
 import werkzeug
-try:
-    import json
-except ImportError:
-    import simplejson as json
-
-py3 = sys.version_info[0] == 3
 
 app = flask.Flask(__name__)
 app.debug = True
@@ -78,13 +72,9 @@ def header():
 # Thanks to bdarnell for the idea: https://github.com/pycurl/pycurl/issues/124
 @app.route('/header_utf8')
 def header_utf8():
-    header_value = flask.request.headers.get(flask.request.args['h'], '' if py3 else b'')
-    if py3:
-        # header_value is a string, headers are decoded in latin1
-        header_value = header_value.encode('latin1').decode('utf8')
-    else:
-        # header_value is a binary string, decode in utf-8 directly
-        header_value = header_value.decode('utf8')
+    header_value = flask.request.headers.get(flask.request.args['h'], '')
+    # header_value is a string, headers are decoded in latin1
+    header_value = header_value.encode('latin1').decode('utf8')
     return header_value
 
 @app.route('/param_utf8_hack', methods=['POST'])

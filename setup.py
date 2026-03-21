@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 """Setup script for the PycURL module distribution."""
@@ -12,15 +11,7 @@ import glob, os, re, shlex, sys, subprocess
 from setuptools import setup
 from setuptools.extension import Extension
 
-py3 = sys.version_info[0] == 3
-
-try:
-    # python 2
-    exception_base = StandardError
-except NameError:
-    # python 3
-    exception_base = Exception
-class ConfigurationError(exception_base):
+class ConfigurationError(Exception):
     pass
 
 
@@ -74,7 +65,7 @@ def scan_argvs(argv, s):
     return p
 
 
-class ExtensionConfiguration(object):
+class ExtensionConfiguration:
     def __init__(self, argv=[]):
         # we mutate argv, this is necessary because
         # setuptools does not recognize pycurl-specific options
@@ -370,9 +361,8 @@ ignore this message.''')
         ssl_lib_detected = None
         curl_version_info = self.get_curl_version_info(libcurl_dll_path)
         ssl_version = curl_version_info.ssl_version
-        if py3:
-            # ssl_version is bytes on python 3
-            ssl_version = ssl_version.decode('ascii')
+        # ssl_version is bytes, decode to string
+        ssl_version = ssl_version.decode('ascii')
         if ssl_version.startswith('OpenSSL/') or ssl_version.startswith('LibreSSL/'):
             self.using_openssl()
             ssl_lib_detected = 'openssl'

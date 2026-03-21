@@ -23,13 +23,12 @@ removed, for example ``CURLINFO_CONTENT_TYPE`` is accessible as
 The type of return value depends on the option, as follows:
 
 - Options documented by libcurl to return an integer value return a
-  Python integer (``long`` on Python 2, ``int`` on Python 3).
+  Python ``int``.
 - Options documented by libcurl to return a floating point value
   return a Python ``float``.
 - Options documented by libcurl to return a string value
-  return a Python string (``str`` on Python 2 and Python 3).
-  On Python 2, the string contains whatever data libcurl returned.
-  On Python 3, the data returned by libcurl is decoded using the
+  return a Python ``str``.
+  The data returned by libcurl is decoded using the
   default string encoding at the time of the call.
   If the data cannot be decoded using the default encoding, ``UnicodeDecodeError``
   is raised. Use :ref:`getinfo_raw <getinfo_raw>`
@@ -47,8 +46,6 @@ The type of return value depends on the option, as follows:
   certificate data as byte strings.
 - For libcurl versions >= 7.45.0, ``CURLINFO_LASTSOCKET`` is aliased to
   ``CURLINFO_ACTIVESOCKET`` to avoid unreliable results on some platforms.
-
-On Python 2, ``getinfo`` and ``getinfo_raw`` behave identically.
 
 Example usage::
 

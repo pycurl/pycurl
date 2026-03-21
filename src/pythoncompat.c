@@ -1,7 +1,5 @@
 #include "pycurl.h"
 
-#if PY_MAJOR_VERSION >= 3
-
 PYCURL_INTERNAL PyObject *
 my_getattro(PyObject *co, PyObject *name, PyObject *dict1, PyObject *dict2, PyMethodDef *m)
 {
@@ -41,44 +39,6 @@ my_setattro(PyObject **dict, PyObject *name, PyObject *v)
         return v;
     }
 }
-
-#else /* PY_MAJOR_VERSION >= 3 */
-
-PYCURL_INTERNAL int
-my_setattr(PyObject **dict, char *name, PyObject *v)
-{
-    if (v == NULL) {
-        int rv = -1;
-        if (*dict != NULL)
-            rv = PyDict_DelItemString(*dict, name);
-        if (rv < 0)
-            PyErr_Format(PyExc_AttributeError, "trying to delete a non-existing attribute: %s", name);
-        return rv;
-    }
-    if (*dict == NULL) {
-        *dict = PyDict_New();
-        if (*dict == NULL)
-            return -1;
-    }
-    return PyDict_SetItemString(*dict, name, v);
-}
-
-PYCURL_INTERNAL PyObject *
-my_getattr(PyObject *co, char *name, PyObject *dict1, PyObject *dict2, PyMethodDef *m)
-{
-    PyObject *v = NULL;
-    if (v == NULL && dict1 != NULL)
-        v = PyDict_GetItemString(dict1, name);
-    if (v == NULL && dict2 != NULL)
-        v = PyDict_GetItemString(dict2, name);
-    if (v != NULL) {
-        Py_INCREF(v);
-        return v;
-    }
-    return Py_FindMethod(m, co, name);
-}
-
-#endif /* PY_MAJOR_VERSION >= 3 */
 
 PYCURL_INTERNAL int
 PyListOrTuple_Check(PyObject *v)

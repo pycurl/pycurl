@@ -63,22 +63,20 @@ do_curl_perform_rb(CurlObject *self, PyObject *Py_UNUSED(ignored))
     return v;
 }
 
-#if PY_MAJOR_VERSION >= 3
 PYCURL_INTERNAL PyObject *
 do_curl_perform_rs(CurlObject *self, PyObject *Py_UNUSED(ignored))
 {
     PyObject *v, *decoded;
-    
+
     v = do_curl_perform_rb(self, NULL);
     if (v == NULL) {
         return NULL;
     }
-    
+
     decoded = PyUnicode_FromEncodedObject(v, NULL, NULL);
     Py_DECREF(v);
     return decoded;
 }
-#endif
 
 
 /* --------------- send/recv --------------- */

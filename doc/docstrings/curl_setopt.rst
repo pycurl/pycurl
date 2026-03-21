@@ -32,22 +32,16 @@ The following are exceptions to option constant naming convention:
 values of different types:
 
 - Options specified by `curl_easy_setopt`_ as accepting ``1`` or an
-  integer value accept Python integers, long integers (on Python 2.x) and
-  booleans::
+  integer value accept Python integers and booleans::
 
     c.setopt(pycurl.FOLLOWLOCATION, True)
     c.setopt(pycurl.FOLLOWLOCATION, 1)
-    # Python 2.x only:
-    c.setopt(pycurl.FOLLOWLOCATION, 1L)
 
 - Options specified as accepting strings by ``curl_easy_setopt`` accept
-  byte strings (``str`` on Python 2, ``bytes`` on Python 3) and
-  Unicode strings with ASCII code points only.
+  ``bytes`` and ``str`` with ASCII code points only.
   For more information, please refer to :ref:`unicode`. Example::
 
     c.setopt(pycurl.URL, "http://www.python.org/")
-    c.setopt(pycurl.URL, u"http://www.python.org/")
-    # Python 3.x only:
     c.setopt(pycurl.URL, b"http://www.python.org/")
 
 - ``HTTP200ALIASES``, ``HTTPHEADER``, ``POSTQUOTE``, ``PREQUOTE``,
@@ -59,22 +53,15 @@ values of different types:
     c.setopt(pycurl.HTTPHEADER, ("Accept:",))
 
 - ``READDATA`` accepts a file object or any Python object which has
-  a ``read`` method. On Python 2, a file object will be passed directly
-  to libcurl and may result in greater transfer efficiency, unless
-  PycURL has been compiled with ``AVOID_STDIO`` option.
-  On Python 3 and on Python 2 when the value is not a true file object,
-  ``READDATA`` is emulated in PycURL via ``READFUNCTION``.
+  a ``read`` method. ``READDATA`` is emulated in PycURL via ``READFUNCTION``.
   The file should generally be opened in binary mode. Example::
 
     f = open('file.txt', 'rb')
     c.setopt(c.READDATA, f)
 
 - ``WRITEDATA`` and ``WRITEHEADER`` accept a file object or any Python
-  object which has a ``write`` method. On Python 2, a file object will
-  be passed directly to libcurl and may result in greater transfer efficiency,
-  unless PycURL has been compiled with ``AVOID_STDIO`` option.
-  On Python 3 and on Python 2 when the value is not a true file object,
-  ``WRITEDATA`` is emulated in PycURL via ``WRITEFUNCTION``.
+  object which has a ``write`` method. ``WRITEDATA`` is emulated in PycURL
+  via ``WRITEFUNCTION``.
   The file should generally be opened in binary mode. Example::
 
     f = open('/dev/null', 'wb')
@@ -83,9 +70,8 @@ values of different types:
 - ``*FUNCTION`` options accept a function. Supported callbacks are documented
   in :ref:`callbacks`. Example::
 
-    # Python 2
-    import StringIO
-    b = StringIO.StringIO()
+    import io
+    b = io.BytesIO()
     c.setopt(pycurl.WRITEFUNCTION, b.write)
 
 - ``SHARE`` option accepts a :ref:`curlshareobject`.

@@ -7,7 +7,7 @@ import unittest
 
 from . import util, localhost
 
-class ProcessManager(object):
+class ProcessManager:
     def __init__(self, cmd):
         self.cmd = cmd
         self.running = False
@@ -54,13 +54,7 @@ if 'PYCURL_VSFTPD_PATH' in os.environ:
 else:
     vsftpd_path = None
 
-try:
-    # python 2
-    exception_base = StandardError
-except NameError:
-    # python 3
-    exception_base = Exception
-class VsftpdNotConfigured(exception_base):
+class VsftpdNotConfigured(Exception):
     pass
 
 def vsftpd_setup():

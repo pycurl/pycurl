@@ -95,11 +95,7 @@ static PyObject *convert_certinfo(struct curl_certinfo *cinfo, int decode)
                     if (decode) {
                         field_tuple = Py_BuildValue("s#s", field, (int)(sep - field), sep+1);
                     } else {
-#if PY_MAJOR_VERSION >= 3
                         field_tuple = Py_BuildValue("y#y", field, (int)(sep - field), sep+1);
-#else
-                        field_tuple = Py_BuildValue("s#s", field, (int)(sep - field), sep+1);
-#endif
                     }
                 }
                 if (!field_tuple)
@@ -171,7 +167,7 @@ do_curl_getinfo_raw(CurlObject *self, PyObject *args)
             if (res != CURLE_OK) {
                 CURLERROR_RETVAL();
             }
-            return PyInt_FromLong(l_res);
+            return PyLong_FromLong(l_res);
         }
 
     case CURLINFO_CONTENT_TYPE:
@@ -325,7 +321,6 @@ do_curl_getinfo_raw(CurlObject *self, PyObject *args)
 }
 
 
-#if PY_MAJOR_VERSION >= 3
 static PyObject *
 decode_string_list(PyObject *list)
 {
@@ -356,6 +351,7 @@ err:
     Py_DECREF(decoded_list);
     return NULL;
 }
+
 
 PYCURL_INTERNAL PyObject *
 do_curl_getinfo(CurlObject *self, PyObject *args)
@@ -423,7 +419,6 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
         return rv;
     }
 }
-#endif
 
 
 PYCURL_INTERNAL PyObject *
@@ -438,7 +433,6 @@ do_curl_errstr(CurlObject *self, PyObject *Py_UNUSED(ignored))
 }
 
 
-#if PY_MAJOR_VERSION >= 3
 PYCURL_INTERNAL PyObject *
 do_curl_errstr_raw(CurlObject *self, PyObject *Py_UNUSED(ignored))
 {
@@ -449,4 +443,3 @@ do_curl_errstr_raw(CurlObject *self, PyObject *Py_UNUSED(ignored))
 
     return PyByteStr_FromString(self->error);
 }
-#endif

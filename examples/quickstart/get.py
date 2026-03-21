@@ -1,12 +1,8 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 import pycurl
-try:
-    from io import BytesIO
-except ImportError:
-    from StringIO import StringIO as BytesIO
+from io import BytesIO
 
 buffer = BytesIO()
 c = pycurl.Curl()
@@ -18,7 +14,7 @@ c.perform()
 c.close()
 
 body = buffer.getvalue()
-# Body is a string on Python 2 and a byte string on Python 3.
+# Body is a byte string.
 # If we know the encoding, we can always decode the body and
 # end up with a Unicode string.
 print(body.decode('iso-8859-1'))

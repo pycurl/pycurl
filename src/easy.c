@@ -28,12 +28,7 @@ do_curlslist_dealloc(CurlSlistObject *self) {
 }
 
 PYCURL_INTERNAL PyTypeObject CurlSlist_Type = {
-#if PY_MAJOR_VERSION >= 3
     PyVarObject_HEAD_INIT(NULL, 0)
-#else
-    PyObject_HEAD_INIT(NULL)
-    0,                          /* ob_size */
-#endif
     "pycurl.CurlSlist",         /* tp_name */
     sizeof(CurlSlistObject),    /* tp_basicsize */
     0,                          /* tp_itemsize */
@@ -78,13 +73,11 @@ PYCURL_INTERNAL PyTypeObject CurlSlist_Type = {
     0,                          /* tp_cache */
     0,                          /* tp_subclasses */
     0,                          /* tp_weaklist */
-#if PY_MAJOR_VERSION >= 3
     0,                          /* tp_del */
     0,                          /* tp_version_tag */
     0,                          /* tp_finalize */
 #if PY_VERSION_HEX >= 0x03080000
     0,                          /* tp_vectorcall */
-#endif
 #endif
 };
 
@@ -117,12 +110,7 @@ do_curlhttppost_dealloc(CurlHttppostObject *self) {
 }
 
 PYCURL_INTERNAL PyTypeObject CurlHttppost_Type = {
-#if PY_MAJOR_VERSION >= 3
     PyVarObject_HEAD_INIT(NULL, 0)
-#else
-    PyObject_HEAD_INIT(NULL)
-    0,                          /* ob_size */
-#endif
     "pycurl.CurlHttppost",      /* tp_name */
     sizeof(CurlHttppostObject), /* tp_basicsize */
     0,                          /* tp_itemsize */
@@ -167,13 +155,11 @@ PYCURL_INTERNAL PyTypeObject CurlHttppost_Type = {
     0,                          /* tp_cache */
     0,                          /* tp_subclasses */
     0,                          /* tp_weaklist */
-#if PY_MAJOR_VERSION >= 3
     0,                          /* tp_del */
     0,                          /* tp_version_tag */
     0,                          /* tp_finalize */
 #if PY_VERSION_HEX >= 0x03080000
     0,                          /* tp_vectorcall */
-#endif
 #endif
 };
 
@@ -940,8 +926,6 @@ PYCURL_INTERNAL PyMethodDef curlobject_methods[] = {
 /* --------------- setattr/getattr --------------- */
 
 
-#if PY_MAJOR_VERSION >= 3
-
 PYCURL_INTERNAL PyObject *
 do_curl_getattro(PyObject *o, PyObject *n)
 {
@@ -962,44 +946,15 @@ do_curl_setattro(PyObject *o, PyObject *name, PyObject *v)
     return my_setattro(&((CurlObject *)o)->dict, name, v);
 }
 
-#else /* PY_MAJOR_VERSION >= 3 */
-
-PYCURL_INTERNAL PyObject *
-do_curl_getattr(CurlObject *co, char *name)
-{
-    assert_curl_state(co);
-    return my_getattr((PyObject *)co, name, co->dict,
-                      curlobject_constants, curlobject_methods);
-}
-
-PYCURL_INTERNAL int
-do_curl_setattr(CurlObject *co, char *name, PyObject *v)
-{
-    assert_curl_state(co);
-    return my_setattr(&co->dict, name, v);
-}
-
-#endif /* PY_MAJOR_VERSION >= 3 */
-
 PYCURL_INTERNAL PyTypeObject Curl_Type = {
-#if PY_MAJOR_VERSION >= 3
     PyVarObject_HEAD_INIT(NULL, 0)
-#else
-    PyObject_HEAD_INIT(NULL)
-    0,                          /* ob_size */
-#endif
     "pycurl.Curl",              /* tp_name */
     sizeof(CurlObject),         /* tp_basicsize */
     0,                          /* tp_itemsize */
     (destructor)do_curl_dealloc, /* tp_dealloc */
     0,                          /* tp_print */
-#if PY_MAJOR_VERSION >= 3
     0,                          /* tp_getattr */
     0,                          /* tp_setattr */
-#else
-    (getattrfunc)do_curl_getattr,  /* tp_getattr */
-    (setattrfunc)do_curl_setattr,  /* tp_setattr */
-#endif
     0,                          /* tp_reserved */
     0,                          /* tp_repr */
     0,                          /* tp_as_number */
@@ -1008,13 +963,8 @@ PYCURL_INTERNAL PyTypeObject Curl_Type = {
     0,                          /* tp_hash  */
     0,                          /* tp_call */
     0,                          /* tp_str */
-#if PY_MAJOR_VERSION >= 3
     (getattrofunc)do_curl_getattro, /* tp_getattro */
     (setattrofunc)do_curl_setattro, /* tp_setattro */
-#else
-    0,                          /* tp_getattro */
-    0,                          /* tp_setattro */
-#endif
     0,                          /* tp_as_buffer */
     PYCURL_TYPE_FLAGS,          /* tp_flags */
     curl_doc,                   /* tp_doc */

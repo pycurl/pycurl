@@ -1,10 +1,10 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 from . import localhost
 import pycurl
 import unittest
+from io import BytesIO
 
 from . import appmanager
 from . import util
@@ -16,7 +16,7 @@ class ResetTest(unittest.TestCase):
         c = util.DefaultCurl()
         c.setopt(pycurl.USERAGENT, 'Phony/42')
         c.setopt(pycurl.URL, 'http://%s:8380/header?h=user-agent' % localhost)
-        sio = util.BytesIO()
+        sio = BytesIO()
         c.setopt(pycurl.WRITEFUNCTION, sio.write)
         c.perform()
         user_agent = sio.getvalue().decode()
@@ -24,7 +24,7 @@ class ResetTest(unittest.TestCase):
 
         c.reset()
         c.setopt(pycurl.URL, 'http://%s:8380/header?h=user-agent' % localhost)
-        sio = util.BytesIO()
+        sio = BytesIO()
         c.setopt(pycurl.WRITEFUNCTION, sio.write)
         c.perform()
         user_agent = sio.getvalue().decode()
@@ -34,7 +34,7 @@ class ResetTest(unittest.TestCase):
 
     # XXX this test was broken when it was test_reset.py
     def skip_reset_with_multi(self):
-        outf = util.BytesIO()
+        outf = BytesIO()
         cm = pycurl.CurlMulti()
 
         eh = util.DefaultCurl()

@@ -1,11 +1,11 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 from . import localhost
 import socket
 import pycurl
 import unittest
+from io import BytesIO
 
 from . import appmanager
 from . import util
@@ -65,7 +65,7 @@ class OpenSocketCbTest(unittest.TestCase):
     def test_socket_open(self):
         self.curl.setopt(pycurl.OPENSOCKETFUNCTION, socket_open_ipv4)
         self.curl.setopt(self.curl.URL, 'http://%s:8380/success' % localhost)
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
 
@@ -77,7 +77,7 @@ class OpenSocketCbTest(unittest.TestCase):
     def test_socket_open_ipv6(self):
         self.curl.setopt(pycurl.OPENSOCKETFUNCTION, socket_open_ipv6)
         self.curl.setopt(self.curl.URL, 'http://[::1]:8380/success')
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         try:
             # perform fails because we do not listen on ::1
@@ -99,7 +99,7 @@ class OpenSocketCbTest(unittest.TestCase):
         self.curl.setopt(pycurl.OPENSOCKETFUNCTION, socket_open_unix)
         self.curl.setopt(self.curl.URL, 'http://%s:8380/success' % localhost)
         self.curl.setopt(self.curl.UNIX_SOCKET_PATH, '/tmp/pycurl-test-path.sock')
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         try:
             # perform fails because we return a socket that is
@@ -109,12 +109,8 @@ class OpenSocketCbTest(unittest.TestCase):
             pass
 
         assert socket_open_called_unix
-        if util.py3:
-            assert isinstance(socket_open_address, bytes)
-            self.assertEqual(b'/tmp/pycurl-test-path.sock', socket_open_address)
-        else:
-            assert isinstance(socket_open_address, str)
-            self.assertEqual('/tmp/pycurl-test-path.sock', socket_open_address)
+        assert isinstance(socket_open_address, bytes)
+        self.assertEqual(b'/tmp/pycurl-test-path.sock', socket_open_address)
 
     def test_socket_open_none(self):
         self.curl.setopt(pycurl.OPENSOCKETFUNCTION, None)

@@ -403,8 +403,8 @@ do_share_setopt(CurlShareObject *self, PyObject *args)
 #endif
 
     /* Handle the case of integer arguments */
-    if (PyInt_Check(obj)) {
-        long d = PyInt_AsLong(obj);
+    if (PyLong_Check(obj)) {
+        long d = PyLong_AsLong(obj);
         switch(d) {
         case CURL_LOCK_DATA_COOKIE:
         case CURL_LOCK_DATA_DNS:
@@ -478,8 +478,6 @@ PYCURL_INTERNAL PyMethodDef curlshareobject_methods[] = {
 /* --------------- setattr/getattr --------------- */
 
 
-#if PY_MAJOR_VERSION >= 3
-
 PYCURL_INTERNAL PyObject *
 do_share_getattro(PyObject *o, PyObject *n)
 {
@@ -502,44 +500,15 @@ do_share_setattro(PyObject *o, PyObject *n, PyObject *v)
     return my_setattro(&((CurlShareObject *)o)->dict, n, v);
 }
 
-#else /* PY_MAJOR_VERSION >= 3 */
-
-PYCURL_INTERNAL PyObject *
-do_share_getattr(CurlShareObject *cso, char *name)
-{
-    assert_share_state(cso);
-    return my_getattr((PyObject *)cso, name, cso->dict,
-                      curlshareobject_constants, curlshareobject_methods);
-}
-
-PYCURL_INTERNAL int
-do_share_setattr(CurlShareObject *so, char *name, PyObject *v)
-{
-    assert_share_state(so);
-    return my_setattr(&so->dict, name, v);
-}
-
-#endif /* PY_MAJOR_VERSION >= 3 */
-
 PYCURL_INTERNAL PyTypeObject CurlShare_Type = {
-#if PY_MAJOR_VERSION >= 3
     PyVarObject_HEAD_INIT(NULL, 0)
-#else
-    PyObject_HEAD_INIT(NULL)
-    0,                          /* ob_size */
-#endif
     "pycurl.CurlShare",         /* tp_name */
     sizeof(CurlShareObject),    /* tp_basicsize */
     0,                          /* tp_itemsize */
     (destructor)do_share_dealloc, /* tp_dealloc */
     0,                          /* tp_print */
-#if PY_MAJOR_VERSION >= 3
     0,                          /* tp_getattr */
     0,                          /* tp_setattr */
-#else
-    (getattrfunc)do_share_getattr,  /* tp_getattr */
-    (setattrfunc)do_share_setattr,  /* tp_setattr */
-#endif
     0,                          /* tp_reserved */
     0,                          /* tp_repr */
     0,                          /* tp_as_number */
@@ -548,13 +517,8 @@ PYCURL_INTERNAL PyTypeObject CurlShare_Type = {
     0,                          /* tp_hash  */
     0,                          /* tp_call */
     0,                          /* tp_str */
-#if PY_MAJOR_VERSION >= 3
     (getattrofunc)do_share_getattro, /* tp_getattro */
     (setattrofunc)do_share_setattro, /* tp_setattro */
-#else
-    0,                          /* tp_getattro */
-    0,                          /* tp_setattro */
-#endif
     0,                          /* tp_as_buffer */
     PYCURL_TYPE_FLAGS,          /* tp_flags */
     share_doc,                  /* tp_doc */

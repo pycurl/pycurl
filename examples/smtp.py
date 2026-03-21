@@ -4,13 +4,7 @@
 
 from . import localhost
 import pycurl
-try:
-    from io import BytesIO
-except ImportError:
-    from StringIO import StringIO as BytesIO
-import sys
-
-PY3 = sys.version_info[0] > 2
+from io import BytesIO
 
 mail_server = 'smtp://%s' % localhost
 mail_from = 'sender@example.org'
@@ -29,18 +23,15 @@ Subject: PycURL SMTP example
 SMTP example via PycURL
 ''' % (mail_from, mail_to)
 
-if PY3:
-    message = message.encode('ascii')
+message = message.encode('ascii')
 
 # libcurl does not perform buffering, therefore
-# we need to wrap the message string into a BytesIO or StringIO.
+# we need to wrap the message string into a BytesIO.
 io = BytesIO(message)
 c.setopt(c.READDATA, io)
 
 # If UPLOAD is not set, libcurl performs SMTP VRFY.
-# Setting UPLOAD to True sends a message.
-c.setopt(c.UPLOAD, True)
+c.setopt(c.UPLOAD, 1)
 
-# Observe SMTP conversation.
-c.setopt(c.VERBOSE, True)
 c.perform()
+c.close()

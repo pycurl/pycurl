@@ -389,7 +389,7 @@ verbose_error:
 static PyObject *
 do_multi_setopt_int(CurlMultiObject *self, int option, PyObject *obj)
 {
-    long d = PyInt_AsLong(obj);
+    long d = PyLong_AsLong(obj);
     switch(option) {
     case CURLMOPT_MAXCONNECTS:
     case CURLMOPT_PIPELINING:
@@ -583,7 +583,7 @@ do_multi_setopt(CurlMultiObject *self, PyObject *args)
     }
 
     /* Handle the case of integer arguments */
-    if (PyInt_Check(obj)) {
+    if (PyLong_Check(obj)) {
         return do_multi_setopt_int(self, option, obj);
     }
 
@@ -942,19 +942,19 @@ do_multi_fdset(CurlMultiObject *self, PyObject *Py_UNUSED(ignored))
     /* Populate lists */
     for (fd = 0; fd < max_fd + 1; fd++) {
         if (FD_ISSET(fd, &self->read_fd_set)) {
-            if ((py_fd = PyInt_FromLong((long)fd)) == NULL) goto error;
+            if ((py_fd = PyLong_FromLong((long)fd)) == NULL) goto error;
             if (PyList_Append(read_list, py_fd) != 0) goto error;
             Py_DECREF(py_fd);
             py_fd = NULL;
         }
         if (FD_ISSET(fd, &self->write_fd_set)) {
-            if ((py_fd = PyInt_FromLong((long)fd)) == NULL) goto error;
+            if ((py_fd = PyLong_FromLong((long)fd)) == NULL) goto error;
             if (PyList_Append(write_list, py_fd) != 0) goto error;
             Py_DECREF(py_fd);
             py_fd = NULL;
         }
         if (FD_ISSET(fd, &self->exc_fd_set)) {
-            if ((py_fd = PyInt_FromLong((long)fd)) == NULL) goto error;
+            if ((py_fd = PyLong_FromLong((long)fd)) == NULL) goto error;
             if (PyList_Append(except_list, py_fd) != 0) goto error;
             Py_DECREF(py_fd);
             py_fd = NULL;
@@ -1027,15 +1027,11 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
             /* Create a result tuple that will get added to err_list. */
             PyObject *error_str = NULL;
             PyObject *v;
-#if PY_MAJOR_VERSION >= 3
             error_str = PyUnicode_DecodeLocale(co->error, "surrogateescape");
             if (error_str == NULL) {
                 goto error;
             }
             v = Py_BuildValue("(OiO)", (PyObject *)co, (int)msg->data.result, error_str);
-#else
-            v = Py_BuildValue("(Ois)", (PyObject *)co, (int)msg->data.result, co->error);
-#endif
             /* Append curl object to list of objects which failed */
             if (v == NULL || PyList_Append(err_list, v) != 0) {
                 Py_XDECREF(error_str);
@@ -1106,7 +1102,7 @@ do_multi_select(CurlMultiObject *self, PyObject *args)
          */
     }
 
-    return PyInt_FromLong(n);
+    return PyLong_FromLong(n);
 }
 
 
@@ -1219,8 +1215,6 @@ static PySequenceMethods curlmulti_as_sequence = {
 /* --------------- setattr/getattr --------------- */
 
 
-#if PY_MAJOR_VERSION >= 3
-
 PYCURL_INTERNAL PyObject *
 do_multi_getattro(PyObject *o, PyObject *n)
 {
@@ -1243,44 +1237,15 @@ do_multi_setattro(PyObject *o, PyObject *n, PyObject *v)
     return my_setattro(&((CurlMultiObject *)o)->dict, n, v);
 }
 
-#else /* PY_MAJOR_VERSION >= 3 */
-
-PYCURL_INTERNAL PyObject *
-do_multi_getattr(CurlMultiObject *co, char *name)
-{
-    assert_multi_state(co);
-    return my_getattr((PyObject *)co, name, co->dict,
-                      curlmultiobject_constants, curlmultiobject_methods);
-}
-
-PYCURL_INTERNAL int
-do_multi_setattr(CurlMultiObject *co, char *name, PyObject *v)
-{
-    assert_multi_state(co);
-    return my_setattr(&co->dict, name, v);
-}
-
-#endif /* PY_MAJOR_VERSION >= 3 */
-
 PYCURL_INTERNAL PyTypeObject CurlMulti_Type = {
-#if PY_MAJOR_VERSION >= 3
     PyVarObject_HEAD_INIT(NULL, 0)
-#else
-    PyObject_HEAD_INIT(NULL)
-    0,                          /* ob_size */
-#endif
     "pycurl.CurlMulti",         /* tp_name */
     sizeof(CurlMultiObject),    /* tp_basicsize */
     0,                          /* tp_itemsize */
     (destructor)do_multi_dealloc, /* tp_dealloc */
     0,                          /* tp_print */
-#if PY_MAJOR_VERSION >= 3
     0,                          /* tp_getattr */
     0,                          /* tp_setattr */
-#else
-    (getattrfunc)do_multi_getattr,  /* tp_getattr */
-    (setattrfunc)do_multi_setattr,  /* tp_setattr */
-#endif
     0,                          /* tp_reserved */
     0,                          /* tp_repr */
     0,                          /* tp_as_number */
@@ -1289,13 +1254,8 @@ PYCURL_INTERNAL PyTypeObject CurlMulti_Type = {
     0,                          /* tp_hash  */
     0,                          /* tp_call */
     0,                          /* tp_str */
-#if PY_MAJOR_VERSION >= 3
     (getattrofunc)do_multi_getattro, /* tp_getattro */
     (setattrofunc)do_multi_setattro, /* tp_setattro */
-#else
-    0,                          /* tp_getattro */
-    0,                          /* tp_setattro */
-#endif
     0,                          /* tp_as_buffer */
     PYCURL_TYPE_FLAGS,          /* tp_flags */
     multi_doc,                   /* tp_doc */

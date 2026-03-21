@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 from . import localhost
@@ -7,6 +6,7 @@ import pycurl
 import unittest
 import select
 import flaky
+from io import BytesIO
 
 from . import appmanager
 from . import util
@@ -71,7 +71,7 @@ class MultiSocketSelectTest(unittest.TestCase):
             c = util.DefaultCurl()
             # save info in standard Python attributes
             c.url = url
-            c.body = util.BytesIO()
+            c.body = BytesIO()
             c.http_code = -1
             m.handles.append(c)
             # pycurl API calls

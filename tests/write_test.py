@@ -1,12 +1,8 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 from . import localhost
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 import pycurl
 import tempfile
 import shutil
@@ -17,7 +13,7 @@ from . import util
 
 setup_module, teardown_module = appmanager.setup(('app', 8380))
 
-class Acceptor(object):
+class Acceptor:
     def __init__(self):
         self.buffer = ''
 

@@ -29,36 +29,10 @@ to manually encode and decode data is unfortunately the price of libcurl's
 flexibility.
 
 
-Setting Options - Python 2.x
-----------------------------
+Setting Options
+---------------
 
-Under Python 2, the ``str`` type can hold arbitrary encoded byte strings.
-PycURL will pass whatever byte strings it is given verbatim to libcurl.
-The following code will work::
-
-    >>> import pycurl
-    >>> c = pycurl.Curl()
-    >>> c.setopt(c.USERAGENT, 'Foo\xa9')
-    # ok
-
-Unicode strings can be used but must contain ASCII code points only::
-
-    >>> c.setopt(c.USERAGENT, u'Foo')
-    # ok
-
-    >>> c.setopt(c.USERAGENT, u'Foo\xa9')
-    Traceback (most recent call last):
-      File "<stdin>", line 1, in <module>
-    UnicodeEncodeError: 'ascii' codec can't encode character u'\xa9' in position 3: ordinal not in range(128)
-
-    >>> c.setopt(c.USERAGENT, u'Foo\xa9'.encode('iso-8859-1'))
-    # ok
-
-
-Setting Options - Python 3.x
-----------------------------
-
-Under Python 3, the ``bytes`` type holds arbitrary encoded byte strings.
+The ``bytes`` type holds arbitrary encoded byte strings.
 PycURL will accept ``bytes`` values for all options where libcurl specifies
 a "string" argument::
 
@@ -85,17 +59,11 @@ containing ASCII code points only::
 Writing To Files
 ----------------
 
-PycURL will return all data read from the network as byte strings. On Python 2,
-this means the write callbacks will receive ``str`` objects, and
-on Python 3, write callbacks will receive ``bytes`` objects.
+PycURL returns all data read from the network as byte strings,
+meaning write callbacks will receive ``bytes`` objects.
 
-Under Python 2, when using e.g. ``WRITEDATA`` or ``WRITEFUNCTION`` options,
-files being written to *should* be opened in binary mode. Writing to files
-opened in text mode will not raise exceptions but may corrupt data.
-
-Under Python 3, PycURL passes strings and binary data to the application
-using ``bytes`` instances. When writing to files, the files must be opened
-in binary mode for the writes to work::
+When using e.g. ``WRITEDATA`` or ``WRITEFUNCTION`` options,
+files being written to must be opened in binary mode for the writes to work::
 
     import pycurl
     c = pycurl.Curl()
@@ -122,24 +90,10 @@ but not propagated, by PycURL. PycURL will raise a ``pycurl.error`` to
 signify operation failure.
 
 
-Writing To StringIO/BytesIO
----------------------------
+Writing To BytesIO
+------------------
 
-Under Python 2, response can be saved in memory by using a ``StringIO``
-object::
-
-    import pycurl
-    from StringIO import StringIO
-    c = pycurl.Curl()
-    c.setopt(c.URL,'http://pycurl.io')
-    buffer = StringIO()
-    c.setopt(c.WRITEDATA, buffer)
-    # Same result if using WRITEFUNCTION instead:
-    #c.setopt(c.WRITEFUNCTION, buffer.write)
-    c.perform()
-    # ok
-
-Under Python 3, as PycURL invokes the write callback with ``bytes`` argument,
+As PycURL invokes the write callback with ``bytes`` argument,
 the response must be written to a ``BytesIO`` object::
 
     import pycurl
@@ -169,16 +123,10 @@ Attempting to use a ``StringIO`` object will produce an error::
         c.perform()
     pycurl.error: (23, 'Failed writing body (0 != 168)')
 
-The following idiom can be used for code that needs to be compatible with both
-Python 2 and Python 3::
+To decode the response body::
 
     import pycurl
-    try:
-        # Python 3
-        from io import BytesIO
-    except ImportError:
-        # Python 2
-        from StringIO import StringIO as BytesIO
+    from io import BytesIO
     c = pycurl.Curl()
     c.setopt(c.URL,'http://pycurl.io')
     buffer = BytesIO()
@@ -193,12 +141,11 @@ Header Functions
 ----------------
 
 Although headers are often ASCII text, they are still returned as
-``bytes`` instances on Python 3 and thus require appropriate decoding.
+``bytes`` instances and thus require appropriate decoding.
 HTTP headers are encoded in ISO/IEC 8859-1 according to the standards.
 
 When using ``WRITEHEADER`` option to write headers to files, the files
-should be opened in binary mode in Python 2 and must be opened in binary
-mode in Python 3, same as with ``WRITEDATA``.
+must be opened in binary mode, same as with ``WRITEDATA``.
 
 
 Read Functions
@@ -207,12 +154,8 @@ Read Functions
 Read functions are expected to provide data in the same fashion as
 string options expect it:
 
-- On Python 2, the data can be given as ``str`` instances, appropriately
-  encoded.
-- On Python 2, the data can be given as ``unicode`` instances containing
-  ASCII code points only.
-- On Python 3, the data can be given as ``bytes`` instances.
-- On Python 3. the data can be given as ``str`` instances containing
+- The data can be given as ``bytes`` instances.
+- The data can be given as ``str`` instances containing
   ASCII code points only.
 
 Caution: when using CURLOPT_READFUNCTION in tandem with CURLOPT_POSTFIELDSIZE,

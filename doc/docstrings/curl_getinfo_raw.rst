@@ -23,13 +23,13 @@ removed, for example ``CURLINFO_CONTENT_TYPE`` is accessible as
 The type of return value depends on the option, as follows:
 
 - Options documented by libcurl to return an integer value return a
-  Python integer (``long`` on Python 2, ``int`` on Python 3).
+  Python ``int``.
 - Options documented by libcurl to return a floating point value
   return a Python ``float``.
 - Options documented by libcurl to return a string value
-  return a Python byte string (``str`` on Python 2, ``bytes`` on Python 3).
+  return a Python ``bytes`` instance.
   The string contains whatever data libcurl returned.
-  Use :ref:`getinfo <getinfo>` to retrieve this data as a Unicode string on Python 3.
+  Use :ref:`getinfo <getinfo>` to retrieve this data as a Unicode string.
 - ``SSL_ENGINES`` and ``INFO_COOKIELIST`` return a list of byte strings.
   The same encoding caveats apply; use :ref:`getinfo <getinfo>` to retrieve the
   data as a list of potentially Unicode strings.
@@ -39,8 +39,6 @@ The type of return value depends on the option, as follows:
   byte strings. String encoding caveats apply; use :ref:`getinfo <getinfo>`
   to retrieve
   certificate data as potentially Unicode strings.
-
-On Python 2, ``getinfo`` and ``getinfo_raw`` behave identically.
 
 Example usage::
 

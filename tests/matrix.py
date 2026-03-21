@@ -1,9 +1,6 @@
 import os, os.path, subprocess, shutil
 
-try:
-    from urllib.request import urlopen
-except ImportError:
-    from urllib import urlopen
+from urllib.request import urlopen
 
 python_versions = ['2.6.8', '2.7.5', '3.1.5', '3.2.5', '3.3.5', '3.4.1']
 libcurl_versions = ['7.19.0', '7.46.0']
