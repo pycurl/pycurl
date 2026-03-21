@@ -135,6 +135,31 @@ def only_ssl_backends(*backends):
         return decorated
     return decorator
 
+def only_ssl_backends_with_min_libcurl(backend_versions: dict[str, tuple[int, int, int]]):
+    import pytest
+
+    def decorator(fn):
+        import pycurl
+
+        @functools.wraps(fn)
+        def decorated(*args, **kwargs):
+            if 'https' not in pycurl.version_info()[8]:
+                pytest.skip('libcurl does not support ssl')
+
+            backend = pycurl.COMPILE_SSL_LIB
+            if backend not in backend_versions:
+                pytest.skip('SSL backend is %s' % backend)
+
+            min_ver = backend_versions[backend]
+            if pycurl_version_less_than(*min_ver):
+                pytest.skip(
+                    'SSL backend %s requires libcurl >= %d.%d.%d' % (backend, *min_ver))
+
+            return fn(*args, **kwargs)
+
+        return decorated
+    return decorator
+
 def only_ssl_ech(fn):
     import pycurl
 
