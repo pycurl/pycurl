@@ -157,9 +157,10 @@ READFUNCTION
     Callback for reading data. Corresponds to `CURLOPT_READFUNCTION`_ in
     libcurl.
 
-    On Python 3, the callback must return either an object supporting the buffer
-    protocol (e.g. `bytes`, `bytearray`) or a Unicode string consisting of ASCII
-    code points only.
+    The callback must return either a C-contiguous object supporting
+    the buffer protocol (e.g. `bytes`, `bytearray`, `memoryview`, or a
+    C-contiguous `numpy` array) or a Unicode string consisting of ASCII code
+    points only.
 
     In addition, ``READFUNCTION`` may return ``READFUNC_ABORT`` or
     ``READFUNC_PAUSE``. See the libcurl documentation for an explanation
