@@ -12,7 +12,7 @@ PycURL, the following steps are required:
     2. Use ``setopt`` to set options.
     3. Call ``perform`` to perform the operation.
 
-Here is how we can retrieve a network resource in Python 3::
+Here is how we can retrieve a network resource::
 
     import pycurl
     import certifi
@@ -32,13 +32,11 @@ Here is how we can retrieve a network resource in Python 3::
     # such as standard output.
     print(body.decode('iso-8859-1'))
 
-This code is available as ``examples/quickstart/get_python3.py``.
-For a Python 2 only example, see ``examples/quickstart/get_python2.py``.
-For an example targeting Python 2 and 3, see ``examples/quickstart/get.py``.
+This code is available as ``examples/quickstart/get.py``.
 
 PycURL does not provide storage for the network response - that is the
 application's job. Therefore we must setup a buffer (in the form of a
-StringIO object) and instruct PycURL to write to that buffer.
+BytesIO object) and instruct PycURL to write to that buffer.
 
 Most of the existing PycURL code uses WRITEFUNCTION instead of WRITEDATA
 as follows::
@@ -80,8 +78,7 @@ if not, consider using the `certifi`_ Python package::
     # such as standard output.
     print(body.decode('iso-8859-1'))
 
-This code is available as ``examples/quickstart/get_python3_https.py``.
-For a Python 2 example, see ``examples/quickstart/get_python2_https.py``.
+This code is available as ``examples/quickstart/get.py`` (with HTTPS and certifi).
 
 
 Troubleshooting
@@ -108,16 +105,11 @@ examine the response headers::
 
     import pycurl
     import re
-    try:
-        from io import BytesIO
-    except ImportError:
-        from StringIO import StringIO as BytesIO
+    from io import BytesIO
 
     headers = {}
     def header_function(header_line):
         # HTTP standard specifies that headers are encoded in iso-8859-1.
-        # On Python 2, decoding step can be skipped.
-        # On Python 3, decoding step is required.
         header_line = header_line.decode('iso-8859-1')
 
         # Header lines include the first status line (HTTP/1.x ...).
@@ -200,8 +192,8 @@ for a change::
 
     import pycurl
 
-    # As long as the file is opened in binary mode, both Python 2 and Python 3
-    # can write response body to it without decoding.
+    # As long as the file is opened in binary mode, response body
+    # can be written to it without decoding.
     with open('out.html', 'wb') as f:
         c = pycurl.Curl()
         c.setopt(c.URL, 'http://pycurl.io/')
@@ -256,10 +248,7 @@ We already covered examining response headers. Other response information is
 accessible via ``getinfo`` call as follows::
 
     import pycurl
-    try:
-        from io import BytesIO
-    except ImportError:
-        from StringIO import StringIO as BytesIO
+    from io import BytesIO
 
     buffer = BytesIO()
     c = pycurl.Curl()
@@ -295,12 +284,7 @@ To send form data, use ``POSTFIELDS`` option. Form data must be URL-encoded
 beforehand::
 
     import pycurl
-    try:
-        # python 3
-        from urllib.parse import urlencode
-    except ImportError:
-        # python 2
-        from urllib import urlencode
+    from urllib.parse import urlencode
 
     c = pycurl.Curl()
     c.setopt(c.URL, 'https://httpbin.org/post')
@@ -450,10 +434,7 @@ This code is available as ``examples/quickstart/put_file.py``.
 And if the data is stored in a buffer::
 
     import pycurl
-    try:
-        from io import BytesIO
-    except ImportError:
-        from StringIO import StringIO as BytesIO
+    from io import BytesIO
 
     c = pycurl.Curl()
     c.setopt(c.URL, 'https://httpbin.org/put')
@@ -461,7 +442,6 @@ And if the data is stored in a buffer::
     c.setopt(c.UPLOAD, 1)
     data = '{"json":true}'
     # READDATA requires an IO-like object; a string is not accepted
-    # encode() is necessary for Python 3
     buffer = BytesIO(data.encode('utf-8'))
     c.setopt(c.READDATA, buffer)
 

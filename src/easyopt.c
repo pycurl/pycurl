@@ -504,7 +504,7 @@ do_curl_setopt_int(CurlObject *self, int option, PyObject *obj)
     int res;
 
     if (IS_LONG_OPTION(option)) {
-        d = PyInt_AsLong(obj);
+        d = PyLong_AsLong(obj);
         res = curl_easy_setopt(self->handle, (CURLoption)option, (long)d);
     } else if (IS_OFF_T_OPTION(option)) {
         /* this path should only be taken in Python 3 */
@@ -548,76 +548,6 @@ do_curl_setopt_long(CurlObject *self, int option, PyObject *obj)
 #undef IS_OFF_T_OPTION
 
 
-#if PY_MAJOR_VERSION < 3 && !defined(PYCURL_AVOID_STDIO)
-static PyObject *
-do_curl_setopt_file_passthrough(CurlObject *self, int option, PyObject *obj)
-{
-    FILE *fp;
-    int res;
-
-    fp = PyFile_AsFile(obj);
-    if (fp == NULL) {
-        PyErr_SetString(PyExc_TypeError, "second argument must be open file");
-        return NULL;
-    }
-
-    switch (option) {
-    case CURLOPT_READDATA:
-        res = curl_easy_setopt(self->handle, CURLOPT_READFUNCTION, fread);
-        if (res != CURLE_OK) {
-            CURLERROR_RETVAL();
-        }
-        break;
-    case CURLOPT_WRITEDATA:
-        res = curl_easy_setopt(self->handle, CURLOPT_WRITEFUNCTION, fwrite);
-        if (res != CURLE_OK) {
-            CURLERROR_RETVAL();
-        }
-        break;
-    case CURLOPT_WRITEHEADER:
-        res = curl_easy_setopt(self->handle, CURLOPT_HEADERFUNCTION, fwrite);
-        if (res != CURLE_OK) {
-            CURLERROR_RETVAL();
-        }
-        break;
-    default:
-        PyErr_SetString(PyExc_TypeError, "files are not supported for this option");
-        return NULL;
-    }
-
-    res = curl_easy_setopt(self->handle, (CURLoption)option, fp);
-    if (res != CURLE_OK) {
-        /*
-        If we get here fread/fwrite are set as callbacks but the file pointer
-        is not set, program will crash if it does not reset read/write
-        callback. Also, we won't do the memory management later in this
-        function.
-        */
-        CURLERROR_RETVAL();
-    }
-    Py_INCREF(obj);
-
-    switch (option) {
-    case CURLOPT_READDATA:
-        Py_CLEAR(self->readdata_fp);
-        self->readdata_fp = obj;
-        break;
-    case CURLOPT_WRITEDATA:
-        Py_CLEAR(self->writedata_fp);
-        self->writedata_fp = obj;
-        break;
-    case CURLOPT_WRITEHEADER:
-        Py_CLEAR(self->writeheader_fp);
-        self->writeheader_fp = obj;
-        break;
-    default:
-        assert(0);
-        break;
-    }
-    /* Return success */
-    Py_RETURN_NONE;
-}
-#endif
 
 
 static PyObject *
@@ -721,7 +651,7 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
                     PyText_EncodedDecref(nencoded_obj);
                     goto error;
                 }
-                if (!PyInt_Check(PyListOrTuple_GetItem(httppost_option, j, which_httppost_option))) {
+                if (!PyLong_Check(PyListOrTuple_GetItem(httppost_option, j, which_httppost_option))) {
                     PyErr_SetString(PyExc_TypeError, "option must be an integer");
                     PyMem_Free(forms);
                     PyText_EncodedDecref(nencoded_obj);
@@ -1252,7 +1182,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     }
 
     /* Handle the case of integer arguments */
-    if (PyInt_Check(obj)) {
+    if (PyLong_Check(obj)) {
         return do_curl_setopt_int(self, option, obj);
     }
 
@@ -1260,13 +1190,6 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     if (PyLong_Check(obj)) {
         return do_curl_setopt_long(self, option, obj);
     }
-
-#if PY_MAJOR_VERSION < 3 && !defined(PYCURL_AVOID_STDIO)
-    /* Handle the case of file objects */
-    if (PyFile_Check(obj)) {
-        return do_curl_setopt_file_passthrough(self, option, obj);
-    }
-#endif
 
     /* Handle the case of list or tuple objects */
     which = PyListOrTuple_Check(obj);
@@ -1300,13 +1223,9 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     Given an object with a write method, we will call the write method
     from the appropriate callback.
 
-    Files in Python 3 are no longer FILE * instances and therefore cannot
-    be directly given to curl, therefore this method handles all I/O to
+    Files in Python 3 are not FILE * instances and therefore cannot
+    be directly given to curl, so this method handles all I/O to
     Python objects.
-
-    In Python 2 true file objects are FILE * instances and will be handled
-    by stdio passthrough code invoked above, and file-like objects will
-    be handled by this method.
     */
     if (option == CURLOPT_READDATA ||
         option == CURLOPT_WRITEDATA ||

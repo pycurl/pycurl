@@ -1,15 +1,11 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 import pycurl
 import unittest
-try:
-    import cPickle
-except ImportError:
-    cPickle = None
 import pickle
 import copy
+from io import StringIO
 
 from . import util
 
@@ -101,8 +97,7 @@ class InternalsTest(unittest.TestCase):
     def test_copy_curl(self):
         try:
             copy.copy(self.curl)
-        # python 2 raises copy.Error, python 3 raises TypeError
-        except (copy.Error, TypeError):
+        except TypeError:
             pass
         else:
             assert False, "No exception when trying to copy a Curl handle"
@@ -111,7 +106,7 @@ class InternalsTest(unittest.TestCase):
         m = pycurl.CurlMulti()
         try:
             copy.copy(m)
-        except (copy.Error, TypeError):
+        except TypeError:
             pass
         else:
             assert False, "No exception when trying to copy a CurlMulti handle"
@@ -120,18 +115,17 @@ class InternalsTest(unittest.TestCase):
         s = pycurl.CurlShare()
         try:
             copy.copy(s)
-        except (copy.Error, TypeError):
+        except TypeError:
             pass
         else:
             assert False, "No exception when trying to copy a CurlShare handle"
 
     def test_pickle_curl(self):
-        fp = util.StringIO()
+        fp = StringIO()
         p = pickle.Pickler(fp, 1)
         try:
             p.dump(self.curl)
-        # python 2 raises pickle.PicklingError, python 3 raises TypeError
-        except (pickle.PicklingError, TypeError):
+        except TypeError:
             pass
         else:
             assert 0, "No exception when trying to pickle a Curl handle"
@@ -139,11 +133,11 @@ class InternalsTest(unittest.TestCase):
 
     def test_pickle_multi(self):
         m = pycurl.CurlMulti()
-        fp = util.StringIO()
+        fp = StringIO()
         p = pickle.Pickler(fp, 1)
         try:
             p.dump(m)
-        except (pickle.PicklingError, TypeError):
+        except TypeError:
             pass
         else:
             assert 0, "No exception when trying to pickle a CurlMulti handle"
@@ -151,11 +145,11 @@ class InternalsTest(unittest.TestCase):
 
     def test_pickle_share(self):
         s = pycurl.CurlShare()
-        fp = util.StringIO()
+        fp = StringIO()
         p = pickle.Pickler(fp, 1)
         try:
             p.dump(s)
-        except (pickle.PicklingError, TypeError):
+        except TypeError:
             pass
         else:
             assert 0, "No exception when trying to pickle a CurlShare handle"
@@ -164,8 +158,7 @@ class InternalsTest(unittest.TestCase):
     def test_pickle_dumps_curl(self):
         try:
             pickle.dumps(self.curl)
-        # python 2 raises pickle.PicklingError, python 3 raises TypeError
-        except (pickle.PicklingError, TypeError):
+        except TypeError:
             pass
         else:
             self.fail("No exception when trying to pickle a Curl handle")
@@ -174,7 +167,7 @@ class InternalsTest(unittest.TestCase):
         m = pycurl.CurlMulti()
         try:
             pickle.dumps(m)
-        except (pickle.PicklingError, TypeError):
+        except TypeError:
             pass
         else:
             self.fail("No exception when trying to pickle a CurlMulti handle")
@@ -183,43 +176,8 @@ class InternalsTest(unittest.TestCase):
         s = pycurl.CurlShare()
         try:
             pickle.dumps(s)
-        except (pickle.PicklingError, TypeError):
+        except TypeError:
             pass
         else:
             self.fail("No exception when trying to pickle a CurlShare handle")
 
-    if cPickle is not None:
-        def test_cpickle_curl(self):
-            fp = util.StringIO()
-            p = cPickle.Pickler(fp, 1)
-            try:
-                p.dump(self.curl)
-            except cPickle.PicklingError:
-                pass
-            else:
-                assert 0, "No exception when trying to pickle a Curl handle via cPickle"
-            del fp, p
-
-        def test_cpickle_multi(self):
-            m = pycurl.CurlMulti()
-            fp = util.StringIO()
-            p = cPickle.Pickler(fp, 1)
-            try:
-                p.dump(m)
-            except cPickle.PicklingError:
-                pass
-            else:
-                assert 0, "No exception when trying to pickle a CurlMulti handle via cPickle"
-            del m, fp, p
-
-        def test_cpickle_share(self):
-            s = pycurl.CurlMulti()
-            fp = util.StringIO()
-            p = cPickle.Pickler(fp, 1)
-            try:
-                p.dump(s)
-            except cPickle.PicklingError:
-                pass
-            else:
-                assert 0, "No exception when trying to pickle a CurlShare handle via cPickle"
-            del s, fp, p

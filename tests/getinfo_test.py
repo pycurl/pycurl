@@ -1,11 +1,11 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 from . import localhost
 import flaky
 import pycurl
 import unittest
+from io import BytesIO
 
 from . import appmanager
 from . import util
@@ -65,22 +65,12 @@ class GetinfoTest(unittest.TestCase):
 
     def make_request(self, path='/success', expected_body='success'):
         self.curl.setopt(pycurl.URL, 'http://%s:8380' % localhost + path)
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
         self.assertEqual(expected_body, sio.getvalue().decode())
 
-    @util.only_python2
-    def test_getinfo_cookie_invalid_utf8_python2(self):
-        self.curl.setopt(self.curl.COOKIELIST, '')
-        self.make_request('/set_cookie_invalid_utf8', 'cookie set')
-
-        self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
-        expected = "%s" % localhost + "\tFALSE\t/\tFALSE\t0\t\xb3\xd2\xda\xcd\xd7\t%96%A6g%9Ay%B0%A5g%A7tm%7C%95%9A"
-        self.assertEqual([expected], self.curl.getinfo(pycurl.INFO_COOKIELIST))
-
-    @util.only_python3
-    def test_getinfo_cookie_invalid_utf8_python3(self):
+    def test_getinfo_cookie_invalid_utf8(self):
         self.curl.setopt(self.curl.COOKIELIST, '')
         self.make_request('/set_cookie_invalid_utf8', 'cookie set')
 
@@ -100,16 +90,7 @@ class GetinfoTest(unittest.TestCase):
         expected = util.b("%s" % localhost + "\tFALSE\t/\tFALSE\t0\t\xb3\xd2\xda\xcd\xd7\t%96%A6g%9Ay%B0%A5g%A7tm%7C%95%9A")
         self.assertEqual([expected], self.curl.getinfo_raw(pycurl.INFO_COOKIELIST))
 
-    @util.only_python2
-    def test_getinfo_content_type_invalid_utf8_python2(self):
-        self.make_request('/content_type_invalid_utf8', 'content type set')
-
-        self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
-        expected = '\xb3\xd2\xda\xcd\xd7'
-        self.assertEqual(expected, self.curl.getinfo(pycurl.CONTENT_TYPE))
-
-    @util.only_python3
-    def test_getinfo_content_type_invalid_utf8_python3(self):
+    def test_getinfo_content_type_invalid_utf8(self):
         self.make_request('/content_type_invalid_utf8', 'content type set')
 
         self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))

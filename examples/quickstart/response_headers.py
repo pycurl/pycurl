@@ -1,19 +1,13 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 import pycurl
 import re
-try:
-    from io import BytesIO
-except ImportError:
-    from StringIO import StringIO as BytesIO
+from io import BytesIO
 
 headers = {}
 def header_function(header_line):
     # HTTP standard specifies that headers are encoded in iso-8859-1.
-    # On Python 2, decoding step can be skipped.
-    # On Python 3, decoding step is required.
     header_line = header_line.decode('iso-8859-1')
 
     # Header lines include the first status line (HTTP/1.x ...).

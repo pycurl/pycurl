@@ -1,8 +1,5 @@
 import os.path, subprocess, sys, os, glob, re, contextlib, shutil
-try:
-    from urllib.request import urlopen
-except ImportError:
-    from urllib import urlopen
+from urllib.request import urlopen
 
 # https://stackoverflow.com/questions/35569042/python-3-ssl-certificate-verify-failed
 import ssl

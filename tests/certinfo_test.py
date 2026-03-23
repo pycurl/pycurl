@@ -1,9 +1,9 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 import pycurl
 import unittest
+from io import BytesIO
 
 from . import appmanager
 from . import util
@@ -27,7 +27,7 @@ class CertinfoTest(unittest.TestCase):
     @util.only_ssl
     def test_request_without_certinfo(self):
         self.curl.setopt(pycurl.URL, 'https://localhost:8383/success')
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         # self signed certificate
         self.curl.setopt(pycurl.SSL_VERIFYPEER, 0)
@@ -46,7 +46,7 @@ class CertinfoTest(unittest.TestCase):
             raise unittest.SkipTest('libcurl does not use openssl')
 
         self.curl.setopt(pycurl.URL, 'https://localhost:8383/success')
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.setopt(pycurl.OPT_CERTINFO, 1)
         # self signed certificate
@@ -74,7 +74,7 @@ class CertinfoTest(unittest.TestCase):
             raise unittest.SkipTest('libcurl does not use openssl')
 
         self.curl.setopt(pycurl.URL, 'https://localhost:8383/success')
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.setopt(pycurl.OPT_CERTINFO, 1)
         # self signed certificate

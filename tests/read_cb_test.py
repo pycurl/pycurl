@@ -1,19 +1,13 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 from . import localhost
+import json
+import urllib.parse as urllib_parse
 import pycurl
-import unittest
 import sys
-try:
-    import json
-except ImportError:
-    import simplejson as json
-try:
-    import urllib.parse as urllib_parse
-except ImportError:
-    import urllib as urllib_parse
+import unittest
+from io import BytesIO
 
 from . import appmanager
 from . import util
@@ -27,7 +21,7 @@ POSTFIELDS = {
 }
 POSTSTRING = urllib_parse.urlencode(POSTFIELDS)
 
-class DataProvider(object):
+class DataProvider:
     def __init__(self, data):
         self.data = data
         self.finished = False
@@ -55,7 +49,7 @@ class ReadCbTest(unittest.TestCase):
         self.curl.setopt(self.curl.POSTFIELDSIZE, len(POSTSTRING))
         self.curl.setopt(self.curl.READFUNCTION, d.read_cb)
         #self.curl.setopt(self.curl.VERBOSE, 1)
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
 
@@ -73,7 +67,7 @@ class ReadCbTest(unittest.TestCase):
 
     def check_bytes(self, poststring):
         data = poststring.encode('utf8')
-        assert type(data) == util.binary_type
+        assert type(data) == bytes
         d = DataProvider(data)
 
         self.curl.setopt(self.curl.URL, 'http://%s:8380/raw_utf8' % localhost)
@@ -83,7 +77,7 @@ class ReadCbTest(unittest.TestCase):
         self.curl.setopt(self.curl.POSTFIELDSIZE, len(data))
         self.curl.setopt(self.curl.READFUNCTION, d.read_cb)
         #self.curl.setopt(self.curl.VERBOSE, 1)
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
 
@@ -112,7 +106,7 @@ class ReadCbTest(unittest.TestCase):
         self.curl.setopt(self.curl.POSTFIELDSIZE, len(data))
         self.curl.setopt(self.curl.READFUNCTION, d.read_cb)
         #self.curl.setopt(self.curl.VERBOSE, 1)
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
 
@@ -161,7 +155,7 @@ class ReadCbTest(unittest.TestCase):
         self.curl.setopt(self.curl.POSTFIELDSIZE, len(data))
         self.curl.setopt(self.curl.READFUNCTION, read_cb)
         #self.curl.setopt(self.curl.VERBOSE, 1)
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
 
         multi = pycurl.CurlMulti()
@@ -186,7 +180,7 @@ class ReadCbTest(unittest.TestCase):
         self.assertTrue(resumed)
 
     def check_unicode(self, poststring):
-        assert type(poststring) == util.text_type
+        assert type(poststring) == str
         d = DataProvider(poststring)
 
         self.curl.setopt(self.curl.URL, 'http://%s:8380/raw_utf8' % localhost)
@@ -195,7 +189,7 @@ class ReadCbTest(unittest.TestCase):
         self.curl.setopt(self.curl.POSTFIELDSIZE, len(poststring))
         self.curl.setopt(self.curl.READFUNCTION, d.read_cb)
         #self.curl.setopt(self.curl.VERBOSE, 1)
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
 
@@ -264,7 +258,7 @@ class ReadCbTest(unittest.TestCase):
         self.curl.setopt(self.curl.HTTPHEADER, ['Content-Type: application/octet-stream', 'Expect: '])
         self.curl.setopt(self.curl.READFUNCTION, None)
         #self.curl.setopt(self.curl.VERBOSE, 1)
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
 
         self.curl.perform()

@@ -103,13 +103,11 @@ Test Matrix
 The test matrix is a separate framework that runs tests on more esoteric
 configurations. It supports:
 
-- Testing against Python 2.4, which bottle does not support.
 - Testing against Python compiled without threads, which requires an out of
   process test server.
 - Testing against locally compiled libcurl with arbitrary options.
 
-To use the test matrix, first start the test server from Python 2.5+ by
-running::
+To use the test matrix, first start the test server by running::
 
     python -m tests.appmanager
 

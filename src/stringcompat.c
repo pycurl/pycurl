@@ -27,9 +27,8 @@ PyText_AsStringAndSize(PyObject *obj, char **buffer, Py_ssize_t *length, PyObjec
 }
 
 
-/* Like PyString_AsString(), but set an exception if the string contains
- * embedded NULs. Actually PyString_AsStringAndSize() already does that for
- * us if the `len' parameter is NULL - see Objects/stringobject.c.
+/* Like PyBytes_AsString(), but set an exception if the string contains
+ * embedded NULs.
  */
 
 PYCURL_INTERNAL char *
@@ -49,38 +48,24 @@ PyText_AsString_NoNUL(PyObject *obj, PyObject **encoded_obj)
  * curl_easy_setopt and such - either a byte string or a Unicode string
  * with ASCII code points only.
  */
-#if PY_MAJOR_VERSION >= 3
 PYCURL_INTERNAL int
 PyText_Check(PyObject *o)
 {
     return PyUnicode_Check(o) || PyBytes_Check(o);
 }
-#else
-PYCURL_INTERNAL int
-PyText_Check(PyObject *o)
-{
-    return PyUnicode_Check(o) || PyString_Check(o);
-}
-#endif
 
 PYCURL_INTERNAL PyObject *
 PyText_FromString_Ignore(const char *string)
 {
     PyObject *v;
-
-#if PY_MAJOR_VERSION >= 3
     PyObject *u;
-    
+
     v = Py_BuildValue("y", string);
     if (v == NULL) {
         return NULL;
     }
-    
+
     u = PyUnicode_FromEncodedObject(v, NULL, "replace");
     Py_DECREF(v);
     return u;
-#else
-    v = Py_BuildValue("s", string);
-    return v;
-#endif
 }

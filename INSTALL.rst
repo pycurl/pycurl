@@ -178,9 +178,8 @@ Additional Windows setup.py options:
   thus permitting Python and libcurl to be linked against different C runtimes.
   This option may carry a performance penalty when Python file objects are
   given directly to PycURL in CURLOPT_READDATA, CURLOPT_WRITEDATA or
-  CURLOPT_WRITEHEADER options. This option applies only on Python 2; on
-  Python 3, file objects no longer expose C library FILE pointers and the
-  C runtime issue does not exist. On Python 3, this option is recognized but
+  CURLOPT_WRITEHEADER options. In practice, Python 3 file objects do not
+  expose C library FILE pointers, so this option is recognized but
   does nothing. You can also give ``--avoid-stdio`` option in
   PYCURL_SETUP_OPTIONS environment variable as follows::
 

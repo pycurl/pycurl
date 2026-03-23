@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 import sys
@@ -226,12 +225,8 @@ class MemoryMgmtTest(unittest.TestCase):
         else:
             iters = 100000
             
-        try:
-            range_generator = xrange
-        except NameError:
-            range_generator = range
         # Ensure that the refcounting error in "reset" is fixed:
-        for i in range_generator(iters):
+        for i in range(iters):
             c = util.DefaultCurl()
             c.reset()
             c.close()

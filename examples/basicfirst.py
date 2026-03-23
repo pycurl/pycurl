@@ -1,22 +1,17 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
-import sys
 import pycurl
-
-PY3 = sys.version_info[0] > 2
 
 
 class Test:
     def __init__(self):
-        self.contents = ''
-        if PY3:
-            self.contents = self.contents.encode('ascii')
+        self.contents = b''
 
     def body_callback(self, buf):
         self.contents = self.contents + buf
 
 
+import sys
 sys.stderr.write("Testing %s\n" % pycurl.version)
 
 t = Test()

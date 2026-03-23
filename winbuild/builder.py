@@ -2,7 +2,7 @@ import os, os.path, shutil, sys, subprocess
 from .utils import *
 from .config import *
 
-class Batch(object):
+class Batch:
     def __init__(self, bconf):
         self.bconf = bconf
         self.commands = []
@@ -73,7 +73,7 @@ class Batch(object):
     def nasm_cmd(self):
         return "set path=%s;%%path%%\n" % self.bconf.nasm_path
 
-class Builder(object):
+class Builder:
     def __init__(self, **kwargs):
         self.bconf = kwargs.pop('bconf')
         self.use_dlls = False

@@ -14,14 +14,6 @@ object implementing a ``read`` method can be passed to ``CURLOPT_READDATA``,
 and any Python file-like object implementing a ``write`` method can be
 passed to ``CURLOPT_WRITEDATA`` or ``CURLOPT_WRITEHEADER`` options.
 
-When running PycURL 7.19.3 and above on Python 2, the old behavior of
-passing ``FILE`` pointers to libcurl remains when a true file object is given
-to ``CURLOPT_READDATA``, ``CURLOPT_WRITEDATA`` and ``CURLOPT_WRITEHEADER``
-options. For consistency with Python 3 behavior these options also accept
-file-like objects implementing a ``read`` or ``write`` method, as appropriate,
-as arguments, in which case the Python 3 code path is used converting these
-options to ``CURLOPT_*FUNCTION`` option calls.
-
 Files given to PycURL as arguments to ``CURLOPT_READDATA``,
 ``CURLOPT_WRITEDATA`` or ``CURLOPT_WRITEHEADER`` must be opened for reading or
 writing in binary mode. Files opened in text mode (without ``"b"`` flag to

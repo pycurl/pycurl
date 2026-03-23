@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 from . import localhost
@@ -8,6 +7,7 @@ import pycurl
 import pytest
 import unittest
 import select
+from io import BytesIO
 
 from . import appmanager
 from . import util
@@ -31,8 +31,8 @@ def teardown_module(mod):
 
 class MultiTest(unittest.TestCase):
     def test_multi(self):
-        io1 = util.BytesIO()
-        io2 = util.BytesIO()
+        io1 = BytesIO()
+        io2 = BytesIO()
         m = pycurl.CurlMulti()
         handles = []
         c1 = util.DefaultCurl()
@@ -67,9 +67,9 @@ class MultiTest(unittest.TestCase):
         c1.setopt(c1.URL, "http://%s:8380/success" % localhost)
         c2.setopt(c2.URL, "http://%s:8381/success" % localhost)
         c3.setopt(c3.URL, "http://%s:8382/success" % localhost)
-        c1.body = util.BytesIO()
-        c2.body = util.BytesIO()
-        c3.body = util.BytesIO()
+        c1.body = BytesIO()
+        c2.body = BytesIO()
+        c3.body = BytesIO()
         c1.setopt(c1.WRITEFUNCTION, c1.body.write)
         c2.setopt(c2.WRITEFUNCTION, c2.body.write)
         c3.setopt(c3.WRITEFUNCTION, c3.body.write)
@@ -117,7 +117,7 @@ class MultiTest(unittest.TestCase):
             c = util.DefaultCurl()
             # save info in standard Python attributes
             c.url = url.rstrip()
-            c.body = util.BytesIO()
+            c.body = BytesIO()
             c.http_code = -1
             m.handles.append(c)
             # pycurl API calls
@@ -165,7 +165,7 @@ class MultiTest(unittest.TestCase):
             c = util.DefaultCurl()
             # save info in standard Python attributes
             c.url = url
-            c.body = util.BytesIO()
+            c.body = BytesIO()
             c.http_code = -1
             c.debug = 0
             m.handles.append(c)
@@ -240,9 +240,9 @@ class MultiTest(unittest.TestCase):
         c1.setopt(c1.URL, "http://%s:8380/success" % localhost)
         c2.setopt(c2.URL, "http://%s:8381/success" % localhost)
         c3.setopt(c3.URL, "http://%s:8382/success" % localhost)
-        c1.body = util.BytesIO()
-        c2.body = util.BytesIO()
-        c3.body = util.BytesIO()
+        c1.body = BytesIO()
+        c2.body = BytesIO()
+        c3.body = BytesIO()
         c1.setopt(c1.WRITEFUNCTION, c1.body.write)
         c2.setopt(c2.WRITEFUNCTION, c2.body.write)
         c3.setopt(c3.WRITEFUNCTION, c3.body.write)
@@ -285,9 +285,9 @@ class MultiTest(unittest.TestCase):
         c1.setopt(c1.URL, "http://%s:8380/short_wait" % localhost)
         c2.setopt(c2.URL, "http://%s:8381/short_wait" % localhost)
         c3.setopt(c3.URL, "http://%s:8382/short_wait" % localhost)
-        c1.body = util.BytesIO()
-        c2.body = util.BytesIO()
-        c3.body = util.BytesIO()
+        c1.body = BytesIO()
+        c2.body = BytesIO()
+        c3.body = BytesIO()
         c1.setopt(c1.WRITEFUNCTION, c1.body.write)
         c2.setopt(c2.WRITEFUNCTION, c2.body.write)
         c3.setopt(c3.WRITEFUNCTION, c3.body.write)
@@ -352,9 +352,9 @@ class MultiTest(unittest.TestCase):
         c1.setopt(c1.URL, "http://%s:8380/short_wait" % localhost)
         c2.setopt(c2.URL, "http://%s:8381/short_wait" % localhost)
         c3.setopt(c3.URL, "http://%s:8382/short_wait" % localhost)
-        c1.body = util.BytesIO()
-        c2.body = util.BytesIO()
-        c3.body = util.BytesIO()
+        c1.body = BytesIO()
+        c2.body = BytesIO()
+        c3.body = BytesIO()
         c1.setopt(c1.WRITEFUNCTION, c1.body.write)
         c2.setopt(c2.WRITEFUNCTION, c2.body.write)
         c3.setopt(c3.WRITEFUNCTION, c3.body.write)

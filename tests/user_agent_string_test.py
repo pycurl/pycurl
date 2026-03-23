@@ -1,10 +1,10 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 from . import localhost
 import unittest
 import pycurl
+from io import BytesIO
 
 from . import appmanager
 from . import util
@@ -20,7 +20,7 @@ class UserAgentStringTest(unittest.TestCase):
 
     def test_pycurl_user_agent_string(self):
         self.curl.setopt(pycurl.URL, 'http://%s:8380/header?h=user-agent' % localhost)
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
         user_agent = sio.getvalue().decode()

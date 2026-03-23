@@ -1,10 +1,10 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 from . import localhost
 import pycurl
 import unittest
+from io import BytesIO
 
 from . import appmanager
 from . import util
@@ -26,7 +26,7 @@ class DebugTest(unittest.TestCase):
         self.curl.setopt(pycurl.VERBOSE, 1)
         self.curl.setopt(pycurl.DEBUGFUNCTION, self.debug_function)
         self.curl.setopt(pycurl.URL, 'http://%s:8380/success' % localhost)
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
 
@@ -52,7 +52,7 @@ class DebugTest(unittest.TestCase):
         self.curl.setopt(pycurl.VERBOSE, 1)
         self.curl.setopt(pycurl.DEBUGFUNCTION, self.debug_function)
         self.curl.setopt(pycurl.URL, 'http://%s:8380/utf8_body' % localhost)
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
 

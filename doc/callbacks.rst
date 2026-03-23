@@ -379,8 +379,7 @@ SSH_KEYFUNCTION
 
         KhKey = namedtuple('KhKey', ('key', 'keytype'))
 
-    On Python 2, the *key* field of ``KhKey`` is a ``str``. On Python 3, the
-    *key* field is ``bytes``. *keytype* is an ``int``.
+    The *key* field of ``KhKey`` is ``bytes``. *keytype* is an ``int``.
 
     *known_key* may be ``None`` when there is no known matching host key.
 

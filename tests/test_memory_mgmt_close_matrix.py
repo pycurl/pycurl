@@ -3,6 +3,7 @@ import logging
 import weakref
 import pytest
 import pycurl
+from io import BytesIO
 
 from . import util
 
@@ -88,7 +89,7 @@ def make_share_easies():
         set_write: bool = True,
     ):
         easies: list[pycurl.Curl] = []
-        sios: list[util.BytesIO] = []
+        sios: list[BytesIO] = []
 
         for _ in range(n):
             c = util.DefaultCurl()
@@ -97,7 +98,7 @@ def make_share_easies():
                 c.setopt(pycurl.URL, url)
                 c.setopt(pycurl.CONNECTTIMEOUT, 5)
             if set_write:
-                sio = util.BytesIO()
+                sio = BytesIO()
                 c.setopt(pycurl.WRITEFUNCTION, sio.write)
                 sios.append(sio)
             easies.append(c)

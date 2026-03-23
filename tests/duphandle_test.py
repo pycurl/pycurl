@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 from . import localhost
@@ -7,6 +6,7 @@ import pycurl
 import unittest
 import gc
 import weakref
+from io import BytesIO
 try:
     import json
 except ImportError:
@@ -43,7 +43,7 @@ class DuphandleTest(unittest.TestCase):
         dup.close()
 
     def slist_check(self, handle, value, persistance=True):
-        body = util.BytesIO()
+        body = BytesIO()
         handle.setopt(pycurl.WRITEFUNCTION, body.write)
         handle.setopt(pycurl.URL, 'http://%s:8380/header_utf8?h=x-test-header' % localhost)
         handle.perform()
@@ -80,7 +80,7 @@ class DuphandleTest(unittest.TestCase):
         self.slist_test(self.orig.unsetopt, pycurl.HTTPHEADER)
 
     def httppost_check(self, handle, value, persistance=True):
-        body = util.BytesIO()
+        body = BytesIO()
         handle.setopt(pycurl.WRITEFUNCTION, body.write)
         handle.setopt(pycurl.URL, 'http://%s:8380/postfields' % localhost)
         handle.perform()
@@ -114,7 +114,7 @@ class DuphandleTest(unittest.TestCase):
         self.httppost_test(self.orig.unsetopt, pycurl.HTTPPOST)
 
     def test_duphandle_references(self):
-        body = util.BytesIO()
+        body = BytesIO()
         def callback(data):
             body.write(data)
         callback_ref = weakref.ref(callback)

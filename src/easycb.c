@@ -14,7 +14,7 @@ callback_return_value_to_int(PyObject *ret_obj, const char *callback_name, int *
     if (ret_obj == NULL) {
         return -1;
     }
-    if (!PyInt_Check(ret_obj) && !PyLong_Check(ret_obj)) {
+    if (!PyLong_Check(ret_obj)) {
         PyObject *ret_repr = PyObject_Repr(ret_obj);
         if (ret_repr) {
             PyObject *encoded_obj;
@@ -25,11 +25,7 @@ callback_return_value_to_int(PyObject *ret_obj, const char *callback_name, int *
         }
         return -1;
     }
-    if (PyInt_Check(ret_obj)) {
-        *ret_out = (int) PyInt_AsLong(ret_obj);
-    } else {
-        *ret_out = (int) PyLong_AsLong(ret_obj);
-    }
+    *ret_out = (int) PyLong_AsLong(ret_obj);
     return 0;
 }
 
@@ -63,11 +59,7 @@ util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *strea
     }
 
     /* run callback */
-#if PY_MAJOR_VERSION >= 3
     arglist = Py_BuildValue("(y#)", ptr, total_size);
-#else
-    arglist = Py_BuildValue("(s#)", ptr, total_size);
-#endif
     if (arglist == NULL)
         goto verbose_error;
     result = PyObject_Call(cb, arglist, NULL);
@@ -79,7 +71,7 @@ util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *strea
     if (result == Py_None) {
         ret = total_size;           /* None means success */
     }
-    else if (PyInt_Check(result) || PyLong_Check(result)) {
+    else if (PyLong_Check(result)) {
         /* if the cast to long fails, PyLong_AsLong() returns -1L */
         ret = (size_t) PyLong_AsLong(result);
     }
@@ -164,11 +156,7 @@ convert_protocol_address(struct sockaddr* saddr, unsigned int saddrlen)
         {
             struct sockaddr_un* s_un = (struct sockaddr_un*)saddr;
 
-#if PY_MAJOR_VERSION >= 3
             res_obj = Py_BuildValue("y", s_un->sun_path);
-#else
-            res_obj = Py_BuildValue("s", s_un->sun_path);
-#endif
         }
         break;
 #endif
@@ -229,7 +217,7 @@ opensocket_callback(void *clientp, curlsocktype purpose,
         goto verbose_error;
     }
 
-    if (PyInt_Check(result)) {
+    if (PyLong_Check(result)) {
         curl_socket_t sock_fd;
         if (PyLong_AsCurlSocket(result, &sock_fd) == 0) {
             ret = sock_fd;
@@ -246,7 +234,7 @@ opensocket_callback(void *clientp, curlsocktype purpose,
             goto verbose_error;
         }
         // normal operation:
-        if (PyInt_Check(fileno_result)) {
+        if (PyLong_Check(fileno_result)) {
             curl_socket_t sock_fd;
             if (PyLong_AsCurlSocket(fileno_result, &sock_fd) != 0) {
                 ret = CURL_SOCKET_BAD;
@@ -377,17 +365,9 @@ khkey_to_object(const struct curl_khkey *khkey)
     }
 
     if (khkey->len) {
-#if PY_MAJOR_VERSION >= 3
         arglist = Py_BuildValue("(y#i)", khkey->key, khkey->len, khkey->keytype);
-#else
-        arglist = Py_BuildValue("(s#i)", khkey->key, khkey->len, khkey->keytype);
-#endif
     } else {
-#if PY_MAJOR_VERSION >= 3
         arglist = Py_BuildValue("(yi)", khkey->key, khkey->keytype);
-#else
-        arglist = Py_BuildValue("(si)", khkey->key, khkey->keytype);
-#endif
     }
 
     if (arglist == NULL) {
@@ -499,8 +479,8 @@ seek_callback(void *stream, curl_off_t offset, int origin)
     if (result == Py_None) {
         ret = 0;           /* None means success */
     }
-    else if (PyInt_Check(result)) {
-        int ret_code = PyInt_AsLong(result);
+    else if (PyLong_Check(result)) {
+        int ret_code = PyLong_AsLong(result);
         if (ret_code < 0 || ret_code > 2) {
             PyErr_Format(ErrorObject, "invalid return value for seek callback %d not in (0, 1, 2)", ret_code);
             goto verbose_error;
@@ -615,14 +595,6 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
         ret = buf.len;              /* success */
         PyBuffer_Release(&buf);
     }
-#if PY_MAJOR_VERSION < 3
-    else if (PyInt_Check(result)) {
-        long r = PyInt_AsLong(result);
-        if (r != CURL_READFUNC_ABORT && r != CURL_READFUNC_PAUSE)
-            goto type_error;
-        ret = r; /* either CURL_READFUNC_ABORT or CURL_READFUNC_PAUSE */
-    }
-#endif
     else if (PyLong_Check(result)) {
         long r = PyLong_AsLong(result);
         if (r != CURL_READFUNC_ABORT && r != CURL_READFUNC_PAUSE)
@@ -677,8 +649,8 @@ progress_callback(void *stream,
     if (result == Py_None) {
         ret = 0;        /* None means success */
     }
-    else if (PyInt_Check(result)) {
-        ret = (int) PyInt_AsLong(result);
+    else if (PyLong_Check(result)) {
+        ret = (int) PyLong_AsLong(result);
     }
     else {
         ret = PyObject_IsTrue(result);  /* FIXME ??? */
@@ -729,8 +701,8 @@ xferinfo_callback(void *stream,
     if (result == Py_None) {
         ret = 0;        /* None means success */
     }
-    else if (PyInt_Check(result)) {
-        ret = (int) PyInt_AsLong(result);
+    else if (PyLong_Check(result)) {
+        ret = (int) PyLong_AsLong(result);
     }
     else {
         ret = PyObject_IsTrue(result);  /* FIXME ??? */
@@ -772,11 +744,7 @@ debug_callback(CURL *curlobj, curl_infotype type,
     }
 
     /* run callback */
-#if PY_MAJOR_VERSION >= 3
     arglist = Py_BuildValue("(iy#)", (int)type, buffer, (int)total_size);
-#else
-    arglist = Py_BuildValue("(is#)", (int)type, buffer, (int)total_size);
-#endif
     if (arglist == NULL)
         goto verbose_error;
     result = PyObject_Call(self->debug_cb, arglist, NULL);
@@ -828,8 +796,8 @@ ioctl_callback(CURL *curlobj, int cmd, void *stream)
     if (result == Py_None) {
         ret = CURLIOE_OK;        /* None means success */
     }
-    else if (PyInt_Check(result)) {
-        ret = (int) PyInt_AsLong(result);
+    else if (PyLong_Check(result)) {
+        ret = (int) PyLong_AsLong(result);
         if (ret >= CURLIOE_LAST || ret < 0) {
             PyErr_SetString(ErrorObject, "ioctl callback returned invalid value");
             goto verbose_error;

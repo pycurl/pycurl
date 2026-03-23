@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # PycURL documentation build configuration file, created by
 # sphinx-quickstart on Tue Feb  4 03:14:18 2014.

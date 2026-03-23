@@ -1,11 +1,11 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 from . import localhost
 import pycurl
 import unittest
 import sys
+from io import BytesIO, StringIO
 
 from . import appmanager
 from . import util
@@ -21,16 +21,14 @@ class WriteToStringioTest(unittest.TestCase):
 
     def test_write_to_bytesio(self):
         self.curl.setopt(pycurl.URL, 'http://%s:8380/success' % localhost)
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
         self.assertEqual('success', sio.getvalue().decode())
 
-    @util.only_python3
     def test_write_to_stringio(self):
         self.curl.setopt(pycurl.URL, 'http://%s:8380/success' % localhost)
-        # stringio in python 3
-        sio = util.StringIO()
+        sio = StringIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         try:
             self.curl.perform()

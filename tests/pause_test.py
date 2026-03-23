@@ -1,13 +1,11 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 import json
 import time
+from io import BytesIO
 
 import pycurl
 import pytest
-
-from . import util
 
 SELECT_TIMEOUT = 0.2
 
@@ -112,7 +110,7 @@ def _run_download_pause(
     app, curl, run_with_unpause, *, mask=pycurl.PAUSE_ALL, resume_after=0.7, timeout=4.0
 ):
     curl.setopt(pycurl.URL, f"{app}/pause")
-    sio = util.BytesIO()
+    sio = BytesIO()
     state = _pause_state()
     curl.setopt(
         pycurl.WRITEFUNCTION, _pause_on_first_write(curl, state, sio, mask=mask)
@@ -152,7 +150,7 @@ def _run_upload_pause(
     curl.setopt(pycurl.POSTFIELDSIZE, len(data))
     curl.setopt(pycurl.READFUNCTION, readfunc)
 
-    sio = util.BytesIO()
+    sio = BytesIO()
     curl.setopt(pycurl.WRITEFUNCTION, sio.write)
 
     _, err_list = run_with_unpause(curl, state, resume_after, timeout)
@@ -161,7 +159,7 @@ def _run_upload_pause(
 
 def _assert_write_return_replays_data(app, curl, run_with_unpause):
     curl.setopt(pycurl.URL, f"{app}/pause")
-    sio = util.BytesIO()
+    sio = BytesIO()
     chunks = []
     state = _pause_state()
 
@@ -215,7 +213,7 @@ def _assert_read_return(app, curl, run_with_unpause):
     curl.setopt(pycurl.POSTFIELDSIZE, len(data))
     curl.setopt(pycurl.READFUNCTION, readfunc)
 
-    sio = util.BytesIO()
+    sio = BytesIO()
     curl.setopt(pycurl.WRITEFUNCTION, sio.write)
 
     _, err_list = run_with_unpause(curl, state, resume_after=0.2, timeout=4.0)
@@ -232,7 +230,7 @@ def _assert_low_speed_timeout(app, curl, run_with_unpause):
     curl.setopt(pycurl.LOW_SPEED_LIMIT, 100)
     curl.setopt(pycurl.LOW_SPEED_TIME, 1)
 
-    sio = util.BytesIO()
+    sio = BytesIO()
     state = _pause_state()
     curl.setopt(pycurl.WRITEFUNCTION, _pause_on_first_write(curl, state, sio))
 

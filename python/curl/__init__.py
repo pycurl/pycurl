@@ -5,21 +5,9 @@
 #    for more info.
 
 import sys, pycurl
-
-py3 = sys.version_info[0] == 3
-
-# python 2/3 compatibility
-if py3:
-    import urllib.parse as urllib_parse
-    from urllib.parse import urljoin
-    from io import BytesIO
-else:
-    import urllib as urllib_parse
-    from urlparse import urljoin
-    try:
-        from cStringIO import StringIO as BytesIO
-    except ImportError:
-        from StringIO import StringIO as BytesIO
+import urllib.parse as urllib_parse
+from urllib.parse import urljoin
+from io import BytesIO
 
 # We should ignore SIGPIPE when using pycurl.NOSIGNAL - see
 # the libcurl tutorial for more info.

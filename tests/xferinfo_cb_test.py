@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 from . import localhost
@@ -34,7 +33,7 @@ class XferinfoCbTest(unittest.TestCase):
         for args in all_args:
             assert len(args) == 4
             for arg in args:
-                assert isinstance(arg, util.long_int)
+                assert isinstance(arg, int)
 
     @util.min_libcurl(7, 32, 0)
     def test_sockoptfunction_fail(self):

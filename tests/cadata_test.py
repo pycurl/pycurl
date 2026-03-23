@@ -1,10 +1,10 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 import os
 import pycurl
 import unittest
+from io import BytesIO
 
 from . import appmanager
 from . import util
@@ -23,7 +23,7 @@ class CaCertsTest(unittest.TestCase):
         with open(os.path.join(os.path.dirname(__file__), 'certs', 'ca.crt'), 'rb') as stream:
             cadata = stream.read().decode('ASCII')
         self.curl.setopt(pycurl.URL, 'https://localhost:8384/success')
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.set_ca_certs(cadata)
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         # self signed certificate, but ca cert should be loaded

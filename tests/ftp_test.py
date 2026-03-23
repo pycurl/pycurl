@@ -1,11 +1,11 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 # Note: this test is meant to be run from pycurl project root.
 
 import pycurl
 import unittest
+from io import BytesIO
 
 from . import util
 from . import procmgr, localhost
@@ -21,7 +21,7 @@ class FtpTest(unittest.TestCase):
 
     def test_get_ftp(self):
         self.curl.setopt(pycurl.URL, 'ftp://%s:8321' % localhost)
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.perform()
 
@@ -32,7 +32,7 @@ class FtpTest(unittest.TestCase):
     # XXX this test needs to be fixed
     def test_quote(self):
         self.curl.setopt(pycurl.URL, 'ftp://%s:8321' % localhost)
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.setopt(pycurl.QUOTE, ['CWD tests'])
         self.curl.perform()
@@ -43,7 +43,7 @@ class FtpTest(unittest.TestCase):
 
     def test_epsv(self):
         self.curl.setopt(pycurl.URL, 'ftp://%s:8321' % localhost)
-        sio = util.BytesIO()
+        sio = BytesIO()
         self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
         self.curl.setopt(pycurl.FTP_USE_EPSV, 1)
         self.curl.perform()

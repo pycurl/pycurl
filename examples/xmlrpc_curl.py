@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 # We should ignore SIGPIPE when using pycurl.NOSIGNAL - see
@@ -12,21 +11,10 @@ except ImportError:
 else:
     signal.signal(SIGPIPE, SIG_IGN)
 
-try:
-    from cStringIO import StringIO
-except ImportError:
-    try:
-        from StringIO import StringIO
-    except ImportError:
-        from io import StringIO
-try:
-    import xmlrpclib
-except ImportError:
-    import xmlrpc.client as xmlrpclib
+from io import StringIO
+import xmlrpc.client as xmlrpclib
 import pycurl
 import sys
-
-PY3 = sys.version_info[0] > 2
 
 
 class CURLTransport(xmlrpclib.Transport):
@@ -55,8 +43,7 @@ class CURLTransport(xmlrpclib.Transport):
            self.c.perform()
         except pycurl.error:
             v = sys.exc_info()[1]
-            if PY3:
-                v = v.args
+            v = v.args
             raise xmlrpclib.ProtocolError(
                 host + handler,
                 v[0], v[1], None

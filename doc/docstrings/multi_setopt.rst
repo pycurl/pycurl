@@ -19,13 +19,10 @@ constants are also exposed on CurlMulti objects::
 values of different types:
 
 - Options specified by `curl_multi_setopt`_ as accepting ``1`` or an
-  integer value accept Python integers, long integers (on Python 2.x) and
-  booleans::
+  integer value accept Python integers and booleans::
 
     m.setopt(pycurl.M_PIPELINING, True)
     m.setopt(pycurl.M_PIPELINING, 1)
-    # Python 2.x only:
-    m.setopt(pycurl.M_PIPELINING, 1L)
 
 - ``*FUNCTION`` options accept a function. Supported callbacks are
   ``CURLMOPT_SOCKETFUNCTION`` AND ``CURLMOPT_TIMERFUNCTION``. Please refer to

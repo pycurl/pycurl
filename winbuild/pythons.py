@@ -9,7 +9,7 @@ class PythonVersion(str):
     def release(self):
         return PythonRelease('.'.join(self.split('.')[:2]))
 
-class PythonBinary(object):
+class PythonBinary:
     def __init__(self, python_release, bitness):
         self.python_release = python_release
         self.bitness = bitness

@@ -1,11 +1,11 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 from . import localhost
 import pycurl
 import pytest
 import unittest
+from io import BytesIO
 
 from . import appmanager
 from . import util
@@ -55,13 +55,13 @@ class SetoptTest(unittest.TestCase):
     def test_unset_httpheader(self):
         self.curl.setopt(self.curl.HTTPHEADER, ('x-test: foo',))
         self.curl.setopt(self.curl.URL, 'http://%s:8380/header?h=x-test' % localhost)
-        io = util.BytesIO()
+        io = BytesIO()
         self.curl.setopt(self.curl.WRITEDATA, io)
         self.curl.perform()
         self.assertEqual(util.b('foo'), io.getvalue())
 
         self.curl.unsetopt(self.curl.HTTPHEADER)
-        io = util.BytesIO()
+        io = BytesIO()
         self.curl.setopt(self.curl.WRITEDATA, io)
         self.curl.perform()
         self.assertEqual(util.b(''), io.getvalue())
@@ -69,13 +69,13 @@ class SetoptTest(unittest.TestCase):
     def test_set_httpheader_none(self):
         self.curl.setopt(self.curl.HTTPHEADER, ('x-test: foo',))
         self.curl.setopt(self.curl.URL, 'http://%s:8380/header?h=x-test' % localhost)
-        io = util.BytesIO()
+        io = BytesIO()
         self.curl.setopt(self.curl.WRITEDATA, io)
         self.curl.perform()
         self.assertEqual(util.b('foo'), io.getvalue())
 
         self.curl.setopt(self.curl.HTTPHEADER, None)
-        io = util.BytesIO()
+        io = BytesIO()
         self.curl.setopt(self.curl.WRITEDATA, io)
         self.curl.perform()
         self.assertEqual(util.b(''), io.getvalue())

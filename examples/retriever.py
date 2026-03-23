@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 # vi:ts=4:et
 
 #
@@ -8,10 +7,7 @@
 #
 
 import sys, threading
-try:
-    import Queue
-except ImportError:
-    import queue as Queue
+import queue
 import pycurl
 
 # We should ignore SIGPIPE when using pycurl.NOSIGNAL - see
@@ -40,18 +36,18 @@ except:
 
 
 # Make a queue with (url, filename) tuples
-queue = Queue.Queue()
+q = queue.Queue()
 for url in urls:
     url = url.strip()
     if not url or url[0] == "#":
         continue
-    filename = "doc_%03d.dat" % (len(queue.queue) + 1)
-    queue.put((url, filename))
+    filename = "doc_%03d.dat" % (len(q.queue) + 1)
+    q.put((url, filename))
 
 
 # Check args
-assert queue.queue, "no URLs given"
-num_urls = len(queue.queue)
+assert q.queue, "no URLs given"
+num_urls = len(q.queue)
 num_conn = min(num_conn, num_urls)
 assert 1 <= num_conn <= 10000, "invalid number of concurrent connections"
 print("PycURL %s (compiled against 0x%x)" % (pycurl.version, pycurl.COMPILE_LIBCURL_VERSION_NUM))
@@ -67,7 +63,7 @@ class WorkerThread(threading.Thread):
         while 1:
             try:
                 url, filename = self.queue.get_nowait()
-            except Queue.Empty:
+            except queue.Empty:
                 raise SystemExit
             fp = open(filename, "wb")
             curl = pycurl.Curl()
@@ -93,7 +89,7 @@ class WorkerThread(threading.Thread):
 # Start a bunch of threads
 threads = []
 for dummy in range(num_conn):
-    t = WorkerThread(queue)
+    t = WorkerThread(q)
     t.start()
     threads.append(t)
 
