@@ -579,7 +579,7 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
         ret = obj_size;             /* success */
     }
     else if (PyObject_CheckBuffer(result)) {
-        if (PyObject_GetBuffer(result, &buf, PyBUF_FULL_RO) != 0) {
+        if (PyObject_GetBuffer(result, &buf, PyBUF_SIMPLE) != 0) {
             goto verbose_error;
         }
         if (buf.len < 0 || buf.len > total_size) {
@@ -587,11 +587,7 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
             PyBuffer_Release(&buf);
             goto verbose_error;
         }
-        int r = PyBuffer_ToContiguous(ptr, &buf, buf.len, 'C');
-        if (r < 0) {
-            PyBuffer_Release(&buf);
-            goto verbose_error;
-        }
+        memcpy(ptr, buf.buf, (size_t)buf.len);
         ret = buf.len;              /* success */
         PyBuffer_Release(&buf);
     }

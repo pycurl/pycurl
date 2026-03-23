@@ -1,25 +1,22 @@
-#! /usr/bin/env python
-# vi:ts=4:et
+from __future__ import annotations
 
-from . import localhost
 import json
-import urllib.parse as urllib_parse
-import pycurl
-import sys
-import unittest
 from io import BytesIO
+from urllib.parse import urlencode
 
-from . import appmanager
+import pycurl
+import pytest
+
 from . import util
 
-setup_module, teardown_module = appmanager.setup(('app', 8380))
 
 POSTFIELDS = {
-    'field1':'value1',
-    'field2':'value2 with blanks',
-    'field3':'value3',
+    "field1": "value1",
+    "field2": "value2 with blanks",
+    "field3": "value3",
 }
-POSTSTRING = urllib_parse.urlencode(POSTFIELDS)
+POSTSTRING = urlencode(POSTFIELDS)
+
 
 class DataProvider:
     def __init__(self, data):
@@ -32,234 +29,274 @@ class DataProvider:
             self.finished = True
             return self.data
         else:
-            # Nothing more to read
             return ""
 
-class ReadCbTest(unittest.TestCase):
-    def setUp(self):
-        self.curl = util.DefaultCurl()
 
-    def tearDown(self):
-        self.curl.close()
+def do_post_raw(curl, app, data, read_cb):
+    curl.setopt(curl.URL, f"{app}/raw_utf8")
+    curl.setopt(curl.POST, 1)
+    curl.setopt(curl.HTTPHEADER, ["Content-Type: application/octet-stream"])
+    curl.setopt(curl.POSTFIELDSIZE, len(data))
+    curl.setopt(curl.READFUNCTION, read_cb)
+    sio = BytesIO()
+    curl.setopt(pycurl.WRITEFUNCTION, sio.write)
+    curl.perform()
+    return json.loads(sio.getvalue().decode("ascii"))
 
-    def test_post_with_read_callback(self):
-        d = DataProvider(POSTSTRING)
-        self.curl.setopt(self.curl.URL, 'http://%s:8380/postfields' % localhost)
-        self.curl.setopt(self.curl.POST, 1)
-        self.curl.setopt(self.curl.POSTFIELDSIZE, len(POSTSTRING))
-        self.curl.setopt(self.curl.READFUNCTION, d.read_cb)
-        #self.curl.setopt(self.curl.VERBOSE, 1)
-        sio = BytesIO()
-        self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
-        self.curl.perform()
 
-        actual = json.loads(sio.getvalue().decode())
-        self.assertEqual(POSTFIELDS, actual)
+def do_bad_read_callback(
+    curl, app, read_cb, post_len=16, expect_code=pycurl.E_ABORTED_BY_CALLBACK
+):
+    curl.setopt(curl.URL, f"{app}/raw_utf8")
+    curl.setopt(curl.POST, 1)
+    curl.setopt(curl.HTTPHEADER, ["Content-Type: application/octet-stream"])
+    curl.setopt(curl.POSTFIELDSIZE, post_len)
+    curl.setopt(curl.READFUNCTION, read_cb)
 
-    def test_post_with_read_callback_returning_bytes(self):
-        self.check_bytes('world')
+    with pytest.raises(pycurl.error) as exc_info:
+        curl.perform()
 
-    def test_post_with_read_callback_returning_bytes_with_nulls(self):
-        self.check_bytes("wor\0ld")
+    err, msg = exc_info.value.args
+    assert err == expect_code
 
-    def test_post_with_read_callback_returning_bytes_with_multibyte(self):
-        self.check_bytes(util.u("Пушкин"))
 
-    def check_bytes(self, poststring):
-        data = poststring.encode('utf8')
-        assert type(data) == bytes
-        d = DataProvider(data)
+# --- basic POST with read callback ---
 
-        self.curl.setopt(self.curl.URL, 'http://%s:8380/raw_utf8' % localhost)
-        self.curl.setopt(self.curl.POST, 1)
-        self.curl.setopt(self.curl.HTTPHEADER, ['Content-Type: application/octet-stream'])
-        # length of bytes
-        self.curl.setopt(self.curl.POSTFIELDSIZE, len(data))
-        self.curl.setopt(self.curl.READFUNCTION, d.read_cb)
-        #self.curl.setopt(self.curl.VERBOSE, 1)
-        sio = BytesIO()
-        self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
-        self.curl.perform()
 
-        # json should be ascii
-        actual = json.loads(sio.getvalue().decode('ascii'))
-        self.assertEqual(poststring, actual)
+def test_post_with_read_callback(curl, app):
+    d = DataProvider(POSTSTRING)
+    curl.setopt(curl.URL, f"{app}/postfields")
+    curl.setopt(curl.POST, 1)
+    curl.setopt(curl.POSTFIELDSIZE, len(POSTSTRING))
+    curl.setopt(curl.READFUNCTION, d.read_cb)
+    sio = BytesIO()
+    curl.setopt(pycurl.WRITEFUNCTION, sio.write)
+    curl.perform()
 
-    def test_post_with_read_callback_returning_memoryview(self):
-        self.check_memoryview('world')
+    actual = json.loads(sio.getvalue().decode())
+    assert actual == POSTFIELDS
 
-    def test_post_with_read_callback_returning_memoryview_with_nulls(self):
-        self.check_memoryview("wor\0ld")
 
-    def test_post_with_read_callback_returning_memoryview_with_multibyte(self):
-        self.check_memoryview(util.u("Пушкин"))
+# --- bytes ---
 
-    def check_memoryview(self, poststring):
-        data = memoryview(poststring.encode('utf8'))
-        assert type(data) == memoryview
-        d = DataProvider(data)
 
-        self.curl.setopt(self.curl.URL, 'http://%s:8380/raw_utf8' % localhost)
-        self.curl.setopt(self.curl.POST, 1)
-        self.curl.setopt(self.curl.HTTPHEADER, ['Content-Type: application/octet-stream'])
-        # length of bytes
-        self.curl.setopt(self.curl.POSTFIELDSIZE, len(data))
-        self.curl.setopt(self.curl.READFUNCTION, d.read_cb)
-        #self.curl.setopt(self.curl.VERBOSE, 1)
-        sio = BytesIO()
-        self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
-        self.curl.perform()
+@pytest.mark.parametrize(
+    "poststring",
+    [
+        "world",
+        "wor\0ld",
+        util.u("Пушкин"),
+    ],
+)
+def test_post_with_read_callback_returning_bytes(curl, app, poststring):
+    data = poststring.encode("utf8")
+    assert type(data) is bytes
+    d = DataProvider(data)
+    actual = do_post_raw(curl, app, data, d.read_cb)
+    assert actual == poststring
 
-        # json should be ascii
-        actual = json.loads(sio.getvalue().decode('ascii'))
-        self.assertEqual(poststring, actual)
 
-    def test_post_with_read_callback_returning_unicode(self):
-        self.check_unicode(util.u('world'))
+# --- memoryview ---
 
-    def test_post_with_read_callback_returning_unicode_with_nulls(self):
-        self.check_unicode(util.u("wor\0ld"))
 
-    def test_post_with_read_callback_returning_unicode_with_multibyte(self):
-        try:
-            self.check_unicode(util.u("Пушкин"))
-            # prints:
-            # UnicodeEncodeError: 'ascii' codec can't encode characters in position 6-11: ordinal not in range(128)
-        except pycurl.error:
-            err, msg = sys.exc_info()[1].args
-            # we expect pycurl.E_WRITE_ERROR as the response
-            self.assertEqual(pycurl.E_ABORTED_BY_CALLBACK, err)
-            self.assertEqual('operation aborted by callback', msg)
+@pytest.mark.parametrize(
+    "poststring",
+    [
+        "world",
+        "wor\0ld",
+        util.u("Пушкин"),
+    ],
+)
+def test_post_with_read_callback_returning_memoryview(curl, app, poststring):
+    data = memoryview(poststring.encode("utf8"))
+    assert type(data) is memoryview
+    d = DataProvider(data)
+    actual = do_post_raw(curl, app, data, d.read_cb)
+    assert actual == poststring
 
-    def test_post_with_read_callback_pause(self):
-        data = b"field1=value1"
-        paused = False
-        resumed = False
-        offset = 0
 
-        def read_cb(size):
-            nonlocal paused, offset
-            if not paused:
-                paused = True
-                return pycurl.READFUNC_PAUSE
-            if offset < len(data):
-                take = min(size, len(data) - offset)
-                chunk = data[offset : offset + take]
-                offset += len(chunk)
-                return chunk
-            return b""
+# --- unicode ---
 
-        self.curl.setopt(self.curl.URL, 'http://%s:8380/raw_utf8' % localhost)
-        self.curl.setopt(self.curl.POST, 1)
-        self.curl.setopt(self.curl.HTTPHEADER, ['Content-Type: application/octet-stream'])
-        self.curl.setopt(self.curl.POSTFIELDSIZE, len(data))
-        self.curl.setopt(self.curl.READFUNCTION, read_cb)
-        #self.curl.setopt(self.curl.VERBOSE, 1)
-        sio = BytesIO()
-        self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
 
-        multi = pycurl.CurlMulti()
-        err_list = []
-        multi.add_handle(self.curl)
-        running = True
-        while running:
-            _, running = multi.perform()
-            if paused and not resumed:
-                resumed = True
-                self.curl.pause(pycurl.PAUSE_CONT)
-            if running:
-                multi.select(0.1)
-        while True:
-            queued, _, err = multi.info_read()
-            if err:
-                err_list.extend(err)
-            if not queued:
-                break
+@pytest.mark.parametrize(
+    "poststring",
+    [
+        util.u("world"),
+        util.u("wor\0ld"),
+    ],
+)
+def test_post_with_read_callback_returning_unicode(curl, app, poststring):
+    assert type(poststring) is str
+    d = DataProvider(poststring)
 
-        self.assertFalse(err_list)
-        self.assertTrue(resumed)
+    curl.setopt(curl.URL, f"{app}/raw_utf8")
+    curl.setopt(curl.POST, 1)
+    curl.setopt(curl.HTTPHEADER, ["Content-Type: application/octet-stream"])
+    curl.setopt(curl.POSTFIELDSIZE, len(poststring))
+    curl.setopt(curl.READFUNCTION, d.read_cb)
+    sio = BytesIO()
+    curl.setopt(pycurl.WRITEFUNCTION, sio.write)
+    curl.perform()
 
-    def check_unicode(self, poststring):
-        assert type(poststring) == str
-        d = DataProvider(poststring)
+    actual = json.loads(sio.getvalue().decode("ascii"))
+    assert actual == poststring
 
-        self.curl.setopt(self.curl.URL, 'http://%s:8380/raw_utf8' % localhost)
-        self.curl.setopt(self.curl.POST, 1)
-        self.curl.setopt(self.curl.HTTPHEADER, ['Content-Type: application/octet-stream'])
-        self.curl.setopt(self.curl.POSTFIELDSIZE, len(poststring))
-        self.curl.setopt(self.curl.READFUNCTION, d.read_cb)
-        #self.curl.setopt(self.curl.VERBOSE, 1)
-        sio = BytesIO()
-        self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
-        self.curl.perform()
 
-        # json should be ascii
-        actual = json.loads(sio.getvalue().decode('ascii'))
-        self.assertEqual(poststring, actual)
+def test_post_with_read_callback_returning_unicode_with_multibyte(curl, app):
+    poststring = util.u("Пушкин")
+    assert type(poststring) is str
+    d = DataProvider(poststring)
 
-    def test_post_with_read_callback_returning_non_buffer(self):
-        def read_cb(size):
-            return object()
+    curl.setopt(curl.URL, f"{app}/raw_utf8")
+    curl.setopt(curl.POST, 1)
+    curl.setopt(curl.HTTPHEADER, ["Content-Type: application/octet-stream"])
+    curl.setopt(curl.POSTFIELDSIZE, len(poststring))
+    curl.setopt(curl.READFUNCTION, d.read_cb)
 
-        self.check_bad_read_callback(read_cb)
+    with pytest.raises(pycurl.error) as exc_info:
+        curl.perform()
 
-    def test_post_with_read_callback_returning_overly_large_buffer(self):
-        def read_cb(size):
-            return " " * (size + 1)
+    err, msg = exc_info.value.args
+    assert err == pycurl.E_ABORTED_BY_CALLBACK
+    assert msg == "operation aborted by callback"
 
-        self.check_bad_read_callback(read_cb, post_len=1)
 
-    def test_post_with_read_callback_that_throws(self):
-        def read_cb(size):
-            raise RuntimeError("Boom")
+# --- numpy array ---
 
-        self.check_bad_read_callback(read_cb)
+numpy = pytest.importorskip("numpy")
 
-    def test_post_with_read_callback_that_aborts(self):
-        def read_cb(size):
-            return pycurl.READFUNC_ABORT
 
-        self.check_bad_read_callback(read_cb)
+def test_post_with_read_callback_returning_numpy_array(curl, app):
+    payload = b"hello numpy"
+    arr = numpy.frombuffer(payload, dtype=numpy.uint8)
+    d = DataProvider(arr)
+    actual = do_post_raw(curl, app, arr, d.read_cb)
+    assert actual == payload.decode("ascii")
 
-    def test_post_with_read_callback_that_returns_bad_integer(self):
-        def read_cb(size):
-            return 5000
 
-        self.check_bad_read_callback(read_cb)
+def test_post_with_read_callback_returning_numpy_tobytes(curl, app):
+    """Test numpy array converted to bytes via .tobytes()."""
+    payload = b"numpy bytes"
+    arr = numpy.frombuffer(payload, dtype=numpy.uint8)
+    data = arr.tobytes()
+    d = DataProvider(data)
+    actual = do_post_raw(curl, app, data, d.read_cb)
+    assert actual == payload.decode("ascii")
 
-    def test_post_with_read_callback_taking_incorrect_args(self):
-        def read_cb(too, many, args):
-            pass
 
-        self.check_bad_read_callback(read_cb)
+def test_post_with_read_callback_returning_non_contiguous_numpy(curl, app):
+    """A strided (non-contiguous) numpy array cannot satisfy PyBUF_SIMPLE."""
+    arr = numpy.arange(10, dtype=numpy.uint8)
+    strided = arr[::2]  # non-contiguous view
+    assert not strided.flags["C_CONTIGUOUS"]
+    do_bad_read_callback(curl, app, lambda _size: strided, post_len=len(strided))
 
-    def test_post_with_read_callback_not_callable(self):
-        with self.assertRaises(TypeError):
-            self.curl.setopt(self.curl.READFUNCTION, object())
 
-    def check_bad_read_callback(self, read_cb, post_len=16, expect_code=pycurl.E_ABORTED_BY_CALLBACK):
-        self.curl.setopt(self.curl.URL, 'http://%s:8380/raw_utf8' % localhost)
-        self.curl.setopt(self.curl.POST, 1)
-        self.curl.setopt(self.curl.HTTPHEADER, ['Content-Type: application/octet-stream'])
-        self.curl.setopt(self.curl.POSTFIELDSIZE, post_len)
-        self.curl.setopt(self.curl.READFUNCTION, read_cb)
-        # self.curl.setopt(self.curl.VERBOSE, 1)
+def test_post_with_read_callback_returning_fortran_order_numpy(curl, app):
+    """A 2D Fortran-ordered numpy array is not C-contiguous and must be rejected."""
+    arr = numpy.array([[1, 2], [3, 4]], dtype=numpy.uint8, order="F")
+    assert arr.flags["F_CONTIGUOUS"]
+    assert not arr.flags["C_CONTIGUOUS"]
+    do_bad_read_callback(curl, app, lambda _size: arr, post_len=arr.nbytes)
 
-        with self.assertRaises(pycurl.error) as context:
-            self.curl.perform()
 
-        err, msg = context.exception.args
-        self.assertEqual(expect_code, err)
+# --- pause / resume ---
 
-    def test_readfunction_unsetopt(self):
-        self.curl.setopt(self.curl.URL, 'http://%s:8380/raw_utf8' % localhost)
-        self.curl.setopt(self.curl.POST, 1)
-        # Body is not read unless HTTP Expect is disabled
-        self.curl.setopt(self.curl.HTTPHEADER, ['Content-Type: application/octet-stream', 'Expect: '])
-        self.curl.setopt(self.curl.READFUNCTION, None)
-        #self.curl.setopt(self.curl.VERBOSE, 1)
-        sio = BytesIO()
-        self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
 
-        self.curl.perform()
-        # did not crash
+def test_post_with_read_callback_pause(curl, app):
+    data = b"field1=value1"
+    paused = False
+    resumed = False
+    offset = 0
+
+    def read_cb(size):
+        nonlocal paused, offset
+        if not paused:
+            paused = True
+            return pycurl.READFUNC_PAUSE
+        if offset < len(data):
+            take = min(size, len(data) - offset)
+            chunk = data[offset : offset + take]
+            offset += len(chunk)
+            return chunk
+        return b""
+
+    curl.setopt(curl.URL, f"{app}/raw_utf8")
+    curl.setopt(curl.POST, 1)
+    curl.setopt(curl.HTTPHEADER, ["Content-Type: application/octet-stream"])
+    curl.setopt(curl.POSTFIELDSIZE, len(data))
+    curl.setopt(curl.READFUNCTION, read_cb)
+    sio = BytesIO()
+    curl.setopt(pycurl.WRITEFUNCTION, sio.write)
+
+    multi = pycurl.CurlMulti()
+    multi.add_handle(curl)
+    running = True
+    while running:
+        _, running = multi.perform()
+        if paused and not resumed:
+            resumed = True
+            curl.pause(pycurl.PAUSE_CONT)
+        if running:
+            multi.select(0.1)
+    while True:
+        queued, _, err = multi.info_read()
+        if err:
+            pytest.fail(f"Multi transfer errors: {err}")
+        if not queued:
+            break
+
+    assert resumed
+
+
+# --- error cases ---
+
+
+def test_post_with_read_callback_returning_non_buffer(curl, app):
+    do_bad_read_callback(curl, app, lambda size: object())
+
+
+def test_post_with_read_callback_returning_overly_large_buffer(curl, app):
+    do_bad_read_callback(curl, app, lambda size: " " * (size + 1), post_len=1)
+
+
+def test_post_with_read_callback_that_throws(curl, app):
+    def read_cb(size):
+        raise RuntimeError("Boom")
+
+    do_bad_read_callback(curl, app, read_cb)
+
+
+def test_post_with_read_callback_that_aborts(curl, app):
+    do_bad_read_callback(curl, app, lambda size: pycurl.READFUNC_ABORT)
+
+
+def test_post_with_read_callback_that_returns_bad_integer(curl, app):
+    do_bad_read_callback(curl, app, lambda size: 5000)
+
+
+def test_post_with_read_callback_taking_incorrect_args(curl, app):
+    def read_cb(too, many, args):
+        pass
+
+    do_bad_read_callback(curl, app, read_cb)
+
+
+def test_post_with_read_callback_not_callable(curl):
+    with pytest.raises(TypeError):
+        curl.setopt(curl.READFUNCTION, object())
+
+
+# --- unsetopt ---
+
+
+def test_readfunction_unsetopt(curl, app):
+    curl.setopt(curl.URL, f"{app}/raw_utf8")
+    curl.setopt(curl.POST, 1)
+    curl.setopt(curl.HTTPHEADER, ["Content-Type: application/octet-stream", "Expect: "])
+    curl.setopt(curl.READFUNCTION, None)
+    sio = BytesIO()
+    curl.setopt(pycurl.WRITEFUNCTION, sio.write)
+
+    curl.perform()
+    # did not crash
