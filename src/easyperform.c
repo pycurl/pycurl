@@ -55,6 +55,7 @@ do_curl_perform_rb(CurlObject *self, PyObject *Py_UNUSED(ignored))
     
     v = do_curl_perform(self, NULL);
     if (v == NULL) {
+        Py_DECREF(io);
         return NULL;
     }
     
