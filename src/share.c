@@ -272,6 +272,9 @@ share_cleanup_and_count_live_easies(CurlShareObject *self)
                 // move to the next reference
                 if (rc < 0)  {
                     Py_DECREF(wr);
+                    Py_DECREF(it);
+                    Py_DECREF(to_remove);
+                    EASY_WEAKREFS_UNLOCK(self);
                     return -1;
                 } else if (rc == 0 || obj == NULL) {
                     PyList_Append(to_remove, wr);
