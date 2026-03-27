@@ -131,7 +131,10 @@ do_share_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
 
 #ifdef WITH_THREAD
     self->lock = share_lock_new();
-    assert(self->lock != NULL);
+    if (self->lock == NULL) {
+        Py_DECREF(self);
+        return NULL;
+    }
     self->easy_weakrefs_lock = PyThread_allocate_lock();
     if (self->easy_weakrefs_lock == NULL) {
         Py_DECREF(self);
@@ -234,7 +237,9 @@ do_share_dealloc(CurlShareObject *self)
     util_share_close(self);
 
 #ifdef WITH_THREAD
-    share_lock_destroy(self->lock);
+    if (self->lock) {
+        share_lock_destroy(self->lock);
+    }
     if (self->easy_weakrefs_lock) {
         PyThread_free_lock(self->easy_weakrefs_lock);
         self->easy_weakrefs_lock = NULL;
