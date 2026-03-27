@@ -142,11 +142,11 @@ do_share_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
 
     self->easy_weakrefs = PySet_New(NULL);
     if (self->easy_weakrefs == NULL) {
-        Py_DECREF(self);
 #ifdef WITH_THREAD
         PyThread_free_lock(self->easy_weakrefs_lock);
         self->easy_weakrefs_lock = NULL;
 #endif
+        Py_DECREF(self);
         return NULL;
     }
 
