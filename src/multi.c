@@ -469,6 +469,7 @@ do_multi_setopt_charpp(CurlMultiObject *self, int option, int which, PyObject *o
         CURLERROR_RETVAL_MULTI_DONE();
     }
 
+    Py_INCREF(Py_None);
     rv = Py_None;
 done:
     if (encoded_objs) {
