@@ -526,29 +526,6 @@ do_curl_setopt_int(CurlObject *self, int option, PyObject *obj)
 }
 
 
-static PyObject *
-do_curl_setopt_long(CurlObject *self, int option, PyObject *obj)
-{
-    int res;
-    PY_LONG_LONG d = PyLong_AsLongLong(obj);
-    if (d == -1 && PyErr_Occurred())
-        return NULL;
-
-    if (IS_LONG_OPTION(option) && (long)d == d)
-        res = curl_easy_setopt(self->handle, (CURLoption)option, (long)d);
-    else if (IS_OFF_T_OPTION(option) && (curl_off_t)d == d)
-        res = curl_easy_setopt(self->handle, (CURLoption)option, (curl_off_t)d);
-    else {
-        PyErr_SetString(PyExc_TypeError, "longs are not supported for this option");
-        return NULL;
-    }
-    if (res != CURLE_OK) {
-        CURLERROR_RETVAL();
-    }
-    Py_RETURN_NONE;
-}
-
-
 #undef IS_LONG_OPTION
 #undef IS_OFF_T_OPTION
 
@@ -1189,11 +1166,6 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     /* Handle the case of integer arguments */
     if (PyLong_Check(obj)) {
         return do_curl_setopt_int(self, option, obj);
-    }
-
-    /* Handle the case of long arguments (used by *_LARGE options) */
-    if (PyLong_Check(obj)) {
-        return do_curl_setopt_long(self, option, obj);
     }
 
     /* Handle the case of list or tuple objects */
