@@ -505,10 +505,15 @@ do_curl_setopt_int(CurlObject *self, int option, PyObject *obj)
 
     if (IS_LONG_OPTION(option)) {
         d = PyLong_AsLong(obj);
+        if (d == -1 && PyErr_Occurred()) {
+            return NULL;
+        }
         res = curl_easy_setopt(self->handle, (CURLoption)option, (long)d);
     } else if (IS_OFF_T_OPTION(option)) {
-        /* this path should only be taken in Python 3 */
         ld = PyLong_AsLongLong(obj);
+        if (ld == -1 && PyErr_Occurred()) {
+            return NULL;
+        }
         res = curl_easy_setopt(self->handle, (CURLoption)option, (curl_off_t)ld);
     } else {
         PyErr_SetString(PyExc_TypeError, "integers are not supported for this option");

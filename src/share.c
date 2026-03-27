@@ -413,6 +413,9 @@ do_share_setopt(CurlShareObject *self, PyObject *args)
     /* Handle the case of integer arguments */
     if (PyLong_Check(obj)) {
         long d = PyLong_AsLong(obj);
+        if (d == -1 && PyErr_Occurred()) {
+            return NULL;
+        }
         switch(d) {
         case CURL_LOCK_DATA_COOKIE:
         case CURL_LOCK_DATA_DNS:

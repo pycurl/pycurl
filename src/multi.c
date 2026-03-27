@@ -390,6 +390,9 @@ static PyObject *
 do_multi_setopt_int(CurlMultiObject *self, int option, PyObject *obj)
 {
     long d = PyLong_AsLong(obj);
+    if (d == -1 && PyErr_Occurred()) {
+        return NULL;
+    }
     switch(option) {
     case CURLMOPT_MAXCONNECTS:
     case CURLMOPT_PIPELINING:
