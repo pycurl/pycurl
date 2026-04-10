@@ -11,12 +11,6 @@
 
 #define PYCURL_VERSION_PREFIX "PycURL/" PYCURL_VERSION_STRING
 
-/* needed for compatibility with python < 3.10, as suggested at:
- * https://docs.python.org/3.10/whatsnew/3.10.html#id2 */
-#if PY_VERSION_HEX < 0x030900A4
-#  define Py_SET_TYPE(obj, type) ((Py_TYPE(obj) = (type)), (void)0)
-#endif
-
 PYCURL_INTERNAL char *empty_keywords[] = { NULL };
 
 PYCURL_INTERNAL PyObject *bytesio = NULL;
