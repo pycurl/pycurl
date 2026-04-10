@@ -15,11 +15,9 @@ assert_multi_state(const CurlMultiObject *self)
 {
     assert(self != NULL);
     assert(PyObject_IsInstance((PyObject *) self, (PyObject *) p_CurlMulti_Type) == 1);
-#ifdef WITH_THREAD
     if (self->state != NULL) {
         assert(self->multi_handle != NULL);
     }
-#endif
 }
 
 
@@ -31,12 +29,10 @@ check_multi_state(const CurlMultiObject *self, int flags, const char *name)
         PyErr_Format(ErrorObject, "cannot invoke %s() - no multi handle", name);
         return -1;
     }
-#ifdef WITH_THREAD
     if ((flags & 2) && self->state != NULL) {
         PyErr_Format(ErrorObject, "cannot invoke %s() - multi_perform() is currently running", name);
         return -1;
     }
-#endif
     return 0;
 }
 
@@ -136,9 +132,7 @@ util_multi_close(CurlMultiObject *self)
 {
     assert(self != NULL);
 
-#ifdef WITH_THREAD
     self->state = NULL;
-#endif
 
     if (self->multi_handle != NULL) {
         CURLM *multi_handle = self->multi_handle;
@@ -798,20 +792,16 @@ check_multi_add_remove(const CurlMultiObject *self, const CurlObject *obj)
         PyErr_SetString(ErrorObject, "cannot add/remove handle - multi-stack is closed");
         return -1;
     }
-#ifdef WITH_THREAD
     if (self->state != NULL) {
         PyErr_SetString(ErrorObject, "cannot add/remove handle - multi_perform() already running");
         return -1;
     }
-#endif
     /* check CurlObject status */
     assert_curl_state(obj);
-#ifdef WITH_THREAD
     if (obj->state != NULL) {
         PyErr_SetString(ErrorObject, "cannot add/remove handle - perform() of curl object already running");
         return -1;
     }
-#endif
     if (obj->multi_stack != NULL && obj->multi_stack != self) {
         PyErr_SetString(ErrorObject, "cannot add/remove handle - curl object already on another multi-stack");
         return -1;

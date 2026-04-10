@@ -275,15 +275,12 @@ static PyObject *
 do_curl_pause_internal(CurlObject *self, int bitmask, const char *op_name)
 {
     CURLcode res;
-#ifdef WITH_THREAD
     PyThreadState *saved_state;
-#endif
 
     if (check_curl_state(self, 1, op_name) != 0) {
         return NULL;
     }
 
-#ifdef WITH_THREAD
     /* Save handle to current thread (used as context for python callbacks) */
     if (self->multi_stack != NULL) {
         saved_state = self->multi_stack->state;
@@ -294,20 +291,17 @@ do_curl_pause_internal(CurlObject *self, int bitmask, const char *op_name)
     /* We must allow threads here because unpausing a handle can cause
        some of its callbacks to be invoked immediately, from inside
        curl_easy_pause() */
-#endif
     
     PYCURL_BEGIN_ALLOW_THREADS_EASY
     res = curl_easy_pause(self->handle, bitmask);
     PYCURL_END_ALLOW_THREADS_EASY
 
-#ifdef WITH_THREAD
     /* Restore the thread-state to whatever it was on entry */
     if (self->multi_stack != NULL) {
         self->multi_stack->state = saved_state;
     } else {
         self->state = saved_state;
     }
-#endif
 
     if (check_pending_python_exception_or_signal() != 0) {
         return NULL;

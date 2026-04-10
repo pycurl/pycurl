@@ -175,9 +175,7 @@ assert_curl_state(const CurlObject *self)
 {
     assert(self != NULL);
     assert(PyObject_IsInstance((PyObject *) self, (PyObject *) p_Curl_Type) == 1);
-#ifdef WITH_THREAD
     (void) pycurl_get_thread_state(self);
-#endif
 }
 
 
@@ -190,12 +188,10 @@ check_curl_state(const CurlObject *self, int flags, const char *name)
         PyErr_Format(ErrorObject, "cannot invoke %s() - no curl handle", name);
         return -1;
     }
-#ifdef WITH_THREAD
     if ((flags & 2) && pycurl_get_thread_state(self) != NULL) {
         PyErr_Format(ErrorObject, "cannot invoke %s() - perform() is currently running", name);
         return -1;
     }
-#endif
     return 0;
 }
 
@@ -628,17 +624,13 @@ util_curl_close(CurlObject *self)
     if (handle == NULL) {
         /* Some paranoia assertions just to make sure the object
          * deallocation problem is finally really fixed... */
-#ifdef WITH_THREAD
         assert(self->state == NULL);
-#endif
         assert(self->multi_stack == NULL);
         assert(self->multi_weakref == NULL);
         assert(self->share == NULL);
         return;             /* already closed */
     }
-#ifdef WITH_THREAD
     self->state = NULL;
-#endif
 
     /* Decref multi stuff which uses this handle */
     if (self->multi_stack != NULL) {
@@ -705,9 +697,7 @@ static PyObject *do_curl_closed(CurlObject *self, PyObject *Py_UNUSED(ignored))
 PYCURL_INTERNAL int
 do_curl_clear(CurlObject *self)
 {
-#ifdef WITH_THREAD
     assert(pycurl_get_thread_state(self) == NULL);
-#endif
     util_curl_xdecref(self, PYCURL_MEMGROUP_ALL, self->handle);
     return 0;
 }

@@ -258,7 +258,6 @@ PYCURL_INTERNAL int pycurl_ssl_init(void);
 PYCURL_INTERNAL void pycurl_ssl_cleanup(void);
 #endif
 
-#ifdef WITH_THREAD
 #  define PYCURL_DECLARE_THREAD_STATE PyThreadState *tmp_state
 #  define PYCURL_ACQUIRE_THREAD() pycurl_acquire_thread(self, &tmp_state)
 #  define PYCURL_ACQUIRE_THREAD_MULTI() pycurl_acquire_thread_multi(self, &tmp_state)
@@ -289,16 +288,6 @@ PYCURL_INTERNAL void pycurl_ssl_cleanup(void);
        PYCURL_END_ALLOW_THREADS \
        if (self->multi_stack != NULL) \
            self->multi_stack->state = NULL;
-#else
-#  define PYCURL_DECLARE_THREAD_STATE
-#  define PYCURL_ACQUIRE_THREAD() (1)
-#  define PYCURL_ACQUIRE_THREAD_MULTI() (1)
-#  define PYCURL_RELEASE_THREAD()
-#  define PYCURL_END_CALLBACK(retval) \
-       return (retval)
-#  define PYCURL_BEGIN_ALLOW_THREADS
-#  define PYCURL_END_ALLOW_THREADS
-#endif
 
 #if PY_VERSION_HEX < 0x030D0000  /* Python 3.13 */
 #  define Py_IsFinalizing _Py_IsFinalizing
@@ -436,9 +425,7 @@ typedef struct CurlObject {
     // https://docs.python.org/3/extending/newtypes.html
     PyObject *weakreflist;
     CURL *handle;
-#ifdef WITH_THREAD
     PyThreadState *state;
-#endif
     PyObject *multi_weakref;
     struct CurlMultiObject *multi_stack;
     struct CurlShareObject *share;
@@ -502,9 +489,7 @@ typedef struct CurlMultiObject {
     // https://docs.python.org/3/extending/newtypes.html
     PyObject *weakreflist;
     CURLM *multi_handle;
-#ifdef WITH_THREAD
     PyThreadState *state;
-#endif
     fd_set read_fd_set;
     fd_set write_fd_set;
     fd_set exc_fd_set;
@@ -529,10 +514,8 @@ typedef struct CurlShareObject {
     // https://docs.python.org/3/extending/newtypes.html
     PyObject *weakreflist;
     CURLSH *share_handle;
-#ifdef WITH_THREAD
     ShareLock *lock;                /* lock object to implement CURLSHOPT_LOCKFUNC */
     PyThread_type_lock easy_weakrefs_lock;  /* protects easy_weakrefs map */
-#endif
     /* Set of weakref.ref(CurlObject) */
     PyObject *easy_weakrefs;
     int detach_on_close; /* boolean: True by default */
@@ -560,8 +543,6 @@ PYCURL_INTERNAL void
 curlmime_duphandle_incref_data_cb_owners(PyObject *mime_obj);
 #endif
 
-#ifdef WITH_THREAD
-
 PYCURL_INTERNAL PyThreadState *
 pycurl_get_thread_state(const CurlObject *self);
 PYCURL_INTERNAL PyThreadState *
@@ -585,8 +566,6 @@ PYCURL_INTERNAL void
 share_lock_callback(CURL *handle, curl_lock_data data, curl_lock_access locktype, void *userptr);
 PYCURL_INTERNAL void
 share_unlock_callback(CURL *handle, curl_lock_data data, void *userptr);
-
-#endif /* WITH_THREAD */
 
 PYCURL_INTERNAL PyObject *
 my_getattro(PyObject *co, PyObject *name, PyObject *dict1, PyObject *dict2, PyMethodDef *m);

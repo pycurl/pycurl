@@ -1,7 +1,5 @@
 #include "pycurl.h"
 
-#ifdef WITH_THREAD
-
 PYCURL_INTERNAL PyThreadState *
 pycurl_get_thread_state(const CurlObject *self)
 {
@@ -343,23 +341,6 @@ share_unlock_callback(CURL *handle, curl_lock_data data, void *userptr)
     share_lock_unlock(share->lock, data);
 }
 
-#else /* WITH_THREAD */
-
-#if defined(PYCURL_NEED_SSL_TSL)
-PYCURL_INTERNAL void
-pycurl_ssl_init(void)
-{
-    return 0;
-}
-
-PYCURL_INTERNAL void
-pycurl_ssl_cleanup(void)
-{
-    return;
-}
-#endif
-
-#endif /* WITH_THREAD */
 
 /* vi:ts=4:et:nowrap
  */

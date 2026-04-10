@@ -1,14 +1,8 @@
 #include "pycurl.h"
 #include "docstrings.h"
 
-#ifdef WITH_THREAD
 #  define EASY_WEAKREFS_LOCK(share)   PyThread_acquire_lock((share)->easy_weakrefs_lock, 1)
 #  define EASY_WEAKREFS_UNLOCK(share) PyThread_release_lock((share)->easy_weakrefs_lock)
-#else
-#  define EASY_WEAKREFS_LOCK(share)   ((void)0)
-#  define EASY_WEAKREFS_UNLOCK(share) ((void)0)
-#endif
-
 /*************************************************************************
 // static utility functions
 **************************************************************************/
@@ -85,9 +79,7 @@ assert_share_state(const CurlShareObject *self)
 {
     assert(self != NULL);
     assert(PyObject_IsInstance((PyObject *) self, (PyObject *) p_CurlShare_Type) == 1);
-#ifdef WITH_THREAD
     assert(self->lock != NULL);
-#endif
 }
 
 
@@ -105,10 +97,8 @@ do_share_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
 {
     int res;
     CurlShareObject *self;
-#ifdef WITH_THREAD
     const curl_lock_function lock_cb = share_lock_callback;
     const curl_unlock_function unlock_cb = share_unlock_callback;
-#endif
     int *ptr;
     static char *kwlist[] = {"detach_on_close", NULL};
     int detach_on_close = 1;
@@ -129,7 +119,6 @@ do_share_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
             assert(*ptr == 0);
     }
 
-#ifdef WITH_THREAD
     self->lock = share_lock_new();
     if (self->lock == NULL) {
         Py_DECREF(self);
@@ -141,14 +130,11 @@ do_share_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
         PyErr_NoMemory();
         return NULL;
     }
-#endif
 
     self->easy_weakrefs = PySet_New(NULL);
     if (self->easy_weakrefs == NULL) {
-#ifdef WITH_THREAD
         PyThread_free_lock(self->easy_weakrefs_lock);
         self->easy_weakrefs_lock = NULL;
-#endif
         Py_DECREF(self);
         return NULL;
     }
@@ -161,7 +147,6 @@ do_share_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
         return NULL;
     }
 
-#ifdef WITH_THREAD
     /* Set locking functions and data  */
     res = curl_share_setopt(self->share_handle, CURLSHOPT_LOCKFUNC, lock_cb);
     assert(res == CURLE_OK);
@@ -169,7 +154,6 @@ do_share_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
     assert(res == CURLE_OK);
     res = curl_share_setopt(self->share_handle, CURLSHOPT_UNLOCKFUNC, unlock_cb);
     assert(res == CURLE_OK);
-#endif
 
     self->detach_on_close = detach_on_close ? 1 : 0;
     return self;
@@ -198,13 +182,9 @@ util_share_xdecref(CurlShareObject *self)
      * The lock can be NULL for partially-initialized objects or during
      * early destruction paths; guard against acquiring an uninitialized lock.
      */
-#ifdef WITH_THREAD
     if (self->easy_weakrefs_lock) EASY_WEAKREFS_LOCK(self);
-#endif
     Py_CLEAR(self->easy_weakrefs);
-#ifdef WITH_THREAD
     if (self->easy_weakrefs_lock) EASY_WEAKREFS_UNLOCK(self);
-#endif
 }
 
 
@@ -236,7 +216,6 @@ do_share_dealloc(CurlShareObject *self)
     util_share_xdecref(self);
     util_share_close(self);
 
-#ifdef WITH_THREAD
     if (self->lock) {
         share_lock_destroy(self->lock);
     }
@@ -244,7 +223,6 @@ do_share_dealloc(CurlShareObject *self)
         PyThread_free_lock(self->easy_weakrefs_lock);
         self->easy_weakrefs_lock = NULL;
     }
-#endif
 
     if (self->weakreflist != NULL) {
         PyObject_ClearWeakRefs((PyObject *) self);
