@@ -1673,11 +1673,6 @@ PyMODINIT_FUNC PyInit_pycurl(void)
         goto error;
     }
 
-#if defined(WITH_THREAD) && PY_MINOR_VERSION < 9
-    /* Finally initialize global interpreter lock */
-    PyEval_InitThreads();
-#endif
-
 #ifdef PYCURL_AUTODETECT_CA
     pycurl_autodetect_ca();
 #endif
