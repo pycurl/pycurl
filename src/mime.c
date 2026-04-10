@@ -531,7 +531,7 @@ curlmime_make_part(CurlMimeObject *mime, curl_mimepart *part)
     }
 
     part_obj->part = part;
-    part_obj->mime = (CurlMimeObject *)my_Py_NewRef((PyObject *)mime);
+    part_obj->mime = (CurlMimeObject *)Py_NewRef((PyObject *)mime);
     part_obj->data_cb_owner = NULL;
 
     return (PyObject *)part_obj;
@@ -622,7 +622,7 @@ do_curlmime_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
     }
 
     self->owns_mime = 1;
-    self->curl = (CurlObject *)my_Py_NewRef((PyObject *)curl);
+    self->curl = (CurlObject *)Py_NewRef((PyObject *)curl);
     self->parts = PyList_New((Py_ssize_t)0);
     if (self->parts == NULL) {
         Py_DECREF(self);
@@ -1174,7 +1174,7 @@ do_curlmime_add_multipart(CurlMimeObject *self, PyObject *args, PyObject *kwds)
             return NULL;
         }
     } else {
-        subtype_ref = my_Py_NewRef(subtype_obj);
+        subtype_ref = Py_NewRef(subtype_obj);
     }
 
     if (subtype_ref != Py_None) {

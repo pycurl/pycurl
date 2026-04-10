@@ -368,101 +368,101 @@ do_curl_duphandle(CurlObject *self, PyObject *Py_UNUSED(ignored))
 
     /* Assign and incref python callback and update data pointers */
     if (self->w_cb != NULL) {
-        dup->w_cb = my_Py_NewRef(self->w_cb);
+        dup->w_cb = Py_NewRef(self->w_cb);
         curl_easy_setopt(dup->handle, CURLOPT_WRITEDATA, dup);
     }
     if (self->h_cb != NULL) {
-        dup->h_cb = my_Py_NewRef(self->h_cb);
+        dup->h_cb = Py_NewRef(self->h_cb);
         curl_easy_setopt(dup->handle, CURLOPT_WRITEHEADER, dup);
     }
     if (self->r_cb != NULL) {
-        dup->r_cb = my_Py_NewRef(self->r_cb);
+        dup->r_cb = Py_NewRef(self->r_cb);
         curl_easy_setopt(dup->handle, CURLOPT_READDATA, dup);
     }
     if (self->pro_cb != NULL) {
-        dup->pro_cb = my_Py_NewRef(self->pro_cb);
+        dup->pro_cb = Py_NewRef(self->pro_cb);
         curl_easy_setopt(dup->handle, CURLOPT_PROGRESSDATA, dup);
     }
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 32, 0)
     if (self->xferinfo_cb != NULL) {
-        dup->xferinfo_cb = my_Py_NewRef(self->xferinfo_cb);
+        dup->xferinfo_cb = Py_NewRef(self->xferinfo_cb);
         curl_easy_setopt(dup->handle, CURLOPT_XFERINFODATA, dup);
     }
 #endif
     if (self->debug_cb != NULL) {
-        dup->debug_cb = my_Py_NewRef(self->debug_cb);
+        dup->debug_cb = Py_NewRef(self->debug_cb);
         curl_easy_setopt(dup->handle, CURLOPT_DEBUGDATA, dup);
     }
     if (self->ioctl_cb != NULL) {
-        dup->ioctl_cb = my_Py_NewRef(self->ioctl_cb);
+        dup->ioctl_cb = Py_NewRef(self->ioctl_cb);
         curl_easy_setopt(dup->handle, CURLOPT_IOCTLDATA, dup);
     }
     if (self->opensocket_cb != NULL) {
-        dup->opensocket_cb = my_Py_NewRef(self->opensocket_cb);
+        dup->opensocket_cb = Py_NewRef(self->opensocket_cb);
         curl_easy_setopt(dup->handle, CURLOPT_OPENSOCKETDATA, dup);
     }
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
     if (self->closesocket_cb != NULL) {
-        dup->closesocket_cb = my_Py_NewRef(self->closesocket_cb);
+        dup->closesocket_cb = Py_NewRef(self->closesocket_cb);
         curl_easy_setopt(dup->handle, CURLOPT_CLOSESOCKETDATA, dup);
     }
 #endif
     if (self->sockopt_cb != NULL) {
-        dup->sockopt_cb = my_Py_NewRef(self->sockopt_cb);
+        dup->sockopt_cb = Py_NewRef(self->sockopt_cb);
         curl_easy_setopt(dup->handle, CURLOPT_SOCKOPTDATA, dup);
     }
 #ifdef HAVE_CURL_7_19_6_OPTS
     if (self->ssh_key_cb != NULL) {
-        dup->ssh_key_cb = my_Py_NewRef(self->ssh_key_cb);
+        dup->ssh_key_cb = Py_NewRef(self->ssh_key_cb);
         curl_easy_setopt(dup->handle, CURLOPT_SSH_KEYDATA, dup);
     }
 #endif
     if (self->seek_cb != NULL) {
-        dup->seek_cb = my_Py_NewRef(self->seek_cb);
+        dup->seek_cb = Py_NewRef(self->seek_cb);
         curl_easy_setopt(dup->handle, CURLOPT_SEEKDATA, dup);
     }
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 80, 0)
     if (self->prereq_cb != NULL) {
-        dup->prereq_cb = my_Py_NewRef(self->prereq_cb);
+        dup->prereq_cb = Py_NewRef(self->prereq_cb);
         curl_easy_setopt(dup->handle, CURLOPT_PREREQDATA, dup);
     }
 #endif
 
     /* Assign and incref python file objects */
-    dup->readdata_fp = my_Py_XNewRef(self->readdata_fp);
-    dup->writedata_fp = my_Py_XNewRef(self->writedata_fp);
-    dup->writeheader_fp = my_Py_XNewRef(self->writeheader_fp);
+    dup->readdata_fp = Py_XNewRef(self->readdata_fp);
+    dup->writedata_fp = Py_XNewRef(self->writedata_fp);
+    dup->writeheader_fp = Py_XNewRef(self->writeheader_fp);
 
     /* Assign and incref postfields object */
-    dup->postfields_obj = my_Py_XNewRef(self->postfields_obj);
+    dup->postfields_obj = Py_XNewRef(self->postfields_obj);
 
     /* Assign and incref ca certs related references */
-    dup->ca_certs_obj = my_Py_XNewRef(self->ca_certs_obj);
+    dup->ca_certs_obj = Py_XNewRef(self->ca_certs_obj);
 
     /* Assign and incref every curl_slist allocated by setopt */
-    dup->httpheader = (CurlSlistObject *)my_Py_XNewRef((PyObject *)self->httpheader);
+    dup->httpheader = (CurlSlistObject *)Py_XNewRef((PyObject *)self->httpheader);
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
-    dup->proxyheader = (CurlSlistObject *)my_Py_XNewRef((PyObject *)self->proxyheader);
+    dup->proxyheader = (CurlSlistObject *)Py_XNewRef((PyObject *)self->proxyheader);
 #endif
-    dup->http200aliases = (CurlSlistObject *)my_Py_XNewRef((PyObject *)self->http200aliases);
-    dup->quote = (CurlSlistObject *)my_Py_XNewRef((PyObject *)self->quote);
-    dup->postquote = (CurlSlistObject *)my_Py_XNewRef((PyObject *)self->postquote);
-    dup->prequote = (CurlSlistObject *)my_Py_XNewRef((PyObject *)self->prequote);
-    dup->telnetoptions = (CurlSlistObject *)my_Py_XNewRef((PyObject *)self->telnetoptions);
+    dup->http200aliases = (CurlSlistObject *)Py_XNewRef((PyObject *)self->http200aliases);
+    dup->quote = (CurlSlistObject *)Py_XNewRef((PyObject *)self->quote);
+    dup->postquote = (CurlSlistObject *)Py_XNewRef((PyObject *)self->postquote);
+    dup->prequote = (CurlSlistObject *)Py_XNewRef((PyObject *)self->prequote);
+    dup->telnetoptions = (CurlSlistObject *)Py_XNewRef((PyObject *)self->telnetoptions);
 #ifdef HAVE_CURLOPT_RESOLVE
-    dup->resolve = (CurlSlistObject *)my_Py_XNewRef((PyObject *)self->resolve);
+    dup->resolve = (CurlSlistObject *)Py_XNewRef((PyObject *)self->resolve);
 #endif
 #ifdef HAVE_CURL_7_20_0_OPTS
-    dup->mail_rcpt = (CurlSlistObject *)my_Py_XNewRef((PyObject *)self->mail_rcpt);
+    dup->mail_rcpt = (CurlSlistObject *)Py_XNewRef((PyObject *)self->mail_rcpt);
 #endif
 #ifdef HAVE_CURLOPT_CONNECT_TO
-    dup->connect_to = (CurlSlistObject *)my_Py_XNewRef((PyObject *)self->connect_to);
+    dup->connect_to = (CurlSlistObject *)Py_XNewRef((PyObject *)self->connect_to);
 #endif
 
     /* Assign and incref httppost */
-    dup->httppost = (CurlHttppostObject *)my_Py_XNewRef((PyObject *)self->httppost);
+    dup->httppost = (CurlHttppostObject *)Py_XNewRef((PyObject *)self->httppost);
 #ifdef HAVE_CURL_MIME
-    dup->mimepost_obj = my_Py_XNewRef(self->mimepost_obj);
+    dup->mimepost_obj = Py_XNewRef(self->mimepost_obj);
 
     if (self->mimepost_obj != NULL) {
         /*
