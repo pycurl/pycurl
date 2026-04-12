@@ -7,9 +7,9 @@
 PYCURL_INTERNAL int
 PyText_AsStringAndSize(PyObject *obj, char **buffer, Py_ssize_t *length, PyObject **encoded_obj)
 {
-    if (PyByteStr_Check(obj)) {
+    if (PyBytes_Check(obj)) {
         *encoded_obj = NULL;
-        return PyByteStr_AsStringAndSize(obj, buffer, length);
+        return PyBytes_AsStringAndSize(obj, buffer, length);
     } else {
         int rv;
         assert(PyUnicode_Check(obj));
@@ -17,7 +17,7 @@ PyText_AsStringAndSize(PyObject *obj, char **buffer, Py_ssize_t *length, PyObjec
         if (*encoded_obj == NULL) {
             return -1;
         }
-        rv = PyByteStr_AsStringAndSize(*encoded_obj, buffer, length);
+        rv = PyBytes_AsStringAndSize(*encoded_obj, buffer, length);
         if (rv != 0) {
             /* If we free the object, pointer must be reset to NULL */
             Py_CLEAR(*encoded_obj);

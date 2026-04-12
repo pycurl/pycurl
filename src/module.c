@@ -109,7 +109,7 @@ static PyObject *vi_str(const char *s)
         Py_RETURN_NONE;
     while (*s == ' ' || *s == '\t')
         s++;
-    return PyText_FromString(s);
+    return PyUnicode_FromString(s);
 }
 
 PYCURL_INTERNAL PyObject *
@@ -188,7 +188,7 @@ insobj2(PyObject *dict1, PyObject *dict2, char *name, PyObject *value)
     if (value == NULL)
         goto error;
 
-    key = PyText_FromString(name);
+    key = PyUnicode_FromString(name);
 
     if (key == NULL)
         goto error;
@@ -227,7 +227,7 @@ insstr(PyObject *d, char *name, char *value)
     PyObject *v;
     int rv;
 
-    v = PyText_FromString(value);
+    v = PyUnicode_FromString(value);
     if (v == NULL)
         return -1;
 

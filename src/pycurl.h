@@ -320,15 +320,8 @@ PYCURL_INTERNAL PyObject *
 PyListOrTuple_GetItem(PyObject *v, Py_ssize_t i, int which);
 
 /*************************************************************************
-// string compatibility macros
+// string helpers
 **************************************************************************/
-
-#define PyText_FromFormat(format, str) PyUnicode_FromFormat((format), (str))
-#define PyText_FromString(str) PyUnicode_FromString(str)
-#define PyByteStr_FromString(str) PyBytes_FromString(str)
-#define PyByteStr_Check(obj) PyBytes_Check(obj)
-#define PyByteStr_AsStringAndSize(obj, buffer, length) PyBytes_AsStringAndSize((obj), (buffer), (length))
-#define PyText_EncodedDecref(encoded) Py_XDECREF(encoded)
 
 PYCURL_INTERNAL int
 PyText_AsStringAndSize(PyObject *obj, char **buffer, Py_ssize_t *length, PyObject **encoded_obj);

@@ -18,7 +18,7 @@ static PyObject *convert_slist(struct curl_slist *slist, int free_flags)
         if (slist->data == NULL) {
             v = Py_None; Py_INCREF(v);
         } else {
-            v = PyByteStr_FromString(slist->data);
+            v = PyBytes_FromString(slist->data);
         }
         if (v == NULL || PyList_Append(ret, v) != 0) {
             Py_XDECREF(v);
@@ -86,9 +86,9 @@ static PyObject *convert_certinfo(struct curl_certinfo *cinfo, int decode)
                 const char *sep = strchr(field, ':');
                 if (!sep) {
                     if (decode) {
-                        field_tuple = PyText_FromString(field);
+                        field_tuple = PyUnicode_FromString(field);
                     } else {
-                        field_tuple = PyByteStr_FromString(field);
+                        field_tuple = PyBytes_FromString(field);
                     }
                 } else {
                     /* XXX check */
@@ -196,7 +196,7 @@ do_curl_getinfo_raw(CurlObject *self, PyObject *args)
             if (s_res == NULL) {
                 Py_RETURN_NONE;
             }
-            return PyByteStr_FromString(s_res);
+            return PyBytes_FromString(s_res);
 
         }
 
@@ -429,7 +429,7 @@ do_curl_errstr(CurlObject *self, PyObject *Py_UNUSED(ignored))
     }
     self->error[sizeof(self->error) - 1] = 0;
 
-    return PyText_FromString(self->error);
+    return PyUnicode_FromString(self->error);
 }
 
 
@@ -441,5 +441,5 @@ do_curl_errstr_raw(CurlObject *self, PyObject *Py_UNUSED(ignored))
     }
     self->error[sizeof(self->error) - 1] = 0;
 
-    return PyByteStr_FromString(self->error);
+    return PyBytes_FromString(self->error);
 }
