@@ -312,7 +312,7 @@ curlmimepart_read_callback(char *ptr, size_t size, size_t nmemb, void *arg)
         if (encoded == NULL) {
             goto verbose_error;
         }
-        conv_res = PyByteStr_AsStringAndSize(encoded, &buf, &obj_size);
+        conv_res = PyBytes_AsStringAndSize(encoded, &buf, &obj_size);
         if (conv_res != 0 || obj_size < 0 || obj_size > total_size) {
             Py_DECREF(encoded);
             PyErr_Format(ErrorObject, "invalid return value for mime read callback (%ld bytes returned after ASCII encoding when at most %ld bytes were wanted)", (long)obj_size, (long)total_size);
@@ -508,7 +508,7 @@ curlmime_headers_to_slist(PyObject *obj)
         }
 
         next = curl_slist_append(slist, header);
-        PyText_EncodedDecref(encoded_obj);
+        Py_XDECREF(encoded_obj);
         if (next == NULL) {
             curl_slist_free_all(slist);
             PyErr_NoMemory();
@@ -801,7 +801,7 @@ curlmimepart_data_as_string_or_buffer(PyObject *arg,
         return 0;
     }
 
-    if (PyByteStr_Check(arg) || PyUnicode_Check(arg)) {
+    if (PyBytes_Check(arg) || PyUnicode_Check(arg)) {
         return PyText_AsStringAndSize(arg, data, data_len, encoded_obj);
     }
 
@@ -826,7 +826,7 @@ curlmime_validate_text_arg(PyObject *obj, const char *name)
     }
 
     value = PyText_AsString_NoNUL(obj, &encoded_obj);
-    PyText_EncodedDecref(encoded_obj);
+    Py_XDECREF(encoded_obj);
     if (value == NULL) {
         return -1;
     }
@@ -856,7 +856,7 @@ curlmime_validate_data_arg(PyObject *obj)
     if (view_active) {
         PyBuffer_Release(&view);
     }
-    PyText_EncodedDecref(encoded_obj);
+    Py_XDECREF(encoded_obj);
 
     return 0;
 }
@@ -882,7 +882,7 @@ curlmime_validate_file_arg(CurlMimeObject *self, PyObject *obj, const char *name
     }
 
     fp = fopen(path, "rb");
-    PyText_EncodedDecref(encoded_obj);
+    Py_XDECREF(encoded_obj);
     if (fp == NULL) {
         curlmime_set_error(self != NULL ? self->curl : NULL, CURLE_READ_ERROR);
         return -1;
@@ -1169,7 +1169,7 @@ do_curlmime_add_multipart(CurlMimeObject *self, PyObject *args, PyObject *kwds)
     }
 
     if (subtype_obj == NULL) {
-        subtype_ref = PyText_FromString("mixed");
+        subtype_ref = PyUnicode_FromString("mixed");
         if (subtype_ref == NULL) {
             return NULL;
         }
@@ -1183,8 +1183,8 @@ do_curlmime_add_multipart(CurlMimeObject *self, PyObject *args, PyObject *kwds)
             goto error;
         }
 
-        content_type_obj = PyText_FromFormat("multipart/%s", subtype);
-        PyText_EncodedDecref(encoded_obj);
+        content_type_obj = PyUnicode_FromFormat("multipart/%s", subtype);
+        Py_XDECREF(encoded_obj);
         encoded_obj = NULL;
         if (content_type_obj == NULL) {
             goto error;
@@ -1230,7 +1230,7 @@ do_curlmime_add_multipart(CurlMimeObject *self, PyObject *args, PyObject *kwds)
 
 error:
     Py_XDECREF(rv);
-    PyText_EncodedDecref(encoded_obj);
+    Py_XDECREF(encoded_obj);
     Py_XDECREF(content_type_obj);
     Py_XDECREF(subtype_ref);
     Py_XDECREF(child_obj);
@@ -1426,7 +1426,7 @@ do_curlmimepart_name(CurlMimePartObject *self, PyObject *arg)
     }
 
     res = (int)curl_mime_name(self->part, name);
-    PyText_EncodedDecref(encoded_obj);
+    Py_XDECREF(encoded_obj);
     if (res != CURLE_OK) {
         curlmime_set_error(self->mime != NULL ? self->mime->curl : NULL, res);
         return NULL;
@@ -1459,7 +1459,7 @@ do_curlmimepart_data(CurlMimePartObject *self, PyObject *arg)
     if (view_active) {
         PyBuffer_Release(&view);
     }
-    PyText_EncodedDecref(encoded_obj);
+    Py_XDECREF(encoded_obj);
     if (res != CURLE_OK) {
         curlmime_set_error(self->mime != NULL ? self->mime->curl : NULL, res);
         return NULL;
@@ -1607,7 +1607,7 @@ do_curlmimepart_filedata(CurlMimePartObject *self, PyObject *arg)
     }
 
     res = (int)curl_mime_filedata(self->part, path);
-    PyText_EncodedDecref(encoded_obj);
+    Py_XDECREF(encoded_obj);
     if (res != CURLE_OK) {
         curlmime_set_error(self->mime != NULL ? self->mime->curl : NULL, res);
         return NULL;
@@ -1636,7 +1636,7 @@ do_curlmimepart_filename(CurlMimePartObject *self, PyObject *arg)
     }
 
     res = (int)curl_mime_filename(self->part, name);
-    PyText_EncodedDecref(encoded_obj);
+    Py_XDECREF(encoded_obj);
     if (res != CURLE_OK) {
         curlmime_set_error(self->mime != NULL ? self->mime->curl : NULL, res);
         return NULL;
@@ -1662,7 +1662,7 @@ do_curlmimepart_type(CurlMimePartObject *self, PyObject *arg)
     }
 
     res = (int)curl_mime_type(self->part, type);
-    PyText_EncodedDecref(encoded_obj);
+    Py_XDECREF(encoded_obj);
     if (res != CURLE_OK) {
         curlmime_set_error(self->mime != NULL ? self->mime->curl : NULL, res);
         return NULL;
@@ -1688,7 +1688,7 @@ do_curlmimepart_encoder(CurlMimePartObject *self, PyObject *arg)
     }
 
     res = (int)curl_mime_encoder(self->part, encoding);
-    PyText_EncodedDecref(encoded_obj);
+    Py_XDECREF(encoded_obj);
     if (res != CURLE_OK) {
         curlmime_set_error(self->mime != NULL ? self->mime->curl : NULL, res);
         return NULL;

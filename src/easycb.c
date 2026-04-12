@@ -568,7 +568,7 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
         if (encoded == NULL) {
             goto verbose_error;
         }
-        r = PyByteStr_AsStringAndSize(encoded, &buf, &obj_size);
+        r = PyBytes_AsStringAndSize(encoded, &buf, &obj_size);
         if (r != 0 || obj_size < 0 || obj_size > total_size) {
             Py_DECREF(encoded);
             PyErr_Format(ErrorObject, "invalid return value for read callback (%ld bytes returned after encoding to utf-8 when at most %ld bytes were wanted)", (long)obj_size, (long)total_size);

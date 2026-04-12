@@ -26,7 +26,7 @@ pycurl_list_or_tuple_to_slist(int which, PyObject *obj, Py_ssize_t len)
             return NULL;
         }
         nlist = curl_slist_append(slist, str);
-        PyText_EncodedDecref(sencoded_obj);
+        Py_XDECREF(sencoded_obj);
         if (nlist == NULL || nlist->data == NULL) {
             curl_slist_free_all(slist);
             PyErr_NoMemory();
@@ -424,7 +424,7 @@ do_curl_setopt_string_impl(CurlObject *self, int option, PyObject *obj)
             res = curl_easy_setopt(self->handle, CURLOPT_POSTFIELDSIZE_LARGE, (curl_off_t)len);
         }
         if (res != CURLE_OK) {
-            PyText_EncodedDecref(encoded_obj);
+            Py_XDECREF(encoded_obj);
             CURLERROR_RETVAL();
         }
         break;
@@ -448,10 +448,10 @@ do_curl_setopt_string_impl(CurlObject *self, int option, PyObject *obj)
 
         res = curl_easy_setopt(self->handle, (CURLoption)option, &curlblob);
         if (res != CURLE_OK) {
-            PyText_EncodedDecref(encoded_obj);
+            Py_XDECREF(encoded_obj);
             CURLERROR_RETVAL();
         }
-        PyText_EncodedDecref(encoded_obj);
+        Py_XDECREF(encoded_obj);
         Py_RETURN_NONE;
         break;
 #endif
@@ -464,7 +464,7 @@ do_curl_setopt_string_impl(CurlObject *self, int option, PyObject *obj)
     res = curl_easy_setopt(self->handle, (CURLoption)option, str);
     /* Check for errors */
     if (res != CURLE_OK) {
-        PyText_EncodedDecref(encoded_obj);
+        Py_XDECREF(encoded_obj);
         CURLERROR_RETVAL();
     }
     /* libcurl does not copy the value of CURLOPT_POSTFIELDS */
@@ -486,7 +486,7 @@ do_curl_setopt_string_impl(CurlObject *self, int option, PyObject *obj)
         util_curl_xdecref(self, PYCURL_MEMGROUP_POSTFIELDS, self->handle);
         self->postfields_obj = store_obj;
     } else {
-        PyText_EncodedDecref(encoded_obj);
+        Py_XDECREF(encoded_obj);
     }
     Py_RETURN_NONE;
 }
@@ -574,7 +574,7 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
             /* Handle strings as second argument for backwards compatibility */
 
             if (PyText_AsStringAndSize(httppost_option, &cstr, &clen, &cencoded_obj)) {
-                PyText_EncodedDecref(nencoded_obj);
+                Py_XDECREF(nencoded_obj);
                 create_and_set_error_object(self, CURLE_BAD_FUNCTION_ARGUMENT);
                 goto error;
             }
@@ -586,9 +586,9 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
                                CURLFORM_COPYCONTENTS, cstr,
                                CURLFORM_CONTENTSLENGTH, (long) clen,
                                CURLFORM_END);
-            PyText_EncodedDecref(cencoded_obj);
+            Py_XDECREF(cencoded_obj);
             if (res != CURLE_OK) {
-                PyText_EncodedDecref(nencoded_obj);
+                Py_XDECREF(nencoded_obj);
                 CURLERROR_SET_RETVAL();
                 goto error;
             }
@@ -602,13 +602,13 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
 
             /* Sanity check that there are at least two tuple items */
             if (tlen < 2) {
-                PyText_EncodedDecref(nencoded_obj);
+                Py_XDECREF(nencoded_obj);
                 PyErr_SetString(PyExc_TypeError, "list or tuple must contain at least one option and one value");
                 goto error;
             }
 
             if (tlen % 2 == 1) {
-                PyText_EncodedDecref(nencoded_obj);
+                Py_XDECREF(nencoded_obj);
                 PyErr_SetString(PyExc_TypeError, "list or tuple must contain an even number of items");
                 goto error;
             }
@@ -616,7 +616,7 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
             /* Allocate enough space to accommodate length options for content or buffers, plus a terminator. */
             forms = PyMem_New(struct curl_forms, (tlen*2) + 1);
             if (forms == NULL) {
-                PyText_EncodedDecref(nencoded_obj);
+                Py_XDECREF(nencoded_obj);
                 PyErr_NoMemory();
                 goto error;
             }
@@ -630,19 +630,19 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
                 if (j == (tlen-1)) {
                     PyErr_SetString(PyExc_TypeError, "expected value");
                     PyMem_Free(forms);
-                    PyText_EncodedDecref(nencoded_obj);
+                    Py_XDECREF(nencoded_obj);
                     goto error;
                 }
                 if (!PyLong_Check(PyListOrTuple_GetItem(httppost_option, j, which_httppost_option))) {
                     PyErr_SetString(PyExc_TypeError, "option must be an integer");
                     PyMem_Free(forms);
-                    PyText_EncodedDecref(nencoded_obj);
+                    Py_XDECREF(nencoded_obj);
                     goto error;
                 }
                 if (!PyText_Check(PyListOrTuple_GetItem(httppost_option, j+1, which_httppost_option))) {
                     PyErr_SetString(PyExc_TypeError, "value must be a byte string or a Unicode string with ASCII code points only");
                     PyMem_Free(forms);
-                    PyText_EncodedDecref(nencoded_obj);
+                    Py_XDECREF(nencoded_obj);
                     goto error;
                 }
 
@@ -656,14 +656,14 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
                 {
                     PyErr_SetString(PyExc_TypeError, "unsupported option");
                     PyMem_Free(forms);
-                    PyText_EncodedDecref(nencoded_obj);
+                    Py_XDECREF(nencoded_obj);
                     goto error;
                 }
 
                 if (PyText_AsStringAndSize(PyListOrTuple_GetItem(httppost_option, j+1, which_httppost_option), &ostr, &olen, &oencoded_obj)) {
                     /* exception should be already set */
                     PyMem_Free(forms);
-                    PyText_EncodedDecref(nencoded_obj);
+                    Py_XDECREF(nencoded_obj);
                     goto error;
                 }
                 forms[k].option = val;
@@ -681,9 +681,9 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
                     if (ref_params == NULL) {
                         ref_params = PyList_New((Py_ssize_t)0);
                         if (ref_params == NULL) {
-                            PyText_EncodedDecref(oencoded_obj);
+                            Py_XDECREF(oencoded_obj);
                             PyMem_Free(forms);
-                            PyText_EncodedDecref(nencoded_obj);
+                            Py_XDECREF(nencoded_obj);
                             goto error;
                         }
                     }
@@ -698,9 +698,9 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
 
                     /* Ensure that the buffer remains alive until curl_easy_cleanup() */
                     if (PyList_Append(ref_params, obj) != 0) {
-                        PyText_EncodedDecref(oencoded_obj);
+                        Py_XDECREF(oencoded_obj);
                         PyMem_Free(forms);
-                        PyText_EncodedDecref(nencoded_obj);
+                        Py_XDECREF(nencoded_obj);
                         goto error;
                     }
 
@@ -716,20 +716,20 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
                                CURLFORM_NAMELENGTH, (long) nlen,
                                CURLFORM_ARRAY, forms,
                                CURLFORM_END);
-            PyText_EncodedDecref(oencoded_obj);
+            Py_XDECREF(oencoded_obj);
             PyMem_Free(forms);
             if (res != CURLE_OK) {
-                PyText_EncodedDecref(nencoded_obj);
+                Py_XDECREF(nencoded_obj);
                 CURLERROR_SET_RETVAL();
                 goto error;
             }
         } else {
             /* Some other type was given, ignore */
-            PyText_EncodedDecref(nencoded_obj);
+            Py_XDECREF(nencoded_obj);
             PyErr_SetString(PyExc_TypeError, "unsupported second type in tuple");
             goto error;
         }
-        PyText_EncodedDecref(nencoded_obj);
+        Py_XDECREF(nencoded_obj);
     }
 #ifdef HAVE_CURL_MIME
     if (self->mimepost_obj != NULL) {
