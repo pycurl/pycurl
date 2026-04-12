@@ -1,137 +1,137 @@
-#! /usr/bin/env python
-# vi:ts=4:et
+from __future__ import annotations
 
-from . import localhost
 import socket
-import pycurl
-import unittest
 from io import BytesIO
 
-from . import appmanager
+import pycurl
+import pytest
+
 from . import util
 
-setup_module, teardown_module = appmanager.setup(('app', 8380))
 
-socket_open_called_ipv4 = False
-socket_open_called_ipv6 = False
-socket_open_called_unix = False
-socket_open_address = None
-
-def socket_open_ipv4(purpose, curl_address):
+def _make_socket(curl_address):
     family, socktype, protocol, address = curl_address
-    global socket_open_called_ipv4
-    global socket_open_address
-    socket_open_called_ipv4 = True
-    socket_open_address = address
-
     s = socket.socket(family, socktype, protocol)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-    return s
+    return s, address
 
-def socket_open_ipv6(purpose, curl_address):
-    family, socktype, protocol, address = curl_address
-    global socket_open_called_ipv6
-    global socket_open_address
-    socket_open_called_ipv6 = True
-    socket_open_address = address
 
-    s = socket.socket(family, socktype, protocol)
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-    return s
+@util.only_unix
+def test_socket_open_ipv4(curl, app):
+    captured = {}
 
-def socket_open_unix(purpose, curl_address):
-    family, socktype, protocol, address = curl_address
-    global socket_open_called_unix
-    global socket_open_address
-    socket_open_called_unix = True
-    socket_open_address = address
+    def on_open(purpose, curl_address):
+        s, addr = _make_socket(curl_address)
+        captured["address"] = addr
+        return s
 
-    sockets = socket.socketpair()
-    sockets[0].close()
-    return sockets[1]
+    curl.setopt(pycurl.OPENSOCKETFUNCTION, on_open)
+    curl.setopt(curl.URL, f"{app}/success")
+    sio = BytesIO()
+    curl.setopt(pycurl.WRITEFUNCTION, sio.write)
+    curl.perform()
 
-def socket_open_bad(purpose, curl_address):
-    return pycurl.SOCKET_BAD
+    assert captured["address"] == ("127.0.0.1", pytest.approx(captured["address"][1]))
+    assert sio.getvalue().decode() == "success"
 
-class OpenSocketCbTest(unittest.TestCase):
-    def setUp(self):
-        self.curl = util.DefaultCurl()
 
-    def tearDown(self):
-        self.curl.close()
+@util.only_ipv6
+def test_socket_open_ipv6(curl, app):
+    captured = {}
 
-    # This is failing too much on appveyor
-    @util.only_unix
-    def test_socket_open(self):
-        self.curl.setopt(pycurl.OPENSOCKETFUNCTION, socket_open_ipv4)
-        self.curl.setopt(self.curl.URL, 'http://%s:8380/success' % localhost)
-        sio = BytesIO()
-        self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
-        self.curl.perform()
+    def on_open(purpose, curl_address):
+        s, addr = _make_socket(curl_address)
+        captured["address"] = addr
+        return s
 
-        assert socket_open_called_ipv4
-        self.assertEqual(("127.0.0.1", 8380), socket_open_address)
-        self.assertEqual('success', sio.getvalue().decode())
+    curl.setopt(pycurl.OPENSOCKETFUNCTION, on_open)
+    curl.setopt(curl.URL, f"{app.replace('127.0.0.1', '[::1]')}/success")
+    sio = BytesIO()
+    curl.setopt(pycurl.WRITEFUNCTION, sio.write)
+    with pytest.raises(pycurl.error):
+        # perform fails because we do not listen on ::1
+        curl.perform()
 
-    @util.only_ipv6
-    def test_socket_open_ipv6(self):
-        self.curl.setopt(pycurl.OPENSOCKETFUNCTION, socket_open_ipv6)
-        self.curl.setopt(self.curl.URL, 'http://[::1]:8380/success')
-        sio = BytesIO()
-        self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
-        try:
-            # perform fails because we do not listen on ::1
-            self.curl.perform()
-        except pycurl.error:
-            pass
+    addr = captured["address"]
+    assert len(addr) == 4
+    assert addr[0] == "::1"
+    assert isinstance(addr[2], int)
+    assert isinstance(addr[3], int)
 
-        assert socket_open_called_ipv6
 
-        assert len(socket_open_address) == 4
-        assert socket_open_address[0] == '::1'
-        assert socket_open_address[1] == 8380
-        assert type(socket_open_address[2]) == int
-        assert type(socket_open_address[3]) == int
+@util.min_libcurl(7, 40, 0)
+@util.only_unix
+def test_socket_open_unix(curl, app):
+    captured = {}
 
-    @util.min_libcurl(7, 40, 0)
-    @util.only_unix
-    def test_socket_open_unix(self):
-        self.curl.setopt(pycurl.OPENSOCKETFUNCTION, socket_open_unix)
-        self.curl.setopt(self.curl.URL, 'http://%s:8380/success' % localhost)
-        self.curl.setopt(self.curl.UNIX_SOCKET_PATH, '/tmp/pycurl-test-path.sock')
-        sio = BytesIO()
-        self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
-        try:
-            # perform fails because we return a socket that is
-            # not attached to anything
-            self.curl.perform()
-        except pycurl.error:
-            pass
+    def on_open(purpose, curl_address):
+        captured["address"] = curl_address[3]
+        sockets = socket.socketpair()
+        sockets[0].close()
+        return sockets[1]
 
-        assert socket_open_called_unix
-        assert isinstance(socket_open_address, bytes)
-        self.assertEqual(b'/tmp/pycurl-test-path.sock', socket_open_address)
+    curl.setopt(pycurl.OPENSOCKETFUNCTION, on_open)
+    curl.setopt(curl.URL, f"{app}/success")
+    curl.setopt(curl.UNIX_SOCKET_PATH, "/tmp/pycurl-test-path.sock")
+    sio = BytesIO()
+    curl.setopt(pycurl.WRITEFUNCTION, sio.write)
+    with pytest.raises(pycurl.error):
+        # perform fails because we return a socket not attached to anything
+        curl.perform()
 
-    def test_socket_open_none(self):
-        self.curl.setopt(pycurl.OPENSOCKETFUNCTION, None)
+    assert isinstance(captured["address"], bytes)
+    assert captured["address"] == b"/tmp/pycurl-test-path.sock"
 
-    def test_unset_socket_open(self):
-        self.curl.unsetopt(pycurl.OPENSOCKETFUNCTION)
 
-    def test_socket_bad(self):
-        self.assertEqual(-1, pycurl.SOCKET_BAD)
+def test_opensocket_set_none(curl):
+    curl.setopt(pycurl.OPENSOCKETFUNCTION, None)
 
-    def test_socket_open_bad(self):
-        self.curl.setopt(pycurl.OPENSOCKETFUNCTION, socket_open_bad)
-        self.curl.setopt(self.curl.URL, 'http://%s:8380/success' % localhost)
-        try:
-            self.curl.perform()
-        except pycurl.error as e:
-            # libcurl 7.38.0 for some reason fails with a timeout
-            # (and spends 5 minutes on this test)
-            if pycurl.version_info()[1].split('.') == ['7', '38', '0']:
-                self.assertEqual(pycurl.E_OPERATION_TIMEDOUT, e.args[0])
-            else:
-                self.assertEqual(pycurl.E_COULDNT_CONNECT, e.args[0])
-        else:
-            self.fail('Should have raised')
+
+def test_opensocket_unset(curl):
+    curl.unsetopt(pycurl.OPENSOCKETFUNCTION)
+
+
+def test_socket_bad_constant():
+    assert pycurl.SOCKET_BAD == -1
+
+
+def test_socket_open_bad(curl, app):
+    """Returning SOCKET_BAD should cause a connection error."""
+    curl.setopt(pycurl.OPENSOCKETFUNCTION, lambda purpose, addr: pycurl.SOCKET_BAD)
+    curl.setopt(curl.URL, f"{app}/success")
+    with pytest.raises(pycurl.error) as exc_info:
+        curl.perform()
+
+    err_code = exc_info.value.args[0]
+    # libcurl 7.38.0 fails with a timeout instead of COULDNT_CONNECT
+    assert err_code in (pycurl.E_COULDNT_CONNECT, pycurl.E_OPERATION_TIMEDOUT)
+
+
+@pytest.mark.parametrize(
+    "return_value, desc",
+    [
+        ("not a socket", "string without fileno"),
+        (object(), "plain object without fileno"),
+    ],
+    ids=["string", "plain-object"],
+)
+def test_socket_open_no_fileno(curl, app, return_value, desc):
+    """Returning an object without fileno should fail with a clear error."""
+    curl.setopt(pycurl.OPENSOCKETFUNCTION, lambda purpose, addr: return_value)
+    curl.setopt(curl.URL, f"{app}/success")
+    with pytest.raises(pycurl.error):
+        curl.perform()
+
+
+def test_socket_open_broken_fileno(curl, app):
+    """Returning an object whose fileno property raises should propagate."""
+
+    class BrokenSocket:
+        @property
+        def fileno(self):
+            raise RuntimeError("broken fileno property")
+
+    curl.setopt(pycurl.OPENSOCKETFUNCTION, lambda purpose, addr: BrokenSocket())
+    curl.setopt(curl.URL, f"{app}/success")
+    with pytest.raises(pycurl.error):
+        curl.perform()

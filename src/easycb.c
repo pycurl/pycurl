@@ -38,7 +38,7 @@ util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *strea
     PyObject *result = NULL;
     size_t ret = 0;     /* assume error */
     PyObject *cb;
-    int total_size;
+    Py_ssize_t total_size;
     PYCURL_DECLARE_THREAD_STATE;
 
     /* acquire thread */
@@ -52,7 +52,7 @@ util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *strea
         goto silent_error;
     if (size <= 0 || nmemb <= 0)
         goto done;
-    total_size = (int)(size * nmemb);
+    total_size = (Py_ssize_t)(size * nmemb);
     if (total_size < 0 || (size_t)total_size / size != nmemb) {
         PyErr_SetString(ErrorObject, "integer overflow in write callback");
         goto verbose_error;
@@ -226,14 +226,24 @@ opensocket_callback(void *clientp, curlsocktype purpose,
         /* PyLong_AsCurlSocket sets an exception on failure */
         ret = CURL_SOCKET_BAD;
         goto verbose_error;
-    } else if (PyObject_HasAttrString(result, "fileno")) {
+    } else {
+        PyObject *fileno_method = PyObject_GetAttrString(result, "fileno");
+        if (fileno_method == NULL) {
+            if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
+                PyErr_Clear();
+                PyErr_SetString(ErrorObject, "Open socket callback's return value must be a socket");
+            }
+            ret = CURL_SOCKET_BAD;
+            goto verbose_error;
+        }
+        Py_DECREF(fileno_method);
+
         fileno_result = PyObject_CallMethod(result, "fileno", NULL);
 
         if (fileno_result == NULL) {
             ret = CURL_SOCKET_BAD;
             goto verbose_error;
         }
-        // normal operation:
         if (PyLong_Check(fileno_result)) {
             curl_socket_t sock_fd;
             if (PyLong_AsCurlSocket(fileno_result, &sock_fd) != 0) {
@@ -250,10 +260,6 @@ opensocket_callback(void *clientp, curlsocktype purpose,
             PyErr_SetString(ErrorObject, "Open socket callback returned an object whose fileno method did not return an integer");
             ret = CURL_SOCKET_BAD;
         }
-    } else {
-        PyErr_SetString(ErrorObject, "Open socket callback's return value must be a socket");
-        ret = CURL_SOCKET_BAD;
-        goto verbose_error;
     }
 
 silent_error:
@@ -512,7 +518,7 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
     Py_buffer buf;
 
     size_t ret = CURL_READFUNC_ABORT;     /* assume error, this actually works */
-    int total_size;
+    Py_ssize_t total_size;
 
     PYCURL_DECLARE_THREAD_STATE;
 
@@ -526,7 +532,7 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
         goto silent_error;
     if (size <= 0 || nmemb <= 0)
         goto done;
-    total_size = (int)(size * nmemb);
+    total_size = (Py_ssize_t)(size * nmemb);
     if (total_size < 0 || (size_t)total_size / size != nmemb) {
         PyErr_SetString(ErrorObject, "integer overflow in read callback");
         goto verbose_error;
@@ -571,7 +577,7 @@ read_callback(char *ptr, size_t size, size_t nmemb, void *stream)
         r = PyBytes_AsStringAndSize(encoded, &buf, &obj_size);
         if (r != 0 || obj_size < 0 || obj_size > total_size) {
             Py_DECREF(encoded);
-            PyErr_Format(ErrorObject, "invalid return value for read callback (%ld bytes returned after encoding to utf-8 when at most %ld bytes were wanted)", (long)obj_size, (long)total_size);
+            PyErr_Format(ErrorObject, "invalid return value for read callback (%ld bytes returned after encoding to ascii when at most %ld bytes were wanted)", (long)obj_size, (long)total_size);
             goto verbose_error;
         }
         memcpy(ptr, buf, obj_size);
