@@ -735,13 +735,6 @@ extern PyMethodDef curlmultiobject_methods[];
 
 #define PYCURL_TYPE_FLAGS Py_TPFLAGS_HAVE_GC | Py_TPFLAGS_BASETYPE
 
-#if PY_MINOR_VERSION >= 8
-# define CPy_TRASHCAN_BEGIN(op, dealloc) Py_TRASHCAN_BEGIN(op, dealloc)
-# define CPy_TRASHCAN_END(op) Py_TRASHCAN_END
-#else
-# define CPy_TRASHCAN_BEGIN(op, dealloc) Py_TRASHCAN_SAFE_BEGIN(op)
-# define CPy_TRASHCAN_END(op) Py_TRASHCAN_SAFE_END(op)
-#endif
 
 #ifdef PYCURL_AUTODETECT_CA
 extern char *g_pycurl_autodetected_cainfo;

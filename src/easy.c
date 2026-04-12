@@ -656,7 +656,7 @@ PYCURL_INTERNAL void
 do_curl_dealloc(CurlObject *self)
 {
     PyObject_GC_UnTrack(self);
-    CPy_TRASHCAN_BEGIN(self, do_curl_dealloc);
+    Py_TRASHCAN_BEGIN(self, do_curl_dealloc);
 
     Py_CLEAR(self->dict);
     util_curl_close(self);
@@ -666,7 +666,7 @@ do_curl_dealloc(CurlObject *self)
     }
 
     Curl_Type.tp_free(self);
-    CPy_TRASHCAN_END(self);
+    Py_TRASHCAN_END;
 }
 
 

@@ -99,10 +99,10 @@ static void
 curlmime_data_cb_owner_dealloc(CurlMimeDataCbOwner *self)
 {
     PyObject_GC_UnTrack(self);
-    CPy_TRASHCAN_BEGIN(self, curlmime_data_cb_owner_dealloc);
+    Py_TRASHCAN_BEGIN(self, curlmime_data_cb_owner_dealloc);
     curlmime_data_cb_owner_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);
-    CPy_TRASHCAN_END(self);
+    Py_TRASHCAN_END;
 }
 
 static CurlMimeDataCbOwner *
@@ -688,10 +688,10 @@ static void
 do_curlmime_dealloc(CurlMimeObject *self)
 {
     PyObject_GC_UnTrack(self);
-    CPy_TRASHCAN_BEGIN(self, do_curlmime_dealloc);
+    Py_TRASHCAN_BEGIN(self, do_curlmime_dealloc);
     do_curlmime_clear(self);
     CurlMime_Type.tp_free(self);
-    CPy_TRASHCAN_END(self);
+    Py_TRASHCAN_END;
 }
 
 static PyObject *
@@ -1403,10 +1403,10 @@ static void
 do_curlmimepart_dealloc(CurlMimePartObject *self)
 {
     PyObject_GC_UnTrack(self);
-    CPy_TRASHCAN_BEGIN(self, do_curlmimepart_dealloc);
+    Py_TRASHCAN_BEGIN(self, do_curlmimepart_dealloc);
     do_curlmimepart_clear(self);
     CurlMimePart_Type.tp_free(self);
-    CPy_TRASHCAN_END(self);
+    Py_TRASHCAN_END;
 }
 
 static PyObject *
