@@ -211,7 +211,7 @@ PYCURL_INTERNAL void
 do_share_dealloc(CurlShareObject *self)
 {
     PyObject_GC_UnTrack(self);
-    CPy_TRASHCAN_BEGIN(self, do_share_dealloc);
+    Py_TRASHCAN_BEGIN(self, do_share_dealloc);
 
     util_share_xdecref(self);
     util_share_close(self);
@@ -229,7 +229,7 @@ do_share_dealloc(CurlShareObject *self)
     }
 
     CurlShare_Type.tp_free(self);
-    CPy_TRASHCAN_END(self);
+    Py_TRASHCAN_END
 }
 
 static int
