@@ -275,6 +275,8 @@ do_multi_traverse(CurlMultiObject *self, visitproc visit, void *arg)
     VISIT(self->dict);
     VISIT(self->easy_object_dict);
     VISIT(self->socket_object_dict);
+    VISIT(self->t_cb);
+    VISIT(self->s_cb);
 
     return 0;
 #undef VISIT
@@ -512,12 +514,14 @@ do_multi_setopt_callable(CurlMultiObject *self, int option, PyObject *obj)
         curl_multi_setopt(self->multi_handle, CURLMOPT_SOCKETFUNCTION, s_cb);
         curl_multi_setopt(self->multi_handle, CURLMOPT_SOCKETDATA, self);
         Py_INCREF(obj);
+        Py_CLEAR(self->s_cb);
         self->s_cb = obj;
         break;
     case CURLMOPT_TIMERFUNCTION:
         curl_multi_setopt(self->multi_handle, CURLMOPT_TIMERFUNCTION, t_cb);
         curl_multi_setopt(self->multi_handle, CURLMOPT_TIMERDATA, self);
         Py_INCREF(obj);
+        Py_CLEAR(self->t_cb);
         self->t_cb = obj;
         break;
     default:
