@@ -7,8 +7,10 @@ For more fine-grained control, libcurl allows a number of callbacks to be
 associated with each connection. In pycurl, callbacks are defined using the
 ``setopt()`` method for Curl objects with options ``WRITEFUNCTION``,
 ``READFUNCTION``, ``HEADERFUNCTION``, ``PROGRESSFUNCTION``,
-``XFERINFOFUNCTION``, ``IOCTLFUNCTION``, ``DEBUGFUNCTION`` or
-``PREREQFUNCTION``. These options correspond to the libcurl options with ``CURLOPT_``
+``XFERINFOFUNCTION``, ``IOCTLFUNCTION``, ``DEBUGFUNCTION``,
+``PREREQFUNCTION``, ``TRAILERFUNCTION``, ``RESOLVER_START_FUNCTION``,
+``FNMATCH_FUNCTION``, ``HSTSREADFUNCTION`` or ``HSTSWRITEFUNCTION``.
+These options correspond to the libcurl options with ``CURLOPT_``
 prefix removed. A callback in pycurl must be either a regular Python
 function, a class method or an extension type function.
 
@@ -458,6 +460,125 @@ PREREQFUNCTION
     `prereq_cb_test.py test`_ shows how to use ``PREREQFUNCTION``.
 
 
+TRAILERFUNCTION
+---------------
+
+.. function:: TRAILERFUNCTION() -> list of strings or None
+
+    Callback for supplying HTTP trailing headers on chunked uploads.
+    Corresponds to `CURLOPT_TRAILERFUNCTION`_ in libcurl.
+
+    The callback takes no arguments and should return either ``None``
+    (no trailing headers) or a list or tuple of header strings in
+    ``"Name: value"`` form. The same rules apply to these strings as
+    do to ``HTTPHEADER`` entries.
+
+    Raising an exception from the callback, or returning any other type,
+    causes the transfer to fail with ``TRAILERFUNC_ABORT``.
+
+    The callback may be unset by calling :ref:`setopt <setopt>` with ``None``
+    as the value or by calling :ref:`unsetopt <unsetopt>`.
+
+
+RESOLVER_START_FUNCTION
+-----------------------
+
+.. function:: RESOLVER_START_FUNCTION() -> int
+
+    Callback invoked before each name resolution. Corresponds to
+    `CURLOPT_RESOLVER_START_FUNCTION`_ in libcurl.
+
+    The callback takes no arguments. Return ``0`` (or ``None``) to let the
+    resolution proceed; return any non-zero value to abort the transfer.
+
+    The callback may be unset by calling :ref:`setopt <setopt>` with ``None``
+    as the value or by calling :ref:`unsetopt <unsetopt>`.
+
+
+FNMATCH_FUNCTION
+----------------
+
+.. function:: FNMATCH_FUNCTION(pattern, string) -> int
+
+    Callback for wildcard matching used by the FTP wildcard transfer
+    feature. Corresponds to `CURLOPT_FNMATCH_FUNCTION`_ in libcurl.
+
+    *pattern* and *string* are both ``bytes``.
+
+    The callback should return one of:
+
+    - ``FNMATCHFUNC_MATCH`` (pattern matched)
+    - ``FNMATCHFUNC_NOMATCH`` (pattern did not match)
+    - ``FNMATCHFUNC_FAIL`` (error during matching; aborts the transfer)
+
+    The callback may be unset by calling :ref:`setopt <setopt>` with ``None``
+    as the value or by calling :ref:`unsetopt <unsetopt>`.
+
+
+HSTSWRITEFUNCTION
+-----------------
+
+.. function:: HSTSWRITEFUNCTION(entry, index) -> int
+
+    Callback for persisting the in-memory HSTS cache. Corresponds to
+    `CURLOPT_HSTSWRITEFUNCTION`_ in libcurl. Requires ``HSTS_CTRL`` to be
+    set to ``CURLHSTS_ENABLE``.
+
+    *entry* is an ``HstsEntry`` `namedtuple`_ with ``host``, ``expire``
+    and ``include_subdomains`` fields::
+
+        HstsEntry = namedtuple('HstsEntry',
+                               ('host', 'expire', 'include_subdomains'))
+
+    *host* is ``bytes``. *expire* is a tz-aware ``datetime`` in UTC, or
+    ``None`` when the entry never expires. *include_subdomains* is ``bool``.
+
+    *index* is an ``HstsIndex`` `namedtuple`_ indicating progress through
+    the cache::
+
+        HstsIndex = namedtuple('HstsIndex', ('index', 'total'))
+
+    The callback should return ``CURLSTS_OK`` (entry accepted),
+    ``CURLSTS_DONE`` (stop iterating) or ``CURLSTS_FAIL`` (error).
+    Returning ``None`` is equivalent to ``CURLSTS_OK``.
+
+    libcurl invokes the callback during ``perform()`` and during handle
+    cleanup; exceptions raised inside the callback while the handle is
+    being cleaned up are written to :py:data:`sys.unraisablehook` and
+    do not propagate.
+
+    The callback may be unset by calling :ref:`setopt <setopt>` with ``None``
+    as the value or by calling :ref:`unsetopt <unsetopt>`.
+
+
+HSTSREADFUNCTION
+----------------
+
+.. function:: HSTSREADFUNCTION() -> HstsEntry or None
+
+    Callback for preloading the in-memory HSTS cache. Corresponds to
+    `CURLOPT_HSTSREADFUNCTION`_ in libcurl. Requires ``HSTS_CTRL`` to be
+    set to ``CURLHSTS_ENABLE``.
+
+    The callback takes no arguments. It is invoked repeatedly until it
+    returns ``None``.
+
+    Return ``None`` to signal there are no more entries
+    (``CURLSTS_DONE``), or an ``HstsEntry`` (or any 3-tuple) where:
+
+    - *host* is ``bytes`` or an ASCII ``str``.
+    - *expire* is a ``datetime`` or ``None``. ``None`` means the entry
+      never expires. Aware datetimes are converted to UTC; naive
+      datetimes are interpreted as UTC.
+    - *include_subdomains* is any truthy/falsy value.
+
+    Raising an exception or returning anything else causes the transfer
+    to fail with ``CURLSTS_FAIL``.
+
+    The callback may be unset by calling :ref:`setopt <setopt>` with ``None``
+    as the value or by calling :ref:`unsetopt <unsetopt>`.
+
+
 .. _CURLOPT_HEADERFUNCTION: https://curl.haxx.se/libcurl/c/CURLOPT_HEADERFUNCTION.html
 .. _CURLOPT_WRITEFUNCTION: https://curl.haxx.se/libcurl/c/CURLOPT_WRITEFUNCTION.html
 .. _CURLOPT_READFUNCTION: https://curl.haxx.se/libcurl/c/CURLOPT_READFUNCTION.html
@@ -484,3 +605,8 @@ PREREQFUNCTION
 .. _CURLMOPT_SOCKETFUNCTION: https://curl.se/libcurl/c/CURLMOPT_SOCKETFUNCTION.html
 .. _CURLOPT_PREREQFUNCTION: https://curl.se/libcurl/c/CURLOPT_PREREQFUNCTION.html
 .. _prereq_cb_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/prereq_cb_test.py
+.. _CURLOPT_TRAILERFUNCTION: https://curl.se/libcurl/c/CURLOPT_TRAILERFUNCTION.html
+.. _CURLOPT_RESOLVER_START_FUNCTION: https://curl.se/libcurl/c/CURLOPT_RESOLVER_START_FUNCTION.html
+.. _CURLOPT_FNMATCH_FUNCTION: https://curl.se/libcurl/c/CURLOPT_FNMATCH_FUNCTION.html
+.. _CURLOPT_HSTSREADFUNCTION: https://curl.se/libcurl/c/CURLOPT_HSTSREADFUNCTION.html
+.. _CURLOPT_HSTSWRITEFUNCTION: https://curl.se/libcurl/c/CURLOPT_HSTSWRITEFUNCTION.html
