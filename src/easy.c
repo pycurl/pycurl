@@ -6,16 +6,17 @@
 // CurlSlistObject
 **************************************************************************/
 
-PYCURL_INTERNAL void
+PYCURL_INTERNAL int
 util_curlslist_update(CurlSlistObject **old, struct curl_slist *slist)
 {
-    /* Decref previous object */
+    CurlSlistObject *new_obj = PyObject_New(CurlSlistObject, p_CurlSlist_Type);
+    if (new_obj == NULL) {
+        return -1;
+    }
+    new_obj->slist = slist;
     Py_XDECREF(*old);
-    /* Create a new object */
-    *old = PyObject_New(CurlSlistObject, p_CurlSlist_Type);
-    assert(*old != NULL);
-    /* Store curl_slist into the new object */
-    (*old)->slist = slist;
+    *old = new_obj;
+    return 0;
 }
 
 PYCURL_INTERNAL void
@@ -86,17 +87,18 @@ PYCURL_INTERNAL PyTypeObject CurlSlist_Type = {
 // CurlHttppostObject
 **************************************************************************/
 
-PYCURL_INTERNAL void
+PYCURL_INTERNAL int
 util_curlhttppost_update(CurlObject *obj, struct curl_httppost *httppost, PyObject *reflist)
 {
-    /* Decref previous object */
+    CurlHttppostObject *new_obj = PyObject_New(CurlHttppostObject, p_CurlHttppost_Type);
+    if (new_obj == NULL) {
+        return -1;
+    }
+    new_obj->httppost = httppost;
+    new_obj->reflist = reflist;
     Py_XDECREF(obj->httppost);
-    /* Create a new object */
-    obj->httppost = PyObject_New(CurlHttppostObject, p_CurlHttppost_Type);
-    assert(obj->httppost != NULL);
-    /* Store curl_httppost and reflist into the new object */
-    obj->httppost->httppost = httppost;
-    obj->httppost->reflist = reflist;
+    obj->httppost = new_obj;
+    return 0;
 }
 
 PYCURL_INTERNAL void
@@ -779,6 +781,10 @@ do_curl_reset(CurlObject *self, PyObject *Py_UNUSED(ignored))
 {
     int res;
 
+    if (check_curl_state(self, 1 | 2, "reset") != 0) {
+        return NULL;
+    }
+
     curl_easy_reset(self->handle);
 
     /* Decref easy interface related objects */
@@ -786,7 +792,10 @@ do_curl_reset(CurlObject *self, PyObject *Py_UNUSED(ignored))
 
     res = util_curl_init(self);
     if (res < 0) {
-        Py_DECREF(self);    /* this also closes self->handle */
+        /* util_curl_init failed to re-set the default options; the libcurl
+         * handle is in an inconsistent state. Close it so subsequent calls
+         * fail predictably instead of crashing on NULL derefs inside libcurl. */
+        util_curl_close(self);
         PyErr_SetString(ErrorObject, "resetting curl failed");
         return NULL;
     }

@@ -757,7 +757,10 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
      */
     util_curl_xdecref(self, PYCURL_MEMGROUP_MIMEPOST, NULL);
 #endif
-    util_curlhttppost_update(self, post, ref_params);
+    if (util_curlhttppost_update(self, post, ref_params) != 0) {
+        (void)curl_easy_setopt(self->handle, CURLOPT_HTTPPOST, NULL);
+        goto error;
+    }
 
     Py_RETURN_NONE;
 
@@ -841,7 +844,11 @@ do_curl_setopt_list(CurlObject *self, int option, int which, PyObject *obj)
     }
     /* Finally, decref previous slist object and replace it with a
      * new one. */
-    util_curlslist_update(old_slist_obj, slist);
+    if (util_curlslist_update(old_slist_obj, slist) != 0) {
+        (void)curl_easy_setopt(self->handle, (CURLoption)option, NULL);
+        curl_slist_free_all(slist);
+        return NULL;
+    }
 
     Py_RETURN_NONE;
 }

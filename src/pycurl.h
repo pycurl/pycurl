@@ -623,9 +623,9 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle);
 PYCURL_INTERNAL PyObject *
 do_curl_setopt_filelike(CurlObject *self, int option, PyObject *obj);
 
-PYCURL_INTERNAL void
+PYCURL_INTERNAL int
 util_curlslist_update(CurlSlistObject **old, struct curl_slist *slist);
-PYCURL_INTERNAL void
+PYCURL_INTERNAL int
 util_curlhttppost_update(CurlObject *obj, struct curl_httppost *httppost, PyObject *reflist);
 
 PYCURL_INTERNAL PyObject *

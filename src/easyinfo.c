@@ -91,11 +91,11 @@ static PyObject *convert_certinfo(struct curl_certinfo *cinfo, int decode)
                         field_tuple = PyBytes_FromString(field);
                     }
                 } else {
-                    /* XXX check */
+                    Py_ssize_t name_len = sep - field;
                     if (decode) {
-                        field_tuple = Py_BuildValue("s#s", field, (int)(sep - field), sep+1);
+                        field_tuple = Py_BuildValue("s#s", field, name_len, sep+1);
                     } else {
-                        field_tuple = Py_BuildValue("y#y", field, (int)(sep - field), sep+1);
+                        field_tuple = Py_BuildValue("y#y", field, name_len, sep+1);
                     }
                 }
                 if (!field_tuple)
