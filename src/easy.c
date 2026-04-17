@@ -76,9 +76,7 @@ PYCURL_INTERNAL PyTypeObject CurlSlist_Type = {
     0,                          /* tp_del */
     0,                          /* tp_version_tag */
     0,                          /* tp_finalize */
-#if PY_VERSION_HEX >= 0x03080000
     0,                          /* tp_vectorcall */
-#endif
 };
 
 
@@ -158,9 +156,7 @@ PYCURL_INTERNAL PyTypeObject CurlHttppost_Type = {
     0,                          /* tp_del */
     0,                          /* tp_version_tag */
     0,                          /* tp_finalize */
-#if PY_VERSION_HEX >= 0x03080000
     0,                          /* tp_vectorcall */
-#endif
 };
 
 

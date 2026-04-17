@@ -1,6 +1,3 @@
-#! /usr/bin/env python
-# vi:ts=4:et
-
 """Setup script for the PycURL module distribution."""
 
 PACKAGE = "pycurl"
@@ -193,13 +190,6 @@ class ExtensionConfiguration:
                         ssl_lib_detected = 'mbedtls'
                         break
 
-        if not ssl_lib_detected and len(self.argv) == len(self.original_argv) \
-                and not os.environ.get('PYCURL_CURL_CONFIG') \
-                and not os.environ.get('PYCURL_SSL_LIBRARY'):
-            # this path should only be taken when no options or
-            # configuration environment variables are given to setup.py
-            ssl_lib_detected = self.detect_ssl_lib_on_centos6_plus()
-
         self.ssl_lib_detected = ssl_lib_detected
 
     def curl_config(self):
@@ -379,20 +369,6 @@ ignore this message.''')
             self.using_sectransp()
             ssl_lib_detected = 'sectransp'
         return ssl_lib_detected
-
-    def detect_ssl_lib_on_centos6_plus(self):
-        import platform
-        from ctypes.util import find_library
-        os_name = platform.system()
-        if os_name != 'Linux' or not hasattr(platform, 'dist'):
-            return False
-        dist_name, dist_version, _ = platform.dist()
-        dist_version = dist_version.split('.')[0]
-        if dist_name != 'centos' or int(dist_version) < 6:
-            return False
-        libcurl_dll_path = find_library('curl')
-        print('libcurl_dll_path = "%s"' % libcurl_dll_path)
-        return self.detect_ssl_lib_from_libcurl_dll(libcurl_dll_path)
 
     def detect_ssl_lib_using_curl_config(self):
         ssl_lib_detected = None
@@ -861,7 +837,7 @@ libcurl, including:
 Requirements
 ------------
 
-- Python 3.9-3.14.
+- Python 3.10-3.14.
 - libcurl 7.19.0 or better.
 
 
