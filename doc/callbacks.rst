@@ -579,6 +579,63 @@ HSTSREADFUNCTION
     as the value or by calling :ref:`unsetopt <unsetopt>`.
 
 
+WebSocket callback receive (libcurl 7.86.0 or later)
+----------------------------------------------------
+
+libcurl supports two WebSocket usage models: *detached mode*
+(``CONNECT_ONLY=2`` plus ``ws_send`` / ``ws_recv``, documented on the
+:ref:`Curl object <curlobject>`) and *callback-receive mode*, where
+libcurl drives the transfer and delivers each received frame chunk
+through the ordinary ``WRITEFUNCTION`` callback. No separate callback
+registration is required — set ``WRITEFUNCTION`` on a ``ws://`` /
+``wss://`` URL, leave ``CONNECT_ONLY`` unset, and call
+:ref:`perform <perform>` as you would for any other transfer.
+``perform()`` blocks for the full lifetime of the WebSocket connection
+and returns when the peer closes (or the transfer otherwise terminates),
+so the server side must have a predictable end condition.
+
+Inside the callback, :py:meth:`pycurl.Curl.ws_meta` returns a ``WsFrame``
+namedtuple (``age``, ``flags``, ``offset``, ``bytesleft``, ``len``)
+describing the chunk currently being delivered. The ``flags`` field is
+a bitmask of ``WS_TEXT``, ``WS_BINARY``, ``WS_CONT``, ``WS_PING``,
+``WS_PONG``, ``WS_CLOSE``, and ``WS_OFFSET``.
+
+libcurl's ``curl_ws_meta()`` returns ``NULL`` outside the valid
+callback context; PycURL maps that to Python ``None``. The same
+``ws_meta()`` method is safe to call after ``perform()`` has returned
+(it simply returns ``None``) and in detached mode (likewise).
+
+Calling :py:meth:`ws_send` or :py:meth:`ws_close` from inside the
+``WRITEFUNCTION`` is allowed: libcurl treats the call as a blocking send
+and returns only once the frame has been fully written (or an error
+occurs). ``CURLE_AGAIN`` / ``BlockingIOError`` semantics do not apply in
+this context. That relaxation applies only inside the callback itself;
+calls from another thread while ``perform()`` is running are still
+rejected. :py:meth:`ws_recv` and :py:meth:`ws_recv_into` remain
+detached-only and still raise ``pycurl.error`` while ``perform()`` is
+running.
+
+Example::
+
+    import pycurl
+
+    c = pycurl.Curl()
+
+    def on_ws_chunk(data):
+        meta = c.ws_meta()           # valid only inside this callback
+        if meta is not None and meta.flags & pycurl.WS_TEXT:
+            print("text chunk:", data)
+            c.ws_send(b"ack", pycurl.WS_BINARY)   # blocking send
+        return len(data)
+
+    c.setopt(c.URL, "wss://example.com/socket")
+    c.setopt(c.WRITEFUNCTION, on_ws_chunk)
+    c.perform()                       # blocks until peer closes
+    c.close()
+
+`ws_callback.py example`_ is a complete runnable version.
+
+
 .. _CURLOPT_HEADERFUNCTION: https://curl.haxx.se/libcurl/c/CURLOPT_HEADERFUNCTION.html
 .. _CURLOPT_WRITEFUNCTION: https://curl.haxx.se/libcurl/c/CURLOPT_WRITEFUNCTION.html
 .. _CURLOPT_READFUNCTION: https://curl.haxx.se/libcurl/c/CURLOPT_READFUNCTION.html
@@ -610,3 +667,4 @@ HSTSREADFUNCTION
 .. _CURLOPT_FNMATCH_FUNCTION: https://curl.se/libcurl/c/CURLOPT_FNMATCH_FUNCTION.html
 .. _CURLOPT_HSTSREADFUNCTION: https://curl.se/libcurl/c/CURLOPT_HSTSREADFUNCTION.html
 .. _CURLOPT_HSTSWRITEFUNCTION: https://curl.se/libcurl/c/CURLOPT_HSTSWRITEFUNCTION.html
+.. _ws_callback.py example: https://github.com/pycurl/pycurl/blob/master/examples/ws_callback.py

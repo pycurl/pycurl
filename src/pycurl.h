@@ -171,6 +171,11 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
 #define HAVE_CURL_7_67_0_MULTI_STREAMS
 #endif
 
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 86, 0)
+#define HAVE_CURL_WEBSOCKETS
+#include <curl/websockets.h>
+#endif
+
 #undef UNUSED
 #define UNUSED(var)     ((void)&var)
 
@@ -485,6 +490,8 @@ typedef struct CurlObject {
     PyObject *postfields_obj;
     /* reference to the object containing ca certs */
     PyObject *ca_certs_obj;
+    /* true while executing WRITEFUNCTION for this handle */
+    int ws_write_cb_running;
     /* misc */
     char error[CURL_ERROR_SIZE+1];
 } CurlObject;
@@ -629,6 +636,23 @@ do_curl_recv(CurlObject *self, PyObject *args);
 PYCURL_INTERNAL PyObject *
 do_curl_recv_into(CurlObject *self, PyObject *args, PyObject *kwds);
 
+PYCURL_INTERNAL PyObject *set_would_block_error(void);
+PYCURL_INTERNAL int
+check_easy_recv_send_result(CurlObject *self, CURLcode res);
+
+#ifdef HAVE_CURL_WEBSOCKETS
+PYCURL_INTERNAL PyObject *
+do_curl_ws_send(CurlObject *self, PyObject *args, PyObject *kwds);
+PYCURL_INTERNAL PyObject *
+do_curl_ws_recv(CurlObject *self, PyObject *args);
+PYCURL_INTERNAL PyObject *
+do_curl_ws_recv_into(CurlObject *self, PyObject *args, PyObject *kwds);
+PYCURL_INTERNAL PyObject *
+do_curl_ws_meta(CurlObject *self, PyObject *Py_UNUSED(ignored));
+PYCURL_INTERNAL PyObject *
+do_curl_ws_close(CurlObject *self, PyObject *args, PyObject *kwds);
+#endif
+
 PYCURL_INTERNAL int
 check_curl_state(const CurlObject *self, int flags, const char *name);
 PYCURL_INTERNAL void
@@ -750,6 +774,9 @@ extern PyObject *hsts_entry_type;
 extern PyObject *hsts_index_type;
 extern PyObject *datetime_type;
 extern PyObject *utc_tz;
+#endif
+#ifdef HAVE_CURL_WEBSOCKETS
+extern PyObject *ws_frame_type;
 #endif
 
 extern PyObject *curlobject_constants;

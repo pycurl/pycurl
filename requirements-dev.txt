@@ -5,3 +5,4 @@ pyflakes
 pytest>=5
 sphinx
 setuptools
+websockets>=12

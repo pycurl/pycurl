@@ -87,6 +87,20 @@ def skip_in_libcurl_versions(*versions):
 
     return decorator
 
+def skip_module_without_websockets():
+    """Call at module level (via :func:`pytest.skip(allow_module_level=True)`)
+    in WS test files. Requires both libcurl >= 7.86.0 AND the runtime
+    library built with WebSocket support — distro libcurl often ships
+    with ``--disable-websockets``."""
+    import pycurl
+    import pytest
+
+    if pycurl_version_less_than(7, 86, 0) or "ws" not in pycurl.version_info()[8]:
+        pytest.skip(
+            "libcurl built without WebSocket support", allow_module_level=True
+        )
+
+
 def only_ssl(fn):
     import pycurl
 
