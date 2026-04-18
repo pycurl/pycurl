@@ -1,137 +1,154 @@
-#! /usr/bin/env python
-# vi:ts=4:et
-
-from . import localhost
-import pycurl
-import pytest
-import unittest
+import sys
 from io import BytesIO
 
-from . import appmanager
+import pycurl
+import pytest
+
 from . import util
 
-setup_module, teardown_module = appmanager.setup(('app', 8380))
 
-class SetoptTest(unittest.TestCase):
-    def setUp(self):
-        self.curl = util.DefaultCurl()
+def test_boolean_value(curl):
+    curl.setopt(pycurl.VERBOSE, True)
 
-    def tearDown(self):
-        self.curl.close()
 
-    def test_boolean_value(self):
-        # expect no exceptions raised
-        self.curl.setopt(pycurl.VERBOSE, True)
+def test_integer_value(curl):
+    curl.setopt(pycurl.VERBOSE, 1)
 
-    def test_integer_value(self):
-        # expect no exceptions raised
-        self.curl.setopt(pycurl.VERBOSE, 1)
 
-    def test_string_value_for_integer_option(self):
-        with pytest.raises(TypeError):
-            self.curl.setopt(pycurl.VERBOSE, "Hello, world!")
+def test_string_value_for_integer_option(curl):
+    with pytest.raises(TypeError):
+        curl.setopt(pycurl.VERBOSE, "Hello, world!")
 
-    def test_string_value(self):
-        # expect no exceptions raised
-        self.curl.setopt(pycurl.URL, 'http://hello.world')
 
-    def test_integer_value_for_string_option(self):
-        with pytest.raises(TypeError):
-            self.curl.setopt(pycurl.URL, 1)
+def test_string_value(curl):
+    curl.setopt(pycurl.URL, "http://hello.world")
 
-    def test_float_value_for_integer_option(self):
-        with pytest.raises(TypeError):
-            self.curl.setopt(pycurl.VERBOSE, 1.0)
 
-    def test_httpheader_list(self):
-        self.curl.setopt(self.curl.HTTPHEADER, ['Accept:'])
+def test_integer_value_for_string_option(curl):
+    with pytest.raises(TypeError):
+        curl.setopt(pycurl.URL, 1)
 
-    def test_httpheader_tuple(self):
-        self.curl.setopt(self.curl.HTTPHEADER, ('Accept:',))
 
-    def test_httpheader_unicode(self):
-        self.curl.setopt(self.curl.HTTPHEADER, (util.u('Accept:'),))
+def test_float_value_for_integer_option(curl):
+    with pytest.raises(TypeError):
+        curl.setopt(pycurl.VERBOSE, 1.0)
 
-    def test_unset_httpheader(self):
-        self.curl.setopt(self.curl.HTTPHEADER, ('x-test: foo',))
-        self.curl.setopt(self.curl.URL, 'http://%s:8380/header?h=x-test' % localhost)
-        io = BytesIO()
-        self.curl.setopt(self.curl.WRITEDATA, io)
-        self.curl.perform()
-        self.assertEqual(util.b('foo'), io.getvalue())
 
-        self.curl.unsetopt(self.curl.HTTPHEADER)
-        io = BytesIO()
-        self.curl.setopt(self.curl.WRITEDATA, io)
-        self.curl.perform()
-        self.assertEqual(util.b(''), io.getvalue())
+def test_httpheader_list(curl):
+    curl.setopt(pycurl.HTTPHEADER, ["Accept:"])
 
-    def test_set_httpheader_none(self):
-        self.curl.setopt(self.curl.HTTPHEADER, ('x-test: foo',))
-        self.curl.setopt(self.curl.URL, 'http://%s:8380/header?h=x-test' % localhost)
-        io = BytesIO()
-        self.curl.setopt(self.curl.WRITEDATA, io)
-        self.curl.perform()
-        self.assertEqual(util.b('foo'), io.getvalue())
 
-        self.curl.setopt(self.curl.HTTPHEADER, None)
-        io = BytesIO()
-        self.curl.setopt(self.curl.WRITEDATA, io)
-        self.curl.perform()
-        self.assertEqual(util.b(''), io.getvalue())
+def test_httpheader_tuple(curl):
+    curl.setopt(pycurl.HTTPHEADER, ("Accept:",))
 
-    @util.min_libcurl(7, 37, 0)
-    def test_proxyheader_list(self):
-        self.curl.setopt(self.curl.PROXYHEADER, ['Accept:'])
 
-    @util.min_libcurl(7, 37, 0)
-    def test_proxyheader_tuple(self):
-        self.curl.setopt(self.curl.PROXYHEADER, ('Accept:',))
+def test_httpheader_unicode(curl):
+    curl.setopt(pycurl.HTTPHEADER, ("Accept:",))
 
-    @util.min_libcurl(7, 37, 0)
-    def test_proxyheader_unicode(self):
-        self.curl.setopt(self.curl.PROXYHEADER, (util.u('Accept:'),))
 
-    @util.min_libcurl(7, 37, 0)
-    def test_unset_proxyheader(self):
-        self.curl.unsetopt(self.curl.PROXYHEADER)
+def _header_echo_url(app):
+    return f"{app}/header?h=x-test"
 
-    @util.min_libcurl(7, 37, 0)
-    def test_set_proxyheader_none(self):
-        self.curl.setopt(self.curl.PROXYHEADER, None)
 
-    def test_unset_encoding(self):
-        self.curl.unsetopt(self.curl.ENCODING)
+def test_unset_httpheader(app, curl):
+    curl.setopt(pycurl.HTTPHEADER, ("x-test: foo",))
+    curl.setopt(pycurl.URL, _header_echo_url(app))
+    io = BytesIO()
+    curl.setopt(pycurl.WRITEDATA, io)
+    curl.perform()
+    assert io.getvalue() == b"foo"
 
-    # github issue #405
-    def test_large_options(self):
-        self.curl.setopt(self.curl.INFILESIZE, 3333858173)
-        self.curl.setopt(self.curl.MAX_RECV_SPEED_LARGE, 3333858173)
-        self.curl.setopt(self.curl.MAX_SEND_SPEED_LARGE, 3333858173)
-        self.curl.setopt(self.curl.MAXFILESIZE, 3333858173)
-        self.curl.setopt(self.curl.POSTFIELDSIZE, 3333858173)
-        self.curl.setopt(self.curl.RESUME_FROM, 3333858173)
+    curl.unsetopt(pycurl.HTTPHEADER)
+    io = BytesIO()
+    curl.setopt(pycurl.WRITEDATA, io)
+    curl.perform()
+    assert io.getvalue() == b""
 
-    def test_set_writefunction_none(self):
-        self.curl.setopt(self.curl.WRITEFUNCTION, None)
 
-    def test_set_headerfunction_none(self):
-        self.curl.setopt(self.curl.HEADERFUNCTION, None)
+def test_set_httpheader_none(app, curl):
+    curl.setopt(pycurl.HTTPHEADER, ("x-test: foo",))
+    curl.setopt(pycurl.URL, _header_echo_url(app))
+    io = BytesIO()
+    curl.setopt(pycurl.WRITEDATA, io)
+    curl.perform()
+    assert io.getvalue() == b"foo"
 
-    def test_set_readfunction_none(self):
-        self.curl.setopt(self.curl.READFUNCTION, None)
+    curl.setopt(pycurl.HTTPHEADER, None)
+    io = BytesIO()
+    curl.setopt(pycurl.WRITEDATA, io)
+    curl.perform()
+    assert io.getvalue() == b""
 
-    def test_set_progressfunction_none(self):
-        self.curl.setopt(self.curl.PROGRESSFUNCTION, None)
 
-    def test_set_xferinfofunction_none(self):
-        self.curl.setopt(self.curl.XFERINFOFUNCTION, None)
+@util.min_libcurl(7, 37, 0)
+def test_proxyheader_list(curl):
+    curl.setopt(pycurl.PROXYHEADER, ["Accept:"])
 
-    def test_set_debugfunction_none(self):
-        self.curl.setopt(self.curl.DEBUGFUNCTION, None)
 
-    def test_set_ioctlfunction_none(self):
-        self.curl.setopt(self.curl.IOCTLFUNCTION, None)
+@util.min_libcurl(7, 37, 0)
+def test_proxyheader_tuple(curl):
+    curl.setopt(pycurl.PROXYHEADER, ("Accept:",))
 
-    def test_set_seekfunction_none(self):
-        self.curl.setopt(self.curl.SEEKFUNCTION, None)
+
+@util.min_libcurl(7, 37, 0)
+def test_proxyheader_unicode(curl):
+    curl.setopt(pycurl.PROXYHEADER, ("Accept:",))
+
+
+@util.min_libcurl(7, 37, 0)
+def test_unset_proxyheader(curl):
+    curl.unsetopt(pycurl.PROXYHEADER)
+
+
+@util.min_libcurl(7, 37, 0)
+def test_set_proxyheader_none(curl):
+    curl.setopt(pycurl.PROXYHEADER, None)
+
+
+def test_unset_encoding(curl):
+    curl.unsetopt(pycurl.ENCODING)
+
+
+# github issue #405
+def test_large_options(curl):
+    curl.setopt(pycurl.INFILESIZE, 3333858173)
+    curl.setopt(pycurl.MAX_RECV_SPEED_LARGE, 3333858173)
+    curl.setopt(pycurl.MAX_SEND_SPEED_LARGE, 3333858173)
+    curl.setopt(pycurl.MAXFILESIZE, 3333858173)
+    curl.setopt(pycurl.POSTFIELDSIZE, 3333858173)
+    curl.setopt(pycurl.RESUME_FROM, 3333858173)
+
+
+@pytest.mark.parametrize(
+    "option",
+    [
+        pycurl.WRITEFUNCTION,
+        pycurl.HEADERFUNCTION,
+        pycurl.READFUNCTION,
+        pycurl.PROGRESSFUNCTION,
+        pycurl.XFERINFOFUNCTION,
+        pycurl.DEBUGFUNCTION,
+        pycurl.IOCTLFUNCTION,
+        pycurl.SEEKFUNCTION,
+    ],
+)
+def test_set_callback_none(curl, option):
+    curl.setopt(option, None)
+
+
+def test_httpheader_replace_cycle(app, curl):
+    curl.setopt(pycurl.URL, _header_echo_url(app))
+    for value in ("a", "b", "c", "d"):
+        curl.setopt(pycurl.HTTPHEADER, [f"x-test: {value}"])
+    io = BytesIO()
+    curl.setopt(pycurl.WRITEDATA, io)
+    curl.perform()
+    assert io.getvalue() == b"d"
+
+
+def test_httpheader_replace_refcount(curl):
+    first = ["x-test: first"]
+    before = sys.getrefcount(first)
+    curl.setopt(pycurl.HTTPHEADER, first)
+    curl.setopt(pycurl.HTTPHEADER, ["x-test: second"])
+    assert sys.getrefcount(first) == before
