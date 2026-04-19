@@ -14,7 +14,7 @@ before-all = [
     "dnf install -y vcpkg",
     "export VCPKG_ROOT=$HOME/.local/share/vcpkg",
     "git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT",
-    "vcpkg install curl[brotli,core,gssapi,http2,non-http,openssl,ssh] --triplet=$VCPKG_TRIPLET",
+    "vcpkg install curl[brotli,core,gssapi,http2,non-http,openssl,ssh,websockets] --triplet=$VCPKG_TRIPLET",
 ]
 before-test = [
     "pip install flake8 -r requirements-dev.txt",
@@ -41,7 +41,7 @@ environment.VCPKG_TRIPLET = "arm64-linux-dynamic"
 [tool.cibuildwheel.macos]
 before-all = [
     "if ! which vcpkg >/dev/null 2>&1; then brew install vcpkg && git clone https://github.com/microsoft/vcpkg.git $HOME/vcpkg; fi",
-    "vcpkg install curl[brotli,core,http2,non-http,openssl,ssh] --triplet=$VCPKG_TRIPLET",
+    "vcpkg install curl[brotli,core,http2,non-http,openssl,ssh,websockets] --triplet=$VCPKG_TRIPLET",
 ]
 before-test = [
     "pip install flake8 -r requirements-dev.txt",
