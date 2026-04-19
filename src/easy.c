@@ -421,6 +421,34 @@ do_curl_duphandle(CurlObject *self, PyObject *Py_UNUSED(ignored))
         curl_easy_setopt(dup->handle, CURLOPT_PREREQDATA, dup);
     }
 #endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 0)
+    if (self->fnmatch_cb != NULL) {
+        dup->fnmatch_cb = Py_NewRef(self->fnmatch_cb);
+        curl_easy_setopt(dup->handle, CURLOPT_FNMATCH_DATA, dup);
+    }
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 59, 0)
+    if (self->resolver_start_cb != NULL) {
+        dup->resolver_start_cb = Py_NewRef(self->resolver_start_cb);
+        curl_easy_setopt(dup->handle, CURLOPT_RESOLVER_START_DATA, dup);
+    }
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 64, 0)
+    if (self->trailer_cb != NULL) {
+        dup->trailer_cb = Py_NewRef(self->trailer_cb);
+        curl_easy_setopt(dup->handle, CURLOPT_TRAILERDATA, dup);
+    }
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 74, 0)
+    if (self->hstsread_cb != NULL) {
+        dup->hstsread_cb = Py_NewRef(self->hstsread_cb);
+        curl_easy_setopt(dup->handle, CURLOPT_HSTSREADDATA, dup);
+    }
+    if (self->hstswrite_cb != NULL) {
+        dup->hstswrite_cb = Py_NewRef(self->hstswrite_cb);
+        curl_easy_setopt(dup->handle, CURLOPT_HSTSWRITEDATA, dup);
+    }
+#endif
 
     /* Assign and incref python file objects */
     dup->readdata_fp = Py_XNewRef(self->readdata_fp);
@@ -514,6 +542,19 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
         Py_CLEAR(self->ssh_key_cb);
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 80, 0)
         Py_CLEAR(self->prereq_cb);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 0)
+        Py_CLEAR(self->fnmatch_cb);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 59, 0)
+        Py_CLEAR(self->resolver_start_cb);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 64, 0)
+        Py_CLEAR(self->trailer_cb);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 74, 0)
+        Py_CLEAR(self->hstsread_cb);
+        Py_CLEAR(self->hstswrite_cb);
 #endif
     }
 
@@ -730,6 +771,19 @@ do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
     VISIT(self->ssh_key_cb);
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 80, 0)
     VISIT(self->prereq_cb);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 0)
+    VISIT(self->fnmatch_cb);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 59, 0)
+    VISIT(self->resolver_start_cb);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 64, 0)
+    VISIT(self->trailer_cb);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 74, 0)
+    VISIT(self->hstsread_cb);
+    VISIT(self->hstswrite_cb);
 #endif
 
     VISIT(self->readdata_fp);

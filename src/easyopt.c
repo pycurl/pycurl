@@ -1,7 +1,7 @@
 #include "pycurl.h"
 
 
-static struct curl_slist *
+PYCURL_INTERNAL struct curl_slist *
 pycurl_list_or_tuple_to_slist(int which, PyObject *obj, Py_ssize_t len)
 {
     struct curl_slist *slist = NULL;
@@ -138,6 +138,9 @@ util_curl_unsetopt(CurlObject *self, int option)
     case CURLOPT_PROXY_SSLKEY_BLOB:
     case CURLOPT_PROXY_ISSUERCERT_BLOB:
 #endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 74, 0)
+    case CURLOPT_HSTS:
+#endif
         SETOPT((char *) NULL);
         break;
 
@@ -211,6 +214,19 @@ util_curl_unsetopt(CurlObject *self, int option)
     CLEAR_CALLBACK(CURLOPT_SEEKFUNCTION, CURLOPT_SEEKDATA, self->seek_cb);
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 80, 0)
     CLEAR_CALLBACK(CURLOPT_PREREQFUNCTION, CURLOPT_PREREQDATA, self->prereq_cb);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 0)
+    CLEAR_CALLBACK(CURLOPT_FNMATCH_FUNCTION, CURLOPT_FNMATCH_DATA, self->fnmatch_cb);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 59, 0)
+    CLEAR_CALLBACK(CURLOPT_RESOLVER_START_FUNCTION, CURLOPT_RESOLVER_START_DATA, self->resolver_start_cb);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 64, 0)
+    CLEAR_CALLBACK(CURLOPT_TRAILERFUNCTION, CURLOPT_TRAILERDATA, self->trailer_cb);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 74, 0)
+    CLEAR_CALLBACK(CURLOPT_HSTSREADFUNCTION, CURLOPT_HSTSREADDATA, self->hstsread_cb);
+    CLEAR_CALLBACK(CURLOPT_HSTSWRITEFUNCTION, CURLOPT_HSTSWRITEDATA, self->hstswrite_cb);
 #endif
 
     /* info: we explicitly list unsupported options here */
@@ -399,6 +415,9 @@ do_curl_setopt_string_impl(CurlObject *self, int option, PyObject *obj)
 #endif
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 71, 0)
     case CURLOPT_PROXY_ISSUERCERT:
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 74, 0)
+    case CURLOPT_HSTS:
 #endif
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 75, 0)
     case CURLOPT_AWS_SIGV4:
@@ -877,6 +896,19 @@ do_curl_setopt_callable(CurlObject *self, int option, PyObject *obj)
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 80, 0)
     const curl_prereq_callback prereq_cb = prereq_callback;
 #endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 0)
+    const curl_fnmatch_callback fnmatch_cb = fnmatch_callback;
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 59, 0)
+    const curl_resolver_start_callback resolver_start_cb = resolver_start_callback;
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 64, 0)
+    const curl_trailer_callback trailer_cb = trailer_callback;
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 74, 0)
+    const curl_hstsread_callback hstsread_cb = hstsread_callback;
+    const curl_hstswrite_callback hstswrite_cb = hstswrite_callback;
+#endif
 
     switch(option) {
     case CURLOPT_WRITEFUNCTION:
@@ -979,6 +1011,49 @@ do_curl_setopt_callable(CurlObject *self, int option, PyObject *obj)
         self->prereq_cb = obj;
         curl_easy_setopt(self->handle, CURLOPT_PREREQFUNCTION, prereq_cb);
         curl_easy_setopt(self->handle, CURLOPT_PREREQDATA, self);
+        break;
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 0)
+    case CURLOPT_FNMATCH_FUNCTION:
+        Py_INCREF(obj);
+        Py_CLEAR(self->fnmatch_cb);
+        self->fnmatch_cb = obj;
+        curl_easy_setopt(self->handle, CURLOPT_FNMATCH_FUNCTION, fnmatch_cb);
+        curl_easy_setopt(self->handle, CURLOPT_FNMATCH_DATA, self);
+        break;
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 59, 0)
+    case CURLOPT_RESOLVER_START_FUNCTION:
+        Py_INCREF(obj);
+        Py_CLEAR(self->resolver_start_cb);
+        self->resolver_start_cb = obj;
+        curl_easy_setopt(self->handle, CURLOPT_RESOLVER_START_FUNCTION, resolver_start_cb);
+        curl_easy_setopt(self->handle, CURLOPT_RESOLVER_START_DATA, self);
+        break;
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 64, 0)
+    case CURLOPT_TRAILERFUNCTION:
+        Py_INCREF(obj);
+        Py_CLEAR(self->trailer_cb);
+        self->trailer_cb = obj;
+        curl_easy_setopt(self->handle, CURLOPT_TRAILERFUNCTION, trailer_cb);
+        curl_easy_setopt(self->handle, CURLOPT_TRAILERDATA, self);
+        break;
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 74, 0)
+    case CURLOPT_HSTSREADFUNCTION:
+        Py_INCREF(obj);
+        Py_CLEAR(self->hstsread_cb);
+        self->hstsread_cb = obj;
+        curl_easy_setopt(self->handle, CURLOPT_HSTSREADFUNCTION, hstsread_cb);
+        curl_easy_setopt(self->handle, CURLOPT_HSTSREADDATA, self);
+        break;
+    case CURLOPT_HSTSWRITEFUNCTION:
+        Py_INCREF(obj);
+        Py_CLEAR(self->hstswrite_cb);
+        self->hstswrite_cb = obj;
+        curl_easy_setopt(self->handle, CURLOPT_HSTSWRITEFUNCTION, hstswrite_cb);
+        curl_easy_setopt(self->handle, CURLOPT_HSTSWRITEDATA, self);
         break;
 #endif
 

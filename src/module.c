@@ -34,6 +34,12 @@ PYCURL_INTERNAL PyTypeObject *p_CurlMimePart_Type = NULL;
 PYCURL_INTERNAL PyObject *khkey_type = NULL;
 #endif
 PYCURL_INTERNAL PyObject *curl_sockaddr_type = NULL;
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 74, 0)
+PYCURL_INTERNAL PyObject *hsts_entry_type = NULL;
+PYCURL_INTERNAL PyObject *hsts_index_type = NULL;
+PYCURL_INTERNAL PyObject *datetime_type = NULL;
+PYCURL_INTERNAL PyObject *utc_tz = NULL;
+#endif
 
 PYCURL_INTERNAL PyObject *curlobject_constants = NULL;
 PYCURL_INTERNAL PyObject *curlmultiobject_constants = NULL;
@@ -338,6 +344,16 @@ static void do_curlmod_free(void *unused) {
 #endif
     Py_XDECREF(curl_sockaddr_type);
     curl_sockaddr_type = NULL;
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 74, 0)
+    Py_XDECREF(hsts_entry_type);
+    hsts_entry_type = NULL;
+    Py_XDECREF(hsts_index_type);
+    hsts_index_type = NULL;
+    Py_XDECREF(datetime_type);
+    datetime_type = NULL;
+    Py_XDECREF(utc_tz);
+    utc_tz = NULL;
+#endif
 
     Py_XDECREF(curlobject_constants);
     curlobject_constants = NULL;
@@ -1184,6 +1200,40 @@ PyMODINIT_FUNC PyInit_pycurl(void)
     insint_c(d, "PREREQFUNC_ABORT", CURL_PREREQFUNC_ABORT);
 #endif
 
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 0)
+    insint_c(d, "FNMATCH_FUNCTION", CURLOPT_FNMATCH_FUNCTION);
+    insint_c(d, "FNMATCH_DATA", CURLOPT_FNMATCH_DATA);
+    insint_c(d, "FNMATCHFUNC_MATCH", CURL_FNMATCHFUNC_MATCH);
+    insint_c(d, "FNMATCHFUNC_NOMATCH", CURL_FNMATCHFUNC_NOMATCH);
+    insint_c(d, "FNMATCHFUNC_FAIL", CURL_FNMATCHFUNC_FAIL);
+#endif
+
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 59, 0)
+    insint_c(d, "RESOLVER_START_FUNCTION", CURLOPT_RESOLVER_START_FUNCTION);
+    insint_c(d, "RESOLVER_START_DATA", CURLOPT_RESOLVER_START_DATA);
+#endif
+
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 64, 0)
+    insint_c(d, "TRAILERFUNCTION", CURLOPT_TRAILERFUNCTION);
+    insint_c(d, "TRAILERDATA", CURLOPT_TRAILERDATA);
+    insint_c(d, "TRAILERFUNC_OK", CURL_TRAILERFUNC_OK);
+    insint_c(d, "TRAILERFUNC_ABORT", CURL_TRAILERFUNC_ABORT);
+#endif
+
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 74, 0)
+    insint_c(d, "HSTS", CURLOPT_HSTS);
+    insint_c(d, "HSTS_CTRL", CURLOPT_HSTS_CTRL);
+    insint_c(d, "HSTSREADFUNCTION", CURLOPT_HSTSREADFUNCTION);
+    insint_c(d, "HSTSREADDATA", CURLOPT_HSTSREADDATA);
+    insint_c(d, "HSTSWRITEFUNCTION", CURLOPT_HSTSWRITEFUNCTION);
+    insint_c(d, "HSTSWRITEDATA", CURLOPT_HSTSWRITEDATA);
+    insint_c(d, "CURLHSTS_ENABLE", CURLHSTS_ENABLE);
+    insint_c(d, "CURLHSTS_READONLYFILE", CURLHSTS_READONLYFILE);
+    insint_c(d, "CURLSTS_OK", CURLSTS_OK);
+    insint_c(d, "CURLSTS_DONE", CURLSTS_DONE);
+    insint_c(d, "CURLSTS_FAIL", CURLSTS_FAIL);
+#endif
+
     insint_m(d, "M_TIMERFUNCTION", CURLMOPT_TIMERFUNCTION);
     insint_m(d, "M_SOCKETFUNCTION", CURLMOPT_SOCKETFUNCTION);
     insint_m(d, "M_PIPELINING", CURLMOPT_PIPELINING);
@@ -1673,6 +1723,55 @@ PyMODINIT_FUNC PyInit_pycurl(void)
         goto error;
     }
 
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 74, 0)
+    {
+        PyObject *datetime_module = PyImport_ImportModule("datetime");
+        PyObject *timezone_cls = NULL;
+        if (datetime_module == NULL) {
+            goto error;
+        }
+        datetime_type = PyObject_GetAttrString(datetime_module, "datetime");
+        timezone_cls = PyObject_GetAttrString(datetime_module, "timezone");
+        if (datetime_type == NULL || timezone_cls == NULL) {
+            Py_XDECREF(timezone_cls);
+            Py_DECREF(datetime_module);
+            goto error;
+        }
+        utc_tz = PyObject_GetAttrString(timezone_cls, "utc");
+        Py_DECREF(timezone_cls);
+        Py_DECREF(datetime_module);
+        if (utc_tz == NULL) {
+            goto error;
+        }
+
+        arglist = Py_BuildValue("ss", "HstsEntry", "host expire include_subdomains");
+        if (arglist == NULL) {
+            goto error;
+        }
+        hsts_entry_type = PyObject_Call(named_tuple, arglist, NULL);
+        if (hsts_entry_type == NULL) {
+            goto error;
+        }
+        Py_DECREF(arglist);
+        if (PyDict_SetItemString(d, "HstsEntry", hsts_entry_type) < 0) {
+            goto error;
+        }
+
+        arglist = Py_BuildValue("ss", "HstsIndex", "index total");
+        if (arglist == NULL) {
+            goto error;
+        }
+        hsts_index_type = PyObject_Call(named_tuple, arglist, NULL);
+        if (hsts_index_type == NULL) {
+            goto error;
+        }
+        Py_DECREF(arglist);
+        if (PyDict_SetItemString(d, "HstsIndex", hsts_index_type) < 0) {
+            goto error;
+        }
+    }
+#endif
+
 #ifdef PYCURL_AUTODETECT_CA
     pycurl_autodetect_ca();
 #endif
@@ -1698,6 +1797,12 @@ error:
     Py_XDECREF(khkey_type);
     #endif
     Py_XDECREF(curl_sockaddr_type);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 74, 0)
+    Py_XDECREF(hsts_entry_type);
+    Py_XDECREF(hsts_index_type);
+    Py_XDECREF(datetime_type);
+    Py_XDECREF(utc_tz);
+#endif
     PyMem_Free(g_pycurl_useragent);
     if (!PyErr_Occurred())
         PyErr_SetString(PyExc_ImportError, "curl module init failed");

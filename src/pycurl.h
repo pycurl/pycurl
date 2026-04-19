@@ -464,6 +464,19 @@ typedef struct CurlObject {
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 80, 0)
     PyObject *prereq_cb;
 #endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 0)
+    PyObject *fnmatch_cb;
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 59, 0)
+    PyObject *resolver_start_cb;
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 64, 0)
+    PyObject *trailer_cb;
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 74, 0)
+    PyObject *hstsread_cb;
+    PyObject *hstswrite_cb;
+#endif
     /* file objects */
     PyObject *readdata_fp;
     PyObject *writedata_fp;
@@ -682,6 +695,28 @@ PYCURL_INTERNAL int
 prereq_callback(void *clientp, char *conn_primary_ip, char *conn_local_ip,
                 int conn_primary_port, int conn_local_port);
 #endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 0)
+PYCURL_INTERNAL int
+fnmatch_callback(void *clientp, const char *pattern, const char *string);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 59, 0)
+PYCURL_INTERNAL int
+resolver_start_callback(void *resolver_state, void *reserved, void *clientp);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 64, 0)
+PYCURL_INTERNAL int
+trailer_callback(struct curl_slist **list, void *clientp);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 74, 0)
+PYCURL_INTERNAL CURLSTScode
+hstsread_callback(CURL *easy, struct curl_hstsentry *e, void *clientp);
+PYCURL_INTERNAL CURLSTScode
+hstswrite_callback(CURL *easy, struct curl_hstsentry *e,
+                   struct curl_index *i, void *clientp);
+#endif
+
+PYCURL_INTERNAL struct curl_slist *
+pycurl_list_or_tuple_to_slist(int which, PyObject *obj, Py_ssize_t len);
 
 PYCURL_INTERNAL int share_register_easy(struct CurlShareObject *share, struct CurlObject *easy);
 PYCURL_INTERNAL void share_unregister_easy(struct CurlShareObject *share, struct CurlObject *easy);
@@ -710,6 +745,12 @@ extern PyTypeObject *p_CurlMimePart_Type;
 #endif
 extern PyObject *khkey_type;
 extern PyObject *curl_sockaddr_type;
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 74, 0)
+extern PyObject *hsts_entry_type;
+extern PyObject *hsts_index_type;
+extern PyObject *datetime_type;
+extern PyObject *utc_tz;
+#endif
 
 extern PyObject *curlobject_constants;
 extern PyObject *curlmultiobject_constants;

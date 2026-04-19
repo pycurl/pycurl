@@ -949,4 +949,401 @@ verbose_error:
 }
 #endif
 
+
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 0)
+PYCURL_INTERNAL int
+fnmatch_callback(void *clientp, const char *pattern, const char *string)
+{
+    PyObject *arglist;
+    CurlObject *self;
+    int ret = CURL_FNMATCHFUNC_FAIL;
+    PyObject *ret_obj = NULL;
+    PYCURL_DECLARE_THREAD_STATE;
+
+    self = (CurlObject *)clientp;
+
+    PYCURL_BEGIN_CALLBACK(fnmatch_callback, ret);
+
+    arglist = Py_BuildValue("(yy)", pattern, string);
+    if (arglist == NULL) {
+        goto verbose_error;
+    }
+
+    ret_obj = PyObject_Call(self->fnmatch_cb, arglist, NULL);
+    Py_DECREF(arglist);
+    if (callback_return_value_to_int(ret_obj, "fnmatch", &ret) != 0) {
+        goto silent_error;
+    }
+    goto done;
+
+silent_error:
+    ret = CURL_FNMATCHFUNC_FAIL;
+done:
+    Py_XDECREF(ret_obj);
+    PYCURL_END_CALLBACK(ret);
+verbose_error:
+    print_callback_error_if_regular_exception();
+    goto silent_error;
+}
+#endif
+
+
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 59, 0)
+PYCURL_INTERNAL int
+resolver_start_callback(void *resolver_state, void *reserved, void *clientp)
+{
+    CurlObject *self;
+    int ret = 1;  /* non-zero aborts */
+    PyObject *ret_obj = NULL;
+    PYCURL_DECLARE_THREAD_STATE;
+
+    UNUSED(resolver_state);
+    UNUSED(reserved);
+
+    self = (CurlObject *)clientp;
+
+    PYCURL_BEGIN_CALLBACK(resolver_start_callback, ret);
+
+    ret_obj = PyObject_CallNoArgs(self->resolver_start_cb);
+    if (ret_obj == NULL) {
+        goto verbose_error;
+    }
+    if (ret_obj == Py_None) {
+        ret = 0;
+    } else if (callback_return_value_to_int(ret_obj, "resolver_start", &ret) != 0) {
+        goto silent_error;
+    }
+    goto done;
+
+silent_error:
+    ret = 1;
+done:
+    Py_XDECREF(ret_obj);
+    PYCURL_END_CALLBACK(ret);
+verbose_error:
+    print_callback_error_if_regular_exception();
+    goto silent_error;
+}
+#endif
+
+
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 64, 0)
+PYCURL_INTERNAL int
+trailer_callback(struct curl_slist **list, void *clientp)
+{
+    CurlObject *self;
+    int ret = CURL_TRAILERFUNC_ABORT;
+    PyObject *ret_obj = NULL;
+    PYCURL_DECLARE_THREAD_STATE;
+
+    self = (CurlObject *)clientp;
+
+    /* Initialise early: libcurl passes an uninitialised pointer on entry. */
+    *list = NULL;
+
+    PYCURL_BEGIN_CALLBACK(trailer_callback, ret);
+
+    ret_obj = PyObject_CallNoArgs(self->trailer_cb);
+    if (ret_obj == NULL) {
+        goto verbose_error;
+    }
+
+    if (ret_obj == Py_None) {
+        ret = CURL_TRAILERFUNC_OK;
+        goto done;
+    }
+
+    if (PyList_Check(ret_obj) || PyTuple_Check(ret_obj)) {
+        int which = PyList_Check(ret_obj) ? PYLISTORTUPLE_LIST : PYLISTORTUPLE_TUPLE;
+        Py_ssize_t len = PyListOrTuple_Size(ret_obj, which);
+        /* pycurl_list_or_tuple_to_slist frees any partial slist on error,
+         * so we never own a non-NULL slist once it returns. An empty
+         * list yields a NULL slist with no error set. */
+        *list = pycurl_list_or_tuple_to_slist(which, ret_obj, len);
+        if (*list == NULL && PyErr_Occurred()) {
+            goto verbose_error;
+        }
+        ret = CURL_TRAILERFUNC_OK;
+        goto done;
+    }
+
+    PyErr_SetString(ErrorObject, "trailer callback must return None or a list/tuple of header strings");
+    goto verbose_error;
+
+silent_error:
+    ret = CURL_TRAILERFUNC_ABORT;
+done:
+    Py_XDECREF(ret_obj);
+    PYCURL_END_CALLBACK(ret);
+verbose_error:
+    *list = NULL;
+    print_callback_error_if_regular_exception();
+    goto silent_error;
+}
+#endif
+
+
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 74, 0)
+
+/* Parse libcurl's "YYYYMMDD HH:MM:SS" stamp into a tz-aware
+ * datetime(UTC). The sentinel values "" and "unlimited" (used by
+ * libcurl for never-expires entries) map to Py_None. Returns a new
+ * reference, or NULL with a Python exception set. Parsing is delegated
+ * to datetime.strptime with an appended "+0000" so the result is an
+ * aware UTC datetime in a single call. */
+static PyObject *
+expire_c_str_to_datetime(const char *stamp)
+{
+    char buf[32];
+    int written;
+
+    if (stamp[0] == '\0' || strcmp(stamp, "unlimited") == 0) {
+        Py_RETURN_NONE;
+    }
+    written = snprintf(buf, sizeof(buf), "%s+0000", stamp);
+    if (written < 0 || (size_t)written >= sizeof(buf)) {
+        PyErr_Format(ErrorObject,
+            "libcurl returned an unparsable HSTS expire stamp: %s", stamp);
+        return NULL;
+    }
+    return PyObject_CallMethod(datetime_type, "strptime", "ss",
+                               buf, "%Y%m%d %H:%M:%S%z");
+}
+
+
+/* Convert a Python value (None or datetime) to libcurl's fixed-size
+ * expire buffer. Aware datetimes are normalised to UTC; naive datetimes
+ * are interpreted as UTC (documented). Returns 0 on success, -1 with a
+ * Python exception set. */
+static int
+expire_obj_to_c_str(PyObject *obj, char *buf, size_t buf_size)
+{
+    PyObject *utc_obj = NULL;
+    PyObject *tzinfo = NULL;
+    PyObject *formatted = NULL;
+    Py_ssize_t str_len;
+    const char *str;
+    int is_datetime;
+    int rc = -1;
+
+    if (obj == Py_None) {
+        /* Empty stamp = never expires, per libcurl docs. */
+        buf[0] = '\0';
+        return 0;
+    }
+
+    is_datetime = PyObject_IsInstance(obj, datetime_type);
+    if (is_datetime < 0) {
+        return -1;
+    }
+    if (!is_datetime) {
+        PyErr_SetString(ErrorObject,
+            "hstsread callback: expire must be a datetime or None");
+        return -1;
+    }
+
+    tzinfo = PyObject_GetAttrString(obj, "tzinfo");
+    if (tzinfo == NULL) {
+        goto cleanup;
+    }
+    if (tzinfo != Py_None) {
+        utc_obj = PyObject_CallMethod(obj, "astimezone", "O", utc_tz);
+        if (utc_obj == NULL) {
+            goto cleanup;
+        }
+        obj = utc_obj;
+    }
+
+    formatted = PyObject_CallMethod(obj, "strftime", "s", "%Y%m%d %H:%M:%S");
+    if (formatted == NULL) {
+        goto cleanup;
+    }
+    str = PyUnicode_AsUTF8AndSize(formatted, &str_len);
+    if (str == NULL) {
+        goto cleanup;
+    }
+    if ((size_t)str_len >= buf_size) {
+        PyErr_SetString(ErrorObject,
+            "hstsread callback: formatted expire does not fit in libcurl's buffer");
+        goto cleanup;
+    }
+    memcpy(buf, str, (size_t)str_len);
+    buf[str_len] = '\0';
+    rc = 0;
+
+cleanup:
+    Py_XDECREF(tzinfo);
+    Py_XDECREF(utc_obj);
+    Py_XDECREF(formatted);
+    return rc;
+}
+
+
+PYCURL_INTERNAL CURLSTScode
+hstswrite_callback(CURL *easy, struct curl_hstsentry *e,
+                   struct curl_index *i, void *clientp)
+{
+    CurlObject *self;
+    CURLSTScode ret = CURLSTS_FAIL;
+    PyObject *expire_obj = NULL;
+    PyObject *entry = NULL;
+    PyObject *index = NULL;
+    PyObject *arglist = NULL;
+    PyObject *ret_obj = NULL;
+    int raw_ret;
+    PYCURL_DECLARE_THREAD_STATE;
+
+    UNUSED(easy);
+
+    self = (CurlObject *)clientp;
+
+    PYCURL_BEGIN_CALLBACK(hstswrite_callback, ret);
+
+    expire_obj = expire_c_str_to_datetime(e->expire);
+    if (expire_obj == NULL) {
+        goto verbose_error;
+    }
+
+    /* HstsEntry(host=bytes, expire=datetime|None, include_subdomains=bool) */
+    entry = PyObject_CallFunction(hsts_entry_type, "y#OO",
+                                  e->name, (Py_ssize_t)e->namelen,
+                                  expire_obj,
+                                  e->includeSubDomains ? Py_True : Py_False);
+    Py_DECREF(expire_obj);
+    expire_obj = NULL;
+    if (entry == NULL) {
+        goto verbose_error;
+    }
+
+    /* HstsIndex(index=int, total=int) */
+    index = PyObject_CallFunction(hsts_index_type, "nn",
+                                  (Py_ssize_t)i->index, (Py_ssize_t)i->total);
+    if (index == NULL) {
+        goto verbose_error;
+    }
+
+    arglist = PyTuple_Pack(2, entry, index);
+    if (arglist == NULL) {
+        goto verbose_error;
+    }
+
+    ret_obj = PyObject_Call(self->hstswrite_cb, arglist, NULL);
+    Py_CLEAR(arglist);
+    if (ret_obj == NULL) {
+        goto verbose_error;
+    }
+    if (ret_obj == Py_None) {
+        ret = CURLSTS_OK;
+        goto done;
+    }
+    if (callback_return_value_to_int(ret_obj, "hstswrite", &raw_ret) != 0) {
+        goto silent_error;
+    }
+    if (raw_ret < 0 || raw_ret > CURLSTS_FAIL) {
+        PyErr_SetString(ErrorObject, "hstswrite callback returned an invalid CURLSTScode");
+        goto verbose_error;
+    }
+    ret = (CURLSTScode)raw_ret;
+    goto done;
+
+silent_error:
+    ret = CURLSTS_FAIL;
+done:
+    Py_XDECREF(entry);
+    Py_XDECREF(index);
+    Py_XDECREF(ret_obj);
+    PYCURL_END_CALLBACK(ret);
+verbose_error:
+    Py_XDECREF(expire_obj);
+    Py_XDECREF(arglist);
+    print_callback_error_if_regular_exception();
+    goto silent_error;
+}
+
+
+PYCURL_INTERNAL CURLSTScode
+hstsread_callback(CURL *easy, struct curl_hstsentry *e, void *clientp)
+{
+    CurlObject *self;
+    CURLSTScode ret = CURLSTS_FAIL;
+    PyObject *ret_obj = NULL;
+    PyObject *host_obj = NULL;
+    PyObject *expire_obj = NULL;
+    PyObject *include_obj = NULL;
+    PyObject *host_encoded = NULL;
+    char *host_buf = NULL;
+    Py_ssize_t host_len = 0;
+    int include_subdomains;
+    PYCURL_DECLARE_THREAD_STATE;
+
+    UNUSED(easy);
+
+    self = (CurlObject *)clientp;
+
+    PYCURL_BEGIN_CALLBACK(hstsread_callback, ret);
+
+    ret_obj = PyObject_CallNoArgs(self->hstsread_cb);
+    if (ret_obj == NULL) {
+        goto verbose_error;
+    }
+
+    if (ret_obj == Py_None) {
+        ret = CURLSTS_DONE;
+        goto done;
+    }
+
+    /* Accept HstsEntry (namedtuple) or any 3-tuple. */
+    if (!PyTuple_Check(ret_obj) || PyTuple_GET_SIZE(ret_obj) != 3) {
+        PyErr_SetString(ErrorObject,
+            "hstsread callback must return None or a 3-tuple (host, expire, include_subdomains)");
+        goto verbose_error;
+    }
+
+    host_obj = PyTuple_GET_ITEM(ret_obj, 0);
+    expire_obj = PyTuple_GET_ITEM(ret_obj, 1);
+    include_obj = PyTuple_GET_ITEM(ret_obj, 2);
+
+    if (PyText_AsStringAndSize(host_obj, &host_buf, &host_len, &host_encoded) != 0) {
+        goto verbose_error;
+    }
+
+    /* e->namelen is the max hostname length libcurl accepts (the
+     * backing buffer is e->namelen + 1 bytes, leaving room for the
+     * null terminator we write at position host_len). */
+    if ((size_t)host_len > e->namelen) {
+        PyErr_Format(ErrorObject,
+            "hstsread callback: host length %zd exceeds libcurl maximum %zu",
+            host_len, (size_t)e->namelen);
+        goto verbose_error;
+    }
+
+    if (expire_obj_to_c_str(expire_obj, e->expire, sizeof(e->expire)) != 0) {
+        goto verbose_error;
+    }
+
+    include_subdomains = PyObject_IsTrue(include_obj);
+    if (include_subdomains < 0) {
+        goto verbose_error;
+    }
+
+    memcpy(e->name, host_buf, (size_t)host_len);
+    e->name[host_len] = '\0';
+    e->namelen = (size_t)host_len;
+    e->includeSubDomains = include_subdomains ? 1 : 0;
+
+    ret = CURLSTS_OK;
+    goto done;
+
+silent_error:
+    ret = CURLSTS_FAIL;
+done:
+    Py_XDECREF(host_encoded);
+    Py_XDECREF(ret_obj);
+    PYCURL_END_CALLBACK(ret);
+verbose_error:
+    print_callback_error_if_regular_exception();
+    goto silent_error;
+}
+#endif
+
 #undef PYCURL_BEGIN_CALLBACK

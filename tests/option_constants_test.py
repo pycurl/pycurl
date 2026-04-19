@@ -742,3 +742,47 @@ def test_xauth_bearer(curl):
 
 def test_cookielist_constants():
     assert pycurl.OPT_COOKIELIST == pycurl.COOKIELIST
+
+
+@util.min_libcurl(7, 21, 0)
+def test_fnmatch_constants():
+    assert hasattr(pycurl, "FNMATCH_FUNCTION")
+    assert hasattr(pycurl, "FNMATCH_DATA")
+    assert pycurl.FNMATCHFUNC_MATCH == 0
+    assert pycurl.FNMATCHFUNC_NOMATCH == 1
+    assert pycurl.FNMATCHFUNC_FAIL == 2
+
+
+@util.min_libcurl(7, 59, 0)
+def test_resolver_start_constants():
+    assert hasattr(pycurl, "RESOLVER_START_FUNCTION")
+    assert hasattr(pycurl, "RESOLVER_START_DATA")
+
+
+@util.min_libcurl(7, 64, 0)
+def test_trailer_constants():
+    assert hasattr(pycurl, "TRAILERFUNCTION")
+    assert hasattr(pycurl, "TRAILERDATA")
+    assert pycurl.TRAILERFUNC_OK == 0
+    assert pycurl.TRAILERFUNC_ABORT == 1
+
+
+@util.min_libcurl(7, 74, 0)
+def test_hsts_constants():
+    for name in (
+        "HSTS",
+        "HSTS_CTRL",
+        "HSTSREADFUNCTION",
+        "HSTSREADDATA",
+        "HSTSWRITEFUNCTION",
+        "HSTSWRITEDATA",
+        "CURLHSTS_ENABLE",
+        "CURLHSTS_READONLYFILE",
+        "CURLSTS_OK",
+        "CURLSTS_DONE",
+        "CURLSTS_FAIL",
+    ):
+        assert hasattr(pycurl, name), name
+    assert pycurl.CURLSTS_OK == 0
+    assert pycurl.CURLSTS_DONE == 1
+    assert pycurl.CURLSTS_FAIL == 2
