@@ -622,6 +622,7 @@ def get_extension(argv, split_extension_source=False):
             os.path.join("src", "easyinfo.c"),
             os.path.join("src", "easyopt.c"),
             os.path.join("src", "easyperform.c"),
+            os.path.join("src", "easyws.c"),
             os.path.join("src", "module.c"),
             os.path.join("src", "mime.c"),
             os.path.join("src", "multi.c"),

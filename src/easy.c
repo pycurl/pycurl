@@ -964,6 +964,13 @@ PYCURL_INTERNAL PyMethodDef curlobject_methods[] = {
 #if defined(HAVE_CURL_OPENSSL)
     {"set_ca_certs", (PyCFunction)do_curl_set_ca_certs, METH_VARARGS, curl_set_ca_certs_doc},
 #endif
+#ifdef HAVE_CURL_WEBSOCKETS
+    {"ws_send", (PyCFunction)do_curl_ws_send, METH_VARARGS | METH_KEYWORDS, curl_ws_send_doc},
+    {"ws_recv", (PyCFunction)do_curl_ws_recv, METH_VARARGS, curl_ws_recv_doc},
+    {"ws_recv_into", (PyCFunction)do_curl_ws_recv_into, METH_VARARGS | METH_KEYWORDS, curl_ws_recv_into_doc},
+    {"ws_meta", (PyCFunction)do_curl_ws_meta, METH_NOARGS, curl_ws_meta_doc},
+    {"ws_close", (PyCFunction)do_curl_ws_close, METH_VARARGS | METH_KEYWORDS, curl_ws_close_doc},
+#endif
     {"__getstate__", (PyCFunction)do_curl_getstate, METH_NOARGS, NULL},
     {"__setstate__", (PyCFunction)do_curl_setstate, METH_VARARGS, NULL},
     {"__enter__", (PyCFunction)do_curl_enter, METH_NOARGS, NULL},

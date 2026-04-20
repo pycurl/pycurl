@@ -36,9 +36,11 @@ def curl():
     yield c
     c.close()
 
+
 @pytest.fixture(scope="session")
 def app() -> Generator[str, None, None]:
     yield from make_app()
+
 
 def make_app() -> Generator[str, None, None]:
     port = _get_free_port()
@@ -59,3 +61,16 @@ def make_app() -> Generator[str, None, None]:
     wait_listening(localhost, port, timeout=10.0)
     yield f"http://{localhost}:{port}"
     teardown(state)
+
+
+@pytest.fixture(scope="session")
+def ws_app() -> Generator[str, None, None]:
+    from . import wsappmanager
+
+    port = _get_free_port()
+    server = wsappmanager.start_server(localhost, port)
+    wait_listening(localhost, port, timeout=10.0)
+    try:
+        yield f"ws://{localhost}:{port}"
+    finally:
+        server.stop()

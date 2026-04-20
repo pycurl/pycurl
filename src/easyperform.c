@@ -82,7 +82,7 @@ do_curl_perform_rs(CurlObject *self, PyObject *Py_UNUSED(ignored))
 
 /* --------------- send/recv --------------- */
 
-static PyObject *
+PYCURL_INTERNAL PyObject *
 set_would_block_error(void)
 {
     errno = EAGAIN;
@@ -90,7 +90,7 @@ set_would_block_error(void)
     return NULL;
 }
 
-static int
+PYCURL_INTERNAL int
 check_easy_recv_send_result(CurlObject *self, CURLcode res)
 {
     if (res == CURLE_OK) {

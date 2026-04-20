@@ -39,6 +39,8 @@ util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *strea
     size_t ret = 0;     /* assume error */
     PyObject *cb;
     Py_ssize_t total_size;
+    int track_ws_write_callback;
+    int prev_ws_write_callback = 0;
     PYCURL_DECLARE_THREAD_STATE;
 
     /* acquire thread */
@@ -62,7 +64,15 @@ util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *strea
     arglist = Py_BuildValue("(y#)", ptr, total_size);
     if (arglist == NULL)
         goto verbose_error;
+    track_ws_write_callback = (flags == 0);
+    if (track_ws_write_callback) {
+        prev_ws_write_callback = self->ws_write_cb_running;
+        self->ws_write_cb_running = 1;
+    }
     result = PyObject_Call(cb, arglist, NULL);
+    if (track_ws_write_callback) {
+        self->ws_write_cb_running = prev_ws_write_callback;
+    }
     Py_DECREF(arglist);
     if (result == NULL)
         goto verbose_error;

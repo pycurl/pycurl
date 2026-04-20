@@ -40,6 +40,9 @@ PYCURL_INTERNAL PyObject *hsts_index_type = NULL;
 PYCURL_INTERNAL PyObject *datetime_type = NULL;
 PYCURL_INTERNAL PyObject *utc_tz = NULL;
 #endif
+#ifdef HAVE_CURL_WEBSOCKETS
+PYCURL_INTERNAL PyObject *ws_frame_type = NULL;
+#endif
 
 PYCURL_INTERNAL PyObject *curlobject_constants = NULL;
 PYCURL_INTERNAL PyObject *curlmultiobject_constants = NULL;
@@ -353,6 +356,10 @@ static void do_curlmod_free(void *unused) {
     datetime_type = NULL;
     Py_XDECREF(utc_tz);
     utc_tz = NULL;
+#endif
+#ifdef HAVE_CURL_WEBSOCKETS
+    Py_XDECREF(ws_frame_type);
+    ws_frame_type = NULL;
 #endif
 
     Py_XDECREF(curlobject_constants);
@@ -1199,6 +1206,22 @@ PyMODINIT_FUNC PyInit_pycurl(void)
     insint_c(d, "PREREQFUNC_OK", CURL_PREREQFUNC_OK);
     insint_c(d, "PREREQFUNC_ABORT", CURL_PREREQFUNC_ABORT);
 #endif
+#ifdef HAVE_CURL_WEBSOCKETS
+    insint_c(d, "WS_OPTIONS", CURLOPT_WS_OPTIONS);
+    /* bits for CURLOPT_WS_OPTIONS */
+    insint_c(d, "WS_RAW_MODE", CURLWS_RAW_MODE);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(8, 14, 0)
+    insint_c(d, "WS_NOAUTOPONG", CURLWS_NOAUTOPONG);
+#endif
+    /* frame flags used by ws_send() and returned in WsFrame.flags */
+    insint_c(d, "WS_TEXT", CURLWS_TEXT);
+    insint_c(d, "WS_BINARY", CURLWS_BINARY);
+    insint_c(d, "WS_CONT", CURLWS_CONT);
+    insint_c(d, "WS_CLOSE", CURLWS_CLOSE);
+    insint_c(d, "WS_PING", CURLWS_PING);
+    insint_c(d, "WS_PONG", CURLWS_PONG);
+    insint_c(d, "WS_OFFSET", CURLWS_OFFSET);
+#endif
 
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 0)
     insint_c(d, "FNMATCH_FUNCTION", CURLOPT_FNMATCH_FUNCTION);
@@ -1772,6 +1795,21 @@ PyMODINIT_FUNC PyInit_pycurl(void)
     }
 #endif
 
+#ifdef HAVE_CURL_WEBSOCKETS
+    arglist = Py_BuildValue("ss", "WsFrame", "age flags offset bytesleft len");
+    if (arglist == NULL) {
+        goto error;
+    }
+    ws_frame_type = PyObject_Call(named_tuple, arglist, NULL);
+    if (ws_frame_type == NULL) {
+        goto error;
+    }
+    Py_DECREF(arglist);
+    if (PyDict_SetItemString(d, "WsFrame", ws_frame_type) < 0) {
+        goto error;
+    }
+#endif
+
 #ifdef PYCURL_AUTODETECT_CA
     pycurl_autodetect_ca();
 #endif
@@ -1790,6 +1828,10 @@ error:
     Py_XDECREF(collections_module);
     Py_XDECREF(named_tuple);
     Py_XDECREF(xio_module);
+#ifdef HAVE_CURL_WEBSOCKETS
+    Py_XDECREF(ws_frame_type);
+    ws_frame_type = NULL;
+#endif
     Py_XDECREF(bytesio);
     Py_XDECREF(stringio);
     Py_XDECREF(arglist);

@@ -28,6 +28,13 @@ For Python programs using PycURL, this means:
   option. The caller must ensure that no other thread is using the
   associated ``Curl`` objects while ``CurlShare.close()`` is executing.
 
+* A WebSocket handle (``CONNECT_ONLY=2`` plus ``ws_send`` / ``ws_recv``)
+  follows the same one-handle-one-thread rule: do not call ``ws_send``
+  from one thread while ``ws_recv`` runs on another. Serialise access
+  with a lock. Calls from another thread while ``perform()`` is running
+  are unsafe unless they happen inside that handle's active
+  ``WRITEFUNCTION`` callback.
+
 PycURL handles the necessary SSL locks for OpenSSL/LibreSSL/BoringSSL,
 GnuTLS, NSS, mbedTLS and wolfSSL.
 

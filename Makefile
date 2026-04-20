@@ -39,8 +39,9 @@ RSYNC_USER = armco@web.sourceforge.net
 # src/module.c is first because it declares global variables
 # which other files reference; important for single source build
 SOURCES = src/easy.c src/easycb.c src/easyinfo.c src/easyopt.c src/easyperform.c \
-	src/mime.c src/module.c src/multi.c src/oscompat.c src/pythoncompat.c \
-	src/share.c src/stringcompat.c src/threadsupport.c src/util.c
+	src/easyws.c src/mime.c src/module.c src/multi.c src/oscompat.c \
+	src/pythoncompat.c src/share.c src/stringcompat.c src/threadsupport.c \
+	src/util.c
 
 GEN_SOURCES = src/docstrings.c src/docstrings.h
 
@@ -64,6 +65,11 @@ DOCSTRINGS_SOURCES = \
 	doc/docstrings/curl_reset.rst \
 	doc/docstrings/curl_send.rst \
 	doc/docstrings/curl_setopt.rst \
+	doc/docstrings/curl_ws_close.rst \
+	doc/docstrings/curl_ws_meta.rst \
+	doc/docstrings/curl_ws_recv.rst \
+	doc/docstrings/curl_ws_recv_into.rst \
+	doc/docstrings/curl_ws_send.rst \
 	doc/docstrings/curl_share.rst \
 	doc/docstrings/curl_unpause.rst \
 	doc/docstrings/curl_unsetopt.rst \
