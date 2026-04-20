@@ -14,13 +14,12 @@ Release Process
    - Changelog (also record release date)
    - doc/conf.py
    - setup.py
-   - winbuild.py
 8. Update copyright years if necessary.
 9. Draft release notes, add to RELEASE-NOTES.rst.
 10. ``make gen docs``.
 11. ``python setup.py sdist``.
 12. Manually test install the built package.
-13. Build windows packages using winbuild.py.
+13. Build windows packages.
 14. Add sdist and windows packages to downloads repo on github.
 15. Tag the new version.
 16. Upload source distribution to pypi using twine.

@@ -130,10 +130,7 @@ of possible dependencies and each of these dependencies having its own
 directory structure, configuration style, parameters and quirks.
 Additionally different dependencies have different
 settings for MSVCRT usage, and an application must have all of its parts
-agreeing on a single setting. If you decide to build PycURL from source
-it is advisable to look through the ``winbuild.py``
-script - it is used to build the official binaries and contains a wealth
-of information for compiling PycURL's dependencies on Windows.
+agreeing on a single setting.
 
 If you are compiling PycURL from source it is recommended to compile all of its
 dependencies from source as well. Using precompiled libraries may lead to
@@ -141,8 +138,7 @@ multiple MSVCRT versions mixed in the resulting PycURL binary, which will
 not be good.
 
 If PycURL is to be linked statically against its dependencies, OpenSSL must
-be patched to link to the DLL version of MSVCRT. There is a patch for this in
-``winbuild`` directory of PycURL source.
+be patched to link to the DLL version of MSVCRT.
 
 For a minimum build you will just need libcurl source. Follow its Windows
 build instructions to build either a static or a DLL version of the library,
@@ -192,35 +188,6 @@ You may find the following mailing list posts helpful:
 
 - https://curl.haxx.se/mail/curlpython-2009-11/0010.html
 - https://curl.haxx.se/mail/curlpython-2013-11/0002.html
-
-
-winbuild.py
-^^^^^^^^^^^
-
-This script is used to build official PycURL Windows packages. You can
-use it to build a full complement of packages with your own options or modify
-it to build a single package you need.
-
-Prerequisites:
-
-- `Git for Windows`_.
-- Appropriate `Python versions`_ installed.
-- MS Visual C++ 9/2008 for Python <= 3.2, MS Visual C++ 10/2010 for
-  Python 3.3 or 3.4, MS Visual C++ 14/2015 for Python 3.5 through 3.8.
-  Express versions of Visual Studio work fine for this,
-  although getting 64 bit compilers to wok in some Express versions involves
-  jumping through several hoops.
-- NASM if building libcurl against OpenSSL.
-- ActivePerl if building libcurl against OpenSSL. The perl shipping with
-  Git for Windows handles forward and backslashes in paths in a way that is
-  incompatible with OpenSSL's build scripts.
-
-.. _Git for Windows: https://git-for-windows.github.io/
-.. _Python versions: http://python.org/download/
-
-``winbuild.py`` assumes all programs are installed in their default locations,
-if this is not the case edit it as needed. ``winbuild.py`` itself can be run
-with any Python it supports.
 
 
 Using PycURL With Custom Python Builds
