@@ -690,7 +690,8 @@ closesocket_callback(void *clientp, curl_socket_t curlfd);
 #ifdef HAVE_CURL_7_19_6_OPTS
 PYCURL_INTERNAL int
 ssh_key_cb(CURL *easy, const struct curl_khkey *knownkey,
-    const struct curl_khkey *foundkey, int khmatch, void *clientp);
+           const struct curl_khkey *foundkey, enum curl_khmatch khmatch,
+           void *clientp);
 #endif
 PYCURL_INTERNAL int
 seek_callback(void *stream, curl_off_t offset, int origin);

@@ -398,7 +398,8 @@ khkey_to_object(const struct curl_khkey *khkey)
 
 PYCURL_INTERNAL int
 ssh_key_cb(CURL *easy, const struct curl_khkey *knownkey,
-    const struct curl_khkey *foundkey, int khmatch, void *clientp)
+           const struct curl_khkey *foundkey, enum curl_khmatch khmatch,
+           void *clientp)
 {
     PyObject *arglist;
     CurlObject *self;
