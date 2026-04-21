@@ -756,12 +756,18 @@ do_multi_socket_all(CurlMultiObject *self, PyObject *Py_UNUSED(ignored))
     CURLMcode res;
     int running = -1;
 
+    if (PyErr_WarnEx(PyExc_DeprecationWarning, "socket_all is deprecated; use socket_action", 1) != 0) {
+        return NULL;
+    }
+
     if (check_multi_state(self, 1 | 2, "socket_all") != 0) {
         return NULL;
     }
 
     PYCURL_BEGIN_ALLOW_THREADS
+    PYCURL_IGNORE_DEPRECATED_BEGIN
     res = curl_multi_socket_all(self->multi_handle, &running);
+    PYCURL_IGNORE_DEPRECATED_END
     PYCURL_END_ALLOW_THREADS
 
     if (check_pending_python_exception_or_signal() != 0) {

@@ -3,6 +3,7 @@
 
 from . import localhost
 import pycurl
+import pytest
 import unittest
 import select
 import flaky
@@ -82,7 +83,8 @@ class MultiSocketSelectTest(unittest.TestCase):
         # get data
         # num_handles = len(m.handles)
 
-        m.socket_all()
+        with pytest.warns(DeprecationWarning, match="socket_all is deprecated; use socket_action"):
+            m.socket_all()
 
         timeout = m.timeout()
         if timeout == -1:

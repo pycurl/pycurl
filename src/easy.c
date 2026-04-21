@@ -102,7 +102,9 @@ util_curlhttppost_update(CurlObject *obj, struct curl_httppost *httppost, PyObje
 PYCURL_INTERNAL void
 do_curlhttppost_dealloc(CurlHttppostObject *self) {
     if (self->httppost != NULL) {
+        PYCURL_IGNORE_DEPRECATED_BEGIN
         curl_formfree(self->httppost);
+        PYCURL_IGNORE_DEPRECATED_END
         self->httppost = NULL;
     }
     Py_CLEAR(self->reflist);
@@ -389,7 +391,9 @@ do_curl_duphandle(CurlObject *self, PyObject *Py_UNUSED(ignored))
     }
     if (self->ioctl_cb != NULL) {
         dup->ioctl_cb = Py_NewRef(self->ioctl_cb);
+        PYCURL_IGNORE_DEPRECATED_BEGIN
         curl_easy_setopt(dup->handle, CURLOPT_IOCTLDATA, dup);
+        PYCURL_IGNORE_DEPRECATED_END
     }
     if (self->opensocket_cb != NULL) {
         dup->opensocket_cb = Py_NewRef(self->opensocket_cb);

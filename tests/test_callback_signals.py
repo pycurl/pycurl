@@ -97,7 +97,8 @@ def test_progress_callback_keyboard_interrupt(curl, app):
         called["called"] = True
         raise KeyboardInterrupt()
 
-    curl.setopt(pycurl.PROGRESSFUNCTION, progress_function)
+    with pytest.warns(DeprecationWarning, match="PROGRESSFUNCTION is deprecated; use XFERINFOFUNCTION"):
+        curl.setopt(pycurl.PROGRESSFUNCTION, progress_function)
 
     with pytest.raises(KeyboardInterrupt):
         curl.perform()

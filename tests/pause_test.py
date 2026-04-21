@@ -52,7 +52,8 @@ def _configure_unpause(curl, state, resume_after, *, use_pause_cont=False):
         return 0
 
     curl.setopt(pycurl.NOPROGRESS, False)
-    curl.setopt(pycurl.PROGRESSFUNCTION, progress)
+    with pytest.warns(DeprecationWarning, match="PROGRESSFUNCTION is deprecated; use XFERINFOFUNCTION"):
+        curl.setopt(pycurl.PROGRESSFUNCTION, progress)
 
 
 def _drive(curl, timeout):

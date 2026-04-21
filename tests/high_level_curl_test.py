@@ -4,6 +4,7 @@
 from . import localhost
 # uses the high level interface
 import curl
+import pytest
 import unittest
 
 from . import appmanager
@@ -24,7 +25,8 @@ class RelativeUrlTest(unittest.TestCase):
     def test_head(self):
         result = self.curl.head('/success')
         self.assertEqual('', result.decode())
-        self.assertEqual(200, self.curl.info()['http-code'])
+        with pytest.warns(DeprecationWarning, match="getinfo option is deprecated"):
+            self.assertEqual(200, self.curl.info()['http-code'])
 
     def test_reuse(self):
         result = self.curl.get('/success')

@@ -98,7 +98,8 @@ def test_tftp_blksize_setopt(curl):
 @util.min_libcurl(7, 19, 4)
 @pytest.mark.gssapi
 def test_socks5_gssapi_service_setopt(curl):
-    curl.setopt(curl.SOCKS5_GSSAPI_SERVICE, "helloworld")
+    with pytest.warns(DeprecationWarning, match="setopt option is deprecated"):
+        curl.setopt(curl.SOCKS5_GSSAPI_SERVICE, "helloworld")
 
 
 # CURLOPT_SOCKS5_GSSAPI_NEC was introduced in libcurl-7.19.4
@@ -457,12 +458,14 @@ def test_crlfile(curl):
 
 @util.only_ssl
 def test_random_file(curl):
-    curl.setopt(curl.RANDOM_FILE, "/bogus-random")
+    with pytest.warns(DeprecationWarning, match="setopt option is deprecated"):
+        curl.setopt(curl.RANDOM_FILE, "/bogus-random")
 
 
 @util.only_ssl
 def test_egdsocket(curl):
-    curl.setopt(curl.EGDSOCKET, "/bogus-egdsocket")
+    with pytest.warns(DeprecationWarning, match="setopt option is deprecated"):
+        curl.setopt(curl.EGDSOCKET, "/bogus-egdsocket")
 
 
 @util.only_ssl_backends_with_min_libcurl(

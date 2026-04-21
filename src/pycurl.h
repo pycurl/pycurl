@@ -36,6 +36,18 @@
 #undef NDEBUG
 #include <assert.h>
 
+/* Use for ignoring libcurl deprecation warnings */
+#if defined(__clang__) || defined(__GNUC__)
+  #define PYCURL_IGNORE_DEPRECATED_BEGIN \
+    _Pragma("GCC diagnostic push") \
+    _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
+  #define PYCURL_IGNORE_DEPRECATED_END \
+    _Pragma("GCC diagnostic pop")
+#else
+#  define PYCURL_IGNORE_DEPRECATED_BEGIN
+#  define PYCURL_IGNORE_DEPRECATED_END
+#endif
+
 #define MAKE_LIBCURL_VERSION(major, minor, patch) \
     ((major) * 0x10000 + (minor) * 0x100 + (patch))
 

@@ -200,17 +200,22 @@ do_curl_getinfo_raw(CurlObject *self, PyObject *args)
 
         }
 
-    case CURLINFO_CONNECT_TIME:
-    case CURLINFO_APPCONNECT_TIME:
+PYCURL_IGNORE_DEPRECATED_BEGIN
     case CURLINFO_CONTENT_LENGTH_DOWNLOAD:
     case CURLINFO_CONTENT_LENGTH_UPLOAD:
-    case CURLINFO_NAMELOOKUP_TIME:
-    case CURLINFO_PRETRANSFER_TIME:
-    case CURLINFO_REDIRECT_TIME:
     case CURLINFO_SIZE_DOWNLOAD:
     case CURLINFO_SIZE_UPLOAD:
     case CURLINFO_SPEED_DOWNLOAD:
     case CURLINFO_SPEED_UPLOAD:
+PYCURL_IGNORE_DEPRECATED_END
+        if (PyErr_WarnEx(PyExc_DeprecationWarning, "getinfo option is deprecated", 1) != 0) {
+            return NULL;
+        }
+    case CURLINFO_CONNECT_TIME:
+    case CURLINFO_APPCONNECT_TIME:
+    case CURLINFO_NAMELOOKUP_TIME:
+    case CURLINFO_PRETRANSFER_TIME:
+    case CURLINFO_REDIRECT_TIME:
     case CURLINFO_STARTTRANSFER_TIME:
     case CURLINFO_TOTAL_TIME:
         {
@@ -295,7 +300,9 @@ do_curl_getinfo_raw(CurlObject *self, PyObject *args)
     /* CURLINFO_ACTIVESOCKET was added as a replacement for CURLINFO_LASTSOCKET
      *  since that one is not working on all platforms.
      */
+PYCURL_IGNORE_DEPRECATED_BEGIN
     case CURLINFO_LASTSOCKET:
+PYCURL_IGNORE_DEPRECATED_END
     case CURLINFO_ACTIVESOCKET:
         {
             /* Return PyLong as result */

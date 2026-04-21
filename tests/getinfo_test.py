@@ -5,6 +5,8 @@ from io import BytesIO
 
 from . import localhost, util
 
+DEPRECATED_STR = "getinfo option is deprecated"
+
 @flaky.flaky(max_runs=3)
 def test_getinfo(curl, app):
     make_request(curl, app)
@@ -12,9 +14,12 @@ def test_getinfo(curl, app):
     assert 200 == curl.getinfo(pycurl.HTTP_CODE)
     assert 200 == curl.getinfo(pycurl.RESPONSE_CODE)
     assert type(curl.getinfo(pycurl.TOTAL_TIME)) is float
-    assert type(curl.getinfo(pycurl.SPEED_DOWNLOAD)) is float
-    assert curl.getinfo(pycurl.SPEED_DOWNLOAD) > 0
-    assert 7 == curl.getinfo(pycurl.SIZE_DOWNLOAD)
+    with pytest.warns(DeprecationWarning, match=DEPRECATED_STR):
+        assert type(curl.getinfo(pycurl.SPEED_DOWNLOAD)) is float
+    with pytest.warns(DeprecationWarning, match=DEPRECATED_STR):
+        assert curl.getinfo(pycurl.SPEED_DOWNLOAD) > 0
+    with pytest.warns(DeprecationWarning, match=DEPRECATED_STR):
+        assert 7 == curl.getinfo(pycurl.SIZE_DOWNLOAD)
     assert f"{app}/success" == curl.getinfo(pycurl.EFFECTIVE_URL)
     assert "text/html; charset=utf-8" == curl.getinfo(pycurl.CONTENT_TYPE).lower()
     assert type(curl.getinfo(pycurl.NAMELOOKUP_TIME)) is float
@@ -92,11 +97,13 @@ def test_getinfo_raw_content_type_invalid_utf8(curl, app):
 
 def test_getinfo_number(curl, app):
     make_request(curl, app)
-    assert 7 == curl.getinfo(pycurl.SIZE_DOWNLOAD)
+    with pytest.warns(DeprecationWarning, match=DEPRECATED_STR):
+        assert 7 == curl.getinfo(pycurl.SIZE_DOWNLOAD)
 
 def test_getinfo_raw_number(curl, app):
     make_request(curl, app)
-    assert 7 == curl.getinfo_raw(pycurl.SIZE_DOWNLOAD)
+    with pytest.warns(DeprecationWarning, match=DEPRECATED_STR):
+        assert 7 == curl.getinfo_raw(pycurl.SIZE_DOWNLOAD)
 
 @util.min_libcurl(7, 55, 0)
 def test_getinfo_upload_download_t(curl, app):
@@ -152,3 +159,15 @@ def test_active_socket(curl, app):
     socket = curl.getinfo(pycurl.ACTIVESOCKET)
     assert socket != -1
     assert socket == curl.getinfo(pycurl.LASTSOCKET)
+
+@pytest.mark.parametrize(
+    "option",
+    [
+        pycurl.CONTENT_LENGTH_DOWNLOAD,
+        pycurl.CONTENT_LENGTH_UPLOAD,
+    ],
+)
+def test_deprecated_getinfo_options(curl, app, option):
+    make_request(curl, app)
+    with pytest.warns(DeprecationWarning, match=DEPRECATED_STR):
+        curl.getinfo(option)

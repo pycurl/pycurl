@@ -96,7 +96,9 @@ util_curl_unsetopt(CurlObject *self, int option)
     case CURLOPT_COOKIE:
     case CURLOPT_COOKIEJAR:
     case CURLOPT_CUSTOMREQUEST:
+PYCURL_IGNORE_DEPRECATED_BEGIN
     case CURLOPT_EGDSOCKET:
+PYCURL_IGNORE_DEPRECATED_END
     case CURLOPT_ENCODING:
     case CURLOPT_FTPPORT:
     case CURLOPT_PROXYUSERPWD:
@@ -104,7 +106,9 @@ util_curl_unsetopt(CurlObject *self, int option)
     case CURLOPT_PROXYUSERNAME:
     case CURLOPT_PROXYPASSWORD:
 #endif
+PYCURL_IGNORE_DEPRECATED_BEGIN
     case CURLOPT_RANDOM_FILE:
+PYCURL_IGNORE_DEPRECATED_END
     case CURLOPT_SSL_CIPHER_LIST:
     case CURLOPT_USERPWD:
 #ifdef HAVE_CURLOPT_USERNAME
@@ -169,7 +173,9 @@ util_curl_unsetopt(CurlObject *self, int option)
     CLEAR_OBJECT(CURLOPT_CONNECT_TO, self->connect_to);
 #endif
     /* FIXME: what about data->set.httpreq ?? */
+PYCURL_IGNORE_DEPRECATED_BEGIN
     CLEAR_OBJECT(CURLOPT_HTTPPOST, self->httppost);
+PYCURL_IGNORE_DEPRECATED_END
 #ifdef HAVE_CURL_MIME
     case CURLOPT_MIMEPOST:
         if ((res = curl_easy_setopt(self->handle, CURLOPT_MIMEPOST, NULL)) != CURLE_OK)
@@ -197,12 +203,16 @@ util_curl_unsetopt(CurlObject *self, int option)
         break;
 
     CLEAR_CALLBACK(CURLOPT_HEADERFUNCTION, CURLOPT_WRITEHEADER, self->h_cb);
+PYCURL_IGNORE_DEPRECATED_BEGIN
     CLEAR_CALLBACK(CURLOPT_PROGRESSFUNCTION, CURLOPT_PROGRESSDATA, self->pro_cb);
+PYCURL_IGNORE_DEPRECATED_END
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 32, 0)
     CLEAR_CALLBACK(CURLOPT_XFERINFOFUNCTION, CURLOPT_XFERINFODATA, self->xferinfo_cb);
 #endif
     CLEAR_CALLBACK(CURLOPT_DEBUGFUNCTION, CURLOPT_DEBUGDATA, self->debug_cb);
+PYCURL_IGNORE_DEPRECATED_BEGIN
     CLEAR_CALLBACK(CURLOPT_IOCTLFUNCTION, CURLOPT_IOCTLDATA, self->ioctl_cb);
+PYCURL_IGNORE_DEPRECATED_END
     CLEAR_CALLBACK(CURLOPT_OPENSOCKETFUNCTION, CURLOPT_OPENSOCKETDATA, self->opensocket_cb);
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
     CLEAR_CALLBACK(CURLOPT_CLOSESOCKETFUNCTION, CURLOPT_CLOSESOCKETDATA, self->closesocket_cb);
@@ -293,6 +303,17 @@ do_curl_setopt_string_impl(CurlObject *self, int option, PyObject *obj)
 
     /* Check that the option specified a string as well as the input */
     switch (option) {
+PYCURL_IGNORE_DEPRECATED_BEGIN
+    case CURLOPT_EGDSOCKET:
+    case CURLOPT_KRBLEVEL:
+    case CURLOPT_RANDOM_FILE:
+#ifdef HAVE_CURL_7_19_4_OPTS
+    case CURLOPT_SOCKS5_GSSAPI_SERVICE:
+#endif
+PYCURL_IGNORE_DEPRECATED_END
+        if (PyErr_WarnEx(PyExc_DeprecationWarning, "setopt option is deprecated", 1) != 0) {
+            return NULL;
+        }
     case CURLOPT_CAINFO:
     case CURLOPT_CAPATH:
     case CURLOPT_COOKIE:
@@ -300,7 +321,6 @@ do_curl_setopt_string_impl(CurlObject *self, int option, PyObject *obj)
     case CURLOPT_COOKIELIST:
     case CURLOPT_COOKIEJAR:
     case CURLOPT_CUSTOMREQUEST:
-    case CURLOPT_EGDSOCKET:
     /* use CURLOPT_ENCODING instead of CURLOPT_ACCEPT_ENCODING
     for compatibility with older libcurls */
     case CURLOPT_ENCODING:
@@ -314,7 +334,6 @@ do_curl_setopt_string_impl(CurlObject *self, int option, PyObject *obj)
     case CURLOPT_PROXYUSERNAME:
     case CURLOPT_PROXYPASSWORD:
 #endif
-    case CURLOPT_RANDOM_FILE:
     case CURLOPT_RANGE:
     case CURLOPT_REFERER:
     case CURLOPT_SSLCERT:
@@ -347,9 +366,6 @@ do_curl_setopt_string_impl(CurlObject *self, int option, PyObject *obj)
 #endif
 #ifdef HAVE_CURLOPT_NOPROXY
     case CURLOPT_NOPROXY:
-#endif
-#ifdef HAVE_CURL_7_19_4_OPTS
-    case CURLOPT_SOCKS5_GSSAPI_SERVICE:
 #endif
 #ifdef HAVE_CURL_7_19_6_OPTS
     case CURLOPT_SSH_KNOWNHOSTS:
@@ -428,7 +444,6 @@ do_curl_setopt_string_impl(CurlObject *self, int option, PyObject *obj)
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(8, 8, 0)
     case CURLOPT_ECH:
 #endif
-    case CURLOPT_KRBLEVEL:
         str = PyText_AsString_NoNUL(obj, &encoded_obj);
         if (str == NULL)
             return NULL;
@@ -565,6 +580,10 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
     Py_ssize_t i, len;
     int res;
 
+    if (PyErr_WarnEx(PyExc_DeprecationWarning, "HTTPPOST is deprecated; use MIMEPOST", 1) != 0) {
+        return NULL;
+    }
+
     len = PyListOrTuple_Size(obj, which);
     if (len == 0)
         Py_RETURN_NONE;
@@ -599,12 +618,14 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
             }
             /* INFO: curl_formadd() internally does memdup() the data, so
              * embedded NUL characters _are_ allowed here. */
+            PYCURL_IGNORE_DEPRECATED_BEGIN
             res = curl_formadd(&post, &last,
                                CURLFORM_COPYNAME, nstr,
                                CURLFORM_NAMELENGTH, (long) nlen,
                                CURLFORM_COPYCONTENTS, cstr,
                                CURLFORM_CONTENTSLENGTH, (long) clen,
                                CURLFORM_END);
+            PYCURL_IGNORE_DEPRECATED_END
             Py_XDECREF(cencoded_obj);
             if (res != CURLE_OK) {
                 Py_XDECREF(nencoded_obj);
@@ -666,6 +687,7 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
                 }
 
                 val = PyLong_AsLong(PyListOrTuple_GetItem(httppost_option, j, which_httppost_option));
+                PYCURL_IGNORE_DEPRECATED_BEGIN
                 if (val != CURLFORM_COPYCONTENTS &&
                     val != CURLFORM_FILE &&
                     val != CURLFORM_FILENAME &&
@@ -678,6 +700,7 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
                     Py_XDECREF(nencoded_obj);
                     goto error;
                 }
+                PYCURL_IGNORE_DEPRECATED_END
 
                 if (PyText_AsStringAndSize(PyListOrTuple_GetItem(httppost_option, j+1, which_httppost_option), &ostr, &olen, &oencoded_obj)) {
                     /* exception should be already set */
@@ -689,6 +712,7 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
                 forms[k].value = ostr;
                 ++k;
 
+                PYCURL_IGNORE_DEPRECATED_BEGIN
                 if (val == CURLFORM_COPYCONTENTS) {
                     /* Contents can contain \0 bytes so we specify the length */
                     forms[k].option = CURLFORM_CONTENTSLENGTH;
@@ -728,13 +752,16 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
                     forms[k].value = (const char *)olen;
                     ++k;
                 }
+                PYCURL_IGNORE_DEPRECATED_END
             }
+            PYCURL_IGNORE_DEPRECATED_BEGIN
             forms[k].option = CURLFORM_END;
             res = curl_formadd(&post, &last,
                                CURLFORM_COPYNAME, nstr,
                                CURLFORM_NAMELENGTH, (long) nlen,
                                CURLFORM_ARRAY, forms,
                                CURLFORM_END);
+            PYCURL_IGNORE_DEPRECATED_END
             Py_XDECREF(oencoded_obj);
             PyMem_Free(forms);
             if (res != CURLE_OK) {
@@ -760,7 +787,9 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
     }
 #endif
 
+    PYCURL_IGNORE_DEPRECATED_BEGIN
     res = curl_easy_setopt(self->handle, CURLOPT_HTTPPOST, post);
+    PYCURL_IGNORE_DEPRECATED_END
     /* Check for errors */
     if (res != CURLE_OK) {
         CURLERROR_SET_RETVAL();
@@ -777,14 +806,18 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
     util_curl_xdecref(self, PYCURL_MEMGROUP_MIMEPOST, NULL);
 #endif
     if (util_curlhttppost_update(self, post, ref_params) != 0) {
+        PYCURL_IGNORE_DEPRECATED_BEGIN
         (void)curl_easy_setopt(self->handle, CURLOPT_HTTPPOST, NULL);
+        PYCURL_IGNORE_DEPRECATED_END
         goto error;
     }
 
     Py_RETURN_NONE;
 
 error:
+    PYCURL_IGNORE_DEPRECATED_BEGIN
     curl_formfree(post);
+    PYCURL_IGNORE_DEPRECATED_END
     Py_XDECREF(ref_params);
     return NULL;
 }
@@ -935,13 +968,18 @@ do_curl_setopt_callable(CurlObject *self, int option, PyObject *obj)
         curl_easy_setopt(self->handle, CURLOPT_READFUNCTION, r_cb);
         curl_easy_setopt(self->handle, CURLOPT_READDATA, self);
         break;
+PYCURL_IGNORE_DEPRECATED_BEGIN
     case CURLOPT_PROGRESSFUNCTION:
+        if (PyErr_WarnEx(PyExc_DeprecationWarning, "PROGRESSFUNCTION is deprecated; use XFERINFOFUNCTION", 1) != 0) {
+            return NULL;
+        }
         Py_INCREF(obj);
         Py_CLEAR(self->pro_cb);
         self->pro_cb = obj;
         curl_easy_setopt(self->handle, CURLOPT_PROGRESSFUNCTION, pro_cb);
         curl_easy_setopt(self->handle, CURLOPT_PROGRESSDATA, self);
         break;
+PYCURL_IGNORE_DEPRECATED_END
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 32, 0)
     case CURLOPT_XFERINFOFUNCTION:
         Py_INCREF(obj);
@@ -958,13 +996,18 @@ do_curl_setopt_callable(CurlObject *self, int option, PyObject *obj)
         curl_easy_setopt(self->handle, CURLOPT_DEBUGFUNCTION, debug_cb);
         curl_easy_setopt(self->handle, CURLOPT_DEBUGDATA, self);
         break;
+PYCURL_IGNORE_DEPRECATED_BEGIN
     case CURLOPT_IOCTLFUNCTION:
+        if (PyErr_WarnEx(PyExc_DeprecationWarning, "IOCTLFUNCTION is deprecated; use SEEKFUNCTION", 1) != 0) {
+            return NULL;
+        }
         Py_INCREF(obj);
         Py_CLEAR(self->ioctl_cb);
         self->ioctl_cb = obj;
         curl_easy_setopt(self->handle, CURLOPT_IOCTLFUNCTION, ioctl_cb);
         curl_easy_setopt(self->handle, CURLOPT_IOCTLDATA, self);
         break;
+PYCURL_IGNORE_DEPRECATED_END
     case CURLOPT_OPENSOCKETFUNCTION:
         Py_INCREF(obj);
         Py_CLEAR(self->opensocket_cb);
@@ -1253,11 +1296,13 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     /* Handle the case of list or tuple objects */
     which = PyListOrTuple_Check(obj);
     if (which) {
+        PYCURL_IGNORE_DEPRECATED_BEGIN
         if (option == CURLOPT_HTTPPOST) {
             return do_curl_setopt_httppost(self, option, which, obj);
         } else {
             return do_curl_setopt_list(self, option, which, obj);
         }
+        PYCURL_IGNORE_DEPRECATED_END
     }
 
     /* Handle the case of function objects for callbacks */
