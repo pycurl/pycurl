@@ -84,6 +84,8 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
     - name: Build
       if: matrix.curl-version == 'ubuntu'
+      env:
+        CFLAGS: -Werror
       run: make
     - name: Test with pytest
       if: matrix.curl-version == 'ubuntu'
@@ -92,6 +94,8 @@ jobs:
       run: make do-test
     - name: Build & test with cibuildwheel
       if: matrix.curl-version == 'vcpkg'
+      env:
+        CFLAGS: -Werror
       run: |
         pip install cibuildwheel
         cibuildwheel --only ${{ matrix.cibw-build }}

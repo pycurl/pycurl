@@ -87,6 +87,8 @@ jobs:
         brew install vsftpd
     - name: Build
       if: matrix.curl-version == 'macos'
+      env:
+        CFLAGS: -Werror
       run: python setup.py build
     - name: Test with pytest
       if: matrix.curl-version == 'macos'
@@ -95,6 +97,8 @@ jobs:
       run: make do-test
     - name: Build & test with cibuildwheel
       if: matrix.curl-version == 'vcpkg'
+      env:
+        CFLAGS: -Werror
       run: |
         pip install cibuildwheel
         cibuildwheel --only ${{ matrix.cibw-build }}
