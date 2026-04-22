@@ -1,171 +1,154 @@
-#! /usr/bin/env python
-# vi:ts=4:et
-
-from . import localhost
 import flaky
 import pycurl
-import unittest
+import pytest
 from io import BytesIO
 
-from . import appmanager
-from . import util
+from . import localhost, util
 
-setup_module, teardown_module = appmanager.setup(('app', 8380))
+@flaky.flaky(max_runs=3)
+def test_getinfo(curl, app):
+    make_request(curl, app)
 
-class GetinfoTest(unittest.TestCase):
-    def setUp(self):
-        self.curl = util.DefaultCurl()
+    assert 200 == curl.getinfo(pycurl.HTTP_CODE)
+    assert 200 == curl.getinfo(pycurl.RESPONSE_CODE)
+    assert type(curl.getinfo(pycurl.TOTAL_TIME)) is float
+    assert type(curl.getinfo(pycurl.SPEED_DOWNLOAD)) is float
+    assert curl.getinfo(pycurl.SPEED_DOWNLOAD) > 0
+    assert 7 == curl.getinfo(pycurl.SIZE_DOWNLOAD)
+    assert f"{app}/success" == curl.getinfo(pycurl.EFFECTIVE_URL)
+    assert "text/html; charset=utf-8" == curl.getinfo(pycurl.CONTENT_TYPE).lower()
+    assert type(curl.getinfo(pycurl.NAMELOOKUP_TIME)) is float
+    assert curl.getinfo(pycurl.NAMELOOKUP_TIME) > 0
+    assert curl.getinfo(pycurl.NAMELOOKUP_TIME) < 1
+    assert 0 == curl.getinfo(pycurl.REDIRECT_TIME)
+    assert 0 == curl.getinfo(pycurl.REDIRECT_COUNT)
+    # time not requested
+    assert -1 == curl.getinfo(pycurl.INFO_FILETIME)
 
-    def tearDown(self):
-        self.curl.close()
+@util.min_libcurl(7, 72, 0)
+def test_getinfo_effective_method(curl, app):
+    make_request(curl, app)
+    assert "GET" == curl.getinfo(pycurl.EFFECTIVE_METHOD)
 
-    @flaky.flaky(max_runs=3)
-    def test_getinfo(self):
-        self.make_request()
+@flaky.flaky(max_runs=3)
+def test_getinfo_times(curl, app):
+    make_request(curl, app)
 
-        self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
-        self.assertEqual(200, self.curl.getinfo(pycurl.RESPONSE_CODE))
-        assert type(self.curl.getinfo(pycurl.TOTAL_TIME)) is float
-        assert type(self.curl.getinfo(pycurl.SPEED_DOWNLOAD)) is float
-        assert self.curl.getinfo(pycurl.SPEED_DOWNLOAD) > 0
-        self.assertEqual(7, self.curl.getinfo(pycurl.SIZE_DOWNLOAD))
-        self.assertEqual('http://%s:8380/success' % localhost, self.curl.getinfo(pycurl.EFFECTIVE_URL))
-        self.assertEqual('text/html; charset=utf-8', self.curl.getinfo(pycurl.CONTENT_TYPE).lower())
-        assert type(self.curl.getinfo(pycurl.NAMELOOKUP_TIME)) is float
-        assert self.curl.getinfo(pycurl.NAMELOOKUP_TIME) > 0
-        assert self.curl.getinfo(pycurl.NAMELOOKUP_TIME) < 1
-        self.assertEqual(0, self.curl.getinfo(pycurl.REDIRECT_TIME))
-        self.assertEqual(0, self.curl.getinfo(pycurl.REDIRECT_COUNT))
-        # time not requested
-        self.assertEqual(-1, self.curl.getinfo(pycurl.INFO_FILETIME))
+    assert 200 == curl.getinfo(pycurl.HTTP_CODE)
+    assert 200 == curl.getinfo(pycurl.RESPONSE_CODE)
+    assert type(curl.getinfo(pycurl.TOTAL_TIME)) is float
+    assert curl.getinfo(pycurl.TOTAL_TIME) > 0
+    assert curl.getinfo(pycurl.TOTAL_TIME) < 1
 
-    @util.min_libcurl(7, 72, 0)
-    def test_getinfo_effective_method(self):
-        self.make_request()
-        self.assertEqual("GET", self.curl.getinfo(pycurl.EFFECTIVE_METHOD))
+@util.min_libcurl(7, 21, 0)
+def test_primary_port_etc(curl, app):
+    make_request(curl, app)
+    assert type(curl.getinfo(pycurl.PRIMARY_PORT)) is int
+    assert type(curl.getinfo(pycurl.LOCAL_IP)) is str
+    assert type(curl.getinfo(pycurl.LOCAL_PORT)) is int
 
-    # It seems that times are 0 on appveyor
-    @util.only_unix
-    @flaky.flaky(max_runs=3)
-    def test_getinfo_times(self):
-        self.make_request()
+def make_request(curl, app, path="/success", expected_body="success"):
+    curl.setopt(pycurl.URL, f"{app}{path}")
+    sio = BytesIO()
+    curl.setopt(pycurl.WRITEFUNCTION, sio.write)
+    curl.perform()
+    assert expected_body == sio.getvalue().decode()
 
-        self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
-        self.assertEqual(200, self.curl.getinfo(pycurl.RESPONSE_CODE))
-        assert type(self.curl.getinfo(pycurl.TOTAL_TIME)) is float
-        assert self.curl.getinfo(pycurl.TOTAL_TIME) > 0
-        assert self.curl.getinfo(pycurl.TOTAL_TIME) < 1
+def test_getinfo_cookie_invalid_utf8(curl, app):
+    curl.setopt(curl.COOKIELIST, "")
+    make_request(curl, app, "/set_cookie_invalid_utf8", "cookie set")
 
-    @util.min_libcurl(7, 21, 0)
-    def test_primary_port_etc(self):
-        self.make_request()
-        assert type(self.curl.getinfo(pycurl.PRIMARY_PORT)) is int
-        assert type(self.curl.getinfo(pycurl.LOCAL_IP)) is str
-        assert type(self.curl.getinfo(pycurl.LOCAL_PORT)) is int
+    assert 200 == curl.getinfo(pycurl.HTTP_CODE)
 
-    def make_request(self, path='/success', expected_body='success'):
-        self.curl.setopt(pycurl.URL, 'http://%s:8380' % localhost + path)
-        sio = BytesIO()
-        self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
-        self.curl.perform()
-        self.assertEqual(expected_body, sio.getvalue().decode())
+    info = curl.getinfo(pycurl.INFO_COOKIELIST)
+    domain, incl_subdomains, path, secure, expires, name, value = info[0].split("\t")
+    assert "\xb3\xd2\xda\xcd\xd7" == name
 
-    def test_getinfo_cookie_invalid_utf8(self):
-        self.curl.setopt(self.curl.COOKIELIST, '')
-        self.make_request('/set_cookie_invalid_utf8', 'cookie set')
+@pytest.mark.skip(reason="bottle converts to utf-8? try without it")
+def test_getinfo_raw_cookie_invalid_utf8(curl, app):
 
-        self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
+    curl.setopt(curl.COOKIELIST, "")
+    make_request(curl, app, "/set_cookie_invalid_utf8", "cookie set")
 
-        info = self.curl.getinfo(pycurl.INFO_COOKIELIST)
-        domain, incl_subdomains, path, secure, expires, name, value = info[0].split("\t")
-        self.assertEqual('\xb3\xd2\xda\xcd\xd7', name)
+    assert 200 == curl.getinfo(pycurl.HTTP_CODE)
+    expected = util.b(f"{localhost}\tFALSE\t/\tFALSE\t0\t\xb3\xd2\xda\xcd\xd7\t%96%A6g%9Ay%B0%A5g%A7tm%7C%95%9A")
+    assert [expected] == curl.getinfo_raw(pycurl.INFO_COOKIELIST)
 
-    def test_getinfo_raw_cookie_invalid_utf8(self):
-        raise unittest.SkipTest('bottle converts to utf-8? try without it')
+def test_getinfo_content_type_invalid_utf8(curl, app):
+    make_request(curl, app, "/content_type_invalid_utf8", "content type set")
 
-        self.curl.setopt(self.curl.COOKIELIST, '')
-        self.make_request('/set_cookie_invalid_utf8', 'cookie set')
+    assert 200 == curl.getinfo(pycurl.HTTP_CODE)
 
-        self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
-        expected = util.b("%s" % localhost + "\tFALSE\t/\tFALSE\t0\t\xb3\xd2\xda\xcd\xd7\t%96%A6g%9Ay%B0%A5g%A7tm%7C%95%9A")
-        self.assertEqual([expected], self.curl.getinfo_raw(pycurl.INFO_COOKIELIST))
+    value = curl.getinfo(pycurl.CONTENT_TYPE)
+    assert "\xb3\xd2\xda\xcd\xd7" == value
 
-    def test_getinfo_content_type_invalid_utf8(self):
-        self.make_request('/content_type_invalid_utf8', 'content type set')
+@pytest.mark.skip(reason="bottle converts to utf-8? try without it")
+def test_getinfo_raw_content_type_invalid_utf8(curl, app):
+    make_request(curl, app, "/content_type_invalid_utf8", "content type set")
 
-        self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
+    assert 200 == curl.getinfo(pycurl.HTTP_CODE)
+    expected = util.b("\xb3\xd2\xda\xcd\xd7")
+    assert expected == curl.getinfo_raw(pycurl.CONTENT_TYPE)
 
-        value = self.curl.getinfo(pycurl.CONTENT_TYPE)
-        self.assertEqual('\xb3\xd2\xda\xcd\xd7', value)
+def test_getinfo_number(curl, app):
+    make_request(curl, app)
+    assert 7 == curl.getinfo(pycurl.SIZE_DOWNLOAD)
 
-    def test_getinfo_raw_content_type_invalid_utf8(self):
-        raise unittest.SkipTest('bottle converts to utf-8? try without it')
+def test_getinfo_raw_number(curl, app):
+    make_request(curl, app)
+    assert 7 == curl.getinfo_raw(pycurl.SIZE_DOWNLOAD)
 
-        self.make_request('/content_type_invalid_utf8', 'content type set')
+@util.min_libcurl(7, 55, 0)
+def test_getinfo_upload_download_t(curl, app):
+    make_request(curl, app)
+    assert 7 == curl.getinfo(pycurl.SIZE_DOWNLOAD_T)
+    assert type(curl.getinfo(pycurl.CONTENT_LENGTH_DOWNLOAD_T)) is int
+    assert type(curl.getinfo(pycurl.CONTENT_LENGTH_UPLOAD_T)) is int
+    assert type(curl.getinfo(pycurl.SIZE_DOWNLOAD_T)) is int
+    assert type(curl.getinfo(pycurl.SIZE_UPLOAD_T)) is int
+    assert type(curl.getinfo(pycurl.SPEED_DOWNLOAD_T)) is int
+    assert type(curl.getinfo(pycurl.SPEED_UPLOAD_T)) is int
 
-        self.assertEqual(200, self.curl.getinfo(pycurl.HTTP_CODE))
-        expected = util.b('\xb3\xd2\xda\xcd\xd7')
-        self.assertEqual(expected, self.curl.getinfo_raw(pycurl.CONTENT_TYPE))
+@util.min_libcurl(7, 59, 0)
+def test_getinfo_filetime_t(curl, app):
+    make_request(curl, app)
+    assert type(curl.getinfo(pycurl.FILETIME_T)) is int
 
-    def test_getinfo_number(self):
-        self.make_request()
-        self.assertEqual(7, self.curl.getinfo(pycurl.SIZE_DOWNLOAD))
+@util.min_libcurl(7, 61, 0)
+def test_getinfo_connect_transfer_t(curl, app):
+    make_request(curl, app)
+    assert type(curl.getinfo(pycurl.APPCONNECT_TIME_T)) is int
+    assert type(curl.getinfo(pycurl.CONNECT_TIME_T)) is int
+    assert type(curl.getinfo(pycurl.NAMELOOKUP_TIME_T)) is int
+    assert type(curl.getinfo(pycurl.PRETRANSFER_TIME_T)) is int
+    assert type(curl.getinfo(pycurl.REDIRECT_TIME_T)) is int
+    assert type(curl.getinfo(pycurl.STARTTRANSFER_TIME_T)) is int
+    assert type(curl.getinfo(pycurl.TOTAL_TIME_T)) is int
 
-    def test_getinfo_raw_number(self):
-        self.make_request()
-        self.assertEqual(7, self.curl.getinfo_raw(pycurl.SIZE_DOWNLOAD))
+@util.min_libcurl(8, 6, 0)
+def test_getinfo_queue_time_t(curl, app):
+    make_request(curl, app)
+    assert type(curl.getinfo(pycurl.QUEUE_TIME_T)) is int
 
-    @util.min_libcurl(7, 55, 0)
-    def test_getinfo_upload_download_t(self):
-        self.make_request()
-        self.assertEqual(7, self.curl.getinfo(pycurl.SIZE_DOWNLOAD_T))
-        assert type(self.curl.getinfo(pycurl.CONTENT_LENGTH_DOWNLOAD_T)) is int
-        assert type(self.curl.getinfo(pycurl.CONTENT_LENGTH_UPLOAD_T)) is int
-        assert type(self.curl.getinfo(pycurl.SIZE_DOWNLOAD_T)) is int
-        assert type(self.curl.getinfo(pycurl.SIZE_UPLOAD_T)) is int
-        assert type(self.curl.getinfo(pycurl.SPEED_DOWNLOAD_T)) is int
-        assert type(self.curl.getinfo(pycurl.SPEED_UPLOAD_T)) is int
+@util.min_libcurl(8, 10, 0)
+def test_getinfo_posttransfer_time_t(curl, app):
+    make_request(curl, app)
+    assert type(curl.getinfo(pycurl.POSTTRANSFER_TIME_T)) is int
 
-    @util.min_libcurl(7, 59, 0)
-    def test_getinfo_filetime_t(self):
-        self.make_request()
-        assert type(self.curl.getinfo(pycurl.FILETIME_T)) is int
+@util.min_libcurl(8, 11, 0)
+def test_getinfo_earlydata_sent_t(curl, app):
+    make_request(curl, app)
+    assert type(curl.getinfo(pycurl.EARLYDATA_SENT_T)) is int
 
-    @util.min_libcurl(7, 61, 0)
-    def test_getinfo_connect_transfer_t(self):
-        self.make_request()
-        assert type(self.curl.getinfo(pycurl.APPCONNECT_TIME_T)) is int
-        assert type(self.curl.getinfo(pycurl.CONNECT_TIME_T)) is int
-        assert type(self.curl.getinfo(pycurl.NAMELOOKUP_TIME_T)) is int
-        assert type(self.curl.getinfo(pycurl.PRETRANSFER_TIME_T)) is int
-        assert type(self.curl.getinfo(pycurl.REDIRECT_TIME_T)) is int
-        assert type(self.curl.getinfo(pycurl.STARTTRANSFER_TIME_T)) is int
-        assert type(self.curl.getinfo(pycurl.TOTAL_TIME_T)) is int
-
-    @util.min_libcurl(8, 6, 0)
-    def test_getinfo_queue_time_t(self):
-        self.make_request()
-        assert type(self.curl.getinfo(pycurl.QUEUE_TIME_T)) is int
-
-    @util.min_libcurl(8, 10, 0)
-    def test_getinfo_posttransfer_time_t(self):
-        self.make_request()
-        assert type(self.curl.getinfo(pycurl.POSTTRANSFER_TIME_T)) is int
-
-    @util.min_libcurl(8, 11, 0)
-    def test_getinfo_earlydata_sent_t(self):
-        self.make_request()
-        assert type(self.curl.getinfo(pycurl.EARLYDATA_SENT_T)) is int
-
-    @util.min_libcurl(7, 45, 0)
-    def test_active_socket(self):
-        self.curl.setopt(pycurl.FORBID_REUSE, False)
-        self.curl.setopt(pycurl.CONNECT_ONLY, True)
-        socket = self.curl.getinfo(pycurl.ACTIVESOCKET)
-        assert socket == -1
-        assert socket == self.curl.getinfo(pycurl.LASTSOCKET)
-        self.curl.setopt(pycurl.URL, f"http://{localhost}:8380")
-        self.curl.perform()
-        socket = self.curl.getinfo(pycurl.ACTIVESOCKET)
-        assert socket != -1
-        assert socket == self.curl.getinfo(pycurl.LASTSOCKET)
+@util.min_libcurl(7, 45, 0)
+def test_active_socket(curl, app):
+    curl.setopt(pycurl.FORBID_REUSE, False)
+    curl.setopt(pycurl.CONNECT_ONLY, True)
+    socket = curl.getinfo(pycurl.ACTIVESOCKET)
+    assert socket == -1
+    assert socket == curl.getinfo(pycurl.LASTSOCKET)
+    curl.setopt(pycurl.URL, app)
+    curl.perform()
+    socket = curl.getinfo(pycurl.ACTIVESOCKET)
+    assert socket != -1
+    assert socket == curl.getinfo(pycurl.LASTSOCKET)
