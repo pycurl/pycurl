@@ -1,3 +1,58 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pycurl"
+description = "PycURL -- A Python Interface To The cURL library"
+requires-python = ">=3.10"
+license = "LGPL-2.1-only OR MIT"
+license-files = ["COPYING-LGPL", "COPYING-MIT"]
+keywords = ["curl", "libcurl", "urllib", "wget", "download", "file transfer", "http", "www"]
+authors = [
+    { name = "Kjetil Jacobsen",         email = "kjetilja@gmail.com" },
+    { name = "Markus F.X.J. Oberhumer", email = "markus@oberhumer.com" },
+    { name = "Oleg Pudeyev",            email = "oleg@bsdpower.com" },
+]
+maintainers = [
+    { name = "Oleg Pudeyev", email = "oleg@bsdpower.com" },
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Web Environment",
+    "Intended Audience :: Developers",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Internet :: File Transfer Protocol (FTP)",
+    "Topic :: Internet :: WWW/HTTP",
+]
+dynamic = ["version", "readme"]
+
+[project.urls]
+Homepage      = "http://pycurl.io/"
+Documentation = "http://pycurl.io/docs/latest/"
+Source        = "https://github.com/pycurl/pycurl"
+Issues        = "https://github.com/pycurl/pycurl/issues"
+Changelog     = "https://github.com/pycurl/pycurl/blob/master/ChangeLog"
+
+[dependency-groups]
+dev = [
+    "flaky",
+    "flask",
+    "numpy",
+    "pyflakes",
+    "pytest>=5",
+    "sphinx",
+    "setuptools",
+    "websockets>=12",
+]
+
 [tool.cibuildwheel]
 build = "cp3*"
 skip = ["cp38-*", "*-musllinux*"]

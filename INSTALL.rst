@@ -9,25 +9,25 @@ everything necessary to build pycurl, in which case you need to
 install the developer specific RPM which is usually called curl-dev.
 
 
-Distutils
----------
+From a source distribution
+--------------------------
 
 Build and install pycurl with the following commands::
 
     (if necessary, become root)
     tar -zxvf pycurl-$VER.tar.gz
     cd pycurl-$VER
-    python setup.py install
+    python -m pip install .
 
 $VER should be substituted with the pycurl version number, e.g. 7.10.5.
 
 Note that the installation script assumes that 'curl-config' can be
 located in your path setting.  If curl-config is installed outside
 your path or you want to force installation to use a particular
-version of curl-config, use the '--curl-config' command line option to
-specify the location of curl-config.  Example::
+version of curl-config, set the ``PYCURL_CURL_CONFIG`` environment
+variable to the location of curl-config.  Example::
 
-    python setup.py install --curl-config=/usr/local/bin/curl-config
+    PYCURL_CURL_CONFIG=/usr/local/bin/curl-config python -m pip install .
 
 If libcurl is linked dynamically with pycurl, you may have to alter the
 LD_LIBRARY_PATH environment variable accordingly.  This normally
@@ -51,43 +51,40 @@ It will then fail at runtime as follows::
 
     ImportError: pycurl: libcurl link-time ssl backend (openssl) is different from compile-time ssl backend (none/other)
 
-To fix this, you need to tell ``setup.py`` what SSL backend is used::
+To fix this, set the ``PYCURL_SSL_LIBRARY`` environment variable to the
+SSL backend that libcurl is using::
 
-    python setup.py --with-[openssl|gnutls|nss|mbedtls|wolfssl|sectransp|schannel] install
+    PYCURL_SSL_LIBRARY=openssl python -m pip install .
 
-Note: as of PycURL 7.21.5, setup.py accepts ``--with-openssl`` option to
-indicate that libcurl is built against OpenSSL/LibreSSL/BoringSSL.
-``--with-ssl`` is an alias
-for ``--with-openssl`` and continues to be accepted for backwards compatibility.
+Substitute the appropriate backend name (``openssl``, ``gnutls``, ``nss``,
+``mbedtls``, ``wolfssl``, ``sectransp``, or ``schannel``).
 
-You can also ask ``setup.py`` to obtain SSL backend information from installed
-libcurl shared library, as follows:
-
-    python setup.py --libcurl-dll=libcurl.so
-
-An unqualified ``libcurl.so`` would use the system libcurl, or you can
-specify a full path.
+Advanced users invoking ``python -m build`` or ``setup.py`` directly can
+also have it obtain SSL backend information from an installed libcurl
+shared library by passing ``--libcurl-dll=libcurl.so`` (an unqualified
+``libcurl.so`` would use the system libcurl, or a full path can be
+specified). When installing via ``pip``, prefer ``PYCURL_SSL_LIBRARY``
+above.
 
 
-easy_install / pip
-------------------
+pip
+---
 
 ::
 
-    easy_install pycurl
     pip install pycurl
 
 If you need to specify an alternate curl-config, it can be done via an
 environment variable::
 
     export PYCURL_CURL_CONFIG=/usr/local/bin/curl-config
-    easy_install pycurl
+    pip install pycurl
 
 The same applies to the SSL backend, if you need to specify it (see the SSL
 note above)::
 
     export PYCURL_SSL_LIBRARY=[openssl|gnutls|nss|mbedtls|sectransp|schannel]
-    easy_install pycurl
+    pip install pycurl
 
 
 pip and cached pycurl package

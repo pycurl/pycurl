@@ -139,8 +139,11 @@ strip: build
 	strip -p --strip-unneeded build/lib*/*.so
 	chmod -x build/lib*/*.so
 
-install install_lib:
-	$(PYTHON) setup.py $@
+install:
+	$(PYTHON) -m pip install .
+
+install_lib:
+	$(PYTHON) setup.py install_lib
 
 clean:
 	-rm -rf build dist

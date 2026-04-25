@@ -94,9 +94,8 @@ Installation
 On Unix, PycURL is easiest to install using your operating system's package
 manager. This will also install libcurl and other dependencies as needed.
 
-Installation via easy_install and pip is also supported::
+Installation via pip is also supported::
 
-    easy_install pycurl
     pip install pycurl
 
 If this does not work, please see :ref:`install`.

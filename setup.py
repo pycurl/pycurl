@@ -806,9 +806,8 @@ def gen_docstrings_sources():
 ###############################################################################
 
 setup_args = dict(
-    name=PACKAGE,
     version=VERSION,
-    description='PycURL -- A Python Interface To The cURL library',
+    long_description_content_type='text/x-rst',
     long_description='''\
 PycURL -- A Python Interface To The cURL library
 ================================================
@@ -890,35 +889,8 @@ in COPYING-LGPL_ and COPYING-MIT_ files in the source distribution.
 .. _COPYING-LGPL: https://raw.githubusercontent.com/pycurl/pycurl/master/COPYING-LGPL
 .. _COPYING-MIT: https://raw.githubusercontent.com/pycurl/pycurl/master/COPYING-MIT
 ''',
-    author="Kjetil Jacobsen, Markus F.X.J. Oberhumer, Oleg Pudeyev",
-    author_email="kjetilja@gmail.com, markus@oberhumer.com, oleg@bsdpower.com",
-    maintainer="Oleg Pudeyev",
-    maintainer_email="oleg@bsdpower.com",
-    url="http://pycurl.io/",
-    license="LGPL/MIT",
-    keywords=['curl', 'libcurl', 'urllib', 'wget', 'download', 'file transfer',
-        'http', 'www'],
-    classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Environment :: Web Environment',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)',
-        'License :: OSI Approved :: MIT License',
-        'Operating System :: Microsoft :: Windows',
-        'Operating System :: POSIX',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.10',
-        'Programming Language :: Python :: 3.11',
-        'Programming Language :: Python :: 3.12',
-        'Programming Language :: Python :: 3.13',
-        'Programming Language :: Python :: 3.14',
-        'Topic :: Internet :: File Transfer Protocol (FTP)',
-        'Topic :: Internet :: WWW/HTTP',
-    ],
     packages=[PY_PACKAGE],
     package_dir={ PY_PACKAGE: os.path.join('python', 'curl') },
-    python_requires='>=3.10',
-    platforms='All',
 )
 
 unix_help = '''\

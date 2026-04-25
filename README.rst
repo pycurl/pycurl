@@ -90,7 +90,25 @@ reports and direct questions to our mailing list instead.
 Automated Tests
 ---------------
 
-PycURL comes with an automated test suite. To run the tests, execute::
+PycURL comes with an automated test suite. To run the tests, set up a
+virtual environment and invoke ``pytest``::
+
+    python3 -m venv .venv
+    source .venv/bin/activate
+    python -m pip install --upgrade pip
+    python -m pip install -e . --group dev
+    python -m pytest tests/
+
+.. note::
+
+    The ``--group`` option requires ``pip`` >= 25.1 (PEP 735).
+
+After modifying C sources under ``src/``, rebuild the extension in place
+with::
+
+    python -m pip install -e .
+
+Alternatively, the suite can be run via ``make``::
 
     make test
 
