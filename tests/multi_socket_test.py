@@ -1,6 +1,3 @@
-#! /usr/bin/env python
-# vi:ts=4:et
-
 import gc
 import select
 import sys
@@ -89,6 +86,35 @@ def _assert_within_deadline(deadline, label):
         pytest.fail(f"{label} timed out")
 
 
+def _chunks_transfer(app, multi, socket_callback, label):
+    """Drive a /chunks transfer on `multi` with `socket_callback` installed.
+
+    Yields the timer_state once per drive iteration so the caller can do
+    per-iteration work (e.g. assign() from outside the callback). The easy
+    handle is removed and closed on exit.
+    """
+    timer_state = _setup_timer(multi)
+    multi.setopt(pycurl.M_SOCKETFUNCTION, socket_callback)
+
+    c = util.DefaultCurl()
+    c.body = BytesIO()
+    c.setopt(c.URL, f"{app}/chunks?num_chunks=10&delay=0.1")
+    c.setopt(c.WRITEFUNCTION, c.body.write)
+    multi.add_handle(c)
+
+    try:
+        running = 1
+        deadline = time.monotonic() + 10.0
+        while running:
+            _assert_within_deadline(deadline, label)
+            running = _drive_multi(multi, timeout=0.2, timer_state=timer_state)
+            yield timer_state
+            multi.select(0.1)
+    finally:
+        multi.remove_handle(c)
+        c.close()
+
+
 def test_multi_socket(app, multi):
     urls = [
         # not sure why requesting /success produces no events.
@@ -157,8 +183,6 @@ def test_multi_socket(app, multi):
 
 @pytest.mark.parametrize("reassign", [False, True])
 def test_multi_assign_objects(app, multi, reassign):
-    url = f"{app}/chunks?num_chunks=10&delay=0.1"
-
     assigned = False
     assigned_ref = None
     first_ref = None
@@ -172,44 +196,29 @@ def test_multi_assign_objects(app, multi, reassign):
         if data is not None:
             seen_data = data
 
-    timer_state = _setup_timer(multi)
-    multi.setopt(pycurl.M_SOCKETFUNCTION, socket)
-    c = util.DefaultCurl()
-    c.body = BytesIO()
-    c.setopt(c.URL, url)
-    c.setopt(c.WRITEFUNCTION, c.body.write)
-    multi.add_handle(c)
-
-    running = 1
-    deadline = time.monotonic() + 10.0
-    while running:
-        _assert_within_deadline(deadline, "multi assign objects transfer")
-        running = _drive_multi(multi, timeout=0.2, timer_state=timer_state)
-        if not assigned:
-            assigned_sock = _find_socket(multi, timeout=5.0, timer_state=timer_state)
-            assert assigned_sock is not None
-            first = Sentinel()
-            first_ref = weakref.ref(first)
-            rc_before = sys.getrefcount(first)
-            multi.assign(assigned_sock, first)
-            rc_after = sys.getrefcount(first)
-            assert rc_after >= rc_before + 1
-            if reassign:
-                second = Sentinel()
-                rc2_before = sys.getrefcount(second)
-                assigned_ref = weakref.ref(second)
-                multi.assign(assigned_sock, second)
-                rc2_after = sys.getrefcount(second)
-                assert rc2_after >= rc2_before + 1
-                del second
-            else:
-                assigned_ref = first_ref
-            assigned = True
-            del first
-        multi.select(0.1)
-
-    multi.remove_handle(c)
-    c.close()
+    for timer_state in _chunks_transfer(app, multi, socket, "assign objects"):
+        if assigned:
+            continue
+        assigned_sock = _find_socket(multi, timeout=5.0, timer_state=timer_state)
+        assert assigned_sock is not None
+        first = Sentinel()
+        first_ref = weakref.ref(first)
+        rc_before = sys.getrefcount(first)
+        multi.assign(assigned_sock, first)
+        rc_after = sys.getrefcount(first)
+        assert rc_after >= rc_before + 1
+        if reassign:
+            second = Sentinel()
+            rc2_before = sys.getrefcount(second)
+            assigned_ref = weakref.ref(second)
+            multi.assign(assigned_sock, second)
+            rc2_after = sys.getrefcount(second)
+            assert rc2_after >= rc2_before + 1
+            del second
+        else:
+            assigned_ref = first_ref
+        assigned = True
+        del first
 
     assert assigned_ref is not None
     assert first_ref is not None
@@ -227,9 +236,76 @@ def test_multi_assign_objects(app, multi, reassign):
     assert assigned_ref() is None
 
 
-def test_multi_assign_none_clears(app, multi):
-    url = f"{app}/chunks?num_chunks=10&delay=0.1"
+def test_multi_assign_inside_socket_callback(app, multi):
+    class Marker:
+        pass
 
+    marker = Marker()
+    events = []
+    assign_errors = []
+
+    def socket(event, sock_fd, multi_handle, data):
+        events.append((sock_fd, event, data))
+        if event != pycurl.POLL_REMOVE and data is None:
+            try:
+                multi.assign(sock_fd, marker)
+            except pycurl.error as e:
+                assign_errors.append(e)
+
+    for _ in _chunks_transfer(app, multi, socket, "assign in callback"):
+        pass
+
+    assert assign_errors == []
+    assert any(data is marker for _, _, data in events), (
+        "expected at least one callback to receive the assigned marker as socketp"
+    )
+
+
+def test_multi_unassign_inside_socket_callback(app, multi):
+    class Marker:
+        pass
+
+    marker = Marker()
+    events = []
+    errors = []
+    unassigned = False
+
+    def socket(event, sock_fd, multi_handle, data):
+        nonlocal unassigned
+        events.append((sock_fd, event, data))
+        try:
+            if event != pycurl.POLL_REMOVE and data is None and not unassigned:
+                multi.assign(sock_fd, marker)
+            elif data is marker and not unassigned:
+                multi.unassign(sock_fd)
+                unassigned = True
+        except pycurl.error as e:
+            errors.append(e)
+
+    for _ in _chunks_transfer(app, multi, socket, "unassign in callback"):
+        pass
+
+    assert errors == []
+    assert unassigned, "did not reach unassign() in callback"
+    marker_seen = [i for i, (_, _, d) in enumerate(events) if d is marker]
+    assert marker_seen, "expected at least one callback with marker as socketp"
+    # After the last marker-bearing callback, libcurl's slot is cleared, so
+    # at least one subsequent callback should observe socketp as None again.
+    later_none = [d for _, _, d in events[marker_seen[-1] + 1 :] if d is None]
+    assert later_none, "expected socketp to be None again after unassign()"
+
+
+@pytest.mark.parametrize(
+    "clear",
+    [
+        lambda multi, sock: multi.assign(sock, None),
+        lambda multi, sock: multi.unassign(sock),
+    ],
+    ids=["assign_none", "unassign"],
+)
+def test_multi_clear_assignment(app, multi, clear):
+    """assign(fd, None) and unassign(fd) both clear the association and
+    release the strong reference to the previously assigned object."""
     assigned_sock = None
     assigned_ref = None
 
@@ -239,34 +315,19 @@ def test_multi_assign_none_clears(app, multi):
     def socket(event, sock_fd, multi_handle, data):
         pass
 
-    timer_state = _setup_timer(multi)
-    multi.setopt(pycurl.M_SOCKETFUNCTION, socket)
-    c = util.DefaultCurl()
-    c.body = BytesIO()
-    c.setopt(c.URL, url)
-    c.setopt(c.WRITEFUNCTION, c.body.write)
-    multi.add_handle(c)
-
-    running = 1
-    deadline = time.monotonic() + 10.0
-    while running:
-        _assert_within_deadline(deadline, "multi assign none clears transfer")
-        running = _drive_multi(multi, timeout=0.2, timer_state=timer_state)
-        if assigned_sock is None:
-            assigned_sock = _find_socket(multi, timeout=5.0, timer_state=timer_state)
-            assert assigned_sock is not None
-            sentinel = Sentinel()
-            assigned_ref = weakref.ref(sentinel)
-            rc_before = sys.getrefcount(sentinel)
-            multi.assign(assigned_sock, sentinel)
-            rc_after = sys.getrefcount(sentinel)
-            assert rc_after >= rc_before + 1
-            multi.assign(assigned_sock, None)
-            del sentinel
-        multi.select(0.1)
-
-    multi.remove_handle(c)
-    c.close()
+    for timer_state in _chunks_transfer(app, multi, socket, "clear assignment"):
+        if assigned_sock is not None:
+            continue
+        assigned_sock = _find_socket(multi, timeout=5.0, timer_state=timer_state)
+        assert assigned_sock is not None
+        sentinel = Sentinel()
+        assigned_ref = weakref.ref(sentinel)
+        rc_before = sys.getrefcount(sentinel)
+        multi.assign(assigned_sock, sentinel)
+        rc_after = sys.getrefcount(sentinel)
+        assert rc_after >= rc_before + 1
+        clear(multi, assigned_sock)
+        del sentinel
 
     assert assigned_ref is not None
     gc.collect()
