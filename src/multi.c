@@ -1142,7 +1142,7 @@ static PyObject *do_curlmulti_setstate(CurlMultiObject *self, PyObject *args)
 }
 
 
-static PyObject *do_curlmulti_enter(CurlObject *self, PyObject *Py_UNUSED(ignored))
+static PyObject *do_curlmulti_enter(CurlMultiObject *self, PyObject *Py_UNUSED(ignored))
 {
     Py_INCREF(self);
     return (PyObject *)self;
