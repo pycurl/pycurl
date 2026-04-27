@@ -308,7 +308,6 @@ multi_socket_callback(CURL *easy,
     }
 
     if (socketp == NULL) {
-        Py_INCREF(Py_None);
         socketp = Py_None;
     }
 
@@ -629,31 +628,30 @@ do_multi_timeout(CurlMultiObject *self, PyObject *Py_UNUSED(ignored))
 }
 
 
-/* --------------- assign --------------- */
+/* --------------- assign / unassign --------------- */
 
 static PyObject *
-do_multi_assign(CurlMultiObject *self, PyObject *args)
+util_multi_assign(CurlMultiObject *self, PyObject *socket_obj,
+                  PyObject *obj, const char *name)
 {
     CURLMcode res;
     curl_socket_t socket;
-    PyObject *socket_obj;
-    PyObject *obj;
     int clear;
-    PyObject *old = NULL;
+    PyObject *old;
 
-    if (!PyArg_ParseTuple(args, "OO:assign", &socket_obj, &obj)) {
-        return NULL;
-    }
     if (PyLong_AsCurlSocket(socket_obj, &socket) != 0) {
         return NULL;
     }
-    if (check_multi_state(self, 1 | 2, "assign") != 0) {
+    /* Flag 1 only: curl_multi_assign() is callback-safe, so we do not block
+     * calls made while multi_perform()/socket_action() is on the stack. */
+    if (check_multi_state(self, 1, name) != 0) {
         return NULL;
     }
 
     clear = (obj == Py_None);
     old = PyDict_GetItem(self->socket_object_dict, socket_obj);
     Py_XINCREF(old);
+
     /* First, update dict keeping previous value */
     if (clear) {
         if (old && PyDict_DelItem(self->socket_object_dict, socket_obj) < 0) {
@@ -669,6 +667,8 @@ do_multi_assign(CurlMultiObject *self, PyObject *args)
 
     res = curl_multi_assign(self->multi_handle, socket, clear ? NULL : (void *)obj);
     if (res != CURLM_OK) {
+        /* Oversized: formatted message is at most "unassign failed". */
+        char err_msg[64];
         /* Restore previous value */
         if (old) {
             if (PyDict_SetItem(self->socket_object_dict, socket_obj, old) < 0) {
@@ -680,12 +680,36 @@ do_multi_assign(CurlMultiObject *self, PyObject *args)
                 PyErr_Clear();
             }
         }
-        CURLERROR_MSG("assign failed");
+        snprintf(err_msg, sizeof(err_msg), "%s failed", name);
+        CURLERROR_MSG(err_msg);
         return NULL;
     }
 
     Py_XDECREF(old);
     Py_RETURN_NONE;
+}
+
+static PyObject *
+do_multi_assign(CurlMultiObject *self, PyObject *args)
+{
+    PyObject *socket_obj;
+    PyObject *obj;
+
+    if (!PyArg_ParseTuple(args, "OO:assign", &socket_obj, &obj)) {
+        return NULL;
+    }
+    return util_multi_assign(self, socket_obj, obj, "assign");
+}
+
+static PyObject *
+do_multi_unassign(CurlMultiObject *self, PyObject *args)
+{
+    PyObject *socket_obj;
+
+    if (!PyArg_ParseTuple(args, "O:unassign", &socket_obj)) {
+        return NULL;
+    }
+    return util_multi_assign(self, socket_obj, Py_None, "unassign");
 }
 
 
@@ -1183,6 +1207,7 @@ PYCURL_INTERNAL PyMethodDef curlmultiobject_methods[] = {
     {"setopt", (PyCFunction)do_multi_setopt, METH_VARARGS, multi_setopt_doc},
     {"timeout", (PyCFunction)do_multi_timeout, METH_NOARGS, multi_timeout_doc},
     {"assign", (PyCFunction)do_multi_assign, METH_VARARGS, multi_assign_doc},
+    {"unassign", (PyCFunction)do_multi_unassign, METH_VARARGS, multi_unassign_doc},
     {"remove_handle", (PyCFunction)do_multi_remove_handle, METH_VARARGS, multi_remove_handle_doc},
     {"select", (PyCFunction)do_multi_select, METH_VARARGS, multi_select_doc},
     {"__getstate__", (PyCFunction)do_curlmulti_getstate, METH_NOARGS, NULL},

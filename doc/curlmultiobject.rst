@@ -34,3 +34,5 @@ CurlMulti Object
 
     .. _multi-assign:
     .. automethod:: pycurl.CurlMulti.assign
+
+    .. automethod:: pycurl.CurlMulti.unassign

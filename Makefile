@@ -89,6 +89,7 @@ DOCSTRINGS_SOURCES = \
 	doc/docstrings/multi_socket_action.rst \
 	doc/docstrings/multi_socket_all.rst \
 	doc/docstrings/multi_timeout.rst \
+	doc/docstrings/multi_unassign.rst \
 	doc/docstrings/pycurl_global_cleanup.rst \
 	doc/docstrings/pycurl_global_init.rst \
 	doc/docstrings/pycurl_module.rst \
