@@ -9,7 +9,10 @@ test -n "$PYTEST" || PYTEST=pytest
 mkdir -p tests/tmp
 export PYTHONMAJOR=$($PYTHON -V 2>&1 |awk '{print $2}' |awk -F. '{print $1}')
 export PYTHONMINOR=$($PYTHON -V 2>&1 |awk '{print $2}' |awk -F. '{print $2}')
-export PYTHONPATH=$(ls -d build/lib.*$PYTHONMAJOR*$PYTHONMINOR):$PYTHONPATH
+build_lib=$(ls -d build/lib.*$PYTHONMAJOR*$PYTHONMINOR 2>/dev/null || true)
+if [ -n "$build_lib" ]; then
+  export PYTHONPATH="$build_lib:$PYTHONPATH"
+fi
 
 $PYTHON -c 'import pycurl; print(pycurl.version)'
 

@@ -1,3 +1,4 @@
+# Mirrored in pyproject.toml [dependency-groups] dev. Keep in sync.
 flaky
 flask
 numpy

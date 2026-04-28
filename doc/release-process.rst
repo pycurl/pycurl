@@ -17,7 +17,7 @@ Release Process
 8. Update copyright years if necessary.
 9. Draft release notes, add to RELEASE-NOTES.rst.
 10. ``make gen docs``.
-11. ``python setup.py sdist``.
+11. ``python -m build --sdist``.
 12. Manually test install the built package.
 13. Build windows packages.
 14. Add sdist and windows packages to downloads repo on github.
