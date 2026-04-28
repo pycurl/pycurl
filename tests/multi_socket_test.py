@@ -295,6 +295,91 @@ def test_multi_unassign_inside_socket_callback(app, multi):
     assert later_none, "expected socketp to be None again after unassign()"
 
 
+def test_socketp_starts_as_none(app, multi):
+    seen_per_fd: dict[int, list] = {}
+
+    def socket(event, sock_fd, multi_handle, data):
+        seen_per_fd.setdefault(sock_fd, []).append(data)
+
+    for _ in _chunks_transfer(app, multi, socket, "socketp starts None"):
+        pass
+
+    assert seen_per_fd, "expected at least one socket callback invocation"
+    for fd, datas in seen_per_fd.items():
+        assert all(d is None for d in datas), (
+            f"fd={fd} received non-None socketp without assign(): {datas!r}"
+        )
+
+
+def test_clear_via_assign_none_inside_callback_resets_socketp(app, multi):
+    class Marker:
+        pass
+
+    marker = Marker()
+    events = []
+    cleared = False
+
+    def socket(event, sock_fd, multi_handle, data):
+        nonlocal cleared
+        events.append((sock_fd, event, data))
+        if event != pycurl.POLL_REMOVE and data is None and not cleared:
+            multi.assign(sock_fd, marker)
+        elif data is marker and not cleared:
+            multi.assign(sock_fd, None)
+            cleared = True
+
+    for _ in _chunks_transfer(app, multi, socket, "assign(None) in callback"):
+        pass
+
+    assert cleared, "did not reach assign(None) inside callback"
+    marker_idx = [i for i, (_, _, d) in enumerate(events) if d is marker]
+    assert marker_idx
+    later_none = [d for _, _, d in events[marker_idx[-1] + 1 :] if d is None]
+    assert later_none, "expected socketp to be None after assign(fd, None)"
+
+
+def _assign_marker_then_close(app):
+    multi = pycurl.CurlMulti()
+    timer_state = _setup_timer(multi)
+
+    class Marker:
+        pass
+
+    marker = Marker()
+    marker_ref = weakref.ref(marker)
+    state = {"assigned": False}
+
+    def socket(event, sock_fd, multi_handle, data):
+        if event != pycurl.POLL_REMOVE and not state["assigned"]:
+            multi.assign(sock_fd, marker)
+            state["assigned"] = True
+
+    multi.setopt(pycurl.M_SOCKETFUNCTION, socket)
+
+    c = util.DefaultCurl()
+    c.body = BytesIO()
+    c.setopt(c.URL, f"{app}/chunks?num_chunks=20&delay=0.05")
+    c.setopt(c.WRITEFUNCTION, c.body.write)
+    multi.add_handle(c)
+
+    deadline = time.monotonic() + 5.0
+    while time.monotonic() < deadline and not state["assigned"]:
+        _drive_multi(multi, timeout=0.1, timer_state=timer_state)
+
+    assert state["assigned"], "did not assign marker before timeout"
+
+    multi.remove_handle(c)
+    c.close()
+    multi.close()
+    return marker_ref
+
+
+def test_close_releases_assigned_marker(app):
+    marker_ref = _assign_marker_then_close(app)
+    gc.collect()
+    assert marker_ref() is None, "marker still alive after close()"
+
+
 @pytest.mark.parametrize(
     "clear",
     [

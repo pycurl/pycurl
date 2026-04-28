@@ -25,8 +25,11 @@ values of different types:
     m.setopt(pycurl.M_PIPELINING, 1)
 
 - ``*FUNCTION`` options accept a function. Supported callbacks are
-  ``CURLMOPT_SOCKETFUNCTION`` AND ``CURLMOPT_TIMERFUNCTION``. Please refer to
-  the PycURL test suite for examples on using the callbacks.
+  ``CURLMOPT_SOCKETFUNCTION`` and ``CURLMOPT_TIMERFUNCTION``; see the
+  ``SOCKETFUNCTION`` and ``TIMERFUNCTION`` sections of the
+  :ref:`callbacks <callbacks>` page. ``CURLMOPT_SOCKETDATA`` and
+  ``CURLMOPT_TIMERDATA`` are reserved by PycURL (set internally to the
+  ``CurlMulti`` instance) and cannot be set from Python.
 
 Raises TypeError when the option value is not of a type accepted by the
 respective option, and pycurl.error exception when libcurl rejects the

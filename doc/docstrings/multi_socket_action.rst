@@ -4,6 +4,11 @@ Returns result from doing a socket_action() on the curl multi file descriptor
 with the given timeout.
 Corresponds to `curl_multi_socket_action`_ in libcurl.
 
+PycURL exposes the relevant constants as ``pycurl.CSELECT_IN``,
+``CSELECT_OUT``, ``CSELECT_ERR`` (for *ev_bitmask*) and
+``pycurl.SOCKET_TIMEOUT`` (for *sock_fd*); refer to the
+`curl_multi_socket_action`_ docs for their meaning.
+
 The return value is a two-element tuple. The first element is the return
 value of the underlying ``curl_multi_socket_action`` function, and it is
 always zero (``CURLE_OK``) because any other return value would cause
