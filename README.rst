@@ -1,8 +1,29 @@
 PycURL -- A Python Interface To The cURL library
 ================================================
 
-.. image:: https://github.com/pycurl/pycurl/workflows/CI/badge.svg
-	   :target: https://github.com/pycurl/pycurl/actions
+.. image:: https://img.shields.io/pypi/v/pycurl.svg
+   :target: https://pypi.org/project/pycurl/
+   :alt: pypi
+
+.. image:: https://img.shields.io/pypi/pyversions/pycurl.svg
+   :target: https://pypi.org/project/pycurl/
+   :alt: python
+
+.. image:: https://img.shields.io/badge/license-LGPL--2.1%20OR%20MIT-blue.svg
+   :target: https://github.com/pycurl/pycurl#license
+   :alt: license
+
+.. image:: https://github.com/pycurl/pycurl/actions/workflows/ci.yml/badge.svg?branch=master
+   :target: https://github.com/pycurl/pycurl/actions/workflows/ci.yml
+   :alt: Linux CI
+
+.. image:: https://github.com/pycurl/pycurl/actions/workflows/ci-macos.yml/badge.svg?branch=master
+   :target: https://github.com/pycurl/pycurl/actions/workflows/ci-macos.yml
+   :alt: macOS CI
+
+.. image:: https://github.com/pycurl/pycurl/actions/workflows/ci-windows.yml/badge.svg?branch=master
+   :target: https://github.com/pycurl/pycurl/actions/workflows/ci-windows.yml
+   :alt: Windows CI
 
 PycURL is a Python interface to `libcurl`_, the multiprotocol file
 transfer library. Similarly to the urllib_ Python module,
