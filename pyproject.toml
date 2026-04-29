@@ -95,6 +95,7 @@ environment.VCPKG_TRIPLET = "arm64-linux-dynamic"
 
 [tool.cibuildwheel.macos]
 before-all = [
+    "if ! which mono >/dev/null 2>&1; then; brew install mono; fi",
     "if ! which vcpkg >/dev/null 2>&1; then brew install vcpkg && git clone https://github.com/microsoft/vcpkg.git $HOME/vcpkg; fi",
     "vcpkg install curl[brotli,core,http2,non-http,openssl,ssh,websockets] --triplet=$VCPKG_TRIPLET",
 ]
