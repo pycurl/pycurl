@@ -375,7 +375,7 @@ static void do_curlmod_free(void *unused) {
 
 static PyModuleDef curlmodule = {
     PyModuleDef_HEAD_INIT,
-    "pycurl",           /* m_name */
+    "pycurl._pycurl",   /* m_name */
     pycurl_module_doc,  /* m_doc */
     -1,                 /* m_size */
     curl_methods,       /* m_methods */
@@ -386,7 +386,7 @@ static PyModuleDef curlmodule = {
 };
 
 
-PyMODINIT_FUNC PyInit_pycurl(void)
+PyMODINIT_FUNC PyInit__pycurl(void)
 {
     PyObject *m, *d;
     const curl_version_info_data *vi;
