@@ -8,6 +8,7 @@ import logging
 import pycurl
 import pytest
 import select
+import sys
 import time
 from . import util
 
@@ -275,6 +276,7 @@ def _raises_runtime(*_args, **_kwargs):
 
 
 # Only -1 aborts; any other return (including non-zero ints) continues.
+@pytest.mark.skipif(sys.platform == "darwin", reason="https://github.com/pycurl/pycurl/issues/984")
 @pytest.mark.parametrize(
     "socket_cb,timer_cb",
     [
