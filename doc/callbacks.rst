@@ -397,7 +397,7 @@ SSH_KEYFUNCTION
 TIMERFUNCTION
 -------------
 
-.. function:: TIMERFUNCTION(timeout_ms) -> None
+.. function:: TIMERFUNCTION(timeout_ms) -> int | None
 
     Callback for installing a timer requested by libcurl. Corresponds to
     `CURLMOPT_TIMERFUNCTION`_.
@@ -405,7 +405,12 @@ TIMERFUNCTION
     The application should arrange for a non-repeating timer to fire in
     ``timeout_ms`` milliseconds, at which point the application should call
     either :ref:`socket_action <multi-socket_action>` or
-    :ref:`perform <multi-perform>`.
+    :ref:`perform <multi-perform>`. See the `CURLMOPT_TIMERFUNCTION`_ docs
+    for the special values of ``timeout_ms``.
+
+    Return ``0`` or ``None`` for success, or ``-1`` to abort all
+    in-progress transfers in the multi handle. Exceptions raised in the
+    callback are printed to stderr and treated as ``-1``.
 
     See ``examples/multi-socket_action-select.py`` for an example program
     that uses the timer function and the socket function.
@@ -414,7 +419,7 @@ TIMERFUNCTION
 SOCKETFUNCTION
 --------------
 
-.. function:: SOCKETFUNCTION(what, sock_fd, multi, socketp) -> None
+.. function:: SOCKETFUNCTION(what, sock_fd, multi, socketp) -> int | None
 
     Callback notifying the application about activity on libcurl sockets.
     Corresponds to `CURLMOPT_SOCKETFUNCTION`_.
@@ -422,6 +427,10 @@ SOCKETFUNCTION
     Note that the PycURL callback takes ``what`` as the first argument and
     ``sock_fd`` as the second argument, whereas the libcurl callback takes
     ``sock_fd`` as the first argument and ``what`` as the second argument.
+
+    *what* is one of ``pycurl.POLL_IN``, ``POLL_OUT``, ``POLL_INOUT`` or
+    ``POLL_REMOVE``; see the `CURLMOPT_SOCKETFUNCTION`_ docs for their
+    meaning.
 
     The ``userp`` ("private callback pointer") argument, as described in the
     ``CURLMOPT_SOCKETFUNCTION`` documentation, is set to the ``CurlMulti``
@@ -431,6 +440,10 @@ SOCKETFUNCTION
     ``CURLMOPT_SOCKETFUNCTION`` documentation, is set to the value provided
     to the :ref:`assign <multi-assign>` method for the corresponding
     ``sock_fd``, or ``None`` if no value was assigned.
+
+    Return ``0`` or ``None`` for success, or ``-1`` to abort all
+    in-progress transfers in the multi handle. Exceptions raised in the
+    callback are printed to stderr and treated as ``-1``.
 
     See ``examples/multi-socket_action-select.py`` for an example program
     that uses the timer function and the socket function.

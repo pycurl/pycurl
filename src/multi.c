@@ -296,14 +296,16 @@ multi_socket_callback(CURL *easy,
     PyObject *arglist;
     PyObject *py_socket = NULL;
     PyObject *result = NULL;
+    int ret = -1;       /* assume error */
     PYCURL_DECLARE_THREAD_STATE;
 
     /* acquire thread */
     self = (CurlMultiObject *)userp;
-    PYCURL_BEGIN_MULTI_CALLBACK(multi_socket_callback, 0);
+    PYCURL_BEGIN_MULTI_CALLBACK(multi_socket_callback, ret);
 
     /* check args */
     if (self->s_cb == NULL) {
+        ret = 0;
         goto silent_error;
     }
 
@@ -327,11 +329,17 @@ multi_socket_callback(CURL *easy,
         goto verbose_error;
     }
 
-    /* return values from socket callbacks should be ignored */
+    /* None => success; otherwise reuse the easy-callback decode helper.
+     * -1 aborts all in-progress transfers per CURLMOPT_SOCKETFUNCTION. */
+    if (result == Py_None) {
+        ret = 0;
+    } else if (callback_return_value_to_int(result, "multi socket", &ret) != 0) {
+        goto silent_error;
+    }
 
 silent_error:
     Py_XDECREF(result);
-    PYCURL_END_CALLBACK(0);
+    PYCURL_END_CALLBACK(ret);
 verbose_error:
     print_callback_error_if_regular_exception();
     goto silent_error;
@@ -346,7 +354,7 @@ multi_timer_callback(CURLM *multi,
     CurlMultiObject *self;
     PyObject *arglist;
     PyObject *result = NULL;
-    int ret = 0;       /* always success */
+    int ret = -1;       /* assume error */
     PYCURL_DECLARE_THREAD_STATE;
 
     UNUSED(multi);
@@ -356,19 +364,29 @@ multi_timer_callback(CURLM *multi,
     PYCURL_BEGIN_MULTI_CALLBACK(multi_timer_callback, ret);
 
     /* check args */
-    if (self->t_cb == NULL)
+    if (self->t_cb == NULL) {
+        ret = 0;
         goto silent_error;
+    }
 
     /* run callback */
     arglist = Py_BuildValue("(i)", timeout_ms);
-    if (arglist == NULL)
+    if (arglist == NULL) {
         goto verbose_error;
+    }
     result = PyObject_Call(self->t_cb, arglist, NULL);
     Py_DECREF(arglist);
-    if (result == NULL)
+    if (result == NULL) {
         goto verbose_error;
+    }
 
-    /* return values from timer callbacks should be ignored */
+    /* None => success; otherwise reuse the easy-callback decode helper.
+     * -1 aborts all in-progress transfers per CURLMOPT_TIMERFUNCTION. */
+    if (result == Py_None) {
+        ret = 0;
+    } else if (callback_return_value_to_int(result, "multi timer", &ret) != 0) {
+        goto silent_error;
+    }
 
 silent_error:
     Py_XDECREF(result);

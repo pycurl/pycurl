@@ -8,7 +8,7 @@
 #define PYCURL_BEGIN_CALLBACK(callback_name, retval) \
     PYCURL_BEGIN_CALLBACK_COMMON(PYCURL_ACQUIRE_THREAD(), retval, callback_name)
 
-static int
+PYCURL_INTERNAL int
 callback_return_value_to_int(PyObject *ret_obj, const char *callback_name, int *ret_out)
 {
     if (ret_obj == NULL) {

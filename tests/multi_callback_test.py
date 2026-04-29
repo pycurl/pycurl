@@ -1,8 +1,7 @@
-#! /usr/bin/env python
-# vi:ts=4:et
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from io import BytesIO
 from typing import Callable, Generator
 from urllib.parse import urlencode
 import logging
@@ -210,6 +209,118 @@ def test_easy_pause_unpause(multi_ctx: MultiCtx, app):
     assert finished, "Transfer did not finish after sleeping"
     assert multi_ctx.write_calls > calls_before
     assert multi_ctx.bytes_received == 70  # 10 chunks of 7 bytes each
+
+
+@pytest.fixture
+def install_callbacks(app):
+    """Yield make(socket_cb, timer_cb) -> (easy, multi); cleans up on exit."""
+    created: list[tuple[pycurl.Curl, pycurl.CurlMulti]] = []
+
+    def make(socket_cb, timer_cb):
+        easy = util.DefaultCurl()
+        easy.setopt(pycurl.URL, f"{app}/success")
+        easy.setopt(pycurl.WRITEFUNCTION, BytesIO().write)
+        multi = pycurl.CurlMulti()
+        multi.setopt(pycurl.M_SOCKETFUNCTION, socket_cb)
+        multi.setopt(pycurl.M_TIMERFUNCTION, timer_cb)
+        created.append((easy, multi))
+        return easy, multi
+
+    yield make
+
+    for easy, multi in created:
+        try:
+            multi.remove_handle(easy)
+        except pycurl.error:
+            pass
+        multi.close()
+        easy.close()
+
+
+def _drive_to_completion(easy, multi, timeout=5.0):
+    multi.add_handle(easy)
+    multi.socket_action(pycurl.SOCKET_TIMEOUT, 0)
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        _, ok_list, err_list = multi.info_read()
+        if ok_list or err_list:
+            return ok_list, err_list
+        rset, wset, xset = multi.fdset()
+        if not (rset or wset or xset):
+            time.sleep(0.01)
+            continue
+        r, w, x = select.select(rset, wset, xset, 0.2)
+        actions: dict[int, int] = {}
+        for s in r:
+            actions[s] = actions.get(s, 0) | pycurl.CSELECT_IN
+        for s in w:
+            actions[s] = actions.get(s, 0) | pycurl.CSELECT_OUT
+        for s in x:
+            actions[s] = actions.get(s, 0) | pycurl.CSELECT_ERR
+        for s, act in actions.items():
+            multi.socket_action(s, act)
+    return None, None
+
+
+def _ok(*_args, **_kwargs):
+    return 0
+
+
+def _none(*_args, **_kwargs):
+    return None
+
+
+def _raises_runtime(*_args, **_kwargs):
+    raise RuntimeError("boom")
+
+
+# Only -1 aborts; any other return (including non-zero ints) continues.
+@pytest.mark.parametrize(
+    "socket_cb,timer_cb",
+    [
+        (_none, _none),
+        (_ok, _ok),
+        (lambda *_: 42, _ok),
+        (_ok, lambda _: 42),
+    ],
+    ids=["return_None", "return_0", "socket_returns_42", "timer_returns_42"],
+)
+def test_callbacks_non_minus_one_return_continues_transfer(
+    install_callbacks, socket_cb, timer_cb
+):
+    easy, multi = install_callbacks(socket_cb, timer_cb)
+    ok, err = _drive_to_completion(easy, multi)
+    assert ok and not err
+
+
+@pytest.mark.parametrize(
+    "socket_cb,timer_cb,expected_stderr",
+    [
+        (lambda *_: -1, _ok, None),
+        (_ok, lambda _: -1, None),
+        (_raises_runtime, _ok, "boom"),
+        (_ok, _raises_runtime, "boom"),
+        (lambda *_: "not an int", _ok, "is not an integer"),
+    ],
+    ids=[
+        "socket_returns_-1",
+        "timer_returns_-1",
+        "socket_raises",
+        "timer_raises",
+        "socket_invalid_type",
+    ],
+)
+def test_callbacks_failure_aborts_transfer(
+    install_callbacks, capfd, socket_cb, timer_cb, expected_stderr
+):
+    easy, multi = install_callbacks(socket_cb, timer_cb)
+    with pytest.raises(pycurl.error):
+        multi.add_handle(easy)
+        multi.socket_action(pycurl.SOCKET_TIMEOUT, 0)
+
+    if expected_stderr is not None:
+        captured = capfd.readouterr()
+        assert expected_stderr in captured.err
 
 
 # (mid-transfer) easy.close() must call SOCKETFUNCTION to remove sockets

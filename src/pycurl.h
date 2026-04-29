@@ -349,6 +349,9 @@ PyText_Check(PyObject *o);
 PYCURL_INTERNAL PyObject *
 PyText_FromString_Ignore(const char *string);
 
+PYCURL_INTERNAL int
+callback_return_value_to_int(PyObject *ret_obj, const char *callback_name, int *ret_out);
+
 struct CurlObject;
 
 PYCURL_INTERNAL void
