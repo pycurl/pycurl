@@ -1,3 +1,66 @@
+Version 7.46.0 [requires libcurl-7.19.0 or better] - 2026-04-28
+---------------------------------------------------------------
+
+        * Skip Kerberos tests on libcurl >= 8.17.0 (patch by Jacek Migacz)
+        * Add arm64 wheels for Windows (patch by Finn Womack)
+        * Add context manager support to pycurl.Curl objects (patch by Scott Talbert)
+        * Add headerpad_max_install_names to LDFLAGS on macOS (patch by Scott Talbert)
+        * Modernize pycurl multi calls in tests (patch by Jorge Rocamora)
+        * Free global variables on module deletion (patch by Jorge Rocamora)
+        * Implement context manager in multicurl (patch by Jorge Rocamora)
+        * Add CURLINFO_ACTIVESOCKET option (patch by Jorge Rocamora)
+        * Avoid circular strong references between Curl and CurlMulti (patch by Jorge Rocamora)
+        * Review share API to avoid closing share handle if active easy handles (patch by Jorge Rocamora)
+        * Refactor multi callback tests to use pytest fixtures (patch by Jorge Rocamora)
+        * Avoid dict mutation during multi handle and handle PyDict_SetItem failure before calling into libcurl in add_handle (patch by Jorge Rocamora)
+        * Update Python version requirement to 3.10-3.14 (patch by Jorge Rocamora)
+        * Avoid GC ID reuse false positives in close-matrix tracker (patch by Jorge Rocamora)
+        * Allow read callbacks to return any object supporting the buffer protocol (patch by Will Toohey)
+        * FIX: guard second usage of PyWeakref_GetObject (patch by Thomas A Caswell)
+        * Fix crash when using unsetopt with READFUNCTION and WRITEFUNCTION (patch by Will Toohey)
+        * Clear buffer-protocol errors in read callback (patch by Jorge Rocamora)
+        * Fix pause thread state and expand/simplify pause tests (patch by Jorge Rocamora)
+        * Launch HTTP server at session scope with pytest (patch by Jorge Rocamora)
+        * Fix Win64 curl_socket_t conversions and reactivate multi-socket Windows tests (patch by Jorge Rocamora)
+        * Implement curl_easy_recv and curl_easy_send methods (patch by Jorge Rocamora)
+        * Save strong references for multi assign (patch by Jorge Rocamora)
+        * tests: only test CURLOPT_ISSUERCERT_BLOB with the openssl backend (patch by Carlos Henrique Lima Melara)
+        * Autodetect CAPROXY/CAPATH for proxies as well (patch by Carlos Gottberg)
+        * Preserve BaseException in callbacks and add SIGINT propagation tests (patch by Jorge Rocamora)
+        * First implementation of pycurl.Mime and pycurl.MimePart (patch by Jorge Rocamora)
+        * Enable callbacks during close() (patch by Scott Talbert)
+        * Drop Python 2 support (patch by Jorge Rocamora)
+        * Align SSL options tests (patch by Jorge Rocamora)
+        * Unify read_callback buffer handling to PyBUF_SIMPLE and modernize read_cb tests (patch by Jorge Rocamora)
+        * Fix memory leak in do_curl_perform_rb if do_curl_perform fails (patch by Scott Talbert)
+        * Fix use-after-free in do_share_new error path (patch by Scott Talbert)
+        * Fix lock leak/deadlock in share_cleanup_and_count_live_easies error path (patch by Scott Talbert)
+        * Fix missing Py_INCREF(Py_None) in do_multi_setopt_charpp (patch by Scott Talbert)
+        * Replace assert with NULL check in do_share_new (patch by Scott Talbert)
+        * Add missing C long overflow checks (patch by Scott Talbert)
+        * Remove unused do_curl_setopt_long (was Python 2 only) (patch by Scott Talbert)
+        * Remove Py_NewRef / Py_XNewRef compatibility shims (patch by Scott Talbert)
+        * Remove Py_SET_TYPE compatibility shim (patch by Scott Talbert)
+        * Remove no longer needed call of PyEval_InitThreads (patch by Scott Talbert)
+        * Remove WITH_THREAD compatibility macro (patch by Scott Talbert)
+        * Fix multi callback reference leak and missing GC traverse visits (patch by Jorge Rocamora)
+        * Remove dead CPy_TRASHCAN compatibility macros for Python < 3.8 (patch by Jorge Rocamora)
+        * Inline PyText_*/PyByteStr_* passthrough macros to direct Python C API calls (patch by Jorge Rocamora)
+        * Fix opensocket exception swallowing, widen callback size type, and correct error message encoding (patch by Jorge Rocamora)
+        * Drop pre-3.10 compat (patch by Jorge Rocamora)
+        * Fix Curl.reset() on closed handle and allocation failures in slist/httppost wrappers (patch by Jorge Rocamora)
+        * Add TRAILER, RESOLVER_START, FNMATCH, and HSTS read/write callbacks plus HSTS persistence options (patch by Jorge Rocamora)
+        * Integrate websockets in pycurl (patch by Jorge Rocamora)
+        * Remove unmaintained winbuild (patch by Scott Talbert)
+        * Correct declaration of SSH key callback function (patch by Scott Talbert)
+        * Advertise WebSockets, MIME, context managers, and low-level socket I/O in the README features list (patch by Jorge Rocamora)
+        * Modernize getinfo_test.py (patch by Scott Talbert)
+        * Allow multi.assign() from inside M_SOCKETFUNCTION and add multi.unassign() (patch by Jorge Rocamora)
+        * Fix CurlMulti.__enter__ signature and document close() callback restriction
+        * Quiet all libcurl deprecation warnings & provide Python ones (patch by Scott Talbert)
+        * Migrate static metadata to pyproject.toml (PEP 517/621) while keeping setup.py for native build logic (patch by Jorge Rocamora)
+        * CurlMulti: honor return values from M_SOCKETFUNCTION / M_TIMERFUNCTION (patch by Jorge Rocamora)
+
 Version 7.45.7 [requires libcurl-7.19.0 or better] - 2025-09-23
 ---------------------------------------------------------------
 
@@ -135,19 +198,19 @@ Version 7.44.0 [requires libcurl-7.19.0 or better] - 2021-08-08
 
         * getinfo(CURLINFO_FTP_ENTRY_PATH) now handles NULL return from
           libcurl, returning None in this case.
-        
+
         * Python 3.9 is now officially supported (patch by Bill Collins).
-        
+
         * Added CURLOPT_DOH_URL (patch by resokou).
-        
+
         * Best effort Python 2 support has been reinstated.
-        
+
         * Added missing fields to curl_version_info struct (patch by Hasan).
-        
+
         * Added CURLINFO_CONDITION_UNMET (patch by Dima Tisnek).
-        
+
         * Exposed MAX_CONCURRENT_STREAMS in CurlMulti (patch by Alexandre Pion).
-        
+
         * Compilation fixed against Python 3.10 alpha (patch by Kamil Dudka).
 
 
@@ -194,18 +257,18 @@ Version 7.43.0.4 [requires libcurl-7.19.0 or better] - 2020-01-15
         * Minimum supported Python 3 version is now 3.5.
 
         * Python 2 is no longer officially supported.
-        
+
         * Improved thread safety of multi code.
-        
+
         * Added Python 3.8 support (patch by Michael Treanor).
-        
+
         * Fixed link order when linking statically against OpenSSL (patch by
           Ashley Whetter).
-        
+
         * Fixed Darwin detection.
-        
+
         * Added support for wolfSSL (patch by Eneas U de Queiroz).
-        
+
         * Added PROXY_SSL_VERIFYHOST (patch by Amir Rossert).
 
 

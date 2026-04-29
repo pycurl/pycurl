@@ -1,6 +1,18 @@
 Release Notes
 =============
 
+PycURL 7.46.0 - 2026-04-28
+--------------------------
+
+This release adds context manager support for pycurl.Curl and
+pycurl.CurlMulti objects, adds support for numerous libcurl options, enables
+read callbacks to return any object supporting the buffer protocol, adds
+support for curl_easy_recv()/curl_easy_send() methods, adds pycurl.Mime and
+pycurl.MimePart implementations, enables callbacks during close(), adds
+websocket support, and adds support for several new callbacks (TRAILER,
+RESOLVER_START, FNMATCH, and HSTS).  This release also fixes numerous minor
+issues and it officially drops support for Python < 3.10.
+
 PycURL 7.45.7 - 2025-09-23
 --------------------------
 
