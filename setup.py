@@ -1,6 +1,7 @@
 """Setup script for the PycURL module distribution."""
 
-PACKAGE = "pycurl"
+PROJECT_NAME = "pycurl"
+EXTENSION_NAME = "pycurl._pycurl"
 PY_PACKAGE = "curl"
 VERSION = "7.46.0"
 
@@ -649,7 +650,7 @@ def get_extension(argv, split_extension_source=False):
         print('Not using an SSL library')
 
     ext = Extension(
-        name=PACKAGE,
+        name=EXTENSION_NAME,
         sources=sources,
         depends=depends,
         include_dirs=ext_config.include_dirs,
@@ -673,9 +674,9 @@ def get_data_files():
     # a list of tuples with (path to install to, a list of local files)
     data_files = []
     if sys.platform == "win32":
-        datadir = os.path.join("doc", PACKAGE)
+        datadir = os.path.join("doc", PROJECT_NAME)
     else:
-        datadir = os.path.join("share", "doc", PACKAGE)
+        datadir = os.path.join("share", "doc", PROJECT_NAME)
     #
     files = ["AUTHORS", "ChangeLog", "COPYING-LGPL", "COPYING-MIT",
         "INSTALL.rst", "README.rst", "RELEASE-NOTES.rst"]
@@ -889,8 +890,6 @@ in COPYING-LGPL_ and COPYING-MIT_ files in the source distribution.
 .. _COPYING-LGPL: https://raw.githubusercontent.com/pycurl/pycurl/master/COPYING-LGPL
 .. _COPYING-MIT: https://raw.githubusercontent.com/pycurl/pycurl/master/COPYING-MIT
 ''',
-    packages=[PY_PACKAGE],
-    package_dir={ PY_PACKAGE: os.path.join('python', 'curl') },
 )
 
 unix_help = '''\
