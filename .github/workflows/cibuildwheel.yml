@@ -98,6 +98,8 @@ jobs:
           CIBW_ARCHS_WINDOWS: ${{ matrix.arch == 'x86' && 'x86' || matrix.arch == 'arm64' && 'ARM64' || 'AMD64' }}
           CIBW_ENVIRONMENT_WINDOWS: PYCURL_CURL_DIR=C:/vcpkg/packages/curl_${{ matrix.arch }}-windows PYCURL_SSL_LIBRARY=schannel
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: delvewheel repair --add-path C:/vcpkg/installed/${{ matrix.arch }}-windows/bin -w {dest_dir} {wheel}
+          # https://github.com/pycurl/pycurl/issues/985
+          CIBW_TEST_SKIP: 'cp*-macosx_x86_64'
         run: |
           python -m cibuildwheel --output-dir wheelhouse
 
