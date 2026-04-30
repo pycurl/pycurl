@@ -1,43 +1,37 @@
-#! /usr/bin/env python
-# vi:ts=4:et
-
-import os
-import pycurl
-import unittest
 from io import BytesIO
+from pathlib import Path
 
-from . import appmanager
+import pycurl
+import pytest
+
 from . import util
 
-setup_module, teardown_module = appmanager.setup(('app', 8384, dict(ssl=True)))
 
-class CaCertsTest(unittest.TestCase):
-    def setUp(self):
-        self.curl = util.DefaultCurlLocalhost(8384)
+@util.only_ssl_backends("openssl")
+def test_request_with_verifypeer(ssl_curl, ssl_app):
+    cert_path = Path(__file__).parent / "certs" / "ca.crt"
+    cadata = cert_path.read_bytes().decode("ASCII")
 
-    def tearDown(self):
-        self.curl.close()
+    ssl_curl.setopt(pycurl.URL, f"{ssl_app}/success")
+    sio = BytesIO()
+    ssl_curl.set_ca_certs(cadata)
+    ssl_curl.setopt(pycurl.WRITEFUNCTION, sio.write)
+    # self signed certificate, but ca cert should be loaded
+    ssl_curl.setopt(pycurl.SSL_VERIFYPEER, 1)
+    ssl_curl.perform()
+    assert sio.getvalue().decode() == "success"
 
-    @util.only_ssl_backends('openssl')
-    def test_request_with_verifypeer(self):
-        with open(os.path.join(os.path.dirname(__file__), 'certs', 'ca.crt'), 'rb') as stream:
-            cadata = stream.read().decode('ASCII')
-        self.curl.setopt(pycurl.URL, 'https://localhost:8384/success')
-        sio = BytesIO()
-        self.curl.set_ca_certs(cadata)
-        self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
-        # self signed certificate, but ca cert should be loaded
-        self.curl.setopt(pycurl.SSL_VERIFYPEER, 1)
-        self.curl.perform()
-        assert sio.getvalue().decode() == 'success'
 
-    @util.only_ssl_backends('openssl')
-    def test_set_ca_certs_bytes(self):
-        self.curl.set_ca_certs(util.b('hello world\x02\xe0'))
+@util.only_ssl_backends("openssl")
+def test_set_ca_certs_bytes(curl):
+    curl.set_ca_certs(util.b("hello world\x02\xe0"))
 
-    @util.only_ssl_backends('openssl')
-    def test_set_ca_certs_bogus_type(self):
-        try:
-            self.curl.set_ca_certs(42)
-        except TypeError as e:
-            self.assertEqual('set_ca_certs argument must be a byte string or a Unicode string with ASCII code points only', str(e))
+
+@util.only_ssl_backends("openssl")
+def test_set_ca_certs_bogus_type(curl):
+    with pytest.raises(TypeError) as exc_info:
+        curl.set_ca_certs(42)
+    assert (
+        str(exc_info.value)
+        == "set_ca_certs argument must be a byte string or a Unicode string with ASCII code points only"
+    )
