@@ -1,6 +1,5 @@
 import gc
 import logging
-import select
 import sys
 import time
 import weakref
@@ -11,6 +10,7 @@ import pycurl
 import pytest
 
 from . import util
+from .multi_driver import install_timer_tracker, pump
 
 logger = logging.getLogger(__name__)
 
@@ -24,53 +24,13 @@ def multi():
         m.close()
 
 
-def _setup_timer(multi):
-    timer_state = {"pending": False}
-
-    def timer(timeout_ms):
-        if timeout_ms == 0:
-            timer_state["pending"] = True
-
-    multi.setopt(pycurl.M_TIMERFUNCTION, timer)
-    return timer_state
-
-
-def _consume_timer(multi, timer_state):
-    if timer_state and timer_state["pending"]:
-        timer_state["pending"] = False
-        multi.socket_action(pycurl.SOCKET_TIMEOUT, 0)
-
-
-def _drive_multi(multi, timeout=0.2, timer_state=None):
-    _, running = multi.socket_action(pycurl.SOCKET_TIMEOUT, 0)
-
-    rset, wset, xset = multi.fdset()
-    if not (rset or wset or xset):
-        _consume_timer(multi, timer_state)
-        time.sleep(min(timeout, 0.01))
-        return running
-
-    r_ready, w_ready, x_ready = select.select(rset, wset, xset, timeout)
-    actions = {}
-    for s in r_ready:
-        actions[s] = actions.get(s, 0) | pycurl.CSELECT_IN
-    for s in w_ready:
-        actions[s] = actions.get(s, 0) | pycurl.CSELECT_OUT
-    for s in x_ready:
-        actions[s] = actions.get(s, 0) | pycurl.CSELECT_ERR
-
-    for s, act in actions.items():
-        _, running = multi.socket_action(s, act)
-
-    _consume_timer(multi, timer_state)
-    return running
-
-
 def _find_socket(multi, timeout=5.0, timer_state=None):
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         multi.socket_action(pycurl.SOCKET_TIMEOUT, 0)
-        _consume_timer(multi, timer_state)
+        if timer_state and timer_state.pending:
+            timer_state.pending = False
+            multi.socket_action(pycurl.SOCKET_TIMEOUT, 0)
         rset, wset, xset = multi.fdset()
         if rset or wset or xset:
             return (rset or wset or xset)[0]
@@ -97,7 +57,7 @@ def _chunks_transfer(app, multi, socket_callback, label):
     per-iteration work (e.g. assign() from outside the callback). The easy
     handle is removed and closed on exit.
     """
-    timer_state = _setup_timer(multi)
+    timer_state = install_timer_tracker(multi)
     multi.setopt(pycurl.M_SOCKETFUNCTION, socket_callback)
 
     c = util.DefaultCurl()
@@ -111,7 +71,7 @@ def _chunks_transfer(app, multi, socket_callback, label):
         deadline = time.monotonic() + 10.0
         while running:
             _assert_within_deadline(deadline, label)
-            running = _drive_multi(multi, timeout=0.2, timer_state=timer_state)
+            running = pump(multi, timer_state, timeout=0.2)
             yield timer_state
             multi.select(0.1)
     finally:
@@ -130,7 +90,7 @@ def test_multi_socket(app, multi):
     ]
 
     socket_events = []
-    timer_state = _setup_timer(multi)
+    timer_state = install_timer_tracker(multi)
 
     # socket callback
     def socket(event, socket, multi_handle, data):
@@ -157,7 +117,7 @@ def test_multi_socket(app, multi):
     deadline = time.monotonic() + 10.0
     while running:
         _assert_within_deadline(deadline, "multi socket transfer")
-        running = _drive_multi(multi, timeout=0.2, timer_state=timer_state)
+        running = pump(multi, timer_state, timeout=0.2)
         # currently no more I/O is pending, could do something in the meantime
         # (display a progress bar, etc.)
         multi.select(0.1)
@@ -335,7 +295,7 @@ def test_clear_assignment_inside_socket_callback_releases_ref(app, multi, clear)
 
 def _assign_marker_then_close(app):
     multi = pycurl.CurlMulti()
-    timer_state = _setup_timer(multi)
+    timer_state = install_timer_tracker(multi)
 
     class Marker:
         pass
@@ -359,7 +319,7 @@ def _assign_marker_then_close(app):
 
     deadline = time.monotonic() + 5.0
     while time.monotonic() < deadline and not state["assigned"]:
-        _drive_multi(multi, timeout=0.1, timer_state=timer_state)
+        pump(multi, timer_state, timeout=0.1)
 
     assert state["assigned"], "did not assign marker before timeout"
 

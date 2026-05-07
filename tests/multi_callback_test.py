@@ -7,10 +7,9 @@ from urllib.parse import urlencode
 import logging
 import pycurl
 import pytest
-import select
-import sys
 import time
 from . import util
+from .multi_driver import TimerState, install_timer_tracker, pump
 
 logger = logging.getLogger(__name__)
 
@@ -25,37 +24,14 @@ class MultiCtx:
     sockets: dict[int, int] = field(default_factory=dict)
 
     handle_added: bool = False
-    timer_pending: bool = False
+    timer_state: TimerState = field(default_factory=TimerState)
 
     write_calls: int = 0
     bytes_received: int = 0
 
 
 def _event_loop_step(ctx: MultiCtx, timeout: float = 0.2) -> None:
-    ctx.multi.socket_action(pycurl.SOCKET_TIMEOUT, 0)
-
-    rset, wset, xset = ctx.multi.fdset()
-
-    if not (rset or wset or xset):
-        time.sleep(min(timeout, 0.01))
-        return
-
-    r_ready, w_ready, x_ready = select.select(rset, wset, xset, timeout)
-
-    actions: dict[int, int] = {}
-    for s in r_ready:
-        actions[s] = actions.get(s, 0) | pycurl.CSELECT_IN
-    for s in w_ready:
-        actions[s] = actions.get(s, 0) | pycurl.CSELECT_OUT
-    for s in x_ready:
-        actions[s] = actions.get(s, 0) | pycurl.CSELECT_ERR
-
-    for s, act in actions.items():
-        ctx.multi.socket_action(s, act)
-
-    if ctx.timer_pending:
-        ctx.timer_pending = False
-        ctx.multi.socket_action(pycurl.SOCKET_TIMEOUT, 0)
+    pump(ctx.multi, ctx.timer_state, timeout)
 
 
 def _run_until(
@@ -125,11 +101,9 @@ def multi_ctx(app) -> Generator[MultiCtx, None, None]:
     def timer_callback(timeout_ms: int) -> None:
         logger.debug("timer_callback: timeout=%d", timeout_ms)
         ctx.timer_result = timeout_ms
-        if timeout_ms == 0:
-            ctx.timer_pending = True
 
     multi.setopt(pycurl.M_SOCKETFUNCTION, socket_callback)
-    multi.setopt(pycurl.M_TIMERFUNCTION, timer_callback)
+    ctx.timer_state = install_timer_tracker(multi, timer_callback)
 
     try:
         yield ctx
@@ -214,7 +188,6 @@ def test_easy_pause_unpause(multi_ctx: MultiCtx, app):
 
 @pytest.fixture
 def install_callbacks(app):
-    """Yield make(socket_cb, timer_cb) -> (easy, multi); cleans up on exit."""
     created: list[tuple[pycurl.Curl, pycurl.CurlMulti]] = []
 
     def make(socket_cb, timer_cb):
@@ -223,9 +196,9 @@ def install_callbacks(app):
         easy.setopt(pycurl.WRITEFUNCTION, BytesIO().write)
         multi = pycurl.CurlMulti()
         multi.setopt(pycurl.M_SOCKETFUNCTION, socket_cb)
-        multi.setopt(pycurl.M_TIMERFUNCTION, timer_cb)
+        timer_state = install_timer_tracker(multi, timer_cb)
         created.append((easy, multi))
-        return easy, multi
+        return easy, multi, timer_state
 
     yield make
 
@@ -238,29 +211,15 @@ def install_callbacks(app):
         easy.close()
 
 
-def _drive_to_completion(easy, multi, timeout=5.0):
+def _drive_to_completion(easy, multi, timer_state, timeout=5.0):
     multi.add_handle(easy)
-    multi.socket_action(pycurl.SOCKET_TIMEOUT, 0)
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
+        pump(multi, timer_state)
         _, ok_list, err_list = multi.info_read()
         if ok_list or err_list:
             return ok_list, err_list
-        rset, wset, xset = multi.fdset()
-        if not (rset or wset or xset):
-            time.sleep(0.01)
-            continue
-        r, w, x = select.select(rset, wset, xset, 0.2)
-        actions: dict[int, int] = {}
-        for s in r:
-            actions[s] = actions.get(s, 0) | pycurl.CSELECT_IN
-        for s in w:
-            actions[s] = actions.get(s, 0) | pycurl.CSELECT_OUT
-        for s in x:
-            actions[s] = actions.get(s, 0) | pycurl.CSELECT_ERR
-        for s, act in actions.items():
-            multi.socket_action(s, act)
-    return None, None
+    pytest.fail(f"transfer did not complete within {timeout}s")
 
 
 def _ok(*_args, **_kwargs):
@@ -276,7 +235,6 @@ def _raises_runtime(*_args, **_kwargs):
 
 
 # Only -1 aborts; any other return (including non-zero ints) continues.
-@pytest.mark.skipif(sys.platform == "darwin", reason="https://github.com/pycurl/pycurl/issues/984")
 @pytest.mark.parametrize(
     "socket_cb,timer_cb",
     [
@@ -290,8 +248,8 @@ def _raises_runtime(*_args, **_kwargs):
 def test_callbacks_non_minus_one_return_continues_transfer(
     install_callbacks, socket_cb, timer_cb
 ):
-    easy, multi = install_callbacks(socket_cb, timer_cb)
-    ok, err = _drive_to_completion(easy, multi)
+    easy, multi, timer_state = install_callbacks(socket_cb, timer_cb)
+    ok, err = _drive_to_completion(easy, multi, timer_state)
     assert ok and not err
 
 
@@ -315,7 +273,7 @@ def test_callbacks_non_minus_one_return_continues_transfer(
 def test_callbacks_failure_aborts_transfer(
     install_callbacks, capfd, socket_cb, timer_cb, expected_stderr
 ):
-    easy, multi = install_callbacks(socket_cb, timer_cb)
+    easy, multi, _ = install_callbacks(socket_cb, timer_cb)
     with pytest.raises(pycurl.error):
         multi.add_handle(easy)
         multi.socket_action(pycurl.SOCKET_TIMEOUT, 0)
