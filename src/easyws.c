@@ -273,7 +273,7 @@ do_curl_ws_recv(CurlObject *self, PyObject *args)
         PyErr_SetString(PyExc_ValueError, "negative buffersize in ws_recv");
         return NULL;
     }
-    if (check_curl_state(self, 1 | 2, "ws_recv") != 0) {
+    if (check_curl_state(self, PYCURL_REQUIRE_HANDLE | PYCURL_REQUIRE_NOT_RUNNING, "ws_recv") != 0) {
         return NULL;
     }
 #if PY_VERSION_HEX >= 0x030F0000
@@ -377,7 +377,7 @@ do_curl_ws_recv_into(CurlObject *self, PyObject *args, PyObject *kwds)
         PyErr_SetString(PyExc_ValueError, "buffer too small for requested bytes");
         return NULL;
     }
-    if (check_curl_state(self, 1 | 2, "ws_recv_into") != 0) {
+    if (check_curl_state(self, PYCURL_REQUIRE_HANDLE | PYCURL_REQUIRE_NOT_RUNNING, "ws_recv_into") != 0) {
         PyBuffer_Release(&recvbuf);
         return NULL;
     }
@@ -409,7 +409,7 @@ do_curl_ws_meta(CurlObject *self, PyObject *Py_UNUSED(ignored))
 {
     const struct curl_ws_frame *meta;
 
-    if (check_curl_state(self, 1, "ws_meta") != 0) {
+    if (check_curl_state(self, PYCURL_REQUIRE_HANDLE, "ws_meta") != 0) {
         return NULL;
     }
     meta = curl_ws_meta(self->handle);
