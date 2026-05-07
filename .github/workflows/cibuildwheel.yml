@@ -46,14 +46,14 @@ jobs:
       matrix:
         include:
           - os: macos-15-intel
-          - os: macOS-14
+          - os: macos-15
           - os: ubuntu-24.04
             arch: x86_64
           - os: ubuntu-24.04-arm
             arch: aarch64
-          - os: windows-2022
+          - os: windows-2025
             arch: x86
-          - os: windows-2022
+          - os: windows-2025
             arch: x64
           - os: windows-11-arm
             arch: arm64
@@ -62,7 +62,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
-          python-version: 3.11
+          python-version: 3.14
 
       - uses: ilammy/msvc-dev-cmd@v1
         if: runner.os == 'Windows'
