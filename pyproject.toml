@@ -53,6 +53,10 @@ dev = [
     "websockets>=12",
 ]
 
+[tool.setuptools.packages.find]
+# Two roots: pycurl lives in src/, the legacy curl wrapper still lives in python/.
+where = ["src", "python"]
+
 [tool.cibuildwheel]
 build = "cp3*"
 skip = ["cp38-*", "*-musllinux*"]

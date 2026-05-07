@@ -4,10 +4,17 @@
 #    combination with a non-existent file name. See the libcurl docs
 #    for more info.
 
-import sys, pycurl
+import sys, warnings, pycurl
 import urllib.parse as urllib_parse
 from urllib.parse import urljoin
 from io import BytesIO
+
+warnings.warn(
+    "The 'curl' high-level wrapper module is deprecated and will be removed "
+    "in a future release. Use 'pycurl' directly instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 # We should ignore SIGPIPE when using pycurl.NOSIGNAL - see
 # the libcurl tutorial for more info.
