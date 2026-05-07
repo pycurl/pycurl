@@ -122,7 +122,7 @@ do_curl_getinfo_raw(CurlObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "i:getinfo_raw", &option)) {
         return NULL;
     }
-    if (check_curl_state(self, 1 | 2, "getinfo") != 0) {
+    if (check_curl_state(self, PYCURL_REQUIRE_HANDLE | PYCURL_REQUIRE_NOT_RUNNING, "getinfo") != 0) {
         return NULL;
     }
 
@@ -431,7 +431,7 @@ do_curl_getinfo(CurlObject *self, PyObject *args)
 PYCURL_INTERNAL PyObject *
 do_curl_errstr(CurlObject *self, PyObject *Py_UNUSED(ignored))
 {
-    if (check_curl_state(self, 1 | 2, "errstr") != 0) {
+    if (check_curl_state(self, PYCURL_REQUIRE_HANDLE | PYCURL_REQUIRE_NOT_RUNNING, "errstr") != 0) {
         return NULL;
     }
     self->error[sizeof(self->error) - 1] = 0;
@@ -443,7 +443,7 @@ do_curl_errstr(CurlObject *self, PyObject *Py_UNUSED(ignored))
 PYCURL_INTERNAL PyObject *
 do_curl_errstr_raw(CurlObject *self, PyObject *Py_UNUSED(ignored))
 {
-    if (check_curl_state(self, 1 | 2, "errstr") != 0) {
+    if (check_curl_state(self, PYCURL_REQUIRE_HANDLE | PYCURL_REQUIRE_NOT_RUNNING, "errstr") != 0) {
         return NULL;
     }
     self->error[sizeof(self->error) - 1] = 0;

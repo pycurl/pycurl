@@ -29,7 +29,7 @@ curlmime_check_state(CurlMimeObject *self, const char *name)
         PyErr_Format(ErrorObject, "cannot invoke %s() - no curl handle", name);
         return -1;
     }
-    return check_curl_state(self->curl, 1 | 2, name);
+    return check_curl_state(self->curl, PYCURL_REQUIRE_HANDLE | PYCURL_REQUIRE_NOT_RUNNING, name);
 }
 
 static int
@@ -49,7 +49,7 @@ curlmimepart_check_state(CurlMimePartObject *self, const char *name)
         PyErr_Format(ErrorObject, "cannot invoke %s() - no curl handle", name);
         return -1;
     }
-    return check_curl_state(mime->curl, 1 | 2, name);
+    return check_curl_state(mime->curl, PYCURL_REQUIRE_HANDLE | PYCURL_REQUIRE_NOT_RUNNING, name);
 }
 
 static void
@@ -612,7 +612,7 @@ do_curlmime_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!", kwlist, p_Curl_Type, &curl)) {
         return NULL;
     }
-    if (check_curl_state(curl, 1 | 2, "CurlMime") != 0) {
+    if (check_curl_state(curl, PYCURL_REQUIRE_HANDLE | PYCURL_REQUIRE_NOT_RUNNING, "CurlMime") != 0) {
         return NULL;
     }
 
@@ -697,7 +697,7 @@ do_curlmime_dealloc(CurlMimeObject *self)
 static PyObject *
 do_curlmime_close(CurlMimeObject *self, PyObject *Py_UNUSED(ignored))
 {
-    if (self->curl != NULL && check_curl_state(self->curl, 2, "close") != 0) {
+    if (self->curl != NULL && check_curl_state(self->curl, PYCURL_REQUIRE_NOT_RUNNING, "close") != 0) {
         return NULL;
     }
     if (curlmime_detach_if_pinned(self, 1) != 0) {

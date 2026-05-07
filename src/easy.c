@@ -184,11 +184,11 @@ PYCURL_INTERNAL int
 check_curl_state(const CurlObject *self, int flags, const char *name)
 {
     assert_curl_state(self);
-    if ((flags & 1) && self->handle == NULL) {
+    if ((flags & PYCURL_REQUIRE_HANDLE) && self->handle == NULL) {
         PyErr_Format(ErrorObject, "cannot invoke %s() - no curl handle", name);
         return -1;
     }
-    if ((flags & 2) && pycurl_get_thread_state(self) != NULL) {
+    if ((flags & PYCURL_REQUIRE_NOT_RUNNING) && pycurl_get_thread_state(self) != NULL) {
         PyErr_Format(ErrorObject, "cannot invoke %s() - perform() is currently running", name);
         return -1;
     }
@@ -716,7 +716,7 @@ do_curl_dealloc(CurlObject *self)
 static PyObject *
 do_curl_close(CurlObject *self, PyObject *Py_UNUSED(ignored))
 {
-    if (check_curl_state(self, 2, "close") != 0) {
+    if (check_curl_state(self, PYCURL_REQUIRE_NOT_RUNNING, "close") != 0) {
         return NULL;
     }
     util_curl_close(self);
@@ -835,7 +835,7 @@ do_curl_reset(CurlObject *self, PyObject *Py_UNUSED(ignored))
 {
     int res;
 
-    if (check_curl_state(self, 1 | 2, "reset") != 0) {
+    if (check_curl_state(self, PYCURL_REQUIRE_HANDLE | PYCURL_REQUIRE_NOT_RUNNING, "reset") != 0) {
         return NULL;
     }
 

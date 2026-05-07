@@ -84,7 +84,7 @@ assert_share_state(const CurlShareObject *self)
 
 
 static int
-check_share_state(const CurlShareObject *self, int flags, const char *name)
+check_share_state(const CurlShareObject *self)
 {
     assert_share_state(self);
     return 0;
@@ -326,7 +326,7 @@ do_share_close(CurlShareObject *self, PyObject *Py_UNUSED(ignored))
 {
     int nlive;
 
-    if (check_share_state(self, 2, "close") != 0) {
+    if (check_share_state(self) != 0) {
         return NULL;
     }
 
@@ -370,7 +370,7 @@ do_share_setopt(CurlShareObject *self, PyObject *args)
 
     if (!PyArg_ParseTuple(args, "iO:setopt", &option, &obj))
         return NULL;
-    if (check_share_state(self, 1 | 2, "sharesetopt") != 0)
+    if (check_share_state(self) != 0)
         return NULL;
 
     /* early checks of option value */

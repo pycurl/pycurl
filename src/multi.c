@@ -25,11 +25,11 @@ static int
 check_multi_state(const CurlMultiObject *self, int flags, const char *name)
 {
     assert_multi_state(self);
-    if ((flags & 1) && self->multi_handle == NULL) {
+    if ((flags & PYCURL_REQUIRE_HANDLE) && self->multi_handle == NULL) {
         PyErr_Format(ErrorObject, "cannot invoke %s() - no multi handle", name);
         return -1;
     }
-    if ((flags & 2) && self->state != NULL) {
+    if ((flags & PYCURL_REQUIRE_NOT_RUNNING) && self->state != NULL) {
         PyErr_Format(ErrorObject, "cannot invoke %s() - multi_perform() is currently running", name);
         return -1;
     }
@@ -229,7 +229,7 @@ do_multi_dealloc(CurlMultiObject *self)
 static PyObject *
 do_multi_close(CurlMultiObject *self, PyObject *Py_UNUSED(ignored))
 {
-    if (check_multi_state(self, 2, "close") != 0) {
+    if (check_multi_state(self, PYCURL_REQUIRE_NOT_RUNNING, "close") != 0) {
         return NULL;
     }
 
@@ -585,7 +585,7 @@ do_multi_setopt(CurlMultiObject *self, PyObject *args)
 
     if (!PyArg_ParseTuple(args, "iO:setopt", &option, &obj))
         return NULL;
-    if (check_multi_state(self, 1 | 2, "setopt") != 0)
+    if (check_multi_state(self, PYCURL_REQUIRE_HANDLE | PYCURL_REQUIRE_NOT_RUNNING, "setopt") != 0)
         return NULL;
 
     /* Early checks of option value */
@@ -632,7 +632,7 @@ do_multi_timeout(CurlMultiObject *self, PyObject *Py_UNUSED(ignored))
     CURLMcode res;
     long timeout;
 
-    if (check_multi_state(self, 1 | 2, "timeout") != 0) {
+    if (check_multi_state(self, PYCURL_REQUIRE_HANDLE | PYCURL_REQUIRE_NOT_RUNNING, "timeout") != 0) {
         return NULL;
     }
 
@@ -662,7 +662,7 @@ util_multi_assign(CurlMultiObject *self, PyObject *socket_obj,
     }
     /* Flag 1 only: curl_multi_assign() is callback-safe, so we do not block
      * calls made while multi_perform()/socket_action() is on the stack. */
-    if (check_multi_state(self, 1, name) != 0) {
+    if (check_multi_state(self, PYCURL_REQUIRE_HANDLE, name) != 0) {
         return NULL;
     }
 
@@ -747,7 +747,7 @@ do_multi_socket_action(CurlMultiObject *self, PyObject *args)
     if (PyLong_AsCurlSocket(socket_obj, &socket) != 0) {
         return NULL;
     }
-    if (check_multi_state(self, 1 | 2, "socket_action") != 0) {
+    if (check_multi_state(self, PYCURL_REQUIRE_HANDLE | PYCURL_REQUIRE_NOT_RUNNING, "socket_action") != 0) {
         return NULL;
     }
 
@@ -778,7 +778,7 @@ do_multi_socket_all(CurlMultiObject *self, PyObject *Py_UNUSED(ignored))
         return NULL;
     }
 
-    if (check_multi_state(self, 1 | 2, "socket_all") != 0) {
+    if (check_multi_state(self, PYCURL_REQUIRE_HANDLE | PYCURL_REQUIRE_NOT_RUNNING, "socket_all") != 0) {
         return NULL;
     }
 
@@ -810,7 +810,7 @@ do_multi_perform(CurlMultiObject *self, PyObject *Py_UNUSED(ignored))
     CURLMcode res;
     int running = -1;
 
-    if (check_multi_state(self, 1 | 2, "perform") != 0) {
+    if (check_multi_state(self, PYCURL_REQUIRE_HANDLE | PYCURL_REQUIRE_NOT_RUNNING, "perform") != 0) {
         return NULL;
     }
 
@@ -964,7 +964,7 @@ do_multi_fdset(CurlMultiObject *self, PyObject *Py_UNUSED(ignored))
     PyObject *read_list = NULL, *write_list = NULL, *except_list = NULL;
     PyObject *py_fd = NULL;
 
-    if (check_multi_state(self, 1 | 2, "fdset") != 0) {
+    if (check_multi_state(self, PYCURL_REQUIRE_HANDLE | PYCURL_REQUIRE_NOT_RUNNING, "fdset") != 0) {
         return NULL;
     }
 
@@ -1036,7 +1036,7 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
         PyErr_SetString(ErrorObject, "argument to info_read must be greater than zero");
         return NULL;
     }
-    if (check_multi_state(self, 1 | 2, "info_read") != 0) {
+    if (check_multi_state(self, PYCURL_REQUIRE_HANDLE | PYCURL_REQUIRE_NOT_RUNNING, "info_read") != 0) {
         return NULL;
     }
 
@@ -1109,7 +1109,7 @@ do_multi_select(CurlMultiObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "d:select", &timeout)) {
         return NULL;
     }
-    if (check_multi_state(self, 1 | 2, "select") != 0) {
+    if (check_multi_state(self, PYCURL_REQUIRE_HANDLE | PYCURL_REQUIRE_NOT_RUNNING, "select") != 0) {
         return NULL;
     }
 

@@ -265,7 +265,7 @@ do_curl_unsetopt(CurlObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "i:unsetopt", &option)) {
         return NULL;
     }
-    if (check_curl_state(self, 1 | 2, "unsetopt") != 0) {
+    if (check_curl_state(self, PYCURL_REQUIRE_HANDLE | PYCURL_REQUIRE_NOT_RUNNING, "unsetopt") != 0) {
         return NULL;
     }
 
@@ -1262,7 +1262,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 
     if (!PyArg_ParseTuple(args, "iO:setopt", &option, &obj))
         return NULL;
-    if (check_curl_state(self, 1 | 2, "setopt") != 0)
+    if (check_curl_state(self, PYCURL_REQUIRE_HANDLE | PYCURL_REQUIRE_NOT_RUNNING, "setopt") != 0)
         return NULL;
 
     /* early checks of option value */
@@ -1353,7 +1353,7 @@ do_curl_setopt_string(CurlObject *self, PyObject *args)
 
     if (!PyArg_ParseTuple(args, "iO:setopt", &option, &obj))
         return NULL;
-    if (check_curl_state(self, 1 | 2, "setopt") != 0)
+    if (check_curl_state(self, PYCURL_REQUIRE_HANDLE | PYCURL_REQUIRE_NOT_RUNNING, "setopt") != 0)
         return NULL;
 
     /* Handle the case of string arguments */

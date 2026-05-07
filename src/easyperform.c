@@ -8,7 +8,7 @@ do_curl_perform(CurlObject *self, PyObject *Py_UNUSED(ignored))
 {
     int res;
 
-    if (check_curl_state(self, 1 | 2, "perform") != 0) {
+    if (check_curl_state(self, PYCURL_REQUIRE_HANDLE | PYCURL_REQUIRE_NOT_RUNNING, "perform") != 0) {
         return NULL;
     }
 
@@ -145,7 +145,7 @@ do_curl_send(CurlObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "y*:send", &sendbuf)) {
         return NULL;
     }
-    if (check_curl_state(self, 1 | 2, "send") != 0) {
+    if (check_curl_state(self, PYCURL_REQUIRE_HANDLE | PYCURL_REQUIRE_NOT_RUNNING, "send") != 0) {
         PyBuffer_Release(&sendbuf);
         return NULL;
     }
@@ -180,7 +180,7 @@ do_curl_recv(CurlObject *self, PyObject *args)
         PyErr_SetString(PyExc_ValueError, "negative buffersize in recv");
         return NULL;
     }
-    if (check_curl_state(self, 1 | 2, "recv") != 0) {
+    if (check_curl_state(self, PYCURL_REQUIRE_HANDLE | PYCURL_REQUIRE_NOT_RUNNING, "recv") != 0) {
         return NULL;
     }
     if (buflen == 0) {
@@ -248,7 +248,7 @@ do_curl_recv_into(CurlObject *self, PyObject *args, PyObject *kwds)
         PyErr_SetString(PyExc_ValueError, "buffer too small for requested bytes");
         return NULL;
     }
-    if (check_curl_state(self, 1 | 2, "recv_into") != 0) {
+    if (check_curl_state(self, PYCURL_REQUIRE_HANDLE | PYCURL_REQUIRE_NOT_RUNNING, "recv_into") != 0) {
         PyBuffer_Release(&recvbuf);
         return NULL;
     }
@@ -277,7 +277,7 @@ do_curl_pause_internal(CurlObject *self, int bitmask, const char *op_name)
     CURLcode res;
     PyThreadState *saved_state;
 
-    if (check_curl_state(self, 1, op_name) != 0) {
+    if (check_curl_state(self, PYCURL_REQUIRE_HANDLE, op_name) != 0) {
         return NULL;
     }
 
