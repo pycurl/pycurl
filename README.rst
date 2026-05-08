@@ -43,6 +43,8 @@ libcurl, including:
   wrappers around libcurl's MIME API.
 - Sockets used for network operations, permitting integration of PycURL
   into the application's I/O loop (e.g., using Tornado_).
+- Built-in ``asyncio`` support via ``pycurl.AsyncCurlMulti``, an asyncio
+  wrapper around ``CurlMulti`` driven by libcurl's multi-socket API.
 - Low-level socket I/O - direct byte-level control (e.g., with ``CONNECT_ONLY``).
 
 .. _was benchmarked: http://stackoverflow.com/questions/15461995/python-requests-vs-pycurl-performance

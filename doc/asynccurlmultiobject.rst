@@ -1,0 +1,24 @@
+.. _asynccurlmultiobject:
+
+AsyncCurlMulti Object
+=====================
+
+.. autoclass:: pycurl.AsyncCurlMulti
+
+    AsyncCurlMulti objects have the following methods:
+
+    .. automethod:: pycurl.AsyncCurlMulti.__init__
+
+    .. automethod:: pycurl.AsyncCurlMulti.setopt
+
+    .. automethod:: pycurl.AsyncCurlMulti.add_handle
+
+    .. automethod:: pycurl.AsyncCurlMulti.perform
+
+    .. automethod:: pycurl.AsyncCurlMulti.futures
+
+    .. automethod:: pycurl.AsyncCurlMulti.close
+
+    .. automethod:: pycurl.AsyncCurlMulti.__aenter__
+
+    .. automethod:: pycurl.AsyncCurlMulti.__aexit__

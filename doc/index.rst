@@ -15,6 +15,8 @@ libcurl, including:
 - Multi_ and share_ interfaces.
 - Sockets used for network operations, permitting integration of PycURL
   into the application's I/O loop (e.g., using Tornado_).
+- Built-in ``asyncio`` support via :py:class:`pycurl.AsyncCurlMulti`, an
+  asyncio wrapper around ``CurlMulti`` driven by libcurl's multi-socket API.
 
 .. _was benchmarked: http://stackoverflow.com/questions/15461995/python-requests-vs-pycurl-performance
 .. _Requests: http://python-requests.org/
@@ -136,6 +138,7 @@ Documentation Contents
    pycurl
    curlobject
    curlmultiobject
+   asynccurlmultiobject
    curlshareobject
    mime
    callbacks
