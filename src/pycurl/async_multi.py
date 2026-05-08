@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
+from functools import partial
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -31,7 +32,6 @@ from pycurl._pycurl import (
     M_SOCKETFUNCTION,
     M_TIMERFUNCTION,
     POLL_IN,
-    POLL_INOUT,
     POLL_NONE,
     POLL_OUT,
     POLL_REMOVE,
@@ -54,7 +54,7 @@ class _SocketState:
 
 
 class AsyncCurlMulti:
-    """AsyncCurlMulti() -> AsyncCurlMulti object
+    """AsyncCurlMulti(close_handles=False) -> AsyncCurlMulti object
 
     An asyncio-driven wrapper around :py:class:`pycurl.CurlMulti`. Each
     :py:class:`pycurl.Curl` transfer is represented by an
@@ -69,8 +69,12 @@ class AsyncCurlMulti:
     loop (e.g., Windows ``ProactorEventLoop``) :py:meth:`add_handle`
     raises :py:exc:`RuntimeError` with guidance on switching policy.
 
-    Always call :py:meth:`close` (or use ``async with``) to release the
+    Always call :py:meth:`aclose` (or use ``async with``) to release the
     underlying multi handle promptly.
+
+    *close_handles* is forwarded to :py:class:`pycurl.CurlMulti`. When
+    ``True``, any easy handle still attached to the multi when
+    :py:meth:`aclose` runs is also closed by libcurl.
 
     Example::
 
@@ -90,14 +94,13 @@ class AsyncCurlMulti:
             results = await asyncio.gather(*multi.futures())
     """
 
-    def __init__(self) -> None:
-        self._multi: CurlMulti = CurlMulti()
+    def __init__(self, close_handles: bool = False) -> None:
+        self._multi: CurlMulti = CurlMulti(close_handles=close_handles)
         self._loop: asyncio.AbstractEventLoop | None = None
         self._futures: dict[Curl, asyncio.Future[Curl]] = {}
-        self._fut_to_curl: dict[int, Curl] = {}
         self._assigned_fds: set[int] = set()
         self._timer: asyncio.Handle | None = None
-        self._closed: bool = False
+        self._closing: bool = False
         try:
             self._multi.setopt(M_SOCKETFUNCTION, self._on_socket)
             self._multi.setopt(M_TIMERFUNCTION, self._on_timer)
@@ -114,8 +117,8 @@ class AsyncCurlMulti:
         ``AsyncCurlMulti`` and raise :py:exc:`ValueError` if set externally.
 
         *option* is a ``pycurl.M_*`` constant identifying which option to
-        set. *value* is the value to set; different options accept values
-        of different types (see :py:meth:`pycurl.CurlMulti.setopt`).
+        set. *value* is the new option value; different options accept
+        values of different types (see :py:meth:`pycurl.CurlMulti.setopt`).
         """
         if option in (M_SOCKETFUNCTION, M_TIMERFUNCTION):
             raise ValueError("AsyncCurlMulti owns M_SOCKETFUNCTION/M_TIMERFUNCTION")
@@ -129,31 +132,52 @@ class AsyncCurlMulti:
         raises :py:class:`pycurl.error` on failure. Cancelling the future
         removes the handle; cleanup runs on the next event-loop tick.
 
-        *curl* is a :py:class:`pycurl.Curl` easy handle that is not
-        already registered with this multi handle.
+        *curl* is a :py:class:`pycurl.Curl` easy handle.
 
         The first call captures the running event loop and binds this
         instance to it. Raises :py:exc:`RuntimeError` if called outside
-        a running loop, after :py:meth:`close`, or if *curl* is already
+        a running loop, after :py:meth:`aclose`, or if *curl* is already
         registered.
         """
-        if self._closed:
+        if self.closed():
             raise RuntimeError("AsyncCurlMulti is closed")
         if curl in self._futures:
             raise RuntimeError("Curl handle is already registered")
         loop = self._ensure_loop()
         fut: asyncio.Future[Curl] = loop.create_future()
         self._futures[curl] = fut
-        self._fut_to_curl[id(fut)] = curl
-        fut.add_done_callback(self._on_future_done)
+        # Bind curl into the done-callback so cancellation can find the
+        # right handle without a reverse-lookup map.
+        fut.add_done_callback(partial(self._on_future_done, curl))
         try:
             self._multi.add_handle(curl)
         except Exception:
             # Roll back bookkeeping; the unreachable future GCs cleanly.
             self._futures.pop(curl, None)
-            self._fut_to_curl.pop(id(fut), None)
             raise
         return fut
+
+    def remove_handle(self, curl: Curl) -> None:
+        """remove_handle(curl) -> None
+
+        Removes *curl* from this multi handle and cancels its future
+        (if not already done). Synchronous; if you need to observe the
+        cancellation propagate, await the future returned from the
+        original :py:meth:`add_handle` call.
+
+        *curl* is a :py:class:`pycurl.Curl` easy handle. Raises
+        :py:exc:`RuntimeError` if *curl* is not registered or after
+        :py:meth:`aclose`. Raises :py:class:`pycurl.error` if libcurl
+        rejects the removal.
+        """
+        if self.closed():
+            raise RuntimeError("AsyncCurlMulti is closed")
+        fut = self._futures.pop(curl, None)
+        if fut is None:
+            raise RuntimeError("Curl handle is not registered")
+        self._multi.remove_handle(curl)
+        if not fut.done():
+            fut.cancel()
 
     async def perform(self, curl: Curl) -> Curl:
         """perform(curl) -> Curl object
@@ -199,21 +223,27 @@ class AsyncCurlMulti:
                 raise KeyError(curl) from None
         return tuple(out)
 
-    async def close(self) -> None:
-        """close() -> None
+    def closed(self) -> bool:
+        """closed() -> bool
+
+        Returns ``True`` if the underlying :py:class:`pycurl.CurlMulti`
+        handle has been closed.
+        """
+        return self._multi.closed()
+
+    async def aclose(self) -> None:
+        """aclose() -> None
 
         Coroutine. Cancels the pending timer, removes all in-flight
         handles, unregisters socket watchers, and closes the underlying
         multi handle. Pending futures are cancelled. Idempotent.
         """
-        if self._closed:
+        if self.closed():
             return
-        self._closed = True
         self._cancel_timer()
         # remove_handle fires POLL_REMOVE, which unregisters watchers and unassigns.
         for curl, fut in list(self._futures.items()):
             self._futures.pop(curl, None)
-            self._fut_to_curl.pop(id(fut), None)
             try:
                 self._multi.remove_handle(curl)
             except _pycurl_error:
@@ -236,7 +266,11 @@ class AsyncCurlMulti:
                 except _pycurl_error:
                     pass
             self._assigned_fds.clear()
-        self._multi.close()
+        self._closing = True
+        try:
+            self._multi.close()
+        finally:
+            self._closing = False
 
     async def __aenter__(self) -> AsyncCurlMulti:
         return self
@@ -247,7 +281,7 @@ class AsyncCurlMulti:
         exc: BaseException | None,
         tb: Any,
     ) -> None:
-        await self.close()
+        await self.aclose()
 
     def _ensure_loop(self) -> asyncio.AbstractEventLoop:
         loop = asyncio.get_running_loop()
@@ -283,6 +317,11 @@ class AsyncCurlMulti:
                 self._unregister_watchers(fd, socketp)
             return
 
+        # POLL_IN/OUT/INOUT below: do not register new watchers if the multi
+        # is being torn down.
+        if self._closing:
+            return
+
         if socketp is None:
             state = _SocketState()
             first_observation = True
@@ -291,8 +330,8 @@ class AsyncCurlMulti:
             state = socketp
             first_observation = False
 
-        want_read = what in (POLL_IN, POLL_INOUT)
-        want_write = what in (POLL_OUT, POLL_INOUT)
+        want_read = bool(what & POLL_IN)
+        want_write = bool(what & POLL_OUT)
 
         assert self._loop is not None, "callback fired before _ensure_loop"
         if want_read and not state.read_registered:
@@ -328,7 +367,7 @@ class AsyncCurlMulti:
         self._assigned_fds.discard(fd)
 
     def _on_timer(self, timeout_ms: int) -> None:
-        if self._closed:
+        if self._closing:
             return
         self._schedule_timer(timeout_ms)
 
@@ -363,7 +402,7 @@ class AsyncCurlMulti:
         self._drive(SOCKET_TIMEOUT, 0)
 
     def _drive(self, fd: int, mask: int) -> None:
-        if self._closed:
+        if self._closing:
             return
         try:
             self._multi.socket_action(fd, mask)
@@ -378,19 +417,16 @@ class AsyncCurlMulti:
             self._resolve(curl, exc)
 
     def _drain(self) -> None:
-        # Snapshot completions before resolving; done-callbacks must not
-        # see _futures mid-mutation.
         _, ok, err = self._multi.info_read()
-        completed: list[tuple[Curl, BaseException | None]] = [(c, None) for c in ok]
-        completed.extend((c, _pycurl_error(code, msg)) for c, code, msg in err)
-        for curl, exc in completed:
-            self._resolve(curl, exc)
+        for curl in ok:
+            self._resolve(curl, None)
+        for curl, code, msg in err:
+            self._resolve(curl, _pycurl_error(code, msg))
 
     def _resolve(self, curl: Curl, exc: BaseException | None) -> None:
         fut = self._futures.pop(curl, None)
         if fut is None:
             return
-        self._fut_to_curl.pop(id(fut), None)
         try:
             self._multi.remove_handle(curl)
         except _pycurl_error:
@@ -402,12 +438,9 @@ class AsyncCurlMulti:
         else:
             fut.set_exception(exc)
 
-    def _on_future_done(self, future: asyncio.Future[Curl]) -> None:
-        # No-op if close() or _resolve already cleaned up.
-        if self._closed:
-            return
-        curl = self._fut_to_curl.pop(id(future), None)
-        if curl is None or curl not in self._futures:
+    def _on_future_done(self, curl: Curl, _future: asyncio.Future[Curl]) -> None:
+        # No-op if aclose() or _resolve already cleaned up.
+        if self._closing or curl not in self._futures:
             return
         self._futures.pop(curl, None)
         try:

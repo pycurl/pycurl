@@ -13,11 +13,15 @@ AsyncCurlMulti Object
 
     .. automethod:: pycurl.AsyncCurlMulti.add_handle
 
+    .. automethod:: pycurl.AsyncCurlMulti.remove_handle
+
     .. automethod:: pycurl.AsyncCurlMulti.perform
 
     .. automethod:: pycurl.AsyncCurlMulti.futures
 
-    .. automethod:: pycurl.AsyncCurlMulti.close
+    .. automethod:: pycurl.AsyncCurlMulti.aclose
+
+    .. automethod:: pycurl.AsyncCurlMulti.closed
 
     .. automethod:: pycurl.AsyncCurlMulti.__aenter__
 

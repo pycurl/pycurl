@@ -46,6 +46,9 @@ class _StubMulti:
     def unassign(self, fd: int) -> None:
         self.unassigned.append(fd)
 
+    def closed(self) -> bool:
+        return False
+
 
 @contextlib.contextmanager
 def _stubbed_socket_io(
@@ -188,7 +191,6 @@ def test_cancellation_cleans_up(app: str) -> None:
                 for _ in range(5):
                     await asyncio.sleep(0.01)
                 assert curl not in multi._futures
-                assert id(fut) not in multi._fut_to_curl
                 assert multi._assigned_fds == set()
             finally:
                 curl.close()
@@ -218,9 +220,9 @@ def test_cancelled_future_not_resolved_by_drain(app: str) -> None:
 def test_close_idempotent() -> None:
     async def main() -> None:
         multi = pycurl.AsyncCurlMulti()
-        await multi.close()
-        await multi.close()
-        assert multi._closed is True
+        await multi.aclose()
+        await multi.aclose()
+        assert multi.closed() is True
 
     _run(main())
 
@@ -232,7 +234,7 @@ def test_close_cancels_pending(app: str) -> None:
         try:
             fut = multi.add_handle(curl)
             await asyncio.sleep(0.01)
-            await multi.close()
+            await multi.aclose()
             assert fut.cancelled() or fut.done()
             assert multi._futures == {}
             assert multi._assigned_fds == set()
@@ -244,15 +246,12 @@ def test_close_cancels_pending(app: str) -> None:
 
 def test_setopt_blocks_socket_timer_function() -> None:
     async def main() -> None:
-        multi = pycurl.AsyncCurlMulti()
-        try:
+        async with pycurl.AsyncCurlMulti() as multi:
             with pytest.raises(ValueError):
                 multi.setopt(pycurl.M_SOCKETFUNCTION, lambda *_: None)
             with pytest.raises(ValueError):
                 multi.setopt(pycurl.M_TIMERFUNCTION, lambda *_: None)
             multi.setopt(pycurl.M_MAX_HOST_CONNECTIONS, 4)
-        finally:
-            await multi.close()
 
     _run(main())
 
@@ -270,6 +269,53 @@ def test_duplicate_add_handle_rejected(app: str) -> None:
                 assert curl.getinfo(pycurl.RESPONSE_CODE) == 200
             finally:
                 curl.close()
+
+    _run(main())
+
+
+def test_remove_handle_cancels_future(app: str) -> None:
+    async def main() -> None:
+        async with pycurl.AsyncCurlMulti() as multi:
+            curl, _ = _easy(f"{app}/long_pause")
+            try:
+                fut = multi.add_handle(curl)
+                await asyncio.sleep(0.01)
+                multi.remove_handle(curl)
+                assert curl not in multi._futures
+                assert fut.cancelled()
+                # Flush the deferred done-callback; it should be a no-op.
+                await asyncio.sleep(0)
+                assert curl not in multi._futures
+                assert fut.cancelled()
+            finally:
+                curl.close()
+
+    _run(main())
+
+
+def test_remove_handle_unregistered_raises() -> None:
+    async def main() -> None:
+        async with pycurl.AsyncCurlMulti() as multi:
+            stranger = pycurl.Curl()
+            try:
+                with pytest.raises(RuntimeError, match="not registered"):
+                    multi.remove_handle(stranger)
+            finally:
+                stranger.close()
+
+    _run(main())
+
+
+def test_remove_handle_after_close_raises() -> None:
+    async def main() -> None:
+        multi = pycurl.AsyncCurlMulti()
+        curl = pycurl.Curl()
+        try:
+            await multi.aclose()
+            with pytest.raises(RuntimeError, match="closed"):
+                multi.remove_handle(curl)
+        finally:
+            curl.close()
 
     _run(main())
 
@@ -311,7 +357,6 @@ def test_socket_action_failure_fails_pending_futures() -> None:
             fake_curl = object()
             fut: asyncio.Future = loop.create_future()
             multi._futures[fake_curl] = fut  # type: ignore[index]
-            multi._fut_to_curl[id(fut)] = fake_curl  # type: ignore[assignment]
 
             injected = pycurl.error(7, "injected socket_action failure")
             real_multi = multi._multi
@@ -326,6 +371,9 @@ def test_socket_action_failure_fails_pending_futures() -> None:
                 def info_read(self, *_a: object) -> tuple[int, list, list]:
                     return (0, [], [])
 
+                def closed(self) -> bool:
+                    return False
+
             multi._multi = _RaisingMulti()  # type: ignore[assignment]
             try:
                 multi._fire_timeout()
@@ -337,9 +385,8 @@ def test_socket_action_failure_fails_pending_futures() -> None:
                 await fut
             assert excinfo.value is injected
             assert fake_curl not in multi._futures  # type: ignore[comparison-overlap]
-            assert id(fut) not in multi._fut_to_curl
         finally:
-            await multi.close()
+            await multi.aclose()
 
     _run(main())
 
@@ -364,8 +411,7 @@ def test_back_to_back_add_handle(app: str) -> None:
 
 def test_socket_mask_transitions() -> None:
     async def main() -> None:
-        multi = pycurl.AsyncCurlMulti()
-        try:
+        async with pycurl.AsyncCurlMulti() as multi:
             with _stubbed_socket_io(multi) as (stub, calls):
                 fd = 99
                 multi._on_socket(pycurl.POLL_IN, fd, stub, None)
@@ -381,8 +427,6 @@ def test_socket_mask_transitions() -> None:
                 ("remove_writer", fd),
             ]
             assert len(stub.assigned) == 1
-        finally:
-            await multi.close()
 
     _run(main())
 
@@ -412,7 +456,6 @@ def test_add_handle_rollback_on_failure(app: str) -> None:
                     multi._multi = real_add.__self__  # type: ignore[assignment]
 
                 assert multi._futures == {}
-                assert multi._fut_to_curl == {}
             finally:
                 curl.close()
 
@@ -421,8 +464,7 @@ def test_add_handle_rollback_on_failure(app: str) -> None:
 
 def test_poll_inout_then_remove_clears_both_watchers() -> None:
     async def main() -> None:
-        multi = pycurl.AsyncCurlMulti()
-        try:
+        async with pycurl.AsyncCurlMulti() as multi:
             with _stubbed_socket_io(multi) as (stub, calls):
                 fd = 77
                 multi._on_socket(pycurl.POLL_INOUT, fd, stub, None)
@@ -436,16 +478,13 @@ def test_poll_inout_then_remove_clears_both_watchers() -> None:
                 ("remove_writer", fd),
             ]
             assert fd not in multi._assigned_fds
-        finally:
-            await multi.close()
 
     _run(main())
 
 
 def test_poll_none_keeps_assignment() -> None:
     async def main() -> None:
-        multi = pycurl.AsyncCurlMulti()
-        try:
+        async with pycurl.AsyncCurlMulti() as multi:
             with _stubbed_socket_io(multi) as (stub, calls):
                 fd = 88
                 multi._on_socket(pycurl.POLL_INOUT, fd, stub, None)
@@ -459,23 +498,18 @@ def test_poll_none_keeps_assignment() -> None:
             assert fd in multi._assigned_fds
             assert state.read_registered is False  # type: ignore[attr-defined]
             assert state.write_registered is False  # type: ignore[attr-defined]
-        finally:
-            await multi.close()
 
     _run(main())
 
 
 def test_negative_timer_clears_pending_handle() -> None:
     async def main() -> None:
-        multi = pycurl.AsyncCurlMulti()
-        try:
+        async with pycurl.AsyncCurlMulti() as multi:
             multi._loop = asyncio.get_running_loop()
             multi._on_timer(50)
             assert multi._timer is not None
             multi._on_timer(-1)
             assert multi._timer is None
-        finally:
-            await multi.close()
 
     _run(main())
 
@@ -495,13 +529,12 @@ def test_ensure_loop_rejects_different_loop() -> None:
 
         _run(reuse())
     finally:
-        _run(multi.close())
+        _run(multi.aclose())
 
 
 def test_proactor_loop_raises_clear_error() -> None:
     async def main() -> None:
-        multi = pycurl.AsyncCurlMulti()
-        try:
+        async with pycurl.AsyncCurlMulti() as multi:
             # On non-Windows ProactorEventLoop is absent; patch it to the
             # running loop's class so the isinstance check fires.
             loop_class = asyncio.get_running_loop().__class__
@@ -510,8 +543,6 @@ def test_proactor_loop_raises_clear_error() -> None:
             ):
                 with pytest.raises(RuntimeError, match="selector-style event loop"):
                     multi._ensure_loop()
-        finally:
-            await multi.close()
 
     _run(main())
 
@@ -528,12 +559,26 @@ def test_stale_watcher_callback_skipped() -> None:
     _run(main())
 
 
-def test_on_timer_noop_after_close() -> None:
+def test_on_timer_noop_during_close() -> None:
     async def main() -> None:
-        multi = pycurl.AsyncCurlMulti()
-        await multi.close()
-        multi._on_timer(50)
-        assert multi._timer is None
+        async with pycurl.AsyncCurlMulti() as multi:
+            multi._loop = asyncio.get_running_loop()
+            multi._closing = True
+            multi._on_timer(50)
+            assert multi._timer is None
+
+    _run(main())
+
+
+def test_close_time_poll_in_is_ignored() -> None:
+    async def main() -> None:
+        async with pycurl.AsyncCurlMulti() as multi:
+            with _stubbed_socket_io(multi) as (stub, calls):
+                multi._closing = True
+                multi._on_socket(pycurl.POLL_IN, 99, stub, None)
+            assert calls == []
+            assert stub.assigned == []
+            assert 99 not in multi._assigned_fds
 
     _run(main())
 
