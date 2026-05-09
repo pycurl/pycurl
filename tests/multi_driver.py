@@ -37,6 +37,15 @@ def install_timer_tracker(
     return state
 
 
+def _idle_wait(multi: pycurl.CurlMulti, *, max_wait: float) -> float:
+    ms = multi.timeout()
+    if ms == 0:
+        return 0.0
+    if ms < 0:
+        return max_wait
+    return min(max_wait, ms / 1000.0)
+
+
 def pump(multi: pycurl.CurlMulti, timer_state: TimerState, timeout: float = 0.2) -> int:
     """Run one event-loop tick; return the number of running handles."""
     _, running = multi.socket_action(pycurl.SOCKET_TIMEOUT, 0)
@@ -45,7 +54,9 @@ def pump(multi: pycurl.CurlMulti, timer_state: TimerState, timeout: float = 0.2)
         if timer_state.pending:
             timer_state.pending = False
             _, running = multi.socket_action(pycurl.SOCKET_TIMEOUT, 0)
-        time.sleep(min(timeout, 0.01))
+        wait = _idle_wait(multi, max_wait=timeout)
+        if wait > 0:
+            time.sleep(wait)
         return running
 
     r, w, x = select.select(rset, wset, xset, timeout)

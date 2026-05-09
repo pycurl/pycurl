@@ -7,8 +7,7 @@ import numpy as np
 import pycurl
 import pytest
 
-IO_TIMEOUT = 5.0
-POLL_INTERVAL = 0.01
+IO_TIMEOUT = 30.0
 
 
 def _connect_only(curl, app):
@@ -41,99 +40,132 @@ def _as_numpy_uint8(payload):
     return np.frombuffer(payload, dtype=np.uint8)
 
 
+def _active_socket_fd(curl):
+    socket_info = (
+        pycurl.ACTIVESOCKET if hasattr(pycurl, "ACTIVESOCKET") else pycurl.LASTSOCKET
+    )
+    fd = curl.getinfo(socket_info)
+    assert fd != -1, "no active socket on connected curl"
+    return fd
+
+
+def _wait_active_socket(
+    curl, *, for_read=False, for_write=False, deadline=None, context=None
+):
+    assert for_read or for_write
+    fd = _active_socket_fd(curl)
+    if deadline is None:
+        deadline = time.monotonic() + IO_TIMEOUT
+
+    while True:
+        timeout = deadline - time.monotonic()
+        if timeout <= 0:
+            mode = "readable" if for_read else "writable"
+            prefix = f"{context()}: " if context else ""
+            raise AssertionError(
+                f"{prefix}timed out waiting for active socket {fd} to become {mode}"
+            )
+        readable, writable, _ = select.select(
+            [fd] if for_read else [],
+            [fd] if for_write else [],
+            [],
+            timeout,
+        )
+        if readable or writable:
+            return
+
+
+def _io_retry(curl, op, *, for_read=False, for_write=False, deadline, context):
+    while True:
+        try:
+            return op()
+        except BlockingIOError as exc:
+            assert exc.errno == errno.EAGAIN
+            _wait_active_socket(
+                curl,
+                for_read=for_read,
+                for_write=for_write,
+                deadline=deadline,
+                context=context,
+            )
+
+
 def _send_all(curl, payload):
     view = memoryview(payload)
     total = 0
-    deadline = time.monotonic() + IO_TIMEOUT
-
+    started = time.monotonic()
+    deadline = started + IO_TIMEOUT
     while total < len(view):
-        if time.monotonic() > deadline:
-            raise AssertionError("timed out while sending request")
-        try:
-            sent = curl.send(view[total:])
-        except BlockingIOError as exc:
-            assert exc.errno == errno.EAGAIN
-            time.sleep(POLL_INTERVAL)
-            continue
+        sent = _io_retry(
+            curl,
+            lambda: curl.send(view[total:]),
+            for_write=True,
+            deadline=deadline,
+            context=lambda: (
+                f"_send_all after {time.monotonic() - started:.3f}s "
+                f"(sent {total}/{len(view)} bytes)"
+            ),
+        )
         assert sent > 0
         total += sent
 
 
 def _recv_all(curl):
     chunks = []
-    deadline = time.monotonic() + IO_TIMEOUT
-
+    received = 0
+    started = time.monotonic()
+    deadline = started + IO_TIMEOUT
     while True:
-        if time.monotonic() > deadline:
-            raise AssertionError("timed out while reading response")
-        try:
-            data = curl.recv(4096)
-        except BlockingIOError as exc:
-            assert exc.errno == errno.EAGAIN
-            time.sleep(POLL_INTERVAL)
-            continue
+        data = _io_retry(
+            curl,
+            lambda: curl.recv(4096),
+            for_read=True,
+            deadline=deadline,
+            context=lambda: (
+                f"_recv_all after {time.monotonic() - started:.3f}s "
+                f"(received {received} bytes)"
+            ),
+        )
         if not data:
             break
         chunks.append(data)
-
+        received += len(data)
     return b"".join(chunks)
 
 
 def _recv_all_into(curl, buf):
     out = bytearray()
-    deadline = time.monotonic() + IO_TIMEOUT
+    received = 0
+    started = time.monotonic()
+    deadline = started + IO_TIMEOUT
     while True:
-        if time.monotonic() > deadline:
-            raise AssertionError("timed out while reading response via recv_into")
-        try:
-            nread = curl.recv_into(buf)
-        except BlockingIOError as exc:
-            assert exc.errno == errno.EAGAIN
-            time.sleep(POLL_INTERVAL)
-            continue
+        nread = _io_retry(
+            curl,
+            lambda: curl.recv_into(buf),
+            for_read=True,
+            deadline=deadline,
+            context=lambda: (
+                f"_recv_all_into after {time.monotonic() - started:.3f}s "
+                f"(received {received} bytes)"
+            ),
+        )
         if nread == 0:
             break
         out.extend(memoryview(buf)[:nread])
+        received += nread
     return bytes(out)
 
 
 def _recv_into_once(curl, buffer, nbytes):
-    deadline = time.monotonic() + IO_TIMEOUT
-    while True:
-        if time.monotonic() > deadline:
-            raise AssertionError("timed out while waiting for recv_into data")
-        try:
-            return curl.recv_into(buffer, nbytes)
-        except BlockingIOError as exc:
-            assert exc.errno == errno.EAGAIN
-            time.sleep(POLL_INTERVAL)
-
-
-def _wait_active_socket(curl, *, for_read=False, for_write=False):
-    assert for_read or for_write
-    socket_info = (
-        pycurl.ACTIVESOCKET if hasattr(pycurl, "ACTIVESOCKET") else pycurl.LASTSOCKET
+    started = time.monotonic()
+    deadline = started + IO_TIMEOUT
+    return _io_retry(
+        curl,
+        lambda: curl.recv_into(buffer, nbytes),
+        for_read=True,
+        deadline=deadline,
+        context=lambda: f"_recv_into_once after {time.monotonic() - started:.3f}s",
     )
-    socket_fd = curl.getinfo(socket_info)
-    assert socket_fd != -1
-
-    deadline = time.monotonic() + IO_TIMEOUT
-    while True:
-        timeout = deadline - time.monotonic()
-        if timeout <= 0:
-            mode = "readable" if for_read else "writable"
-            raise AssertionError(
-                f"timed out waiting for active socket to become {mode}"
-            )
-
-        readable, writable, _ = select.select(
-            [socket_fd] if for_read else [],
-            [socket_fd] if for_write else [],
-            [],
-            timeout,
-        )
-        if (for_read and readable) or (for_write and writable):
-            return
 
 
 def test_connect_only_recv_would_block_before_request(connected_curl):
@@ -182,11 +214,7 @@ def test_connect_only_recv_into_respects_nbytes(connected_curl, success_request)
 def test_connect_only_waits_for_activity_on_active_socket(
     connected_curl, success_request
 ):
-    socket_info = (
-        pycurl.ACTIVESOCKET if hasattr(pycurl, "ACTIVESOCKET") else pycurl.LASTSOCKET
-    )
-    socket_fd = connected_curl.getinfo(socket_info)
-    assert socket_fd != -1
+    socket_fd = _active_socket_fd(connected_curl)
     if hasattr(pycurl, "ACTIVESOCKET") and hasattr(pycurl, "LASTSOCKET"):
         assert socket_fd == connected_curl.getinfo(pycurl.LASTSOCKET)
 

@@ -10,7 +10,7 @@ import pycurl
 import pytest
 
 from . import util
-from .multi_driver import install_timer_tracker, pump
+from .multi_driver import _idle_wait, install_timer_tracker, pump
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,12 @@ def _find_socket(multi, timeout=5.0, timer_state=None):
         rset, wset, xset = multi.fdset()
         if rset or wset or xset:
             return (rset or wset or xset)[0]
-        time.sleep(0.01)
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            break
+        wait = _idle_wait(multi, max_wait=min(remaining, 0.05))
+        if wait > 0:
+            time.sleep(wait)
     return None
 
 
