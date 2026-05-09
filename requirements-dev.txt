@@ -5,6 +5,8 @@ numpy
 paramiko; sys_platform != 'win32' or platform_machine != 'ARM64'
 pyflakes
 pytest>=5
+pytest-run-parallel
+pytest-timeout
 sphinx
 setuptools
 websockets>=12

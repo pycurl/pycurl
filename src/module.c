@@ -539,6 +539,10 @@ PYCURL_IGNORE_DEPRECATED_END
     if (m == NULL)
         goto error;
 
+#ifdef Py_GIL_DISABLED
+    PyUnstable_Module_SetGIL(m, Py_MOD_GIL_NOT_USED);
+#endif
+
     /* Add error object to the module */
     d = PyModule_GetDict(m);
     assert(d != NULL);

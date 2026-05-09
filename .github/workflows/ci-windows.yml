@@ -28,7 +28,7 @@ jobs:
       matrix:
         os: ["windows-2025"]
         arch: ["x64"]
-        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14", "3.14t"]
         include:
           - os: "windows-11-arm"
             arch: "arm64"
@@ -80,6 +80,13 @@ jobs:
         delvewheel repair --add-path $VCPKG_INSTALLATION_ROOT/installed/${{ matrix.arch }}-windows/bin dist/*.whl
         pip install wheelhouse/*.whl
       shell: bash
+    - name: Verify free-threaded import does not enable the GIL
+      if: matrix.python-version == '3.14t'
+      env:
+        PYTHON_GIL: "0"
+      run: |
+        python -W error -c "import pycurl; print(pycurl.version)"
+        python -c "import sys, pycurl; assert sys._is_gil_enabled() is False, 'pycurl import re-enabled the GIL'"
     - name: Test with pytest
       run: |
         python -c 'import pycurl; print(pycurl.version)'
