@@ -16,12 +16,12 @@ Example::
 
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    import asyncio
     from collections.abc import Iterable
 
 from pycurl._pycurl import (
@@ -101,12 +101,8 @@ class AsyncCurlMulti:
         self._assigned_fds: set[int] = set()
         self._timer: asyncio.Handle | None = None
         self._closing: bool = False
-        try:
-            self._multi.setopt(M_SOCKETFUNCTION, self._on_socket)
-            self._multi.setopt(M_TIMERFUNCTION, self._on_timer)
-        except Exception:
-            self._multi.close()
-            raise
+        self._multi.setopt(M_SOCKETFUNCTION, self._on_socket)
+        self._multi.setopt(M_TIMERFUNCTION, self._on_timer)
 
     def setopt(self, option: int, value: Any) -> None:
         """setopt(option, value) -> None
@@ -284,6 +280,8 @@ class AsyncCurlMulti:
         await self.aclose()
 
     def _ensure_loop(self) -> asyncio.AbstractEventLoop:
+        import asyncio
+
         loop = asyncio.get_running_loop()
         if self._loop is None:
             proactor = getattr(asyncio, "ProactorEventLoop", None)

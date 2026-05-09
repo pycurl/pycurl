@@ -3,6 +3,11 @@
 AsyncCurlMulti Object
 =====================
 
+.. note::
+
+    The ``AsyncCurlMulti`` API is experimental and may change in a
+    future release.
+
 .. autoclass:: pycurl.AsyncCurlMulti
 
     AsyncCurlMulti objects have the following methods:
