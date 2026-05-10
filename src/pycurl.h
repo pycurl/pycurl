@@ -568,7 +568,7 @@ typedef struct CurlShareObject {
     PyObject *weakreflist;
     CURLSH *share_handle;
     ShareLock *lock;                /* lock object to implement CURLSHOPT_LOCKFUNC */
-    PyThread_type_lock easy_weakrefs_lock;  /* protects easy_weakrefs map */
+    pycurl_mutex_t api_lock;        /* serialises CurlShare's Python API and easy_weakrefs access */
     /* Set of weakref.ref(CurlObject) */
     PyObject *easy_weakrefs;
     int detach_on_close; /* boolean: True by default */

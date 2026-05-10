@@ -101,7 +101,9 @@ DOCSTRINGS_SOURCES = \
 	doc/docstrings/share.rst \
 	doc/docstrings/share_close.rst \
 	doc/docstrings/share_closed.rst \
-	doc/docstrings/share_setopt.rst
+	doc/docstrings/share_setopt.rst \
+	doc/docstrings/share_share.rst \
+	doc/docstrings/share_unshare.rst
 
 all: build
 src-release: $(RELEASE_SOURCES)

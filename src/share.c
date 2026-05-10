@@ -1,8 +1,8 @@
 #include "pycurl.h"
 #include "docstrings.h"
 
-#  define EASY_WEAKREFS_LOCK(share)   PyThread_acquire_lock((share)->easy_weakrefs_lock, 1)
-#  define EASY_WEAKREFS_UNLOCK(share) PyThread_release_lock((share)->easy_weakrefs_lock)
+#define PYCURL_SHARE_API_LOCK(s)   PYCURL_MUTEX_LOCK(&(s)->api_lock)
+#define PYCURL_SHARE_API_UNLOCK(s) PYCURL_MUTEX_UNLOCK(&(s)->api_lock)
 /*************************************************************************
 // static utility functions
 **************************************************************************/
@@ -20,10 +20,10 @@ share_register_easy(CurlShareObject *share, CurlObject *easy)
         return -1;
     }
 
-    EASY_WEAKREFS_LOCK(share);
+    PYCURL_SHARE_API_LOCK(share);
 
     if (share->share_handle == NULL || share->easy_weakrefs == NULL) {
-        PyErr_SetString(PyExc_RuntimeError, "CurlShare is closed");
+        PyErr_SetString(ErrorObject, "CurlShare is closed");
         goto error;
     }
 
@@ -31,12 +31,12 @@ share_register_easy(CurlShareObject *share, CurlObject *easy)
         goto error;
     }
 
-    EASY_WEAKREFS_UNLOCK(share);
+    PYCURL_SHARE_API_UNLOCK(share);
     Py_DECREF(wr);
     return 0;
 
 error:
-    EASY_WEAKREFS_UNLOCK(share);
+    PYCURL_SHARE_API_UNLOCK(share);
     Py_DECREF(wr);
     return -1;
 }
@@ -56,10 +56,10 @@ share_unregister_easy(CurlShareObject *share, CurlObject *easy)
         return;
     }
 
-    EASY_WEAKREFS_LOCK(share);
+    PYCURL_SHARE_API_LOCK(share);
 
     if (share->easy_weakrefs == NULL) {
-        EASY_WEAKREFS_UNLOCK(share);
+        PYCURL_SHARE_API_UNLOCK(share);
         Py_DECREF(wr);
         return;
     }
@@ -68,7 +68,7 @@ share_unregister_easy(CurlShareObject *share, CurlObject *easy)
         PyErr_Clear();
     }
 
-    EASY_WEAKREFS_UNLOCK(share);
+    PYCURL_SHARE_API_UNLOCK(share);
     Py_DECREF(wr);
 }
 
@@ -83,11 +83,55 @@ assert_share_state(const CurlShareObject *self)
 }
 
 
+/* check state for methods (mirrors check_curl_state / check_multi_state) */
 static int
-check_share_state(const CurlShareObject *self)
+check_share_state(const CurlShareObject *self, int flags, const char *name)
 {
     assert_share_state(self);
+    if ((flags & PYCURL_REQUIRE_HANDLE) && self->share_handle == NULL) {
+        PyErr_Format(ErrorObject, "cannot invoke %s() - no share handle", name);
+        return -1;
+    }
     return 0;
+}
+
+
+static int
+check_share_setopt_result(CURLSHcode res)
+{
+    if (res == CURLSHE_OK) {
+        return 0;
+    }
+    PyObject *v = Py_BuildValue("(is)", (int)res, curl_share_strerror(res));
+    if (v != NULL) {
+        PyErr_SetObject(ErrorObject, v);
+        Py_DECREF(v);
+    }
+    return -1;
+}
+
+
+/* Apply SH_SHARE/SH_UNSHARE for one CURL_LOCK_DATA_* kind; caller holds api_lock. */
+static int
+share_setopt_one(CurlShareObject *self, int option, long data_kind)
+{
+    switch (data_kind) {
+    case CURL_LOCK_DATA_COOKIE:
+    case CURL_LOCK_DATA_DNS:
+    case CURL_LOCK_DATA_SSL_SESSION:
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 57, 0)
+    case CURL_LOCK_DATA_CONNECT:
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 61, 0)
+    case CURL_LOCK_DATA_PSL:
+#endif
+        break;
+    default:
+        PyErr_SetString(PyExc_TypeError, "invalid arguments to setopt");
+        return -1;
+    }
+    return check_share_setopt_result(
+        curl_share_setopt(self->share_handle, option, data_kind));
 }
 
 
@@ -124,17 +168,17 @@ do_share_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
         Py_DECREF(self);
         return NULL;
     }
-    self->easy_weakrefs_lock = PyThread_allocate_lock();
-    if (self->easy_weakrefs_lock == NULL) {
+#if PY_VERSION_HEX < 0x030D0000
+    self->api_lock = PyThread_allocate_lock();
+    if (self->api_lock == NULL) {
         Py_DECREF(self);
         PyErr_NoMemory();
         return NULL;
     }
+#endif
 
     self->easy_weakrefs = PySet_New(NULL);
     if (self->easy_weakrefs == NULL) {
-        PyThread_free_lock(self->easy_weakrefs_lock);
-        self->easy_weakrefs_lock = NULL;
         Py_DECREF(self);
         return NULL;
     }
@@ -178,13 +222,23 @@ static void
 util_share_xdecref(CurlShareObject *self)
 {
     Py_CLEAR(self->dict);
+#if PY_VERSION_HEX >= 0x030D0000
+    PYCURL_SHARE_API_LOCK(self);
+    Py_CLEAR(self->easy_weakrefs);
+    PYCURL_SHARE_API_UNLOCK(self);
+#else
     /*
-     * The lock can be NULL for partially-initialized objects or during
+     * api_lock can be NULL for partially-initialized objects or during
      * early destruction paths; guard against acquiring an uninitialized lock.
      */
-    if (self->easy_weakrefs_lock) EASY_WEAKREFS_LOCK(self);
+    if (self->api_lock) {
+        PYCURL_SHARE_API_LOCK(self);
+    }
     Py_CLEAR(self->easy_weakrefs);
-    if (self->easy_weakrefs_lock) EASY_WEAKREFS_UNLOCK(self);
+    if (self->api_lock) {
+        PYCURL_SHARE_API_UNLOCK(self);
+    }
+#endif
 }
 
 
@@ -219,10 +273,12 @@ do_share_dealloc(CurlShareObject *self)
     if (self->lock) {
         share_lock_destroy(self->lock);
     }
-    if (self->easy_weakrefs_lock) {
-        PyThread_free_lock(self->easy_weakrefs_lock);
-        self->easy_weakrefs_lock = NULL;
+#if PY_VERSION_HEX < 0x030D0000
+    if (self->api_lock) {
+        PyThread_free_lock(self->api_lock);
+        self->api_lock = NULL;
     }
+#endif
 
     if (self->weakreflist != NULL) {
         PyObject_ClearWeakRefs((PyObject *) self);
@@ -236,8 +292,6 @@ static int
 share_cleanup_and_count_live_easies(CurlShareObject *self)
 {
     int has_live = 0;
-
-    EASY_WEAKREFS_LOCK(self);
 
     if (self->easy_weakrefs && PySet_Check(self->easy_weakrefs)) {
         PyObject *it = PyObject_GetIter(self->easy_weakrefs);
@@ -257,7 +311,6 @@ share_cleanup_and_count_live_easies(CurlShareObject *self)
                     Py_DECREF(wr);
                     Py_DECREF(it);
                     Py_DECREF(to_remove);
-                    EASY_WEAKREFS_UNLOCK(self);
                     return -1;
                 } else if (rc == 0 || obj == NULL) {
                     PyList_Append(to_remove, wr);
@@ -281,7 +334,10 @@ share_cleanup_and_count_live_easies(CurlShareObject *self)
                 CurlObject *easy = (CurlObject *)obj;
 
                 if (easy && easy->share == self) {
-                    if (self->detach_on_close) {
+                    int performing = (easy->state != NULL) ||
+                                     (easy->multi_stack != NULL && easy->multi_stack->state != NULL);
+
+                    if (self->detach_on_close && !performing) {
                         curl_easy_setopt(easy->handle, CURLOPT_SHARE, NULL);
                         easy->share = NULL;
 
@@ -316,7 +372,6 @@ share_cleanup_and_count_live_easies(CurlShareObject *self)
         }
     }
 
-    EASY_WEAKREFS_UNLOCK(self);
     return has_live;
 }
 
@@ -326,12 +381,12 @@ do_share_close(CurlShareObject *self, PyObject *Py_UNUSED(ignored))
 {
     int nlive;
 
-    if (check_share_state(self) != 0) {
-        return NULL;
-    }
+    assert_share_state(self);
 
+    PYCURL_SHARE_API_LOCK(self);
     nlive = share_cleanup_and_count_live_easies(self);
     if (nlive > 0) {
+        PYCURL_SHARE_API_UNLOCK(self);
         PyErr_Format(
             ErrorObject,
             "cannot close CurlShare: still in use by %d active Curl object%s",
@@ -340,18 +395,24 @@ do_share_close(CurlShareObject *self, PyObject *Py_UNUSED(ignored))
         );
         return NULL;
     } else if (nlive < 0) {
-        // Error in share_cleanup_and_count_live_easies, propagate up
+        PYCURL_SHARE_API_UNLOCK(self);
         return NULL;
     }
 
     util_share_close(self);
+    PYCURL_SHARE_API_UNLOCK(self);
     Py_RETURN_NONE;
 }
 
 
 static PyObject *do_share_get_closed(CurlShareObject *self, void *Py_UNUSED(closure))
 {
-    if (self->share_handle == NULL) {
+    /* api_lock prevents a free-threaded data race with util_share_close. */
+    int closed;
+    PYCURL_SHARE_API_LOCK(self);
+    closed = (self->share_handle == NULL);
+    PYCURL_SHARE_API_UNLOCK(self);
+    if (closed) {
         Py_RETURN_TRUE;
     } else {
         Py_RETURN_FALSE;
@@ -367,10 +428,9 @@ do_share_setopt(CurlShareObject *self, PyObject *args)
 {
     int option;
     PyObject *obj;
+    long d;
 
     if (!PyArg_ParseTuple(args, "iO:setopt", &option, &obj))
-        return NULL;
-    if (check_share_state(self) != 0)
         return NULL;
 
     /* early checks of option value */
@@ -381,48 +441,96 @@ do_share_setopt(CurlShareObject *self, PyObject *args)
     if (option % 10000 >= OPTIONS_SIZE)
         goto error;
 
-#if 0 /* XXX - should we ??? */
-    /* Handle the case of None */
-    if (obj == Py_None) {
-        return util_curl_unsetopt(self, option);
+    if (!PyLong_Check(obj)) {
+        goto error;
     }
-#endif
 
-    /* Handle the case of integer arguments */
-    if (PyLong_Check(obj)) {
-        long d = PyLong_AsLong(obj);
-        if (d == -1 && PyErr_Occurred()) {
-            return NULL;
-        }
-        switch(d) {
-        case CURL_LOCK_DATA_COOKIE:
-        case CURL_LOCK_DATA_DNS:
-        case CURL_LOCK_DATA_SSL_SESSION:
-#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 57, 0)
-        case CURL_LOCK_DATA_CONNECT:
-#endif
-#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 61, 0)
-        case CURL_LOCK_DATA_PSL:
-#endif
-            break;
-        default:
-            goto error;
-        }
-        switch(option) {
-        case CURLSHOPT_SHARE:
-        case CURLSHOPT_UNSHARE:
-            curl_share_setopt(self->share_handle, option, d);
-            break;
-        default:
-            PyErr_SetString(PyExc_TypeError, "integers are not supported for this option");
-            return NULL;
-        }
-        Py_RETURN_NONE;
+    d = PyLong_AsLong(obj);
+    if (d == -1 && PyErr_Occurred()) {
+        return NULL;
     }
-    /* Failed to match any of the function signatures -- return error */
+
+    if (option != CURLSHOPT_SHARE && option != CURLSHOPT_UNSHARE) {
+        PyErr_SetString(PyExc_TypeError, "integers are not supported for this option");
+        return NULL;
+    }
+
+    PYCURL_SHARE_API_LOCK(self);
+    if (check_share_state(self, PYCURL_REQUIRE_HANDLE, "setopt") != 0) {
+        PYCURL_SHARE_API_UNLOCK(self);
+        return NULL;
+    }
+    if (share_setopt_one(self, option, d) != 0) {
+        PYCURL_SHARE_API_UNLOCK(self);
+        return NULL;
+    }
+    PYCURL_SHARE_API_UNLOCK(self);
+    Py_RETURN_NONE;
+
 error:
     PyErr_SetString(PyExc_TypeError, "invalid arguments to setopt");
     return NULL;
+}
+
+
+static PyObject *
+share_apply_kinds(CurlShareObject *self, PyObject *args, int option, const char *name)
+{
+    Py_ssize_t n = PyTuple_GET_SIZE(args);
+    if (n == 0) {
+        PyErr_SetString(PyExc_TypeError,
+            "at least one LOCK_DATA_* argument required");
+        return NULL;
+    }
+
+    PYCURL_SHARE_API_LOCK(self);
+    if (check_share_state(self, PYCURL_REQUIRE_HANDLE, name) != 0) {
+        PYCURL_SHARE_API_UNLOCK(self);
+        return NULL;
+    }
+
+    for (Py_ssize_t i = 0; i < n; i++) {
+        PyObject *item = PyTuple_GET_ITEM(args, i);
+        if (PyList_Check(item) || PyTuple_Check(item)) {
+            PyErr_SetString(PyExc_TypeError,
+                "list/tuple arguments are not expanded; "
+                "pass each LOCK_DATA_* constant individually");
+            PYCURL_SHARE_API_UNLOCK(self);
+            return NULL;
+        }
+        if (!PyLong_Check(item)) {
+            PyErr_SetString(PyExc_TypeError,
+                "arguments must be LOCK_DATA_* integers");
+            PYCURL_SHARE_API_UNLOCK(self);
+            return NULL;
+        }
+        long d = PyLong_AsLong(item);
+        if (d == -1 && PyErr_Occurred()) {
+            PYCURL_SHARE_API_UNLOCK(self);
+            return NULL;
+        }
+        /* sequential, not transactional: a failure leaves prior items applied */
+        if (share_setopt_one(self, option, d) != 0) {
+            PYCURL_SHARE_API_UNLOCK(self);
+            return NULL;
+        }
+    }
+    PYCURL_SHARE_API_UNLOCK(self);
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
+do_share_share(CurlShareObject *self, PyObject *args)
+{
+    return share_apply_kinds(self, args, CURLSHOPT_SHARE, "share");
+}
+
+
+static PyObject *
+do_share_unshare(CurlShareObject *self, PyObject *args)
+{
+    return share_apply_kinds(self, args, CURLSHOPT_UNSHARE, "unshare");
 }
 
 
@@ -441,6 +549,7 @@ static PyObject *do_share_setstate(CurlShareObject *self, PyObject *args)
 
 static PyObject *do_share_enter(CurlShareObject *self, PyObject *Py_UNUSED(ignored))
 {
+    /* No api_lock: Py_INCREF is GIL-safe and atomic on free-threaded builds (PEP 703). */
     Py_INCREF(self);
     return (PyObject *)self;
 }
@@ -455,6 +564,8 @@ static PyObject *do_share_enter(CurlShareObject *self, PyObject *Py_UNUSED(ignor
 PYCURL_INTERNAL PyMethodDef curlshareobject_methods[] = {
     {"close", (PyCFunction)do_share_close, METH_NOARGS, share_close_doc},
     {"setopt", (PyCFunction)do_share_setopt, METH_VARARGS, share_setopt_doc},
+    {"share", (PyCFunction)do_share_share, METH_VARARGS, share_share_doc},
+    {"unshare", (PyCFunction)do_share_unshare, METH_VARARGS, share_unshare_doc},
     {"__getstate__", (PyCFunction)do_share_getstate, METH_NOARGS, NULL},
     {"__setstate__", (PyCFunction)do_share_setstate, METH_VARARGS, NULL},
     {"__enter__", (PyCFunction)do_share_enter, METH_NOARGS, NULL},

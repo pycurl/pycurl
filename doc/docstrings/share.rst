@@ -33,10 +33,5 @@ Example::
     or close all associated ``Curl`` objects before closing the
     ``CurlShare``.
 
-.. warning::
-
-   Detaching ``Curl`` objects from a ``CurlShare`` is **not thread-safe**
-   with respect to those ``Curl`` objects.
-
-   The caller is responsible for ensuring proper synchronization when
-   using ``CurlShare`` and ``Curl`` objects across multiple threads.
+See :py:meth:`~pycurl.CurlShare.close` for the rules ``close()``
+enforces when associated ``Curl`` handles are still in use.
