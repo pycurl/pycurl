@@ -56,6 +56,17 @@
 # error MAKE_LIBCURL_VERSION is not working correctly
 #endif
 
+/* PyMutex on 3.13+; PyThread_type_lock fallback on older. */
+#if PY_VERSION_HEX >= 0x030D0000
+typedef PyMutex pycurl_mutex_t;
+#  define PYCURL_MUTEX_LOCK(p)   PyMutex_Lock(p)
+#  define PYCURL_MUTEX_UNLOCK(p) PyMutex_Unlock(p)
+#else
+typedef PyThread_type_lock pycurl_mutex_t;
+#  define PYCURL_MUTEX_LOCK(p)   PyThread_acquire_lock(*(p), 1)
+#  define PYCURL_MUTEX_UNLOCK(p) PyThread_release_lock(*(p))
+#endif
+
 #if defined(PYCURL_SINGLE_FILE)
 # define PYCURL_INTERNAL static
 #else
@@ -533,7 +544,7 @@ typedef struct CurlMultiObject {
 } CurlMultiObject;
 
 typedef struct {
-    PyThread_type_lock locks[CURL_LOCK_DATA_LAST];
+    pycurl_mutex_t locks[CURL_LOCK_DATA_LAST];
 } ShareLock;
 
 typedef struct CurlShareObject {
