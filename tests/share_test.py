@@ -63,18 +63,18 @@ def test_share(app, default_share):
 
 def test_share_close():
     s = pycurl.CurlShare()
-    assert not s.closed()
+    assert not s.closed
     s.close()
-    assert s.closed()
+    assert s.closed
 
 
 def test_share_close_twice():
     s = pycurl.CurlShare()
-    assert not s.closed()
+    assert not s.closed
     s.close()
-    assert s.closed()
+    assert s.closed
     s.close()
-    assert s.closed()
+    assert s.closed
 
 
 # positional arguments are rejected
@@ -92,12 +92,12 @@ def test_keyword_arguments():
 def test_detach_on_close_keyword_argument_accepted():
     s1 = pycurl.CurlShare(detach_on_close=True)
     s2 = pycurl.CurlShare(detach_on_close=False)
-    assert not s1.closed()
-    assert not s2.closed()
+    assert not s1.closed
+    assert not s2.closed
     s1.close()
     s2.close()
-    assert s1.closed()
-    assert s2.closed()
+    assert s1.closed
+    assert s2.closed
 
 
 def test_easy_with_share_closed_before_perform(app, default_share):
@@ -115,11 +115,11 @@ def test_easy_with_share_closed_before_perform(app, default_share):
         easies.append((c, sio))
 
     s.close()
-    assert s.closed()
+    assert s.closed
 
     for c, _ in easies:
         assert c.share() is None
-        assert not c.closed()
+        assert not c.closed
 
 
 def test_easy_with_share_closed_before_perform_no_detach(app, default_share_no_detach):
@@ -138,7 +138,7 @@ def test_easy_with_share_closed_before_perform_no_detach(app, default_share_no_d
 
     with pytest.raises(pycurl.error):
         s.close()
-    assert not s.closed()
+    assert not s.closed
 
     for c, _ in easies:
         assert c.share() == s
@@ -159,17 +159,17 @@ def test_easy_with_share_closed_before_perform_no_detach(app, default_share_no_d
 
     for c, _ in easies[:q1] + easies[q3:]:
         c.close()
-        assert c.closed()
+        assert c.closed
 
     s.close()
-    assert s.closed()
+    assert s.closed
 
 
 def test_easy_set_share_closed_raises(app):
     s = pycurl.CurlShare()
     s.setopt(pycurl.SH_SHARE, pycurl.LOCK_DATA_COOKIE)
     s.close()
-    assert s.closed()
+    assert s.closed
 
     c = util.DefaultCurl()
     c.setopt(pycurl.URL, app + "/success")
@@ -191,7 +191,7 @@ def test_share_context_manager_detaches_by_default(app):
         c.setopt(pycurl.SHARE, s)
         assert c.share() == s
 
-    assert s.closed()
+    assert s.closed
     assert c.share() is None
 
     sio.seek(0)
@@ -213,7 +213,7 @@ def test_share_context_manager_strict_raises_if_live_easies(app):
             c.setopt(pycurl.SHARE, s)
             assert c.share() == s
 
-    assert not s.closed()
+    assert not s.closed
     assert c.share() == s
 
     c.unsetopt(pycurl.SHARE)

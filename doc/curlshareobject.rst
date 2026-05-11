@@ -9,4 +9,6 @@ CurlShare Object
 
     .. automethod:: pycurl.CurlShare.close
 
+    .. autoattribute:: pycurl.CurlShare.closed
+
     .. automethod:: pycurl.CurlShare.setopt

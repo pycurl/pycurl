@@ -245,7 +245,7 @@ do_multi_close(CurlMultiObject *self, PyObject *Py_UNUSED(ignored))
 }
 
 
-static PyObject *do_multi_closed(CurlMultiObject *self, PyObject *Py_UNUSED(ignored))
+static PyObject *do_multi_get_closed(CurlMultiObject *self, void *Py_UNUSED(closure))
 {
     if (self->multi_handle == NULL) {
         Py_RETURN_TRUE;
@@ -1222,7 +1222,6 @@ do_multi_sq_contains(PyObject *o, PyObject *obj)
 PYCURL_INTERNAL PyMethodDef curlmultiobject_methods[] = {
     {"add_handle", (PyCFunction)do_multi_add_handle, METH_VARARGS, multi_add_handle_doc},
     {"close", (PyCFunction)do_multi_close, METH_NOARGS, multi_close_doc},
-    {"closed", (PyCFunction)do_multi_closed, METH_NOARGS, multi_closed_doc},
     {"fdset", (PyCFunction)do_multi_fdset, METH_NOARGS, multi_fdset_doc},
     {"info_read", (PyCFunction)do_multi_info_read, METH_VARARGS, multi_info_read_doc},
     {"perform", (PyCFunction)do_multi_perform, METH_NOARGS, multi_perform_doc},
@@ -1239,6 +1238,14 @@ PYCURL_INTERNAL PyMethodDef curlmultiobject_methods[] = {
     {"__enter__", (PyCFunction)do_curlmulti_enter, METH_NOARGS, NULL},
     {"__exit__", (PyCFunction)do_curlmulti_exit, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}
+};
+
+
+/* --------------- getsets --------------- */
+
+PYCURL_INTERNAL PyGetSetDef curlmultiobject_getsets[] = {
+    {"closed", (getter)do_multi_get_closed, NULL, multi_closed_doc, NULL},
+    {NULL, NULL, NULL, NULL, NULL}
 };
 
 
@@ -1314,7 +1321,7 @@ PYCURL_INTERNAL PyTypeObject CurlMulti_Type = {
     0,                          /* tp_iternext */
     curlmultiobject_methods,    /* tp_methods */
     0,                          /* tp_members */
-    0,                          /* tp_getset */
+    curlmultiobject_getsets,    /* tp_getset */
     0,                          /* tp_base */
     0,                          /* tp_dict */
     0,                          /* tp_descr_get */

@@ -61,7 +61,7 @@ CurlMime
 
     .. automethod:: pycurl.CurlMime.close
 
-    .. automethod:: pycurl.CurlMime.closed
+    .. autoattribute:: pycurl.CurlMime.closed
 
     .. automethod:: pycurl.CurlMime.addpart
 

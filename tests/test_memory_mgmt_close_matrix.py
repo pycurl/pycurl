@@ -210,7 +210,7 @@ def test_multi_close_and_remove_one_easy_gone_others_not(make_multi):
     for i, r in enumerate(survivor_refs):
         obj = r()
         assert obj is not None, f"survivor[{i}] unexpectedly collected"
-        assert obj.closed() is False, f"survivor[{i}] unexpectedly closed"
+        assert not obj.closed, f"survivor[{i}] unexpectedly closed"
 
     for e in survivors:
         multi.remove_handle(e)
@@ -263,20 +263,20 @@ def test_share_close_matrix(app, make_share_easies, order):
     if order == "close_easies_then_close_share":
         for e in easies:
             e.close()
-            assert e.closed()
+            assert e.closed
         s.close()
-        assert s.closed()
+        assert s.closed
 
     elif order == "close_share_then_perform_then_close_easies":
         with pytest.raises(pycurl.error):
             s.close()
-        assert not s.closed()
+        assert not s.closed
         for e in easies:
             assert e.share() == s
         perform_all(easies)
         for e in easies:
             e.close()
-            assert e.closed()
+            assert e.closed
 
         for sio in sios:
             assert sio.getvalue().decode() == "success"
@@ -284,7 +284,7 @@ def test_share_close_matrix(app, make_share_easies, order):
     elif order == "close_share_then_drop":
         with pytest.raises(pycurl.error):
             s.close()
-        assert not s.closed()
+        assert not s.closed
         for e in easies:
             assert e.share() == s
 
@@ -293,7 +293,7 @@ def test_share_close_matrix(app, make_share_easies, order):
             e.setopt(pycurl.SHARE, None)
             assert e.share() is None
         s.close()
-        assert s.closed()
+        assert s.closed
 
     elif order == "del_share_without_close":
         pass
@@ -323,7 +323,7 @@ def test_share_close_detaches_and_easy_still_succeeds(app, make_share_easies):
 
     with pytest.raises(pycurl.error):
         s.close()
-    assert not s.closed()
+    assert not s.closed
 
     for e in easies:
         assert e.share() == s
@@ -364,7 +364,7 @@ def test_share_close_one_easy_does_not_keep_share_or_others_alive(
     for i, r in enumerate(survivor_refs):
         obj = r()
         assert obj is not None, f"survivor[{i}] unexpectedly collected"
-        assert obj.closed() is False, f"survivor[{i}] unexpectedly closed"
+        assert not obj.closed, f"survivor[{i}] unexpectedly closed"
 
     for e in survivors:
         e.close()

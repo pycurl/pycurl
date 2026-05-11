@@ -9,6 +9,8 @@ Curl Object
 
     .. automethod:: pycurl.Curl.close
 
+    .. autoattribute:: pycurl.Curl.closed
+
     .. _setopt:
     .. automethod:: pycurl.Curl.setopt
 

@@ -386,24 +386,24 @@ class MultiTest(unittest.TestCase):
 
     def test_multi_close(self):
         m = pycurl.CurlMulti()
-        assert not m.closed()
+        assert not m.closed
         m.close()
-        assert m.closed()
+        assert m.closed
 
     def test_multi_close_twice(self):
         m = pycurl.CurlMulti()
-        assert not m.closed()
+        assert not m.closed
         m.close()
-        assert m.closed()
+        assert m.closed
         m.close()
-        assert m.closed()
+        assert m.closed
 
         m = pycurl.CurlMulti(close_handles=True)
-        assert not m.closed()
+        assert not m.closed
         m.close()
-        assert m.closed()
+        assert m.closed
         m.close()
-        assert m.closed()
+        assert m.closed
 
     def test_close_handles_false(self):
         easy1 = pycurl.Curl()
@@ -416,9 +416,9 @@ class MultiTest(unittest.TestCase):
         assert m == easy1.multi()
         assert m == easy2.multi()
         m.close()
-        assert m.closed()
-        assert not easy1.closed()
-        assert not easy2.closed()
+        assert m.closed
+        assert not easy1.closed
+        assert not easy2.closed
         assert easy1.multi() is None
         assert easy2.multi() is None
 
@@ -433,10 +433,10 @@ class MultiTest(unittest.TestCase):
         assert m == easy1.multi()
         assert m == easy2.multi()
         m.close()
-        assert easy1.closed()
-        assert easy2.closed()
-        assert easy1.closed()
-        assert easy2.closed()
+        assert easy1.closed
+        assert easy2.closed
+        assert easy1.closed
+        assert easy2.closed
         assert easy1.multi() is None
         assert easy2.multi() is None
 
@@ -468,8 +468,8 @@ class MultiTest(unittest.TestCase):
             assert m == easy1.multi()
             assert m == easy2.multi()
 
-        assert not easy1.closed()
-        assert not easy2.closed()
+        assert not easy1.closed
+        assert not easy2.closed
         assert easy1.multi() is None
         assert easy2.multi() is None
 
@@ -491,8 +491,8 @@ class MultiTest(unittest.TestCase):
             assert m == easy1.multi()
             assert m == easy2.multi()
 
-        assert easy1.closed()
-        assert easy2.closed()
+        assert easy1.closed
+        assert easy2.closed
         assert easy1.multi() is None
         assert easy2.multi() is None
 
@@ -551,5 +551,5 @@ class MultiTest(unittest.TestCase):
         assert easy2 in m
 
         m.close()
-        assert m.closed()
+        assert m.closed
         assert easy2 not in m

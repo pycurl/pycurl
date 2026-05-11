@@ -724,7 +724,7 @@ do_curl_close(CurlObject *self, PyObject *Py_UNUSED(ignored))
 }
 
 
-static PyObject *do_curl_closed(CurlObject *self, PyObject *Py_UNUSED(ignored))
+static PyObject *do_curl_get_closed(CurlObject *self, void *Py_UNUSED(closure))
 {
     if (self->handle == NULL) {
         Py_RETURN_TRUE;
@@ -945,7 +945,6 @@ do_curl_share(CurlObject *self, PyObject *Py_UNUSED(ignored))
 
 PYCURL_INTERNAL PyMethodDef curlobject_methods[] = {
     {"close", (PyCFunction)do_curl_close, METH_NOARGS, curl_close_doc},
-    {"closed", (PyCFunction)do_curl_closed, METH_NOARGS, curl_closed_doc},
     {"duphandle", (PyCFunction)do_curl_duphandle, METH_NOARGS, curl_duphandle_doc},
     {"errstr", (PyCFunction)do_curl_errstr, METH_NOARGS, curl_errstr_doc},
     {"errstr_raw", (PyCFunction)do_curl_errstr_raw, METH_NOARGS, curl_errstr_raw_doc},
@@ -980,6 +979,14 @@ PYCURL_INTERNAL PyMethodDef curlobject_methods[] = {
     {"__enter__", (PyCFunction)do_curl_enter, METH_NOARGS, NULL},
     {"__exit__", (PyCFunction)do_curl_close, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}
+};
+
+
+/* --------------- getsets --------------- */
+
+PYCURL_INTERNAL PyGetSetDef curlobject_getsets[] = {
+    {"closed", (getter)do_curl_get_closed, NULL, curl_closed_doc, NULL},
+    {NULL, NULL, NULL, NULL, NULL}
 };
 
 
@@ -1036,7 +1043,7 @@ PYCURL_INTERNAL PyTypeObject Curl_Type = {
     0,                          /* tp_iternext */
     curlobject_methods,         /* tp_methods */
     0,                          /* tp_members */
-    0,                          /* tp_getset */
+    curlobject_getsets,         /* tp_getset */
     0,                          /* tp_base */
     0,                          /* tp_dict */
     0,                          /* tp_descr_get */
