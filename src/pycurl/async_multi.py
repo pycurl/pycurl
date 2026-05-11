@@ -135,7 +135,7 @@ class AsyncCurlMulti:
         a running loop, after :py:meth:`aclose`, or if *curl* is already
         registered.
         """
-        if self.closed():
+        if self.closed:
             raise RuntimeError("AsyncCurlMulti is closed")
         if curl in self._futures:
             raise RuntimeError("Curl handle is already registered")
@@ -166,7 +166,7 @@ class AsyncCurlMulti:
         :py:meth:`aclose`. Raises :py:class:`pycurl.error` if libcurl
         rejects the removal.
         """
-        if self.closed():
+        if self.closed:
             raise RuntimeError("AsyncCurlMulti is closed")
         fut = self._futures.pop(curl, None)
         if fut is None:
@@ -219,13 +219,10 @@ class AsyncCurlMulti:
                 raise KeyError(curl) from None
         return tuple(out)
 
+    @property
     def closed(self) -> bool:
-        """closed() -> bool
-
-        Returns ``True`` if the underlying :py:class:`pycurl.CurlMulti`
-        handle has been closed.
-        """
-        return self._multi.closed()
+        """Whether the underlying :py:class:`pycurl.CurlMulti` handle is closed."""
+        return self._multi.closed
 
     async def aclose(self) -> None:
         """aclose() -> None
@@ -234,7 +231,7 @@ class AsyncCurlMulti:
         handles, unregisters socket watchers, and closes the underlying
         multi handle. Pending futures are cancelled. Idempotent.
         """
-        if self.closed():
+        if self.closed:
             return
         self._cancel_timer()
         # remove_handle fires POLL_REMOVE, which unregisters watchers and unassigns.

@@ -46,6 +46,7 @@ class _StubMulti:
     def unassign(self, fd: int) -> None:
         self.unassigned.append(fd)
 
+    @property
     def closed(self) -> bool:
         return False
 
@@ -222,7 +223,7 @@ def test_close_idempotent() -> None:
         multi = pycurl.AsyncCurlMulti()
         await multi.aclose()
         await multi.aclose()
-        assert multi.closed() is True
+        assert multi.closed is True
 
     _run(main())
 
@@ -371,6 +372,7 @@ def test_socket_action_failure_fails_pending_futures() -> None:
                 def info_read(self, *_a: object) -> tuple[int, list, list]:
                     return (0, [], [])
 
+                @property
                 def closed(self) -> bool:
                     return False
 

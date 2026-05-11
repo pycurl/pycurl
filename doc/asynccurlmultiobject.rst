@@ -26,7 +26,7 @@ AsyncCurlMulti Object
 
     .. automethod:: pycurl.AsyncCurlMulti.aclose
 
-    .. automethod:: pycurl.AsyncCurlMulti.closed
+    .. autoattribute:: pycurl.AsyncCurlMulti.closed
 
     .. automethod:: pycurl.AsyncCurlMulti.__aenter__
 
