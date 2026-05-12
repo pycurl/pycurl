@@ -1,3 +1,1 @@
-closed() -> bool
-
-Return ``True`` if the ``CurlMulti`` object was already closed, ``False`` otherwise.
+Whether this ``CurlMulti`` object has been closed.

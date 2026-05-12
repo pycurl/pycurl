@@ -9,6 +9,8 @@ CurlMulti Object
     
     .. automethod:: pycurl.CurlMulti.close
 
+    .. autoattribute:: pycurl.CurlMulti.closed
+
     .. automethod:: pycurl.CurlMulti.add_handle
 
     .. automethod:: pycurl.CurlMulti.remove_handle

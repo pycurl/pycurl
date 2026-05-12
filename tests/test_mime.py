@@ -93,18 +93,18 @@ def data_value(request):
 def test_mime_lifecycle_and_context_manager():
     with pycurl.Curl() as curl:
         mime = pycurl.CurlMime(curl)
-        assert mime.closed() is False
+        assert not mime.closed
 
         mime.close()
-        assert mime.closed() is True
+        assert mime.closed
 
         mime.close()
-        assert mime.closed() is True
+        assert mime.closed
 
         with pycurl.CurlMime(curl) as second:
-            assert second.closed() is False
+            assert not second.closed
 
-        assert second.closed() is True
+        assert second.closed
 
 
 def test_mime_exit_requires_exception_tuple():
@@ -554,11 +554,11 @@ def test_mime_subparts_transfers_ownership():
 
         parent_part = parent.addpart()
         parent_part.subparts(child)
-        assert child.closed() is False
+        assert not child.closed
 
         child.addpart()
         parent.close()
-        assert child.closed() is True
+        assert child.closed
 
         with pytest.raises(pycurl.error, match="no mime handle"):
             child.addpart()
@@ -683,10 +683,10 @@ def test_mime_add_multipart_helper():
         child = parent.add_multipart(name="nested")
 
         assert isinstance(child, pycurl.CurlMime)
-        assert child.closed() is False
+        assert not child.closed
 
         child.add_field("inner", "value")
         parent.add_multipart(name="without-type", subtype=None)
 
         parent.close()
-        assert child.closed() is True
+        assert child.closed

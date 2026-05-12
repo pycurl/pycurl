@@ -349,7 +349,7 @@ do_share_close(CurlShareObject *self, PyObject *Py_UNUSED(ignored))
 }
 
 
-static PyObject *do_share_closed(CurlShareObject *self, PyObject *Py_UNUSED(ignored))
+static PyObject *do_share_get_closed(CurlShareObject *self, void *Py_UNUSED(closure))
 {
     if (self->share_handle == NULL) {
         Py_RETURN_TRUE;
@@ -454,13 +454,20 @@ static PyObject *do_share_enter(CurlShareObject *self, PyObject *Py_UNUSED(ignor
 
 PYCURL_INTERNAL PyMethodDef curlshareobject_methods[] = {
     {"close", (PyCFunction)do_share_close, METH_NOARGS, share_close_doc},
-    {"closed", (PyCFunction)do_share_closed, METH_NOARGS, share_closed_doc},
     {"setopt", (PyCFunction)do_share_setopt, METH_VARARGS, share_setopt_doc},
     {"__getstate__", (PyCFunction)do_share_getstate, METH_NOARGS, NULL},
     {"__setstate__", (PyCFunction)do_share_setstate, METH_VARARGS, NULL},
     {"__enter__", (PyCFunction)do_share_enter, METH_NOARGS, NULL},
     {"__exit__", (PyCFunction)do_share_close, METH_VARARGS, NULL},
     {NULL, NULL, 0, 0}
+};
+
+
+/* --------------- getsets --------------- */
+
+PYCURL_INTERNAL PyGetSetDef curlshareobject_getsets[] = {
+    {"closed", (getter)do_share_get_closed, NULL, share_closed_doc, NULL},
+    {NULL, NULL, NULL, NULL, NULL}
 };
 
 
@@ -519,7 +526,7 @@ PYCURL_INTERNAL PyTypeObject CurlShare_Type = {
     0,                          /* tp_iternext */
     curlshareobject_methods,    /* tp_methods */
     0,                          /* tp_members */
-    0,                          /* tp_getset */
+    curlshareobject_getsets,    /* tp_getset */
     0,                          /* tp_base */
     0,                          /* tp_dict */
     0,                          /* tp_descr_get */

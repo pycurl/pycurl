@@ -709,7 +709,7 @@ do_curlmime_close(CurlMimeObject *self, PyObject *Py_UNUSED(ignored))
 }
 
 static PyObject *
-do_curlmime_closed(CurlMimeObject *self, PyObject *Py_UNUSED(ignored))
+do_curlmime_get_closed(CurlMimeObject *self, void *Py_UNUSED(closure))
 {
     if (self->mime == NULL) {
         Py_RETURN_TRUE;
@@ -1285,11 +1285,15 @@ static PyMethodDef curlmimeobject_methods[] = {
     {"add_file", (PyCFunction)do_curlmime_add_file, METH_VARARGS | METH_KEYWORDS, "Add a file upload part."},
     {"add_multipart", (PyCFunction)do_curlmime_add_multipart, METH_VARARGS | METH_KEYWORDS, "Add and attach a nested multipart CurlMime."},
     {"close", (PyCFunction)do_curlmime_close, METH_NOARGS, "Release the underlying curl_mime handle."},
-    {"closed", (PyCFunction)do_curlmime_closed, METH_NOARGS, "Return whether this CurlMime object is closed."},
     {"addpart", (PyCFunction)do_curlmime_addpart, METH_NOARGS, "Create and return a new MIME part."},
     {"__enter__", (PyCFunction)do_curlmime_enter, METH_NOARGS, NULL},
     {"__exit__", (PyCFunction)do_curlmime_exit, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}
+};
+
+static PyGetSetDef curlmimeobject_getsets[] = {
+    {"closed", (getter)do_curlmime_get_closed, NULL, "Whether this CurlMime object is closed.", NULL},
+    {NULL, NULL, NULL, NULL, NULL}
 };
 
 static PyTypeObject CurlMimeDataCbOwner_Type = {
@@ -1364,7 +1368,7 @@ PYCURL_INTERNAL PyTypeObject CurlMime_Type = {
     0,                          /* tp_iternext */
     curlmimeobject_methods,     /* tp_methods */
     0,                          /* tp_members */
-    0,                          /* tp_getset */
+    curlmimeobject_getsets,     /* tp_getset */
     0,                          /* tp_base */
     0,                          /* tp_dict */
     0,                          /* tp_descr_get */
