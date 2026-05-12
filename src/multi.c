@@ -151,6 +151,9 @@ util_multi_xdecref(CurlMultiObject *self)
     Py_CLEAR(self->dict);
     Py_CLEAR(self->t_cb);
     Py_CLEAR(self->s_cb);
+#ifdef HAVE_CURL_MULTI_NOTIFY
+    Py_CLEAR(self->n_cb);
+#endif
     Py_CLEAR(self->socket_object_dict);
 }
 
@@ -281,6 +284,9 @@ do_multi_traverse(CurlMultiObject *self, visitproc visit, void *arg)
     VISIT(self->socket_object_dict);
     VISIT(self->t_cb);
     VISIT(self->s_cb);
+#ifdef HAVE_CURL_MULTI_NOTIFY
+    VISIT(self->n_cb);
+#endif
 
     return 0;
 #undef VISIT
@@ -399,6 +405,88 @@ verbose_error:
     print_callback_error_if_regular_exception();
     goto silent_error;
 }
+
+
+#ifdef HAVE_CURL_MULTI_NOTIFY
+/* Map libcurl `easy` to its Python Curl, or NULL when unsafe. Borrowed ref. */
+static CurlObject *
+resolve_easy_to_curl(CurlMultiObject *self, CURL *easy)
+{
+    CurlObject *co = NULL;
+    CURLcode res;
+
+    if (easy == NULL) {
+        return NULL;
+    }
+    res = curl_easy_getinfo(easy, CURLINFO_PRIVATE, (char **) &co);
+    if (res != CURLE_OK || co == NULL) {
+        return NULL;
+    }
+    if (!PyObject_TypeCheck((PyObject *) co, p_Curl_Type)) {
+        return NULL;
+    }
+    if (co->handle != easy || co->multi_stack != self) {
+        return NULL;
+    }
+    return co;
+}
+
+
+static void
+multi_notify_callback(CURLM *multi,
+                      unsigned int notification,
+                      CURL *easy,
+                      void *user_data)
+{
+    CurlMultiObject *self;
+    CurlObject *co = NULL;
+    PyObject *curl_arg = NULL;
+    PyObject *arglist = NULL;
+    PyObject *result = NULL;
+    PYCURL_DECLARE_THREAD_STATE;
+
+    UNUSED(multi);
+
+    self = (CurlMultiObject *)user_data;
+    if (Py_IsFinalizing()) {
+        return;
+    }
+    if (!PYCURL_ACQUIRE_THREAD_MULTI()) {
+        warn_failed_to_acquire_thread(
+            "multi_notify_callback failed to acquire thread");
+        return;
+    }
+
+    /* The callback may fire during curl_multi_cleanup after Py_CLEAR(n_cb). */
+    if (self->n_cb == NULL) {
+        goto done;
+    }
+
+    co = resolve_easy_to_curl(self, easy);
+    curl_arg = co ? (PyObject *) co : Py_None;
+
+    arglist = Py_BuildValue("(IO)", notification, curl_arg);
+    if (arglist == NULL) {
+        goto verbose_error;
+    }
+    result = PyObject_Call(self->n_cb, arglist, NULL);
+    Py_DECREF(arglist);
+    if (result == NULL) {
+        goto verbose_error;
+    }
+    /* Return value ignored; CURLMOPT_NOTIFYFUNCTION is void. */
+
+done:
+    Py_XDECREF(result);
+    PYCURL_RELEASE_THREAD();
+    return;
+
+verbose_error:
+    print_callback_error_if_regular_exception();
+    goto done;
+}
+#endif /* HAVE_CURL_MULTI_NOTIFY */
+
 
 #undef PYCURL_BEGIN_MULTI_CALLBACK
 
@@ -529,6 +617,9 @@ do_multi_setopt_callable(CurlMultiObject *self, int option, PyObject *obj)
      */
     const curl_multi_timer_callback t_cb = multi_timer_callback;
     const curl_socket_callback s_cb = multi_socket_callback;
+#ifdef HAVE_CURL_MULTI_NOTIFY
+    const curl_notify_callback n_cb = multi_notify_callback;
+#endif
 
     switch(option) {
     case CURLMOPT_SOCKETFUNCTION:
@@ -545,6 +636,15 @@ do_multi_setopt_callable(CurlMultiObject *self, int option, PyObject *obj)
         Py_CLEAR(self->t_cb);
         self->t_cb = obj;
         break;
+#ifdef HAVE_CURL_MULTI_NOTIFY
+    case CURLMOPT_NOTIFYFUNCTION:
+        curl_multi_setopt(self->multi_handle, CURLMOPT_NOTIFYFUNCTION, n_cb);
+        curl_multi_setopt(self->multi_handle, CURLMOPT_NOTIFYDATA, self);
+        Py_INCREF(obj);
+        Py_CLEAR(self->n_cb);
+        self->n_cb = obj;
+        break;
+#endif
     default:
         PyErr_SetString(PyExc_TypeError, "callables are not supported for this option");
         return NULL;
@@ -573,6 +673,13 @@ do_multi_setopt_none(CurlMultiObject *self, int option, PyObject *obj)
         curl_multi_setopt(self->multi_handle, CURLMOPT_TIMERDATA, NULL);
         Py_CLEAR(self->t_cb);
         break;
+#ifdef HAVE_CURL_MULTI_NOTIFY
+    case CURLMOPT_NOTIFYFUNCTION:
+        curl_multi_setopt(self->multi_handle, CURLMOPT_NOTIFYFUNCTION, NULL);
+        curl_multi_setopt(self->multi_handle, CURLMOPT_NOTIFYDATA, NULL);
+        Py_CLEAR(self->n_cb);
+        break;
+#endif
     default:
         PyErr_SetString(PyExc_TypeError, "unsetting is not supported for this option");
         return NULL;
@@ -626,6 +733,66 @@ error:
     PyErr_SetString(PyExc_TypeError, "invalid arguments to setopt");
     return NULL;
 }
+
+
+/* --------------- notify --------------- */
+
+#ifdef HAVE_CURL_MULTI_NOTIFY
+static PyObject *
+util_multi_notify_set(CurlMultiObject *self, PyObject *args,
+                      CURLMcode (*op)(CURLM *, unsigned int),
+                      const char *name)
+{
+    Py_ssize_t i, n;
+
+    if (check_multi_state(self, PYCURL_REQUIRE_HANDLE | PYCURL_REQUIRE_NOT_RUNNING, name) != 0) {
+        return NULL;
+    }
+
+    n = PyTuple_GET_SIZE(args);
+    if (n == 0) {
+        PyErr_Format(PyExc_TypeError,
+            "%s requires at least one notification", name);
+        return NULL;
+    }
+
+    for (i = 0; i < n; ++i) {
+        unsigned long v = PyLong_AsUnsignedLong(PyTuple_GET_ITEM(args, i));
+        CURLMcode res;
+        if (v == (unsigned long)-1 && PyErr_Occurred()) {
+            return NULL;
+        }
+        if (v > UINT_MAX) {
+            PyErr_Format(PyExc_OverflowError,
+                "%s notification value out of range", name);
+            return NULL;
+        }
+        res = op(self->multi_handle, (unsigned int)v);
+        if (res != CURLM_OK) {
+            char err_msg[64];
+            snprintf(err_msg, sizeof(err_msg), "%s failed", name);
+            CURLERROR_MSG(err_msg);
+        }
+    }
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
+do_multi_notify_enable(CurlMultiObject *self, PyObject *args)
+{
+    return util_multi_notify_set(self, args,
+        curl_multi_notify_enable, "notify_enable");
+}
+
+
+static PyObject *
+do_multi_notify_disable(CurlMultiObject *self, PyObject *args)
+{
+    return util_multi_notify_set(self, args,
+        curl_multi_notify_disable, "notify_disable");
+}
+#endif /* HAVE_CURL_MULTI_NOTIFY */
 
 
 /* --------------- timeout --------------- */
@@ -1036,7 +1203,10 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
         PyErr_SetString(ErrorObject, "argument to info_read must be greater than zero");
         return NULL;
     }
-    if (check_multi_state(self, PYCURL_REQUIRE_HANDLE | PYCURL_REQUIRE_NOT_RUNNING, "info_read") != 0) {
+    /* curl_multi_info_read() is callback-safe (just drains a queue), so
+     * skip PYCURL_REQUIRE_NOT_RUNNING — M_NOTIFY_INFO_READ users drain
+     * results from inside the notify callback. */
+    if (check_multi_state(self, PYCURL_REQUIRE_HANDLE, "info_read") != 0) {
         return NULL;
     }
 
@@ -1233,6 +1403,10 @@ PYCURL_INTERNAL PyMethodDef curlmultiobject_methods[] = {
     {"unassign", (PyCFunction)do_multi_unassign, METH_VARARGS, multi_unassign_doc},
     {"remove_handle", (PyCFunction)do_multi_remove_handle, METH_VARARGS, multi_remove_handle_doc},
     {"select", (PyCFunction)do_multi_select, METH_VARARGS, multi_select_doc},
+#ifdef HAVE_CURL_MULTI_NOTIFY
+    {"notify_enable", (PyCFunction)do_multi_notify_enable, METH_VARARGS, multi_notify_enable_doc},
+    {"notify_disable", (PyCFunction)do_multi_notify_disable, METH_VARARGS, multi_notify_disable_doc},
+#endif
     {"__getstate__", (PyCFunction)do_curlmulti_getstate, METH_NOARGS, NULL},
     {"__setstate__", (PyCFunction)do_curlmulti_setstate, METH_VARARGS, NULL},
     {"__enter__", (PyCFunction)do_curlmulti_enter, METH_NOARGS, NULL},

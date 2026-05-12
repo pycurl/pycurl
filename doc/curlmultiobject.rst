@@ -38,3 +38,7 @@ CurlMulti Object
     .. automethod:: pycurl.CurlMulti.assign
 
     .. automethod:: pycurl.CurlMulti.unassign
+
+    .. automethod:: pycurl.CurlMulti.notify_enable
+
+    .. automethod:: pycurl.CurlMulti.notify_disable

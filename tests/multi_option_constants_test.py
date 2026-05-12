@@ -79,6 +79,13 @@ class MultiOptionConstantsTest(unittest.TestCase):
         self.m.setopt(pycurl.M_SOCKETFUNCTION, None)
         self.m.setopt(pycurl.M_TIMERFUNCTION, None)
 
+    @util.min_libcurl(8, 17, 0)
+    def test_multi_notify_callback_opts(self):
+        def callback(notification, curl):
+            pass
+        self.m.setopt(pycurl.M_NOTIFYFUNCTION, callback)
+        self.m.setopt(pycurl.M_NOTIFYFUNCTION, None)
+
     def test_multi_unsetopt_unsupported(self):
         try:
             self.m.setopt(pycurl.M_MAXCONNECTS, None)
