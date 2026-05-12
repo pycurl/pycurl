@@ -648,7 +648,7 @@ util_easy_detach_from_multi(CurlObject *self, CURL *easy_handle)
     (void) curl_multi_remove_handle(multi->multi_handle, easy_handle);
     PYCURL_END_ALLOW_THREADS_EASY
 
-    if (multi->easy_object_dict != NULL && PyDict_DelItem(multi->easy_object_dict, (PyObject *)self) < 0) {
+    if (multi->easy_object_refs != NULL && PySet_Discard(multi->easy_object_refs, (PyObject *)self) < 0) {
         PyErr_Clear();
     }
 }

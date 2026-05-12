@@ -103,8 +103,8 @@ do_multi_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
         ++ptr)
             assert(*ptr == 0);
 
-    self->easy_object_dict = PyDict_New();
-    if (self->easy_object_dict == NULL) {
+    self->easy_object_refs = PySet_New(NULL);
+    if (self->easy_object_refs == NULL) {
         Py_DECREF(self);
         return NULL;
     }
@@ -158,21 +158,25 @@ util_multi_xdecref(CurlMultiObject *self)
 static int
 util_multi_detach_easies(CurlMultiObject *self, int close_handles, int swallow_exceptions)
 {
-    if (!self->easy_object_dict) {
+    if (!self->easy_object_refs) {
         return 0;
     }
 
-    /* Iterate over a snapshot since closing easies can mutate the dict. */
-    PyObject *keys = PyDict_Keys(self->easy_object_dict);
-    if (keys == NULL) {
+    /* Iterate over a snapshot since closing easies can mutate the set. */
+    PyObject *snapshot = PySequence_List(self->easy_object_refs);
+    if (snapshot == NULL) {
         return -1;
     }
 
     Py_ssize_t i;
-    Py_ssize_t keys_len = PyList_Size(keys);
-    for (i = 0; i < keys_len; ++i) {
-        PyObject *key = PyList_GetItem(keys, i);
-        CurlObject *easy = (CurlObject *) key;
+    Py_ssize_t snapshot_len = PyList_Size(snapshot);
+    for (i = 0; i < snapshot_len; ++i) {
+        PyObject *item = PyList_GetItem(snapshot, i);
+        if (item == NULL) {
+            Py_DECREF(snapshot);
+            return -1;
+        }
+        CurlObject *easy = (CurlObject *) item;
 
         if (easy->multi_stack == NULL || easy->multi_stack != self) {
             continue;
@@ -193,14 +197,14 @@ util_multi_detach_easies(CurlMultiObject *self, int close_handles, int swallow_e
             } else if (swallow_exceptions) {
                 PyErr_Clear();
             } else {
-                Py_DECREF(keys);
+                Py_DECREF(snapshot);
                 return -1;
             }
         }
     }
 
-    Py_DECREF(keys);
-    Py_CLEAR(self->easy_object_dict);
+    Py_DECREF(snapshot);
+    Py_CLEAR(self->easy_object_refs);
 
     return 0;
 }
@@ -273,7 +277,7 @@ do_multi_traverse(CurlMultiObject *self, visitproc visit, void *arg)
 #define VISIT(v)    if ((v) != NULL && ((err = visit(v, arg)) != 0)) return err
 
     VISIT(self->dict);
-    VISIT(self->easy_object_dict);
+    VISIT(self->easy_object_refs);
     VISIT(self->socket_object_dict);
     VISIT(self->t_cb);
     VISIT(self->s_cb);
@@ -883,7 +887,7 @@ do_multi_add_handle(CurlMultiObject *self, PyObject *args)
         return NULL;
     }
 
-    if (PyDict_SetItem(self->easy_object_dict, (PyObject *) obj, Py_True) < 0) {
+    if (PySet_Add(self->easy_object_refs, (PyObject *) obj) < 0) {
         return NULL;
     }
 
@@ -893,16 +897,16 @@ do_multi_add_handle(CurlMultiObject *self, PyObject *args)
     res = curl_multi_add_handle(self->multi_handle, obj->handle);
     PYCURL_END_ALLOW_THREADS
     if (res != CURLM_OK) {
-        PyDict_DelItem(self->easy_object_dict, (PyObject *) obj);
+        PySet_Discard(self->easy_object_refs, (PyObject *) obj);
         CURLERROR_MSG("curl_multi_add_handle() failed due to internal errors");
     }
 
     if (easy_set_multi_ref(obj, self) < 0) {
-        /* undo dict + libcurl add */
+        /* undo set + libcurl add */
         PYCURL_BEGIN_ALLOW_THREADS
         (void) curl_multi_remove_handle(self->multi_handle, obj->handle);
         PYCURL_END_ALLOW_THREADS
-        (void) PyDict_DelItem(self->easy_object_dict, (PyObject *) obj);
+        (void) PySet_Discard(self->easy_object_refs, (PyObject *) obj);
         return NULL;
     }
 
@@ -924,7 +928,7 @@ do_multi_remove_handle(CurlMultiObject *self, PyObject *args)
     }
     if (obj->handle == NULL) {
         /* CurlObject handle already closed -- ignore */
-        if (PyDict_DelItem(self->easy_object_dict, (PyObject *)obj) < 0) {
+        if (PySet_Discard(self->easy_object_refs, (PyObject *)obj) < 0) {
             PyErr_Clear();
         }
         goto done;
@@ -938,11 +942,7 @@ do_multi_remove_handle(CurlMultiObject *self, PyObject *args)
     res = curl_multi_remove_handle(self->multi_handle, obj->handle);
     PYCURL_END_ALLOW_THREADS
     if (res == CURLM_OK) {
-        PyDict_DelItem(self->easy_object_dict, (PyObject *) obj);
-        // if PyDict_DelItem fails, remove_handle call will also fail.
-        // but the dictionary should always have our object in it
-        // hence this failure shouldn't happen unless something unaccounted
-        // for went wrong
+        PySet_Discard(self->easy_object_refs, (PyObject *) obj);
     } else {
         CURLERROR_MSG("curl_multi_remove_handle() failed due to internal errors");
     }
@@ -1204,11 +1204,11 @@ do_multi_sq_contains(PyObject *o, PyObject *obj)
         return -1;
     }
 
-    if (self->easy_object_dict == NULL) {
+    if (self->easy_object_refs == NULL) {
         return 0;
     }
 
-    rc = PyDict_Contains(self->easy_object_dict, obj);
+    rc = PySet_Contains(self->easy_object_refs, obj);
     return rc;
 }
 
