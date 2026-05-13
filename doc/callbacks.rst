@@ -413,7 +413,9 @@ TIMERFUNCTION
     callback are printed to stderr and treated as ``-1``.
 
     See ``examples/multi-socket_action-select.py`` for an example program
-    that uses the timer function and the socket function.
+    that uses the timer function and the socket function. Asyncio
+    applications can use :py:class:`pycurl.AsyncCurlMulti` instead of
+    installing these callbacks directly.
 
 
 SOCKETFUNCTION
@@ -446,7 +448,9 @@ SOCKETFUNCTION
     callback are printed to stderr and treated as ``-1``.
 
     See ``examples/multi-socket_action-select.py`` for an example program
-    that uses the timer function and the socket function.
+    that uses the timer function and the socket function. Asyncio
+    applications can use :py:class:`pycurl.AsyncCurlMulti` instead of
+    installing these callbacks directly.
 
 
 PREREQFUNCTION
