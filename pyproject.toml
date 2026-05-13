@@ -29,6 +29,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: Free Threading :: 1 - Unstable",
     "Topic :: Internet :: File Transfer Protocol (FTP)",
     "Topic :: Internet :: WWW/HTTP",
 ]
@@ -49,6 +50,8 @@ dev = [
     "paramiko; sys_platform != 'win32' or platform_machine != 'ARM64'",
     "pyflakes",
     "pytest>=5",
+    "pytest-run-parallel",
+    "pytest-timeout",
     "sphinx",
     "setuptools",
     "websockets>=12",
