@@ -1,384 +1,239 @@
-#! /usr/bin/env python
-# vi:ts=4:et
-
+import gc
 import sys
 import weakref
+
 import pycurl
 import pytest
-import unittest
-import gc
-import flaky
+
 from . import util
+from .util import LiveTracker, gc_collect_hard
 
-debug = False
 
-if sys.platform == 'win32':
-    devnull = 'NUL'
-else:
-    devnull = '/dev/null'
+devnull = "NUL" if sys.platform == "win32" else "/dev/null"
 
-@flaky.flaky(max_runs=3)
-class MemoryMgmtTest(unittest.TestCase):
-    def maybe_enable_debug(self):
-        if debug:
-            flags = gc.DEBUG_COLLECTABLE | gc.DEBUG_UNCOLLECTABLE
-            # python 3 has no DEBUG_OBJECTS
-            if hasattr(gc, 'DEBUG_OBJECTS'):
-                flags |= gc.DEBUG_OBJECTS
-                flags |= gc.DEBUG_STATS
-            gc.set_debug(flags)
-            gc.collect()
 
-            print("Tracked objects:", len(gc.get_objects()))
-
-    def maybe_print_objects(self):
-        if debug:
-            print("Tracked objects:", len(gc.get_objects()))
-
-    def tearDown(self):
-        gc.set_debug(0)
-
-    def test_multi_collection(self):
-        gc.collect()
-        self.maybe_enable_debug()
-
-        multi = pycurl.CurlMulti()
-        t = []
-        searches = []
-        for a in range(100):
-            curl = util.DefaultCurl()
-            multi.add_handle(curl)
-            t.append(curl)
-
-            c_id = id(curl)
-            searches.append(c_id)
-        m_id = id(multi)
-        searches.append(m_id)
-
-        self.maybe_print_objects()
-
-        for curl in t:
-            curl.close()
-            multi.remove_handle(curl)
-
-        self.maybe_print_objects()
-
-        del curl
-        del t
-        del multi
-
-        self.maybe_print_objects()
-        gc.collect()
-        self.maybe_print_objects()
-
-        objects = gc.get_objects()
-        for search in searches:
-            for object in objects:
-                assert search != id(object)
-
-    def test_multi_cycle(self):
-        gc.collect()
-        self.maybe_enable_debug()
-
-        multi = pycurl.CurlMulti()
-        t = []
-        searches = []
-        for a in range(100):
-            curl = util.DefaultCurl()
-            multi.add_handle(curl)
-            t.append(curl)
-
-            c_id = id(curl)
-            searches.append(c_id)
-        m_id = id(multi)
-        searches.append(m_id)
-
-        self.maybe_print_objects()
-
-        del curl
-        del t
-        del multi
-
-        self.maybe_print_objects()
-        gc.collect()
-        self.maybe_print_objects()
-
-        objects = gc.get_objects()
-        for search in searches:
-            for object in objects:
-                assert search != id(object)
-
-    def test_share_collection(self):
-        gc.collect()
-        self.maybe_enable_debug()
-
-        share = pycurl.CurlShare()
-        t = []
-        searches = []
-        for a in range(100):
-            curl = util.DefaultCurl()
-            curl.setopt(curl.SHARE, share)
-            t.append(curl)
-
-            c_id = id(curl)
-            searches.append(c_id)
-        m_id = id(share)
-        searches.append(m_id)
-
-        self.maybe_print_objects()
-
-        for curl in t:
-            curl.unsetopt(curl.SHARE)
-            curl.close()
-
-        self.maybe_print_objects()
-
-        del curl
-        del t
-        del share
-
-        self.maybe_print_objects()
-        gc.collect()
-        self.maybe_print_objects()
-
-        objects = gc.get_objects()
-        for search in searches:
-            for object in objects:
-                assert search != id(object)
-
-    def test_share_cycle(self):
-        gc.collect()
-        self.maybe_enable_debug()
-
-        share = pycurl.CurlShare()
-        t = []
-        searches = []
-        for a in range(100):
-            curl = util.DefaultCurl()
-            curl.setopt(curl.SHARE, share)
-            t.append(curl)
-
-            c_id = id(curl)
-            searches.append(c_id)
-        m_id = id(share)
-        searches.append(m_id)
-
-        self.maybe_print_objects()
-
-        del curl
-        del t
-        del share
-
-        self.maybe_print_objects()
-        gc.collect()
-        self.maybe_print_objects()
-
-        objects = gc.get_objects()
-        for search in searches:
-            for object in objects:
-                assert search != id(object)
-
-    # basic check of reference counting (use a memory checker like valgrind)
-    def test_reference_counting(self):
+def _populate_multi(multi, count):
+    tr = LiveTracker()
+    tr.track("multi", multi)
+    handles = []
+    for i in range(count):
         c = util.DefaultCurl()
-        m = pycurl.CurlMulti()
-        m.add_handle(c)
-        del m
-        m = pycurl.CurlMulti()
+        tr.track(f"easy[{i}]", c)
+        multi.add_handle(c)
+        handles.append(c)
+    return tr, handles
+
+
+def _populate_share(share, count):
+    tr = LiveTracker()
+    tr.track("share", share)
+    handles = []
+    for i in range(count):
+        c = util.DefaultCurl()
+        tr.track(f"easy[{i}]", c)
+        c.setopt(c.SHARE, share)
+        handles.append(c)
+    return tr, handles
+
+
+def test_multi_releases_easies_after_close_and_remove():
+    multi = pycurl.CurlMulti()
+    tr, handles = _populate_multi(multi, 100)
+
+    for c in handles:
         c.close()
-        del m, c
+        multi.remove_handle(c)
 
-    def test_cyclic_gc(self):
-        gc.collect()
-        c = util.DefaultCurl()
-        c.m = pycurl.CurlMulti()
-        c.m.add_handle(c)
-        # create some nasty cyclic references
-        c.c = c
-        c.c.c1 = c
-        c.c.c2 = c
-        c.c.c3 = c.c
-        c.c.c4 = c.m
-        c.m.c = c
-        c.m.m = c.m
-        c.m.c = c
-        # delete
-        gc.collect()
-        self.maybe_enable_debug()
-        ##print gc.get_referrers(c)
-        ##print gc.get_objects()
-        #if opts.verbose >= 1:
-            #print("Tracked objects:", len(gc.get_objects()))
-        c_id = id(c)
-        # The `del' below should delete these 4 objects:
-        #   Curl + internal dict, CurlMulti + internal dict
-        del c
-        gc.collect()
-        objects = gc.get_objects()
-        for object in objects:
-            assert id(object) != c_id
-        #if opts.verbose >= 1:
-            #print("Tracked objects:", len(gc.get_objects()))
+    del c, handles, multi
+    tr.assert_all_gone()
 
-    def test_refcounting_bug_in_reset(self):
-        if sys.platform == 'win32':
-            iters = 10000
-        else:
-            iters = 100000
 
-        # Ensure that the refcounting error in "reset" is fixed:
-        for i in range(iters):
-            c = util.DefaultCurl()
-            c.reset()
-            c.close()
+def test_multi_cycle_collected_by_gc():
+    multi = pycurl.CurlMulti()
+    tr, handles = _populate_multi(multi, 100)
 
-    def test_writefunction_collection(self):
-        self.check_callback(pycurl.WRITEFUNCTION)
+    del handles, multi
+    tr.assert_all_gone()
 
-    def test_headerfunction_collection(self):
-        self.check_callback(pycurl.HEADERFUNCTION)
 
-    def test_readfunction_collection(self):
-        self.check_callback(pycurl.READFUNCTION)
+def test_share_releases_easies_after_unsetopt_and_close():
+    share = pycurl.CurlShare()
+    tr, handles = _populate_share(share, 100)
 
-    def test_progressfunction_collection(self):
-        self.check_callback(pycurl.PROGRESSFUNCTION)
-
-    @util.min_libcurl(7, 32, 0)
-    def test_xferinfofunction_collection(self):
-        self.check_callback(pycurl.XFERINFOFUNCTION)
-
-    def test_debugfunction_collection(self):
-        self.check_callback(pycurl.DEBUGFUNCTION)
-
-    def test_ioctlfunction_collection(self):
-        self.check_callback(pycurl.IOCTLFUNCTION)
-
-    def test_opensocketfunction_collection(self):
-        self.check_callback(pycurl.OPENSOCKETFUNCTION)
-
-    def test_seekfunction_collection(self):
-        self.check_callback(pycurl.SEEKFUNCTION)
-
-    # This is failing too much on appveyor
-    @util.only_unix
-    def check_callback(self, callback):
-        # Note: extracting a context manager seems to result in
-        # everything being garbage collected even if the C code
-        # does not clear the callback
-        object_count = 0
-        gc.collect()
-        object_count = len(gc.get_objects())
-
-        c = util.DefaultCurl()
-        if callback == pycurl.IOCTLFUNCTION:
-            with pytest.warns(DeprecationWarning, match="IOCTLFUNCTION is deprecated; use SEEKFUNCTION"):
-                c.setopt(callback, lambda x: True)
-        elif callback == pycurl.PROGRESSFUNCTION:
-            with pytest.warns(DeprecationWarning, match="PROGRESSFUNCTION is deprecated; use XFERINFOFUNCTION"):
-                c.setopt(callback, lambda x: True)
-        else:
-            c.setopt(callback, lambda x: True)
-        del c
-
-        gc.collect()
-        new_object_count = len(gc.get_objects())
-        # it seems that GC sometimes collects something that existed
-        # before this test ran, GH issues #273/#274
-        self.assertIn(new_object_count, (object_count, object_count-1))
-
-    def test_postfields_unicode_memory_leak_gh252(self):
-        # this test passed even before the memory leak was fixed,
-        # not sure why.
-
-        c = util.DefaultCurl()
-        gc.collect()
-        before_object_count = len(gc.get_objects())
-
-        for i in range(100000):
-            c.setopt(pycurl.POSTFIELDS, util.u('hello world'))
-
-        gc.collect()
-        after_object_count = len(gc.get_objects())
-        self.assertTrue(after_object_count <= before_object_count + 1000, 'Grew from %d to %d objects' % (before_object_count, after_object_count))
+    for c in handles:
+        c.unsetopt(c.SHARE)
         c.close()
 
-    def test_form_bufferptr_memory_leak_gh267(self):
+    del c, handles, share
+    tr.assert_all_gone()
+
+
+def test_share_cycle_collected_by_gc():
+    share = pycurl.CurlShare()
+    tr, handles = _populate_share(share, 100)
+
+    del handles, share
+    tr.assert_all_gone()
+
+
+def test_reference_counting():
+    c = util.DefaultCurl()
+    m = pycurl.CurlMulti()
+    m.add_handle(c)
+    del m
+    m = pycurl.CurlMulti()
+    c.close()
+    del m, c
+
+
+def test_self_referential_curl_collected_via_gc():
+    c = util.DefaultCurl()
+    c.m = pycurl.CurlMulti()
+    c.m.add_handle(c)
+    c.c = c
+    c.c.c1 = c
+    c.c.c2 = c
+    c.c.c3 = c.c
+    c.c.c4 = c.m
+    c.m.c = c
+    c.m.m = c.m
+
+    ref = weakref.ref(c)
+    del c
+    gc_collect_hard()
+    assert ref() is None
+
+
+def test_refcounting_bug_in_reset():
+    iters = 10000 if sys.platform == "win32" else 100000
+    for _ in range(iters):
         c = util.DefaultCurl()
-        gc.collect()
-        before_object_count = len(gc.get_objects())
-
-        for i in range(100000):
-            with pytest.warns(DeprecationWarning, match="HTTPPOST is deprecated; use MIMEPOST"):
-                c.setopt(pycurl.HTTPPOST, [
-                    # Newer versions of libcurl accept FORM_BUFFERPTR
-                    # without FORM_BUFFER and reproduce the memory leak;
-                    # libcurl 7.19.0 requires FORM_BUFFER to be given before
-                    # FORM_BUFFERPTR.
-                    ("post1", (pycurl.FORM_BUFFER, 'foo.txt', pycurl.FORM_BUFFERPTR, "data1")),
-                    ("post2", (pycurl.FORM_BUFFER, 'bar.txt', pycurl.FORM_BUFFERPTR, "data2")),
-                ])
-
-        gc.collect()
-        after_object_count = len(gc.get_objects())
-        self.assertTrue(after_object_count <= before_object_count + 1000, 'Grew from %d to %d objects' % (before_object_count, after_object_count))
+        c.reset()
         c.close()
 
-    def do_data_refcounting(self, option):
-        c = util.DefaultCurl()
-        f = open(devnull, 'a+')
-        c.setopt(option, f)
-        ref = weakref.ref(f)
-        del f
-        gc.collect()
-        assert ref()
 
-        for i in range(100):
-            assert ref()
-            c.setopt(option, ref())
-        gc.collect()
-        assert ref()
+def test_postfields_unicode_memory_leak_gh252():
+    c = util.DefaultCurl()
+    gc.collect()
+    before = len(gc.get_objects())
 
-        c.close()
-        gc.collect()
-        assert ref() is None
+    for _ in range(100000):
+        c.setopt(pycurl.POSTFIELDS, util.u("hello world"))
 
-    def test_readdata_refcounting(self):
-        self.do_data_refcounting(pycurl.READDATA)
+    gc.collect()
+    after = len(gc.get_objects())
+    assert after <= before + 1000, f"object count grew {before} -> {after}"
+    c.close()
 
-    def test_writedata_refcounting(self):
-        self.do_data_refcounting(pycurl.WRITEDATA)
 
-    def test_writeheader_refcounting(self):
-        self.do_data_refcounting(pycurl.WRITEHEADER)
+def test_form_bufferptr_memory_leak_gh267():
+    c = util.DefaultCurl()
+    gc.collect()
+    before = len(gc.get_objects())
 
-    # Python < 3.5 cannot create weak references to functions
-    @util.min_python(3, 5)
-    def do_function_refcounting(self, option, method_name):
-        c = util.DefaultCurl()
-        f = open(devnull, 'a+')
-        fn = getattr(f, method_name)
-        c.setopt(option, fn)
-        ref = weakref.ref(fn)
-        del f, fn
-        gc.collect()
-        assert ref()
+    for _ in range(100000):
+        with pytest.warns(
+            DeprecationWarning, match="HTTPPOST is deprecated; use MIMEPOST"
+        ):
+            # libcurl 7.19.0 requires FORM_BUFFER before FORM_BUFFERPTR;
+            # newer versions accept FORM_BUFFERPTR alone and reproduce the leak.
+            c.setopt(
+                pycurl.HTTPPOST,
+                [
+                    (
+                        "post1",
+                        (pycurl.FORM_BUFFER, "foo.txt", pycurl.FORM_BUFFERPTR, "data1"),
+                    ),
+                    (
+                        "post2",
+                        (pycurl.FORM_BUFFER, "bar.txt", pycurl.FORM_BUFFERPTR, "data2"),
+                    ),
+                ],
+            )
 
-        for i in range(100):
-            assert ref()
-            c.setopt(option, ref())
-        gc.collect()
-        assert ref()
+    gc.collect()
+    after = len(gc.get_objects())
+    assert after <= before + 1000, f"object count grew {before} -> {after}"
+    c.close()
 
-        c.close()
-        gc.collect()
-        assert ref() is None
 
-    def test_readfunction_refcounting(self):
-        self.do_function_refcounting(pycurl.READFUNCTION, 'read')
+@pytest.mark.parametrize(
+    "option,target",
+    [
+        pytest.param(pycurl.READDATA, lambda f: f, id="READDATA"),
+        pytest.param(pycurl.WRITEDATA, lambda f: f, id="WRITEDATA"),
+        pytest.param(pycurl.WRITEHEADER, lambda f: f, id="WRITEHEADER"),
+        pytest.param(pycurl.READFUNCTION, lambda f: f.read, id="READFUNCTION"),
+        pytest.param(pycurl.WRITEFUNCTION, lambda f: f.write, id="WRITEFUNCTION"),
+        pytest.param(pycurl.HEADERFUNCTION, lambda f: f.write, id="HEADERFUNCTION"),
+    ],
+)
+def test_option_refcounting(option, target):
+    c = util.DefaultCurl()
+    f = open(devnull, "a+")
+    obj = target(f)
+    c.setopt(option, obj)
+    ref = weakref.ref(obj)
+    del f, obj
+    gc.collect()
+    assert ref() is not None
 
-    def test_writefunction_refcounting(self):
-        self.do_function_refcounting(pycurl.WRITEFUNCTION, 'write')
+    for _ in range(100):
+        assert ref() is not None
+        c.setopt(option, ref())
+    gc.collect()
+    assert ref() is not None
 
-    def test_headerfunction_refcounting(self):
-        self.do_function_refcounting(pycurl.HEADERFUNCTION, 'write')
+    c.close()
+    gc.collect()
+    assert ref() is None
+
+
+_CALLBACK_RELEASE_PARAMS = [
+    pytest.param(pycurl.WRITEFUNCTION, None, id="WRITEFUNCTION"),
+    pytest.param(pycurl.HEADERFUNCTION, None, id="HEADERFUNCTION"),
+    pytest.param(pycurl.READFUNCTION, None, id="READFUNCTION"),
+    pytest.param(
+        pycurl.PROGRESSFUNCTION,
+        "PROGRESSFUNCTION is deprecated; use XFERINFOFUNCTION",
+        id="PROGRESSFUNCTION",
+    ),
+    pytest.param(
+        pycurl.XFERINFOFUNCTION,
+        None,
+        id="XFERINFOFUNCTION",
+        marks=pytest.mark.skipif(
+            util.pycurl_version_less_than(7, 32, 0),
+            reason="libcurl < 7.32.0",
+        ),
+    ),
+    pytest.param(pycurl.DEBUGFUNCTION, None, id="DEBUGFUNCTION"),
+    pytest.param(
+        pycurl.IOCTLFUNCTION,
+        "IOCTLFUNCTION is deprecated; use SEEKFUNCTION",
+        id="IOCTLFUNCTION",
+    ),
+    pytest.param(pycurl.OPENSOCKETFUNCTION, None, id="OPENSOCKETFUNCTION"),
+    pytest.param(pycurl.SEEKFUNCTION, None, id="SEEKFUNCTION"),
+]
+
+
+@pytest.mark.parametrize("callback,deprecation_match", _CALLBACK_RELEASE_PARAMS)
+def test_callback_released_on_close(callback, deprecation_match):
+    def cb(x):
+        return True
+
+    ref = weakref.ref(cb)
+
+    c = util.DefaultCurl()
+    if deprecation_match:
+        with pytest.warns(DeprecationWarning, match=deprecation_match):
+            c.setopt(callback, cb)
+    else:
+        c.setopt(callback, cb)
+    del cb
+    assert ref() is not None, "C extension should still hold the callback"
+
+    del c
+    gc.collect()
+    assert ref() is None, "callback should be released after handle is destroyed"
