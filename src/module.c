@@ -54,6 +54,12 @@ static PyMethodDef curl_methods[] = {
     {"global_init", (PyCFunction)do_global_init, METH_VARARGS, pycurl_global_init_doc},
     {"global_cleanup", (PyCFunction)do_global_cleanup, METH_NOARGS, pycurl_global_cleanup_doc},
     {"version_info", (PyCFunction)do_version_info, METH_VARARGS, pycurl_version_info_doc},
+    {"easy_strerror", (PyCFunction)do_easy_strerror, METH_VARARGS, pycurl_easy_strerror_doc},
+    {"multi_strerror", (PyCFunction)do_multi_strerror, METH_VARARGS, pycurl_multi_strerror_doc},
+    {"share_strerror", (PyCFunction)do_share_strerror, METH_VARARGS, pycurl_share_strerror_doc},
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 80, 0)
+    {"url_strerror", (PyCFunction)do_url_strerror, METH_VARARGS, pycurl_url_strerror_doc},
+#endif
     {NULL, NULL, 0, NULL}
 };
 
@@ -181,6 +187,28 @@ error:
     Py_XDECREF(protocols);
     return NULL;
 }
+
+
+#define PYCURL_DEFINE_STRERROR(name, libfn, enum_type) \
+    PYCURL_INTERNAL PyObject * \
+    do_##name(PyObject *dummy, PyObject *args) \
+    { \
+        int errornum; \
+        UNUSED(dummy); \
+        if (!PyArg_ParseTuple(args, "i:" #name, &errornum)) { \
+            return NULL; \
+        } \
+        return PyUnicode_FromString(libfn((enum_type) errornum)); \
+    }
+
+PYCURL_DEFINE_STRERROR(easy_strerror,  curl_easy_strerror,  CURLcode)
+PYCURL_DEFINE_STRERROR(multi_strerror, curl_multi_strerror, CURLMcode)
+PYCURL_DEFINE_STRERROR(share_strerror, curl_share_strerror, CURLSHcode)
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 80, 0)
+PYCURL_DEFINE_STRERROR(url_strerror,   curl_url_strerror,   CURLUcode)
+#endif
+
+#undef PYCURL_DEFINE_STRERROR
 
 
 /* Helper functions for inserting constants into the module namespace */

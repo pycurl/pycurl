@@ -22,6 +22,14 @@ pycurl Module Functionality
 
 .. autofunction:: pycurl.version_info
 
+.. autofunction:: pycurl.easy_strerror
+
+.. autofunction:: pycurl.multi_strerror
+
+.. autofunction:: pycurl.share_strerror
+
+.. autofunction:: pycurl.url_strerror
+
 .. autoclass:: pycurl.Curl
     :noindex:
 

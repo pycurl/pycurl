@@ -633,6 +633,16 @@ PYCURL_INTERNAL PyObject *
 do_global_cleanup(PyObject *dummy, PyObject *Py_UNUSED(ignored));
 PYCURL_INTERNAL PyObject *
 do_version_info(PyObject *dummy, PyObject *args);
+PYCURL_INTERNAL PyObject *
+do_easy_strerror(PyObject *dummy, PyObject *args);
+PYCURL_INTERNAL PyObject *
+do_multi_strerror(PyObject *dummy, PyObject *args);
+PYCURL_INTERNAL PyObject *
+do_share_strerror(PyObject *dummy, PyObject *args);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 80, 0)
+PYCURL_INTERNAL PyObject *
+do_url_strerror(PyObject *dummy, PyObject *args);
+#endif
 
 PYCURL_INTERNAL PyObject *
 do_curl_setopt(CurlObject *self, PyObject *args);
