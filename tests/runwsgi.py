@@ -27,7 +27,7 @@ class Server:
             base = self.options.get("handler_class", WSGIRequestHandler)
 
             class QuietHandler(base):
-                def log_request(*args, **kw):
+                def log_request(self, *args, **kw):
                     pass
 
             self.options["handler_class"] = QuietHandler
