@@ -57,7 +57,7 @@ print("----- Getting", num_urls, "URLs using", num_conn, "connections -----")
 # Pre-allocate a list of curl objects
 m = pycurl.CurlMulti()
 m.handles = []
-for i in range(num_conn):
+for _ in range(num_conn):
     c = pycurl.Curl()
     c.fp = None
     c.setopt(pycurl.FOLLOWLOCATION, 1)
