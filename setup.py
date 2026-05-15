@@ -15,7 +15,7 @@ class ConfigurationError(Exception):
 
 def fail(msg):
     sys.stderr.write(msg + "\n")
-    exit(10)
+    sys.exit(10)
 
 
 def scan_argv(argv, s, default=None):
