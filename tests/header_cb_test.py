@@ -1,50 +1,28 @@
-#! /usr/bin/env python
-# vi:ts=4:et
-
-from . import localhost
-import pycurl
-import unittest
 import time as _time
 from io import BytesIO
 
-from . import appmanager
-from . import util
+import pycurl
 
-setup_module, teardown_module = appmanager.setup(('app', 8380))
 
-class HeaderCbTest(unittest.TestCase):
-    def setUp(self):
-        self.curl = util.DefaultCurl()
-        self.header_lines = []
+def test_get(curl, app):
+    curl.setopt(pycurl.URL, f"{app}/success")
+    sio = BytesIO()
+    header_lines = []
+    curl.setopt(pycurl.WRITEFUNCTION, sio.write)
+    curl.setopt(pycurl.HEADERFUNCTION, lambda line: header_lines.append(line.decode()))
+    curl.perform()
+    assert sio.getvalue().decode() == "success"
 
-    def tearDown(self):
-        self.curl.close()
+    assert len(header_lines) > 0
+    assert header_lines[0] == "HTTP/1.0 200 OK\r\n"
 
-    def header_function(self, line):
-        self.header_lines.append(line.decode())
-
-    def test_get(self):
-        self.curl.setopt(pycurl.URL, 'http://%s:8380/success' % localhost)
-        sio = BytesIO()
-        self.curl.setopt(pycurl.WRITEFUNCTION, sio.write)
-        self.curl.setopt(pycurl.HEADERFUNCTION, self.header_function)
-        self.curl.perform()
-        self.assertEqual('success', sio.getvalue().decode())
-
-        assert len(self.header_lines) > 0
-        self.assertEqual("HTTP/1.0 200 OK\r\n", self.header_lines[0])
-        # day of week
-        # important: must be in utc
-        todays_day = _time.strftime('%a', _time.gmtime())
-        # Date: Sun, 03 Mar 2013 05:38:12 GMT\r\n
-        self.check('Date: %s' % todays_day)
-        # Server: WSGIServer/0.1 Python/2.7.3\r\n
-        self.check('Server: WSGIServer')
-        self.check('Content-Length: 7')
-        self.check('Content-Type: text/html')
-
-    def check(self, wanted_text):
-        for line in self.header_lines:
-            if wanted_text in line:
-                return
-        assert False, "%s not found in header lines" % wanted_text
+    todays_day = _time.strftime("%a", _time.gmtime())
+    for wanted in (
+        f"Date: {todays_day}",
+        "Server: WSGIServer",
+        "Content-Length: 7",
+        "Content-Type: text/html",
+    ):
+        assert any(wanted in line for line in header_lines), (
+            f"{wanted!r} not found in {header_lines!r}"
+        )

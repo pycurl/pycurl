@@ -1,41 +1,22 @@
-#! /usr/bin/env python
-# vi:ts=4:et
-
-import os.path
-import pycurl
 import sys
-import unittest
-import urllib.request
+from pathlib import Path
 
-class WriteAbortTest(unittest.TestCase):
-    def setUp(self):
-        self.curl = pycurl.Curl()
+import pycurl
+import pytest
 
-    def tearDown(self):
-        self.curl.close()
 
-    def test_write_abort(self):
-        def write_cb(_):
-            # this should cause pycurl.WRITEFUNCTION (without any range errors)
-            return -1
+def test_write_abort(curl):
+    try:
+        del sys.last_value
+    except AttributeError:
+        pass
 
-        try:
-            # set when running full test suite if any earlier tests
-            # failed in Python code called from C
-            del sys.last_value
-        except AttributeError:
-            pass
+    curl.setopt(pycurl.URL, Path(__file__).resolve().as_uri())
+    curl.setopt(pycurl.WRITEFUNCTION, lambda _: -1)
 
-        # download the script itself through the file:// protocol into write_cb
-        url = 'file:' + urllib.request.pathname2url(os.path.abspath(__file__))
-        self.curl.setopt(pycurl.URL, url)
-        self.curl.setopt(pycurl.WRITEFUNCTION, write_cb)
-        try:
-            self.curl.perform()
-        except pycurl.error:
-            err, msg = sys.exc_info()[1].args
-            # we expect pycurl.E_WRITE_ERROR as the response
-            assert pycurl.E_WRITE_ERROR == err
+    with pytest.raises(pycurl.error) as exc_info:
+        curl.perform()
+    assert exc_info.value.args[0] == pycurl.E_WRITE_ERROR
 
-        # no additional errors should be reported
-        assert not hasattr(sys, 'last_value')
+    # no additional errors should be reported
+    assert not hasattr(sys, "last_value")
