@@ -61,6 +61,7 @@ def test_opensocket_callback_keyboard_interrupt(callback_curl):
         called["called"] = True
         raise KeyboardInterrupt()
 
+    callback_curl.setopt(pycurl.IPRESOLVE, pycurl.IPRESOLVE_V4)
     callback_curl.setopt(pycurl.OPENSOCKETFUNCTION, opensocket_function)
 
     with pytest.raises(KeyboardInterrupt):
