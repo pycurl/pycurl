@@ -453,6 +453,35 @@ SOCKETFUNCTION
     installing these callbacks directly.
 
 
+NOTIFYFUNCTION
+--------------
+
+.. function:: NOTIFYFUNCTION(notification, curl) -> None
+
+    Callback receiving libcurl multi notifications. Requires libcurl
+    8.17.0 or later. Corresponds to `CURLMOPT_NOTIFYFUNCTION`_.
+
+    *notification* is one of ``pycurl.M_NOTIFY_INFO_READ`` (the multi
+    info-read queue became non-empty) or ``pycurl.M_NOTIFY_EASY_DONE``
+    (one easy handle finished). ``M_NOTIFY_EASY_DONE`` does not carry
+    the ``CURLcode`` result, so applications that need success or
+    failure information must still drain ``info_read``.
+
+    *curl* is the original ``pycurl.Curl`` object the notification is
+    about, or ``None`` when PyCURL cannot safely identify it.
+
+    Install the callback with ``setopt(M_NOTIFYFUNCTION, ...)``. Turn
+    individual notifications on or off with
+    :py:meth:`notify_enable <pycurl.CurlMulti.notify_enable>` and
+    :py:meth:`notify_disable <pycurl.CurlMulti.notify_disable>`.
+    Calling ``info_read`` from inside the callback is supported and
+    is the intended pattern for ``M_NOTIFY_INFO_READ``.
+
+    The return value is ignored (the C callback returns ``void``).
+    Exceptions raised in the callback are printed to stderr and do not
+    abort transfers.
+
+
 PREREQFUNCTION
 ---------------
 
@@ -677,6 +706,7 @@ Example::
 .. _socket module: https://docs.python.org/library/socket.html
 .. _CURLMOPT_TIMERFUNCTION: https://curl.se/libcurl/c/CURLMOPT_TIMERFUNCTION.html
 .. _CURLMOPT_SOCKETFUNCTION: https://curl.se/libcurl/c/CURLMOPT_SOCKETFUNCTION.html
+.. _CURLMOPT_NOTIFYFUNCTION: https://curl.se/libcurl/c/CURLMOPT_NOTIFYFUNCTION.html
 .. _CURLOPT_PREREQFUNCTION: https://curl.se/libcurl/c/CURLOPT_PREREQFUNCTION.html
 .. _prereq_cb_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/prereq_cb_test.py
 .. _CURLOPT_TRAILERFUNCTION: https://curl.se/libcurl/c/CURLOPT_TRAILERFUNCTION.html

@@ -11,6 +11,14 @@ from . import util
 _MULTI_CALLBACKS = [
     pytest.param(pycurl.M_SOCKETFUNCTION, id="M_SOCKETFUNCTION"),
     pytest.param(pycurl.M_TIMERFUNCTION, id="M_TIMERFUNCTION"),
+    pytest.param(
+        getattr(pycurl, "M_NOTIFYFUNCTION", None),
+        marks=pytest.mark.skipif(
+            util.pycurl_version_less_than(8, 17, 0),
+            reason="libcurl < 8.17.0",
+        ),
+        id="M_NOTIFYFUNCTION",
+    ),
 ]
 
 

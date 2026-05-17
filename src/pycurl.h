@@ -199,6 +199,10 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
 #include <curl/websockets.h>
 #endif
 
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(8, 17, 0)
+#define HAVE_CURL_MULTI_NOTIFY
+#endif
+
 #undef UNUSED
 #define UNUSED(var)     ((void)&var)
 
@@ -535,6 +539,9 @@ typedef struct CurlMultiObject {
     /* callbacks */
     PyObject *t_cb;
     PyObject *s_cb;
+#ifdef HAVE_CURL_MULTI_NOTIFY
+    PyObject *n_cb;
+#endif
 
     /* socket-to-object mappings for curl_multi_assign */
     PyObject *socket_object_dict;
