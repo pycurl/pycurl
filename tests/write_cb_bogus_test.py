@@ -1,47 +1,24 @@
-#! /usr/bin/env python
-# vi:ts=4:et
-
-import os.path
-import pycurl
 import sys
-import unittest
-import urllib.request
+from pathlib import Path
 
-class WriteAbortTest(unittest.TestCase):
-    def setUp(self):
-        self.curl = pycurl.Curl()
+import pycurl
+import pytest
 
-    def tearDown(self):
-        self.curl.close()
 
-    def write_cb_returning_string(self, data):
-        return 'foo'
+@pytest.mark.parametrize(
+    "bogus_return",
+    ["foo", 0.5],
+    ids=["returning_string", "returning_float"],
+)
+def test_write_cb_bogus_return(curl, bogus_return):
+    curl.setopt(pycurl.URL, Path(__file__).resolve().as_uri())
+    curl.setopt(pycurl.WRITEFUNCTION, lambda _: bogus_return)
 
-    def write_cb_returning_float(self, data):
-        return 0.5
+    with pytest.raises(pycurl.error) as exc_info:
+        curl.perform()
+    assert exc_info.value.args[0] == pycurl.E_WRITE_ERROR
 
-    def test_write_cb_returning_string(self):
-        self.check(self.write_cb_returning_string)
-
-    def test_write_cb_returning_float(self):
-        self.check(self.write_cb_returning_float)
-
-    def check(self, write_cb):
-        # download the script itself through the file:// protocol into write_cb
-        url = 'file:' + urllib.request.pathname2url(os.path.abspath(__file__))
-        self.curl.setopt(pycurl.URL, url)
-        self.curl.setopt(pycurl.WRITEFUNCTION, write_cb)
-        try:
-            self.curl.perform()
-
-            self.fail('Should not get here')
-        except pycurl.error:
-            err, msg = sys.exc_info()[1].args
-            # we expect pycurl.E_WRITE_ERROR as the response
-            assert pycurl.E_WRITE_ERROR == err
-
-        # actual error
-        assert hasattr(sys, 'last_type')
-        self.assertEqual(pycurl.error, sys.last_type)
-        assert hasattr(sys, 'last_value')
-        self.assertEqual('write callback must return int or None', str(sys.last_value))
+    assert hasattr(sys, "last_type")
+    assert sys.last_type == pycurl.error
+    assert hasattr(sys, "last_value")
+    assert str(sys.last_value) == "write callback must return int or None"
