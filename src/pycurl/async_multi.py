@@ -39,6 +39,22 @@ from pycurl._pycurl import (
     error as _pycurl_error,
 )
 
+try:
+    from pycurl._pycurl import M_NOTIFY_INFO_READ, M_NOTIFYFUNCTION
+
+    _NOTIFY_SUPPORTED = True
+except ImportError:
+    M_NOTIFYFUNCTION = None
+    M_NOTIFY_INFO_READ = None
+    _NOTIFY_SUPPORTED = False
+
+_BLOCKED_OPTIONS = (M_SOCKETFUNCTION, M_TIMERFUNCTION) + (
+    (M_NOTIFYFUNCTION,) if _NOTIFY_SUPPORTED else ()
+)
+_BLOCKED_OPTIONS_MSG = "AsyncCurlMulti owns M_SOCKETFUNCTION/M_TIMERFUNCTION" + (
+    "/M_NOTIFYFUNCTION" if _NOTIFY_SUPPORTED else ""
+)
+
 
 @dataclass(slots=True)
 class _SocketState:
@@ -101,23 +117,28 @@ class AsyncCurlMulti:
         self._assigned_fds: set[int] = set()
         self._timer: asyncio.Handle | None = None
         self._closing: bool = False
+        self._notify_handle: asyncio.Handle | None = None
         self._multi.setopt(M_SOCKETFUNCTION, self._on_socket)
         self._multi.setopt(M_TIMERFUNCTION, self._on_timer)
+        if _NOTIFY_SUPPORTED:
+            self._multi.setopt(M_NOTIFYFUNCTION, self._on_notify)
+            self._multi.notify_enable(M_NOTIFY_INFO_READ)
 
     def setopt(self, option: int, value: Any) -> None:
         """setopt(option, value) -> None
 
         Sets a multi-handle option. Equivalent to
         :py:meth:`pycurl.CurlMulti.setopt`, except that
-        ``M_SOCKETFUNCTION`` and ``M_TIMERFUNCTION`` are owned by
-        ``AsyncCurlMulti`` and raise :py:exc:`ValueError` if set externally.
+        ``M_SOCKETFUNCTION``, ``M_TIMERFUNCTION``, and (on libcurl 8.17.0+)
+        ``M_NOTIFYFUNCTION`` are owned by ``AsyncCurlMulti`` and raise
+        :py:exc:`ValueError` if set externally.
 
         *option* is a ``pycurl.M_*`` constant identifying which option to
         set. *value* is the new option value; different options accept
         values of different types (see :py:meth:`pycurl.CurlMulti.setopt`).
         """
-        if option in (M_SOCKETFUNCTION, M_TIMERFUNCTION):
-            raise ValueError("AsyncCurlMulti owns M_SOCKETFUNCTION/M_TIMERFUNCTION")
+        if option in _BLOCKED_OPTIONS:
+            raise ValueError(_BLOCKED_OPTIONS_MSG)
         self._multi.setopt(option, value)
 
     def add_handle(self, curl: Curl) -> asyncio.Future[Curl]:
@@ -233,6 +254,10 @@ class AsyncCurlMulti:
         """
         if self.closed:
             return
+        self._closing = True
+        if self._notify_handle is not None:
+            self._notify_handle.cancel()
+            self._notify_handle = None
         self._cancel_timer()
         # remove_handle fires POLL_REMOVE, which unregisters watchers and unassigns.
         for curl, fut in list(self._futures.items()):
@@ -259,11 +284,7 @@ class AsyncCurlMulti:
                 except _pycurl_error:
                     pass
             self._assigned_fds.clear()
-        self._closing = True
-        try:
-            self._multi.close()
-        finally:
-            self._closing = False
+        self._multi.close()
 
     async def __aenter__(self) -> AsyncCurlMulti:
         return self
@@ -366,6 +387,17 @@ class AsyncCurlMulti:
             return
         self._schedule_timer(timeout_ms)
 
+    def _on_notify(self, _notification: int, _curl: Curl | None) -> None:
+        if self._closing or self._loop is None or self._notify_handle is not None:
+            return
+        self._notify_handle = self._loop.call_soon(self._drain_from_notify)
+
+    def _drain_from_notify(self) -> None:
+        self._notify_handle = None
+        if self._closing:
+            return
+        self._drain()
+
     def _schedule_timer(self, timeout_ms: int) -> None:
         self._cancel_timer()
         if timeout_ms < 0:
@@ -405,7 +437,8 @@ class AsyncCurlMulti:
             # Multi is in a bad state; info_read will not produce completions.
             self._fail_all_pending(exc)
             return
-        self._drain()
+        if not _NOTIFY_SUPPORTED:
+            self._drain()
 
     def _fail_all_pending(self, exc: BaseException) -> None:
         for curl in list(self._futures):

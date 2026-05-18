@@ -11,6 +11,8 @@ from unittest import mock
 import pycurl
 import pytest
 
+from . import util
+
 
 def _run(coro: Coroutine[Any, Any, None]) -> None:
     # AsyncCurlMulti requires a selector-style loop; Windows defaults to
@@ -252,6 +254,9 @@ def test_setopt_blocks_socket_timer_function() -> None:
                 multi.setopt(pycurl.M_SOCKETFUNCTION, lambda *_: None)
             with pytest.raises(ValueError):
                 multi.setopt(pycurl.M_TIMERFUNCTION, lambda *_: None)
+            if hasattr(pycurl, "M_NOTIFYFUNCTION"):
+                with pytest.raises(ValueError):
+                    multi.setopt(pycurl.M_NOTIFYFUNCTION, lambda *_: None)
             multi.setopt(pycurl.M_MAX_HOST_CONNECTIONS, 4)
 
     _run(main())
@@ -713,3 +718,41 @@ def test_futures_compose_with_gather(app: str) -> None:
                     c.close()
 
     _run(main())
+
+
+@pytest.mark.skipif(
+    util.pycurl_version_less_than(8, 17, 0),
+    reason="libcurl < 8.17.0",
+)
+class TestNotify:
+    def test_aclose_clears_state(self, app: str) -> None:
+        async def main() -> None:
+            multi = pycurl.AsyncCurlMulti()
+            curl, _ = _easy(f"{app}/long_pause")
+            try:
+                multi.add_handle(curl)
+                await asyncio.sleep(0.01)
+                await multi.aclose()
+                assert multi._notify_handle is None
+                assert multi._closing is True
+                # Late notify after close must be a safe no-op.
+                multi._on_notify(pycurl.M_NOTIFY_INFO_READ, None)
+                assert multi._notify_handle is None
+            finally:
+                curl.close()
+
+        _run(main())
+
+    def test_with_none_curl_is_safe(self, app: str) -> None:
+        async def main() -> None:
+            async with pycurl.AsyncCurlMulti() as multi:
+                curl, _ = _easy(f"{app}/success")
+                try:
+                    fut = multi.add_handle(curl)
+                    multi._on_notify(pycurl.M_NOTIFY_INFO_READ, None)
+                    await fut
+                    assert curl.getinfo(pycurl.RESPONSE_CODE) == 200
+                finally:
+                    curl.close()
+
+        _run(main())
