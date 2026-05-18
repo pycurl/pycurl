@@ -96,6 +96,7 @@ def test_closesocketfunction_on_close(app):
 
     curl = util.DefaultCurl()
     curl.setopt(curl.URL, f"{app}/success")
+    curl.setopt(pycurl.IPRESOLVE, pycurl.IPRESOLVE_V4)
     curl.setopt(pycurl.FORBID_REUSE, False)
     curl.setopt(pycurl.CONNECT_ONLY, True)
     curl.setopt(pycurl.CLOSESOCKETFUNCTION, closesocketfunction)
@@ -120,6 +121,7 @@ def test_closesocketfunction_on_dealloc(app):
 
     curl = util.DefaultCurl()
     curl.setopt(curl.URL, f"{app}/success")
+    curl.setopt(pycurl.IPRESOLVE, pycurl.IPRESOLVE_V4)
     curl.setopt(pycurl.FORBID_REUSE, False)
     curl.setopt(pycurl.CONNECT_ONLY, True)
     curl.setopt(pycurl.CLOSESOCKETFUNCTION, closesocketfunction)

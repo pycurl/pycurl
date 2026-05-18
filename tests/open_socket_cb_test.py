@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import socket
 from io import BytesIO
+from urllib.parse import urlparse
 
 import pycurl
 import pytest
@@ -45,7 +46,8 @@ def test_socket_open_ipv6(curl, app):
         return s
 
     curl.setopt(pycurl.OPENSOCKETFUNCTION, on_open)
-    curl.setopt(curl.URL, f"{app.replace('127.0.0.1', '[::1]')}/success")
+    port = urlparse(app).port
+    curl.setopt(curl.URL, f"http://[::1]:{port}/success")
     sio = BytesIO()
     curl.setopt(pycurl.WRITEFUNCTION, sio.write)
     with pytest.raises(pycurl.error):
