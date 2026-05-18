@@ -1,4 +1,4 @@
-setopt(option, value) -> None
+setopt(option, value, *, copy=True) -> None
 
 Set curl session option. Corresponds to `curl_easy_setopt`_ in libcurl.
 
@@ -73,6 +73,10 @@ values of different types:
     import io
     b = io.BytesIO()
     c.setopt(pycurl.WRITEFUNCTION, b.write)
+
+  The keyword-only ``copy`` argument is accepted for ``WRITEFUNCTION`` and
+  ``HEADERFUNCTION`` (see :ref:`callbacks`); passing it with any other
+  option raises ``TypeError``.
 
 - ``SHARE`` option accepts a :ref:`curlshareobject`.
 
