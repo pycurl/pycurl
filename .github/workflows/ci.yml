@@ -48,26 +48,6 @@ jobs:
         sudo apt-get update
         sudo apt-get install libcurl4-gnutls-dev libgnutls28-dev
       if: matrix.curl-version == 'ubuntu'
-    - name: Install packages
-      run: |
-        sudo apt-get update
-        sudo apt-get install mono-complete
-      if: matrix.curl-version == 'vcpkg'
-    - name: 'Setup NuGet credentials'
-      shell: 'bash'
-      run: |
-        nuget="$(vcpkg fetch nuget | tail -n 1)"
-        mono "${nuget}" \
-          sources add \
-          -source "https://nuget.pkg.github.com/${GITHUB_REPOSITORY_OWNER}/index.json" \
-          -storepasswordincleartext \
-          -name "GitHub" \
-          -username "${GITHUB_REPOSITORY_OWNER}" \
-          -password "${{ secrets.GITHUB_TOKEN }}"
-        mono "${nuget}" \
-          setapikey "${{ secrets.GITHUB_TOKEN }}" \
-          -source "https://nuget.pkg.github.com/${GITHUB_REPOSITORY_OWNER}/index.json"
-      if: matrix.curl-version == 'vcpkg'
     - name: Install dependencies
       if: matrix.curl-version == 'ubuntu'
       run: |
@@ -100,6 +80,9 @@ jobs:
       run: make do-test
     - name: Build & test with cibuildwheel
       if: matrix.curl-version == 'vcpkg'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        CIBW_ENVIRONMENT_PASS_LINUX: GITHUB_TOKEN GITHUB_REPOSITORY_OWNER VCPKG_BINARY_SOURCES
       run: |
         pip install cibuildwheel
         cibuildwheel --only ${{ matrix.cibw-build }}

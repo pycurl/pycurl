@@ -72,11 +72,12 @@ test-command = "pytest -v -ra {project}/tests"
 
 [tool.cibuildwheel.linux]
 before-all = [
-    "dnf install -y git zip perl-IPC-Cmd perl-Time-Piece autoconf-archive libtool",
+    "dnf install -y git zip perl-IPC-Cmd perl-Time-Piece autoconf-archive libtool mono-complete",
     "dnf copr enable -y swt2c/vcpkg-epel8",
     "dnf install -y vcpkg",
     "export VCPKG_ROOT=$HOME/.local/share/vcpkg",
     "git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT",
+    "{project}/scripts/setup-vcpkg-nuget.sh",
     "vcpkg install curl[brotli,core,gssapi,http2,non-http,openssl,ssh,websockets] --triplet=$VCPKG_TRIPLET",
 ]
 before-test = [
