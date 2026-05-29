@@ -6,7 +6,7 @@
  */
 
 #define PYCURL_BEGIN_CALLBACK(callback_name, retval) \
-    PYCURL_BEGIN_CALLBACK_COMMON(PYCURL_ACQUIRE_THREAD(), retval, callback_name)
+    PYCURL_BEGIN_CALLBACK_COMMON(PYCURL_GET_THREAD_STATE, retval, callback_name)
 
 PYCURL_INTERNAL int
 callback_return_value_to_int(PyObject *ret_obj, const char *callback_name, int *ret_out)

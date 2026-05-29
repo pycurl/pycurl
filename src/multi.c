@@ -2,7 +2,7 @@
 #include "docstrings.h"
 
 #define PYCURL_BEGIN_MULTI_CALLBACK(callback_name, retval) \
-    PYCURL_BEGIN_CALLBACK_COMMON(PYCURL_ACQUIRE_THREAD_MULTI(), retval, callback_name)
+    PYCURL_BEGIN_CALLBACK_COMMON(PYCURL_GET_THREAD_STATE_MULTI, retval, callback_name)
 
 /*************************************************************************
 // static utility functions
@@ -451,7 +451,8 @@ multi_notify_callback(CURLM *multi,
     if (Py_IsFinalizing()) {
         return;
     }
-    if (!PYCURL_ACQUIRE_THREAD_MULTI()) {
+    PYCURL_GET_THREAD_STATE_MULTI;
+    if (!PYCURL_PYTHON_ENTER()) {
         warn_failed_to_acquire_thread(
             "multi_notify_callback failed to acquire thread");
         return;
@@ -478,7 +479,7 @@ multi_notify_callback(CURLM *multi,
 
 done:
     Py_XDECREF(result);
-    PYCURL_RELEASE_THREAD();
+    PYCURL_PYTHON_LEAVE();
     return;
 
 verbose_error:
