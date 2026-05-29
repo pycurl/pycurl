@@ -3,8 +3,12 @@
 
 from . import localhost
 # uses the high level interface
-import curl
 import pytest
+with pytest.warns(
+    DeprecationWarning,
+    match="The 'curl' high-level wrapper module is deprecated and will be removed in a future release. Use 'pycurl' directly instead.",
+):
+    import curl
 import unittest
 
 from . import appmanager

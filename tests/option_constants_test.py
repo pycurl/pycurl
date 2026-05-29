@@ -493,13 +493,15 @@ def test_ssl_sessionid_cache(curl):
 @util.removed_in_libcurl(8, 17, 0)
 @util.only_gssapi
 def test_krblevel(curl):
-    curl.setopt(curl.KRBLEVEL, "clear")
+    with pytest.warns(DeprecationWarning, match="setopt option is deprecated"):
+        curl.setopt(curl.KRBLEVEL, "clear")
 
 
 @util.removed_in_libcurl(8, 17, 0)
 @util.only_gssapi
 def test_krb4level(curl):
-    curl.setopt(curl.KRB4LEVEL, "clear")
+    with pytest.warns(DeprecationWarning, match="setopt option is deprecated"):
+        curl.setopt(curl.KRB4LEVEL, "clear")
 
 
 @util.min_libcurl(7, 25, 0)
