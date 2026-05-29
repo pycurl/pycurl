@@ -27,7 +27,8 @@ try:
     if sys.argv[1] == "-":
         urls = sys.stdin.readlines()
     else:
-        urls = open(sys.argv[1]).readlines()
+        with open(sys.argv[1]) as fp:
+            urls = fp.readlines()
     if len(sys.argv) >= 3:
         num_conn = int(sys.argv[2])
 except:

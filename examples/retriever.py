@@ -27,7 +27,8 @@ try:
     if sys.argv[1] == "-":
         urls = sys.stdin.readlines()
     else:
-        urls = open(sys.argv[1]).readlines()
+        with open(sys.argv[1]) as fp:
+            urls = fp.readlines()
     if len(sys.argv) >= 3:
         num_conn = int(sys.argv[2])
 except:
@@ -65,23 +66,20 @@ class WorkerThread(threading.Thread):
                 url, filename = self.queue.get_nowait()
             except queue.Empty:
                 raise SystemExit
-            fp = open(filename, "wb")
-            curl = pycurl.Curl()
-            curl.setopt(pycurl.URL, url)
-            curl.setopt(pycurl.FOLLOWLOCATION, 1)
-            curl.setopt(pycurl.MAXREDIRS, 5)
-            curl.setopt(pycurl.CONNECTTIMEOUT, 30)
-            curl.setopt(pycurl.TIMEOUT, 300)
-            curl.setopt(pycurl.NOSIGNAL, 1)
-            curl.setopt(pycurl.WRITEDATA, fp)
-            try:
-                curl.perform()
-            except:
-                import traceback
-                traceback.print_exc(file=sys.stderr)
-                sys.stderr.flush()
-            curl.close()
-            fp.close()
+            with open(filename, "wb") as fp, pycurl.Curl() as curl:
+                curl.setopt(pycurl.URL, url)
+                curl.setopt(pycurl.FOLLOWLOCATION, 1)
+                curl.setopt(pycurl.MAXREDIRS, 5)
+                curl.setopt(pycurl.CONNECTTIMEOUT, 30)
+                curl.setopt(pycurl.TIMEOUT, 300)
+                curl.setopt(pycurl.NOSIGNAL, 1)
+                curl.setopt(pycurl.WRITEDATA, fp)
+                try:
+                    curl.perform()
+                except:
+                    import traceback
+                    traceback.print_exc(file=sys.stderr)
+                    sys.stderr.flush()
             sys.stdout.write(".")
             sys.stdout.flush()
 
