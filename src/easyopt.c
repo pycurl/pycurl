@@ -907,7 +907,7 @@ do_curl_setopt_list(CurlObject *self, int option, int which, PyObject *obj)
 
 
 static PyObject *
-do_curl_setopt_callable(CurlObject *self, int option, PyObject *obj)
+do_curl_setopt_callable(CurlObject *self, int option, PyObject *obj, int copy_flag)
 {
     /* We use function types here to make sure that our callback
      * definitions exactly match the <curl/curl.h> interface.
@@ -949,6 +949,7 @@ do_curl_setopt_callable(CurlObject *self, int option, PyObject *obj)
         Py_CLEAR(self->writedata_fp);
         Py_CLEAR(self->w_cb);
         self->w_cb = obj;
+        self->w_cb_copy = (copy_flag == 0) ? 0 : 1;
         curl_easy_setopt(self->handle, CURLOPT_WRITEFUNCTION, w_cb);
         curl_easy_setopt(self->handle, CURLOPT_WRITEDATA, self);
         break;
@@ -957,6 +958,7 @@ do_curl_setopt_callable(CurlObject *self, int option, PyObject *obj)
         Py_CLEAR(self->writeheader_fp);
         Py_CLEAR(self->h_cb);
         self->h_cb = obj;
+        self->h_cb_copy = (copy_flag == 0) ? 0 : 1;
         curl_easy_setopt(self->handle, CURLOPT_HEADERFUNCTION, h_cb);
         curl_easy_setopt(self->handle, CURLOPT_WRITEHEADER, self);
         break;
@@ -1239,7 +1241,7 @@ do_curl_setopt_filelike(CurlObject *self, int option, PyObject *obj)
         if (arglist == NULL) {
             return NULL;
         }
-        rv = do_curl_setopt(self, arglist);
+        rv = do_curl_setopt(self, arglist, NULL);
         Py_DECREF(arglist);
         return rv;
     } else {
@@ -1254,13 +1256,16 @@ do_curl_setopt_filelike(CurlObject *self, int option, PyObject *obj)
 
 
 PYCURL_INTERNAL PyObject *
-do_curl_setopt(CurlObject *self, PyObject *args)
+do_curl_setopt(CurlObject *self, PyObject *args, PyObject *kwargs)
 {
     int option;
     PyObject *obj;
     int which;
+    int copy_flag = -1;  /* sentinel: kwarg not supplied */
+    static char *kwlist[] = {"option", "value", "copy", NULL};
 
-    if (!PyArg_ParseTuple(args, "iO:setopt", &option, &obj))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "iO|$p:setopt",
+                                     kwlist, &option, &obj, &copy_flag))
         return NULL;
     if (check_curl_state(self, PYCURL_REQUIRE_HANDLE | PYCURL_REQUIRE_NOT_RUNNING, "setopt") != 0)
         return NULL;
@@ -1277,6 +1282,14 @@ do_curl_setopt(CurlObject *self, PyObject *args)
 #endif
     if (option % 10000 >= OPTIONS_SIZE)
         goto error;
+
+    if (copy_flag != -1 &&
+        option != CURLOPT_WRITEFUNCTION &&
+        option != CURLOPT_HEADERFUNCTION) {
+        PyErr_SetString(PyExc_TypeError,
+            "copy is only supported for WRITEFUNCTION and HEADERFUNCTION");
+        return NULL;
+    }
 
     /* Handle the case of None as the call of unsetopt() */
     if (obj == Py_None) {
@@ -1308,7 +1321,7 @@ do_curl_setopt(CurlObject *self, PyObject *args)
     /* Handle the case of function objects for callbacks */
     if (PyFunction_Check(obj) || PyCFunction_Check(obj) ||
         PyCallable_Check(obj) || PyMethod_Check(obj)) {
-        return do_curl_setopt_callable(self, option, obj);
+        return do_curl_setopt_callable(self, option, obj, copy_flag);
     }
     /* handle the SHARE case */
     if (option == CURLOPT_SHARE) {

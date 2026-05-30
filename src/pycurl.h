@@ -488,7 +488,9 @@ typedef struct CurlObject {
 #endif
     /* callbacks */
     PyObject *w_cb;
+    int       w_cb_copy;
     PyObject *h_cb;
+    int       h_cb_copy;
     PyObject *r_cb;
     PyObject *pro_cb;
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 32, 0)
@@ -659,7 +661,7 @@ do_url_strerror(PyObject *dummy, PyObject *args);
 #endif
 
 PYCURL_INTERNAL PyObject *
-do_curl_setopt(CurlObject *self, PyObject *args);
+do_curl_setopt(CurlObject *self, PyObject *args, PyObject *kwargs);
 PYCURL_INTERNAL PyObject *
 do_curl_setopt_string(CurlObject *self, PyObject *args);
 PYCURL_INTERNAL PyObject *
