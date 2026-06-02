@@ -64,7 +64,7 @@ jobs:
         with:
           python-version: 3.14
 
-      - uses: ilammy/msvc-dev-cmd@v1
+      - uses: step-security/msvc-dev-cmd@v1
         if: runner.os == 'Windows'
         with:
           arch: ${{ matrix.arch }}
