@@ -380,7 +380,7 @@ multi_timer_callback(CURLM *multi,
     }
 
     /* run callback */
-    arglist = Py_BuildValue("(i)", timeout_ms);
+    arglist = Py_BuildValue("(l)", timeout_ms);
     if (arglist == NULL) {
         goto verbose_error;
     }
