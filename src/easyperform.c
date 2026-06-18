@@ -52,13 +52,19 @@ do_curl_perform_rb(CurlObject *self, PyObject *Py_UNUSED(ignored))
         Py_DECREF(io);
         return NULL;
     }
-    
+#if PY_VERSION_HEX < 0x030C0000
+    Py_DECREF(v);
+#endif
+
     v = do_curl_perform(self, NULL);
     if (v == NULL) {
         Py_DECREF(io);
         return NULL;
     }
-    
+#if PY_VERSION_HEX < 0x030C0000
+    Py_DECREF(v);
+#endif
+
     v = PyObject_CallMethod(io, "getvalue", NULL);
     Py_DECREF(io);
     return v;

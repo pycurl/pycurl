@@ -1256,6 +1256,7 @@ do_multi_info_read(CurlMultiObject *self, PyObject *args)
                 goto error;
             }
             Py_DECREF(v);
+            Py_DECREF(error_str);
         }
     }
     /* Return (number of queued messages, [ok_objects], [error_objects]) */
