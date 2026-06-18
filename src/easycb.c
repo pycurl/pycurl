@@ -757,7 +757,7 @@ debug_callback(CURL *curlobj, curl_infotype type,
     }
 
     /* run callback */
-    arglist = Py_BuildValue("(iy#)", (int)type, buffer, (int)total_size);
+    arglist = Py_BuildValue("(iy#)", (int)type, buffer, (Py_ssize_t)total_size);
     if (arglist == NULL)
         goto verbose_error;
     result = PyObject_Call(self->debug_cb, arglist, NULL);
