@@ -127,10 +127,7 @@ create_error_object(CurlObject *self, int code)
         }
     }
     v = Py_BuildValue("(iO)", code, s);
-    if (v == NULL) {
-        Py_DECREF(s);
-        return NULL;
-    }
+    Py_DECREF(s);
     return v;
 }
 
