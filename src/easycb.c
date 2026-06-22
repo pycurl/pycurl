@@ -197,7 +197,7 @@ opensocket_callback(void *clientp, curlsocktype purpose,
     PYCURL_DECLARE_THREAD_STATE;
 
     self = (CurlObject *)clientp;
-    
+
     PYCURL_BEGIN_CALLBACK(opensocket_callback, ret);
 
     converted_address = convert_protocol_address(&address->addr, address->addrlen);
@@ -666,7 +666,10 @@ progress_callback(void *stream,
         ret = (int) PyLong_AsLong(result);
     }
     else {
-        ret = PyObject_IsTrue(result);  /* FIXME ??? */
+        ret = PyObject_IsTrue(result);
+        if (ret == -1) {
+            goto verbose_error;
+        }
     }
 
 silent_error:
@@ -718,7 +721,10 @@ xferinfo_callback(void *stream,
         ret = (int) PyLong_AsLong(result);
     }
     else {
-        ret = PyObject_IsTrue(result);  /* FIXME ??? */
+        ret = PyObject_IsTrue(result);
+        if (ret == -1) {
+            goto verbose_error;
+        }
     }
 
 silent_error:
