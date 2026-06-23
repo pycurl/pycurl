@@ -2,9 +2,12 @@
 # vi:ts=4:et
 
 import threading
+import time
+from concurrent.futures import ThreadPoolExecutor
+from io import BytesIO
+
 import pycurl
 import pytest
-from io import BytesIO
 
 from . import util
 
@@ -174,7 +177,7 @@ def test_easy_set_share_closed_raises(app):
     c = util.DefaultCurl()
     c.setopt(pycurl.URL, app + "/success")
 
-    with pytest.raises(RuntimeError) as excinfo:
+    with pytest.raises(pycurl.error) as excinfo:
         c.setopt(pycurl.SHARE, s)
 
     assert "CurlShare is closed" == str(excinfo.value)
@@ -219,3 +222,124 @@ def test_share_context_manager_strict_raises_if_live_easies(app):
     c.unsetopt(pycurl.SHARE)
     s.close()
     c.close()
+
+
+@pytest.fixture
+def fresh_share():
+    s = pycurl.CurlShare()
+    yield s
+    if not s.closed:
+        s.close()
+
+
+@pytest.mark.parametrize("method", ["share", "unshare"])
+def test_zero_args_raises_type_error(fresh_share, method):
+    with pytest.raises(TypeError, match="at least one LOCK_DATA"):
+        getattr(fresh_share, method)()
+
+
+@pytest.mark.parametrize("method", ["share", "unshare"])
+@pytest.mark.parametrize(
+    "bad_arg",
+    [
+        pytest.param([pycurl.LOCK_DATA_COOKIE], id="list"),
+        pytest.param((pycurl.LOCK_DATA_COOKIE,), id="tuple"),
+        pytest.param("LOCK_DATA_COOKIE", id="string"),
+        pytest.param(99999, id="invalid_int"),
+        pytest.param(None, id="none"),
+    ],
+)
+def test_invalid_arg_raises_type_error(fresh_share, method, bad_arg):
+    with pytest.raises(TypeError):
+        getattr(fresh_share, method)(bad_arg)
+
+
+@pytest.mark.parametrize("method", ["share", "unshare"])
+def test_single_arg_succeeds(fresh_share, method):
+    getattr(fresh_share, method)(pycurl.LOCK_DATA_COOKIE)
+
+
+@pytest.mark.parametrize("method", ["share", "unshare"])
+def test_multiple_args_apply(default_share, method):
+    getattr(default_share, method)(
+        pycurl.LOCK_DATA_COOKIE,
+        pycurl.LOCK_DATA_DNS,
+        pycurl.LOCK_DATA_SSL_SESSION,
+    )
+
+
+@pytest.mark.parametrize(
+    "call",
+    [
+        pytest.param(lambda s: s.share(pycurl.LOCK_DATA_COOKIE), id="share"),
+        pytest.param(lambda s: s.unshare(pycurl.LOCK_DATA_COOKIE), id="unshare"),
+        pytest.param(
+            lambda s: s.setopt(pycurl.SH_SHARE, pycurl.LOCK_DATA_COOKIE), id="setopt"
+        ),
+    ],
+)
+def test_method_after_close_raises(call):
+    s = pycurl.CurlShare()
+    s.close()
+    with pytest.raises(pycurl.error):
+        call(s)
+
+
+def test_mixed_valid_then_invalid_raises_at_invalid_item(fresh_share):
+    with pytest.raises(TypeError):
+        fresh_share.share(pycurl.LOCK_DATA_COOKIE, 99999)
+
+
+def test_close_refuses_detach_when_easy_is_performing(app):
+    s = pycurl.CurlShare()
+    set_share_defaults(s)
+
+    c = util.DefaultCurl()
+    c.setopt(pycurl.URL, app + "/short_wait?delay=0.5")
+    c.setopt(pycurl.SHARE, s)
+    sio = BytesIO()
+    c.setopt(pycurl.WRITEFUNCTION, sio.write)
+
+    started = threading.Event()
+    perform_error = []
+
+    def run():
+        started.set()
+        try:
+            c.perform()
+        except Exception as e:
+            perform_error.append(e)
+
+    t = threading.Thread(target=run)
+    t.start()
+    started.wait()
+    time.sleep(0.05)
+
+    with pytest.raises(pycurl.error):
+        s.close()
+
+    t.join()
+    assert not perform_error, f"perform() raised: {perform_error}"
+    s.close()
+    c.close()
+    assert s.closed
+
+
+def test_concurrent_api_calls_do_not_crash():
+    s = pycurl.CurlShare()
+    n_workers = 8
+    iters = 200
+
+    def worker():
+        for _ in range(iters):
+            s.share(pycurl.LOCK_DATA_COOKIE)
+            s.unshare(pycurl.LOCK_DATA_COOKIE)
+            s.setopt(pycurl.SH_SHARE, pycurl.LOCK_DATA_DNS)
+            s.closed
+
+    with ThreadPoolExecutor(max_workers=n_workers) as ex:
+        futures = [ex.submit(worker) for _ in range(n_workers)]
+        for f in futures:
+            f.result()
+
+    s.close()

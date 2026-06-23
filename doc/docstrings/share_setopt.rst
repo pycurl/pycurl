@@ -20,7 +20,8 @@ Example usage::
     curl.perform()
     curl.close()
 
-Raises pycurl.error exception upon failure.
+Raises pycurl.error exception upon failure. Failures reported by libcurl
+(``CURLSHcode``) are surfaced as ``pycurl.error``.
 
 .. _curl_share_setopt:
     https://curl.haxx.se/libcurl/c/curl_share_setopt.html

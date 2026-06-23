@@ -23,16 +23,18 @@ For Python programs using PycURL, this means:
   Python code *outside of a libcurl callback for the PycURL object in question*
   is unsafe.
 
-* ``CurlShare`` is thread-safe: different ``Curl`` handles attached
-  to the same share may be used from different threads. Concurrent
-  method calls on the same ``CurlShare`` Python object are not.
+* ``CurlShare`` is thread-safe: methods may be called concurrently
+  from multiple threads, and different ``Curl`` handles attached to
+  the same share may be used from different threads. Edge cases:
 
-* Closing a ``CurlShare`` object with ``detach_on_close=True`` (the
-  default) is **not thread-safe** with respect to the associated
-  ``Curl`` objects. During ``CurlShare.close()``, PycURL automatically
-  detaches all associated ``Curl`` objects by clearing their ``SHARE``
-  option. The caller must ensure that no other thread is using the
-  associated ``Curl`` objects while ``CurlShare.close()`` is executing.
+  * :py:meth:`~pycurl.CurlShare.close` is not fully thread-safe with
+    respect to associated ``Curl`` handles — see its
+    :py:meth:`docs <pycurl.CurlShare.close>` for the rules it
+    enforces.
+
+  * Not every kind of libcurl shared data is safe to share across
+    threads. See `CURLSHOPT_SHARE`_ for the list of supported
+    ``CURL_LOCK_DATA_*`` values and their constraints.
 
 * Not every kind of libcurl shared data is safe to share across
   threads. See `CURLSHOPT_SHARE`_ for the list of supported
