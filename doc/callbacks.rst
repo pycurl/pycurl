@@ -98,6 +98,19 @@ WRITEFUNCTION
     alternate way of indicating that the callback has consumed all of the
     string passed to it and, hence, succeeded.
 
+    Passing ``use_memoryview=True`` to ``Curl.setopt`` causes the callback to
+    receive a read-only ``memoryview`` over libcurl's temporary buffer
+    instead of a ``bytes`` copy. The memoryview is released as soon as the
+    callback returns, so any reference kept past that point raises
+    ``ValueError`` on access.
+
+    Example::
+
+        def write_cb(chunk: memoryview) -> int:
+            return len(chunk)
+
+        curl.setopt(pycurl.WRITEFUNCTION, write_cb, use_memoryview=True)
+
     `write_test.py test`_ shows how to use ``WRITEFUNCTION``.
 
 
@@ -147,6 +160,19 @@ HEADERFUNCTION
     an error and libcurl will abort the request. Returning ``None`` is an
     alternate way of indicating that the callback has consumed all of the
     string passed to it and, hence, succeeded.
+
+    Passing ``use_memoryview=True`` to ``Curl.setopt`` causes the callback to
+    receive a read-only ``memoryview`` over libcurl's temporary buffer
+    instead of a ``bytes`` copy. The memoryview is released as soon as the
+    callback returns, so any reference kept past that point raises
+    ``ValueError`` on access.
+
+    Example::
+
+        def header_cb(chunk: memoryview) -> int:
+            return len(chunk)
+
+        curl.setopt(pycurl.HEADERFUNCTION, header_cb, use_memoryview=True)
 
     `header_test.py test`_ shows how to use ``WRITEFUNCTION``.
 

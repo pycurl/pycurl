@@ -367,10 +367,12 @@ do_curl_duphandle(CurlObject *self, PyObject *Py_UNUSED(ignored))
         dup->w_cb = Py_NewRef(self->w_cb);
         curl_easy_setopt(dup->handle, CURLOPT_WRITEDATA, dup);
     }
+    dup->w_cb_memoryview = self->w_cb_memoryview;
     if (self->h_cb != NULL) {
         dup->h_cb = Py_NewRef(self->h_cb);
         curl_easy_setopt(dup->handle, CURLOPT_WRITEHEADER, dup);
     }
+    dup->h_cb_memoryview = self->h_cb_memoryview;
     if (self->r_cb != NULL) {
         dup->r_cb = Py_NewRef(self->r_cb);
         curl_easy_setopt(dup->handle, CURLOPT_READDATA, dup);
@@ -959,7 +961,7 @@ PYCURL_INTERNAL PyMethodDef curlobject_methods[] = {
     {"recv_into", (PyCFunction)do_curl_recv_into, METH_VARARGS | METH_KEYWORDS, curl_recv_into_doc},
     {"reset", (PyCFunction)do_curl_reset, METH_NOARGS, curl_reset_doc},
     {"send", (PyCFunction)do_curl_send, METH_VARARGS, curl_send_doc},
-    {"setopt", (PyCFunction)do_curl_setopt, METH_VARARGS, curl_setopt_doc},
+    {"setopt", (PyCFunction)do_curl_setopt, METH_VARARGS | METH_KEYWORDS, curl_setopt_doc},
     {"setopt_string", (PyCFunction)do_curl_setopt_string, METH_VARARGS, curl_setopt_string_doc},
     {"share", (PyCFunction)do_curl_share, METH_NOARGS, curl_share_doc},
     {"unpause", (PyCFunction)do_curl_unpause, METH_NOARGS, curl_unpause_doc},

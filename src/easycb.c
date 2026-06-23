@@ -34,11 +34,13 @@ static size_t
 util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *stream)
 {
     CurlObject *self;
+    PyObject *arg;
     PyObject *arglist;
     PyObject *result = NULL;
     size_t ret = 0;     /* assume error */
     PyObject *cb;
     Py_ssize_t total_size;
+    int as_memoryview;
     int track_ws_write_callback;
     int prev_ws_write_callback = 0;
     PYCURL_DECLARE_THREAD_STATE;
@@ -61,7 +63,17 @@ util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *strea
     }
 
     /* run callback */
-    arglist = Py_BuildValue("(y#)", ptr, total_size);
+    as_memoryview = flags ? self->h_cb_memoryview : self->w_cb_memoryview;
+    if (as_memoryview) {
+        arg = PyMemoryView_FromMemory(ptr, total_size, PyBUF_READ);
+    } else {
+        arg = PyBytes_FromStringAndSize(ptr, total_size);
+    }
+    if (arg == NULL) {
+        goto verbose_error;
+    }
+    arglist = PyTuple_Pack(1, arg);
+    Py_DECREF(arg);
     if (arglist == NULL)
         goto verbose_error;
     track_ws_write_callback = (flags == 0);
@@ -72,6 +84,15 @@ util_write_callback(int flags, char *ptr, size_t size, size_t nmemb, void *strea
     result = PyObject_Call(cb, arglist, NULL);
     if (track_ws_write_callback) {
         self->ws_write_cb_running = prev_ws_write_callback;
+    }
+    if (as_memoryview) {
+        PyObject *mv = PyTuple_GET_ITEM(arglist, 0);
+        PyObject *exc_type, *exc_val, *exc_tb;
+
+        /* invalidate stashed references; preserve any callback exception */
+        PyErr_Fetch(&exc_type, &exc_val, &exc_tb);
+        Py_XDECREF(PyObject_CallMethod(mv, "release", NULL));
+        PyErr_Restore(exc_type, exc_val, exc_tb);
     }
     Py_DECREF(arglist);
     if (result == NULL)
