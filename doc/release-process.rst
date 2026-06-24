@@ -1,6 +1,30 @@
 Release Process
 ===============
 
+Release tag schema
+------------------
+
+Release tags should use the ``vX.Y.Z`` schema, for example ``v7.46.1``.
+The leading ``v`` is required for new release tags.
+
+Older releases used ``REL_X_Y_Z``-style tags (for example ``REL_7_45_7``).
+These historical tags are kept unchanged and continue to be referenced
+from the changelog and from ``git shortlog`` invocations such as the one
+in step 3 below.
+
+Pushing a ``vX.Y.Z`` tag triggers the Draft GitHub Release workflow
+(``.github/workflows/draft-release.yml``), which creates a draft GitHub
+Release with automatically generated release notes. Maintainers should
+review and edit the draft release before publishing it.
+
+The existing manual Build Wheels workflow
+(``.github/workflows/cibuildwheel.yml``) remains the publishing path for
+PyPI and TestPyPI. This first step does not make PyPI publishing
+tag-driven.
+
+Release checklist
+-----------------
+
 1. Ensure changelog is up to date with commits in master.
 2. Run ``python setup.py authors`` and review the updated AUTHORS file.
 3. Run ``git shortlog REL_<previous release>...`` and add new contributors
