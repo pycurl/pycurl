@@ -33,10 +33,24 @@ def _wait_readable(c, timeout):
     return bool(r)
 
 
-def _recv(c, bufsize, timeout=5.0):
+def _flush_pending_sends(c):
+    # libcurl >= 8.21.0 queues the auto-PONG reply instead of sending it, and a
+    # recv-only loop never flushes it. ws_send() flushes buffered frames first,
+    # so an empty PONG pushes the queued reply out. Returns False on EAGAIN.
+    try:
+        c.ws_send(b"", pycurl.WS_PONG)
+        return True
+    except BlockingIOError:
+        return False
+
+
+def _recv(c, bufsize, timeout=5.0, pump_sends=False):
     # Try ws_recv() first (libcurl may hold buffered data); fall back to
-    # select() on BlockingIOError / CURLE_AGAIN.
+    # select() on BlockingIOError / CURLE_AGAIN. With pump_sends, also flush the
+    # send side once it has drained so a queued auto-PONG reaches the server.
     deadline = time.monotonic() + timeout
+    fd = c.getinfo(pycurl.ACTIVESOCKET)
+    flushed = False
     while True:
         try:
             return c.ws_recv(bufsize)
@@ -44,7 +58,12 @@ def _recv(c, bufsize, timeout=5.0):
             remaining = deadline - time.monotonic()
             if remaining <= 0:
                 raise AssertionError("timed out waiting for ws data")
-            _wait_readable(c, remaining)
+            if pump_sends and not flushed:
+                r, w, _ = select.select([fd], [fd], [], remaining)
+                if w and not r:
+                    flushed = _flush_pending_sends(c)
+            else:
+                _wait_readable(c, remaining)
 
 
 def _recv_into(c, buffer, nbytes=0, timeout=5.0):
@@ -59,15 +78,16 @@ def _recv_into(c, buffer, nbytes=0, timeout=5.0):
             _wait_readable(c, remaining)
 
 
-def _recv_until(c, predicate, timeout=5.0):
+def _recv_until(c, predicate, timeout=5.0, pump_sends=False):
     # Drain frames until predicate(data, meta) matches. Used by auto-pong tests.
+    # pump_sends flushes a lazily-queued auto-PONG (libcurl >= 8.21.0).
     deadline = time.monotonic() + timeout
     frames = []
     while True:
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             raise AssertionError("timed out waiting for ws data")
-        data, meta = _recv(c, 4096, remaining)
+        data, meta = _recv(c, 4096, remaining, pump_sends=pump_sends)
         frames.append((data, meta))
         if predicate(data, meta):
             return frames
@@ -389,6 +409,7 @@ def test_default_mode_autopongs_server_ping(wscurl, ws_app):
     _recv_until(
         wscurl,
         lambda data, meta: (meta.flags & pycurl.WS_TEXT) and data == b"pong-ok",
+        pump_sends=True,
     )
 
 
