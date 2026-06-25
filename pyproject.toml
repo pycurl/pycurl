@@ -78,7 +78,7 @@ before-all = [
     "export VCPKG_ROOT=$HOME/.local/share/vcpkg",
     "git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT",
     "{project}/scripts/setup-vcpkg-nuget.sh",
-    "vcpkg install curl[brotli,core,gssapi,http2,non-http,openssl,ssh,websockets] --triplet=$VCPKG_TRIPLET",
+    "PATH=$(echo \"$PATH\" | tr ':' '\n' | grep -v '^/usr/local/bin$' | paste -sd:) vcpkg install curl[brotli,core,gssapi,http2,non-http,openssl,ssh,websockets] --triplet=$VCPKG_TRIPLET",
 ]
 before-test = [
     "pip install flake8 -r requirements-dev.txt",
