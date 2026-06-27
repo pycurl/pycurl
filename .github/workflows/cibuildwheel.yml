@@ -50,8 +50,6 @@ jobs:
           - os: ubuntu-24.04-arm
             arch: aarch64
           - os: windows-2025
-            arch: x86
-          - os: windows-2025
             arch: x64
           - os: windows-11-arm
             arch: arm64
@@ -77,7 +75,7 @@ jobs:
       - name: Build wheels
         env:
           CIBW_ARCHS_LINUX: ${{ matrix.arch }}
-          CIBW_ARCHS_WINDOWS: ${{ matrix.arch == 'x86' && 'x86' || matrix.arch == 'arm64' && 'ARM64' || 'AMD64' }}
+          CIBW_ARCHS_WINDOWS: ${{ matrix.arch == 'arm64' && 'ARM64' || 'AMD64' }}
           CIBW_ENVIRONMENT_WINDOWS: PYCURL_CURL_DIR=C:/vcpkg/packages/curl_${{ matrix.arch }}-windows PYCURL_SSL_LIBRARY=schannel
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: delvewheel repair --add-path C:/vcpkg/installed/${{ matrix.arch }}-windows/bin -w {dest_dir} {wheel}
         run: |
