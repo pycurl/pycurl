@@ -39,8 +39,6 @@ jobs:
   package-wheel:
     name: Build wheels on ${{ matrix.os }} ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
-    env:
-      VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'
     strategy:
       fail-fast: false
       matrix:
@@ -68,22 +66,6 @@ jobs:
         if: runner.os == 'Windows'
         with:
           arch: ${{ matrix.arch }}
-
-      - name: 'Setup NuGet credentials'
-        if: runner.os == 'Windows'
-        shell: 'bash'
-        run: |
-          nuget="$(vcpkg fetch nuget | tail -n 1)"
-          "${nuget}" \
-            sources add \
-            -source "https://nuget.pkg.github.com/${GITHUB_REPOSITORY_OWNER}/index.json" \
-            -storepasswordincleartext \
-            -name "GitHub" \
-            -username "${GITHUB_REPOSITORY_OWNER}" \
-            -password "${{ secrets.GITHUB_TOKEN }}"
-          "${nuget}" \
-            setapikey "${{ secrets.GITHUB_TOKEN }}" \
-            -source "https://nuget.pkg.github.com/${GITHUB_REPOSITORY_OWNER}/index.json"
 
       - name: Install packages (Windows)
         if: runner.os == 'Windows'
