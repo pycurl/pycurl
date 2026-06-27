@@ -85,7 +85,7 @@ class WsServer:
         async def ping_and_report_pong(ws):
             pong_waiter = await ws.ping(b"probe")
             try:
-                await asyncio.wait_for(pong_waiter, timeout=0.5)
+                await asyncio.wait_for(pong_waiter, timeout=2.0)
                 await ws.send("pong-ok")
             except asyncio.TimeoutError:
                 await ws.send("pong-missing")

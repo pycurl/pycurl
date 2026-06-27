@@ -33,6 +33,9 @@ jobs:
           - curl-version: "vcpkg"
             python-version: "3.12"
             cibw-build: "cp312-manylinux_x86_64"
+          - curl-version: "vcpkg"
+            python-version: "3.14t"
+            cibw-build: "cp314t-manylinux_x86_64"
     permissions:
       packages: write
 
