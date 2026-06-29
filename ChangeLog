@@ -1,3 +1,36 @@
+Version 7.47.0 [requires libcurl-7.19.0 or better] - 2026-06-29
+---------------------------------------------------------------
+
+        * Use dynamic SSL ports in certificate tests (patch by Jorge Rocamora)
+        * Harden test_clear_assignment_inside_socket_callback_resets_socketp test (patch by Jorge Rocamora)
+        * Rename index field to idx in HstsIndex to avoid shadowing (patch by Jorge Rocamora)
+        * Fix test_callbacks_non_minus_one_return_continues_transfer on macOS (patch by Jorge Rocamora)
+        * Use PYCURL_REQUIRE_HANDLE and PYCURL_REQUIRE_NOT_RUNNING instead of magic numbers (patch by Jorge Rocamora)
+        * Convert pycurl to a Python package with the C extension renamed to pycurl._pycurl (patch by Jorge Rocamora)
+        * Fix flaky CONNECT_ONLY send/recv tests by waiting on active socket readiness instead of sleeping after EAGAIN (#997) (patch by Jorge Rocamora)
+        * Add PyMutex support on Python 3.13+ (patch by Jorge Rocamora)
+        * Modernize ssh_key_cb_test and use a local SFTP server (patch by Scott Talbert)
+        * Use set instead of dict for saving refs to easy objects in multi (patch by Jorge Rocamora)
+        * Make closed as property instead a method (patch by Jorge Rocamora)
+        * Add free-threaded CPython support (patch by Jorge Rocamora)
+        * Add AsyncCurlMulti (patch by Jorge Rocamora)
+        * Fix flaky memory_mgmt callback (patch by Jorge Rocamora)
+        * Add libcurl strerror wrappers (easy/multi/share/url) (patch by Jorge Rocamora)
+        * Modernize write/header tests (patch by Jorge Rocamora)
+        * Implement Curl multi notify API (patch by Jorge Rocamora)
+        * Pin socket callback tests to IPv4 to handle dual-stack localhost resolution (patch by Jorge Rocamora)
+        * Integrate notify in AsyncCurlMulti (patch by Jorge Rocamora)
+        * Review GIL management (patch by Jorge Rocamora)
+        * Capture more expected warnings during tests (patch by Scott Talbert)
+        * Fix/update/remove some examples (patch by Scott Talbert)
+        * Fix truncated timeout value in multi timer callback (patch by Jorge Rocamora)
+        * Fix incorrect argument type in debug callback (patch by Jorge Rocamora)
+        * Fix some reference leaks (patch by Jorge Rocamora)
+        * Ensure errors are logged in progress/xferinfo callbacks (patch by Scott Talbert)
+        * Support zero-copy write/header callbacks (patch by Jorge Rocamora)
+        * Evolve CurlShare with share()/unshare(), Python-level thread safety, and CURLSHcode error propagation (patch by Jorge Rocamora)
+        * Fix test_default_mode_autopongs_server_ping with libcurl 8.21.0 (patches by Jorge Rocamora)
+
 Version 7.46.0 [requires libcurl-7.19.0 or better] - 2026-04-28
 ---------------------------------------------------------------
 

@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+PycURL 7.47.0 - 2026-06-29
+--------------------------
+
+This release adds AsyncCurlMulti (initial async pycurl support), implements a
+curl multi notify API, and adds initial free-threaded CPython support.  This
+release also fixes numerous minor issues and makes tests more reliable.
+
 PycURL 7.46.0 - 2026-04-28
 --------------------------
 
