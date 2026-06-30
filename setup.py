@@ -6,6 +6,7 @@ PY_PACKAGE = "curl"
 VERSION = "7.47.0"
 
 import glob, os, re, shlex, sys, subprocess
+from pathlib import Path
 from setuptools import setup
 from setuptools.extension import Extension
 
@@ -809,87 +810,7 @@ def gen_docstrings_sources():
 setup_args = dict(
     version=VERSION,
     long_description_content_type='text/x-rst',
-    long_description='''\
-PycURL -- A Python Interface To The cURL library
-================================================
-
-PycURL is a Python interface to `libcurl`_, the multiprotocol file
-transfer library. Similarly to the urllib_ Python module,
-PycURL can be used to fetch objects identified by a URL from a Python program.
-Beyond simple fetches however PycURL exposes most of the functionality of
-libcurl, including:
-
-- Speed - libcurl is very fast and PycURL, being a thin wrapper above
-  libcurl, is very fast as well. PycURL `was benchmarked`_ to be several
-  times faster than requests_.
-- Features including multiple protocol support, SSL, authentication and
-  proxy options. PycURL supports most of libcurl's callbacks.
-- Multi_ and share_ interfaces.
-- Sockets used for network operations, permitting integration of PycURL
-  into the application's I/O loop (e.g., using Tornado_).
-
-.. _was benchmarked: http://stackoverflow.com/questions/15461995/python-requests-vs-pycurl-performance
-.. _requests: http://python-requests.org/
-.. _Multi: https://curl.haxx.se/libcurl/c/libcurl-multi.html
-.. _share: https://curl.haxx.se/libcurl/c/libcurl-share.html
-.. _Tornado: http://www.tornadoweb.org/
-
-
-Requirements
-------------
-
-- Python 3.10-3.14.
-- libcurl 7.19.0 or better.
-
-
-Installation
-------------
-
-Download the source distribution from `PyPI`_.
-
-Please see `the installation documentation`_ for installation instructions.
-
-.. _PyPI: https://pypi.python.org/pypi/pycurl
-.. _the installation documentation: http://pycurl.io/docs/latest/install.html
-
-
-Documentation
--------------
-
-Documentation for the most recent PycURL release is available on
-`PycURL website <http://pycurl.io/docs/latest/>`_.
-
-
-Support
--------
-
-For support questions please use `curl-and-python mailing list`_.
-`Mailing list archives`_ are available for your perusal as well.
-
-Although not an official support venue, `Stack Overflow`_ has been
-popular with some PycURL users.
-
-Bugs can be reported `via GitHub`_. Please use GitHub only for bug
-reports and direct questions to our mailing list instead.
-
-.. _curl-and-python mailing list: https://lists.haxx.se/listinfo/curl-and-python
-.. _Stack Overflow: http://stackoverflow.com/questions/tagged/pycurl
-.. _Mailing list archives: https://curl.haxx.se/mail/list.cgi?list=curl-and-python
-.. _via GitHub: https://github.com/pycurl/pycurl/issues
-
-
-License
--------
-
-PycURL is dual licensed under the LGPL and an MIT/X derivative license
-based on the libcurl license. The complete text of the licenses is available
-in COPYING-LGPL_ and COPYING-MIT_ files in the source distribution.
-
-.. _libcurl: https://curl.haxx.se/libcurl/
-.. _urllib: http://docs.python.org/library/urllib.html
-.. _COPYING-LGPL: https://raw.githubusercontent.com/pycurl/pycurl/master/COPYING-LGPL
-.. _COPYING-MIT: https://raw.githubusercontent.com/pycurl/pycurl/master/COPYING-MIT
-''',
+    long_description=(Path(__file__).parent / 'README.rst').read_text(encoding='utf-8'),
 )
 
 unix_help = '''\
