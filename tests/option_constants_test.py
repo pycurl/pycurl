@@ -516,6 +516,36 @@ def test_ssl_option_no_revoke(curl):
     curl.setopt(curl.SSL_OPTIONS, curl.SSLOPT_NO_REVOKE)
 
 
+@util.min_libcurl(7, 68, 0)
+@util.only_ssl
+def test_ssl_option_no_partialchain(curl):
+    curl.setopt(curl.SSL_OPTIONS, curl.SSLOPT_NO_PARTIALCHAIN)
+
+
+@util.min_libcurl(7, 70, 0)
+@util.only_ssl
+def test_ssl_option_revoke_best_effort(curl):
+    curl.setopt(curl.SSL_OPTIONS, curl.SSLOPT_REVOKE_BEST_EFFORT)
+
+
+@util.min_libcurl(7, 71, 0)
+@util.only_ssl
+def test_ssl_option_native_ca(curl):
+    curl.setopt(curl.SSL_OPTIONS, curl.SSLOPT_NATIVE_CA)
+
+
+@util.min_libcurl(7, 77, 0)
+@util.only_ssl
+def test_ssl_option_auto_client_cert(curl):
+    curl.setopt(curl.SSL_OPTIONS, curl.SSLOPT_AUTO_CLIENT_CERT)
+
+
+@util.min_libcurl(8, 11, 0)
+@util.only_ssl
+def test_ssl_option_earlydata(curl):
+    curl.setopt(curl.SSL_OPTIONS, curl.SSLOPT_EARLYDATA)
+
+
 @util.min_libcurl(7, 55, 0)
 def test_request_target_option(curl):
     curl.setopt(curl.REQUEST_TARGET, "*")
