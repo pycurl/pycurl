@@ -85,7 +85,7 @@ def test_protocols_setopt(curl):
 # CURLOPT_REDIR_PROTOCOLS was introduced in libcurl-7.19.4
 @util.min_libcurl(7, 19, 4)
 def test_redir_protocols_setopt(curl):
-    curl.setopt(curl.PROTOCOLS, curl.PROTO_ALL & ~curl.PROTO_HTTP)
+    curl.setopt(curl.REDIR_PROTOCOLS, curl.PROTO_ALL & ~curl.PROTO_HTTP)
 
 
 # CURLOPT_TFTP_BLKSIZE was introduced in libcurl-7.19.4
