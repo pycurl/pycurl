@@ -398,6 +398,24 @@ struct CurlObject;
 PYCURL_INTERNAL void
 create_and_set_error_object(struct CurlObject *self, int code);
 
+/* Capture the pending exception onto the *storage list. The _capture_ variant
+   also prints it. A BaseException is left set to keep propagating. */
+PYCURL_INTERNAL void
+pycurl_capture_callback_exception(PyObject **storage);
+PYCURL_INTERNAL void
+pycurl_stash_callback_exception(PyObject **storage);
+
+/* Attach the captures in *storage as __cause__ of the pending error (an
+   ExceptionGroup on 3.11+ when several). Always clears *storage. */
+PYCURL_INTERNAL void
+pycurl_attach_callback_cause(PyObject **storage);
+
+/* Easy-handle wrappers operating on self->callback_exception. */
+PYCURL_INTERNAL void
+pycurl_easy_clear_callback_state(struct CurlObject *self);
+PYCURL_INTERNAL void
+pycurl_easy_attach_callback_cause(struct CurlObject *self);
+
 
 /* Raise exception based on return value `res' and `self->error' */
 #define CURLERROR_RETVAL() do {\
@@ -556,6 +574,8 @@ typedef struct CurlObject {
     PyObject *ca_certs_obj;
     /* true while executing WRITEFUNCTION for this handle */
     int ws_write_cb_running;
+    /* captured callback exceptions, chained as __cause__ by perform() */
+    PyObject *callback_exception;
     /* misc */
     char error[CURL_ERROR_SIZE+1];
 } CurlObject;

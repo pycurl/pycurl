@@ -551,6 +551,7 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
 
     if (flags & PYCURL_MEMGROUP_CALLBACK) {
         /* Decrement refcount for python callbacks. */
+        Py_CLEAR(self->callback_exception);
         Py_CLEAR(self->w_cb);
         Py_CLEAR(self->h_cb);
         Py_CLEAR(self->r_cb);
@@ -788,6 +789,8 @@ do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
     VISIT(self->dict);
     VISIT(self->multi_weakref);
     VISIT((PyObject *) self->share);
+
+    VISIT(self->callback_exception);
 
     VISIT(self->w_cb);
     VISIT(self->h_cb);

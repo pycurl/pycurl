@@ -22,3 +22,9 @@ def test_write_cb_bogus_return(curl, bogus_return):
     assert sys.last_type == pycurl.error
     assert hasattr(sys, "last_value")
     assert str(sys.last_value) == "write callback must return int or None"
+
+    cause = exc_info.value.__cause__
+    assert cause is not None
+    leaves = getattr(cause, "exceptions", None)
+    messages = [str(e) for e in leaves] if leaves else [str(cause)]
+    assert any("write callback must return int or None" in m for m in messages)
