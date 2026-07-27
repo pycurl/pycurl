@@ -140,6 +140,7 @@ Documentation Contents
    curlmultiobject
    asynccurlmultiobject
    curlshareobject
+   curlurlobject
    mime
    callbacks
    curl

@@ -183,6 +183,9 @@ PYCURL_IGNORE_DEPRECATED_END
         Py_CLEAR(self->mimepost_obj);
         break;
 #endif
+#ifdef HAVE_CURLOPT_CURLU
+    CLEAR_OBJECT(CURLOPT_CURLU, self->curl_url);
+#endif
 
     /* "If you do not use a write callback, you must make pointer a 'FILE*'
      * as libcurl passes this to fwrite(3) when writing data" (default: stdout)
@@ -1203,6 +1206,35 @@ do_curl_setopt_mimepost(CurlObject *self, PyObject *obj)
 #endif
 
 
+#ifdef HAVE_CURLOPT_CURLU
+static PyObject *
+do_curl_setopt_curlurl(CurlObject *self, PyObject *obj)
+{
+    CurlUrlObject *url;
+    int res;
+
+    if (!PyObject_TypeCheck(obj, p_CurlUrl_Type)) {
+        PyErr_SetString(PyExc_TypeError, "setopt(option=CURLU) expects a CurlUrl object");
+        return NULL;
+    }
+
+    url = (CurlUrlObject *)obj;
+    if (url->url_handle == NULL) {
+        PyErr_SetString(PyExc_ValueError, "setopt(option=CURLU) received a CurlUrl without a handle");
+        return NULL;
+    }
+
+    res = curl_easy_setopt(self->handle, CURLOPT_CURLU, url->url_handle);
+    if (res != CURLE_OK) {
+        CURLERROR_RETVAL();
+    }
+
+    Py_XSETREF(self->curl_url, Py_NewRef(obj));
+    Py_RETURN_NONE;
+}
+#endif
+
+
 PYCURL_INTERNAL PyObject *
 do_curl_setopt_filelike(CurlObject *self, int option, PyObject *obj)
 {
@@ -1331,6 +1363,12 @@ do_curl_setopt(CurlObject *self, PyObject *args, PyObject *kwargs)
 #ifdef HAVE_CURL_MIME
     if (option == CURLOPT_MIMEPOST) {
         return do_curl_setopt_mimepost(self, obj);
+    }
+#endif
+
+#ifdef HAVE_CURLOPT_CURLU
+    if (option == CURLOPT_CURLU) {
+        return do_curl_setopt_curlurl(self, obj);
     }
 #endif
 

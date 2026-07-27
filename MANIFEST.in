@@ -37,6 +37,7 @@ include src/pythoncompat.c
 include src/share.c
 include src/stringcompat.c
 include src/threadsupport.c
+include src/url.c
 include src/util.c
 include requirements*.txt
 include tests/*.py

@@ -190,6 +190,16 @@ pycurl_inet_ntop (int family, void *addr, char *string, size_t string_size);
 #define HAVE_CURL_MIME
 #endif
 
+/* URL API (curl_url and friends), the CurlUrl object */
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 62, 0)
+#define HAVE_CURL_URL
+#endif
+
+/* CURLOPT_CURLU, binding a CurlUrl to an easy handle */
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 63, 0)
+#define HAVE_CURLOPT_CURLU
+#endif
+
 #if LIBCURL_VERSION_NUM >= 0x074300 /* check for 7.67.0 or greater */
 #define HAVE_CURL_7_67_0_MULTI_STREAMS
 #endif
@@ -431,12 +441,14 @@ create_and_set_error_object(struct CurlObject *self, int code);
 #define PYCURL_MEMGROUP_SLIST           256
 /* CurlMime object pinned via CURLOPT_MIMEPOST */
 #define PYCURL_MEMGROUP_MIMEPOST        512
+/* CurlUrl object pinned via CURLOPT_CURLU */
+#define PYCURL_MEMGROUP_CURLU           1024
 
 #define PYCURL_MEMGROUP_EASY \
     (PYCURL_MEMGROUP_CALLBACK | PYCURL_MEMGROUP_FILE | \
     PYCURL_MEMGROUP_HTTPPOST | PYCURL_MEMGROUP_POSTFIELDS | \
     PYCURL_MEMGROUP_CACERTS | PYCURL_MEMGROUP_SLIST | \
-    PYCURL_MEMGROUP_MIMEPOST)
+    PYCURL_MEMGROUP_MIMEPOST | PYCURL_MEMGROUP_CURLU)
 
 #define PYCURL_MEMGROUP_ALL \
     (PYCURL_MEMGROUP_ATTRDICT | PYCURL_MEMGROUP_EASY | \
@@ -467,6 +479,10 @@ typedef struct CurlObject {
     struct CurlHttppostObject *httppost;
 #ifdef HAVE_CURL_MIME
     PyObject *mimepost_obj;
+#endif
+#ifdef HAVE_CURLOPT_CURLU
+    /* strong ref to the CurlUrl set via CURLOPT_CURLU (or NULL) */
+    PyObject *curl_url;
 #endif
     struct CurlSlistObject *httpheader;
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 37, 0)
@@ -596,6 +612,17 @@ typedef struct CurlMimePartObject {
 
 PYCURL_INTERNAL void
 curlmime_duphandle_incref_data_cb_owners(PyObject *mime_obj);
+#endif
+
+#ifdef HAVE_CURL_URL
+typedef struct CurlUrlObject {
+    PyObject_HEAD
+    PyObject *weakreflist;
+    CURLU *url_handle;
+#ifdef Py_GIL_DISABLED
+    pycurl_mutex_t api_lock;    /* serialises curl_url_* access on this handle */
+#endif
+} CurlUrlObject;
 #endif
 
 PYCURL_INTERNAL PyThreadState *
@@ -813,6 +840,9 @@ extern PyTypeObject CurlShare_Type;
 extern PyTypeObject CurlMime_Type;
 extern PyTypeObject CurlMimePart_Type;
 #endif
+#ifdef HAVE_CURL_URL
+extern PyTypeObject CurlUrl_Type;
+#endif
 
 extern PyObject *ErrorObject;
 extern PyTypeObject *p_Curl_Type;
@@ -823,6 +853,9 @@ extern PyTypeObject *p_CurlShare_Type;
 #ifdef HAVE_CURL_MIME
 extern PyTypeObject *p_CurlMime_Type;
 extern PyTypeObject *p_CurlMimePart_Type;
+#endif
+#ifdef HAVE_CURL_URL
+extern PyTypeObject *p_CurlUrl_Type;
 #endif
 extern PyObject *khkey_type;
 extern PyObject *curl_sockaddr_type;

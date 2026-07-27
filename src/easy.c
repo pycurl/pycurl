@@ -505,6 +505,9 @@ do_curl_duphandle(CurlObject *self, PyObject *Py_UNUSED(ignored))
         curlmime_duphandle_incref_data_cb_owners(self->mimepost_obj);
     }
 #endif
+#ifdef HAVE_CURLOPT_CURLU
+    dup->curl_url = Py_XNewRef(self->curl_url);
+#endif
 
     /* Success - return cloned object */
     return dup;
@@ -605,6 +608,15 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
         }
         /* Decrement refcounts for mimepost object. */
         Py_CLEAR(self->mimepost_obj);
+    }
+#endif
+
+#ifdef HAVE_CURLOPT_CURLU
+    if (flags & PYCURL_MEMGROUP_CURLU) {
+        if (self->curl_url != NULL && handle != NULL) {
+            (void)curl_easy_setopt(handle, CURLOPT_CURLU, NULL);
+        }
+        Py_CLEAR(self->curl_url);
     }
 #endif
 
@@ -804,6 +816,9 @@ do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
 
 #ifdef HAVE_CURL_MIME
     VISIT(self->mimepost_obj);
+#endif
+#ifdef HAVE_CURLOPT_CURLU
+    VISIT(self->curl_url);
 #endif
 
     VISIT(self->ca_certs_obj);

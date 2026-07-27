@@ -41,7 +41,7 @@ RSYNC_USER = armco@web.sourceforge.net
 SOURCES = src/easy.c src/easycb.c src/easyinfo.c src/easyopt.c src/easyperform.c \
 	src/easyws.c src/mime.c src/module.c src/multi.c src/oscompat.c \
 	src/pythoncompat.c src/share.c src/stringcompat.c src/threadsupport.c \
-	src/util.c
+	src/url.c src/util.c
 
 GEN_SOURCES = src/docstrings.c src/docstrings.h
 
@@ -103,7 +103,21 @@ DOCSTRINGS_SOURCES = \
 	doc/docstrings/share_closed.rst \
 	doc/docstrings/share_setopt.rst \
 	doc/docstrings/share_share.rst \
-	doc/docstrings/share_unshare.rst
+	doc/docstrings/share_unshare.rst \
+	doc/docstrings/url.rst \
+	doc/docstrings/url_getpart.rst \
+	doc/docstrings/url_setpart.rst \
+	doc/docstrings/url_url.rst \
+	doc/docstrings/url_scheme.rst \
+	doc/docstrings/url_user.rst \
+	doc/docstrings/url_password.rst \
+	doc/docstrings/url_options.rst \
+	doc/docstrings/url_host.rst \
+	doc/docstrings/url_port.rst \
+	doc/docstrings/url_path.rst \
+	doc/docstrings/url_query.rst \
+	doc/docstrings/url_fragment.rst \
+	doc/docstrings/url_zoneid.rst
 
 all: build
 src-release: $(RELEASE_SOURCES)
