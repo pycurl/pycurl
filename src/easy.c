@@ -321,6 +321,10 @@ do_curl_duphandle(CurlObject *self, PyObject *Py_UNUSED(ignored))
     int res;
     int *ptr;
 
+    if (check_curl_state(self, PYCURL_REQUIRE_HANDLE, "duphandle") != 0) {
+        return NULL;
+    }
+
     /* Allocate python curl object */
     subtype = Py_TYPE(self);
     dup = (CurlObject *) subtype->tp_alloc(subtype, 0);
