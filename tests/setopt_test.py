@@ -146,6 +146,20 @@ def test_httpheader_replace_cycle(app, curl):
     assert io.getvalue() == b"d"
 
 
+def test_httppost_non_text_field_name(curl):
+    with (
+        pytest.warns(DeprecationWarning, match="HTTPPOST is deprecated; use MIMEPOST"),
+        pytest.raises(
+            TypeError,
+            match=(
+                r"^list or tuple must contain a byte string or Unicode string "
+                r"with ASCII code points only as first element$"
+            ),
+        ),
+    ):
+        curl.setopt(pycurl.HTTPPOST, [(1, b"value")])
+
+
 def test_httpheader_replace_refcount(curl):
     first = ["x-test: first"]
     before = sys.getrefcount(first)

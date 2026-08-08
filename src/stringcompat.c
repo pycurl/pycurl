@@ -12,9 +12,14 @@ PyText_AsStringAndSize(PyObject *obj, char **buffer, Py_ssize_t *length, PyObjec
         return PyBytes_AsStringAndSize(obj, buffer, length);
     } else {
         int rv;
-        assert(PyUnicode_Check(obj));
         *encoded_obj = PyUnicode_AsEncodedString(obj, "ascii", "strict");
         if (*encoded_obj == NULL) {
+            if (PyErr_ExceptionMatches(PyExc_TypeError)) {
+                PyErr_Clear();
+                PyErr_Format(PyExc_TypeError,
+                    "expected bytes or an ASCII string, got %.200s",
+                    Py_TYPE(obj)->tp_name);
+            }
             return -1;
         }
         rv = PyBytes_AsStringAndSize(*encoded_obj, buffer, length);
