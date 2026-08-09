@@ -343,6 +343,7 @@ share_cleanup_and_count_live_easies(CurlShareObject *self)
                     if (self->detach_on_close && !performing) {
                         curl_easy_setopt(easy->handle, CURLOPT_SHARE, NULL);
                         easy->share = NULL;
+                        Py_DECREF(self);
 
                         PyList_Append(to_remove, wr);
                     } else {
