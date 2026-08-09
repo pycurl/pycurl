@@ -11,8 +11,8 @@ from .util import LiveTracker, gc_collect_hard
 logger = logging.getLogger(__name__)
 
 
-def default_share() -> pycurl.CurlShare:
-    s = pycurl.CurlShare(detach_on_close=False)
+def default_share(*, detach_on_close: bool = False) -> pycurl.CurlShare:
+    s = pycurl.CurlShare(detach_on_close=detach_on_close)
     s.setopt(pycurl.SH_SHARE, pycurl.LOCK_DATA_COOKIE)
     s.setopt(pycurl.SH_SHARE, pycurl.LOCK_DATA_DNS)
     s.setopt(pycurl.SH_SHARE, pycurl.LOCK_DATA_SSL_SESSION)
@@ -276,6 +276,25 @@ def test_share_close_matrix(app, make_share_easies, order):
     del sios
     del easies
     del s
+    gc_collect_hard()
+
+    tr.assert_all_gone()
+
+
+def test_share_close_detaching_releases_easies(make_share_easies):
+    tr = LiveTracker()
+    s = default_share(detach_on_close=True)
+    tr.track("share", s)
+
+    easies, _ = make_share_easies(s, n=3, set_write=False)
+    for i, e in enumerate(easies):
+        tr.track(f"easy[{i}]", e)
+
+    s.close()
+    assert s.closed
+    assert all(e.share() is None for e in easies)
+
+    del e, easies, s
     gc_collect_hard()
 
     tr.assert_all_gone()
