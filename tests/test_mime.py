@@ -377,6 +377,16 @@ def test_mime_addpart_and_part_methods(fixture_data_path):
         mime.close()
 
 
+@pytest.mark.parametrize("method", ["name", "filename", "type", "encoder", "filedata"])
+def test_mimepart_text_methods_reject_non_text(method):
+    with pycurl.Curl() as curl, pycurl.CurlMime(curl) as mime:
+        part = mime.addpart()
+        with pytest.raises(
+            TypeError, match=r"^expected bytes or an ASCII string, got int$"
+        ):
+            getattr(part, method)(123)
+
+
 def test_mimepart_data_accepts_common_value_types(data_value):
     with pycurl.Curl() as curl:
         mime = pycurl.CurlMime(curl)
