@@ -102,7 +102,10 @@ WRITEFUNCTION
     receive a read-only ``memoryview`` over libcurl's temporary buffer
     instead of a ``bytes`` copy. The memoryview is released as soon as the
     callback returns, so any reference kept past that point raises
-    ``ValueError`` on access.
+    ``ValueError`` on access. Views derived from it, such as slices or
+    ``memoryview()`` wrappers, are **not** released with it and give no such
+    protection: using one after the callback returns **reads freed memory**.
+    Copy what you need to keep with ``bytes(chunk)``.
 
     Example::
 
@@ -165,7 +168,10 @@ HEADERFUNCTION
     receive a read-only ``memoryview`` over libcurl's temporary buffer
     instead of a ``bytes`` copy. The memoryview is released as soon as the
     callback returns, so any reference kept past that point raises
-    ``ValueError`` on access.
+    ``ValueError`` on access. Views derived from it, such as slices or
+    ``memoryview()`` wrappers, are **not** released with it and give no such
+    protection: using one after the callback returns **reads freed memory**.
+    Copy what you need to keep with ``bytes(chunk)``.
 
     Example::
 
