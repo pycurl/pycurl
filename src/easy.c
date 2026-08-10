@@ -470,6 +470,9 @@ do_curl_duphandle(CurlObject *self, PyObject *Py_UNUSED(ignored))
 
     /* Assign and incref ca certs related references */
     dup->ca_certs_obj = Py_XNewRef(self->ca_certs_obj);
+    if (dup->ca_certs_obj != NULL) {
+        curl_easy_setopt(dup->handle, CURLOPT_SSL_CTX_DATA, dup);
+    }
 
     /* Assign and incref every curl_slist allocated by setopt */
     dup->httpheader = (CurlSlistObject *)Py_XNewRef((PyObject *)self->httpheader);

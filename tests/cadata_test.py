@@ -1,5 +1,7 @@
+import gc
 from io import BytesIO
 from pathlib import Path
+from urllib.parse import urlparse
 
 import pycurl
 import pytest
@@ -7,19 +9,24 @@ import pytest
 from . import util
 
 
+def _ca_cert_data():
+    return (Path(__file__).parent / "certs" / "ca.crt").read_bytes().decode("ASCII")
+
+
+def _fetch_success(curl, url):
+    sio = BytesIO()
+    curl.setopt(pycurl.URL, url)
+    curl.setopt(pycurl.WRITEFUNCTION, sio.write)
+    curl.perform()
+    return sio.getvalue().decode()
+
+
 @util.only_ssl_backends("openssl")
 def test_request_with_verifypeer(ssl_curl, ssl_app):
-    cert_path = Path(__file__).parent / "certs" / "ca.crt"
-    cadata = cert_path.read_bytes().decode("ASCII")
-
-    ssl_curl.setopt(pycurl.URL, f"{ssl_app}/success")
-    sio = BytesIO()
-    ssl_curl.set_ca_certs(cadata)
-    ssl_curl.setopt(pycurl.WRITEFUNCTION, sio.write)
+    ssl_curl.set_ca_certs(_ca_cert_data())
     # self signed certificate, but ca cert should be loaded
     ssl_curl.setopt(pycurl.SSL_VERIFYPEER, 1)
-    ssl_curl.perform()
-    assert sio.getvalue().decode() == "success"
+    assert _fetch_success(ssl_curl, f"{ssl_app}/success") == "success"
 
 
 @util.only_ssl_backends("openssl")
@@ -35,3 +42,23 @@ def test_set_ca_certs_bogus_type(curl):
         str(exc_info.value)
         == "set_ca_certs argument must be a byte string or a Unicode string with ASCII code points only"
     )
+
+
+@pytest.mark.parametrize("free_original", [False, True], ids=["alive", "freed"])
+@util.only_ssl_backends("openssl")
+def test_duphandle_keeps_ca_certs_working(ssl_app, free_original):
+    orig = util.DefaultCurlLocalhost(urlparse(ssl_app).port)
+    orig.set_ca_certs(_ca_cert_data())
+    orig.setopt(pycurl.SSL_VERIFYPEER, 1)
+
+    dup = orig.duphandle()
+    try:
+        if free_original:
+            orig.close()
+            orig = None
+            gc.collect()
+        assert _fetch_success(dup, f"{ssl_app}/success") == "success"
+    finally:
+        dup.close()
+        if orig is not None:
+            orig.close()
