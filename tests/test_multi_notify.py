@@ -114,6 +114,24 @@ def test_info_read_from_inside_callback(notify_setup):
     assert easy in flat_ok
 
 
+def test_callback_keyboard_interrupt_not_replaced(notify_setup, capfd):
+    easy, multi, observed, timer_state = notify_setup
+
+    def on_notify(notification, curl):
+        observed.append((notification, curl))
+        if len(observed) == 1:
+            raise KeyboardInterrupt()
+
+    multi.setopt(pycurl.M_NOTIFYFUNCTION, on_notify)
+    multi.notify_enable(pycurl.M_NOTIFY_INFO_READ, pycurl.M_NOTIFY_EASY_DONE)
+    multi.add_handle(easy)
+
+    with pytest.raises(KeyboardInterrupt):
+        _drive(multi, timer_state, observed)
+
+    assert "SystemError" not in capfd.readouterr().err
+
+
 def test_callback_exception_printed_to_stderr(notify_setup, capfd):
     easy, multi, observed, timer_state = notify_setup
 
