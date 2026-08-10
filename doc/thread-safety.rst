@@ -47,6 +47,10 @@ For Python programs using PycURL, this means:
   are unsafe unless they happen inside that handle's active
   ``WRITEFUNCTION`` callback.
 
+* Individual ``CurlUrl`` reads and writes are thread-safe, on free-threaded
+  builds as well. Mutating a ``CurlUrl`` set through the ``CURLU`` option
+  during a transfer is unsafe.
+
 PycURL handles the necessary SSL locks for OpenSSL/LibreSSL/BoringSSL,
 GnuTLS, NSS, mbedTLS and wolfSSL.
 

@@ -41,6 +41,7 @@ libcurl, including:
 - WebSockets - first-class ``ws://``/``wss://`` support.
 - MIME / multipart forms - the ``pycurl.Mime`` and ``pycurl.MimePart``
   wrappers around libcurl's MIME API.
+- URL parsing - the ``pycurl.CurlUrl`` wrapper around libcurl's URL API.
 - Sockets used for network operations, permitting integration of PycURL
   into the application's I/O loop (e.g., using Tornado_).
 - Built-in ``asyncio`` support via ``pycurl.AsyncCurlMulti``, an asyncio
