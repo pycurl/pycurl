@@ -339,6 +339,12 @@ PYCURL_INTERNAL void pycurl_ssl_cleanup(void);
     if (!pycurl_python_enter(tstate)) { \
         warn_failed_to_acquire_thread(#callback_name " failed to acquire thread"); \
         return (retval); \
+    } \
+    /* a pending exception would turn this callback's PyObject_Call into a \
+       SystemError, replacing the original */ \
+    if (PyErr_Occurred()) { \
+        PYCURL_PYTHON_LEAVE(); \
+        return (retval); \
     }
 
 /* Convert socket values without truncation on Win64 where curl_socket_t is SOCKET. */

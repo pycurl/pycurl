@@ -457,6 +457,11 @@ multi_notify_callback(CURLM *multi,
             "multi_notify_callback failed to acquire thread");
         return;
     }
+    /* a pending exception would turn this callback's PyObject_Call into a
+       SystemError, replacing the original */
+    if (PyErr_Occurred()) {
+        goto done;
+    }
 
     /* The callback may fire during curl_multi_cleanup after Py_CLEAR(n_cb). */
     if (self->n_cb == NULL) {
