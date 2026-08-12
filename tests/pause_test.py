@@ -1,6 +1,5 @@
-#! /usr/bin/env python
-# vi:ts=4:et
 import json
+import threading
 import time
 from io import BytesIO
 
@@ -353,3 +352,44 @@ def test_multi_excludes_low_speed_limit_and_resets_timer(app, curl):
 def test_easy_excludes_low_speed_limit_and_resets_timer(app, curl):
     """Paused transfers ignore low-speed checks until unpaused (easy)."""
     _assert_low_speed_timeout(app, curl, _run_with_unpause_easy)
+
+
+@pytest.mark.parametrize("op", ["pause", "unpause"])
+def test_pause_from_another_thread_is_refused(app, curl, op):
+    curl.setopt(pycurl.URL, f"{app}/success")
+    in_callback = threading.Event()
+    release = threading.Event()
+    perform_error = []
+
+    def writefunc(data):
+        in_callback.set()
+        release.wait(10)
+        return len(data)
+
+    curl.setopt(pycurl.WRITEFUNCTION, writefunc)
+
+    def perform():
+        try:
+            curl.perform()
+        except pycurl.error as exc:
+            perform_error.append(exc)
+
+    thread = threading.Thread(target=perform, daemon=True)
+    thread.start()
+    try:
+        assert in_callback.wait(10)
+        with pytest.raises(
+            pycurl.error,
+            match=rf"^cannot invoke {op}\(\) - perform\(\) is currently "
+            r"running on another thread$",
+        ):
+            if op == "pause":
+                curl.pause(pycurl.PAUSE_ALL)
+            else:
+                curl.unpause()
+    finally:
+        release.set()
+        thread.join(10)
+
+    assert not thread.is_alive()
+    assert perform_error == []

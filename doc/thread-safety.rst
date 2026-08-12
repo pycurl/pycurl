@@ -21,7 +21,11 @@ For Python programs using PycURL, this means:
 
 * Accessing a PycURL object that is involved in an active transfer from
   Python code *outside of a libcurl callback for the PycURL object in question*
-  is unsafe.
+  is unsafe. Where PycURL can detect this, it raises ``pycurl.error``
+  instead of proceeding: most methods refuse while ``perform()`` is
+  running, and ``pause()`` / ``unpause()`` refuse when called from a
+  thread other than the performing one, which `curl_easy_pause`_ does
+  not support. Misuse PycURL cannot detect remains undefined behavior.
 
 * ``CurlShare`` is thread-safe: methods may be called concurrently
   from multiple threads, and different ``Curl`` handles attached to
@@ -44,8 +48,8 @@ For Python programs using PycURL, this means:
   follows the same one-handle-one-thread rule: do not call ``ws_send``
   from one thread while ``ws_recv`` runs on another. Serialise access
   with a lock. Calls from another thread while ``perform()`` is running
-  are unsafe unless they happen inside that handle's active
-  ``WRITEFUNCTION`` callback.
+  are rejected with ``pycurl.error`` unless they happen inside that
+  handle's active ``WRITEFUNCTION`` callback.
 
 * Individual ``CurlUrl`` reads and writes are thread-safe, on free-threaded
   builds as well. Mutating a ``CurlUrl`` set through the ``CURLU`` option
@@ -61,5 +65,6 @@ work properly in multi-threaded programs. When using PycURL objects from
 multiple Python threads ``NOSIGNAL`` option `must be given`_.
 
 .. _libcurl thread safety documentation: https://curl.haxx.se/libcurl/c/threadsafe.html
+.. _curl_easy_pause: https://curl.se/libcurl/c/curl_easy_pause.html
 .. _CURLSHOPT_SHARE: https://curl.se/libcurl/c/CURLSHOPT_SHARE.html
 .. _must be given: https://github.com/curl/curl/issues/1003

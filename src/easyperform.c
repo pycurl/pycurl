@@ -283,7 +283,10 @@ do_curl_pause_internal(CurlObject *self, int bitmask, const char *op_name)
     CURLcode res;
     PyThreadState *saved_state;
 
-    if (check_curl_state(self, PYCURL_REQUIRE_HANDLE, op_name) != 0) {
+    /* "While it may feel tempting, take care and notice that you cannot
+       call this function from another thread."
+       https://curl.se/libcurl/c/curl_easy_pause.html */
+    if (check_curl_state(self, PYCURL_REQUIRE_HANDLE | PYCURL_REQUIRE_SAME_THREAD, op_name) != 0) {
         return NULL;
     }
 
