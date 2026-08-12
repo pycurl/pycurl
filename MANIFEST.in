@@ -20,7 +20,6 @@ include doc/static/favicon.ico
 include examples/*.py
 include examples/quickstart/*.py
 include examples/tests/*.py
-include src/Makefile
 include src/docstrings.c
 include src/docstrings.h
 include src/easy.c
@@ -28,6 +27,7 @@ include src/easycb.c
 include src/easyinfo.c
 include src/easyopt.c
 include src/easyperform.c
+include src/easyws.c
 include src/mime.c
 include src/module.c
 include src/multi.c
