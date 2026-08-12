@@ -183,13 +183,24 @@ assert_curl_state(const CurlObject *self)
 PYCURL_INTERNAL int
 check_curl_state(const CurlObject *self, int flags, const char *name)
 {
+    PyThreadState *callback_state;
+
     assert_curl_state(self);
     if ((flags & PYCURL_REQUIRE_HANDLE) && self->handle == NULL) {
         PyErr_Format(ErrorObject, "cannot invoke %s() - no curl handle", name);
         return -1;
     }
-    if ((flags & PYCURL_REQUIRE_NOT_RUNNING) && pycurl_get_thread_state(self) != NULL) {
+    callback_state = pycurl_get_thread_state(self);
+    if ((flags & PYCURL_REQUIRE_NOT_RUNNING) && callback_state != NULL) {
         PyErr_Format(ErrorObject, "cannot invoke %s() - perform() is currently running", name);
+        return -1;
+    }
+    if ((flags & PYCURL_REQUIRE_SAME_THREAD)
+        && callback_state != NULL
+        && PyThreadState_Get() != callback_state) {
+        PyErr_Format(ErrorObject,
+            "cannot invoke %s() - perform() is currently running "
+            "on another thread", name);
         return -1;
     }
     return 0;

@@ -741,6 +741,7 @@ do_curl_ws_close(CurlObject *self, PyObject *args, PyObject *kwds);
 /* Bit flags for check_curl_state / check_multi_state. */
 #define PYCURL_REQUIRE_HANDLE       (1 << 0)
 #define PYCURL_REQUIRE_NOT_RUNNING  (1 << 1)
+#define PYCURL_REQUIRE_SAME_THREAD  (1 << 2)
 
 PYCURL_INTERNAL int
 check_curl_state(const CurlObject *self, int flags, const char *name);
