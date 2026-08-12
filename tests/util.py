@@ -305,26 +305,32 @@ def only_psl(fn):
 
 
 def guard_unknown_libcurl_option(fn):
-    """Converts curl error 48, CURLE_UNKNOWN_OPTION, into a SkipTest
-    exception. This is meant to be used with tests exercising libcurl
-    features that depend on external libraries, such as libssh2/gssapi,
-    where libcurl does not provide a way of detecting whether the
-    required libraries were compiled against."""
+    """Converts an option-unavailable curl error into a SkipTest exception.
+    This is meant to be used with tests exercising libcurl features that
+    depend on external libraries, such as libssh2/gssapi, where libcurl
+    does not provide a way of detecting whether the required libraries
+    were compiled against. Any other curl error is a real failure and is
+    re-raised."""
 
     import pycurl
+
+    # CURLE_UNKNOWN_OPTION means libcurl does not know the option at all,
+    # CURLE_NOT_BUILT_IN that it knows it but the backend lacks support.
+    # Both constants exist only when built against libcurl 7.21.5 or later.
+    unavailable = [
+        getattr(pycurl, name)
+        for name in ("E_UNKNOWN_OPTION", "E_NOT_BUILT_IN")
+        if hasattr(pycurl, name)
+    ]
 
     @functools.wraps(fn)
     def decorated(*args, **kwargs):
         try:
             return fn(*args, **kwargs)
-        except pycurl.error:
-            exc = sys.exc_info()[1]
-            # E_UNKNOWN_OPTION is available as of libcurl 7.21.5
-            if (
-                hasattr(pycurl, "E_UNKNOWN_OPTION")
-                and exc.args[0] == pycurl.E_UNKNOWN_OPTION
-            ):
-                raise unittest.SkipTest("CURLE_UNKNOWN_OPTION, skipping test")
+        except pycurl.error as exc:
+            if exc.args[0] in unavailable:
+                raise unittest.SkipTest(str(exc))
+            raise
 
     return decorated
 
