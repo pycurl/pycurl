@@ -58,7 +58,7 @@ libcurl, including:
 Requirements
 ------------
 
-- Python 3.10-3.14.
+- Python 3.10-3.15.
 - libcurl 7.19.0 or better.
 
 
