@@ -783,34 +783,6 @@ static PyObject *do_curlmimepart_headers(CurlMimePartObject *self, PyObject *arg
 static PyObject *do_curlmimepart_subparts(CurlMimePartObject *self, PyObject *arg);
 
 static int
-curlmimepart_data_as_string_or_buffer(PyObject *arg,
-    char **data,
-    Py_ssize_t *data_len,
-    PyObject **encoded_obj,
-    Py_buffer *view,
-    int *view_active)
-{
-    if (PyObject_CheckBuffer(arg)) {
-        if (PyObject_GetBuffer(arg, view, PyBUF_SIMPLE) != 0) {
-            return -1;
-        }
-
-        *view_active = 1;
-        *data = (char *)view->buf;
-        *data_len = view->len;
-        return 0;
-    }
-
-    if (PyBytes_Check(arg) || PyUnicode_Check(arg)) {
-        return PyText_AsStringAndSize(arg, data, data_len, encoded_obj);
-    }
-
-    PyErr_SetString(PyExc_TypeError,
-        "data() argument must be a byte string, ASCII-only Unicode string, or a buffer object");
-    return -1;
-}
-
-static int
 curlmime_validate_text_arg(PyObject *obj, const char *name)
 {
     char *value;
@@ -847,8 +819,8 @@ curlmime_validate_data_arg(PyObject *obj)
         return 0;
     }
 
-    if (curlmimepart_data_as_string_or_buffer(obj, &data, &data_len,
-            &encoded_obj, &view, &view_active) != 0)
+    if (PyText_OrBuffer_AsStringAndSize(obj, &data, &data_len,
+            &encoded_obj, &view, &view_active, "data() argument") != 0)
     {
         return -1;
     }
@@ -1453,8 +1425,8 @@ do_curlmimepart_data(CurlMimePartObject *self, PyObject *arg)
         return NULL;
     }
 
-    if (curlmimepart_data_as_string_or_buffer(arg, &data, &data_len,
-            &encoded_obj, &view, &view_active) != 0)
+    if (PyText_OrBuffer_AsStringAndSize(arg, &data, &data_len,
+            &encoded_obj, &view, &view_active, "data() argument") != 0)
     {
         return NULL;
     }

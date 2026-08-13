@@ -1,3 +1,5 @@
+import array
+
 import pycurl
 import pytest
 
@@ -251,6 +253,16 @@ def test_capath(curl):
     curl.setopt(curl.CAPATH, "/bogus-capath")
 
 
+def _exercise_blob_option(curl, option):
+    curl.setopt(option, "bogus-blob-as-str")
+    curl.setopt(option, b"bogus-blob-as-bytes")
+    curl.setopt(option, bytearray(b"bogus-blob-as-bytearray"))
+    curl.setopt(option, memoryview(b"bogus-blob-as-memoryview"))
+    curl.setopt(option, array.array("B", b"bogus-blob-as-array"))
+    curl.setopt(option, None)
+    curl.unsetopt(option)
+
+
 @util.only_ssl_backends_with_min_libcurl(
     {
         "openssl": (7, 77, 0),
@@ -262,37 +274,25 @@ def test_capath(curl):
     }
 )
 def test_cainfo_blob(curl):
-    curl.setopt(curl.CAINFO_BLOB, "bogus-cainfo-blob-as-str")
-    curl.setopt(curl.CAINFO_BLOB, None)
-    curl.setopt(curl.CAINFO_BLOB, b"bogus-cainfo-blob-as-bytes")
-    curl.unsetopt(curl.CAINFO_BLOB)
+    _exercise_blob_option(curl, curl.CAINFO_BLOB)
 
 
 @util.min_libcurl(7, 71, 0)
 @util.only_ssl_backends("openssl", "schannel", "mbedtls", "wolfssl")
 def test_sslcert_blob(curl):
-    curl.setopt(curl.SSLCERT_BLOB, "bogus-sslcert-blob-as-str")
-    curl.setopt(curl.SSLCERT_BLOB, None)
-    curl.setopt(curl.SSLCERT_BLOB, b"bogus-sslcert-blob-as-bytes")
-    curl.unsetopt(curl.SSLCERT_BLOB)
+    _exercise_blob_option(curl, curl.SSLCERT_BLOB)
 
 
 @util.min_libcurl(7, 71, 0)
 @util.only_ssl_backends("openssl", "wolfssl")
 def test_sslkey_blob(curl):
-    curl.setopt(curl.SSLKEY_BLOB, "bogus-sslkey-blob-as-str")
-    curl.setopt(curl.SSLKEY_BLOB, None)
-    curl.setopt(curl.SSLKEY_BLOB, b"bogus-sslkey-blob-as-bytes")
-    curl.unsetopt(curl.SSLKEY_BLOB)
+    _exercise_blob_option(curl, curl.SSLKEY_BLOB)
 
 
 @util.min_libcurl(7, 71, 0)
 @util.only_ssl_backends("openssl")
 def test_issuercert_blob(curl):
-    curl.setopt(curl.ISSUERCERT_BLOB, "bogus-issuercert-blob-as-str")
-    curl.setopt(curl.ISSUERCERT_BLOB, None)
-    curl.setopt(curl.ISSUERCERT_BLOB, b"bogus-issuercert-blob-as-bytes")
-    curl.unsetopt(curl.ISSUERCERT_BLOB)
+    _exercise_blob_option(curl, curl.ISSUERCERT_BLOB)
 
 
 # CURLOPT_PROXY_CAPATH was introduced in libcurl-7.52.0
@@ -311,10 +311,7 @@ def test_proxy_cainfo(curl):
 @util.min_libcurl(7, 77, 0)
 @util.only_ssl_backends("openssl", "rustls", "schannel")
 def test_proxy_cainfo_blob(curl):
-    curl.setopt(curl.PROXY_CAINFO_BLOB, "bogus-cainfo-blob-as-str")
-    curl.setopt(curl.PROXY_CAINFO_BLOB, None)
-    curl.setopt(curl.PROXY_CAINFO_BLOB, b"bogus-cainfo-blob-as-bytes")
-    curl.unsetopt(curl.PROXY_CAINFO_BLOB)
+    _exercise_blob_option(curl, curl.PROXY_CAINFO_BLOB)
 
 
 @util.min_libcurl(7, 52, 0)
@@ -332,10 +329,7 @@ def test_proxy_sslcert(curl):
 @util.min_libcurl(7, 71, 0)
 @util.only_ssl_backends("openssl", "schannel")
 def test_proxy_sslcert_blob(curl):
-    curl.setopt(curl.PROXY_SSLCERT_BLOB, "bogus-sslcert-blob-as-str")
-    curl.setopt(curl.PROXY_SSLCERT_BLOB, None)
-    curl.setopt(curl.PROXY_SSLCERT_BLOB, b"bogus-sslcert-blob-as-bytes")
-    curl.unsetopt(curl.PROXY_SSLCERT_BLOB)
+    _exercise_blob_option(curl, curl.PROXY_SSLCERT_BLOB)
 
 
 @util.min_libcurl(7, 52, 0)
@@ -353,10 +347,7 @@ def test_proxy_sslkey(curl):
 @util.min_libcurl(7, 71, 0)
 @util.only_ssl_backends("openssl")
 def test_proxy_sslkey_blob(curl):
-    curl.setopt(curl.PROXY_SSLKEY_BLOB, "bogus-sslkey-blob-as-str")
-    curl.setopt(curl.PROXY_SSLKEY_BLOB, None)
-    curl.setopt(curl.PROXY_SSLKEY_BLOB, b"bogus-sslkey-blob-as-bytes")
-    curl.unsetopt(curl.PROXY_SSLKEY_BLOB)
+    _exercise_blob_option(curl, curl.PROXY_SSLKEY_BLOB)
 
 
 @util.min_libcurl(7, 52, 0)
@@ -368,10 +359,7 @@ def test_proxy_sslkeytype(curl):
 @util.min_libcurl(7, 71, 0)
 @util.only_ssl_backends("openssl")
 def test_proxy_issuercert_blob(curl):
-    curl.setopt(curl.PROXY_ISSUERCERT_BLOB, "bogus-issuercert-blob-as-str")
-    curl.setopt(curl.PROXY_ISSUERCERT_BLOB, None)
-    curl.setopt(curl.PROXY_ISSUERCERT_BLOB, b"bogus-issuercert-blob-as-bytes")
-    curl.unsetopt(curl.PROXY_ISSUERCERT_BLOB)
+    _exercise_blob_option(curl, curl.PROXY_ISSUERCERT_BLOB)
 
 
 @util.min_libcurl(7, 52, 0)

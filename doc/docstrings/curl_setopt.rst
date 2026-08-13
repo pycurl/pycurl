@@ -44,6 +44,13 @@ values of different types:
     c.setopt(pycurl.URL, "http://www.python.org/")
     c.setopt(pycurl.URL, b"http://www.python.org/")
 
+- Blob options, that is the ``*_BLOB`` options, accept the same values as
+  string options, plus any object supporting the buffer protocol such as
+  ``bytearray``, ``memoryview`` or ``array.array``. The value is copied, so
+  it does not have to be kept alive. Example::
+
+    c.setopt(pycurl.SSLCERT_BLOB, memoryview(certificate))
+
 - ``HTTP200ALIASES``, ``HTTPHEADER``, ``POSTQUOTE``, ``PREQUOTE``,
   ``PROXYHEADER`` and
   ``QUOTE`` accept a list or tuple of strings. The same rules apply to these
