@@ -530,7 +530,11 @@ PYCURL_IGNORE_DEPRECATED_END
 
 
 #define IS_LONG_OPTION(o)   (o < CURLOPTTYPE_OBJECTPOINT)
-#define IS_OFF_T_OPTION(o)  (o >= CURLOPTTYPE_OFF_T)
+#ifdef CURLOPTTYPE_BLOB
+#define IS_OFF_T_OPTION(o)  ((o) >= CURLOPTTYPE_OFF_T && (o) < CURLOPTTYPE_BLOB)
+#else
+#define IS_OFF_T_OPTION(o)  ((o) >= CURLOPTTYPE_OFF_T)
+#endif
 
 
 static PyObject *
