@@ -34,6 +34,31 @@ def test_float_value_for_integer_option(curl):
         curl.setopt(pycurl.VERBOSE, 1.0)
 
 
+BLOB_OPTIONS = [
+    name
+    for name in (
+        # libcurl 7.71.0
+        "SSLCERT_BLOB",
+        "SSLKEY_BLOB",
+        "PROXY_SSLCERT_BLOB",
+        "PROXY_SSLKEY_BLOB",
+        "ISSUERCERT_BLOB",
+        "PROXY_ISSUERCERT_BLOB",
+        # libcurl 7.77.0
+        "CAINFO_BLOB",
+        "PROXY_CAINFO_BLOB",
+    )
+    if hasattr(pycurl, name)
+]
+
+
+@pytest.mark.parametrize("value", [12345, True], ids=["int", "bool"])
+@pytest.mark.parametrize("name", BLOB_OPTIONS)
+def test_integer_value_for_blob_option(curl, name, value):
+    with pytest.raises(TypeError, match="^integers are not supported for this option$"):
+        curl.setopt(getattr(pycurl, name), value)
+
+
 def test_httpheader_list(curl):
     curl.setopt(pycurl.HTTPHEADER, ["Accept:"])
 
