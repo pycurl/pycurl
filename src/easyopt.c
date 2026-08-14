@@ -293,15 +293,50 @@ error:
 }
 
 
+#ifdef CURLOPTTYPE_BLOB
+/* CURL_BLOB_COPY makes libcurl copy the data, so the buffer only has to stay
+   valid across curl_easy_setopt(). */
+static PyObject *
+do_curl_setopt_blob(CurlObject *self, int option, PyObject *obj)
+{
+    struct curl_blob curlblob;
+    PyObject *encoded_obj = NULL;
+    Py_buffer view;
+    int view_active = 0;
+    char *str;
+    Py_ssize_t len;
+    int res;
+
+    if (PyText_OrBuffer_AsStringAndSize(obj, &str, &len, &encoded_obj,
+            &view, &view_active, "blob option value") != 0) {
+        return NULL;
+    }
+
+    curlblob.data = str;
+    curlblob.len = len;
+    curlblob.flags = CURL_BLOB_COPY;
+
+    res = curl_easy_setopt(self->handle, (CURLoption)option, &curlblob);
+
+    if (view_active) {
+        PyBuffer_Release(&view);
+    }
+    Py_XDECREF(encoded_obj);
+
+    if (res != CURLE_OK) {
+        CURLERROR_RETVAL();
+    }
+    Py_RETURN_NONE;
+}
+#endif
+
+
 static PyObject *
 do_curl_setopt_string_impl(CurlObject *self, int option, PyObject *obj)
 {
     char *str = NULL;
     Py_ssize_t len = -1;
     PyObject *encoded_obj;
-#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 71, 0)
-    struct curl_blob curlblob;
-#endif
     int res;
 
     /* Check that the option specified a string as well as the input */
@@ -465,33 +500,6 @@ PYCURL_IGNORE_DEPRECATED_END
             CURLERROR_RETVAL();
         }
         break;
-#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 71, 0)
-    case CURLOPT_SSLCERT_BLOB:
-    case CURLOPT_SSLKEY_BLOB:
-    case CURLOPT_PROXY_SSLCERT_BLOB:
-    case CURLOPT_PROXY_SSLKEY_BLOB:
-    case CURLOPT_ISSUERCERT_BLOB:
-    case CURLOPT_PROXY_ISSUERCERT_BLOB:
-#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 77, 0)
-    case CURLOPT_CAINFO_BLOB:
-    case CURLOPT_PROXY_CAINFO_BLOB:
-#endif
-        if (PyText_AsStringAndSize(obj, &str, &len, &encoded_obj) != 0)
-            return NULL;
-
-        curlblob.data = str;
-        curlblob.len = len;
-        curlblob.flags = CURL_BLOB_COPY;
-
-        res = curl_easy_setopt(self->handle, (CURLoption)option, &curlblob);
-        if (res != CURLE_OK) {
-            Py_XDECREF(encoded_obj);
-            CURLERROR_RETVAL();
-        }
-        Py_XDECREF(encoded_obj);
-        Py_RETURN_NONE;
-        break;
-#endif
     default:
         PyErr_SetString(PyExc_TypeError, "strings are not supported for this option");
         return NULL;
@@ -532,6 +540,7 @@ PYCURL_IGNORE_DEPRECATED_END
 #define IS_LONG_OPTION(o)   (o < CURLOPTTYPE_OBJECTPOINT)
 #ifdef CURLOPTTYPE_BLOB
 #define IS_OFF_T_OPTION(o)  ((o) >= CURLOPTTYPE_OFF_T && (o) < CURLOPTTYPE_BLOB)
+#define IS_BLOB_OPTION(o)   ((o) >= CURLOPTTYPE_BLOB)
 #else
 #define IS_OFF_T_OPTION(o)  ((o) >= CURLOPTTYPE_OFF_T)
 #endif
@@ -1331,6 +1340,13 @@ do_curl_setopt(CurlObject *self, PyObject *args, PyObject *kwargs)
     if (obj == Py_None) {
         return util_curl_unsetopt(self, option);
     }
+
+#ifdef CURLOPTTYPE_BLOB
+    /* Blob options accept text and buffer objects alike */
+    if (IS_BLOB_OPTION(option)) {
+        return do_curl_setopt_blob(self, option, obj);
+    }
+#endif
 
     /* Handle the case of string arguments */
     if (PyText_Check(obj)) {

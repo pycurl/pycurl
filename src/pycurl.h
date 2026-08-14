@@ -380,6 +380,9 @@ PyListOrTuple_GetItem(PyObject *v, Py_ssize_t i, int which);
 
 PYCURL_INTERNAL int
 PyText_AsStringAndSize(PyObject *obj, char **buffer, Py_ssize_t *length, PyObject **encoded_obj);
+PYCURL_INTERNAL int
+PyText_OrBuffer_AsStringAndSize(PyObject *obj, char **buffer, Py_ssize_t *length,
+    PyObject **encoded_obj, Py_buffer *view, int *view_active, const char *what);
 PYCURL_INTERNAL char *
 PyText_AsString_NoNUL(PyObject *obj, PyObject **encoded_obj);
 PYCURL_INTERNAL int

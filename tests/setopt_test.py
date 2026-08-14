@@ -52,11 +52,24 @@ BLOB_OPTIONS = [
 ]
 
 
-@pytest.mark.parametrize("value", [12345, True], ids=["int", "bool"])
+@pytest.mark.parametrize("value", [12345, True, 1.5], ids=["int", "bool", "float"])
 @pytest.mark.parametrize("name", BLOB_OPTIONS)
-def test_integer_value_for_blob_option(curl, name, value):
-    with pytest.raises(TypeError, match="^integers are not supported for this option$"):
+def test_unsupported_value_for_blob_option(curl, name, value):
+    with pytest.raises(
+        TypeError,
+        match=(
+            "^blob option value must be a byte string, ASCII-only Unicode "
+            "string, or a buffer object$"
+        ),
+    ):
         curl.setopt(getattr(pycurl, name), value)
+
+
+@pytest.mark.skipif(not BLOB_OPTIONS, reason="libcurl without blob options")
+def test_noncontiguous_buffer_for_blob_option(curl):
+    option = getattr(pycurl, BLOB_OPTIONS[0])
+    with pytest.raises(BufferError):
+        curl.setopt(option, memoryview(bytearray(b"abcdefgh"))[::2])
 
 
 def test_httpheader_list(curl):
