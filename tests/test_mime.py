@@ -200,6 +200,31 @@ def test_mimepost_replacement_keeps_new_pin():
         curl.close()
 
 
+def _replace_httppost_with_mimepost(curl):
+    with pytest.warns(DeprecationWarning, match="HTTPPOST is deprecated"):
+        curl.setopt(
+            pycurl.HTTPPOST, [("formfield", [pycurl.FORM_CONTENTS, "form-value"])]
+        )
+
+    mime = pycurl.CurlMime(curl)
+    mime.add_field("mimefield", "mime-value")
+    curl.setopt(pycurl.MIMEPOST, mime)
+    return {"mimefield": "mime-value"}
+
+
+def test_mimepost_replacing_httppost_sends_the_mime(app):
+    with pycurl.Curl() as curl:
+        expected = _replace_httppost_with_mimepost(curl)
+        assert _perform_json(curl, f"{app}/postfields") == expected
+
+
+def test_duphandle_after_mimepost_replaced_httppost(app):
+    with pycurl.Curl() as curl:
+        expected = _replace_httppost_with_mimepost(curl)
+        with curl.duphandle() as dup:
+            assert _perform_json(dup, f"{app}/postfields") == expected
+
+
 def test_mime_data_cb_duphandle_free_called_once():
     curl = pycurl.Curl()
     dup = None

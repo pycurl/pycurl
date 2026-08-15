@@ -590,6 +590,8 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
     /* List of all references that have been INCed as a result of
      * this operation */
     PyObject *ref_params = NULL;
+    /* Encoded values, alive until curl_formadd() has copied them */
+    PyObject *encoded_objs = NULL;
     PyObject *nencoded_obj, *cencoded_obj, *oencoded_obj;
     int which_httppost_item, which_httppost_option;
     PyObject *httppost_option;
@@ -676,12 +678,18 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
                 PyErr_NoMemory();
                 goto error;
             }
+            encoded_objs = PyList_New((Py_ssize_t)0);
+            if (encoded_objs == NULL) {
+                PyMem_Free(forms);
+                Py_XDECREF(nencoded_obj);
+                goto error;
+            }
 
             /* Iterate all the tuple members pairwise */
             for (j = 0, k = 0, l = 0; j < tlen; j += 2, l++) {
                 char *ostr;
                 Py_ssize_t olen;
-                int val;
+                int val, rv;
 
                 if (j == (tlen-1)) {
                     PyErr_SetString(PyExc_TypeError, "expected value");
@@ -724,6 +732,16 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
                     Py_XDECREF(nencoded_obj);
                     goto error;
                 }
+                /* ostr points into oencoded_obj, which encoded_objs now owns */
+                if (oencoded_obj != NULL) {
+                    rv = PyList_Append(encoded_objs, oencoded_obj);
+                    Py_DECREF(oencoded_obj);
+                    if (rv != 0) {
+                        PyMem_Free(forms);
+                        Py_XDECREF(nencoded_obj);
+                        goto error;
+                    }
+                }
                 forms[k].option = val;
                 forms[k].value = ostr;
                 ++k;
@@ -740,7 +758,6 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
                     if (ref_params == NULL) {
                         ref_params = PyList_New((Py_ssize_t)0);
                         if (ref_params == NULL) {
-                            Py_XDECREF(oencoded_obj);
                             PyMem_Free(forms);
                             Py_XDECREF(nencoded_obj);
                             goto error;
@@ -757,7 +774,6 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
 
                     /* Ensure that the buffer remains alive until curl_easy_cleanup() */
                     if (PyList_Append(ref_params, obj) != 0) {
-                        Py_XDECREF(oencoded_obj);
                         PyMem_Free(forms);
                         Py_XDECREF(nencoded_obj);
                         goto error;
@@ -778,7 +794,7 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
                                CURLFORM_ARRAY, forms,
                                CURLFORM_END);
             PYCURL_IGNORE_DEPRECATED_END
-            Py_XDECREF(oencoded_obj);
+            Py_CLEAR(encoded_objs);
             PyMem_Free(forms);
             if (res != CURLE_OK) {
                 Py_XDECREF(nencoded_obj);
@@ -834,6 +850,7 @@ error:
     PYCURL_IGNORE_DEPRECATED_BEGIN
     curl_formfree(post);
     PYCURL_IGNORE_DEPRECATED_END
+    Py_XDECREF(encoded_objs);
     Py_XDECREF(ref_params);
     return NULL;
 }
@@ -1202,6 +1219,20 @@ do_curl_setopt_mimepost(CurlObject *self, PyObject *obj)
         return NULL;
     }
 
+    /*
+     * CURLOPT_HTTPPOST and CURLOPT_MIMEPOST are mutually exclusive in libcurl.
+     * Unset the form first: libcurl has to stop pointing at it before
+     * curl_formfree() runs, and unsetting it later would clear the new mime.
+     */
+    if (self->httppost != NULL) {
+        PYCURL_IGNORE_DEPRECATED_BEGIN
+        res = curl_easy_setopt(self->handle, CURLOPT_HTTPPOST, NULL);
+        PYCURL_IGNORE_DEPRECATED_END
+        if (res != CURLE_OK) {
+            CURLERROR_RETVAL();
+        }
+    }
+
     res = curl_easy_setopt(self->handle, CURLOPT_MIMEPOST, mime->mime);
     if (res != CURLE_OK) {
         CURLERROR_RETVAL();
@@ -1212,7 +1243,7 @@ do_curl_setopt_mimepost(CurlObject *self, PyObject *obj)
     self->mimepost_obj = obj;
     Py_XDECREF(old_mimepost_obj);
 
-    util_curl_xdecref(self, PYCURL_MEMGROUP_HTTPPOST, self->handle);
+    util_curl_xdecref(self, PYCURL_MEMGROUP_HTTPPOST, NULL);
 
     Py_RETURN_NONE;
 }
