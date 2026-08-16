@@ -1,4 +1,5 @@
 import sys
+import warnings
 from io import BytesIO
 
 import pycurl
@@ -204,3 +205,39 @@ def test_httpheader_replace_refcount(curl):
     curl.setopt(pycurl.HTTPHEADER, first)
     curl.setopt(pycurl.HTTPHEADER, ["x-test: second"])
     assert sys.getrefcount(first) == before
+
+
+def test_httppost_multiple_options_do_not_leak(curl):
+    form = [
+        (
+            "field",
+            [pycurl.FORM_CONTENTS, "v" * 64, pycurl.FORM_CONTENTTYPE, "text/plain"],
+        )
+    ]
+
+    def set_form(n):
+        for _ in range(n):
+            curl.setopt(pycurl.HTTPPOST, form)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        set_form(200)
+        before = sys.getallocatedblocks()
+        set_form(1000)
+        assert sys.getallocatedblocks() - before < 100
+
+
+def test_httppost_bufferptr_stays_pinned(curl):
+    payload = bytes(32)
+    buffer_form = [
+        ("field", [pycurl.FORM_BUFFER, "name.txt", pycurl.FORM_BUFFERPTR, payload])
+    ]
+    before = sys.getrefcount(payload)
+
+    with pytest.warns(DeprecationWarning, match="HTTPPOST is deprecated"):
+        curl.setopt(pycurl.HTTPPOST, buffer_form)
+    assert sys.getrefcount(payload) == before + 1
+
+    with pytest.warns(DeprecationWarning, match="HTTPPOST is deprecated"):
+        curl.setopt(pycurl.HTTPPOST, [("field", [pycurl.FORM_CONTENTS, "other"])])
+    assert sys.getrefcount(payload) == before
