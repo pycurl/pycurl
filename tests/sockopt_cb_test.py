@@ -1,84 +1,104 @@
-#! /usr/bin/env python
-# vi:ts=4:et
+import pytest
 
-from . import localhost
-import unittest
 import pycurl
 
 from . import util
-from . import appmanager
 
-setup_module, teardown_module = appmanager.setup(('app', 8380))
 
-class SockoptCbTest(unittest.TestCase):
-    def setUp(self):
-        self.curl = util.DefaultCurl()
-        self.curl.setopt(self.curl.URL, 'http://%s:8380/success' % localhost)
+@pytest.fixture
+def sockopt_curl(curl, app):
+    curl.setopt(pycurl.URL, f"{app}/success")
+    return curl
 
-    def tearDown(self):
-        self.curl.close()
 
-    def test_sockoptfunction_ok(self):
-        called = {}
+def _record_and_return(called, value):
+    def sockoptfunction(curlfd, purpose):
+        called.append(True)
+        return value
 
-        def sockoptfunction(curlfd, purpose):
-            called['called'] = True
-            return 0
+    return sockoptfunction
 
-        self.curl.setopt(pycurl.SOCKOPTFUNCTION, sockoptfunction)
 
-        self.curl.perform()
-        assert called['called']
+def test_sockoptfunction_ok(sockopt_curl):
+    called = []
+    sockopt_curl.setopt(pycurl.SOCKOPTFUNCTION, _record_and_return(called, 0))
 
-    def test_sockoptfunction_fail(self):
-        called = {}
+    sockopt_curl.perform()
+    assert called
 
-        def sockoptfunction(curlfd, purpose):
-            called['called'] = True
-            return 1
 
-        self.curl.setopt(pycurl.SOCKOPTFUNCTION, sockoptfunction)
+def _assert_connection_refused(curl, return_value):
+    called = []
+    curl.setopt(pycurl.SOCKOPTFUNCTION, _record_and_return(called, return_value))
 
-        try:
-            self.curl.perform()
-            self.fail('should have raised')
-        except pycurl.error as e:
-            assert e.args[0] in [pycurl.E_ABORTED_BY_CALLBACK, pycurl.E_COULDNT_CONNECT], \
-                'Unexpected pycurl error code %s' % e.args[0]
-        assert called['called']
+    with pytest.raises(pycurl.error) as exc_info:
+        curl.perform()
+    assert exc_info.value.args[0] in (
+        pycurl.E_ABORTED_BY_CALLBACK,
+        pycurl.E_COULDNT_CONNECT,
+    )
+    assert called
 
-    def test_sockoptfunction_bogus_return(self):
-        called = {}
 
-        def sockoptfunction(curlfd, purpose):
-            called['called'] = True
-            return 'bogus'
+def test_sockoptfunction_fail(sockopt_curl):
+    _assert_connection_refused(sockopt_curl, 1)
 
-        self.curl.setopt(pycurl.SOCKOPTFUNCTION, sockoptfunction)
 
-        try:
-            self.curl.perform()
-            self.fail('should have raised')
-        except pycurl.error as e:
-            assert e.args[0] in [pycurl.E_ABORTED_BY_CALLBACK, pycurl.E_COULDNT_CONNECT], \
-                'Unexpected pycurl error code %s' % e.args[0]
-        assert called['called']
+class _UnreprableReturn:
+    def __repr__(self):
+        raise ValueError("no repr")
 
-    @util.min_libcurl(7, 28, 0)
-    def test_socktype_accept(self):
-        assert hasattr(pycurl, 'SOCKTYPE_ACCEPT')
-        assert hasattr(self.curl, 'SOCKTYPE_ACCEPT')
 
-    def test_socktype_ipcxn(self):
-        assert hasattr(pycurl, 'SOCKTYPE_IPCXN')
-        assert hasattr(self.curl, 'SOCKTYPE_IPCXN')
+@pytest.mark.parametrize(
+    "return_value, expected",
+    [
+        ("bogus", "returned 'bogus' which is not an integer"),
+        # the repr is encoded with backslashreplace, so non-ASCII still prints
+        ("caf\xe9", "returned 'caf\\xe9' which is not an integer"),
+        (object(), "returned <object object at"),
+        (_UnreprableReturn(), "returned a value which is not an integer"),
+    ],
+    ids=["ascii-str", "non-ascii-str", "object", "repr-raises"],
+)
+def test_sockoptfunction_bogus_return(sockopt_curl, return_value, expected, capfd):
+    _assert_connection_refused(sockopt_curl, return_value)
+    assert f"sockopt callback {expected}" in capfd.readouterr().err
 
-class SockoptCbUnsetTest(unittest.TestCase):
-    def setUp(self):
-        self.curl = util.DefaultCurl()
 
-    def test_sockoptfunction_none(self):
-        self.curl.setopt(pycurl.SOCKOPTFUNCTION, None)
+@pytest.mark.parametrize(
+    "return_value",
+    [2**31, 2**32, 2**70],
+    ids=["int32-overflow", "int-truncates-to-zero", "long-overflow"],
+)
+def test_sockoptfunction_oversized_return(sockopt_curl, return_value):
+    called = []
+    sockopt_curl.setopt(
+        pycurl.SOCKOPTFUNCTION, _record_and_return(called, return_value)
+    )
 
-    def test_sockoptfunction_unset(self):
-        self.curl.unsetopt(pycurl.SOCKOPTFUNCTION)
+    with pytest.raises(OverflowError) as exc_info:
+        sockopt_curl.perform()
+    assert (
+        str(exc_info.value)
+        == f"sockopt callback returned {return_value} which does not fit in an int"
+    )
+    assert called
+
+
+@util.min_libcurl(7, 28, 0)
+def test_socktype_accept(curl):
+    assert hasattr(pycurl, "SOCKTYPE_ACCEPT")
+    assert hasattr(curl, "SOCKTYPE_ACCEPT")
+
+
+def test_socktype_ipcxn(curl):
+    assert hasattr(pycurl, "SOCKTYPE_IPCXN")
+    assert hasattr(curl, "SOCKTYPE_IPCXN")
+
+
+def test_sockoptfunction_none(curl):
+    curl.setopt(pycurl.SOCKOPTFUNCTION, None)
+
+
+def test_sockoptfunction_unset(curl):
+    curl.unsetopt(pycurl.SOCKOPTFUNCTION)

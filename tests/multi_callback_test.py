@@ -295,3 +295,75 @@ def test_easy_close(multi_ctx: MultiCtx):
 
     _run_until(multi_ctx, lambda: multi_ctx.socket_result is not None, timeout=10.0)
     assert multi_ctx.socket_result is not None
+
+
+def _overflowing_timer(timeout_ms):
+    return 2**32
+
+
+TIMER_OVERFLOW = "multi timer callback returned 4294967296 which does not fit in an int"
+SOCKET_OVERFLOW = (
+    "multi socket callback returned 4294967296 which does not fit in an int"
+)
+
+
+@pytest.fixture
+def callback_multi():
+    multi = pycurl.CurlMulti()
+    multi.setopt(pycurl.M_SOCKETFUNCTION, lambda *args: 0)
+    multi.setopt(pycurl.M_TIMERFUNCTION, lambda timeout_ms: 0)
+    yield multi
+    multi.close()
+
+
+@pytest.fixture
+def spare_easy():
+    easy = util.DefaultCurl()
+    easy.setopt(pycurl.URL, "http://127.0.0.1:1/")
+    yield easy
+    easy.close()
+
+
+def test_multi_timer_overflow_on_add_handle_is_reported(
+    callback_multi, spare_easy, capfd
+):
+    callback_multi.setopt(pycurl.M_TIMERFUNCTION, _overflowing_timer)
+
+    with pytest.raises(pycurl.error):
+        callback_multi.add_handle(spare_easy)
+    assert f"OverflowError: {TIMER_OVERFLOW}" in capfd.readouterr().err
+
+
+def test_multi_timer_overflow_on_remove_handle_is_reported(
+    callback_multi, spare_easy, capfd
+):
+    callback_multi.add_handle(spare_easy)
+    callback_multi.setopt(pycurl.M_TIMERFUNCTION, _overflowing_timer)
+
+    with pytest.raises(pycurl.error):
+        callback_multi.remove_handle(spare_easy)
+    assert f"OverflowError: {TIMER_OVERFLOW}" in capfd.readouterr().err
+
+
+def test_multi_timer_overflow_on_close_is_reported(callback_multi, spare_easy, capfd):
+    callback_multi.add_handle(spare_easy)
+    callback_multi.setopt(pycurl.M_TIMERFUNCTION, _overflowing_timer)
+
+    callback_multi.close()
+    assert f"OverflowError: {TIMER_OVERFLOW}" in capfd.readouterr().err
+
+
+def _overflowing_socket(*args):
+    return 2**32
+
+
+# An overflow must not leave an exception pending: libcurl keeps CURLM_OK here,
+# and a pending exception would stop the callbacks that close the socket.
+def test_multi_socket_overflow_on_remove_handle_is_reported(multi_ctx, capfd):
+    partial_transfer(multi_ctx)
+    multi_ctx.multi.setopt(pycurl.M_SOCKETFUNCTION, _overflowing_socket)
+
+    multi_ctx.multi.remove_handle(multi_ctx.easy)
+    multi_ctx.handle_added = False
+
+    assert f"OverflowError: {SOCKET_OVERFLOW}" in capfd.readouterr().err

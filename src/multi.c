@@ -344,7 +344,7 @@ multi_socket_callback(CURL *easy,
     if (result == Py_None) {
         ret = 0;
     } else if (callback_return_value_to_int(result, "multi socket", &ret) != 0) {
-        goto silent_error;
+        goto verbose_error;
     }
 
 silent_error:
@@ -395,7 +395,7 @@ multi_timer_callback(CURLM *multi,
     if (result == Py_None) {
         ret = 0;
     } else if (callback_return_value_to_int(result, "multi timer", &ret) != 0) {
-        goto silent_error;
+        goto verbose_error;
     }
 
 silent_error:
