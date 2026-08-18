@@ -1,74 +1,93 @@
-#! /usr/bin/env python
-# vi:ts=4:et
+import warnings
 
-from . import localhost
-import unittest
+import pytest
+
 import pycurl
 
 from . import util
-from . import appmanager
 
-setup_module, teardown_module = appmanager.setup(('app', 8380))
+pytestmark = pytest.mark.skipif(
+    util.pycurl_version_less_than(7, 32, 0), reason="libcurl < 7.32.0"
+)
 
-class XferinfoCbTest(unittest.TestCase):
-    def setUp(self):
-        self.curl = util.DefaultCurl()
-        self.curl.setopt(self.curl.URL, 'http://%s:8380/long_pause' % localhost)
 
-    def tearDown(self):
-        self.curl.close()
+@pytest.fixture
+def xferinfo_curl(curl, app):
+    curl.setopt(pycurl.URL, f"{app}/long_pause")
+    curl.setopt(pycurl.NOPROGRESS, False)
+    return curl
 
-    @util.min_libcurl(7, 32, 0)
-    def test_xferinfo_cb(self):
-        all_args = []
 
-        def xferinfofunction(*args):
-            all_args.append(args)
+def test_xferinfo_cb(xferinfo_curl):
+    all_args = []
 
-        self.curl.setopt(pycurl.XFERINFOFUNCTION, xferinfofunction)
-        self.curl.setopt(pycurl.NOPROGRESS, False)
+    def xferinfofunction(*args):
+        all_args.append(args)
 
-        self.curl.perform()
-        assert len(all_args) > 0
-        for args in all_args:
-            assert len(args) == 4
-            for arg in args:
-                assert isinstance(arg, int)
+    xferinfo_curl.setopt(pycurl.XFERINFOFUNCTION, xferinfofunction)
 
-    @util.min_libcurl(7, 32, 0)
-    def test_sockoptfunction_fail(self):
-        called = {}
+    xferinfo_curl.perform()
+    assert len(all_args) > 0
+    for args in all_args:
+        assert len(args) == 4
+        for arg in args:
+            assert isinstance(arg, int)
 
-        def xferinfofunction(*args):
-            called['called'] = True
-            return -1
 
-        self.curl.setopt(pycurl.XFERINFOFUNCTION, xferinfofunction)
-        self.curl.setopt(pycurl.NOPROGRESS, False)
+PROGRESS_OPTIONS = [
+    pytest.param(pycurl.XFERINFOFUNCTION, "xferinfo", id="xferinfo"),
+    pytest.param(pycurl.PROGRESSFUNCTION, "progress", id="progress"),
+]
 
-        try:
-            self.curl.perform()
-            self.fail('should have raised')
-        except pycurl.error as e:
-            assert e.args[0] in [pycurl.E_ABORTED_BY_CALLBACK], \
-                'Unexpected pycurl error code %s' % e.args[0]
-        assert called['called']
 
-    @util.min_libcurl(7, 32, 0)
-    def test_sockoptfunction_exception(self):
-        called = {}
+def _assert_aborts(curl, option, return_value):
+    called = []
 
-        def xferinfofunction(*args):
-            called['called'] = True
-            raise ValueError
+    def progressfunction(*args):
+        called.append(True)
+        return return_value
 
-        self.curl.setopt(pycurl.XFERINFOFUNCTION, xferinfofunction)
-        self.curl.setopt(pycurl.NOPROGRESS, False)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        curl.setopt(option, progressfunction)
 
-        try:
-            self.curl.perform()
-            self.fail('should have raised')
-        except pycurl.error as e:
-            assert e.args[0] in [pycurl.E_ABORTED_BY_CALLBACK], \
-                'Unexpected pycurl error code %s' % e.args[0]
-        assert called['called']
+    with pytest.raises(pycurl.error) as exc_info:
+        curl.perform()
+    assert exc_info.value.args[0] == pycurl.E_ABORTED_BY_CALLBACK
+    assert called
+
+
+@pytest.mark.parametrize("return_value", [-1, 1], ids=["negative", "one"])
+def test_xferinfo_nonzero_return_aborts(xferinfo_curl, return_value):
+    _assert_aborts(xferinfo_curl, pycurl.XFERINFOFUNCTION, return_value)
+
+
+@pytest.mark.parametrize("option, callback_name", PROGRESS_OPTIONS)
+@pytest.mark.parametrize(
+    "return_value",
+    [2**31, 2**32, 2**70],
+    ids=["int32-overflow", "int-truncates-to-zero", "long-overflow"],
+)
+def test_progress_oversized_return_aborts(
+    xferinfo_curl, option, callback_name, return_value, capfd
+):
+    _assert_aborts(xferinfo_curl, option, return_value)
+    assert (
+        f"OverflowError: {callback_name} callback returned {return_value} "
+        "which does not fit in an int"
+    ) in capfd.readouterr().err
+
+
+def test_xferinfo_exception_aborts(xferinfo_curl):
+    called = []
+
+    def xferinfofunction(*args):
+        called.append(True)
+        raise ValueError
+
+    xferinfo_curl.setopt(pycurl.XFERINFOFUNCTION, xferinfofunction)
+
+    with pytest.raises(pycurl.error) as exc_info:
+        xferinfo_curl.perform()
+    assert exc_info.value.args[0] == pycurl.E_ABORTED_BY_CALLBACK
+    assert called

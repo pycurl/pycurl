@@ -363,6 +363,9 @@ PyLong_FromCurlSocket(curl_socket_t sockfd);
 PYCURL_INTERNAL int
 PyLong_AsCurlSocket(PyObject *obj, curl_socket_t *sockfd);
 
+PYCURL_INTERNAL int
+pycurl_long_as_int(PyObject *obj, int *ret_out);
+
 #define PYLISTORTUPLE_LIST 1
 #define PYLISTORTUPLE_TUPLE 2
 #define PYLISTORTUPLE_OTHER 0

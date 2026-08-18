@@ -32,6 +32,15 @@ def not_found():
 def postfields():
     return json.dumps(dict(flask.request.form))
 
+@app.route('/upload_redirect', methods=['PUT', 'POST'])
+def upload_redirect():
+    return flask.Response(status=307,
+        headers={'Location': flask.url_for('upload_target')})
+
+@app.route('/upload_target', methods=['PUT', 'POST'])
+def upload_target():
+    return str(len(flask.request.get_data()))
+
 @app.route('/raw_utf8', methods=['POST'])
 def raw_utf8():
     data = flask.request.data.decode('utf8')

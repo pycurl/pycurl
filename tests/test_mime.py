@@ -446,6 +446,24 @@ def test_mimepart_data_cb_streams_field_value(app):
         }
 
 
+def test_mimepart_data_cb_oversized_return_fails_the_transfer(app, capfd):
+    with pycurl.Curl() as curl:
+        mime = pycurl.CurlMime(curl)
+        part = mime.addpart()
+        part.name("field")
+        part.data_cb(10, lambda userdata, size: 2**70)
+        curl.setopt(pycurl.MIMEPOST, mime)
+        curl.setopt(pycurl.URL, f"{app}/postfields")
+        curl.setopt(pycurl.WRITEFUNCTION, io.BytesIO().write)
+
+        with pytest.raises(pycurl.error):
+            curl.perform()
+
+    err = capfd.readouterr().err
+    assert "OverflowError" in err
+    assert "must return a buffer object" not in err
+
+
 def test_mimepart_data_cb_requires_callable_read():
     with pycurl.Curl() as curl:
         mime = pycurl.CurlMime(curl)

@@ -44,6 +44,19 @@ def test_set_ca_certs_bogus_type(curl):
     )
 
 
+@util.only_ssl_backends("openssl")
+def test_set_ca_certs_without_a_certificate_reports_an_error(ssl_curl, ssl_app):
+    ssl_curl.set_ca_certs("this blob holds no certificate")
+    ssl_curl.setopt(pycurl.SSL_VERIFYPEER, 1)
+    ssl_curl.setopt(pycurl.URL, f"{ssl_app}/success")
+
+    # the ssl ctx callback reports its failure as E_FAILED_INIT, so the parse
+    # error itself only reaches stderr
+    with pytest.raises(pycurl.error) as exc_info:
+        ssl_curl.perform()
+    assert exc_info.value.args[0] == pycurl.E_FAILED_INIT
+
+
 @pytest.mark.parametrize("free_original", [False, True], ids=["alive", "freed"])
 @util.only_ssl_backends("openssl")
 def test_duphandle_keeps_ca_certs_working(ssl_app, free_original):

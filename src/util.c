@@ -110,6 +110,34 @@ PyLong_AsCurlSocket(PyObject *obj, curl_socket_t *sockfd)
 #endif
 }
 
+/* Returns -1 with the OverflowError PyLong_AsInt raises, so that callers see the
+   same contract before and after it became available in 3.13. */
+PYCURL_INTERNAL int
+pycurl_long_as_int(PyObject *obj, int *ret_out)
+{
+#if PY_VERSION_HEX >= 0x030D0000
+    int value = PyLong_AsInt(obj);
+
+    if (value == -1 && PyErr_Occurred()) {
+        return -1;
+    }
+#else
+    int overflow;
+    long value = PyLong_AsLongAndOverflow(obj, &overflow);
+
+    if (value == -1 && PyErr_Occurred()) {
+        return -1;
+    }
+    if (overflow || value > INT_MAX || value < INT_MIN) {
+        PyErr_SetString(PyExc_OverflowError,
+                        "Python int too large to convert to C int");
+        return -1;
+    }
+#endif
+    *ret_out = (int) value;
+    return 0;
+}
+
 static PyObject *
 create_error_object(CurlObject *self, int code)
 {

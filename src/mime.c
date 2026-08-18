@@ -324,6 +324,9 @@ curlmimepart_read_callback(char *ptr, size_t size, size_t nmemb, void *arg)
     }
     else if (PyLong_Check(result)) {
         long long_res = PyLong_AsLong(result);
+        if (long_res == -1 && PyErr_Occurred()) {
+            goto verbose_error;
+        }
         if (long_res != CURL_READFUNC_ABORT && long_res != CURL_READFUNC_PAUSE) {
             PyErr_SetString(ErrorObject, "mime read callback must return a buffer object, an ASCII-only Unicode string, READFUNC_ABORT, or READFUNC_PAUSE");
             goto verbose_error;
@@ -401,8 +404,9 @@ curlmimepart_seek_callback(void *arg, curl_off_t offset, int origin)
         ret = CURL_SEEKFUNC_OK;
     }
     else if (PyLong_Check(result)) {
-        int ret_code = (int)PyLong_AsLong(result);
-        if (PyErr_Occurred()) {
+        int ret_code;
+
+        if (callback_return_value_to_int(result, "mime seek", &ret_code) != 0) {
             goto verbose_error;
         }
         if (ret_code < CURL_SEEKFUNC_OK || ret_code > CURL_SEEKFUNC_CANTSEEK) {
