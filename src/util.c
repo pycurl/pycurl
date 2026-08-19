@@ -34,6 +34,125 @@ print_callback_error_if_regular_exception(void)
     }
 }
 
+/* Stash the pending exception on the *storage list; also print it when
+   print_traceback is set. A BaseException is left set to keep propagating. */
+static void
+capture_callback_exception(PyObject **storage, int print_traceback)
+{
+    PyObject *type = NULL, *value = NULL, *tb = NULL, *list;
+
+    if (!PyErr_Occurred() || !PyErr_ExceptionMatches(PyExc_Exception)) {
+        return;
+    }
+    PyErr_Fetch(&type, &value, &tb);
+    PyErr_NormalizeException(&type, &value, &tb);
+    if (value == NULL) {
+        Py_XDECREF(type);
+        Py_XDECREF(tb);
+        return;
+    }
+    if (tb != NULL) {
+        PyException_SetTraceback(value, tb);
+    }
+
+    list = *storage;
+    if (list == NULL) {
+        list = PyList_New(0);
+        if (list != NULL) {
+            *storage = list;
+        }
+    }
+    if (list != NULL) {
+        (void) PyList_Append(list, value);
+    }
+
+    if (print_traceback) {
+        PyErr_Restore(type, value, tb);
+        PyErr_Print();
+    } else {
+        Py_DECREF(value);
+        Py_XDECREF(type);
+        Py_XDECREF(tb);
+    }
+}
+
+PYCURL_INTERNAL void
+pycurl_capture_callback_exception(PyObject **storage)
+{
+    capture_callback_exception(storage, 1);
+}
+
+PYCURL_INTERNAL void
+pycurl_stash_callback_exception(PyObject **storage)
+{
+    capture_callback_exception(storage, 0);
+}
+
+PYCURL_INTERNAL void
+pycurl_attach_callback_cause(PyObject **storage)
+{
+    PyObject *list = *storage;
+    PyObject *cause = NULL;
+    PyObject *type = NULL, *value = NULL, *tb = NULL;
+    Py_ssize_t n;
+
+    *storage = NULL;
+    if (list == NULL) {
+        return;
+    }
+    n = PyList_GET_SIZE(list);
+    if (n == 0) {
+        Py_DECREF(list);
+        return;
+    }
+    /* No pending error: the libcurl call succeeded despite the callback
+       raising (e.g. DEBUGFUNCTION). Drop the captures. */
+    if (!PyErr_Occurred()) {
+        Py_DECREF(list);
+        return;
+    }
+
+    PyErr_Fetch(&type, &value, &tb);
+    PyErr_NormalizeException(&type, &value, &tb);
+    if (value == NULL) {
+        PyErr_Restore(type, value, tb);
+        Py_DECREF(list);
+        return;
+    }
+
+#if PY_VERSION_HEX >= 0x030B0000
+    /* Several captures wrap in an ExceptionGroup (all leaves are Exception). */
+    if (n > 1) {
+        cause = PyObject_CallFunction(PyExc_BaseExceptionGroup, "sO",
+                                      "PycURL callback exceptions", list);
+    } else
+#endif
+    {
+        cause = Py_NewRef(PyList_GET_ITEM(list, 0));
+    }
+    Py_DECREF(list);
+    if (cause == NULL) {
+        PyErr_Clear();
+        PyErr_Restore(type, value, tb);
+        return;
+    }
+
+    PyException_SetCause(value, cause); /* steals cause */
+    PyErr_Restore(type, value, tb);     /* steals type/value/tb */
+}
+
+PYCURL_INTERNAL void
+pycurl_easy_clear_callback_state(CurlObject *self)
+{
+    Py_CLEAR(self->callback_exception);
+}
+
+PYCURL_INTERNAL void
+pycurl_easy_attach_callback_cause(CurlObject *self)
+{
+    pycurl_attach_callback_cause(&self->callback_exception);
+}
+
 PYCURL_INTERNAL PyObject *
 PyLong_FromCurlSocket(curl_socket_t sockfd)
 {

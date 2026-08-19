@@ -12,17 +12,24 @@ do_curl_perform(CurlObject *self, PyObject *Py_UNUSED(ignored))
         return NULL;
     }
 
+    pycurl_easy_clear_callback_state(self);
+
     PYCURL_BEGIN_ALLOW_THREADS
     res = curl_easy_perform(self->handle);
     PYCURL_END_ALLOW_THREADS
 
     if (check_pending_python_exception_or_signal() != 0) {
+        pycurl_easy_clear_callback_state(self);
         return NULL;
     }
 
     if (res != CURLE_OK) {
-        CURLERROR_RETVAL();
+        create_and_set_error_object(self, (int) res);
+        pycurl_easy_attach_callback_cause(self);
+        return NULL;
     }
+    /* Drop captures from ignored-return callbacks such as DEBUGFUNCTION. */
+    pycurl_easy_clear_callback_state(self);
     Py_RETURN_NONE;
 }
 
@@ -316,11 +323,18 @@ do_curl_pause_internal(CurlObject *self, int bitmask, const char *op_name)
         return NULL;
     }
 
+    /* pause() may run nested inside a callback. Chain onto its own error
+       without clearing the enclosing perform's captures. */
     if (res != CURLE_OK) {
-        CURLERROR_MSG("pause/unpause failed");
-    } else {
-        Py_RETURN_NONE;
+        PyObject *v = Py_BuildValue("(is)", (int) res, "pause/unpause failed");
+        if (v != NULL) {
+            PyErr_SetObject(ErrorObject, v);
+            Py_DECREF(v);
+        }
+        pycurl_easy_attach_callback_cause(self);
+        return NULL;
     }
+    Py_RETURN_NONE;
 }
 
 

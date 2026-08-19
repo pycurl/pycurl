@@ -1,6 +1,3 @@
-#! /usr/bin/env python
-# vi:ts=4:et
-
 import os
 import select
 import signal
@@ -98,7 +95,9 @@ def test_progress_callback_keyboard_interrupt(curl, app):
         called["called"] = True
         raise KeyboardInterrupt()
 
-    with pytest.warns(DeprecationWarning, match="PROGRESSFUNCTION is deprecated; use XFERINFOFUNCTION"):
+    with pytest.warns(
+        DeprecationWarning, match="PROGRESSFUNCTION is deprecated; use XFERINFOFUNCTION"
+    ):
         curl.setopt(pycurl.PROGRESSFUNCTION, progress_function)
 
     with pytest.raises(KeyboardInterrupt):
@@ -163,6 +162,8 @@ def test_header_callback_non_interrupt_exception(callback_curl):
         callback_curl.perform()
 
     assert excinfo.value.args[0] == pycurl.E_WRITE_ERROR
+    assert isinstance(excinfo.value.__cause__, ValueError)
+    assert str(excinfo.value.__cause__) == "boom"
 
 
 def test_header_callback_system_exit(callback_curl):
