@@ -219,6 +219,11 @@ do_multi_dealloc(CurlMultiObject *self)
     PyObject_GC_UnTrack(self);
     Py_TRASHCAN_BEGIN(self, do_multi_dealloc);
 
+    /* Removing easy handles can invoke M_SOCKETFUNCTION. Clear it first so
+     * the dying CurlMulti is not handed back to Python from its own
+     * tp_dealloc. */
+    Py_CLEAR(self->s_cb);
+
     util_multi_detach_easies(self, 0, 1);
 
     util_multi_xdecref(self);

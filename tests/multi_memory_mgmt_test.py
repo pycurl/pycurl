@@ -75,3 +75,54 @@ def test_curl_kept_alive_while_added_to_multi():
     m.remove_handle(ref())
     gc.collect()
     assert ref() is None
+
+
+def test_socket_callback_not_invoked_during_multi_dealloc(app):
+    callbacks_during_dealloc = []
+    deallocating = False
+
+    def socket_callback(event, fd, multi, data):
+        if deallocating:
+            callbacks_during_dealloc.append(event)
+
+    easy = pycurl.Curl()
+    easy.setopt(pycurl.URL, f"{app}/success")
+    multi = pycurl.CurlMulti()
+    multi.setopt(pycurl.M_SOCKETFUNCTION, socket_callback)
+    multi.add_handle(easy)
+
+    for _ in range(3):
+        multi.socket_action(pycurl.SOCKET_TIMEOUT, 0)
+
+    deallocating = True
+    del multi
+    gc.collect()
+
+    assert callbacks_during_dealloc == []
+    easy.close()
+
+
+def test_multi_callback_cycle_is_collectable(app):
+    class Client:
+        def __init__(self):
+            self.multi = pycurl.CurlMulti()
+            self.multi.setopt(pycurl.M_TIMERFUNCTION, self.on_timer)
+            self.multi.setopt(pycurl.M_SOCKETFUNCTION, self.on_socket)
+            self.easy = pycurl.Curl()
+            self.easy.setopt(pycurl.URL, f"{app}/success")
+            self.multi.add_handle(self.easy)
+            for _ in range(3):
+                self.multi.socket_action(pycurl.SOCKET_TIMEOUT, 0)
+
+        def on_timer(self, timeout_ms):
+            pass
+
+        def on_socket(self, event, fd, multi, data):
+            pass
+
+    client = Client()
+    client_ref = weakref.ref(client)
+    del client
+    gc.collect()
+
+    assert client_ref() is None
