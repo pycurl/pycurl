@@ -1,138 +1,108 @@
-#! /usr/bin/env python
-# vi:ts=4:et
-
-from . import localhost
 import gc
 import socket
-import unittest
-import pycurl
+
 import pytest
 
+import pycurl
+
 from . import util
-from . import appmanager
 
-setup_module, teardown_module = appmanager.setup(('app', 8380))
+pytestmark = pytest.mark.skipif(
+    util.pycurl_version_less_than(7, 21, 7), reason="libcurl < 7.21.7"
+)
 
-class CloseSocketCbTest(unittest.TestCase):
-    def setUp(self):
-        self.curl = util.DefaultCurl()
-        self.curl.setopt(self.curl.URL, 'http://%s:8380/success' % localhost)
-        self.curl.setopt(pycurl.FORBID_REUSE, True)
 
-    def tearDown(self):
-        self.curl.close()
+def _record_and_return(called, value):
+    def closesocketfunction(curlfd):
+        called.append(True)
+        return value
 
-    @util.min_libcurl(7, 21, 7)
-    def test_closesocketfunction_ok(self):
-        called = {}
+    return closesocketfunction
 
-        def closesocketfunction(curlfd):
-            called['called'] = True
-            # Unix only
-            #os.close(curlfd)
-            # Unix & Windows
-            socket.fromfd(curlfd, socket.AF_INET, socket.SOCK_STREAM).close()
-            return 0
 
-        self.curl.setopt(pycurl.CLOSESOCKETFUNCTION, closesocketfunction)
-
-        self.curl.perform()
-        assert called['called']
-
-    @util.min_libcurl(7, 21, 7)
-    def test_closesocketfunction_fail(self):
-        called = {}
-
-        def closesocketfunction(curlfd):
-            called['called'] = True
-            return 1
-
-        self.curl.setopt(pycurl.CLOSESOCKETFUNCTION, closesocketfunction)
-
-        # no exception on errors, apparently
-        self.curl.perform()
-        assert called['called']
-
-    @util.min_libcurl(7, 21, 7)
-    def test_closesocketfunction_bogus_return(self):
-        called = {}
-
-        def closesocketfunction(curlfd):
-            called['called'] = True
-            return 'bogus'
-
-        self.curl.setopt(pycurl.CLOSESOCKETFUNCTION, closesocketfunction)
-
-        # no exception on errors, apparently
-        self.curl.perform()
-        assert called['called']
-
-class CloseSocketCbUnsetTest(unittest.TestCase):
-    def setUp(self):
-        self.curl = util.DefaultCurl()
-
-    @util.min_libcurl(7, 21, 7)
-    def test_closesocketfunction_none(self):
-        self.curl.setopt(pycurl.CLOSESOCKETFUNCTION, None)
-
-    @util.min_libcurl(7, 21, 7)
-    def test_closesocketfunction_unset(self):
-        self.curl.unsetopt(pycurl.CLOSESOCKETFUNCTION)
-
-# test_closesocketfunction_on_close leaves the server in a weird state, so use
-# one specific to this test, rather than the session one.
 @pytest.fixture
-def app():
-    from .conftest import make_app
-    yield from make_app()
+def closesocket_curl(curl, app):
+    curl.setopt(pycurl.URL, f"{app}/success")
+    curl.setopt(pycurl.FORBID_REUSE, True)
+    return curl
 
-@util.min_libcurl(7, 21, 7)
-def test_closesocketfunction_on_close(app):
-    called = {}
 
-    def closesocketfunction(curlfd) -> int:
-        called["called"] = True
-        return 1
+def test_closesocketfunction_ok(closesocket_curl):
+    called = []
 
-    curl = util.DefaultCurl()
-    curl.setopt(curl.URL, f"{app}/success")
+    def closesocketfunction(curlfd):
+        called.append(True)
+        socket.fromfd(curlfd, socket.AF_INET, socket.SOCK_STREAM).close()
+        return 0
+
+    closesocket_curl.setopt(pycurl.CLOSESOCKETFUNCTION, closesocketfunction)
+
+    closesocket_curl.perform()
+    assert called
+
+
+@pytest.mark.parametrize("return_value", [1, "bogus"], ids=["failure", "bogus"])
+def test_closesocketfunction_error_does_not_fail_the_transfer(
+    closesocket_curl, return_value
+):
+    called = []
+    closesocket_curl.setopt(
+        pycurl.CLOSESOCKETFUNCTION, _record_and_return(called, return_value)
+    )
+
+    # libcurl has nowhere to report a failed close, so the transfer still succeeds.
+    closesocket_curl.perform()
+    assert called
+
+
+# CONNECT_ONLY keeps the socket open past perform(), so closesocket runs from
+# curl_easy_cleanup() instead.
+def _connect_only(curl, app):
+    curl.setopt(pycurl.URL, f"{app}/success")
     curl.setopt(pycurl.IPRESOLVE, pycurl.IPRESOLVE_V4)
     curl.setopt(pycurl.FORBID_REUSE, False)
     curl.setopt(pycurl.CONNECT_ONLY, True)
-    curl.setopt(pycurl.CLOSESOCKETFUNCTION, closesocketfunction)
+    return curl
 
-    assert curl.getinfo(pycurl.ACTIVESOCKET) == -1
 
-    curl.perform()
-    assert curl.getinfo(pycurl.ACTIVESOCKET) != -1
-    assert not called.get("called", False)
+@pytest.fixture
+def connect_only_curl(curl, app):
+    return _connect_only(curl, app)
 
-    curl.close()
 
-    assert called.get("called", False)
+def test_closesocketfunction_on_close(connect_only_curl):
+    called = []
+    connect_only_curl.setopt(pycurl.CLOSESOCKETFUNCTION, _record_and_return(called, 1))
 
-@util.min_libcurl(7, 21, 7)
+    assert connect_only_curl.getinfo(pycurl.ACTIVESOCKET) == -1
+    connect_only_curl.perform()
+    assert connect_only_curl.getinfo(pycurl.ACTIVESOCKET) != -1
+    assert not called
+
+    connect_only_curl.close()
+    assert called
+
+
 def test_closesocketfunction_on_dealloc(app):
-    called = {}
+    called = []
 
-    def closesocketfunction(curlfd) -> int:
-        called["called"] = True
-        return 1
-
-    curl = util.DefaultCurl()
-    curl.setopt(curl.URL, f"{app}/success")
-    curl.setopt(pycurl.IPRESOLVE, pycurl.IPRESOLVE_V4)
-    curl.setopt(pycurl.FORBID_REUSE, False)
-    curl.setopt(pycurl.CONNECT_ONLY, True)
-    curl.setopt(pycurl.CLOSESOCKETFUNCTION, closesocketfunction)
+    curl = _connect_only(util.DefaultCurl(), app)
+    curl.setopt(pycurl.CLOSESOCKETFUNCTION, _record_and_return(called, 1))
 
     assert curl.getinfo(pycurl.ACTIVESOCKET) == -1
-
     curl.perform()
     assert curl.getinfo(pycurl.ACTIVESOCKET) != -1
-    assert not called.get("called", False)
+    assert not called
 
     del curl
     gc.collect()
 
-    assert called.get("called", False)
+    assert called
+
+
+def test_closesocketfunction_none(curl):
+    curl.setopt(pycurl.CLOSESOCKETFUNCTION, None)
+
+
+def test_closesocketfunction_unset(curl):
+    curl.unsetopt(pycurl.CLOSESOCKETFUNCTION)

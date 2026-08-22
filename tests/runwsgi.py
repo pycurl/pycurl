@@ -21,7 +21,15 @@ class Server:
         self.serve()
 
     def make_server(self, handler):
-        from wsgiref.simple_server import make_server, WSGIRequestHandler
+        import socketserver
+        from wsgiref.simple_server import WSGIRequestHandler, WSGIServer, make_server
+
+        class ThreadingWSGIServer(socketserver.ThreadingMixIn, WSGIServer):
+            # A client that never closes its connection leaves its worker
+            # running, so workers must not keep the interpreter from exiting.
+            daemon_threads = True
+
+        self.options.setdefault("server_class", ThreadingWSGIServer)
 
         if self.quiet:
             base = self.options.get("handler_class", WSGIRequestHandler)
