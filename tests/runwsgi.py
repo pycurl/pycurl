@@ -28,6 +28,7 @@ class Server:
             # A client that never closes its connection leaves its worker
             # running, so workers must not keep the interpreter from exiting.
             daemon_threads = True
+            request_queue_size = 128
 
         self.options.setdefault("server_class", ThreadingWSGIServer)
 
