@@ -819,10 +819,10 @@ def test_scheme_constant(curl):
 
 
 @util.min_libcurl(7, 76, 0)
-def test_referer_constant(curl):
-    assert hasattr(pycurl, "REFERER")
-    assert hasattr(curl, "REFERER")
-    assert pycurl.REFERER == curl.REFERER
+def test_info_referer_constant(curl):
+    assert hasattr(pycurl, "INFO_REFERER")
+    assert hasattr(curl, "INFO_REFERER")
+    assert pycurl.INFO_REFERER == curl.INFO_REFERER
 
 
 @util.min_libcurl(7, 66, 0)
