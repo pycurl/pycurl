@@ -667,7 +667,7 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
         else if ((which_httppost_option = PyListOrTuple_Check(httppost_option))) {
             /* Supports content, file and content-type */
             Py_ssize_t tlen = PyListOrTuple_Size(httppost_option, which_httppost_option);
-            int j, k, l;
+            int j, k;
             struct curl_forms *forms = NULL;
 
             /* Sanity check that there are at least two tuple items */
@@ -698,7 +698,7 @@ do_curl_setopt_httppost(CurlObject *self, int option, int which, PyObject *obj)
             }
 
             /* Iterate all the tuple members pairwise */
-            for (j = 0, k = 0, l = 0; j < tlen; j += 2, l++) {
+            for (j = 0, k = 0; j < tlen; j += 2) {
                 char *ostr;
                 Py_ssize_t olen;
                 int val, rv;
