@@ -35,6 +35,24 @@ def test_getinfo_effective_method(curl, app):
     make_request(curl, app)
     assert "GET" == curl.getinfo(pycurl.EFFECTIVE_METHOD)
 
+@util.min_libcurl(7, 52, 0)
+def test_getinfo_scheme(curl, app):
+    make_request(curl, app)
+    assert "HTTP" == curl.getinfo(pycurl.SCHEME).upper()
+
+@util.min_libcurl(8, 2, 0)
+def test_getinfo_conn_and_xfer_id(curl, app):
+    make_request(curl, app)
+    assert type(curl.getinfo(pycurl.CONN_ID)) is int
+    assert curl.getinfo(pycurl.CONN_ID) >= 0
+    assert type(curl.getinfo(pycurl.XFER_ID)) is int
+    assert curl.getinfo(pycurl.XFER_ID) >= 0
+
+@util.min_libcurl(8, 7, 0)
+def test_getinfo_used_proxy(curl, app):
+    make_request(curl, app)
+    assert 0 == curl.getinfo(pycurl.USED_PROXY)
+
 @flaky.flaky(max_runs=3)
 def test_getinfo_times(curl, app):
     make_request(curl, app)

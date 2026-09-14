@@ -809,3 +809,67 @@ def test_hsts_constants():
     assert pycurl.CURLSTS_OK == 0
     assert pycurl.CURLSTS_DONE == 1
     assert pycurl.CURLSTS_FAIL == 2
+
+
+@util.min_libcurl(7, 52, 0)
+def test_scheme_constant(curl):
+    assert hasattr(pycurl, "SCHEME")
+    assert hasattr(curl, "SCHEME")
+    assert pycurl.SCHEME == curl.SCHEME
+
+
+@util.min_libcurl(7, 76, 0)
+def test_info_referer_constant(curl):
+    assert hasattr(pycurl, "INFO_REFERER")
+    assert hasattr(curl, "INFO_REFERER")
+    assert pycurl.INFO_REFERER == curl.INFO_REFERER
+
+
+@util.min_libcurl(7, 66, 0)
+def test_retry_after_constant(curl):
+    assert hasattr(pycurl, "RETRY_AFTER")
+    assert hasattr(curl, "RETRY_AFTER")
+    assert pycurl.RETRY_AFTER == curl.RETRY_AFTER
+
+
+@util.min_libcurl(8, 2, 0)
+def test_conn_id_constant(curl):
+    assert hasattr(pycurl, "CONN_ID")
+    assert hasattr(curl, "CONN_ID")
+    assert pycurl.CONN_ID == curl.CONN_ID
+
+
+@util.min_libcurl(8, 2, 0)
+def test_xfer_id_constant(curl):
+    assert hasattr(pycurl, "XFER_ID")
+    assert hasattr(curl, "XFER_ID")
+    assert pycurl.XFER_ID == curl.XFER_ID
+
+
+@util.min_libcurl(8, 7, 0)
+def test_used_proxy_constant(curl):
+    assert hasattr(pycurl, "USED_PROXY")
+    assert hasattr(curl, "USED_PROXY")
+    assert pycurl.USED_PROXY == curl.USED_PROXY
+
+
+@util.min_libcurl(7, 73, 0)
+def test_proxy_error_constant(curl):
+    assert hasattr(pycurl, "PROXY_ERROR")
+    assert hasattr(curl, "PROXY_ERROR")
+    assert pycurl.PROXY_ERROR == curl.PROXY_ERROR
+
+
+@util.min_libcurl(7, 52, 0)
+def test_proxy_ssl_verifyresult_constant(curl):
+    assert hasattr(pycurl, "PROXY_SSL_VERIFYRESULT")
+    assert hasattr(curl, "PROXY_SSL_VERIFYRESULT")
+    assert pycurl.PROXY_SSL_VERIFYRESULT == curl.PROXY_SSL_VERIFYRESULT
+
+
+@util.min_libcurl(8, 20, 0)
+def test_size_delivered_constant(curl):
+    assert hasattr(pycurl, "SIZE_DELIVERED")
+    assert hasattr(curl, "SIZE_DELIVERED")
+    assert pycurl.SIZE_DELIVERED == curl.SIZE_DELIVERED
+

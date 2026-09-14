@@ -1,6 +1,7 @@
 import gc
 import io
 import json
+import sys
 import weakref
 
 import pytest
@@ -459,6 +460,7 @@ def test_mimepart_data_cb_oversized_return_fails_the_transfer(app, capfd):
         with pytest.raises(pycurl.error):
             curl.perform()
 
+    sys.stderr.flush()
     err = capfd.readouterr().err
     assert "OverflowError" in err
     assert "must return a buffer object" not in err
