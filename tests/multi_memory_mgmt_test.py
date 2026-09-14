@@ -77,11 +77,11 @@ def test_curl_kept_alive_while_added_to_multi():
     assert ref() is None
 
 
-def test_socket_callback_not_invoked_during_multi_dealloc(app):
+def test_socket_callback_invoked_during_multi_dealloc(app):
     callbacks_during_dealloc = []
     deallocating = False
 
-    def socket_callback(event, fd, multi, data):
+    def socket_callback(event, fd, data):
         if deallocating:
             callbacks_during_dealloc.append(event)
 
@@ -98,7 +98,7 @@ def test_socket_callback_not_invoked_during_multi_dealloc(app):
     del multi
     gc.collect()
 
-    assert callbacks_during_dealloc == []
+    assert pycurl.POLL_REMOVE in callbacks_during_dealloc
     easy.close()
 
 
@@ -117,7 +117,7 @@ def test_multi_callback_cycle_is_collectable(app):
         def on_timer(self, timeout_ms):
             pass
 
-        def on_socket(self, event, fd, multi, data):
+        def on_socket(self, event, fd, data):
             pass
 
     client = Client()
@@ -126,3 +126,36 @@ def test_multi_callback_cycle_is_collectable(app):
     gc.collect()
 
     assert client_ref() is None
+
+
+@pytest.mark.thread_unsafe
+def test_socket_callback_does_not_create_cycle(app):
+    def build_and_drop():
+        events = []
+
+        def socket_callback(*args):
+            events.append(args)
+
+        easy = pycurl.Curl()
+        easy.setopt(pycurl.URL, f"{app}/success")
+        multi = pycurl.CurlMulti()
+        multi.setopt(pycurl.M_SOCKETFUNCTION, socket_callback)
+        multi.add_handle(easy)
+        for _ in range(3):
+            multi.socket_action(pycurl.SOCKET_TIMEOUT, 0)
+
+        assert events, "expected at least one socket callback"
+        ref = weakref.ref(multi)
+        multi.remove_handle(easy)
+        easy.close()
+        del multi
+        return ref
+
+    gc.collect()
+    gc.disable()
+    try:
+        ref = build_and_drop()
+    finally:
+        gc.enable()
+
+    assert ref() is None, "CurlMulti outlived its last reference without the GC"

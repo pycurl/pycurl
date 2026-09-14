@@ -316,7 +316,6 @@ class AsyncCurlMulti:
         self,
         what: int,
         fd: int,
-        multi: CurlMulti,
         socketp: _SocketState | None,
     ) -> None:
         if what == POLL_REMOVE:
@@ -363,7 +362,7 @@ class AsyncCurlMulti:
         state.read_registered = want_read
         state.write_registered = want_write
         if first_observation:
-            multi.assign(fd, state)
+            self._multi.assign(fd, state)
 
     def _unregister_watchers(self, fd: int, state: _SocketState) -> None:
         assert self._loop is not None, "callback fired before _ensure_loop"
