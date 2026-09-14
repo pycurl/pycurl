@@ -568,6 +568,25 @@ def test_proxy_tls13_ciphers(curl):
     curl.setopt(curl.PROXY_TLS13_CIPHERS, "TLS_CHACHA20_POLY1305_SHA256")
 
 
+@util.only_ssl_backends_with_min_libcurl(
+    {
+        "openssl": (7, 73, 0),
+        "wolfssl": (7, 73, 0),
+    }
+)
+def test_ssl_ec_curves(curl):
+    curl.setopt(curl.SSL_EC_CURVES, "X25519:P-256")
+
+
+@util.only_ssl_backends_with_min_libcurl(
+    {
+        "openssl": (8, 14, 0),
+    }
+)
+def test_ssl_signature_algorithms(curl):
+    curl.setopt(curl.SSL_SIGNATURE_ALGORITHMS, "rsa_pss_pss_sha256")
+
+
 @util.min_libcurl(7, 75, 0)
 def test_aws_sigv4(curl):
     curl.setopt(curl.AWS_SIGV4, "provider1:provider2")
@@ -872,4 +891,18 @@ def test_size_delivered_constant(curl):
     assert hasattr(pycurl, "SIZE_DELIVERED")
     assert hasattr(curl, "SIZE_DELIVERED")
     assert pycurl.SIZE_DELIVERED == curl.SIZE_DELIVERED
+
+
+@util.min_libcurl(7, 73, 0)
+def test_ssl_ec_curves_constant(curl):
+    assert hasattr(pycurl, "SSL_EC_CURVES")
+    assert hasattr(curl, "SSL_EC_CURVES")
+    assert pycurl.SSL_EC_CURVES == curl.SSL_EC_CURVES
+
+
+@util.min_libcurl(8, 14, 0)
+def test_ssl_signature_algorithms_constant(curl):
+    assert hasattr(pycurl, "SSL_SIGNATURE_ALGORITHMS")
+    assert hasattr(curl, "SSL_SIGNATURE_ALGORITHMS")
+    assert pycurl.SSL_SIGNATURE_ALGORITHMS == curl.SSL_SIGNATURE_ALGORITHMS
 
