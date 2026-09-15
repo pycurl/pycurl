@@ -448,17 +448,26 @@ def test_mimepart_data_cb_streams_field_value(app):
 
 
 def test_mimepart_data_cb_oversized_return_fails_the_transfer(app, capfd):
+    calls = []
+
+    def oversized_return(userdata, size):
+        calls.append(size)
+        return 2**70
+
     with pycurl.Curl() as curl:
         mime = pycurl.CurlMime(curl)
         part = mime.addpart()
         part.name("field")
-        part.data_cb(10, lambda userdata, size: 2**70)
+        part.data_cb(10, oversized_return)
         curl.setopt(pycurl.MIMEPOST, mime)
         curl.setopt(pycurl.URL, f"{app}/postfields")
         curl.setopt(pycurl.WRITEFUNCTION, io.BytesIO().write)
 
-        with pytest.raises(pycurl.error):
+        with pytest.raises(pycurl.error) as excinfo:
             curl.perform()
+
+    assert calls, f"read callback never invoked; curl error was {excinfo.value!r}"
+    assert excinfo.value.args[0] == pycurl.E_ABORTED_BY_CALLBACK, excinfo.value
 
     sys.stderr.flush()
     err = capfd.readouterr().err
