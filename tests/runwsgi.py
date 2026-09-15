@@ -9,7 +9,7 @@ global_stop = False
 
 
 class Server:
-    quiet = False
+    quiet = True
 
     def __init__(self, host, port, **options):
         self.options = options
