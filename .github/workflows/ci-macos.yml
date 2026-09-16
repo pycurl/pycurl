@@ -103,6 +103,8 @@ jobs:
       run: make do-test
     - name: Build & test with cibuildwheel
       if: matrix.curl-version == 'vcpkg'
+      env:
+        PYCURL_WERROR: "1"
       run: |
         pip install cibuildwheel
         cibuildwheel --only ${{ matrix.cibw-build }}
