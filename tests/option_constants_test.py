@@ -429,8 +429,9 @@ def test_proxy_ssl_options(curl):
 @util.only_ssl_backends("openssl", "gnutls")
 @util.only_tls_srp
 def test_proxy_tlsauth(curl):
-    curl.setopt(curl.PROXY_TLSAUTH_USERNAME, "test")
-    curl.setopt(curl.PROXY_TLSAUTH_PASSWORD, "test")
+    with pytest.warns(DeprecationWarning, match="setopt option is deprecated"):
+        curl.setopt(curl.PROXY_TLSAUTH_USERNAME, "test")
+        curl.setopt(curl.PROXY_TLSAUTH_PASSWORD, "test")
 
 
 @util.min_libcurl(7, 71, 0)
@@ -752,9 +753,10 @@ def test_proto_smb(curl):
 @util.only_ssl_backends("openssl", "gnutls")
 @util.only_tls_srp
 def test_tlsauth(curl):
-    curl.setopt(curl.TLSAUTH_TYPE, "SRP")
-    curl.setopt(curl.TLSAUTH_USERNAME, "test")
-    curl.setopt(curl.TLSAUTH_PASSWORD, "test")
+    with pytest.warns(DeprecationWarning, match="setopt option is deprecated"):
+        curl.setopt(curl.TLSAUTH_TYPE, "SRP")
+        curl.setopt(curl.TLSAUTH_USERNAME, "test")
+        curl.setopt(curl.TLSAUTH_PASSWORD, "test")
 
 
 @util.min_libcurl(7, 45, 0)
@@ -905,4 +907,3 @@ def test_ssl_signature_algorithms_constant(curl):
     assert hasattr(pycurl, "SSL_SIGNATURE_ALGORITHMS")
     assert hasattr(curl, "SSL_SIGNATURE_ALGORITHMS")
     assert pycurl.SSL_SIGNATURE_ALGORITHMS == curl.SSL_SIGNATURE_ALGORITHMS
-
