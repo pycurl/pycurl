@@ -327,6 +327,7 @@ ignore this message.''')
 
         # Recognize --avoid-stdio on Unix so that it can be tested
         self.check_avoid_stdio()
+        self.check_werror()
 
         try:
             for dir in os.environ['PYCURL_RUNTIME_LIBRARY_DIRS'].split(os.pathsep):
@@ -495,6 +496,11 @@ ignore this message.''')
             self.extra_compile_args.append("-DPYCURL_AVOID_STDIO")
         if scan_argv(self.argv, '--avoid-stdio') is not None:
             self.extra_compile_args.append("-DPYCURL_AVOID_STDIO")
+
+    def check_werror(self):
+        # Not CFLAGS, which unrelated builds (e.g. vcpkg) in the same environment also pick up.
+        if os.environ.get('PYCURL_WERROR'):
+            self.extra_compile_args.append("-Werror")
 
     def get_curl_version_info(self, dll_path):
         import ctypes

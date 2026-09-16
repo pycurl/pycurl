@@ -85,7 +85,8 @@ jobs:
       if: matrix.curl-version == 'vcpkg'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        CIBW_ENVIRONMENT_PASS_LINUX: GITHUB_TOKEN GITHUB_REPOSITORY_OWNER VCPKG_BINARY_SOURCES
+        CIBW_ENVIRONMENT_PASS_LINUX: GITHUB_TOKEN GITHUB_REPOSITORY_OWNER VCPKG_BINARY_SOURCES PYCURL_WERROR
+        PYCURL_WERROR: "1"
       run: |
         pip install cibuildwheel
         cibuildwheel --only ${{ matrix.cibw-build }}
