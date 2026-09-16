@@ -17,5 +17,6 @@ Example usage::
     while num_handles:
         apply(select.select, m.fdset() + (1,))
         _, num_handles = m.perform()
+
 .. _curl_multi_fdset:
     https://curl.haxx.se/libcurl/c/curl_multi_fdset.html

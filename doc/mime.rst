@@ -1,7 +1,7 @@
 .. _mime:
 
 CurlMime Objects
-============
+================
 
 PycURL exposes libcurl's MIME tree API via ``CurlMime`` and ``CurlMimePart`` classes.
 
@@ -53,7 +53,7 @@ Example::
 
 
 CurlMime
-----
+--------
 
 .. autoclass:: pycurl.CurlMime
 
@@ -75,7 +75,7 @@ CurlMime
 
 
 CurlMimePart
---------
+------------
 
 .. autoclass:: pycurl.CurlMimePart
 

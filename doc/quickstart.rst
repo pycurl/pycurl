@@ -309,7 +309,7 @@ methods can be specified via ``CUSTOMREQUEST`` option::
 
 
 Building Multipart Trees With CurlMime (Draft)
-------------------------------------------
+-----------------------------------------------
 
 ``CurlMime`` is a new object API for constructing multipart trees in a more
 Pythonic way than legacy ``HTTPPOST`` tuples.
