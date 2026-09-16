@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+PycURL 7.48.0 - 2026-09-15
+--------------------------
+
+This release adds a CurlUrl object wrapping libcurl's URL API (with
+CURLOPT_CURLU support), adds support for Python 3.15, adds CURL_LOCK_DATA_HSTS
+as a CurlShare option, and adds support for several new libcurl options.
+This release also fixes several crashes, a memory leak, and other minor
+issues.
+
 PycURL 7.47.0 - 2026-06-29
 --------------------------
 

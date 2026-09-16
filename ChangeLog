@@ -1,3 +1,41 @@
+Version 7.48.0 [requires libcurl-7.19.0 or better] - 2026-09-15
+---------------------------------------------------------------
+
+        * Expose more CURLOPT_SSL_OPTIONS (patch by Scott Talbert)
+        * Read long description from README.rst instead of duplicating it in setup.py (patch by Scott Talbert)
+        * Fix test_redir_protocols_setopt (patch by Scott Talbert)
+        * Add CURL_LOCK_DATA_HSTS as a CurlShare option (patch by Scott Talbert)
+        * Add libpsl support to vcpkg installs for CI and wheel builds (patch by Scott Talbert)
+        * Configure nuget repo access as read-only from PRs (patch by Scott Talbert)
+        * Officially change project URL to https://pycurl.github.io/ (patch by Scott Talbert)
+        * Replace bare except clauses in examples with specific exception types (patch by Kotesh Kumar Yelamati)
+        * Add HTTP/3 support in libcurl wheel (patch by Will Noble)
+        * Fix segfault when calling duphandle() on a closed Curl handle (patch by Jorge Rocamora)
+        * Fix abort on non-text string arguments (patch by Jorge Rocamora)
+        * Fix CurlShare leak when close() detaches attached handles (patch by Jorge Rocamora)
+        * Document that views derived from the callback memoryview are not released (patch by Jorge Rocamora)
+        * Fix crash when duplicating a handle that uses set_ca_certs() (patch by Jorge Rocamora)
+        * Add CurlUrl object wrapping libcurl's URL API, with CURLOPT_CURLU support (patch by Jorge Rocamora)
+        * Fix callback exceptions being replaced by SystemError (patch by Jorge Rocamora)
+        * Fix test guard silently passing on real libcurl errors (patch by Jorge Rocamora)
+        * Update the docstring and manifest source lists (patch by Jorge Rocamora)
+        * Refuse pause() from a thread other than the performing one (patch by Jorge Rocamora)
+        * Add support for Python 3.15 (patch by Scott Talbert)
+        * Refuse integers for blob options instead of crashing (patch by Jorge Rocamora)
+        * Accept buffer objects for blob options (patch by Jorge Rocamora)
+        * Release all httppost encoded values and unset the form before MIMEPOST (patch by Jorge Rocamora)
+        * Reject callback return values that do not fit in an int (patch by Jorge Rocamora)
+        * Clear CurlMulti callbacks before deallocating attached handles (patch by Eric Buehl)
+        * Serve the test apps from a threaded WSGI server (patch by Jorge Rocamora)
+        * Add support for missing CURL options (patch by Khavish Anshudass Bhundoo)
+        * Add CURLOPT_SSL_EC_CURVES & CURLOPT_SSL_SIGNATURE_ALGORITHMS options (patch by Khavish Anshudass Bhundoo)
+        * Remove unused variable from do_curl_setopt_httppost (patch by Scott Talbert)
+        * test: silence WSGI test server access logging to stderr (patch by Scott Talbert)
+        * test: pin down oversized mime data_cb error assertions (patch by Scott Talbert)
+        * Give vendored OpenSSL a private OPENSSLDIR on Linux manylinux wheels (patch by Scott Talbert)
+        * Enable -Werror for the pycurl build in cibuildwheel without affecting vcpkg (patch by Scott Talbert)
+        * Handle libcurl options deprecated in 8.22.0 (patch by Scott Talbert)
+
 Version 7.47.0 [requires libcurl-7.19.0 or better] - 2026-06-29
 ---------------------------------------------------------------
 

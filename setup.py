@@ -3,7 +3,7 @@
 PROJECT_NAME = "pycurl"
 EXTENSION_NAME = "pycurl._pycurl"
 PY_PACKAGE = "curl"
-VERSION = "7.47.0"
+VERSION = "7.48.0"
 
 import glob, os, re, shlex, sys, subprocess
 from pathlib import Path
