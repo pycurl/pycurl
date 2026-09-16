@@ -12,30 +12,6 @@ PYFLAKES = pyflakes
 PYTHONMAJOR=$$($(PYTHON) -V 2>&1 |awk '{print $$2}' |awk -F. '{print $$1}')
 PYTHONMINOR=$$($(PYTHON) -V 2>&1 |awk '{print $$2}' |awk -F. '{print $$2}')
 
-# -c on linux
-# freebsd does not understand -c
-CHMOD_VERBOSE=-v
-
-BUILD_WWW = build/www
-
-RSYNC = rsync
-##RSYNC_FLAGS = -av --relative -e ssh
-RSYNC_FLAGS = -av --relative --delete --delete-after -e ssh
-
-RSYNC_FILES = \
-	htdocs \
-	htdocs/download/.htaccess \
-	upload
-
-RSYNC_EXCLUDES = \
-	'--exclude=htdocs/download/' \
-	'--exclude=upload/Ignore/' \
-	'--exclude=htdocs/travis-deps/'
-
-RSYNC_TARGET = /home/groups/p/py/pycurl/
-
-RSYNC_USER = armco@web.sourceforge.net
-
 # src/module.c is first because it declares global variables
 # which other files reference; important for single source build
 SOURCES = src/easy.c src/easycb.c src/easyinfo.c src/easyopt.c src/easyperform.c \
@@ -209,39 +185,8 @@ docs-force: build
 	$(PYTHON) -m sphinx doc build/doc
 	cp ChangeLog build/doc
 
-www: docs
-	mkdir -p build
-	rsync -a www build --delete
-	rsync -a build/doc/ build/www/htdocs/doc --exclude .buildinfo --exclude .doctrees
-	cp doc/static/favicon.ico build/www/htdocs
-	cp ChangeLog build/www/htdocs
-
-rsync: rsync-prepare
-	cd $(BUILD_WWW) && \
-	$(RSYNC) $(RSYNC_FLAGS) $(RSYNC_EXCLUDES) $(RSYNC_FILES) $(RSYNC_USER):$(RSYNC_TARGET)
-
-rsync-dry:
-	$(MAKE) rsync 'RSYNC=rsync --dry-run'
-
-rsync-check:
-	$(MAKE) rsync 'RSYNC=rsync --dry-run -c'
-
-# NOTE: Git does not maintain metadata like owners and file permissions,
-#       so we have to care manually.
-# NOTE: rsync targets depend on www.
-rsync-prepare:
-	chgrp $(CHMOD_VERBOSE) -R pycurl $(BUILD_WWW)
-	chmod $(CHMOD_VERBOSE) g+r `find $(BUILD_WWW) -perm +400 -print`
-	chmod $(CHMOD_VERBOSE) g+w `find $(BUILD_WWW) -perm +200 -print`
-	chmod $(CHMOD_VERBOSE) g+s `find $(BUILD_WWW) -type d -print`
-##	chmod $(CHMOD_VERBOSE) g+rws `find $(BUILD_WWW) -type d -perm -770 -print`
-	chmod $(CHMOD_VERBOSE) g+rws `find $(BUILD_WWW) -type d -print`
-	chmod $(CHMOD_VERBOSE) o-rwx $(BUILD_WWW)/upload
-	#-rm -rf `find $(BUILD_WWW) -name .xvpics -type d -print`
-
 .PHONY: all build test do-test strip install install_lib \
 	clean distclean maintainer-clean dist sdist \
-	docs docs-force \
-	rsync rsync-dry rsync-check rsync-prepare
+	docs docs-force
 
 .NOEXPORT:
