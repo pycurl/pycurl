@@ -57,13 +57,13 @@ class MultiSocketSelectTest(unittest.TestCase):
         socket_events = []
 
         # socket callback
-        def socket(event, socket, multi, data):
+        def socket(event, socket, data):
             if event == pycurl.POLL_REMOVE:
                 sockets.remove(socket)
             else:
                 if socket not in sockets:
                     sockets.add(socket)
-            socket_events.append((event, multi))
+            socket_events.append((event, socket))
 
         # init
         m = self.m
@@ -117,12 +117,10 @@ class MultiSocketSelectTest(unittest.TestCase):
             self.assertEqual("success", c.body.getvalue().decode())
             self.assertEqual(200, c.http_code)
 
-            # multi, not curl handle
-            self.check(pycurl.POLL_IN, m, socket_events)
-            self.check(pycurl.POLL_REMOVE, m, socket_events)
+        self.check(pycurl.POLL_IN, socket_events)
+        self.check(pycurl.POLL_REMOVE, socket_events)
 
-    def check(self, event, multi, socket_events):
-        for event_, multi_ in socket_events:
-            if event == event_ and multi == multi_:
-                return
-        assert False, "%d %s not found in socket events" % (event, multi)
+    def check(self, event, socket_events):
+        assert any(event == event_ for event_, _ in socket_events), (
+            "%d not found in socket events: %r" % (event, socket_events)
+        )

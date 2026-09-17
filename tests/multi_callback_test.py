@@ -90,7 +90,7 @@ def multi_ctx(app) -> Generator[MultiCtx, None, None]:
     multi = pycurl.CurlMulti()
     ctx = MultiCtx(easy=easy, multi=multi)
 
-    def socket_callback(ev_bitmask: int, sock_fd: int, multi_handle, data) -> None:
+    def socket_callback(ev_bitmask: int, sock_fd: int, data) -> None:
         logger.debug("socket_callback: fd=%d ev=%d", sock_fd, ev_bitmask)
         ctx.socket_result = (sock_fd, ev_bitmask)
         if ev_bitmask & pycurl.POLL_REMOVE:

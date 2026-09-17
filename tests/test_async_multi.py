@@ -421,11 +421,11 @@ def test_socket_mask_transitions() -> None:
         async with pycurl.AsyncCurlMulti() as multi:
             with _stubbed_socket_io(multi) as (stub, calls):
                 fd = 99
-                multi._on_socket(pycurl.POLL_IN, fd, stub, None)
+                multi._on_socket(pycurl.POLL_IN, fd, None)
                 state = stub.assigned[-1]
-                multi._on_socket(pycurl.POLL_INOUT, fd, stub, state)
-                multi._on_socket(pycurl.POLL_OUT, fd, stub, state)
-                multi._on_socket(pycurl.POLL_REMOVE, fd, stub, state)
+                multi._on_socket(pycurl.POLL_INOUT, fd, state)
+                multi._on_socket(pycurl.POLL_OUT, fd, state)
+                multi._on_socket(pycurl.POLL_REMOVE, fd, state)
 
             assert calls == [
                 ("add_reader", fd),
@@ -474,9 +474,9 @@ def test_poll_inout_then_remove_clears_both_watchers() -> None:
         async with pycurl.AsyncCurlMulti() as multi:
             with _stubbed_socket_io(multi) as (stub, calls):
                 fd = 77
-                multi._on_socket(pycurl.POLL_INOUT, fd, stub, None)
+                multi._on_socket(pycurl.POLL_INOUT, fd, None)
                 state = stub.assigned[-1]
-                multi._on_socket(pycurl.POLL_REMOVE, fd, stub, state)
+                multi._on_socket(pycurl.POLL_REMOVE, fd, state)
 
             assert calls == [
                 ("add_reader", fd),
@@ -494,9 +494,9 @@ def test_poll_none_keeps_assignment() -> None:
         async with pycurl.AsyncCurlMulti() as multi:
             with _stubbed_socket_io(multi) as (stub, calls):
                 fd = 88
-                multi._on_socket(pycurl.POLL_INOUT, fd, stub, None)
+                multi._on_socket(pycurl.POLL_INOUT, fd, None)
                 state = stub.assigned[-1]
-                multi._on_socket(pycurl.POLL_NONE, fd, stub, state)
+                multi._on_socket(pycurl.POLL_NONE, fd, state)
 
             assert ("remove_reader", fd) in calls
             assert ("remove_writer", fd) in calls
@@ -582,7 +582,7 @@ def test_close_time_poll_in_is_ignored() -> None:
         async with pycurl.AsyncCurlMulti() as multi:
             with _stubbed_socket_io(multi) as (stub, calls):
                 multi._closing = True
-                multi._on_socket(pycurl.POLL_IN, 99, stub, None)
+                multi._on_socket(pycurl.POLL_IN, 99, None)
             assert calls == []
             assert stub.assigned == []
             assert 99 not in multi._assigned_fds

@@ -219,11 +219,6 @@ do_multi_dealloc(CurlMultiObject *self)
     PyObject_GC_UnTrack(self);
     Py_TRASHCAN_BEGIN(self, do_multi_dealloc);
 
-    /* Removing easy handles can invoke M_SOCKETFUNCTION. Clear it first so
-     * the dying CurlMulti is not handed back to Python from its own
-     * tp_dealloc. */
-    Py_CLEAR(self->s_cb);
-
     util_multi_detach_easies(self, 0, 1);
 
     util_multi_xdecref(self);
@@ -333,7 +328,7 @@ multi_socket_callback(CURL *easy,
     if (py_socket == NULL) {
         goto verbose_error;
     }
-    arglist = Py_BuildValue("(iOOO)", what, py_socket, userp, (PyObject *)socketp);
+    arglist = Py_BuildValue("(iOO)", what, py_socket, (PyObject *)socketp);
     Py_DECREF(py_socket);
     if (arglist == NULL) {
         goto verbose_error;

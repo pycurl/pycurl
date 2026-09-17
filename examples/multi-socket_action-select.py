@@ -75,7 +75,7 @@ state = {
     'msg': None,
 }
 
-def socket_fn(what, sock_fd, multi, socketp):
+def socket_fn(what, sock_fd, socketp):
     if what == pycurl.POLL_IN or what == pycurl.POLL_INOUT:
         state['rlist'].append(sock_fd)
     elif what == pycurl.POLL_OUT or what == pycurl.POLL_INOUT:
