@@ -19,7 +19,6 @@ include doc/docstrings/*.rst
 include doc/static/favicon.ico
 include examples/*.py
 include examples/quickstart/*.py
-include examples/tests/*.py
 include src/docstrings.c
 include src/docstrings.h
 include src/easy.c
