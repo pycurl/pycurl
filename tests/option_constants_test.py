@@ -119,9 +119,9 @@ def test_curlproxy_http_1_0_setopt(curl):
 
 # CURLOPT_SSH_KNOWNHOSTS was introduced in libcurl-7.19.6
 @util.min_libcurl(7, 19, 6)
-@util.guard_unknown_libcurl_option
 def test_ssh_knownhosts_setopt(curl):
-    curl.setopt(curl.SSH_KNOWNHOSTS, "/hello/world")
+    with util.guard_unknown_libcurl_option("SSH_KNOWNHOSTS"):
+        curl.setopt(curl.SSH_KNOWNHOSTS, "/hello/world")
 
 
 # CURLOPT_MAIL_FROM was introduced in libcurl-7.20.0
@@ -230,9 +230,9 @@ def test_ssl_enable_npn(curl):
 
 @util.min_libcurl(7, 42, 0)
 @util.only_ssl
-@util.guard_unknown_libcurl_option
 def test_ssl_falsestart(curl):
-    curl.setopt(curl.SSL_FALSESTART, 1)
+    with util.guard_unknown_libcurl_option("SSL_FALSESTART"):
+        curl.setopt(curl.SSL_FALSESTART, 1)
 
 
 def test_ssl_verifyhost(curl):

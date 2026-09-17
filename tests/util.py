@@ -8,9 +8,9 @@ import socket
 import sys
 import tempfile
 import time as _time
-import unittest
 import weakref
 
+import pytest
 
 def b(s):
     """Byte literal"""
@@ -42,63 +42,35 @@ def pycurl_version_less_than(*spec):
 
 
 def min_python(major, minor):
-    def decorator(fn):
-        @functools.wraps(fn)
-        def decorated(*args, **kwargs):
-            if sys.version_info[0:2] < (major, minor):
-                raise unittest.SkipTest("python < %d.%d" % (major, minor))
-
-            return fn(*args, **kwargs)
-
-        return decorated
-
-    return decorator
+    return pytest.mark.skipif(
+        sys.version_info[0:2] < (major, minor),
+        reason=f"python < {major}.{minor}",
+    )
 
 
 def min_libcurl(major, minor, patch):
-    def decorator(fn):
-        @functools.wraps(fn)
-        def decorated(*args, **kwargs):
-            if pycurl_version_less_than(major, minor, patch):
-                raise unittest.SkipTest("libcurl < %d.%d.%d" % (major, minor, patch))
-
-            return fn(*args, **kwargs)
-
-        return decorated
-
-    return decorator
+    return pytest.mark.skipif(
+        pycurl_version_less_than(major, minor, patch),
+        reason=f"libcurl < {major}.{minor}.{patch}",
+    )
 
 
 def removed_in_libcurl(major, minor, patch):
-    def decorator(fn):
-        @functools.wraps(fn)
-        def decorated(*args, **kwargs):
-            if not pycurl_version_less_than(major, minor, patch):
-                raise unittest.SkipTest("libcurl >= %d.%d.%d" % (major, minor, patch))
-
-            return fn(*args, **kwargs)
-
-        return decorated
-
-    return decorator
+    return pytest.mark.skipif(
+        not pycurl_version_less_than(major, minor, patch),
+        reason=f"libcurl >= {major}.{minor}.{patch}",
+    )
 
 
 def skip_in_libcurl_versions(*versions):
     import pycurl
 
-    def decorator(fn):
-        @functools.wraps(fn)
-        def decorated(*args, **kwargs):
-            c = pycurl.COMPILE_LIBCURL_VERSION_NUM
-            version = (c >> 16 & 0xFF, c >> 8 & 0xFF, c & 0xFF)
-            if version in versions:
-                raise unittest.SkipTest("libcurl == %d.%d.%d" % version)
-
-            return fn(*args, **kwargs)
-
-        return decorated
-
-    return decorator
+    c = pycurl.COMPILE_LIBCURL_VERSION_NUM
+    version = (c >> 16 & 0xFF, c >> 8 & 0xFF, c & 0xFF)
+    return pytest.mark.skipif(
+        version in versions,
+        reason=f"libcurl == {version[0]}.{version[1]}.{version[2]}",
+    )
 
 
 def skip_module_without_websockets():
@@ -107,7 +79,6 @@ def skip_module_without_websockets():
     library built with WebSocket support — distro libcurl often ships
     with ``--disable-websockets``."""
     import pycurl
-    import pytest
 
     if pycurl_version_less_than(7, 86, 0) or "ws" not in pycurl.version_info()[8]:
         pytest.skip("libcurl built without WebSocket support", allow_module_level=True)
@@ -116,225 +87,187 @@ def skip_module_without_websockets():
 def only_ssl(fn):
     import pycurl
 
-    @functools.wraps(fn)
-    def decorated(*args, **kwargs):
-        # easier to check that pycurl supports https, although
-        # theoretically it is not the same test.
-        # pycurl.version_info()[8] is a tuple of protocols supported by libcurl
-        if "https" not in pycurl.version_info()[8]:
-            raise unittest.SkipTest("libcurl does not support ssl")
-
-        return fn(*args, **kwargs)
-
-    return decorated
+    # easier to check that pycurl supports https, although
+    # theoretically it is not the same test.
+    # pycurl.version_info()[8] is a tuple of protocols supported by libcurl
+    return pytest.mark.skipif(
+        "https" not in pycurl.version_info()[8],
+        reason="libcurl does not support ssl",
+    )(fn)
 
 
 def only_telnet(fn):
     import pycurl
 
-    @functools.wraps(fn)
-    def decorated(*args, **kwargs):
-        # pycurl.version_info()[8] is a tuple of protocols supported by libcurl
-        if "telnet" not in pycurl.version_info()[8]:
-            raise unittest.SkipTest("libcurl does not support telnet")
-
-        return fn(*args, **kwargs)
-
-    return decorated
+    # pycurl.version_info()[8] is a tuple of protocols supported by libcurl
+    return pytest.mark.skipif(
+        "telnet" not in pycurl.version_info()[8],
+        reason="libcurl does not support telnet",
+    )(fn)
 
 
 def only_ssl_backends(*backends):
-    def decorator(fn):
-        import pycurl
+    import pycurl
 
-        @functools.wraps(fn)
-        def decorated(*args, **kwargs):
-            # easier to check that pycurl supports https, although
-            # theoretically it is not the same test.
-            # pycurl.version_info()[8] is a tuple of protocols supported by libcurl
-            if "https" not in pycurl.version_info()[8]:
-                raise unittest.SkipTest("libcurl does not support ssl")
+    # easier to check that pycurl supports https, although
+    # theoretically it is not the same test.
+    # pycurl.version_info()[8] is a tuple of protocols supported by libcurl
+    if "https" not in pycurl.version_info()[8]:
+        return pytest.mark.skipif(True, reason="libcurl does not support ssl")
 
-            if pycurl.COMPILE_SSL_LIB not in backends:
-                raise unittest.SkipTest("SSL backend is %s" % pycurl.COMPILE_SSL_LIB)
-
-            return fn(*args, **kwargs)
-
-        return decorated
-
-    return decorator
+    return pytest.mark.skipif(
+        pycurl.COMPILE_SSL_LIB not in backends,
+        reason=f"SSL backend is {pycurl.COMPILE_SSL_LIB}",
+    )
 
 
 def only_ssl_backends_with_min_libcurl(
     backend_versions: dict[str, tuple[int, int, int]],
 ):
-    import pytest
+    import pycurl
 
-    def decorator(fn):
-        import pycurl
+    if "https" not in pycurl.version_info()[8]:
+        return pytest.mark.skipif(True, reason="libcurl does not support ssl")
 
-        @functools.wraps(fn)
-        def decorated(*args, **kwargs):
-            if "https" not in pycurl.version_info()[8]:
-                pytest.skip("libcurl does not support ssl")
+    backend = pycurl.COMPILE_SSL_LIB
+    if backend not in backend_versions:
+        return pytest.mark.skipif(True, reason=f"SSL backend is {backend}")
 
-            backend = pycurl.COMPILE_SSL_LIB
-            if backend not in backend_versions:
-                pytest.skip("SSL backend is %s" % backend)
-
-            min_ver = backend_versions[backend]
-            if pycurl_version_less_than(*min_ver):
-                pytest.skip(
-                    "SSL backend %s requires libcurl >= %d.%d.%d" % (backend, *min_ver)
-                )
-
-            return fn(*args, **kwargs)
-
-        return decorated
-
-    return decorator
+    min_ver = backend_versions[backend]
+    return pytest.mark.skipif(
+        pycurl_version_less_than(*min_ver),
+        reason=f"SSL backend {backend} requires libcurl >= "
+        f"{min_ver[0]}.{min_ver[1]}.{min_ver[2]}",
+    )
 
 
 def only_ssl_ech(fn):
     import pycurl
 
-    @functools.wraps(fn)
-    def decorated(*args, **kwargs):
-        # easier to check that pycurl supports https, although
-        # theoretically it is not the same test.
-        # pycurl.version_info()[8] is a tuple of protocols supported by libcurl
-        if "https" not in pycurl.version_info()[8]:
-            raise unittest.SkipTest("libcurl does not support ssl")
+    # easier to check that pycurl supports https, although
+    # theoretically it is not the same test.
+    # pycurl.version_info()[8] is a tuple of protocols supported by libcurl
+    if "https" not in pycurl.version_info()[8]:
+        return pytest.mark.skipif(True, reason="libcurl does not support ssl")(fn)
 
-        # CURLOPT_ECH is experimental not yet supported by OpenSSL.
-        supported = ["BoringSSL", "wolfSSL"]
-        ssl_lib = pycurl.version_info()[5]
-        if not any(ssl_lib.startswith(lib) for lib in supported):
-            raise unittest.SkipTest("SSL runtime library is %s" % ssl_lib)
-
-        return fn(*args, **kwargs)
-
-    return decorated
+    # CURLOPT_ECH is experimental not yet supported by OpenSSL.
+    supported = ["BoringSSL", "wolfSSL"]
+    ssl_lib = pycurl.version_info()[5]
+    return pytest.mark.skipif(
+        not any(ssl_lib.startswith(lib) for lib in supported),
+        reason=f"SSL runtime library is {ssl_lib}",
+    )(fn)
 
 
 def only_ipv6(fn):
     import pycurl
 
-    @functools.wraps(fn)
-    def decorated(*args, **kwargs):
-        if not pycurl.version_info()[4] & pycurl.VERSION_IPV6:
-            raise unittest.SkipTest("libcurl does not support ipv6")
-
-        return fn(*args, **kwargs)
-
-    return decorated
+    return pytest.mark.skipif(
+        not pycurl.version_info()[4] & pycurl.VERSION_IPV6,
+        reason="libcurl does not support ipv6",
+    )(fn)
 
 
 def only_unix(fn):
-    @functools.wraps(fn)
-    def decorated(*args, **kwargs):
-        if sys.platform == "win32":
-            raise unittest.SkipTest("Unix only")
-
-        return fn(*args, **kwargs)
-
-    return decorated
+    return pytest.mark.skipif(sys.platform == "win32", reason="Unix only")(fn)
 
 
 def only_http2(fn):
     import pycurl
 
-    @functools.wraps(fn)
-    def decorated(*args, **kwargs):
-        if not pycurl.version_info()[4] & pycurl.VERSION_HTTP2:
-            raise unittest.SkipTest("libcurl does not support HTTP version 2")
-
-        return fn(*args, **kwargs)
-
-    return decorated
+    return pytest.mark.skipif(
+        not pycurl.version_info()[4] & pycurl.VERSION_HTTP2,
+        reason="libcurl does not support HTTP version 2",
+    )(fn)
 
 
 def only_http3(fn):
     import pycurl
 
-    @functools.wraps(fn)
-    def decorated(*args, **kwargs):
-        if not pycurl.version_info()[4] & pycurl.VERSION_HTTP3:
-            raise unittest.SkipTest("libcurl does not support HTTP version 3")
-
-        return fn(*args, **kwargs)
-
-    return decorated
+    return pytest.mark.skipif(
+        not pycurl.version_info()[4] & pycurl.VERSION_HTTP3,
+        reason="libcurl does not support HTTP version 3",
+    )(fn)
 
 
 def only_gssapi(fn):
     import pycurl
 
-    @functools.wraps(fn)
-    def decorated(*args, **kwargs):
-        if not pycurl.version_info()[4] & pycurl.VERSION_GSSAPI:
-            raise unittest.SkipTest("libcurl does not support GSS-API")
-
-        return fn(*args, **kwargs)
-
-    return decorated
+    return pytest.mark.skipif(
+        not pycurl.version_info()[4] & pycurl.VERSION_GSSAPI,
+        reason="libcurl does not support GSS-API",
+    )(fn)
 
 
 def only_tls_srp(fn):
     import pycurl
 
-    @functools.wraps(fn)
-    def decorated(*args, **kwargs):
-        if not pycurl.version_info()[4] & pycurl.VERSION_TLSAUTH_SRP:
-            raise unittest.SkipTest("libcurl does not support TLS-SRP")
-
-        return fn(*args, **kwargs)
-
-    return decorated
+    return pytest.mark.skipif(
+        not pycurl.version_info()[4] & pycurl.VERSION_TLSAUTH_SRP,
+        reason="libcurl does not support TLS-SRP",
+    )(fn)
 
 
 def only_psl(fn):
     import pycurl
 
-    @functools.wraps(fn)
-    def decorated(*args, **kwargs):
-        if not pycurl.version_info()[4] & pycurl.VERSION_PSL:
-            raise unittest.SkipTest("libcurl does not support libpsl")
-
-        return fn(*args, **kwargs)
-
-    return decorated
+    return pytest.mark.skipif(
+        not pycurl.version_info()[4] & pycurl.VERSION_PSL,
+        reason="libcurl does not support libpsl",
+    )(fn)
 
 
-def guard_unknown_libcurl_option(fn):
-    """Converts an option-unavailable curl error into a SkipTest exception.
-    This is meant to be used with tests exercising libcurl features that
-    depend on external libraries, such as libssh2/gssapi, where libcurl
-    does not provide a way of detecting whether the required libraries
-    were compiled against. Any other curl error is a real failure and is
-    re-raised."""
+class guard_unknown_libcurl_option:
+    """Context manager that turns an option-unavailable curl error into a
+    skip. Wrap just the setopt/unsetopt call that exercises a libcurl
+    feature depending on an external library, such as libssh2/gssapi,
+    where libcurl does not provide a way of detecting whether the required
+    libraries were compiled in. Any other curl error is a real failure and
+    is re-raised.
 
-    import pycurl
+    ``pycurl.error`` does not carry which option was being set, so pass
+    its name (matching the ``pycurl``/``Curl`` attribute you used, e.g.
+    ``util.guard_unknown_libcurl_option("SSH_KNOWNHOSTS")``) to get it into
+    the skip message.
 
-    # CURLE_UNKNOWN_OPTION means libcurl does not know the option at all,
-    # CURLE_NOT_BUILT_IN that it knows it but the backend lacks support.
-    # Both constants exist only when built against libcurl 7.21.5 or later.
-    unavailable = [
-        getattr(pycurl, name)
-        for name in ("E_UNKNOWN_OPTION", "E_NOT_BUILT_IN")
-        if hasattr(pycurl, name)
-    ]
+    Used as ``with util.guard_unknown_libcurl_option(...): ...`` rather
+    than as a function decorator so that pytest reports the skip against
+    the call site inside the test, not this context manager's own frame."""
 
-    @functools.wraps(fn)
-    def decorated(*args, **kwargs):
-        try:
-            return fn(*args, **kwargs)
-        except pycurl.error as exc:
-            if exc.args[0] in unavailable:
-                raise unittest.SkipTest(str(exc))
-            raise
+    def __init__(self, option_name=None):
+        self.option_name = option_name
 
-    return decorated
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        __tracebackhide__ = True
+
+        if exc_type is None:
+            return False
+
+        import pycurl
+
+        if exc_type is not pycurl.error:
+            return False
+
+        # CURLE_UNKNOWN_OPTION means libcurl does not know the option at
+        # all, CURLE_NOT_BUILT_IN that it knows it but the backend lacks
+        # support. Both constants exist only when built against libcurl
+        # 7.21.5 or later.
+        reasons = {
+            getattr(pycurl, name, None): reason
+            for name, reason in (
+                ("E_UNKNOWN_OPTION", "unknown libcurl option"),
+                ("E_NOT_BUILT_IN", "libcurl option not built-in"),
+            )
+        }
+        reason = reasons.get(exc.args[0])
+        if reason is not None:
+            target = self.option_name if self.option_name is not None else exc
+            pytest.skip(f"{reason}: {target}")
+
+        return False
 
 
 create_connection = socket.create_connection
