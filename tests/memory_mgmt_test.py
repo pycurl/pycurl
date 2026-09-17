@@ -168,6 +168,7 @@ def test_form_bufferptr_memory_leak_gh267():
         pytest.param(pycurl.HEADERFUNCTION, lambda f: f.write, id="HEADERFUNCTION"),
     ],
 )
+@pytest.mark.filterwarnings("ignore::ResourceWarning")
 def test_option_refcounting(option, target):
     c = util.DefaultCurl()
     f = open(devnull, "a+")
