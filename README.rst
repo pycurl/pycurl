@@ -154,37 +154,6 @@ vsftpd tests you must explicitly set PYCURL_VSFTPD_PATH variable like so::
 .. _vsftpd: http://vsftpd.beasts.org/
 
 
-Test Matrix
------------
-
-The test matrix is a separate framework that runs tests on more esoteric
-configurations. It supports:
-
-- Testing against Python compiled without threads, which requires an out of
-  process test server.
-- Testing against locally compiled libcurl with arbitrary options.
-
-To use the test matrix, first start the test server by running::
-
-    python -m tests.appmanager
-
-Then in a different shell, and preferably in a separate user account,
-run the test matrix::
-
-    # run ftp tests, etc.
-    export PYCURL_VSFTPD_PATH=vsftpd
-    # create a new work directory, preferably not under pycurl tree
-    mkdir testmatrix
-    cd testmatrix
-    # run the matrix specifying absolute path
-    python /path/to/pycurl/tests/matrix.py
-
-The test matrix will download, build and install supported Python versions
-and supported libcurl versions, then run pycurl tests against each combination.
-To see what the combinations are, look in
-`tests/matrix.py <tests/matrix.py>`_.
-
-
 Contribute
 ----------
 

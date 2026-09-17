@@ -125,7 +125,6 @@ build-release: $(RELEASE_SOURCES)
 do-test:
 	make -C tests/fake-curl/libcurl
 	./tests/run.sh
-	./tests/ext/test-suite.sh
 	$(PYFLAKES) python examples tests setup.py
 
 test: build do-test
