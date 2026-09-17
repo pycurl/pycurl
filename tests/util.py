@@ -1,11 +1,13 @@
 # vi:ts=4:et
 
-import gc
-import tempfile
-import sys
-import socket
-import time as _time
+import contextlib
 import functools
+import gc
+import os
+import socket
+import sys
+import tempfile
+import time as _time
 import unittest
 import weakref
 
@@ -380,6 +382,24 @@ def with_real_write_file(fn):
             return fn(*(list(args) + [f.file]))
 
     return wrapper
+
+
+@contextlib.contextmanager
+def redirected_fd(fd, replacement_path):
+    """Temporarily point the OS-level file descriptor `fd` at
+    `replacement_path`, restoring the original on exit. For redirecting
+    C-level streams like `stdin`/`stdout` that native code (e.g. libcurl)
+    reads/writes directly by fd, which plain sys.stdin/stdout swaps can't
+    reach."""
+    replacement_fd = os.open(replacement_path, os.O_RDONLY)
+    saved_fd = os.dup(fd)
+    try:
+        os.dup2(replacement_fd, fd)
+        yield
+    finally:
+        os.dup2(saved_fd, fd)
+        os.close(saved_fd)
+        os.close(replacement_fd)
 
 
 def gc_collect_hard(rounds=3):

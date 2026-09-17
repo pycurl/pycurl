@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from io import BytesIO
 from urllib.parse import urlencode
 
@@ -298,5 +299,7 @@ def test_readfunction_unsetopt(curl, app):
     sio = BytesIO()
     curl.setopt(pycurl.WRITEFUNCTION, sio.write)
 
-    curl.perform()
+    # unset READFUNCTION reads from real stdin; force EOF so a tty doesn't block.
+    with util.redirected_fd(0, os.devnull):
+        curl.perform()
     # did not crash
