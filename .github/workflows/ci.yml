@@ -36,12 +36,16 @@ jobs:
           - curl-version: "vcpkg"
             python-version: "3.14t"
             cibw-build: "cp314t-manylinux_x86_64"
+          - curl-version: "ubuntu"
+            python-version: "3.12d"
+            use-debug-python: true
     permissions:
       packages: write
 
     steps:
     - uses: actions/checkout@v6
     - name: Set up Python ${{ matrix.python-version }}
+      if: ${{ !matrix.use-debug-python }}
       uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
@@ -51,6 +55,13 @@ jobs:
         sudo apt-get update
         sudo apt-get install libcurl4-gnutls-dev libgnutls28-dev
       if: matrix.curl-version == 'ubuntu'
+    - name: Set up Debug Python ${{ matrix.python-version }}
+      if: ${{ matrix.use-debug-python }}
+      run: |
+        sudo apt-get install python3-dbg gdb
+        sudo rm /usr/bin/python
+        sudo ln -s /usr/bin/python3.12d /usr/bin/python
+        sudo sysctl -w kernel.core_pattern=core
     - name: Install dependencies
       if: matrix.curl-version == 'ubuntu'
       run: |
@@ -80,7 +91,18 @@ jobs:
       if: matrix.curl-version == 'ubuntu'
       env:
         PYCURL_VSFTPD_PATH: vsftpd
-      run: make do-test
+        PYTEST_ADDOPTS: ${{ matrix.use-debug-python && '-s' || '' }}
+      run: |
+        ulimit -c unlimited
+        make do-test
+    - name: Show gdb backtrace on crash
+      if: ${{ failure() && matrix.use-debug-python }}
+      run: |
+        if [ -f core ]; then
+          gdb -batch -ex "thread apply all bt full" -ex "py-bt" "$(which python)" core
+        else
+          echo "Test step failed but no core file was found."
+        fi
     - name: Build & test with cibuildwheel
       if: matrix.curl-version == 'vcpkg'
       env:
