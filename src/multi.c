@@ -216,6 +216,15 @@ util_multi_detach_easies(CurlMultiObject *self, int close_handles, int swallow_e
 PYCURL_INTERNAL void
 do_multi_dealloc(CurlMultiObject *self)
 {
+    /* tp_dealloc can run while an exception is propagating (e.g. when
+     * __init__ of a subclass rejects our arguments and the freshly
+     * constructed object is immediately discarded). The cleanup below
+     * calls back into Python (iterating easy_object_refs, calling the
+     * easy objects' close() method), which must not observe that
+     * exception, so stash it for the duration. */
+    PyObject *exc_type, *exc_val, *exc_tb;
+    PyErr_Fetch(&exc_type, &exc_val, &exc_tb);
+
     PyObject_GC_UnTrack(self);
     Py_TRASHCAN_BEGIN(self, do_multi_dealloc);
 
@@ -235,6 +244,8 @@ do_multi_dealloc(CurlMultiObject *self)
 
     CurlMulti_Type.tp_free(self);
     Py_TRASHCAN_END
+
+    PyErr_Restore(exc_type, exc_val, exc_tb);
 }
 
 
