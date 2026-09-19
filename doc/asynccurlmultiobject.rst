@@ -31,3 +31,10 @@ AsyncCurlMulti Object
     .. automethod:: pycurl.AsyncCurlMulti.__aenter__
 
     .. automethod:: pycurl.AsyncCurlMulti.__aexit__
+
+Blocking behaviour
+------------------
+
+User callbacks run on the event loop thread, so a callback that blocks
+also blocks the loop. For blocking inside libcurl, see
+`libcurl-multi <https://curl.se/libcurl/c/libcurl-multi.html>`_.
