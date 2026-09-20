@@ -106,6 +106,15 @@ def only_telnet(fn):
     )(fn)
 
 
+def only_libssh2(fn):
+    import pycurl
+
+    return pytest.mark.skipif(
+        "libssh2/" not in pycurl.version,
+        reason="SSH backend is not libssh2",
+    )(fn)
+
+
 def only_ssl_backends(*backends):
     import pycurl
 

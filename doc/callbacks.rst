@@ -426,6 +426,30 @@ SSH_KEYFUNCTION
     `ssh_key_cb_test.py test`_ shows how to use ``SSH_KEYFUNCTION``.
 
 
+SSH_HOSTKEYFUNCTION
+-------------------
+
+.. function:: SSH_HOSTKEYFUNCTION(keytype: int, key: bytes) -> int
+
+    Callback for verifying the server's host key. Corresponds to
+    `CURLOPT_SSH_HOSTKEYFUNCTION`_ in libcurl.
+
+    *keytype* is a ``KHTYPE_*`` value. *key* is the raw host key.
+
+    Return ``KHMATCH_OK`` to accept the host key. Any other value rejects
+    it and the transfer fails with ``E_PEER_FAILED_VERIFICATION``. An
+    exception raised in the callback also rejects the key and propagates
+    out of :ref:`perform <perform>`.
+
+    :ref:`setopt <setopt>` raises ``pycurl.error`` when libcurl does not
+    support this option.
+
+    The callback may be unset by calling :ref:`setopt <setopt>` with ``None``
+    as the value or by calling :ref:`unsetopt <unsetopt>`.
+
+    `ssh_key_cb_test.py test`_ shows how to use ``SSH_HOSTKEYFUNCTION``.
+
+
 TIMERFUNCTION
 -------------
 
@@ -727,6 +751,7 @@ Example::
 .. _header_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/header_test.py
 .. _debug_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/debug_test.py
 .. _CURLOPT_SSH_KEYFUNCTION: https://curl.haxx.se/libcurl/c/CURLOPT_SSH_KEYFUNCTION.html
+.. _CURLOPT_SSH_HOSTKEYFUNCTION: https://curl.se/libcurl/c/CURLOPT_SSH_HOSTKEYFUNCTION.html
 .. _namedtuple: https://docs.python.org/library/collections.html#collections.namedtuple
 .. _CURLOPT_SOCKOPTFUNCTION: https://curl.haxx.se/libcurl/c/CURLOPT_SOCKOPTFUNCTION.html
 .. _sockopt_cb_test.py test: https://github.com/pycurl/pycurl/blob/master/tests/sockopt_cb_test.py
