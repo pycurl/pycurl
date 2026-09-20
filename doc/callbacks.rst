@@ -453,7 +453,7 @@ TIMERFUNCTION
 SOCKETFUNCTION
 --------------
 
-.. function:: SOCKETFUNCTION(what, sock_fd, multi, socketp) -> int | None
+.. function:: SOCKETFUNCTION(what: int, sock_fd: int, socketp: object) -> int | None
 
     Callback notifying the application about activity on libcurl sockets.
     Corresponds to `CURLMOPT_SOCKETFUNCTION`_.
@@ -466,9 +466,8 @@ SOCKETFUNCTION
     ``POLL_REMOVE``; see the `CURLMOPT_SOCKETFUNCTION`_ docs for their
     meaning.
 
-    The ``userp`` ("private callback pointer") argument, as described in the
-    ``CURLMOPT_SOCKETFUNCTION`` documentation, is set to the ``CurlMulti``
-    instance.
+    The callback is not passed the ``CurlMulti`` instance. A callback that
+    needs it should capture it, for example with a closure or a bound method.
 
     The ``socketp`` ("private socket pointer") argument, as described in the
     ``CURLMOPT_SOCKETFUNCTION`` documentation, is set to the value provided

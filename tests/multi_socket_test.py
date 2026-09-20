@@ -43,11 +43,10 @@ def _find_socket(multi, timeout=5.0, timer_state=None):
     return None
 
 
-def _assert_socket_event(event, multi, socket_events):
-    for event_, multi_ in socket_events:
-        if event == event_ and multi == multi_:
-            return
-    assert False, "%d %s not found in socket events" % (event, multi)
+def _assert_socket_event(event, socket_events):
+    assert any(event == event_ for event_, _ in socket_events), (
+        "%d not found in socket events: %r" % (event, socket_events)
+    )
 
 
 def _assert_within_deadline(deadline, label):
@@ -98,9 +97,8 @@ def test_multi_socket(app, multi):
     timer_state = install_timer_tracker(multi)
 
     # socket callback
-    def socket(event, socket, multi_handle, data):
-        # print(event, socket, multi_handle, data)
-        socket_events.append((event, multi_handle))
+    def socket(event, sock_fd, data):
+        socket_events.append((event, sock_fd))
 
     # init
     multi.setopt(pycurl.M_SOCKETFUNCTION, socket)
@@ -139,9 +137,8 @@ def test_multi_socket(app, multi):
         assert "success" == c.body.getvalue().decode()
         assert 200 == c.http_code
 
-        # multi, not curl handle
-        _assert_socket_event(pycurl.POLL_IN, multi, socket_events)
-        _assert_socket_event(pycurl.POLL_REMOVE, multi, socket_events)
+    _assert_socket_event(pycurl.POLL_IN, socket_events)
+    _assert_socket_event(pycurl.POLL_REMOVE, socket_events)
 
     # close handles
     for c in handles:
@@ -160,7 +157,7 @@ def test_multi_assign_objects(app, multi, reassign):
     class Sentinel:
         pass
 
-    def socket(event, sock_fd, multi_handle, data):
+    def socket(event, sock_fd, data):
         nonlocal seen_data
         if data is not None:
             seen_data = data
@@ -213,7 +210,7 @@ def test_multi_assign_inside_socket_callback(app, multi):
     events = []
     assign_errors = []
 
-    def socket(event, sock_fd, multi_handle, data):
+    def socket(event, sock_fd, data):
         events.append((sock_fd, event, data))
         if event != pycurl.POLL_REMOVE and data is None:
             try:
@@ -230,10 +227,26 @@ def test_multi_assign_inside_socket_callback(app, multi):
     )
 
 
+def test_socket_callback_receives_three_args(app, multi):
+    calls = []
+
+    def socket(*args):
+        calls.append(args)
+
+    for _ in _chunks_transfer(app, multi, socket, "arg count"):
+        pass
+
+    assert calls, "expected at least one socket callback invocation"
+    assert {len(args) for args in calls} == {3}
+    assert all(
+        isinstance(what, int) and isinstance(sock_fd, int) for what, sock_fd, _ in calls
+    )
+
+
 def test_socketp_starts_as_none(app, multi):
     seen_per_fd: dict[int, list] = {}
 
-    def socket(event, sock_fd, multi_handle, data):
+    def socket(event, sock_fd, data):
         seen_per_fd.setdefault(sock_fd, []).append(data)
 
     for _ in _chunks_transfer(app, multi, socket, "socketp starts None"):
@@ -265,7 +278,7 @@ def test_clear_assignment_inside_socket_callback_releases_ref(app, multi, clear)
     errors = []
     cleared_fds = set()
 
-    def socket(event, sock_fd, multi_handle, data):
+    def socket(event, sock_fd, data):
         # why: log primitives only -- passing `data` would pin marker via LogRecord args.
         kind = (
             "None" if data is None else ("marker" if data is marker_ref() else "other")
@@ -309,7 +322,7 @@ def _assign_marker_then_close(app):
     marker_ref = weakref.ref(marker)
     state = {"assigned": False}
 
-    def socket(event, sock_fd, multi_handle, data):
+    def socket(event, sock_fd, data):
         if event != pycurl.POLL_REMOVE and not state["assigned"]:
             multi.assign(sock_fd, marker)
             state["assigned"] = True
@@ -357,7 +370,7 @@ def test_multi_clear_assignment(app, multi, clear):
     class Sentinel:
         pass
 
-    def socket(event, sock_fd, multi_handle, data):
+    def socket(event, sock_fd, data):
         pass
 
     for timer_state in _chunks_transfer(app, multi, socket, "clear assignment"):
