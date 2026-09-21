@@ -432,6 +432,12 @@ do_curl_duphandle(CurlObject *self, PyObject *Py_UNUSED(ignored))
         curl_easy_setopt(dup->handle, CURLOPT_SSH_KEYDATA, dup);
     }
 #endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 84, 0)
+    if (self->ssh_hostkey_cb != NULL) {
+        dup->ssh_hostkey_cb = Py_NewRef(self->ssh_hostkey_cb);
+        curl_easy_setopt(dup->handle, CURLOPT_SSH_HOSTKEYDATA, dup);
+    }
+#endif
     if (self->seek_cb != NULL) {
         dup->seek_cb = Py_NewRef(self->seek_cb);
         curl_easy_setopt(dup->handle, CURLOPT_SEEKDATA, dup);
@@ -567,6 +573,9 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
 #endif
         Py_CLEAR(self->sockopt_cb);
         Py_CLEAR(self->ssh_key_cb);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 84, 0)
+        Py_CLEAR(self->ssh_hostkey_cb);
+#endif
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 80, 0)
         Py_CLEAR(self->prereq_cb);
 #endif
@@ -805,6 +814,9 @@ do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
 #endif
     VISIT(self->sockopt_cb);
     VISIT(self->ssh_key_cb);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 84, 0)
+    VISIT(self->ssh_hostkey_cb);
+#endif
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 80, 0)
     VISIT(self->prereq_cb);
 #endif

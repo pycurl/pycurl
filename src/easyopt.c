@@ -230,6 +230,9 @@ PYCURL_IGNORE_DEPRECATED_END
 #ifdef HAVE_CURL_7_19_6_OPTS
     CLEAR_CALLBACK(CURLOPT_SSH_KEYFUNCTION, CURLOPT_SSH_KEYDATA, self->ssh_key_cb);
 #endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 84, 0)
+    CLEAR_CALLBACK(CURLOPT_SSH_HOSTKEYFUNCTION, CURLOPT_SSH_HOSTKEYDATA, self->ssh_hostkey_cb);
+#endif
     CLEAR_CALLBACK(CURLOPT_SEEKFUNCTION, CURLOPT_SEEKDATA, self->seek_cb);
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 80, 0)
     CLEAR_CALLBACK(CURLOPT_PREREQFUNCTION, CURLOPT_PREREQDATA, self->prereq_cb);
@@ -408,6 +411,9 @@ PYCURL_IGNORE_DEPRECATED_END
     case CURLOPT_SSH_PRIVATE_KEYFILE:
     case CURLOPT_COPYPOSTFIELDS:
     case CURLOPT_SSH_HOST_PUBLIC_KEY_MD5:
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 80, 0)
+    case CURLOPT_SSH_HOST_PUBLIC_KEY_SHA256:
+#endif
     case CURLOPT_CRLFILE:
     case CURLOPT_ISSUERCERT:
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 20, 0)
@@ -973,6 +979,10 @@ do_curl_setopt_callable(CurlObject *self, int option, PyObject *obj, int use_mem
     const curl_closesocket_callback closesocket_cb = closesocket_callback;
 #endif
     const curl_seek_callback seek_cb = seek_callback;
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 84, 0)
+    const curl_sshhostkeycallback ssh_hostkey_cb = ssh_hostkey_callback;
+    CURLcode res;
+#endif
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 80, 0)
     const curl_prereq_callback prereq_cb = prereq_callback;
 #endif
@@ -1087,6 +1097,20 @@ PYCURL_IGNORE_DEPRECATED_END
         self->ssh_key_cb = obj;
         curl_easy_setopt(self->handle, CURLOPT_SSH_KEYFUNCTION, ssh_key_cb);
         curl_easy_setopt(self->handle, CURLOPT_SSH_KEYDATA, self);
+        break;
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 84, 0)
+    case CURLOPT_SSH_HOSTKEYFUNCTION:
+        /* Report libcurl refusing this option: silently not verifying
+         * host keys is worse than failing here. */
+        res = curl_easy_setopt(self->handle, CURLOPT_SSH_HOSTKEYFUNCTION, ssh_hostkey_cb);
+        if (res != CURLE_OK) {
+            CURLERROR_RETVAL();
+        }
+        Py_INCREF(obj);
+        Py_CLEAR(self->ssh_hostkey_cb);
+        self->ssh_hostkey_cb = obj;
+        curl_easy_setopt(self->handle, CURLOPT_SSH_HOSTKEYDATA, self);
         break;
 #endif
     case CURLOPT_SEEKFUNCTION:

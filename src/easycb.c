@@ -503,6 +503,46 @@ verbose_error:
 #endif
 
 
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 84, 0)
+PYCURL_INTERNAL int
+ssh_hostkey_callback(void *clientp, int keytype, const char *key,
+                     size_t keylen)
+{
+    PyObject *arglist;
+    CurlObject *self;
+    /* anything but CURLKHMATCH_OK rejects the key: fail closed */
+    int ret = CURLKHMATCH_MISMATCH;
+    PyObject *ret_obj = NULL;
+    PYCURL_DECLARE_THREAD_STATE;
+
+    self = (CurlObject *)clientp;
+
+    PYCURL_BEGIN_CALLBACK(ssh_hostkey_callback, ret);
+
+    arglist = Py_BuildValue("(iy#)", keytype, key, (Py_ssize_t)keylen);
+    if (arglist == NULL) {
+        goto verbose_error;
+    }
+
+    ret_obj = PyObject_Call(self->ssh_hostkey_cb, arglist, NULL);
+    Py_DECREF(arglist);
+    if (callback_return_value_to_int(ret_obj, "ssh hostkey", &ret) != 0) {
+        goto silent_error;
+    }
+    goto done;
+
+silent_error:
+    ret = CURLKHMATCH_MISMATCH;
+done:
+    Py_XDECREF(ret_obj);
+    PYCURL_END_CALLBACK(ret);
+verbose_error:
+    print_callback_error_if_regular_exception();
+    goto silent_error;
+}
+#endif
+
+
 PYCURL_INTERNAL int
 seek_callback(void *stream, curl_off_t offset, int origin)
 {

@@ -533,6 +533,9 @@ typedef struct CurlObject {
     PyObject *seek_cb;
     PyObject *sockopt_cb;
     PyObject *ssh_key_cb;
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 84, 0)
+    PyObject *ssh_hostkey_cb;
+#endif
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 80, 0)
     PyObject *prereq_cb;
 #endif
@@ -788,6 +791,11 @@ PYCURL_INTERNAL int
 ssh_key_cb(CURL *easy, const struct curl_khkey *knownkey,
            const struct curl_khkey *foundkey, enum curl_khmatch khmatch,
            void *clientp);
+#endif
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 84, 0)
+PYCURL_INTERNAL int
+ssh_hostkey_callback(void *clientp, int keytype, const char *key,
+                     size_t keylen);
 #endif
 PYCURL_INTERNAL int
 seek_callback(void *stream, curl_off_t offset, int origin);

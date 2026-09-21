@@ -32,7 +32,7 @@ class LocalSFTPServer:
     """Minimal SSH/SFTP server for testing SSH key callbacks."""
 
     def __init__(self):
-        self._host_key = paramiko.RSAKey.generate(2048)
+        self.host_key = paramiko.RSAKey.generate(2048)
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
         self._sock.bind(('127.0.0.1', 0))
@@ -59,7 +59,7 @@ class LocalSFTPServer:
 
     def _handle_conn(self, conn):
         transport = paramiko.Transport(conn)
-        transport.add_server_key(self._host_key)
+        transport.add_server_key(self.host_key)
         try:
             transport.start_server(server=SFTPServerInterface())
             transport.join(5)
