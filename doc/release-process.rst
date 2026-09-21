@@ -28,7 +28,7 @@ Release checklist
 -----------------
 
 1. Ensure changelog is up to date with commits in master.
-2. Run ``python setup.py authors`` and review the updated AUTHORS file.
+2. Run ``scripts/update-authors`` and review the updated AUTHORS file.
 3. Run ``git shortlog REL_<previous release>...`` and add new contributors
    missed by the authors script to AUTHORS.
 4. Run ``check-manifest`` (from PyPI) and check that none of the listed

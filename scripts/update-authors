@@ -1,0 +1,41 @@
+#!/usr/bin/env python
+"""Add contributors from the git history to AUTHORS.
+
+Names already listed are left alone; new ones are added and the list is
+re-sorted. Review the result by hand: the same person may commit under
+several names or addresses.
+"""
+
+import subprocess
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+AUTHORS = ROOT / "AUTHORS"
+HEADER = "The following individuals contributed code to PycURL:"
+
+
+def git_authors():
+    log = subprocess.run(
+        ["git", "log", "--format=%an <%ae>"],
+        cwd=ROOT, check=True, capture_output=True, text=True,
+    ).stdout
+    return {line.replace("@", " at ") for line in log.splitlines() if line}
+
+
+def main():
+    text = AUTHORS.read_text(encoding="utf-8")
+    head, sep, body = text.partition(HEADER + "\n\n")
+    if not sep:
+        raise SystemExit(f"{AUTHORS}: header line not found: {HEADER!r}")
+
+    authors_para, blank, rest = body.partition("\n\n")
+    authors = set(authors_para.splitlines()) | git_authors()
+    authors_para = "\n".join(sorted(authors, key=str.lower))
+    if not blank:
+        authors_para += "\n"
+
+    AUTHORS.write_text(head + sep + authors_para + blank + rest, encoding="utf-8")
+
+
+if __name__ == "__main__":
+    main()
