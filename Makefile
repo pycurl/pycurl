@@ -144,9 +144,6 @@ strip: build
 install:
 	$(PYTHON) -m pip install .
 
-install_lib:
-	$(PYTHON) setup.py install_lib
-
 clean:
 	-rm -rf build dist
 	-rm -f *.pyc *.pyo */*.pyc */*.pyo */*/*.pyc */*/*.pyo
@@ -184,7 +181,7 @@ docs-force: build
 	$(PYTHON) -m sphinx doc build/doc
 	cp ChangeLog build/doc
 
-.PHONY: all build test do-test strip install install_lib \
+.PHONY: all build test do-test strip install \
 	clean distclean maintainer-clean dist sdist \
 	docs docs-force
 
