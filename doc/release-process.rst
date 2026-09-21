@@ -31,8 +31,8 @@ Release checklist
 2. Run ``python setup.py authors`` and review the updated AUTHORS file.
 3. Run ``git shortlog REL_<previous release>...`` and add new contributors
    missed by the authors script to AUTHORS.
-4. Run ``python setup.py manifest``, check that none of the listed files
-   should be in MANIFEST.in.
+4. Run ``check-manifest`` (from PyPI) and check that none of the listed
+   files should be in MANIFEST.in.
 5. Check ``get_data_files()`` in ``setup.py`` to see if any new files should
    be included in binary distributions.
 6. Make sure GitHub Actions is green for master.
