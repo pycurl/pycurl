@@ -40,22 +40,6 @@ class ExtensionConfiguration:
     def define_symbols(self):
         return [symbol for symbol, expansion in self.define_macros]
 
-    # append contents of an environment variable to library_dirs[]
-    def add_libdirs(self, envvar, sep, fatal=False):
-        v = os.environ.get(envvar)
-        if not v:
-            return
-        for dir in str.split(v, sep):
-            dir = str.strip(dir)
-            if not dir:
-                continue
-            dir = os.path.normpath(dir)
-            if os.path.isdir(dir):
-                if not dir in self.library_dirs:
-                    self.library_dirs.append(dir)
-            elif fatal:
-                fail("FATAL: bad directory %s in environment variable %s" % (dir, envvar))
-
     def detect_features(self):
         p = subprocess.Popen((self.curl_config(), '--features'),
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
