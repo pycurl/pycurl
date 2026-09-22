@@ -10,6 +10,7 @@ import subprocess
 import sys
 from pathlib import Path
 from setuptools import setup
+from setuptools.command.build_ext import build_ext as _build_ext
 from setuptools.extension import Extension
 
 class ConfigurationError(Exception):
@@ -535,28 +536,34 @@ def get_extension():
     depends = [
         os.path.join("src", "pycurl.h"),
     ]
-    ext_config = ExtensionConfiguration()
+    return Extension(name=EXTENSION_NAME, sources=sources, depends=depends)
 
-    if ext_config.ssl_lib_detected:
-        print('Using SSL library: %s' % PRETTY_SSL_LIBS[ext_config.ssl_lib_detected])
-    else:
-        print('Not using an SSL library')
 
-    ext = Extension(
-        name=EXTENSION_NAME,
-        sources=sources,
-        depends=depends,
-        include_dirs=ext_config.include_dirs,
-        define_macros=ext_config.define_macros,
-        library_dirs=ext_config.library_dirs,
-        libraries=ext_config.libraries,
-        runtime_library_dirs=ext_config.runtime_library_dirs,
-        extra_objects=ext_config.extra_objects,
-        extra_compile_args=ext_config.extra_compile_args,
-        extra_link_args=ext_config.extra_link_args,
-    )
-    ##print(ext.__dict__); sys.exit(1)
-    return ext
+class BuildExt(_build_ext):
+    def run(self):
+        generate_docstrings()
+
+        config = ExtensionConfiguration()
+        if config.ssl_lib_detected:
+            print('Using SSL library: %s' % PRETTY_SSL_LIBS[config.ssl_lib_detected])
+        else:
+            print('Not using an SSL library')
+
+        for ext in self.extensions:
+            if ext.name != EXTENSION_NAME:
+                continue
+            ext.include_dirs.extend(config.include_dirs)
+            ext.define_macros.extend(config.define_macros)
+            ext.library_dirs.extend(config.library_dirs)
+            ext.libraries.extend(config.libraries)
+            ext.runtime_library_dirs.extend(config.runtime_library_dirs)
+            ext.extra_objects.extend(config.extra_objects)
+            ext.extra_compile_args.extend(config.extra_compile_args)
+            ext.extra_link_args.extend(config.extra_link_args)
+            for o in ext.extra_objects:
+                assert os.path.isfile(o), o
+
+        super().run()
 
 
 ###############################################################################
@@ -588,15 +595,9 @@ def generate_docstrings():
 
 setup_args = dict(
     version=VERSION,
+    ext_modules=[get_extension()],
+    cmdclass={'build_ext': BuildExt},
 )
 
 if __name__ == "__main__":
-    if sys.argv[1] not in ['clean']:
-        generate_docstrings()
-
-    ext = get_extension()
-    setup_args['ext_modules'] = [ext]
-
-    for o in ext.extra_objects:
-        assert os.path.isfile(o), o
     setup(**setup_args)
