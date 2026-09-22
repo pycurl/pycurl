@@ -25,88 +25,13 @@ ALL_SOURCES = src/pycurl.h $(GEN_SOURCES) $(SOURCES)
 
 RELEASE_SOURCES = src/allpycurl.c
 
-# regenerate with `python setup.py docstrings-sources'
-DOCSTRINGS_SOURCES = \
-	doc/docstrings/curl.rst \
-	doc/docstrings/curl_close.rst \
-	doc/docstrings/curl_closed.rst \
-	doc/docstrings/curl_duphandle.rst \
-	doc/docstrings/curl_errstr.rst \
-	doc/docstrings/curl_errstr_raw.rst \
-	doc/docstrings/curl_getinfo.rst \
-	doc/docstrings/curl_getinfo_raw.rst \
-	doc/docstrings/curl_multi.rst \
-	doc/docstrings/curl_pause.rst \
-	doc/docstrings/curl_perform.rst \
-	doc/docstrings/curl_perform_rb.rst \
-	doc/docstrings/curl_perform_rs.rst \
-	doc/docstrings/curl_recv.rst \
-	doc/docstrings/curl_recv_into.rst \
-	doc/docstrings/curl_reset.rst \
-	doc/docstrings/curl_send.rst \
-	doc/docstrings/curl_set_ca_certs.rst \
-	doc/docstrings/curl_setopt.rst \
-	doc/docstrings/curl_setopt_string.rst \
-	doc/docstrings/curl_share.rst \
-	doc/docstrings/curl_unpause.rst \
-	doc/docstrings/curl_unsetopt.rst \
-	doc/docstrings/curl_ws_close.rst \
-	doc/docstrings/curl_ws_meta.rst \
-	doc/docstrings/curl_ws_recv.rst \
-	doc/docstrings/curl_ws_recv_into.rst \
-	doc/docstrings/curl_ws_send.rst \
-	doc/docstrings/multi.rst \
-	doc/docstrings/multi_add_handle.rst \
-	doc/docstrings/multi_assign.rst \
-	doc/docstrings/multi_close.rst \
-	doc/docstrings/multi_closed.rst \
-	doc/docstrings/multi_contains.rst \
-	doc/docstrings/multi_fdset.rst \
-	doc/docstrings/multi_info_read.rst \
-	doc/docstrings/multi_notify_disable.rst \
-	doc/docstrings/multi_notify_enable.rst \
-	doc/docstrings/multi_perform.rst \
-	doc/docstrings/multi_remove_handle.rst \
-	doc/docstrings/multi_select.rst \
-	doc/docstrings/multi_setopt.rst \
-	doc/docstrings/multi_socket_action.rst \
-	doc/docstrings/multi_socket_all.rst \
-	doc/docstrings/multi_timeout.rst \
-	doc/docstrings/multi_unassign.rst \
-	doc/docstrings/pycurl_easy_strerror.rst \
-	doc/docstrings/pycurl_global_cleanup.rst \
-	doc/docstrings/pycurl_global_init.rst \
-	doc/docstrings/pycurl_module.rst \
-	doc/docstrings/pycurl_multi_strerror.rst \
-	doc/docstrings/pycurl_share_strerror.rst \
-	doc/docstrings/pycurl_url_strerror.rst \
-	doc/docstrings/pycurl_version_info.rst \
-	doc/docstrings/share.rst \
-	doc/docstrings/share_close.rst \
-	doc/docstrings/share_closed.rst \
-	doc/docstrings/share_setopt.rst \
-	doc/docstrings/share_share.rst \
-	doc/docstrings/share_unshare.rst \
-	doc/docstrings/url.rst \
-	doc/docstrings/url_fragment.rst \
-	doc/docstrings/url_getpart.rst \
-	doc/docstrings/url_host.rst \
-	doc/docstrings/url_options.rst \
-	doc/docstrings/url_password.rst \
-	doc/docstrings/url_path.rst \
-	doc/docstrings/url_port.rst \
-	doc/docstrings/url_query.rst \
-	doc/docstrings/url_scheme.rst \
-	doc/docstrings/url_setpart.rst \
-	doc/docstrings/url_url.rst \
-	doc/docstrings/url_user.rst \
-	doc/docstrings/url_zoneid.rst
+DOCSTRINGS_SOURCES = $(wildcard doc/docstrings/*.rst)
 
 all: build
 src-release: $(RELEASE_SOURCES)
 
 src/docstrings.c src/docstrings.h: $(DOCSTRINGS_SOURCES)
-	$(PYTHON) setup.py docstrings
+	$(PYTHON) -c "import setup; setup.generate_docstrings()"
 
 src/allpycurl.c: $(ALL_SOURCES)
 	echo '#define PYCURL_SINGLE_FILE' >src/.tmp.allpycurl.c

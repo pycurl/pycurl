@@ -707,21 +707,14 @@ def get_data_files():
 
 ###############################################################################
 
-def convert_docstrings():
-    docstrings = []
-    for entry in sorted(os.listdir('doc/docstrings')):
-        if not entry.endswith('.rst'):
-            continue
+def generate_docstrings():
+    docstrings_dir = Path("doc", "docstrings")
+    docstrings = [
+        (entry.stem, entry.read_text(encoding="utf-8").strip())
+        for entry in sorted(docstrings_dir.glob("*.rst"))
+    ]
 
-        name = entry.replace('.rst', '')
-        f = open('doc/docstrings/%s' % entry)
-        try:
-            text = f.read().strip()
-        finally:
-            f.close()
-        docstrings.append((name, text))
-    f = open('src/docstrings.c', 'w')
-    try:
+    with Path("src", "docstrings.c").open("w", encoding="utf-8") as f:
         f.write("/* Generated file - do not edit. */\n")
         # space to avoid having /* inside a C comment
         f.write("/* See doc/docstrings/ *.rst. */\n\n")
@@ -729,25 +722,13 @@ def convert_docstrings():
         for name, text in docstrings:
             text = text.replace("\"", "\\\"").replace("\n", "\\n\\\n")
             f.write("PYCURL_INTERNAL const char %s_doc[] = \"%s\";\n\n" % (name, text))
-    finally:
-        f.close()
-    f = open('src/docstrings.h', 'w')
-    try:
+
+    with Path("src", "docstrings.h").open("w", encoding="utf-8") as f:
         f.write("/* Generated file - do not edit. */\n")
         # space to avoid having /* inside a C comment
         f.write("/* See doc/docstrings/ *.rst. */\n\n")
         for name, text in docstrings:
             f.write("extern const char %s_doc[];\n" % name)
-    finally:
-        f.close()
-
-
-def gen_docstrings_sources():
-    sources = 'DOCSTRINGS_SOURCES ='
-    for entry in sorted(os.listdir('doc/docstrings')):
-        if entry.endswith('.rst'):
-            sources += " \\\n\tdoc/docstrings/%s" % entry
-    print(sources)
 
 ###############################################################################
 
@@ -796,13 +777,9 @@ if __name__ == "__main__":
         # we need to remove our options because distutils complains about them
         strip_pycurl_options(sys.argv)
         setup(**setup_args)
-    elif len(sys.argv) > 1 and sys.argv[1] == 'docstrings':
-        convert_docstrings()
-    elif len(sys.argv) > 1 and sys.argv[1] == 'docstrings-sources':
-        gen_docstrings_sources()
     else:
-        if sys.argv[1] not in ['clean'] and (not os.path.exists('src/docstrings.c') or not os.path.exists('src/docstrings.h')):
-            convert_docstrings()
+        if sys.argv[1] not in ['clean']:
+            generate_docstrings()
 
         setup_args['data_files'] = get_data_files()
         if 'PYCURL_RELEASE' in os.environ and os.environ['PYCURL_RELEASE'].lower() in ['1', 'yes', 'true']:
