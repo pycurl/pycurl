@@ -59,12 +59,12 @@ SSL backend that libcurl is using::
 Substitute the appropriate backend name (``openssl``, ``gnutls``, ``nss``,
 ``mbedtls``, ``wolfssl``, ``sectransp``, or ``schannel``).
 
-Advanced users invoking ``python -m build`` or ``setup.py`` directly can
-also have it obtain SSL backend information from an installed libcurl
-shared library by passing ``--libcurl-dll=libcurl.so`` (an unqualified
+If ``curl-config`` does not report the SSL backend and you would rather not
+specify it manually, set the ``PYCURL_LIBCURL_DLL`` environment variable to
+the path of an installed libcurl shared library (an unqualified
 ``libcurl.so`` would use the system libcurl, or a full path can be
-specified). When installing via ``pip``, prefer ``PYCURL_SSL_LIBRARY``
-above.
+specified), and it will be inspected to determine the SSL backend in use.
+When you already know the SSL backend, prefer ``PYCURL_SSL_LIBRARY`` above.
 
 
 pip
@@ -139,47 +139,37 @@ be patched to link to the DLL version of MSVCRT.
 
 For a minimum build you will just need libcurl source. Follow its Windows
 build instructions to build either a static or a DLL version of the library,
-then configure PycURL as follows to use it::
+then configure PycURL as follows to use it.
 
-    python setup.py --curl-dir=c:\dev\curl-7.33.0\builds\libcurl-vc-x86-release-dll-ipv6-sspi-spnego-winssl --use-libcurl-dll
+In ``cmd.exe``::
 
-Note that ``--curl-dir`` must point not to libcurl source but rather to headers
-and compiled libraries.
+    set PYCURL_CURL_DIR=c:\dev\curl-7.33.0\builds\libcurl-vc-x86-release-dll-ipv6-sspi-spnego-winssl
+    set PYCURL_USE_LIBCURL_DLL=1
+    python -m pip install .
 
-If libcurl and Python are not linked against the same exact C runtime
-(version number, static/dll, single-threaded/multi-threaded) you must use
-``--avoid-stdio`` option (see below).
+In PowerShell::
 
-Additional Windows setup.py options:
+    $env:PYCURL_CURL_DIR = "c:\dev\curl-7.33.0\builds\libcurl-vc-x86-release-dll-ipv6-sspi-spnego-winssl"
+    $env:PYCURL_USE_LIBCURL_DLL = "1"
+    python -m pip install .
 
-- ``--use-libcurl-dll``: build against libcurl DLL, if not given PycURL will
-  be built against libcurl statically.
-- ``--libcurl-lib-name=libcurl_imp.lib``: specify a different name for libcurl
-  import library. The default is ``libcurl.lib`` which is appropriate for
-  static linking and is sometimes the correct choice for dynamic linking as
-  well. The other possibility for dynamic linking is ``libcurl_imp.lib``.
-- ``--with-openssl``: use OpenSSL/LibreSSL/BoringSSL crypto locks when libcurl
-  was built against these SSL backends.
-- ``--with-ssl``: legacy alias for ``--with-openssl``.
-- ``--openssl-lib-name=""``: specify a different name for OpenSSL import
+Note that ``PYCURL_CURL_DIR`` must point not to libcurl source but rather to
+headers and compiled libraries.
+
+Additional Windows environment variables:
+
+- ``PYCURL_USE_LIBCURL_DLL``: build against libcurl DLL, if not given PycURL
+  will be built against libcurl statically.
+- ``PYCURL_LIBCURL_LIB_NAME=libcurl_imp.lib``: specify a different name for
+  libcurl import library. The default is ``libcurl.lib`` which is appropriate
+  for static linking and is sometimes the correct choice for dynamic linking
+  as well. The other possibility for dynamic linking is ``libcurl_imp.lib``.
+- ``PYCURL_SSL_LIBRARY=openssl``: use OpenSSL/LibreSSL/BoringSSL crypto locks
+  when libcurl was built against these SSL backends (also accepts
+  ``schannel``; see the SSL note above).
+- ``PYCURL_OPENSSL_LIB_NAME=""``: specify a different name for OpenSSL import
   library containing CRYPTO_num_locks. For OpenSSL 1.1.0+ this should be set
   to an empty string as given here.
-- ``--avoid-stdio``: on Windows, a process and each library it is using
-  may be linked to its own version of the C runtime (MSVCRT).
-  FILE pointers from one C runtime may not be passed to another C runtime.
-  This option prevents direct passing of FILE pointers from Python to libcurl,
-  thus permitting Python and libcurl to be linked against different C runtimes.
-  This option may carry a performance penalty when Python file objects are
-  given directly to PycURL in CURLOPT_READDATA, CURLOPT_WRITEDATA or
-  CURLOPT_WRITEHEADER options. In practice, Python 3 file objects do not
-  expose C library FILE pointers, so this option is recognized but
-  does nothing. You can also give ``--avoid-stdio`` option in
-  PYCURL_SETUP_OPTIONS environment variable as follows::
-
-    PYCURL_SETUP_OPTIONS=--avoid-stdio pip install pycurl
-
-A good ``setup.py`` target to use is ``bdist_wininst`` which produces an
-executable installer that you can run to install PycURL.
 
 You may find the following mailing list posts helpful:
 
