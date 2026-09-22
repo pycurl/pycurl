@@ -167,9 +167,10 @@ Additional Windows environment variables:
 - ``PYCURL_SSL_LIBRARY=openssl``: use OpenSSL/LibreSSL/BoringSSL crypto locks
   when libcurl was built against these SSL backends (also accepts
   ``schannel``; see the SSL note above).
-- ``PYCURL_OPENSSL_LIB_NAME=""``: specify a different name for OpenSSL import
-  library containing CRYPTO_num_locks. For OpenSSL 1.1.0+ this should be set
-  to an empty string as given here.
+- ``PYCURL_OPENSSL_LIB_NAME``: name of the OpenSSL import library containing
+  CRYPTO_num_locks, needed only for OpenSSL older than 1.1.0. Empty by
+  default, since 1.1.0+ does not need it; set to ``libeay32.lib`` if you
+  are building against an older OpenSSL.
 
 You may find the following mailing list posts helpful:
 

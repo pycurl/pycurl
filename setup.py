@@ -327,11 +327,12 @@ ignore this message.''')
         # override with: PYCURL_LIBCURL_LIB_NAME=libcurl_imp.lib
         curl_lib_name = os.environ.get('PYCURL_LIBCURL_LIB_NAME', 'libcurl.lib')
 
-        # openssl 1.1.0 changed its library names
-        # from libeay32.lib/ssleay32.lib to libcrypto.lib/libssl.lib.
-        # at the same time they dropped thread locking callback interface,
-        # meaning the correct usage of this option is PYCURL_OPENSSL_LIB_NAME=""
-        self.openssl_lib_name = os.environ.get('PYCURL_OPENSSL_LIB_NAME', 'libeay32.lib')
+        # OpenSSL 1.1.0 renamed its import libraries from
+        # libeay32.lib/ssleay32.lib to libcrypto.lib/libssl.lib, and dropped
+        # the thread locking callback interface at the same time, meaning we
+        # do not need to link against an OpenSSL import library at all by
+        # default. Override with PYCURL_OPENSSL_LIB_NAME if yours does.
+        self.openssl_lib_name = os.environ.get('PYCURL_OPENSSL_LIB_NAME', '')
 
         try:
             for lib in os.environ['PYCURL_LINK_ARG'].split(os.pathsep):
@@ -342,7 +343,7 @@ ignore this message.''')
         if os.environ.get('PYCURL_USE_LIBCURL_DLL') is not None:
             libcurl_lib_path = os.path.join(curl_dir, "lib", curl_lib_name)
             self.extra_link_args.extend(["ws2_32.lib"])
-            if str.find(sys.version, "MSC") >= 0:
+            if "MSC" in sys.version:
                 # build a dll
                 self.extra_compile_args.append("-MD")
         else:
@@ -361,24 +362,10 @@ ignore this message.''')
             else:
                 raise ConfigurationError('Invalid value "%s" for PYCURL_SSL_LIBRARY' % ssl_lib)
 
-        # make pycurl binary work on windows xp.
-        # we use inet_ntop which was added in vista and implement a fallback.
-        # our implementation will not be compiled with _WIN32_WINNT targeting
-        # vista or above, thus said binary won't work on xp.
-        # https://curl.haxx.se/mail/curlpython-2013-12/0007.html
-        self.extra_compile_args.append("-D_WIN32_WINNT=0x0501")
-
-        if str.find(sys.version, "MSC") >= 0:
+        if "MSC" in sys.version:
             self.extra_compile_args.append("-O2")
             self.extra_compile_args.append("-GF")        # enable read-only string pooling
             self.extra_compile_args.append("-WX")        # treat warnings as errors
-            p = subprocess.Popen(['cl.exe'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            out, err = p.communicate()
-            match = re.search(r'Version (\d+)', err.decode().split("\n")[0])
-            if match and int(match.group(1)) < 16:
-                # option removed in vs 2010:
-                # connect.microsoft.com/VisualStudio/feedback/details/475896/link-fatal-error-lnk1117-syntax-error-in-option-opt-nowin98/
-                self.extra_link_args.append("/opt:nowin98")  # use small section alignment
 
     if sys.platform == "win32":
         configure = configure_windows
@@ -434,9 +421,10 @@ ignore this message.''')
     def using_openssl(self):
         self.define_macros.append(('HAVE_CURL_OPENSSL', 1))
         if sys.platform == "win32":
-            # CRYPTO_num_locks is defined in libeay32.lib
-            # for openssl < 1.1.0; it is a noop for openssl >= 1.1.0
-            self.extra_link_args.append(self.openssl_lib_name)
+            # CRYPTO_num_locks was defined in libeay32.lib for openssl <
+            # 1.1.0; not needed for 1.1.0+, which is why the default is empty.
+            if self.openssl_lib_name:
+                self.extra_link_args.append(self.openssl_lib_name)
         else:
             # we also need ssl for the certificate functions
             # (SSL_CTX_get_cert_store)
