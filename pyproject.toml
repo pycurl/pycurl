@@ -5,6 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pycurl"
 description = "PycURL -- A Python Interface To The cURL library"
+readme = "README.rst"
 requires-python = ">=3.10"
 license = "LGPL-2.1-only OR MIT"
 license-files = ["COPYING-LGPL", "COPYING-MIT"]
@@ -34,7 +35,7 @@ classifiers = [
     "Topic :: Internet :: File Transfer Protocol (FTP)",
     "Topic :: Internet :: WWW/HTTP",
 ]
-dynamic = ["version", "readme"]
+dynamic = ["version"]
 
 [project.urls]
 Homepage      = "https://pycurl.github.io/"

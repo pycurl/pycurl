@@ -728,8 +728,6 @@ def generate_docstrings():
 
 setup_args = dict(
     version=VERSION,
-    long_description_content_type='text/x-rst',
-    long_description=(Path(__file__).parent / 'README.rst').read_text(encoding='utf-8'),
 )
 
 unix_help = '''\
