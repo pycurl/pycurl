@@ -621,35 +621,29 @@ PRETTY_SSL_LIBS = {
     'schannel': 'Schannel',
 }
 
-def get_extension(argv, split_extension_source=False):
-    if split_extension_source:
-        sources = [
-            os.path.join("src", "docstrings.c"),
-            os.path.join("src", "easy.c"),
-            os.path.join("src", "easycb.c"),
-            os.path.join("src", "easyinfo.c"),
-            os.path.join("src", "easyopt.c"),
-            os.path.join("src", "easyperform.c"),
-            os.path.join("src", "easyws.c"),
-            os.path.join("src", "module.c"),
-            os.path.join("src", "mime.c"),
-            os.path.join("src", "multi.c"),
-            os.path.join("src", "oscompat.c"),
-            os.path.join("src", "pythoncompat.c"),
-            os.path.join("src", "share.c"),
-            os.path.join("src", "stringcompat.c"),
-            os.path.join("src", "threadsupport.c"),
-            os.path.join("src", "url.c"),
-            os.path.join("src", "util.c"),
-        ]
-        depends = [
-            os.path.join("src", "pycurl.h"),
-        ]
-    else:
-        sources = [
-            os.path.join("src", "allpycurl.c"),
-        ]
-        depends = []
+def get_extension(argv):
+    sources = [
+        os.path.join("src", "docstrings.c"),
+        os.path.join("src", "easy.c"),
+        os.path.join("src", "easycb.c"),
+        os.path.join("src", "easyinfo.c"),
+        os.path.join("src", "easyopt.c"),
+        os.path.join("src", "easyperform.c"),
+        os.path.join("src", "easyws.c"),
+        os.path.join("src", "module.c"),
+        os.path.join("src", "mime.c"),
+        os.path.join("src", "multi.c"),
+        os.path.join("src", "oscompat.c"),
+        os.path.join("src", "pythoncompat.c"),
+        os.path.join("src", "share.c"),
+        os.path.join("src", "stringcompat.c"),
+        os.path.join("src", "threadsupport.c"),
+        os.path.join("src", "url.c"),
+        os.path.join("src", "util.c"),
+    ]
+    depends = [
+        os.path.join("src", "pycurl.h"),
+    ]
     ext_config = ExtensionConfiguration(argv)
 
     if ext_config.ssl_lib_detected:
@@ -782,11 +776,7 @@ if __name__ == "__main__":
             generate_docstrings()
 
         setup_args['data_files'] = get_data_files()
-        if 'PYCURL_RELEASE' in os.environ and os.environ['PYCURL_RELEASE'].lower() in ['1', 'yes', 'true']:
-            split_extension_source = False
-        else:
-            split_extension_source = True
-        ext = get_extension(sys.argv, split_extension_source=split_extension_source)
+        ext = get_extension(sys.argv)
         setup_args['ext_modules'] = [ext]
 
         for o in ext.extra_objects:

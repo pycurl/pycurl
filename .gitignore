@@ -2,7 +2,6 @@
 *.py[oc]
 .venv
 /MANIFEST
-/src/allpycurl.c
 /src/docstrings.c
 /src/docstrings.h
 /tests/fake-curl/libcurl/*.so

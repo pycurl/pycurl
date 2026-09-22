@@ -12,8 +12,6 @@ PYFLAKES = pyflakes
 PYTHONMAJOR=$$($(PYTHON) -V 2>&1 |awk '{print $$2}' |awk -F. '{print $$1}')
 PYTHONMINOR=$$($(PYTHON) -V 2>&1 |awk '{print $$2}' |awk -F. '{print $$2}')
 
-# src/module.c is first because it declares global variables
-# which other files reference; important for single source build
 SOURCES = src/easy.c src/easycb.c src/easyinfo.c src/easyopt.c src/easyperform.c \
 	src/easyws.c src/mime.c src/module.c src/multi.c src/oscompat.c \
 	src/pythoncompat.c src/share.c src/stringcompat.c src/threadsupport.c \
@@ -23,29 +21,17 @@ GEN_SOURCES = src/docstrings.c src/docstrings.h
 
 ALL_SOURCES = src/pycurl.h $(GEN_SOURCES) $(SOURCES)
 
-RELEASE_SOURCES = src/allpycurl.c
-
 DOCSTRINGS_SOURCES = $(wildcard doc/docstrings/*.rst)
 
 all: build
-src-release: $(RELEASE_SOURCES)
 
 src/docstrings.c src/docstrings.h: $(DOCSTRINGS_SOURCES)
 	$(PYTHON) -c "import setup; setup.generate_docstrings()"
-
-src/allpycurl.c: $(ALL_SOURCES)
-	echo '#define PYCURL_SINGLE_FILE' >src/.tmp.allpycurl.c
-	cat src/pycurl.h >>src/.tmp.allpycurl.c
-	cat src/docstrings.c $(SOURCES) |sed -e 's/#include "pycurl.h"//' -e 's/#include "docstrings.h"//' >>src/.tmp.allpycurl.c
-	mv src/.tmp.allpycurl.c src/allpycurl.c
 
 gen: $(ALL_SOURCES)
 
 build: $(ALL_SOURCES)
 	$(PYTHON) setup.py build
-
-build-release: $(RELEASE_SOURCES)
-	PYCURL_RELEASE=1 $(PYTHON) setup.py build
 
 do-test:
 	make -C tests/fake-curl/libcurl
@@ -53,7 +39,6 @@ do-test:
 	$(PYFLAKES) python examples tests setup.py
 
 test: build do-test
-test-release: build-release do-test
 
 # rails-style alias
 c: console
@@ -73,7 +58,7 @@ clean:
 	-rm -rf build dist
 	-rm -f *.pyc *.pyo */*.pyc */*.pyo */*/*.pyc */*/*.pyo
 	-rm -f MANIFEST
-	-rm -f src/allpycurl.c $(GEN_SOURCES)
+	-rm -f $(GEN_SOURCES)
 
 distclean: clean
 

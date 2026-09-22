@@ -67,11 +67,7 @@ typedef PyThread_type_lock pycurl_mutex_t;
 #  define PYCURL_MUTEX_UNLOCK(p) PyThread_release_lock(*(p))
 #endif
 
-#if defined(PYCURL_SINGLE_FILE)
-# define PYCURL_INTERNAL static
-#else
-# define PYCURL_INTERNAL
-#endif
+#define PYCURL_INTERNAL
 
 #if defined(WIN32)
 /* supposedly not present in errno.h provided with VC */
@@ -850,7 +846,6 @@ pycurl_list_or_tuple_to_slist(int which, PyObject *obj, Py_ssize_t len);
 PYCURL_INTERNAL int share_register_easy(struct CurlShareObject *share, struct CurlObject *easy);
 PYCURL_INTERNAL void share_unregister_easy(struct CurlShareObject *share, struct CurlObject *easy);
 
-#if !defined(PYCURL_SINGLE_FILE)
 /* Type objects */
 extern PyTypeObject Curl_Type;
 extern PyTypeObject CurlSlist_Type;
@@ -903,7 +898,6 @@ extern PYCURL_INTERNAL PyObject *stringio;
 extern PyMethodDef curlobject_methods[];
 extern PyMethodDef curlshareobject_methods[];
 extern PyMethodDef curlmultiobject_methods[];
-#endif /* !PYCURL_SINGLE_FILE */
 
 #define PYCURL_TYPE_FLAGS Py_TPFLAGS_HAVE_GC | Py_TPFLAGS_BASETYPE
 
