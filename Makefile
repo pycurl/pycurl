@@ -164,8 +164,6 @@ run-quickstart:
 # Editing docstrings in Python or C source will not cause the documentation
 # to be rebuilt with this target, use docs-force instead.
 docs: build
-	mkdir -p build/docstrings
-	for file in doc/docstrings/*.rst; do tail -n +3 $$file >build/docstrings/`basename $$file`; done
 	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONMAJOR*$$PYTHONMINOR):$$PYTHONPATH \
 	$(PYTHON) -m sphinx doc build/doc
 	cp ChangeLog build/doc
