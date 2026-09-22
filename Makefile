@@ -6,7 +6,6 @@
 SHELL = /bin/sh
 
 PYTHON = python
-PYTEST = pytest
 PYFLAKES = pyflakes
 
 PYTHONMAJOR=$$($(PYTHON) -V 2>&1 |awk '{print $$2}' |awk -F. '{print $$1}')
@@ -30,7 +29,7 @@ src/docstrings.c src/docstrings.h: $(DOCSTRINGS_SOURCES)
 
 gen: $(ALL_SOURCES)
 
-build: $(ALL_SOURCES)
+build:
 	$(PYTHON) setup.py build
 
 do-test:
@@ -40,17 +39,6 @@ do-test:
 
 test: build do-test
 
-# rails-style alias
-c: console
-console:
-	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONMAJOR*$$PYTHONMINOR):$$PYTHONPATH \
-	$(PYTHON)
-
-# (needs GNU binutils)
-strip: build
-	strip -p --strip-unneeded build/lib*/*.so
-	chmod -x build/lib*/*.so
-
 install:
 	$(PYTHON) -m pip install .
 
@@ -59,13 +47,6 @@ clean:
 	-rm -f *.pyc *.pyo */*.pyc */*.pyo */*/*.pyc */*/*.pyo
 	-rm -f MANIFEST
 	-rm -f $(GEN_SOURCES)
-
-distclean: clean
-
-maintainer-clean: distclean
-
-dist sdist: distclean
-	$(PYTHON) setup.py sdist
 
 run-quickstart:
 	./tests/run-quickstart.sh
@@ -89,8 +70,8 @@ docs-force: build
 	$(PYTHON) -m sphinx doc build/doc
 	cp ChangeLog build/doc
 
-.PHONY: all build test do-test strip install \
-	clean distclean maintainer-clean dist sdist \
+.PHONY: all build test do-test install \
+	clean \
 	docs docs-force
 
 .NOEXPORT:
