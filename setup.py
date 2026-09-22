@@ -1,11 +1,13 @@
 """Setup script for the PycURL module distribution."""
 
-PROJECT_NAME = "pycurl"
 EXTENSION_NAME = "pycurl._pycurl"
-PY_PACKAGE = "curl"
 VERSION = "7.48.0"
 
-import glob, os, re, shlex, sys, subprocess
+import os
+import re
+import shlex
+import subprocess
+import sys
 from pathlib import Path
 from setuptools import setup
 from setuptools.extension import Extension
@@ -670,37 +672,6 @@ def get_extension(argv):
 
 ###############################################################################
 
-# prepare data_files
-
-def get_data_files():
-    # a list of tuples with (path to install to, a list of local files)
-    data_files = []
-    if sys.platform == "win32":
-        datadir = os.path.join("doc", PROJECT_NAME)
-    else:
-        datadir = os.path.join("share", "doc", PROJECT_NAME)
-    #
-    files = ["AUTHORS", "ChangeLog", "COPYING-LGPL", "COPYING-MIT",
-        "INSTALL.rst", "README.rst", "RELEASE-NOTES.rst"]
-    if files:
-        data_files.append((os.path.join(datadir), files))
-    files = glob.glob(os.path.join("examples", "*.py"))
-    if files:
-        data_files.append((os.path.join(datadir, "examples"), files))
-    files = glob.glob(os.path.join("examples", "quickstart", "*.py"))
-    if files:
-        data_files.append((os.path.join(datadir, "examples", "quickstart"), files))
-    #
-    assert data_files
-    for install_dir, files in data_files:
-        assert files
-        for f in files:
-            assert os.path.isfile(f), (f, install_dir)
-    return data_files
-
-
-###############################################################################
-
 def generate_docstrings():
     docstrings_dir = Path("doc", "docstrings")
     docstrings = [
@@ -773,7 +744,6 @@ if __name__ == "__main__":
         if sys.argv[1] not in ['clean']:
             generate_docstrings()
 
-        setup_args['data_files'] = get_data_files()
         ext = get_extension(sys.argv)
         setup_args['ext_modules'] = [ext]
 
