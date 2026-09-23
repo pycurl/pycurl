@@ -7,6 +7,7 @@ SHELL = /bin/sh
 
 PYTHON = python
 PYFLAKES = pyflakes
+SPHINXOPTS =
 
 PYTHONMAJOR=$$($(PYTHON) -V 2>&1 |awk '{print $$2}' |awk -F. '{print $$1}')
 PYTHONMINOR=$$($(PYTHON) -V 2>&1 |awk '{print $$2}' |awk -F. '{print $$2}')
@@ -56,7 +57,7 @@ run-quickstart:
 # to be rebuilt with this target, use docs-force instead.
 docs: build
 	PYTHONPATH=$$(ls -d build/lib.*$(PYTHONMAJOR)*$(PYTHONMINOR)):$$PYTHONPATH \
-	$(PYTHON) -m sphinx doc build/doc
+	$(PYTHON) -m sphinx $(SPHINXOPTS) doc build/doc
 	cp ChangeLog build/doc
 
 # Rebuild all documentation.
@@ -67,7 +68,7 @@ docs-force: build
 	# rebuild everything
 	rm -rf build/doc
 	PYTHONPATH=$$(ls -d build/lib.*$(PYTHONMAJOR)*$(PYTHONMINOR)):$$PYTHONPATH \
-	$(PYTHON) -m sphinx doc build/doc
+	$(PYTHON) -m sphinx $(SPHINXOPTS) doc build/doc
 	cp ChangeLog build/doc
 
 .PHONY: all build test do-test install \

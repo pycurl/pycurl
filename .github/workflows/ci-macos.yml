@@ -7,12 +7,14 @@ on:
     - '.github/workflows/ci.yml'
     - '.github/workflows/ci-windows.yml'
     - '.github/workflows/cibuildwheel.yml'
+    - '.github/workflows/docs.yml'
   pull_request:
     branches: [ master ]
     paths-ignore:
     - '.github/workflows/ci.yml'
     - '.github/workflows/ci-windows.yml'
     - '.github/workflows/cibuildwheel.yml'
+    - '.github/workflows/docs.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}

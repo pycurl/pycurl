@@ -1,0 +1,66 @@
+name: Docs
+
+on:
+  push:
+    branches: [ master ]
+    paths-ignore:
+    - '.github/workflows/ci.yml'
+    - '.github/workflows/ci-macos.yml'
+    - '.github/workflows/ci-windows.yml'
+    - '.github/workflows/cibuildwheel.yml'
+  pull_request:
+    branches: [ master ]
+    paths-ignore:
+    - '.github/workflows/ci.yml'
+    - '.github/workflows/ci-macos.yml'
+    - '.github/workflows/ci-windows.yml'
+    - '.github/workflows/cibuildwheel.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docs:
+    runs-on: ubuntu-24.04
+    env:
+      VCPKG_BINARY_SOURCES: "clear;nuget,GitHub,${{ github.event_name == 'pull_request' && 'read' || 'readwrite' }}"
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - uses: actions/checkout@v6
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: "3.14"
+    - name: Build wheel with vcpkg libcurl
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        CIBW_ENVIRONMENT_PASS_LINUX: GITHUB_TOKEN GITHUB_REPOSITORY_OWNER VCPKG_BINARY_SOURCES
+        CIBW_TEST_SKIP: "*"
+      run: |
+        pip install cibuildwheel
+        cibuildwheel --only cp314-manylinux_x86_64 --output-dir wheelhouse
+    - name: Install wheel and dependencies
+      run: pip install wheelhouse/pycurl-*.whl --group docs
+    - name: Set SOURCE_DATE_EPOCH
+      run: echo "SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)" >> "$GITHUB_ENV"
+    - name: Build docs
+      run: |
+        python -m sphinx --fail-on-warning doc build/doc
+        cp ChangeLog build/doc
+    - name: Package docs
+      run: |
+        version=$(python -c "import importlib.metadata; print(importlib.metadata.version('pycurl'))")
+        name=pycurl-$version-docs
+        tar -czf build/$name.tar.gz --sort=name --owner=0 --group=0 --numeric-owner \
+          --mtime="@$SOURCE_DATE_EPOCH" \
+          --exclude=.doctrees --exclude=.buildinfo \
+          --transform "s,^doc,$name," -C build doc
+    - name: Upload docs
+      uses: actions/upload-artifact@v7
+      with:
+        path: build/pycurl-*-docs.tar.gz
+        archive: false
