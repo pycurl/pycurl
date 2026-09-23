@@ -55,7 +55,7 @@ run-quickstart:
 # Editing docstrings in Python or C source will not cause the documentation
 # to be rebuilt with this target, use docs-force instead.
 docs: build
-	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONMAJOR*$$PYTHONMINOR):$$PYTHONPATH \
+	PYTHONPATH=$$(ls -d build/lib.*$(PYTHONMAJOR)*$(PYTHONMINOR)):$$PYTHONPATH \
 	$(PYTHON) -m sphinx doc build/doc
 	cp ChangeLog build/doc
 
@@ -66,7 +66,7 @@ docs-force: build
 	# sphinx-docs has an -a option but it does not seem to always
 	# rebuild everything
 	rm -rf build/doc
-	PYTHONPATH=$$(ls -d build/lib.*$$PYTHONMAJOR*$$PYTHONMINOR):$$PYTHONPATH \
+	PYTHONPATH=$$(ls -d build/lib.*$(PYTHONMAJOR)*$(PYTHONMINOR)):$$PYTHONPATH \
 	$(PYTHON) -m sphinx doc build/doc
 	cp ChangeLog build/doc
 
