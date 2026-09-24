@@ -15,9 +15,13 @@ on:
     - '.github/workflows/ci-macos.yml'
     - '.github/workflows/ci-windows.yml'
     - '.github/workflows/cibuildwheel.yml'
+  workflow_call:
 
+# When called from the release workflow, github.workflow is the caller's name,
+# so the event name keeps this group distinct from the caller's and from
+# push/PR runs of this workflow on the same ref.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: docs-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:

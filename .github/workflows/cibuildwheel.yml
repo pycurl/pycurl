@@ -1,21 +1,75 @@
-name: Build Wheels
+name: Release
 
 on:
   workflow_dispatch:
     inputs:
-      environment:
-        description: 'PyPI Environment for Deployment'
+      mode:
+        description: 'build-only: just build; testpypi: publish to TestPyPI; release: draft a GitHub release, then publish to PyPI and GitHub on approval'
         type: choice
         options:
-          - none
-          - pypi
+          - build-only
           - testpypi
+          - release
         required: true
-        default: none
+        default: build-only
+
+concurrency:
+  group: ${{ inputs.mode == 'release' && 'release' || github.run_id }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
+  prepare:
+    name: Validate version and draft release
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Check version numbers
+        id: version
+        run: echo "version=$(scripts/release-notes --version)" >> "$GITHUB_OUTPUT"
+      - name: Generate release notes
+        run: |
+          scripts/release-notes > notes.md
+          cat notes.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Check that the release does not exist yet
+        if: inputs.mode == 'release'
+        env:
+          TAG: v${{ steps.version.outputs.version }}
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG"; then
+            echo "Tag $TAG already exists"
+            exit 1
+          fi
+          # Drafts can share a tag name, so look for them explicitly.
+          if gh api "repos/$GH_REPO/releases" --paginate --jq ".[].tag_name" | grep -qx "$TAG"; then
+            echo "A release for $TAG already exists"
+            exit 1
+          fi
+      - name: Create draft release
+        if: inputs.mode == 'release'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release create "v$VERSION" \
+            --draft \
+            --target "$GITHUB_SHA" \
+            --title "PycURL $VERSION" \
+            --notes-file notes.md
+
   build-sdist:
     name: Build sdist
+    needs: prepare
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
@@ -38,6 +92,7 @@ jobs:
 
   package-wheel:
     name: Build wheels on ${{ matrix.os }} ${{ matrix.arch }}
+    needs: prepare
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -87,21 +142,75 @@ jobs:
           path: ./wheelhouse/*.whl
           name: wheels-${{ matrix.os }}-${{ matrix.arch }}
 
-  deploy:
-    name: Deploy wheels to PyPI
+  docs:
+    name: Build docs
+    needs: prepare
+    if: inputs.mode == 'release'
+    uses: ./.github/workflows/docs.yml
+    permissions:
+      contents: read
+      packages: write
+
+  upload-docs:
+    name: Upload docs to draft release
+    needs: [prepare, docs]
     runs-on: ubuntu-24.04
-    if: ${{ github.event.inputs.environment == 'pypi' || github.event.inputs.environment == 'testpypi' }}
-    needs: [build-sdist, package-wheel]
-    environment: ${{ github.event.inputs.environment }}
+    permissions:
+      contents: write
+    steps:
+      - name: Download docs
+        uses: actions/download-artifact@v8
+        with:
+          pattern: pycurl-*-docs.tar.gz
+          path: docs/
+          merge-multiple: true
+      - name: Upload docs to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: gh release upload "v$VERSION" "docs/pycurl-$VERSION-docs.tar.gz"
+
+  # The pypi environment requires approval; this is where a release waits to be
+  # reviewed. PyPI goes first because an upload there cannot be undone, whereas
+  # the GitHub release is still a draft if this fails.
+  publish-pypi:
+    name: Publish to ${{ inputs.mode == 'release' && 'PyPI' || 'TestPyPI' }}
+    needs: [build-sdist, package-wheel, upload-docs]
+    if: ${{ !cancelled() && !failure() && inputs.mode != 'build-only' }}
+    runs-on: ubuntu-24.04
+    environment: ${{ inputs.mode == 'release' && 'pypi' || 'testpypi' }}
     permissions:
       id-token: write
     steps:
+      - name: Download sdist
+        uses: actions/download-artifact@v8
+        with:
+          name: sdist
+          path: dist/
       - name: Download wheels
         uses: actions/download-artifact@v8
         with:
+          pattern: wheels-*
           path: dist/
           merge-multiple: true
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          repository-url: ${{ github.event.inputs.environment == 'pypi' && 'https://upload.pypi.org/legacy/' || 'https://test.pypi.org/legacy/' }}
+          repository-url: ${{ inputs.mode == 'release' && 'https://upload.pypi.org/legacy/' || 'https://test.pypi.org/legacy/' }}
+
+  publish-release:
+    name: Publish GitHub release
+    needs: [prepare, publish-pypi]
+    if: inputs.mode == 'release'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      # Publishing the draft creates the tag at the commit this run built.
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: gh release edit "v$VERSION" --draft=false

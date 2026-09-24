@@ -1,0 +1,108 @@
+#!/usr/bin/env python3
+"""Print the GitHub release notes for the version being released.
+
+The notes are the summary from RELEASE-NOTES.rst followed by the entries
+from the top section of ChangeLog, converted to Markdown. Before printing
+anything, check that setup.py, doc/conf.py, ChangeLog and RELEASE-NOTES.rst
+all agree on the version.
+
+With --version, print only the version.
+"""
+
+import re
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+
+
+def read(name):
+    return (ROOT / name).read_text(encoding="utf-8")
+
+
+def search(pattern, name, text=None):
+    m = re.search(pattern, read(name) if text is None else text, re.MULTILINE)
+    if not m:
+        raise SystemExit(f"{name}: no match for {pattern!r}")
+    return m.group(1)
+
+
+def top_section(text, heading):
+    """Return the lines between the first heading matching `heading` and
+    the next one. Headings are recognized by their underline."""
+    lines = text.splitlines()
+    start = None
+    for i, line in enumerate(lines[1:], 1):
+        if not re.fullmatch(r"(-+|=+)", line):
+            continue
+        if start is None:
+            if re.match(heading, lines[i - 1]):
+                start = i + 1
+        else:
+            return lines[start:i - 1]
+    if start is None:
+        raise SystemExit(f"no section matching {heading!r}")
+    return lines[start:]
+
+
+def paragraphs(lines):
+    paras = []
+    for line in lines:
+        if not line.strip():
+            paras.append([])
+        elif paras and paras[-1]:
+            paras[-1].append(line.strip())
+        else:
+            paras.append([line.strip()])
+    return [" ".join(p) for p in paras if p]
+
+
+def summary(version):
+    lines = top_section(read("RELEASE-NOTES.rst"), rf"PycURL {re.escape(version)} ")
+    return "\n\n".join(p.replace("``", "`") for p in paragraphs(lines))
+
+
+def changes(version):
+    lines = top_section(read("ChangeLog"), rf"Version {re.escape(version)} ")
+    entries = []
+    for line in lines:
+        if line.lstrip().startswith("* "):
+            entries.append(line.lstrip()[2:].strip())
+        elif line.strip():
+            if not entries:
+                raise SystemExit(f"ChangeLog: unexpected line {line!r}")
+            entries[-1] += " " + line.strip()
+    if not entries:
+        raise SystemExit(f"ChangeLog: no entries for {version}")
+    return "\n".join(f"- {e}" for e in entries)
+
+
+def check_version():
+    version = search(r'^VERSION = "([^"]+)"', "setup.py")
+    found = {
+        "doc/conf.py version": search(r"^version = '([^']+)'", "doc/conf.py"),
+        "doc/conf.py release": search(r"^release = '([^']+)'", "doc/conf.py"),
+        "ChangeLog": search(r"\AVersion (\S+) ", "ChangeLog"),
+        "RELEASE-NOTES.rst": search(r"^PycURL (\S+) - ", "RELEASE-NOTES.rst"),
+    }
+    bad = [f"{k}: {v}" for k, v in found.items() if v != version]
+    if bad:
+        raise SystemExit(f"version mismatch with setup.py ({version}):\n  "
+                         + "\n  ".join(bad))
+    return version
+
+
+def main():
+    version = check_version()
+    if sys.argv[1:] == ["--version"]:
+        print(version)
+        return
+    print(summary(version))
+    print()
+    print("## Changes")
+    print()
+    print(changes(version))
+
+
+if __name__ == "__main__":
+    main()
