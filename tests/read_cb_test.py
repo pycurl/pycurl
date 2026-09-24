@@ -164,9 +164,15 @@ def test_post_with_read_callback_returning_unicode_with_multibyte(curl, app):
 
 # --- numpy array ---
 
-numpy = pytest.importorskip("numpy")
+try:
+    import numpy
+except ImportError:
+    numpy = None
+
+requires_numpy = pytest.mark.skipif(numpy is None, reason="numpy is not installed")
 
 
+@requires_numpy
 def test_post_with_read_callback_returning_numpy_array(curl, app):
     payload = b"hello numpy"
     arr = numpy.frombuffer(payload, dtype=numpy.uint8)
@@ -175,6 +181,7 @@ def test_post_with_read_callback_returning_numpy_array(curl, app):
     assert actual == payload.decode("ascii")
 
 
+@requires_numpy
 def test_post_with_read_callback_returning_numpy_tobytes(curl, app):
     """Test numpy array converted to bytes via .tobytes()."""
     payload = b"numpy bytes"
@@ -185,6 +192,7 @@ def test_post_with_read_callback_returning_numpy_tobytes(curl, app):
     assert actual == payload.decode("ascii")
 
 
+@requires_numpy
 def test_post_with_read_callback_returning_non_contiguous_numpy(curl, app):
     """A strided (non-contiguous) numpy array cannot satisfy PyBUF_SIMPLE."""
     arr = numpy.arange(10, dtype=numpy.uint8)
@@ -193,6 +201,7 @@ def test_post_with_read_callback_returning_non_contiguous_numpy(curl, app):
     do_bad_read_callback(curl, app, lambda _size: strided, post_len=len(strided))
 
 
+@requires_numpy
 def test_post_with_read_callback_returning_fortran_order_numpy(curl, app):
     """A 2D Fortran-ordered numpy array is not C-contiguous and must be rejected."""
     arr = numpy.array([[1, 2], [3, 4]], dtype=numpy.uint8, order="F")

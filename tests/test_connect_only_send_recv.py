@@ -3,9 +3,15 @@ import select
 import time
 from urllib.parse import urlparse
 
-import numpy as np
 import pycurl
 import pytest
+
+try:
+    import numpy as np
+except ImportError:
+    np = None
+
+requires_numpy = pytest.mark.skipif(np is None, reason="numpy is not installed")
 
 IO_TIMEOUT = 30.0
 
@@ -175,7 +181,13 @@ def test_connect_only_recv_would_block_before_request(connected_curl):
 
 
 @pytest.mark.parametrize(
-    "make_payload", (bytes, bytearray, memoryview, _as_numpy_uint8)
+    "make_payload",
+    (
+        bytes,
+        bytearray,
+        memoryview,
+        pytest.param(_as_numpy_uint8, marks=requires_numpy),
+    ),
 )
 def test_connect_only_send_recv_byteslike(
     connected_curl, success_request, make_payload
@@ -191,6 +203,7 @@ def test_connect_only_recv_into(connected_curl, success_request):
     _assert_success_response(response)
 
 
+@requires_numpy
 def test_connect_only_recv_into_numpy_array(connected_curl, success_request):
     _send_all(connected_curl, success_request)
     response = _recv_all_into(connected_curl, np.empty(128, dtype=np.uint8))

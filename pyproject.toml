@@ -48,7 +48,9 @@ Changelog     = "https://github.com/pycurl/pycurl/blob/master/ChangeLog"
 test = [
     "flaky",
     "flask",
-    "numpy",
+    # numpy has no win_arm64 wheels for Python 3.10, and building it from
+    # source there fails with MSVC 19.51 (numpy/numpy#32229).
+    "numpy; python_version >= '3.11' or sys_platform != 'win32' or platform_machine != 'ARM64'",
     "paramiko; python_version < '3.15' and (sys_platform != 'win32' or platform_machine != 'ARM64')",
     "pytest>=5",
     "pytest-run-parallel",
