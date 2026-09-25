@@ -31,55 +31,33 @@ The signature of each callback used in PycURL is documented below.
 Error Reporting
 ---------------
 
-PycURL callbacks are invoked as follows:
+Callbacks are invoked by libcurl. On failure they should not raise an
+exception but return the failure value documented for each callback below.
 
-Python application -> ``perform()`` -> libcurl (C code) -> Python callback
-
-Because callbacks are invoked by libcurl, they should not raise exceptions
-on failure but instead return appropriate values indicating failure.
-The documentation for individual callbacks below specifies expected success and
-failure return values.
-
-Unhandled exceptions propagated out of Python callbacks will be intercepted
-by PycURL or the Python runtime. This will fail the callback with a
-generic failure status, in turn failing the ``perform()`` operation.
-A failing ``perform()`` will raise ``pycurl.error``, but the error code
-used depends on the specific callback.
-
-``KeyboardInterrupt`` and other ``BaseException`` subclasses (for example, ``SystemExit``)
-are handled specially: if they are raised inside a callback, they are preserved and re-raised
-to the caller instead of being converted into a ``pycurl.error``.
-
-Rich context information like exception objects can be stored in various ways,
-for example the following example stores OPENSOCKET callback exception on the
-Curl object::
-
-    import pycurl, random, socket
-
-    class ConnectionRejected(Exception):
-        pass
-
-    def opensocket(curl, purpose, curl_address):
-        # always fail
-        curl.exception = ConnectionRejected('Rejecting connection attempt in opensocket callback')
-        return pycurl.SOCKET_BAD
-
-        # the callback must create a socket if it does not fail,
-        # see examples/opensocketexception.py
-
-    c = pycurl.Curl()
-    c.setopt(c.URL, 'https://pycurl.github.io')
-    c.exception = None
-    c.setopt(c.OPENSOCKETFUNCTION,
-        lambda purpose, address: opensocket(c, purpose, address))
+A regular ``Exception`` raised inside an easy-handle callback is attached as the
+``__cause__`` of the ``pycurl.error`` that ``perform()`` raises. The
+``pycurl.error`` type, error code and message are unchanged, and the original
+exception remains available through ``__cause__`` with its traceback and
+attributes intact::
 
     try:
         c.perform()
     except pycurl.error as e:
-        if e.args[0] == pycurl.E_COULDNT_CONNECT and c.exception:
-            print(c.exception)
-        else:
-            print(e)
+        if isinstance(e.__cause__, MyError):
+            handle(e.__cause__)
+
+If several callbacks raise during the same ``perform()``, the captured
+exceptions are wrapped in an ``ExceptionGroup`` (Python 3.11 or later) that
+becomes the ``__cause__``. On Python 3.10 the first captured exception is used
+instead.
+
+``KeyboardInterrupt``, ``SystemExit`` and other ``BaseException`` subclasses are
+not converted to ``pycurl.error`` and propagate unchanged.
+
+A callback whose return value libcurl ignores (for example ``DEBUGFUNCTION``)
+cannot fail the transfer by itself. An exception raised in such a callback is
+printed to stderr, and becomes part of the ``__cause__`` only when the same
+``perform()`` fails for another reason.
 
 
 WRITEFUNCTION
