@@ -296,6 +296,45 @@ def wait_for_network_service(netloc, check_interval, num_attempts):
     return ok
 
 
+class SocketListener:
+    """Raw TCP listener for observing when libcurl closes its end."""
+
+    def __init__(self):
+        self.sock = socket.socket()
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
+        self.sock.bind(("127.0.0.1", 0))
+        self.sock.listen(1)
+        self.port = self.sock.getsockname()[1]
+        self.conns = []
+
+    def accept(self, timeout=10):
+        self.sock.settimeout(timeout)
+        conn, _ = self.sock.accept()
+        self.conns.append(conn)
+        return conn
+
+    def peer_closed(self, conn, timeout=1):
+        """True once the peer closed its side, whatever it sent first."""
+        deadline = _time.monotonic() + timeout
+        while True:
+            conn.settimeout(max(0.01, deadline - _time.monotonic()))
+            try:
+                if conn.recv(4096) == b"":
+                    return True
+            except TimeoutError:
+                return False
+            except ConnectionResetError:
+                return True
+            if _time.monotonic() >= deadline:
+                return False
+
+    def close(self):
+        for conn in self.conns:
+            conn.close()
+        self.conns = []
+        self.sock.close()
+
+
 def DefaultCurl():
     import pycurl
 

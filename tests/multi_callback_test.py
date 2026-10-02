@@ -345,12 +345,14 @@ def test_multi_timer_overflow_on_remove_handle_is_reported(
     assert f"OverflowError: {TIMER_OVERFLOW}" in capfd.readouterr().err
 
 
-def test_multi_timer_overflow_on_close_is_reported(callback_multi, spare_easy, capfd):
+def test_multi_timer_overflow_on_close_is_reported(
+    callback_multi, spare_easy, unraisable
+):
     callback_multi.add_handle(spare_easy)
     callback_multi.setopt(pycurl.M_TIMERFUNCTION, _overflowing_timer)
 
     callback_multi.close()
-    assert f"OverflowError: {TIMER_OVERFLOW}" in capfd.readouterr().err
+    assert unraisable == [OverflowError]
 
 
 def _overflowing_socket(*args):

@@ -50,6 +50,11 @@ used depends on the specific callback.
 are handled specially: if they are raised inside a callback, they are preserved and re-raised
 to the caller instead of being converted into a ``pycurl.error``.
 
+Callbacks that libcurl invokes while a handle is being closed have no
+``perform()`` to fail, whether the close came from ``close()`` or from the last
+reference going away. Exceptions raised there are written to
+:py:data:`sys.unraisablehook`.
+
 Rich context information like exception objects can be stored in various ways,
 for example the following example stores OPENSOCKET callback exception on the
 Curl object::
@@ -367,12 +372,16 @@ CLOSESOCKETFUNCTION
 
 .. function:: CLOSESOCKETFUNCTION(curlfd) -> int
 
-    Callback for setting socket options. Corresponds to
+    Callback for closing a socket. Corresponds to
     `CURLOPT_CLOSESOCKETFUNCTION`_ in libcurl.
 
     *curlfd* is the file descriptor to be closed.
 
     The callback should return an ``int``.
+
+    An exception in the callback leaves the descriptor open, since libcurl has
+    already handed it over. When the callback cannot run at all, pycurl closes
+    the descriptor itself rather than leak it.
 
     The callback may be unset by calling :ref:`setopt <setopt>` with ``None``
     as the value or by calling :ref:`unsetopt <unsetopt>`.
@@ -466,7 +475,7 @@ TIMERFUNCTION
 
     Return ``0`` or ``None`` for success, or ``-1`` to abort all
     in-progress transfers in the multi handle. Exceptions raised in the
-    callback are printed to stderr and treated as ``-1``.
+    callback during ``perform()`` are printed to stderr and treated as ``-1``.
 
     See ``examples/multi-socket_action-select.py`` for an example program
     that uses the timer function and the socket function. Asyncio
@@ -501,7 +510,7 @@ SOCKETFUNCTION
 
     Return ``0`` or ``None`` for success, or ``-1`` to abort all
     in-progress transfers in the multi handle. Exceptions raised in the
-    callback are printed to stderr and treated as ``-1``.
+    callback during ``perform()`` are printed to stderr and treated as ``-1``.
 
     See ``examples/multi-socket_action-select.py`` for an example program
     that uses the timer function and the socket function. Asyncio
@@ -534,8 +543,8 @@ NOTIFYFUNCTION
     is the intended pattern for ``M_NOTIFY_INFO_READ``.
 
     The return value is ignored (the C callback returns ``void``).
-    Exceptions raised in the callback are printed to stderr and do not
-    abort transfers.
+    Exceptions raised in the callback during ``perform()`` are printed to
+    stderr and do not abort transfers.
 
 
 PREREQFUNCTION
@@ -644,10 +653,7 @@ HSTSWRITEFUNCTION
     ``CURLSTS_DONE`` (stop iterating) or ``CURLSTS_FAIL`` (error).
     Returning ``None`` is equivalent to ``CURLSTS_OK``.
 
-    libcurl invokes the callback during ``perform()`` and during handle
-    cleanup; exceptions raised inside the callback while the handle is
-    being cleaned up are written to :py:data:`sys.unraisablehook` and
-    do not propagate.
+    libcurl invokes the callback during ``perform()`` and during cleanup.
 
     The callback may be unset by calling :ref:`setopt <setopt>` with ``None``
     as the value or by calling :ref:`unsetopt <unsetopt>`.

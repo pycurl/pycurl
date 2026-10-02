@@ -12,6 +12,7 @@
 #include <sys/types.h>
 
 #if !defined(WIN32)
+#include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -337,6 +338,28 @@ PYCURL_INTERNAL void pycurl_ssl_cleanup(void);
 #  define Py_IsFinalizing _Py_IsFinalizing
 #endif
 
+/* Teardown phase of a Curl or CurlMulti object. While it is not NONE, callback
+   errors go to sys.unraisablehook instead of staying pending: libcurl's cleanup
+   cannot be stopped halfway, and a pending exception skips the callbacks after
+   the one that raised. */
+#define PYCURL_TEARDOWN_NONE       0
+#define PYCURL_TEARDOWN_FINALIZING 1  /* tp_finalize: the object is alive */
+#define PYCURL_TEARDOWN_DEALLOC    2  /* tp_dealloc: it must not reach Python */
+
+/* Save and restore the caller's exception around teardown. */
+#if PY_VERSION_HEX >= 0x030C0000
+#  define PYCURL_BEGIN_SAVE_EXC \
+       PyObject *pycurl_saved_exc = PyErr_GetRaisedException();
+#  define PYCURL_END_SAVE_EXC \
+       PyErr_SetRaisedException(pycurl_saved_exc);
+#else
+#  define PYCURL_BEGIN_SAVE_EXC \
+       PyObject *pycurl_saved_type, *pycurl_saved_value, *pycurl_saved_tb; \
+       PyErr_Fetch(&pycurl_saved_type, &pycurl_saved_value, &pycurl_saved_tb);
+#  define PYCURL_END_SAVE_EXC \
+       PyErr_Restore(pycurl_saved_type, pycurl_saved_value, pycurl_saved_tb);
+#endif
+
 #define PYCURL_BEGIN_CALLBACK_COMMON(get_expr, retval, callback_name) \
     if (Py_IsFinalizing()) { \
         return (retval); \
@@ -481,6 +504,7 @@ typedef struct CurlObject {
     PyObject *weakreflist;
     CURL *handle;
     PyThreadState *state;
+    int teardown;
     PyObject *multi_weakref;
     struct CurlMultiObject *multi_stack;
     struct CurlShareObject *share;
@@ -569,6 +593,7 @@ typedef struct CurlMultiObject {
     PyObject *weakreflist;
     CURLM *multi_handle;
     PyThreadState *state;
+    int teardown;
     fd_set read_fd_set;
     fd_set write_fd_set;
     fd_set exc_fd_set;
@@ -680,6 +705,15 @@ warn_failed_to_acquire_thread(const char *warning_message);
 
 PYCURL_INTERNAL void
 print_callback_error_if_regular_exception(void);
+
+PYCURL_INTERNAL void
+print_callback_error_unless_teardown(int teardown);
+
+PYCURL_INTERNAL void
+pycurl_report_teardown_error(int teardown, PyObject *context);
+
+PYCURL_INTERNAL int
+pycurl_close_socket_fallback(curl_socket_t sockfd);
 
 PYCURL_INTERNAL PyObject *
 do_global_init(PyObject *dummy, PyObject *args);
