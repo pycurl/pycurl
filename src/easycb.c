@@ -394,7 +394,11 @@ closesocket_callback(void *clientp, curl_socket_t curlfd)
 
     self = (CurlObject *)clientp;
 
-    PYCURL_BEGIN_CALLBACK(closesocket_callback, ret);
+    if (self->teardown == PYCURL_TEARDOWN_DEALLOC) {
+        return pycurl_close_socket_fallback(curlfd);
+    }
+
+    PYCURL_BEGIN_CALLBACK(closesocket_callback, pycurl_close_socket_fallback(curlfd));
 
     py_curlfd = PyLong_FromCurlSocket(curlfd);
     if (py_curlfd == NULL) {
@@ -409,17 +413,21 @@ closesocket_callback(void *clientp, curl_socket_t curlfd)
     ret_obj = PyObject_Call(self->closesocket_cb, arglist, NULL);
     Py_DECREF(arglist);
     if (callback_return_value_to_int(ret_obj, "closesocket", &ret) != 0) {
-        goto silent_error;
+        /* The callback owns the socket once it has run. Closing it here
+           could hit a reused descriptor. */
+        ret = -1;
     }
     goto done;
 
 silent_error:
-    ret = -1;
+    /* Reached only before the callback runs, and libcurl closes nothing. */
+    ret = pycurl_close_socket_fallback(curlfd);
 done:
     Py_XDECREF(ret_obj);
+    pycurl_report_teardown_error(self->teardown, self->closesocket_cb);
     PYCURL_END_CALLBACK(ret);
 verbose_error:
-    print_callback_error_if_regular_exception();
+    print_callback_error_unless_teardown(self->teardown);
     goto silent_error;
 }
 #endif
@@ -746,6 +754,10 @@ progress_callback(void *stream,
     /* acquire thread */
     self = (CurlObject *)stream;
 
+    if (self->teardown == PYCURL_TEARDOWN_DEALLOC) {
+        return ret;
+    }
+
     PYCURL_BEGIN_CALLBACK(progress_callback, ret);
 
     /* check args */
@@ -779,9 +791,10 @@ progress_callback(void *stream,
 
 silent_error:
     Py_XDECREF(result);
+    pycurl_report_teardown_error(self->teardown, self->pro_cb);
     PYCURL_END_CALLBACK(ret);
 verbose_error:
-    print_callback_error_if_regular_exception();
+    print_callback_error_unless_teardown(self->teardown);
     goto silent_error;
 }
 
@@ -800,6 +813,10 @@ xferinfo_callback(void *stream,
 
     /* acquire thread */
     self = (CurlObject *)stream;
+
+    if (self->teardown == PYCURL_TEARDOWN_DEALLOC) {
+        return ret;
+    }
 
     PYCURL_BEGIN_CALLBACK(xferinfo_callback, ret);
 
@@ -836,9 +853,10 @@ xferinfo_callback(void *stream,
 
 silent_error:
     Py_XDECREF(result);
+    pycurl_report_teardown_error(self->teardown, self->xferinfo_cb);
     PYCURL_END_CALLBACK(ret);
 verbose_error:
-    print_callback_error_if_regular_exception();
+    print_callback_error_unless_teardown(self->teardown);
     goto silent_error;
 }
 #endif
@@ -858,6 +876,10 @@ debug_callback(CURL *curlobj, curl_infotype type,
 
     /* acquire thread */
     self = (CurlObject *)stream;
+
+    if (self->teardown == PYCURL_TEARDOWN_DEALLOC) {
+        return ret;
+    }
 
     PYCURL_BEGIN_CALLBACK(debug_callback, ret);
 
@@ -882,9 +904,10 @@ debug_callback(CURL *curlobj, curl_infotype type,
 
 silent_error:
     Py_XDECREF(result);
+    pycurl_report_teardown_error(self->teardown, self->debug_cb);
     PYCURL_END_CALLBACK(ret);
 verbose_error:
-    print_callback_error_if_regular_exception();
+    print_callback_error_unless_teardown(self->teardown);
     goto silent_error;
 }
 
@@ -1327,6 +1350,10 @@ hstswrite_callback(CURL *easy, struct curl_hstsentry *e,
 
     self = (CurlObject *)clientp;
 
+    if (self->teardown == PYCURL_TEARDOWN_DEALLOC) {
+        return ret;
+    }
+
     PYCURL_BEGIN_CALLBACK(hstswrite_callback, ret);
 
     expire_obj = expire_c_str_to_datetime(e->expire);
@@ -1382,11 +1409,12 @@ done:
     Py_XDECREF(entry);
     Py_XDECREF(index);
     Py_XDECREF(ret_obj);
+    pycurl_report_teardown_error(self->teardown, self->hstswrite_cb);
     PYCURL_END_CALLBACK(ret);
 verbose_error:
     Py_XDECREF(expire_obj);
     Py_XDECREF(arglist);
-    print_callback_error_if_regular_exception();
+    print_callback_error_unless_teardown(self->teardown);
     goto silent_error;
 }
 

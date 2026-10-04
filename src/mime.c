@@ -171,6 +171,8 @@ curlmime_data_cb_owner_release_libcurl_ref(CurlMimeDataCbOwner *owner, int invok
         return;
     }
 
+    PYCURL_BEGIN_SAVE_EXC
+
     if (owner->shared_refcount <= 0) {
         /*
          * Defensive: do not decref without a matching logical libcurl ref.
@@ -178,6 +180,7 @@ curlmime_data_cb_owner_release_libcurl_ref(CurlMimeDataCbOwner *owner, int invok
          */
         PyErr_SetString(ErrorObject, "internal error: mime data_cb owner libcurl refcount underflow");
         PyErr_WriteUnraisable((PyObject *)owner);
+        PYCURL_END_SAVE_EXC
         return;
     }
     owner->shared_refcount -= 1;
@@ -196,6 +199,7 @@ curlmime_data_cb_owner_release_libcurl_ref(CurlMimeDataCbOwner *owner, int invok
     }
 
     Py_DECREF(owner);
+    PYCURL_END_SAVE_EXC
 }
 
 static int

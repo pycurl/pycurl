@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import socket
+import sys
 import time
 from typing import TYPE_CHECKING, Generator
 from urllib.parse import urlparse
@@ -38,6 +39,20 @@ def wait_listening(host: str, port: int, timeout: float = DEFAULT_WAIT_TIMEOUT) 
 @pytest.fixture
 def free_port() -> int:
     return _get_free_port()
+
+
+@pytest.fixture
+def unraisable(monkeypatch: pytest.MonkeyPatch) -> list[type[BaseException]]:
+    seen: list[type[BaseException]] = []
+    monkeypatch.setattr(sys, "unraisablehook", lambda args: seen.append(args.exc_type))
+    return seen
+
+
+@pytest.fixture
+def listener() -> Generator[util.SocketListener, None, None]:
+    listener = util.SocketListener()
+    yield listener
+    listener.close()
 
 
 @pytest.fixture

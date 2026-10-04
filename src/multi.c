@@ -186,9 +186,15 @@ util_multi_detach_easies(CurlMultiObject *self, int close_handles, int swallow_e
         }
 
         if (self->multi_handle && easy->handle) {
+            /* Removing a handle reports its final progress through a callback
+             * of the easy, which this teardown cannot propagate either. */
+            int easy_teardown = easy->teardown;
+
+            easy->teardown = PYCURL_TEARDOWN_FINALIZING;
             PYCURL_BEGIN_ALLOW_THREADS
             (void)curl_multi_remove_handle(self->multi_handle, easy->handle);
             PYCURL_END_ALLOW_THREADS
+            easy->teardown = easy_teardown;
         }
 
         easy_clear_multi_ref(easy, self);
@@ -219,14 +225,15 @@ do_multi_dealloc(CurlMultiObject *self)
     /* tp_dealloc can run while an exception is propagating (e.g. when
      * __init__ of a subclass rejects our arguments and the freshly
      * constructed object is immediately discarded). The cleanup below
-     * calls back into Python (iterating easy_object_refs, calling the
-     * easy objects' close() method), which must not observe that
-     * exception, so stash it for the duration. */
-    PyObject *exc_type, *exc_val, *exc_tb;
-    PyErr_Fetch(&exc_type, &exc_val, &exc_tb);
+     * calls back into Python (iterating easy_object_refs, dropping the
+     * callbacks), which must not observe that exception, so stash it for
+     * the duration. */
+    PYCURL_BEGIN_SAVE_EXC
 
     PyObject_GC_UnTrack(self);
     Py_TRASHCAN_BEGIN(self, do_multi_dealloc);
+
+    self->teardown = PYCURL_TEARDOWN_DEALLOC;
 
     /* Removing easy handles can invoke M_SOCKETFUNCTION. Clear it first so
      * the dying CurlMulti is not handed back to Python from its own
@@ -253,24 +260,37 @@ do_multi_dealloc(CurlMultiObject *self)
     CurlMulti_Type.tp_free(self);
     Py_TRASHCAN_END
 
-    PyErr_Restore(exc_type, exc_val, exc_tb);
+    if (PyErr_Occurred()) {
+        PyErr_WriteUnraisable((PyObject *) &CurlMulti_Type);
+    }
+    PYCURL_END_SAVE_EXC
 }
 
 
 static PyObject *
 do_multi_close(CurlMultiObject *self, PyObject *Py_UNUSED(ignored))
 {
+    int res;
+
     if (check_multi_state(self, PYCURL_REQUIRE_NOT_RUNNING, "close") != 0) {
         return NULL;
     }
 
-    if (util_multi_detach_easies(self, self->close_handles, 0) < 0) {
+    self->teardown = PYCURL_TEARDOWN_FINALIZING;
+    res = util_multi_detach_easies(self, self->close_handles, 0);
+    if (res == 0) {
+        util_multi_close(self);
+    }
+    self->teardown = PYCURL_TEARDOWN_NONE;
+    if (res < 0) {
         return NULL;
     }
 
-    util_multi_close(self);
     if (self->socket_object_dict) {
         PyDict_Clear(self->socket_object_dict);
+    }
+    if (PyErr_Occurred()) {
+        return NULL;
     }
     Py_RETURN_NONE;
 }
@@ -373,9 +393,10 @@ multi_socket_callback(CURL *easy,
 
 silent_error:
     Py_XDECREF(result);
+    pycurl_report_teardown_error(self->teardown, self->s_cb);
     PYCURL_END_CALLBACK(ret);
 verbose_error:
-    print_callback_error_if_regular_exception();
+    print_callback_error_unless_teardown(self->teardown);
     goto silent_error;
 }
 
@@ -424,9 +445,10 @@ multi_timer_callback(CURLM *multi,
 
 silent_error:
     Py_XDECREF(result);
+    pycurl_report_teardown_error(self->teardown, self->t_cb);
     PYCURL_END_CALLBACK(ret);
 verbose_error:
-    print_callback_error_if_regular_exception();
+    print_callback_error_unless_teardown(self->teardown);
     goto silent_error;
 }
 
@@ -508,11 +530,12 @@ multi_notify_callback(CURLM *multi,
 
 done:
     Py_XDECREF(result);
+    pycurl_report_teardown_error(self->teardown, self->n_cb);
     PYCURL_PYTHON_LEAVE();
     return;
 
 verbose_error:
-    print_callback_error_if_regular_exception();
+    print_callback_error_unless_teardown(self->teardown);
     goto done;
 }
 #endif /* HAVE_CURL_MULTI_NOTIFY */
@@ -1089,22 +1112,21 @@ do_multi_add_handle(CurlMultiObject *self, PyObject *args)
     }
 
     assert(obj->multi_stack == NULL);
+    /* Before the libcurl call, which can run a callback that reaches the easy:
+     * without the back reference, close() does not see the running multi. */
+    if (easy_set_multi_ref(obj, self) < 0) {
+        (void) PySet_Discard(self->easy_object_refs, (PyObject *) obj);
+        return NULL;
+    }
+
     /* Allow threads because callbacks can be invoked */
     PYCURL_BEGIN_ALLOW_THREADS
     res = curl_multi_add_handle(self->multi_handle, obj->handle);
     PYCURL_END_ALLOW_THREADS
     if (res != CURLM_OK) {
+        easy_clear_multi_ref(obj, self);
         PySet_Discard(self->easy_object_refs, (PyObject *) obj);
         CURLERROR_MSG("curl_multi_add_handle() failed due to internal errors");
-    }
-
-    if (easy_set_multi_ref(obj, self) < 0) {
-        /* undo set + libcurl add */
-        PYCURL_BEGIN_ALLOW_THREADS
-        (void) curl_multi_remove_handle(self->multi_handle, obj->handle);
-        PYCURL_END_ALLOW_THREADS
-        (void) PySet_Discard(self->easy_object_refs, (PyObject *) obj);
-        return NULL;
     }
 
     Py_RETURN_NONE;

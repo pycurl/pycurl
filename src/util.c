@@ -34,6 +34,36 @@ print_callback_error_if_regular_exception(void)
     }
 }
 
+PYCURL_INTERNAL void
+print_callback_error_unless_teardown(int teardown)
+{
+    if (teardown == PYCURL_TEARDOWN_NONE) {
+        print_callback_error_if_regular_exception();
+    }
+}
+
+PYCURL_INTERNAL void
+pycurl_report_teardown_error(int teardown, PyObject *context)
+{
+    if (teardown == PYCURL_TEARDOWN_NONE || !PyErr_Occurred()) {
+        return;
+    }
+    PyErr_WriteUnraisable(context);
+}
+
+PYCURL_INTERNAL int
+pycurl_close_socket_fallback(curl_socket_t sockfd)
+{
+    if (sockfd != CURL_SOCKET_BAD) {
+#if defined(WIN32)
+        closesocket(sockfd);
+#else
+        close(sockfd);
+#endif
+    }
+    return 0;
+}
+
 PYCURL_INTERNAL PyObject *
 PyLong_FromCurlSocket(curl_socket_t sockfd)
 {
