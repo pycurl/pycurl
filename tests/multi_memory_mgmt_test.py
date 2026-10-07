@@ -77,34 +77,61 @@ def test_curl_kept_alive_while_added_to_multi():
     assert ref() is None
 
 
-def test_socket_callback_not_invoked_during_multi_dealloc(app):
-    callbacks_during_dealloc = []
-    deallocating = False
-
-    def socket_callback(event, fd, multi, data):
-        if deallocating:
-            callbacks_during_dealloc.append(event)
-
+def _driven_multi(app, socket_callback, multi_class=pycurl.CurlMulti):
     easy = pycurl.Curl()
     easy.setopt(pycurl.URL, f"{app}/success")
-    multi = pycurl.CurlMulti()
+    multi = multi_class()
     multi.setopt(pycurl.M_SOCKETFUNCTION, socket_callback)
     multi.add_handle(easy)
-
     for _ in range(3):
         multi.socket_action(pycurl.SOCKET_TIMEOUT, 0)
+    return multi, easy
 
-    deallocating = True
+
+def test_socket_callback_invoked_during_multi_finalize(app):
+    events = []
+    tearing_down = False
+
+    def socket_callback(event, fd, multi, data):
+        if tearing_down:
+            events.append(event)
+
+    multi, easy = _driven_multi(app, socket_callback)
+
+    tearing_down = True
     del multi
     gc.collect()
 
-    assert callbacks_during_dealloc == []
+    assert set(events) == {pycurl.POLL_REMOVE}
     easy.close()
 
 
-def test_multi_callback_cycle_is_collectable(app):
+def test_socket_callback_not_invoked_when_del_skips_super(app):
+    events = []
+    tearing_down = False
+
+    def socket_callback(event, fd, multi, data):
+        if tearing_down:
+            events.append(event)
+
+    class MyMulti(pycurl.CurlMulti):
+        def __del__(self):
+            pass
+
+    multi, easy = _driven_multi(app, socket_callback, MyMulti)
+
+    tearing_down = True
+    del multi
+    gc.collect()
+
+    assert events == []
+    easy.close()
+
+
+def test_multi_callback_cycle_is_collectable(app, unraisable):
     class Client:
         def __init__(self):
+            self.seen = []
             self.multi = pycurl.CurlMulti()
             self.multi.setopt(pycurl.M_TIMERFUNCTION, self.on_timer)
             self.multi.setopt(pycurl.M_SOCKETFUNCTION, self.on_socket)
@@ -115,10 +142,10 @@ def test_multi_callback_cycle_is_collectable(app):
                 self.multi.socket_action(pycurl.SOCKET_TIMEOUT, 0)
 
         def on_timer(self, timeout_ms):
-            pass
+            self.seen.append(("timer", self.easy is not None))
 
         def on_socket(self, event, fd, multi, data):
-            pass
+            self.seen.append(("socket", self.easy is not None))
 
     client = Client()
     client_ref = weakref.ref(client)
@@ -126,3 +153,4 @@ def test_multi_callback_cycle_is_collectable(app):
     gc.collect()
 
     assert client_ref() is None
+    assert unraisable == []

@@ -219,46 +219,84 @@ util_multi_detach_easies(CurlMultiObject *self, int close_handles, int swallow_e
 }
 
 
+static int
+util_multi_detach_and_close(CurlMultiObject *self, int close_handles,
+                            int swallow_exceptions)
+{
+    if (util_multi_detach_easies(self, close_handles, swallow_exceptions) < 0) {
+        return -1;
+    }
+    util_multi_close(self);
+    if (self->socket_object_dict != NULL) {
+        PyDict_Clear(self->socket_object_dict);
+    }
+    return PyErr_Occurred() ? -1 : 0;
+}
+
+
+PYCURL_INTERNAL void
+do_multi_finalize(PyObject *op)
+{
+    CurlMultiObject *self = (CurlMultiObject *)op;
+    PYCURL_BEGIN_SAVE_EXC
+
+    if (check_multi_state(self, PYCURL_REQUIRE_NOT_RUNNING, "__del__") != 0) {
+        PyErr_WriteUnraisable(op);
+    } else {
+        self->teardown = PYCURL_TEARDOWN_FINALIZING;
+        if (util_multi_detach_and_close(self, 0, 1) < 0) {
+            PyErr_WriteUnraisable(op);
+        }
+        self->teardown = PYCURL_TEARDOWN_NONE;
+    }
+    PYCURL_END_SAVE_EXC
+}
+
+
 PYCURL_INTERNAL void
 do_multi_dealloc(CurlMultiObject *self)
 {
+    PyObject *op = (PyObject *)self;
     /* tp_dealloc can run while an exception is propagating (e.g. when
      * __init__ of a subclass rejects our arguments and the freshly
      * constructed object is immediately discarded). The cleanup below
-     * calls back into Python (iterating easy_object_refs, dropping the
-     * callbacks), which must not observe that exception, so stash it for
-     * the duration. */
+     * calls back into Python, which must not observe that exception, so
+     * stash it for the duration. */
     PYCURL_BEGIN_SAVE_EXC
 
     PyObject_GC_UnTrack(self);
     Py_TRASHCAN_BEGIN(self, do_multi_dealloc);
 
-    self->teardown = PYCURL_TEARDOWN_DEALLOC;
-
-    /* Removing easy handles can invoke M_SOCKETFUNCTION. Clear it first so
-     * the dying CurlMulti is not handed back to Python from its own
-     * tp_dealloc. */
-    Py_CLEAR(self->s_cb);
-
-    if (util_multi_detach_easies(self, 0, 1) < 0) {
-#if PY_VERSION_HEX >= 0x030D0000
-        PyErr_FormatUnraisable("Exception ignored while deallocating pycurl.CurlMulti");
-#else
-        /* Not self: its refcount is already zero, and the unraisable hook
-         * takes a strong reference to whatever it is handed. */
-        PyErr_WriteUnraisable((PyObject *) &CurlMulti_Type);
-#endif
+    PyObject_GC_Track(self);
+    if (PyObject_CallFinalizerFromDealloc(op) < 0) {
+        goto resurrected;
     }
-
-    util_multi_xdecref(self);
-    util_multi_close(self);
+    PyObject_GC_UnTrack(self);
 
     if (self->weakreflist != NULL) {
-        PyObject_ClearWeakRefs((PyObject *) self);
+        PyObject_ClearWeakRefs(op);
     }
 
+    /* A subclass __del__ that does not call super() replaces our finalizer, so
+     * the multi handle can still be open here, with no Python allowed. The
+     * callbacks are released below either way. Clearing them first keeps the
+     * removals from reaching Python at all. */
+    if (self->multi_handle != NULL) {
+        self->teardown = PYCURL_TEARDOWN_DEALLOC;
+        Py_CLEAR(self->s_cb);
+        Py_CLEAR(self->t_cb);
+#ifdef HAVE_CURL_MULTI_NOTIFY
+        Py_CLEAR(self->n_cb);
+#endif
+        (void)util_multi_detach_and_close(self, 0, 1);
+    }
+
+    Py_CLEAR(self->easy_object_refs);
+    util_multi_xdecref(self);
+
     CurlMulti_Type.tp_free(self);
-    Py_TRASHCAN_END
+resurrected:
+    Py_TRASHCAN_END;
 
     if (PyErr_Occurred()) {
         PyErr_WriteUnraisable((PyObject *) &CurlMulti_Type);
@@ -277,19 +315,9 @@ do_multi_close(CurlMultiObject *self, PyObject *Py_UNUSED(ignored))
     }
 
     self->teardown = PYCURL_TEARDOWN_FINALIZING;
-    res = util_multi_detach_easies(self, self->close_handles, 0);
-    if (res == 0) {
-        util_multi_close(self);
-    }
+    res = util_multi_detach_and_close(self, self->close_handles, 0);
     self->teardown = PYCURL_TEARDOWN_NONE;
     if (res < 0) {
-        return NULL;
-    }
-
-    if (self->socket_object_dict) {
-        PyDict_Clear(self->socket_object_dict);
-    }
-    if (PyErr_Occurred()) {
         return NULL;
     }
     Py_RETURN_NONE;
@@ -1558,6 +1586,15 @@ PYCURL_INTERNAL PyTypeObject CurlMulti_Type = {
     PyType_GenericAlloc,        /* tp_alloc */
     (newfunc)do_multi_new,      /* tp_new */
     PyObject_GC_Del,            /* tp_free */
+    0,                          /* tp_is_gc */
+    0,                          /* tp_bases */
+    0,                          /* tp_mro */
+    0,                          /* tp_cache */
+    0,                          /* tp_subclasses */
+    0,                          /* tp_weaklist */
+    0,                          /* tp_del */
+    0,                          /* tp_version_tag */
+    do_multi_finalize,          /* tp_finalize */
 };
 
 /* vi:ts=4:et:nowrap

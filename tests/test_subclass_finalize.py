@@ -106,12 +106,51 @@ def test_del_storing_self_keeps_handle_open(listener):
     saved[0].close()
 
 
-def test_multi_subclass_del_releases_easy():
+def multi_base():
+    return pycurl.CurlMulti()
+
+
+def multi_plain_subclass():
+    class MyMulti(pycurl.CurlMulti):
+        pass
+
+    return MyMulti()
+
+
+def multi_del_override():
     class MyMulti(pycurl.CurlMulti):
         def __del__(self):
             pass
 
-    multi = MyMulti()
+    return MyMulti()
+
+
+def multi_del_with_super():
+    class MyMulti(pycurl.CurlMulti):
+        def __del__(self):
+            super().__del__()
+
+    return MyMulti()
+
+
+def multi_del_override_in_cycle():
+    multi = multi_del_override()
+    multi.myself = multi
+    return multi
+
+
+@pytest.mark.parametrize(
+    "make_multi",
+    [
+        multi_base,
+        multi_plain_subclass,
+        multi_del_override,
+        multi_del_with_super,
+        multi_del_override_in_cycle,
+    ],
+)
+def test_multi_releases_its_easy(make_multi):
+    multi = make_multi()
     curl = pycurl.Curl()
     multi.add_handle(curl)
     ref = weakref.ref(curl)
@@ -123,6 +162,90 @@ def test_multi_subclass_del_releases_easy():
     del multi
     gc.collect()
     assert ref() is None
+
+
+def _multi_with_timer(make_multi, calls, tearing_down):
+    def timerfunction(timeout_ms):
+        if tearing_down:
+            calls.append(timeout_ms)
+        return 0
+
+    multi = make_multi()
+    multi.setopt(pycurl.M_TIMERFUNCTION, timerfunction)
+    multi.add_handle(pycurl.Curl())
+    return multi
+
+
+def test_multi_del_with_super_invokes_callback():
+    calls = []
+    tearing_down = []
+    multi = _multi_with_timer(multi_del_with_super, calls, tearing_down)
+
+    tearing_down.append(True)
+    del multi
+    gc.collect()
+    assert calls
+
+
+def test_multi_del_without_super_skips_callback():
+    calls = []
+    tearing_down = []
+    multi = _multi_with_timer(multi_del_override, calls, tearing_down)
+
+    tearing_down.append(True)
+    del multi
+    gc.collect()
+    assert calls == []
+
+
+def test_multi_explicit_del_is_idempotent(unraisable):
+    multi = pycurl.CurlMulti()
+    multi.add_handle(pycurl.Curl())
+
+    multi.__del__()
+    assert multi.closed
+    multi.__del__()
+
+    del multi
+    gc.collect()
+    assert unraisable == []
+
+
+def test_multi_explicit_del_while_running_is_refused(unraisable):
+    multi = pycurl.CurlMulti()
+
+    def timerfunction(timeout_ms):
+        multi.__del__()
+        return 0
+
+    multi.setopt(pycurl.M_TIMERFUNCTION, timerfunction)
+    multi.add_handle(pycurl.Curl())
+
+    assert set(unraisable) == {pycurl.error}
+    assert not multi.closed
+    assert multi.close() is None
+
+
+def test_multi_del_storing_self_keeps_it_usable():
+    saved = []
+
+    class MyMulti(pycurl.CurlMulti):
+        def __del__(self):
+            super().__del__()
+            saved.append(self)
+
+    multi = MyMulti()
+    multi.add_handle(pycurl.Curl())
+
+    del multi
+    gc.collect()
+    assert len(saved) == 1
+    survivor = saved[0]
+    assert survivor.closed
+    with pytest.raises(pycurl.error):
+        survivor.add_handle(pycurl.Curl())
+    assert pycurl.Curl() not in survivor
+    assert survivor.close() is None
 
 
 def test_closesocketfunction_raising_during_dealloc(listener, unraisable):
