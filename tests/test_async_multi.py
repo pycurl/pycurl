@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import gc
 import sys
 from collections.abc import Callable, Coroutine, Iterator
 from io import BytesIO
@@ -218,6 +219,26 @@ def test_cancelled_future_not_resolved_by_drain(app: str) -> None:
                 curl.close()
 
     _run(main())
+
+
+def test_dropped_without_aclose_is_silent(
+    app: str, unraisable: list[type[BaseException]]
+) -> None:
+    smuggled: list[Any] = []
+
+    async def main() -> None:
+        multi = pycurl.AsyncCurlMulti()
+        easy = util.DefaultCurl()
+        easy.setopt(pycurl.URL, f"{app}/success")
+        easy.setopt(pycurl.WRITEFUNCTION, BytesIO().write)
+        task = asyncio.ensure_future(multi.perform(easy))
+        await asyncio.sleep(0.1)
+        smuggled.append((multi, easy, task))
+
+    _run(main())
+    smuggled.clear()
+    gc.collect()
+    assert unraisable == []
 
 
 def test_close_idempotent() -> None:

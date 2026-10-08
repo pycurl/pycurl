@@ -9,7 +9,11 @@ multi handle.
 
 If the ``CurlMulti`` was constructed with ``close_handles=True``, the
 removed easy handles are also closed after removal. Otherwise, they
-remain open.
+remain open. Automatic teardown only removes the easy handles. It never
+closes them, whatever ``close_handles`` was set to.
+
+A subclass overriding ``__del__`` must call ``super().__del__()``, otherwise
+the multi handle is closed without running any Python callback.
 
 ``close()`` may not be called while ``perform()`` or ``socket_action()``
 is on the stack (for example, from inside ``M_SOCKETFUNCTION`` or
