@@ -13,12 +13,7 @@ PycURL exposes libcurl's MIME tree API via ``CurlMime`` and ``CurlMimePart`` cla
   ``add_multipart()``.
 - ``CurlMimePart.data()`` also accepts objects exposing Python's buffer protocol
   (for example ``bytearray`` and ``memoryview``), not only ``bytes``/ASCII ``str``.
-- ``CurlMimePart.data_cb(datasize, read, seek=None, free=None, userdata=None)`` maps to libcurl
-  ``curl_mime_data_cb()`` for streaming content from callbacks.
-  ``read(userdata, max_bytes)`` uses the same return conventions as ``READFUNCTION``.
-  Optional ``seek(userdata, offset, origin)`` follows ``SEEKFUNCTION`` semantics and
-  should return ``SEEKFUNC_OK``, ``SEEKFUNC_FAIL`` or ``SEEKFUNC_CANTSEEK``.
-  Optional ``free(userdata)`` is called when libcurl releases the callback-backed part.
+- ``CurlMimePart.data_cb()`` streams content from callbacks.
 
 Example::
 
@@ -35,9 +30,7 @@ Example::
 
 .. note::
 
-    This is a first-draft API. It currently documents MIME object construction
-    and nesting. End-to-end request attachment via Curl options is documented
-    separately as that integration is finalized.
+    This is a first-draft API.
 
 .. note::
 
@@ -98,3 +91,4 @@ CurlMimePart
     .. automethod:: pycurl.CurlMimePart.headers
 
     .. automethod:: pycurl.CurlMimePart.subparts
+

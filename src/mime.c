@@ -1,4 +1,5 @@
 #include "pycurl.h"
+#include "docstrings.h"
 
 #ifdef HAVE_CURL_MIME
 
@@ -263,7 +264,7 @@ curlmimepart_read_callback(char *ptr, size_t size, size_t nmemb, void *arg)
     if (owner == NULL || owner->read_cb == NULL) {
         return ret;
     }
-    if (!Py_IsInitialized()) {
+    if (Py_IsFinalizing()) {
         return ret;
     }
 
@@ -365,7 +366,7 @@ curlmimepart_seek_callback(void *arg, curl_off_t offset, int origin)
     if (owner == NULL || owner->seek_cb == NULL) {
         return ret;
     }
-    if (!Py_IsInitialized()) {
+    if (Py_IsFinalizing()) {
         return ret;
     }
 
@@ -440,7 +441,7 @@ curlmimepart_free_callback(void *arg)
     CurlMimeDataCbOwner *owner = (CurlMimeDataCbOwner *)arg;
     PyGILState_STATE gil_state;
 
-    if (owner == NULL || !Py_IsInitialized()) {
+    if (owner == NULL || Py_IsFinalizing()) {
         return;
     }
 
@@ -545,6 +546,58 @@ curlmime_make_part(CurlMimeObject *mime, curl_mimepart *part)
     return (PyObject *)part_obj;
 }
 
+static void curlmime_invalidate_wrappers(CurlMimeObject *self);
+
+static void
+curlmime_clear_data_cb_owners(CurlMimeObject *self)
+{
+    Py_ssize_t i;
+    Py_ssize_t len;
+
+    if (self == NULL) {
+        return;
+    }
+
+    if (self->data_cb_owners != NULL) {
+        len = PyList_GET_SIZE(self->data_cb_owners);
+        for (i = 0; i < len; i++) {
+            PyObject *owner_obj = PyList_GET_ITEM(self->data_cb_owners, i);
+            if (PyObject_TypeCheck(owner_obj, &CurlMimeDataCbOwner_Type)) {
+                (void)curlmime_data_cb_owner_clear((CurlMimeDataCbOwner *)owner_obj);
+            }
+        }
+    }
+
+    if (self->submimes != NULL) {
+        len = PyList_GET_SIZE(self->submimes);
+        for (i = 0; i < len; i++) {
+            PyObject *submime_obj = PyList_GET_ITEM(self->submimes, i);
+            if (PyObject_TypeCheck(submime_obj, p_CurlMime_Type)) {
+                curlmime_clear_data_cb_owners((CurlMimeObject *)submime_obj);
+            }
+        }
+    }
+}
+
+static void
+curlmime_invalidate_submimes(CurlMimeObject *self)
+{
+    Py_ssize_t i;
+    Py_ssize_t len;
+
+    if (self->submimes == NULL) {
+        return;
+    }
+
+    len = PyList_GET_SIZE(self->submimes);
+    for (i = 0; i < len; i++) {
+        PyObject *submime_obj = PyList_GET_ITEM(self->submimes, i);
+        if (PyObject_TypeCheck(submime_obj, p_CurlMime_Type)) {
+            curlmime_invalidate_wrappers((CurlMimeObject *)submime_obj);
+        }
+    }
+}
+
 static int
 curlmime_invalidate_parts(CurlMimeObject *self)
 {
@@ -574,9 +627,6 @@ curlmime_invalidate_parts(CurlMimeObject *self)
 static void
 curlmime_invalidate_wrappers(CurlMimeObject *self)
 {
-    Py_ssize_t i;
-    Py_ssize_t len;
-
     if (self == NULL) {
         return;
     }
@@ -593,16 +643,7 @@ curlmime_invalidate_wrappers(CurlMimeObject *self)
     self->owns_mime = 0;
 
     (void)curlmime_invalidate_parts(self);
-
-    if (self->submimes != NULL) {
-        len = PyList_GET_SIZE(self->submimes);
-        for (i = 0; i < len; i++) {
-            PyObject *submime_obj = PyList_GET_ITEM(self->submimes, i);
-            if (PyObject_TypeCheck(submime_obj, p_CurlMime_Type)) {
-                curlmime_invalidate_wrappers((CurlMimeObject *)submime_obj);
-            }
-        }
-    }
+    curlmime_invalidate_submimes(self);
 
     Py_CLEAR(self->parts);
     Py_CLEAR(self->submimes);
@@ -674,7 +715,7 @@ do_curlmime_traverse(CurlMimeObject *self, visitproc visit, void *arg)
 }
 
 static int
-do_curlmime_clear(CurlMimeObject *self)
+util_curlmime_close(CurlMimeObject *self)
 {
     curl_mime *mime = self->mime;
     int owns_mime = self->owns_mime;
@@ -684,22 +725,94 @@ do_curlmime_clear(CurlMimeObject *self)
         return 0;
     }
 
+    /* Invalidate before freeing: a user free callback that re-enters close()
+       then finds self->mime already NULL and cannot free the handle twice. */
     curlmime_invalidate_wrappers(self);
 
     if (owns_mime && mime != NULL) {
         curl_mime_free(mime);
     }
+    return PyErr_Occurred() ? -1 : 0;
+}
+
+static int
+do_curlmime_clear(CurlMimeObject *self)
+{
+    /* Must run while the lists still reach the owners. Once they are gone the
+       dealloc fallback cannot find the callables it has to suppress. */
+    curlmime_clear_data_cb_owners(self);
+    /* Children are freed with the parent subtree, so they have to be
+       invalidated here as well or they keep a dangling curl_mime. */
+    curlmime_invalidate_submimes(self);
+
+    Py_CLEAR(self->parts);
+    Py_CLEAR(self->submimes);
+    Py_CLEAR(self->data_cb_owners);
+    Py_CLEAR(self->curl);
     return 0;
+}
+
+static void
+do_curlmime_finalize(PyObject *op)
+{
+    CurlMimeObject *self = (CurlMimeObject *)op;
+    PYCURL_BEGIN_SAVE_EXC
+
+    /* An attached child is torn down by its parent, and a closed mime has
+       nothing left to do. */
+    if (!self->owns_mime) {
+        PYCURL_END_SAVE_EXC
+        return;
+    }
+
+    /* tp_finalize is reachable from Python as __del__(), so a running handle
+       has to be refused here just as close() refuses it. */
+    if (self->curl != NULL &&
+        check_curl_state(self->curl, PYCURL_REQUIRE_NOT_RUNNING, "__del__") != 0) {
+        PyErr_WriteUnraisable(op);
+    } else if (util_curlmime_close(self) < 0) {
+        PyErr_WriteUnraisable(op);
+    }
+    PYCURL_END_SAVE_EXC
 }
 
 static void
 do_curlmime_dealloc(CurlMimeObject *self)
 {
+    PyObject *op = (PyObject *)self;
+    PYCURL_BEGIN_SAVE_EXC
+
     PyObject_GC_UnTrack(self);
     Py_TRASHCAN_BEGIN(self, do_curlmime_dealloc);
+
+    PyObject_GC_Track(self);
+    if (PyObject_CallFinalizerFromDealloc(op) < 0) {
+        goto resurrected;
+    }
+    PyObject_GC_UnTrack(self);
+
+    if (self->weakreflist != NULL) {
+        PyObject_ClearWeakRefs(op);
+    }
+
+    /* A subclass __del__ that does not call super() replaces our finalizer, so
+       the mime handle can still be open here, with no Python allowed. Dropping
+       the data_cb callables first keeps curl_mime_free from reaching the user
+       free callback. */
+    if (self->mime != NULL) {
+        curlmime_clear_data_cb_owners(self);
+        (void)util_curlmime_close(self);
+    }
     do_curlmime_clear(self);
-    CurlMime_Type.tp_free(self);
+
+    Py_TYPE(self)->tp_free(self);
+resurrected:
     Py_TRASHCAN_END;
+
+    if (PyErr_Occurred()) {
+        PyErr_WriteUnraisable((PyObject *) &CurlMime_Type);
+    }
+    PYCURL_END_SAVE_EXC
 }
 
 static PyObject *
@@ -712,7 +825,9 @@ do_curlmime_close(CurlMimeObject *self, PyObject *Py_UNUSED(ignored))
         return NULL;
     }
 
-    do_curlmime_clear(self);
+    if (util_curlmime_close(self) < 0) {
+        return NULL;
+    }
     Py_RETURN_NONE;
 }
 
@@ -1260,19 +1375,19 @@ curlmime_duphandle_incref_data_cb_owners(PyObject *mime_obj)
 }
 
 static PyMethodDef curlmimeobject_methods[] = {
-    {"add", (PyCFunction)do_curlmime_add, METH_VARARGS | METH_KEYWORDS, "Add a part using a keyword-oriented builder API."},
-    {"add_field", (PyCFunction)do_curlmime_add_field, METH_VARARGS | METH_KEYWORDS, "Add a simple form field part."},
-    {"add_file", (PyCFunction)do_curlmime_add_file, METH_VARARGS | METH_KEYWORDS, "Add a file upload part."},
-    {"add_multipart", (PyCFunction)do_curlmime_add_multipart, METH_VARARGS | METH_KEYWORDS, "Add and attach a nested multipart CurlMime."},
-    {"close", (PyCFunction)do_curlmime_close, METH_NOARGS, "Release the underlying curl_mime handle."},
-    {"addpart", (PyCFunction)do_curlmime_addpart, METH_NOARGS, "Create and return a new MIME part."},
+    {"add", (PyCFunction)do_curlmime_add, METH_VARARGS | METH_KEYWORDS, mime_add_doc},
+    {"add_field", (PyCFunction)do_curlmime_add_field, METH_VARARGS | METH_KEYWORDS, mime_add_field_doc},
+    {"add_file", (PyCFunction)do_curlmime_add_file, METH_VARARGS | METH_KEYWORDS, mime_add_file_doc},
+    {"add_multipart", (PyCFunction)do_curlmime_add_multipart, METH_VARARGS | METH_KEYWORDS, mime_add_multipart_doc},
+    {"close", (PyCFunction)do_curlmime_close, METH_NOARGS, mime_close_doc},
+    {"addpart", (PyCFunction)do_curlmime_addpart, METH_NOARGS, mime_addpart_doc},
     {"__enter__", (PyCFunction)do_curlmime_enter, METH_NOARGS, NULL},
     {"__exit__", (PyCFunction)do_curlmime_exit, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}
 };
 
 static PyGetSetDef curlmimeobject_getsets[] = {
-    {"closed", (getter)do_curlmime_get_closed, NULL, "Whether this CurlMime object is closed.", NULL},
+    {"closed", (getter)do_curlmime_get_closed, NULL, mime_closed_doc, NULL},
     {NULL, NULL, NULL, NULL, NULL}
 };
 
@@ -1339,11 +1454,11 @@ PYCURL_INTERNAL PyTypeObject CurlMime_Type = {
     0,                          /* tp_setattro */
     0,                          /* tp_as_buffer */
     PYCURL_TYPE_FLAGS,          /* tp_flags */
-    "Python wrapper for libcurl MIME API.", /* tp_doc */
+    mime_doc,                   /* tp_doc */
     (traverseproc)do_curlmime_traverse, /* tp_traverse */
     (inquiry)do_curlmime_clear, /* tp_clear */
     0,                          /* tp_richcompare */
-    0,                          /* tp_weaklistoffset */
+    offsetof(CurlMimeObject, weakreflist), /* tp_weaklistoffset */
     0,                          /* tp_iter */
     0,                          /* tp_iternext */
     curlmimeobject_methods,     /* tp_methods */
@@ -1358,6 +1473,15 @@ PYCURL_INTERNAL PyTypeObject CurlMime_Type = {
     PyType_GenericAlloc,        /* tp_alloc */
     (newfunc)do_curlmime_new,   /* tp_new */
     PyObject_GC_Del,            /* tp_free */
+    0,                          /* tp_is_gc */
+    0,                          /* tp_bases */
+    0,                          /* tp_mro */
+    0,                          /* tp_cache */
+    0,                          /* tp_subclasses */
+    0,                          /* tp_weaklist */
+    0,                          /* tp_del */
+    0,                          /* tp_version_tag */
+    do_curlmime_finalize,       /* tp_finalize */
 };
 
 static int
@@ -1772,15 +1896,15 @@ do_curlmimepart_subparts(CurlMimePartObject *self, PyObject *arg)
 }
 
 static PyMethodDef curlmimepartobject_methods[] = {
-    {"name", (PyCFunction)do_curlmimepart_name, METH_O, "Set the name of this MIME part."},
-    {"data", (PyCFunction)do_curlmimepart_data, METH_O, "Set in-memory data for this MIME part."},
-    {"data_cb", (PyCFunction)do_curlmimepart_data_cb, METH_VARARGS | METH_KEYWORDS, "Set callback-based data for this MIME part."},
-    {"filedata", (PyCFunction)do_curlmimepart_filedata, METH_O, "Set on-disk file data for this MIME part."},
-    {"filename", (PyCFunction)do_curlmimepart_filename, METH_O, "Set the remote filename for this MIME part."},
-    {"type", (PyCFunction)do_curlmimepart_type, METH_O, "Set content type for this MIME part."},
-    {"encoder", (PyCFunction)do_curlmimepart_encoder, METH_O, "Set content transfer encoding for this MIME part."},
-    {"headers", (PyCFunction)do_curlmimepart_headers, METH_O, "Set custom headers for this MIME part."},
-    {"subparts", (PyCFunction)do_curlmimepart_subparts, METH_O, "Attach a child CurlMime object as multipart data."},
+    {"name", (PyCFunction)do_curlmimepart_name, METH_O, mimepart_name_doc},
+    {"data", (PyCFunction)do_curlmimepart_data, METH_O, mimepart_data_doc},
+    {"data_cb", (PyCFunction)do_curlmimepart_data_cb, METH_VARARGS | METH_KEYWORDS, mimepart_data_cb_doc},
+    {"filedata", (PyCFunction)do_curlmimepart_filedata, METH_O, mimepart_filedata_doc},
+    {"filename", (PyCFunction)do_curlmimepart_filename, METH_O, mimepart_filename_doc},
+    {"type", (PyCFunction)do_curlmimepart_type, METH_O, mimepart_type_doc},
+    {"encoder", (PyCFunction)do_curlmimepart_encoder, METH_O, mimepart_encoder_doc},
+    {"headers", (PyCFunction)do_curlmimepart_headers, METH_O, mimepart_headers_doc},
+    {"subparts", (PyCFunction)do_curlmimepart_subparts, METH_O, mimepart_subparts_doc},
     {NULL, NULL, 0, NULL}
 };
 
@@ -1805,7 +1929,7 @@ PYCURL_INTERNAL PyTypeObject CurlMimePart_Type = {
     0,                          /* tp_setattro */
     0,                          /* tp_as_buffer */
     PYCURL_TYPE_FLAGS,          /* tp_flags */
-    "A MIME part belonging to a CurlMime object.", /* tp_doc */
+    mimepart_doc,               /* tp_doc */
     (traverseproc)do_curlmimepart_traverse, /* tp_traverse */
     (inquiry)do_curlmimepart_clear, /* tp_clear */
     0,                          /* tp_richcompare */

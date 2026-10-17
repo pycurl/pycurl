@@ -508,3 +508,172 @@ def test_dealloc_preserves_a_propagating_exception(listener, unraisable):
 
     assert unraisable == [ValueError]
     socket.socket(fileno=fds[0]).close()
+
+
+requires_mime = pytest.mark.skipif(
+    not hasattr(pycurl, "CurlMime"), reason="libcurl without MIME support"
+)
+
+
+def mime_base(curl):
+    return pycurl.CurlMime(curl)
+
+
+def mime_plain_subclass(curl):
+    class MyMime(pycurl.CurlMime):
+        pass
+
+    return MyMime(curl)
+
+
+def mime_del_with_super(curl):
+    class MyMime(pycurl.CurlMime):
+        def __del__(self):
+            super().__del__()
+
+    return MyMime(curl)
+
+
+def mime_del_override(curl):
+    class MyMime(pycurl.CurlMime):
+        def __del__(self):
+            pass
+
+    return MyMime(curl)
+
+
+def mime_del_with_super_in_cycle(curl):
+    mime = mime_del_with_super(curl)
+    mime.myself = mime
+    return mime
+
+
+def mime_del_override_in_cycle(curl):
+    mime = mime_del_override(curl)
+    mime.myself = mime
+    return mime
+
+
+def _mime_with_free_hook(make_mime, curl, calls, nested=False):
+    mime = make_mime(curl)
+    target = mime.add_multipart(name="outer") if nested else mime
+    part = target.addpart()
+    part.name("field")
+    part.data_cb(0, lambda userdata, size: b"", free=calls.append, userdata="ud")
+    return mime
+
+
+@requires_mime
+@pytest.mark.parametrize(
+    "make_mime", [mime_del_with_super, mime_del_with_super_in_cycle]
+)
+def test_mime_del_with_super_invokes_free_callback(curl, make_mime):
+    calls = []
+    mime = _mime_with_free_hook(make_mime, curl, calls)
+
+    del mime
+    gc.collect()
+    assert calls == ["ud"]
+
+
+@requires_mime
+@pytest.mark.parametrize("make_mime", [mime_del_override, mime_del_override_in_cycle])
+@pytest.mark.parametrize("nested", [False, True], ids=["flat", "subparts"])
+def test_mime_del_without_super_skips_free_callback(curl, make_mime, nested):
+    calls = []
+    mime = _mime_with_free_hook(make_mime, curl, calls, nested=nested)
+    mime_ref = weakref.ref(mime)
+
+    del mime
+    gc.collect()
+    assert calls == []
+    assert mime_ref() is None
+
+
+@requires_mime
+@pytest.mark.parametrize("make_mime", [mime_base, mime_plain_subclass])
+def test_mime_is_released_without_explicit_close(curl, make_mime):
+    calls = []
+    mime = _mime_with_free_hook(make_mime, curl, calls)
+
+    del mime
+    gc.collect()
+    assert calls == ["ud"]
+
+
+@requires_mime
+@pytest.mark.parametrize("make_mime", [mime_del_override, mime_del_override_in_cycle])
+def test_mime_del_without_super_still_invalidates_children(curl, make_mime):
+    mime = make_mime(curl)
+    child = mime.add_multipart(name="outer")
+
+    del mime
+    gc.collect()
+    assert child.closed
+    with pytest.raises(pycurl.error, match="no mime handle"):
+        child.addpart()
+
+
+@requires_mime
+def test_mime_explicit_del_is_idempotent(curl, unraisable):
+    mime = pycurl.CurlMime(curl)
+
+    mime.__del__()
+    assert mime.closed
+    mime.__del__()
+    assert mime.closed
+    assert unraisable == []
+
+
+@requires_mime
+def test_mime_explicit_del_while_running_is_refused(listener, unraisable):
+    curl = pycurl.Curl()
+    mime = pycurl.CurlMime(curl)
+
+    def sockoptfunction(curlfd, purpose):
+        mime.__del__()
+        return 0
+
+    curl.setopt(pycurl.SOCKOPTFUNCTION, sockoptfunction)
+    connect(curl, listener)
+
+    assert unraisable == [pycurl.error]
+    assert not mime.closed
+    mime.close()
+    curl.close()
+
+
+@requires_mime
+def test_mime_del_storing_self_keeps_it_closed(curl):
+    saved = []
+
+    class MyMime(pycurl.CurlMime):
+        def __del__(self):
+            super().__del__()
+            saved.append(self)
+
+    mime = MyMime(curl)
+    del mime
+    gc.collect()
+
+    survivor = saved[0]
+    assert survivor.closed
+    with pytest.raises(pycurl.error, match="no mime handle"):
+        survivor.addpart()
+
+
+@requires_mime
+@pytest.mark.parametrize("teardown", ["dealloc", "close"])
+def test_mime_free_callback_error_reaches_unraisable(curl, unraisable, teardown):
+    mime = pycurl.CurlMime(curl)
+    part = mime.addpart()
+    part.name("field")
+    part.data_cb(0, lambda userdata, size: b"", free=raise_value_error)
+
+    if teardown == "close":
+        mime.close()
+    else:
+        del mime, part
+        gc.collect()
+
+    assert unraisable == [ValueError]

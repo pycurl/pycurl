@@ -631,6 +631,7 @@ typedef struct CurlShareObject {
 #ifdef HAVE_CURL_MIME
 typedef struct CurlMimeObject {
     PyObject_HEAD
+    PyObject *weakreflist;
     struct CurlObject *curl;
     curl_mime *mime;
     PyObject *parts;

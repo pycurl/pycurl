@@ -13,13 +13,6 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-def _make_tracking_mime(curl):
-    class TrackingMime(pycurl.CurlMime):
-        __slots__ = ("__weakref__",)
-
-    return TrackingMime(curl)
-
-
 def _perform_json(curl, url):
     response = io.BytesIO()
     curl.setopt(pycurl.URL, url)
@@ -108,6 +101,16 @@ def test_mime_lifecycle_and_context_manager():
         assert second.closed
 
 
+def test_mime_is_weakref_able(curl):
+    mime = pycurl.CurlMime(curl)
+    ref = weakref.ref(mime)
+    assert ref() is mime
+
+    del mime
+    gc.collect()
+    assert ref() is None
+
+
 def test_mime_exit_requires_exception_tuple():
     with pycurl.Curl() as curl:
         mime = pycurl.CurlMime(curl)
@@ -118,7 +121,7 @@ def test_mime_exit_requires_exception_tuple():
 def test_mimepost_setopt_pins_mime_until_unset():
     curl = pycurl.Curl()
     try:
-        mime = _make_tracking_mime(curl)
+        mime = pycurl.CurlMime(curl)
         mime.add_field("field", "value")
 
         mime_ref = weakref.ref(mime)
@@ -160,7 +163,7 @@ def test_mimepost_setopt_rejects_attached_submime():
 def test_mime_close_clears_mimepost_pin():
     curl = pycurl.Curl()
     try:
-        mime = _make_tracking_mime(curl)
+        mime = pycurl.CurlMime(curl)
         mime.add_field("field", "value")
         curl.setopt(pycurl.MIMEPOST, mime)
 
@@ -176,12 +179,12 @@ def test_mime_close_clears_mimepost_pin():
 def test_mimepost_replacement_keeps_new_pin():
     curl = pycurl.Curl()
     try:
-        old_mime = _make_tracking_mime(curl)
+        old_mime = pycurl.CurlMime(curl)
         old_mime.add_field("old", "value")
         curl.setopt(pycurl.MIMEPOST, old_mime)
 
         old_ref = weakref.ref(old_mime)
-        new_mime = _make_tracking_mime(curl)
+        new_mime = pycurl.CurlMime(curl)
         new_mime.add_field("new", "value")
         curl.setopt(pycurl.MIMEPOST, new_mime)
 
@@ -230,7 +233,7 @@ def test_mime_data_cb_duphandle_free_called_once():
     curl = pycurl.Curl()
     dup = None
     try:
-        mime = _make_tracking_mime(curl)
+        mime = pycurl.CurlMime(curl)
         part = _make_named_part(mime)
 
         free_calls = []
@@ -355,7 +358,7 @@ def test_mime_data_cb_owner_kept_alive_while_mimepost_is_set():
     curl = pycurl.Curl()
     dup = None
     try:
-        mime = _make_tracking_mime(curl)
+        mime = pycurl.CurlMime(curl)
         part = _make_named_part(mime)
         reader = _ChunkReader(b"value")
         reader_ref = weakref.ref(reader)
@@ -661,7 +664,7 @@ def test_mime_subparts_rejects_mimepost_pinned_mime():
 
 def test_mime_subparts_failure_rolls_back_parent_reference():
     with pycurl.Curl() as curl:
-        parent = _make_tracking_mime(curl)
+        parent = pycurl.CurlMime(curl)
         child = pycurl.CurlMime(curl)
 
         parent.addpart().subparts(child)

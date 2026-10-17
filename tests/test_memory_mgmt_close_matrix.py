@@ -366,13 +366,6 @@ def test_share_close_one_easy_does_not_keep_share_or_others_alive(
         assert r() is None, f"survivor[{i}] still alive after cleanup"
 
 
-def _make_tracking_mime(curl: pycurl.Curl):
-    class TrackingMime(pycurl.CurlMime):
-        __slots__ = ("__weakref__",)
-
-    return TrackingMime(curl)
-
-
 @pytest.mark.skipif(
     not hasattr(pycurl, "MIMEPOST"),
     reason="libcurl without CURLOPT_MIMEPOST support",
@@ -389,7 +382,7 @@ def _make_tracking_mime(curl: pycurl.Curl):
 )
 def test_mimepost_close_matrix(order):
     curl = pycurl.Curl()
-    mime = _make_tracking_mime(curl)
+    mime = pycurl.CurlMime(curl)
     mime.add_field("field", "value")
     curl.setopt(pycurl.MIMEPOST, mime)
 
@@ -427,8 +420,8 @@ def test_mimepost_close_matrix(order):
 )
 def test_mime_subparts_parent_owns_child_until_parent_close():
     with pycurl.Curl() as curl:
-        parent = _make_tracking_mime(curl)
-        child = _make_tracking_mime(curl)
+        parent = pycurl.CurlMime(curl)
+        child = pycurl.CurlMime(curl)
 
         parent.addpart().subparts(child)
         child_ref = weakref.ref(child)
@@ -450,7 +443,7 @@ def test_mime_subparts_parent_owns_child_until_parent_close():
 )
 def test_mimepart_does_not_keep_parent_alive_after_parent_close():
     with pycurl.Curl() as curl:
-        parent = _make_tracking_mime(curl)
+        parent = pycurl.CurlMime(curl)
         part = parent.addpart()
 
         parent_ref = weakref.ref(parent)
@@ -473,7 +466,7 @@ def test_mimepost_cycle_gc_without_explicit_close():
     tr = LiveTracker()
 
     curl = tr.track("curl", pycurl.Curl())
-    mime = tr.track("mime", _make_tracking_mime(curl))
+    mime = tr.track("mime", pycurl.CurlMime(curl))
     mime.add_field("field", "value")
     curl.setopt(pycurl.MIMEPOST, mime)
 
