@@ -90,7 +90,7 @@ before-all = [
     "git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT",
     "$VCPKG_ROOT/bootstrap-vcpkg.sh",
     "{project}/scripts/setup-vcpkg-nuget.sh",
-    "PATH=$(echo \"$PATH\" | tr ':' '\n' | grep -v '^/usr/local/bin$' | paste -sd:) vcpkg install curl[brotli,core,gssapi,http2,http3,non-http,openssl,psl,ssh,websockets] --triplet=$VCPKG_TRIPLET --overlay-triplets={project}/scripts/vcpkg-triplets",
+    "PATH=$(echo \"$PATH\" | tr ':' '\n' | grep -v '^/usr/local/bin$' | paste -sd:) vcpkg install curl[brotli,core,gssapi,http2,http3,openssl,psl,ssh,websockets] --triplet=$VCPKG_TRIPLET --overlay-triplets={project}/scripts/vcpkg-triplets",
 ]
 before-test = [
     "pip install --group test",
@@ -118,7 +118,7 @@ before-all = [
     "if ! which mono >/dev/null 2>&1; then brew install mono; fi",
     "if ! which vcpkg >/dev/null 2>&1; then brew install vcpkg && git clone https://github.com/microsoft/vcpkg.git $HOME/vcpkg; fi",
     "brew install autoconf autoconf-archive automake libtool",
-    "vcpkg install curl[brotli,core,http2,http3,non-http,openssl,psl,ssh,websockets] --triplet=$VCPKG_TRIPLET",
+    "vcpkg install curl[brotli,core,http2,http3,openssl,psl,ssh,websockets] --triplet=$VCPKG_TRIPLET",
 ]
 before-test = [
     "pip install --group test",
