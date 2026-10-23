@@ -90,6 +90,9 @@ before-all = [
     "git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT",
     "$VCPKG_ROOT/bootstrap-vcpkg.sh",
     "{project}/scripts/setup-vcpkg-nuget.sh",
+    # cibuildwheel puts its own Python 3.9 first on PATH for before-all, and
+    # meson, which vcpkg builds for libpsl, needs 3.10 or newer.
+    "export PATH=/opt/python/cp312-cp312/bin:$PATH",
     "PATH=$(echo \"$PATH\" | tr ':' '\n' | grep -v '^/usr/local/bin$' | paste -sd:) vcpkg install curl[brotli,core,gssapi,http2,http3,openssl,psl,ssh,websockets] --triplet=$VCPKG_TRIPLET --overlay-triplets={project}/scripts/vcpkg-triplets",
 ]
 before-test = [
