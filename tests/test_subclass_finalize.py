@@ -542,18 +542,6 @@ def mime_del_override(curl):
     return MyMime(curl)
 
 
-def mime_del_with_super_in_cycle(curl):
-    mime = mime_del_with_super(curl)
-    mime.myself = mime
-    return mime
-
-
-def mime_del_override_in_cycle(curl):
-    mime = mime_del_override(curl)
-    mime.myself = mime
-    return mime
-
-
 def _mime_with_free_hook(make_mime, curl, calls, nested=False):
     mime = make_mime(curl)
     target = mime.add_multipart(name="outer") if nested else mime
@@ -565,11 +553,12 @@ def _mime_with_free_hook(make_mime, curl, calls, nested=False):
 
 @requires_mime
 @pytest.mark.parametrize(
-    "make_mime", [mime_del_with_super, mime_del_with_super_in_cycle]
+    "make_mime", [mime_base, mime_plain_subclass, mime_del_with_super]
 )
-def test_mime_del_with_super_invokes_free_callback(curl, make_mime):
+@pytest.mark.parametrize("nested", [False, True], ids=["flat", "subparts"])
+def test_mime_teardown_invokes_free_callback(curl, make_mime, nested):
     calls = []
-    mime = _mime_with_free_hook(make_mime, curl, calls)
+    mime = _mime_with_free_hook(make_mime, curl, calls, nested=nested)
 
     del mime
     gc.collect()
@@ -577,11 +566,10 @@ def test_mime_del_with_super_invokes_free_callback(curl, make_mime):
 
 
 @requires_mime
-@pytest.mark.parametrize("make_mime", [mime_del_override, mime_del_override_in_cycle])
 @pytest.mark.parametrize("nested", [False, True], ids=["flat", "subparts"])
-def test_mime_del_without_super_skips_free_callback(curl, make_mime, nested):
+def test_mime_del_without_super_skips_free_callback(curl, nested):
     calls = []
-    mime = _mime_with_free_hook(make_mime, curl, calls, nested=nested)
+    mime = _mime_with_free_hook(mime_del_override, curl, calls, nested=nested)
     mime_ref = weakref.ref(mime)
 
     del mime
@@ -591,19 +579,10 @@ def test_mime_del_without_super_skips_free_callback(curl, make_mime, nested):
 
 
 @requires_mime
-@pytest.mark.parametrize("make_mime", [mime_base, mime_plain_subclass])
-def test_mime_is_released_without_explicit_close(curl, make_mime):
-    calls = []
-    mime = _mime_with_free_hook(make_mime, curl, calls)
-
-    del mime
-    gc.collect()
-    assert calls == ["ud"]
-
-
-@requires_mime
-@pytest.mark.parametrize("make_mime", [mime_del_override, mime_del_override_in_cycle])
-def test_mime_del_without_super_still_invalidates_children(curl, make_mime):
+@pytest.mark.parametrize(
+    "make_mime", [mime_base, mime_del_with_super, mime_del_override]
+)
+def test_mime_teardown_invalidates_children(curl, make_mime):
     mime = make_mime(curl)
     child = mime.add_multipart(name="outer")
 
@@ -629,6 +608,8 @@ def test_mime_explicit_del_is_idempotent(curl, unraisable):
 def test_mime_explicit_del_while_running_is_refused(listener, unraisable):
     curl = pycurl.Curl()
     mime = pycurl.CurlMime(curl)
+    mime.add_field("field", "value")
+    curl.setopt(pycurl.MIMEPOST, mime)
 
     def sockoptfunction(curlfd, purpose):
         mime.__del__()
@@ -641,6 +622,49 @@ def test_mime_explicit_del_while_running_is_refused(listener, unraisable):
     assert not mime.closed
     mime.close()
     curl.close()
+
+
+@requires_mime
+def test_mime_collected_during_perform_runs_free_callback(listener, unraisable):
+    curl = pycurl.Curl()
+    calls = []
+    mime = pycurl.CurlMime(curl)
+    part = mime.addpart()
+    part.name("field")
+    part.data_cb(0, lambda userdata, size: b"", free=calls.append, userdata="ud")
+    del mime, part
+    seen = []
+
+    def sockoptfunction(curlfd, purpose):
+        seen.append(list(calls))
+        gc.collect()
+        seen.append(list(calls))
+        return 0
+
+    curl.setopt(pycurl.SOCKOPTFUNCTION, sockoptfunction)
+    connect(curl, listener)
+
+    assert unraisable == []
+    assert seen == [[], ["ud"]]
+    curl.close()
+
+
+@requires_mime
+def test_closed_child_is_still_released_by_its_parent(curl):
+    calls = []
+    parent = pycurl.CurlMime(curl)
+    child = parent.add_multipart(name="outer")
+    part = child.addpart()
+    part.name("field")
+    part.data_cb(0, lambda userdata, size: b"", free=calls.append, userdata="ud")
+
+    child.close()
+    assert child.closed
+    assert calls == []
+
+    del parent, child, part
+    gc.collect()
+    assert calls == ["ud"]
 
 
 @requires_mime
@@ -672,6 +696,7 @@ def test_mime_free_callback_error_reaches_unraisable(curl, unraisable, teardown)
 
     if teardown == "close":
         mime.close()
+        assert mime.closed
     else:
         del mime, part
         gc.collect()

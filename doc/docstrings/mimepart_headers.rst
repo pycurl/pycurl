@@ -1,6 +1,6 @@
 headers(headers) -> None
 
-Set custom headers for this part, as a list or tuple of strings.
+Set custom headers for this part.
 
 Corresponds to `curl_mime_headers`_ in libcurl.
 

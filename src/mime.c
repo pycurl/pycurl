@@ -765,9 +765,13 @@ do_curlmime_finalize(PyObject *op)
         return;
     }
 
-    /* tp_finalize is reachable from Python as __del__(), so a running handle
-       has to be refused here just as close() refuses it. */
-    if (self->curl != NULL &&
+    /* Only the mime the transfer is using needs refusing, because freeing it
+       would clear CURLOPT_MIMEPOST on a live handle. That mime is kept alive by
+       curl->mimepost_obj, so it only reaches here through an explicit __del__().
+       An unattached mime is in a reference cycle with its parts, so the GC can
+       free it during any perform, and refusing that would drop the user's free
+       callback. */
+    if (self->curl != NULL && self->curl->mimepost_obj == op &&
         check_curl_state(self->curl, PYCURL_REQUIRE_NOT_RUNNING, "__del__") != 0) {
         PyErr_WriteUnraisable(op);
     } else if (util_curlmime_close(self) < 0) {

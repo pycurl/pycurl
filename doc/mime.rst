@@ -11,9 +11,6 @@ PycURL exposes libcurl's MIME tree API via ``CurlMime`` and ``CurlMimePart`` cla
   ``data()``, ``data_cb()``, ``filedata()`` and ``subparts()``.
 - Builder helpers: ``add()``, ``add_field()``, ``add_file()`` and
   ``add_multipart()``.
-- ``CurlMimePart.data()`` also accepts objects exposing Python's buffer protocol
-  (for example ``bytearray`` and ``memoryview``), not only ``bytes``/ASCII ``str``.
-- ``CurlMimePart.data_cb()`` streams content from callbacks.
 
 Example::
 
@@ -30,19 +27,12 @@ Example::
 
 .. note::
 
-    This is a first-draft API.
+    This API is a first draft and may change.
 
 .. note::
 
-    Ownership and handle constraints:
-
-    - ``CurlMime`` objects passed to ``Curl.setopt(pycurl.MIMEPOST, mime)`` must be
-      top-level/owning MIME trees (not already attached via ``subparts()``).
-    - ``CurlMimePart.subparts(child)`` requires both ``CurlMime`` objects to use the
-      same ``Curl`` handle.
-    - A ``CurlMime`` currently set as ``MIMEPOST`` cannot be attached as ``subparts()``.
-    - ``Curl.duphandle()`` duplicates callback-backed MIME parts and shares the
-      callback ``userdata`` pointer between handles, matching libcurl behavior.
+    A ``CurlMime`` passed to ``Curl.setopt(pycurl.MIMEPOST, mime)`` must be a
+    top-level owning tree, not one already attached with ``subparts()``.
 
 
 CurlMime
@@ -91,4 +81,3 @@ CurlMimePart
     .. automethod:: pycurl.CurlMimePart.headers
 
     .. automethod:: pycurl.CurlMimePart.subparts
-

@@ -5,7 +5,7 @@ Set callback-based data for this part.
 *read* uses the same return conventions as ``READFUNCTION``. *seek* follows
 ``SEEKFUNCTION`` semantics and should return ``SEEKFUNC_OK``,
 ``SEEKFUNC_FAIL`` or ``SEEKFUNC_CANTSEEK``. *free* runs when libcurl releases
-the part.
+the part's content, which includes replacing it.
 
 ``Curl.duphandle()`` shares *userdata* between the handles, so *free* runs
 once the last of them has been closed.

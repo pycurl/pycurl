@@ -1,6 +1,6 @@
 addpart() -> CurlMimePart
 
-Create and return a new :ref:`mime` part at the end of this tree.
+Create and return a new part at the end of this tree.
 
 Corresponds to `curl_mime_addpart`_ in libcurl.
 

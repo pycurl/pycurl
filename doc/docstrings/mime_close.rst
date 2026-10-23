@@ -8,8 +8,7 @@ A ``CurlMime`` attached to another one with ``subparts()`` is released by
 its parent instead.
 
 A subclass overriding ``__del__`` must call ``super().__del__()``, otherwise
-the mime handle is released without running the ``free`` callbacks of its
-parts.
+the ``free`` callbacks of its parts may not run.
 
 ``close()`` may not be called while ``perform()`` is running on the ``Curl``
 handle the mime belongs to. Doing so raises ``pycurl.error``.

@@ -7,8 +7,9 @@ parent.
 
 Corresponds to `curl_mime_subparts`_ in libcurl.
 
-:param CurlMime child: the tree to attach. It must use the same ``Curl``
-    handle, must not already be attached, and must not be set as ``MIMEPOST``.
+:param CurlMime child: the tree to attach. It must be open, must use the
+    same ``Curl`` handle, must not already be attached, and must not be set
+    as ``MIMEPOST``.
 
 .. _curl_mime_subparts:
     https://curl.se/libcurl/c/curl_mime_subparts.html

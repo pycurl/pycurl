@@ -1,6 +1,6 @@
 CurlMime(curl) -> New CurlMime object
 
-Creates a new :ref:`mime` tree bound to *curl*, corresponding to a
+Creates a new :ref:`CurlMime <mime>` tree bound to *curl*, corresponding to a
 ``curl_mime`` handle in libcurl. Pass it to
 ``Curl.setopt(pycurl.MIMEPOST, mime)`` to send it as the request body.
 

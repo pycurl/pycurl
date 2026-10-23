@@ -4,7 +4,7 @@ Add a part and set the given fields on it, then return it.
 
 At most one of *data* and *file* may be given. Each argument that is not
 ``None`` is applied with the ``CurlMimePart`` method of the same name,
-except *file*, which is applied with ``filedata()``.
+except *file* and *content_type*, which use ``filedata()`` and ``type()``.
 
 :param str name: part name. A byte string is also accepted.
 :param data: in-memory content, as ``bytes``, an ASCII ``str``, or any object
