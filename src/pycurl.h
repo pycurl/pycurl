@@ -645,6 +645,7 @@ typedef struct CurlMimePartObject {
     CurlMimeObject *mime;
     curl_mimepart *part;
     PyObject *data_cb_owner;
+    PyObject *submime;
 } CurlMimePartObject;
 
 PYCURL_INTERNAL void

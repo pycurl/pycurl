@@ -631,6 +631,43 @@ def test_mime_subparts_transfers_ownership():
             child.addpart()
 
 
+@pytest.mark.parametrize(
+    "replacement_kind", ["data", "filedata", "data_cb", "subparts"]
+)
+def test_mimepart_replaced_content_closes_its_subparts(
+    replacement_kind, fixture_data_path
+):
+    with pycurl.Curl() as curl:
+        parent = pycurl.CurlMime(curl)
+        child = pycurl.CurlMime(curl)
+        part = _make_named_part(parent)
+        part.subparts(child)
+
+        if replacement_kind == "data":
+            part.data(b"value")
+        elif replacement_kind == "filedata":
+            part.filedata(str(fixture_data_path))
+        elif replacement_kind == "data_cb":
+            part.data_cb(0, _read_empty)
+        else:
+            part.subparts(pycurl.CurlMime(curl))
+
+        assert child.closed
+        with pytest.raises(pycurl.error, match="no mime handle"):
+            child.addpart()
+
+
+def test_mimepart_attached_subparts_stay_usable():
+    with pycurl.Curl() as curl:
+        parent = pycurl.CurlMime(curl)
+        child = pycurl.CurlMime(curl)
+        _make_named_part(parent).subparts(child)
+
+        part = _make_named_part(child, "nested")
+        part.data(b"value")
+        assert not child.closed
+
+
 def test_mime_subparts_requires_same_curl_handle():
     with pycurl.Curl() as curl1, pycurl.Curl() as curl2:
         parent = pycurl.CurlMime(curl1)

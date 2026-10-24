@@ -204,7 +204,7 @@ curlmime_data_cb_owner_release_libcurl_ref(CurlMimeDataCbOwner *owner, int invok
 }
 
 static int
-curlmime_owner_list_remove_ptr(PyObject *owners, PyObject *owner_obj)
+curlmime_list_remove_ptr(PyObject *owners, PyObject *owner_obj)
 {
     Py_ssize_t i;
     Py_ssize_t len;
@@ -241,12 +241,35 @@ curlmimepart_drop_data_cb_owner(CurlMimePartObject *self)
 
     owners = (self->mime != NULL) ? self->mime->data_cb_owners : NULL;
     if (owners != NULL &&
-        curlmime_owner_list_remove_ptr(owners, self->data_cb_owner) != 0)
+        curlmime_list_remove_ptr(owners, self->data_cb_owner) != 0)
     {
         PyErr_Clear();
     }
 
     Py_CLEAR(self->data_cb_owner);
+    return 0;
+}
+
+static void curlmime_invalidate_wrappers(CurlMimeObject *self);
+
+static int
+curlmimepart_drop_submime(CurlMimePartObject *self)
+{
+    PyObject *submimes;
+
+    if (self->submime == NULL) {
+        return 0;
+    }
+
+    submimes = (self->mime != NULL) ? self->mime->submimes : NULL;
+    if (submimes != NULL &&
+        curlmime_list_remove_ptr(submimes, self->submime) != 0)
+    {
+        PyErr_Clear();
+    }
+
+    curlmime_invalidate_wrappers((CurlMimeObject *)self->submime);
+    Py_CLEAR(self->submime);
     return 0;
 }
 
@@ -542,11 +565,10 @@ curlmime_make_part(CurlMimeObject *mime, curl_mimepart *part)
     part_obj->part = part;
     part_obj->mime = (CurlMimeObject *)Py_NewRef((PyObject *)mime);
     part_obj->data_cb_owner = NULL;
+    part_obj->submime = NULL;
 
     return (PyObject *)part_obj;
 }
-
-static void curlmime_invalidate_wrappers(CurlMimeObject *self);
 
 static void
 curlmime_clear_data_cb_owners(CurlMimeObject *self)
@@ -618,6 +640,7 @@ curlmime_invalidate_parts(CurlMimeObject *self)
                 Py_CLEAR(part->mime);
             }
             Py_CLEAR(part->data_cb_owner);
+            Py_CLEAR(part->submime);
         }
     }
 
@@ -1497,6 +1520,7 @@ do_curlmimepart_traverse(CurlMimePartObject *self, visitproc visit, void *arg)
 
     VISIT((PyObject *)self->mime);
     VISIT(self->data_cb_owner);
+    VISIT(self->submime);
 
     return 0;
 #undef VISIT
@@ -1506,6 +1530,7 @@ static int
 do_curlmimepart_clear(CurlMimePartObject *self)
 {
     Py_CLEAR(self->data_cb_owner);
+    Py_CLEAR(self->submime);
     Py_CLEAR(self->mime);
     self->part = NULL;
     return 0;
@@ -1574,6 +1599,9 @@ do_curlmimepart_data(CurlMimePartObject *self, PyObject *arg)
     Py_XDECREF(encoded_obj);
     if (res != CURLE_OK) {
         curlmime_set_error(self->mime != NULL ? self->mime->curl : NULL, res);
+        return NULL;
+    }
+    if (curlmimepart_drop_submime(self) != 0) {
         return NULL;
     }
     if (curlmimepart_drop_data_cb_owner(self) != 0) {
@@ -1679,7 +1707,7 @@ do_curlmimepart_data_cb(CurlMimePartObject *self, PyObject *args, PyObject *kwds
     res = (int)curl_mime_data_cb(self->part, datasize, readfunc, seekfunc,
         curlmimepart_free_callback, owner);
     if (res != CURLE_OK) {
-        if (curlmime_owner_list_remove_ptr(owners, (PyObject *)owner) != 0) {
+        if (curlmime_list_remove_ptr(owners, (PyObject *)owner) != 0) {
             PyErr_Clear();
         }
         curlmime_data_cb_owner_release_libcurl_ref(owner, 0);
@@ -1690,7 +1718,7 @@ do_curlmimepart_data_cb(CurlMimePartObject *self, PyObject *args, PyObject *kwds
 
     old_owner_obj = self->data_cb_owner;
     if (old_owner_obj != NULL) {
-        if (curlmime_owner_list_remove_ptr(owners, old_owner_obj) != 0) {
+        if (curlmime_list_remove_ptr(owners, old_owner_obj) != 0) {
             PyErr_Clear();
         }
     }
@@ -1698,6 +1726,10 @@ do_curlmimepart_data_cb(CurlMimePartObject *self, PyObject *args, PyObject *kwds
     self->data_cb_owner = (PyObject *)owner;
     Py_XDECREF(old_owner_obj);
     Py_DECREF(owner);
+
+    if (curlmimepart_drop_submime(self) != 0) {
+        return NULL;
+    }
 
     Py_RETURN_NONE;
 }
@@ -1722,6 +1754,9 @@ do_curlmimepart_filedata(CurlMimePartObject *self, PyObject *arg)
     Py_XDECREF(encoded_obj);
     if (res != CURLE_OK) {
         curlmime_set_error(self->mime != NULL ? self->mime->curl : NULL, res);
+        return NULL;
+    }
+    if (curlmimepart_drop_submime(self) != 0) {
         return NULL;
     }
     if (curlmimepart_drop_data_cb_owner(self) != 0) {
@@ -1892,9 +1927,13 @@ do_curlmimepart_subparts(CurlMimePartObject *self, PyObject *arg)
         return NULL;
     }
     submime->owns_mime = 0;
+    if (curlmimepart_drop_submime(self) != 0) {
+        return NULL;
+    }
     if (curlmimepart_drop_data_cb_owner(self) != 0) {
         return NULL;
     }
+    self->submime = Py_NewRef((PyObject *)submime);
 
     Py_RETURN_NONE;
 }
