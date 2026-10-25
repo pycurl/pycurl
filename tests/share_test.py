@@ -92,6 +92,15 @@ def test_keyword_arguments():
         pycurl.CurlShare(a=1)
 
 
+def test_setopt_share_accepts_a_subclass():
+    class MyShare(pycurl.CurlShare):
+        pass
+
+    with MyShare() as share, pycurl.Curl() as curl:
+        curl.setopt(pycurl.SHARE, share)
+        assert curl.share() is share
+
+
 def test_detach_on_close_keyword_argument_accepted():
     s1 = pycurl.CurlShare(detach_on_close=True)
     s2 = pycurl.CurlShare(detach_on_close=False)
