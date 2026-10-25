@@ -1208,7 +1208,7 @@ do_curl_setopt_share(CurlObject *self, PyObject *obj)
             Py_RETURN_NONE;
         }
     }
-    if (Py_TYPE(obj) != p_CurlShare_Type) {
+    if (!PyObject_TypeCheck(obj, p_CurlShare_Type)) {
         PyErr_SetString(PyExc_TypeError, "invalid arguments to setopt");
         return NULL;
     }
