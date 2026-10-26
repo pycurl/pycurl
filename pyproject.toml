@@ -87,7 +87,7 @@ test-command = "pytest -v -ra {project}/tests"
 before-all = [
     "dnf install -y git zip perl-IPC-Cmd perl-Time-Piece autoconf-archive libtool mono-complete",
     "export VCPKG_ROOT=$HOME/.local/share/vcpkg",
-    "git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT",
+    "git clone --depth 1 https://github.com/microsoft/vcpkg.git $VCPKG_ROOT",
     "$VCPKG_ROOT/bootstrap-vcpkg.sh",
     "{project}/scripts/setup-vcpkg-nuget.sh",
     "PATH=/opt/python/cp312-cp312/bin:$(echo \"$PATH\" | tr ':' '\n' | grep -v '^/usr/local/bin$' | paste -sd:) vcpkg install curl[brotli,core,gssapi,http2,http3,openssl,psl,ssh,websockets] --triplet=$VCPKG_TRIPLET --overlay-triplets={project}/scripts/vcpkg-triplets",
@@ -116,7 +116,8 @@ environment.VCPKG_TRIPLET = "arm64-linux-dynamic"
 [tool.cibuildwheel.macos]
 before-all = [
     "if ! which mono >/dev/null 2>&1; then brew install mono; fi",
-    "if ! which vcpkg >/dev/null 2>&1; then brew install vcpkg && git clone https://github.com/microsoft/vcpkg.git $HOME/vcpkg; fi",
+    "[ -d \"$VCPKG_ROOT\" ] || git clone --depth 1 https://github.com/microsoft/vcpkg.git \"$VCPKG_ROOT\"",
+    "$VCPKG_ROOT/bootstrap-vcpkg.sh",
     "brew install autoconf autoconf-archive automake libtool",
     "vcpkg install curl[brotli,core,http2,http3,openssl,psl,ssh,websockets] --triplet=$VCPKG_TRIPLET",
 ]
@@ -127,6 +128,8 @@ before-test = [
 repair-wheel-command = "DYLD_LIBRARY_PATH=$VCPKG_ROOT/installed/$VCPKG_TRIPLET/lib delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}"
 
 [tool.cibuildwheel.macos.environment]
+VCPKG_ROOT = "$HOME/vcpkg"
+PATH = "$VCPKG_ROOT:$PATH"
 PYCURL_CURL_CONFIG = "$VCPKG_ROOT/installed/$VCPKG_TRIPLET/tools/curl/bin/curl-config"
 PYCURL_SSL_LIBRARY = "openssl"
 LDFLAGS = "-headerpad_max_install_names"
@@ -134,13 +137,11 @@ LDFLAGS = "-headerpad_max_install_names"
 [[tool.cibuildwheel.overrides]]
 select = "cp*-macosx_x86_64"
 inherit.environment = "prepend"
-environment.VCPKG_ROOT = "/usr/local/share/vcpkg"
 environment.VCPKG_TRIPLET = "x64-osx-dynamic"
 
 [[tool.cibuildwheel.overrides]]
 select = "cp*-macosx_arm64"
 inherit.environment = "prepend"
-environment.VCPKG_ROOT = "/usr/local/share/vcpkg"
 environment.VCPKG_TRIPLET = "arm64-osx-dynamic"
 
 [tool.cibuildwheel.windows]

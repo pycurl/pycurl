@@ -120,6 +120,16 @@ jobs:
         with:
           arch: ${{ matrix.arch }}
 
+      # After msvc-dev-cmd, which exports VCPKG_ROOT for the copy bundled with Visual Studio.
+      - name: Install vcpkg (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          $root = "$env:USERPROFILE\vcpkg"
+          git clone --depth 1 https://github.com/microsoft/vcpkg.git $root
+          & "$root\bootstrap-vcpkg.bat"
+          "VCPKG_ROOT=$($root -replace '\\', '/')" | Out-File -FilePath $env:GITHUB_ENV -Append
+          $root | Out-File -FilePath $env:GITHUB_PATH -Append
+
       - name: Install packages (Windows)
         if: runner.os == 'Windows'
         run: vcpkg install curl[brotli,core,http2,psl,ssh,ssl,websockets]:${{ matrix.arch }}-windows
@@ -131,8 +141,8 @@ jobs:
         env:
           CIBW_ARCHS_LINUX: ${{ matrix.arch }}
           CIBW_ARCHS_WINDOWS: ${{ matrix.arch == 'arm64' && 'ARM64' || 'AMD64' }}
-          CIBW_ENVIRONMENT_WINDOWS: PYCURL_CURL_DIR=C:/vcpkg/packages/curl_${{ matrix.arch }}-windows PYCURL_SSL_LIBRARY=schannel
-          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: delvewheel repair --add-path C:/vcpkg/installed/${{ matrix.arch }}-windows/bin -w {dest_dir} {wheel}
+          CIBW_ENVIRONMENT_WINDOWS: PYCURL_CURL_DIR=${{ env.VCPKG_ROOT }}/packages/curl_${{ matrix.arch }}-windows PYCURL_SSL_LIBRARY=schannel
+          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: delvewheel repair --add-path ${{ env.VCPKG_ROOT }}/installed/${{ matrix.arch }}-windows/bin -w {dest_dir} {wheel}
         run: |
           python -m cibuildwheel --output-dir wheelhouse
 

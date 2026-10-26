@@ -50,6 +50,14 @@ jobs:
         python-version: ${{ matrix.python-version }}
         architecture: ${{ matrix.arch }}
         allow-prereleases: true
+    # After msvc-dev-cmd, which exports VCPKG_ROOT for the copy bundled with Visual Studio.
+    - name: Install vcpkg
+      run: |
+        $root = "$env:USERPROFILE\vcpkg"
+        git clone --depth 1 https://github.com/microsoft/vcpkg.git $root
+        & "$root\bootstrap-vcpkg.bat"
+        "VCPKG_ROOT=$($root -replace '\\', '/')" | Out-File -FilePath $env:GITHUB_ENV -Append
+        $root | Out-File -FilePath $env:GITHUB_PATH -Append
     - name: 'Setup NuGet credentials'
       shell: 'bash'
       run: |
@@ -74,12 +82,12 @@ jobs:
     - name: Build
       env:
         PYCURL_SSL_LIBRARY: schannel
-        PYCURL_CURL_DIR: 'C:/vcpkg/packages/curl_${{ matrix.arch }}-windows'
+        PYCURL_CURL_DIR: '${{ env.VCPKG_ROOT }}/packages/curl_${{ matrix.arch }}-windows'
       run: |
         python -m build --wheel
     - name: Repair & install built wheel
       run: |
-        delvewheel repair --add-path $VCPKG_INSTALLATION_ROOT/installed/${{ matrix.arch }}-windows/bin dist/*.whl
+        delvewheel repair --add-path "$VCPKG_ROOT"/installed/${{ matrix.arch }}-windows/bin dist/*.whl
         pip install wheelhouse/*.whl
       shell: bash
     - name: Verify free-threaded import does not enable the GIL

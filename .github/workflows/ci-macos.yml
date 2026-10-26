@@ -56,13 +56,10 @@ jobs:
     - name: 'Install vcpkg'
       if: matrix.curl-version == 'vcpkg'
       run: |
-        if ! which vcpkg >/dev/null 2>&1; then
-            brew install vcpkg
-            git clone https://github.com/microsoft/vcpkg.git "$HOME/vcpkg"
-            echo "VCPKG_ROOT=$HOME/vcpkg" >> "$GITHUB_ENV"
-        else
-            echo "VCPKG_ROOT=/usr/local/share/vcpkg" >> "$GITHUB_ENV"
-        fi
+        git clone --depth 1 https://github.com/microsoft/vcpkg.git "$HOME/vcpkg"
+        "$HOME/vcpkg/bootstrap-vcpkg.sh"
+        echo "VCPKG_ROOT=$HOME/vcpkg" >> "$GITHUB_ENV"
+        echo "$HOME/vcpkg" >> "$GITHUB_PATH"
     - name: 'Setup NuGet credentials'
       if: matrix.curl-version == 'vcpkg'
       run: |
