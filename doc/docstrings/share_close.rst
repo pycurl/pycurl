@@ -23,6 +23,8 @@ inside ``perform()`` and raises ``pycurl.error`` in that case, even
 with ``detach_on_close=True``. Idle attached handles are still
 detached automatically.
 
+A subclass overriding ``__del__`` should call ``super().__del__()``.
+
 .. warning::
 
    Detaching ``Curl`` objects from a ``CurlShare`` is **not thread-safe**

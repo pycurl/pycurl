@@ -702,3 +702,128 @@ def test_mime_free_callback_error_reaches_unraisable(curl, unraisable, teardown)
         gc.collect()
 
     assert unraisable == [ValueError]
+
+
+def share_base():
+    return pycurl.CurlShare()
+
+
+def share_plain_subclass():
+    class MyShare(pycurl.CurlShare):
+        pass
+
+    return MyShare()
+
+
+def share_del_with_super():
+    class MyShare(pycurl.CurlShare):
+        def __del__(self):
+            super().__del__()
+
+    return MyShare()
+
+
+def share_del_override():
+    class MyShare(pycurl.CurlShare):
+        def __del__(self):
+            pass
+
+    return MyShare()
+
+
+@pytest.mark.parametrize(
+    "make_share",
+    [share_base, share_plain_subclass, share_del_with_super, share_del_override],
+)
+def test_share_teardown_detaches_its_easy(make_share):
+    share = make_share()
+    ref = weakref.ref(share)
+
+    with pycurl.Curl() as curl:
+        curl.setopt(pycurl.SHARE, share)
+        del share
+        gc.collect()
+        assert ref() is not None, "the easy should keep the share alive"
+
+    gc.collect()
+    assert ref() is None
+
+
+def build_share_easy_cycle(make_share):
+    share = make_share()
+    share.setopt(pycurl.SH_SHARE, pycurl.LOCK_DATA_DNS)
+    curl = pycurl.Curl()
+    curl.setopt(pycurl.SHARE, share)
+    curl.setopt(pycurl.WRITEFUNCTION, lambda data, _c=curl: len(data))
+    return weakref.ref(share), weakref.ref(curl)
+
+
+@pytest.mark.parametrize("detach_on_close", [True, False])
+def test_share_collected_in_a_cycle_with_its_easy(unraisable, detach_on_close):
+    refs = build_share_easy_cycle(
+        lambda: pycurl.CurlShare(detach_on_close=detach_on_close)
+    )
+
+    gc.collect()
+    assert [ref() for ref in refs] == [None, None]
+    assert unraisable == []
+
+
+def test_share_resurrected_in_a_cycle_retries_its_close():
+    saved = []
+
+    class MyShare(pycurl.CurlShare):
+        def __del__(self):
+            super().__del__()
+            saved.append(self)
+
+    build_share_easy_cycle(MyShare)
+    gc.collect()
+
+    survivor = saved[0]
+    assert not survivor.closed, "libcurl refuses to free a share an easy is attached to"
+    assert survivor.close() is None
+    assert survivor.closed
+
+
+def test_share_explicit_del_is_idempotent(unraisable):
+    share = pycurl.CurlShare()
+    share.setopt(pycurl.SH_SHARE, pycurl.LOCK_DATA_DNS)
+
+    share.__del__()
+    assert share.closed
+    share.__del__()
+    assert share.closed
+    assert unraisable == []
+
+
+@pytest.mark.parametrize("detach_on_close", [True, False])
+def test_share_explicit_del_with_attached_easy_leaves_it_open(
+    unraisable, detach_on_close
+):
+    share = pycurl.CurlShare(detach_on_close=detach_on_close)
+
+    with pycurl.Curl() as curl:
+        curl.setopt(pycurl.SHARE, share)
+        share.__del__()
+        assert not share.closed
+        assert unraisable == []
+
+    assert share.close() is None
+
+
+def test_share_del_storing_self_keeps_it_closed():
+    saved = []
+
+    class MyShare(pycurl.CurlShare):
+        def __del__(self):
+            super().__del__()
+            saved.append(self)
+
+    share = MyShare()
+    del share
+    gc.collect()
+
+    survivor = saved[0]
+    assert survivor.closed
+    assert survivor.close() is None

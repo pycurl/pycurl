@@ -259,18 +259,58 @@ util_share_close(CurlShareObject *self){
     if (self->share_handle != NULL) {
         CURLSH *share_handle = self->share_handle;
         self->share_handle = NULL;
-        curl_share_cleanup(share_handle);
+        /* libcurl refuses to free a share that an easy is still attached to,
+           which the GC can cause by finalizing us first. Keep the handle so
+           a later close releases it. */
+        if (curl_share_cleanup(share_handle) != CURLSHE_OK) {
+            self->share_handle = share_handle;
+        }
     }
+}
+
+
+static void
+do_share_finalize(PyObject *op)
+{
+    CurlShareObject *self = (CurlShareObject *)op;
+    PYCURL_BEGIN_SAVE_EXC
+
+    if (self->share_handle != NULL) {
+        PYCURL_SHARE_API_LOCK(self);
+        util_share_close(self);
+        PYCURL_SHARE_API_UNLOCK(self);
+        if (PyErr_Occurred()) {
+            PyErr_WriteUnraisable(op);
+        }
+    }
+    PYCURL_END_SAVE_EXC
 }
 
 
 PYCURL_INTERNAL void
 do_share_dealloc(CurlShareObject *self)
 {
+    PyObject *op = (PyObject *)self;
+    PYCURL_BEGIN_SAVE_EXC
+
     PyObject_GC_UnTrack(self);
     Py_TRASHCAN_BEGIN(self, do_share_dealloc);
 
-    util_share_xdecref(self);
+    PyObject_GC_Track(self);
+    if (PyObject_CallFinalizerFromDealloc(op) < 0) {
+        goto resurrected;
+    }
+    PyObject_GC_UnTrack(self);
+
+    if (self->weakreflist != NULL) {
+        PyObject_ClearWeakRefs(op);
+    }
+
+    do_share_clear(self);
+
+    /* A subclass __del__ that does not call super() replaces our finalizer, so
+       the share handle can still be open here. No easy can still be attached,
+       since each one holds a strong reference that would have kept us alive. */
     util_share_close(self);
 
     if (self->lock) {
@@ -283,12 +323,16 @@ do_share_dealloc(CurlShareObject *self)
     }
 #endif
 
-    if (self->weakreflist != NULL) {
-        PyObject_ClearWeakRefs((PyObject *) self);
-    }
+    Py_TYPE(self)->tp_free(self);
+    self = NULL;
+    op = NULL;
+resurrected:
+    Py_TRASHCAN_END;
 
-    CurlShare_Type.tp_free(self);
-    Py_TRASHCAN_END
+    if (PyErr_Occurred()) {
+        PyErr_WriteUnraisable((PyObject *) &CurlShare_Type);
+    }
+    PYCURL_END_SAVE_EXC
 }
 
 static int
@@ -405,6 +449,9 @@ do_share_close(CurlShareObject *self, PyObject *Py_UNUSED(ignored))
 
     util_share_close(self);
     PYCURL_SHARE_API_UNLOCK(self);
+    if (PyErr_Occurred()) {
+        return NULL;
+    }
     Py_RETURN_NONE;
 }
 
@@ -651,6 +698,15 @@ PYCURL_INTERNAL PyTypeObject CurlShare_Type = {
     PyType_GenericAlloc,        /* tp_alloc */
     (newfunc)do_share_new,      /* tp_new */
     PyObject_GC_Del,            /* tp_free */
+    0,                          /* tp_is_gc */
+    0,                          /* tp_bases */
+    0,                          /* tp_mro */
+    0,                          /* tp_cache */
+    0,                          /* tp_subclasses */
+    0,                          /* tp_weaklist */
+    0,                          /* tp_del */
+    0,                          /* tp_version_tag */
+    do_share_finalize,          /* tp_finalize */
 };
 
 /* vi:ts=4:et:nowrap

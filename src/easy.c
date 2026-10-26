@@ -612,7 +612,7 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
             CurlShareObject *share = self->share;
             share_unregister_easy(share, self);
             self->share = NULL;
-            if (share->share_handle != NULL && handle != NULL) {
+            if (handle != NULL) {
                 curl_easy_setopt(handle, CURLOPT_SHARE, NULL);
             }
             Py_DECREF(share);
