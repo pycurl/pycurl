@@ -1,7 +1,7 @@
 """Setup script for the PycURL module distribution."""
 
 EXTENSION_NAME = "pycurl._pycurl"
-VERSION = "7.48.0"
+VERSION = "7.49.0"
 
 import os
 import re

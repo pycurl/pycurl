@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+PycURL 7.49.0 - 2026-10-26
+--------------------------
+
+This release adds SSH_HOSTKEYFUNCTION and several missing libcurl SSH
+constants, and accepts CurlShare subclasses in setopt.  It fixes a
+use-after-free when a mime part's content is replaced and makes object
+teardown exception-safe by moving cleanup into tp_finalize.  The build
+system has also been cleaned up: custom setup.py command line options have
+been removed in favor of their environment variable equivalents, and wheels
+no longer install documentation and examples.
+
 PycURL 7.48.0 - 2026-09-15
 --------------------------
 

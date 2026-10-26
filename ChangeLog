@@ -1,3 +1,36 @@
+Version 7.49.0 [requires libcurl-7.19.0 or better] - 2026-10-26
+---------------------------------------------------------------
+
+        * Fix test_readfunction_unsetopt hanging with a tty on stdin (patch by Scott Talbert)
+        * Fix skip location reporting in tests/util.py decorators (patch by Scott Talbert)
+        * Document AsyncCurlMulti blocking limitations (patch by Jorge Rocamora)
+        * Add SSH_HOSTKEYFUNCTION and some missing libcurl SSH constants (patch by Jorge Rocamora)
+        * Add a debug build of Python to Linux CI/CD (patch by Scott Talbert)
+        * Preserve pending exception across CurlMulti dealloc cleanup (patch by Scott Talbert)
+        * Ignore ResourceWarning in test_option_refcounting (patch by Scott Talbert)
+        * Fix Sphinx documentation build warnings (patch by Scott Talbert)
+        * Clean up the build system, removing dead and redundant setup.py and Makefile code (patch by Scott Talbert)
+        * Remove obsolete cruft from tests directory (patch by Scott Talbert)
+        * Remove outdated example scripts (patch by Scott Talbert)
+        * Move dev dependencies into PEP 735 groups and drop requirements-dev.txt (patch by Scott Talbert)
+        * Update LGPL v2.1 license text to the latest version (patch by Scott Talbert)
+        * Stop installing docs/examples via data_files in wheels (patch by Scott Talbert)
+        * Drop setup.py CLI argument parsing in favor of environment variables (patch by Scott Talbert)
+        * Remove dead Windows XP/pre-VS2010 handling, update OpenSSL lib default (patch by Scott Talbert)
+        * Add GitHub Actions workflow to build the docs (patch by Scott Talbert)
+        * Make releases a single dispatch-and-approve workflow (patch by Scott Talbert)
+        * Skip numpy for tests on Windows ARM64 with Python 3.10 (patch by Scott Talbert)
+        * Make object teardown exception-safe and move Curl cleanup into tp_finalize (patch by Jorge Rocamora)
+        * Move CurlMulti cleanup into tp_finalize (patch by Jorge Rocamora)
+        * Drop the removed vcpkg non-http curl feature (patch by Jorge Rocamora)
+        * Use Python 3.12 for the vcpkg install on Linux (patch by Scott Talbert)
+        * Move CurlMime cleanup into tp_finalize (patch by Jorge Rocamora)
+        * Allow to free a mime that isn't attached to a Curl (patch by Jorge Rocamora)
+        * Accept CurlShare subclasses in setopt (patch by Jorge Rocamora)
+        * Clone and bootstrap vcpkg on all platforms (patch by Scott Talbert)
+        * Invalidate a mime part's subparts when its content is replaced (patch by Jorge Rocamora)
+        * Unify CurlShare cleanup into tp_finalize (patch by Jorge Rocamora)
+
 Version 7.48.0 [requires libcurl-7.19.0 or better] - 2026-09-15
 ---------------------------------------------------------------
 
