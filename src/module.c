@@ -567,6 +567,11 @@ PYCURL_IGNORE_DEPRECATED_END
     if (PyType_Ready(&CurlShare_Type) < 0)
         goto error;
 
+#ifdef HAVE_CURLOPT_CLOSESOCKETFUNCTION
+    if (pycurl_closesocket_owner_ready() < 0)
+        goto error;
+#endif
+
 #ifdef HAVE_CURL_MIME
     if (PyType_Ready(&CurlMime_Type) < 0)
         goto error;
@@ -1077,7 +1082,7 @@ PYCURL_IGNORE_DEPRECATED_BEGIN
     insint_c(d, "IOCTLFUNCTION", CURLOPT_IOCTLFUNCTION);
 PYCURL_IGNORE_DEPRECATED_END
     insint_c(d, "OPENSOCKETFUNCTION", CURLOPT_OPENSOCKETFUNCTION);
-#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
+#ifdef HAVE_CURLOPT_CLOSESOCKETFUNCTION
     insint_c(d, "CLOSESOCKETFUNCTION", CURLOPT_CLOSESOCKETFUNCTION);
 #endif
     insint_c(d, "SOCKOPTFUNCTION", CURLOPT_SOCKOPTFUNCTION);

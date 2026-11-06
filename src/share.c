@@ -31,6 +31,14 @@ share_register_easy(CurlShareObject *share, CurlObject *easy)
         goto error;
     }
 
+#ifdef HAVE_CURLOPT_CLOSESOCKETFUNCTION
+    if (pycurl_closesocket_owner_join(share->closesocket_owners,
+                                      easy->closesocket_owner) != 0)
+    {
+        goto error;
+    }
+#endif
+
     PYCURL_SHARE_API_UNLOCK(share);
     Py_DECREF(wr);
     return 0;
@@ -40,6 +48,22 @@ error:
     Py_DECREF(wr);
     return -1;
 }
+
+
+#ifdef HAVE_CURLOPT_CLOSESOCKETFUNCTION
+PYCURL_INTERNAL int
+share_join_closesocket_owner(CurlShareObject *share, PyObject *owner)
+{
+    int res = 0;
+
+    PYCURL_SHARE_API_LOCK(share);
+    if (share->share_handle != NULL) {
+        res = pycurl_closesocket_owner_join(share->closesocket_owners, owner);
+    }
+    PYCURL_SHARE_API_UNLOCK(share);
+    return res;
+}
+#endif
 
 
 PYCURL_INTERNAL void
@@ -186,6 +210,14 @@ do_share_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
         return NULL;
     }
 
+#ifdef HAVE_CURLOPT_CLOSESOCKETFUNCTION
+    self->closesocket_owners = pycurl_closesocket_owners_new();
+    if (self->closesocket_owners == NULL) {
+        Py_DECREF(self);
+        return NULL;
+    }
+#endif
+
     /* Allocate libcurl share handle */
     self->share_handle = curl_share_init();
     if (self->share_handle == NULL) {
@@ -216,6 +248,12 @@ do_share_traverse(CurlShareObject *self, visitproc visit, void *arg)
 
     VISIT(self->dict);
     VISIT(self->easy_weakrefs);
+#ifdef HAVE_CURLOPT_CLOSESOCKETFUNCTION
+    err = pycurl_closesocket_owners_traverse(self->closesocket_owners, visit, arg);
+    if (err != 0) {
+        return err;
+    }
+#endif
 
     return 0;
 #undef VISIT
@@ -254,18 +292,53 @@ do_share_clear(CurlShareObject *self)
 }
 
 
-static void
-util_share_close(CurlShareObject *self){
-    if (self->share_handle != NULL) {
-        CURLSH *share_handle = self->share_handle;
-        self->share_handle = NULL;
-        /* libcurl refuses to free a share that an easy is still attached to,
-           which the GC can cause by finalizing us first. Keep the handle so
-           a later close releases it. */
-        if (curl_share_cleanup(share_handle) != CURLSHE_OK) {
-            self->share_handle = share_handle;
-        }
+static CURLSH *
+util_share_claim_handle(CurlShareObject *self)
+{
+    CURLSH *share_handle;
+
+    if (self->share_handle == NULL) {
+        return NULL;
     }
+
+    PYCURL_SHARE_API_LOCK(self);
+    share_handle = self->share_handle;
+    self->share_handle = NULL;
+    PYCURL_SHARE_API_UNLOCK(self);
+    return share_handle;
+}
+
+
+static void
+util_share_cleanup(CurlShareObject *self, CURLSH *share_handle, int phase)
+{
+    int cleaned;
+
+    if (share_handle == NULL) {
+        return;
+    }
+
+#ifdef HAVE_CURLOPT_CLOSESOCKETFUNCTION
+    pycurl_closesocket_owners_set_pool_teardown(self->closesocket_owners, phase);
+#endif
+    /* libcurl refuses to free a share that an easy is still attached to,
+       which the GC can cause by finalizing us first. Keep the handle so a
+       later close releases it. */
+    cleaned = curl_share_cleanup(share_handle) == CURLSHE_OK;
+    if (!cleaned) {
+        PYCURL_SHARE_API_LOCK(self);
+        self->share_handle = share_handle;
+        PYCURL_SHARE_API_UNLOCK(self);
+    }
+#ifdef HAVE_CURLOPT_CLOSESOCKETFUNCTION
+    pycurl_closesocket_owners_set_pool_teardown(self->closesocket_owners,
+                                                PYCURL_TEARDOWN_NONE);
+    if (cleaned) {
+        Py_CLEAR(self->closesocket_owners);
+    }
+#else
+    (void)phase;
+#endif
 }
 
 
@@ -276,9 +349,8 @@ do_share_finalize(PyObject *op)
     PYCURL_BEGIN_SAVE_EXC
 
     if (self->share_handle != NULL) {
-        PYCURL_SHARE_API_LOCK(self);
-        util_share_close(self);
-        PYCURL_SHARE_API_UNLOCK(self);
+        util_share_cleanup(self, util_share_claim_handle(self),
+                           PYCURL_TEARDOWN_FINALIZING);
         if (PyErr_Occurred()) {
             PyErr_WriteUnraisable(op);
         }
@@ -311,7 +383,8 @@ do_share_dealloc(CurlShareObject *self)
     /* A subclass __del__ that does not call super() replaces our finalizer, so
        the share handle can still be open here. No easy can still be attached,
        since each one holds a strong reference that would have kept us alive. */
-    util_share_close(self);
+    util_share_cleanup(self, util_share_claim_handle(self),
+                       PYCURL_TEARDOWN_DEALLOC);
 
     if (self->lock) {
         share_lock_destroy(self->lock);
@@ -428,13 +501,19 @@ static PyObject *
 do_share_close(CurlShareObject *self, PyObject *Py_UNUSED(ignored))
 {
     int nlive;
+    CURLSH *share_handle = NULL;
 
     assert_share_state(self);
 
     PYCURL_SHARE_API_LOCK(self);
     nlive = share_cleanup_and_count_live_easies(self);
+    if (nlive == 0) {
+        share_handle = self->share_handle;
+        self->share_handle = NULL;
+    }
+    PYCURL_SHARE_API_UNLOCK(self);
+
     if (nlive > 0) {
-        PYCURL_SHARE_API_UNLOCK(self);
         PyErr_Format(
             ErrorObject,
             "cannot close CurlShare: still in use by %d active Curl object%s",
@@ -443,12 +522,10 @@ do_share_close(CurlShareObject *self, PyObject *Py_UNUSED(ignored))
         );
         return NULL;
     } else if (nlive < 0) {
-        PYCURL_SHARE_API_UNLOCK(self);
         return NULL;
     }
 
-    util_share_close(self);
-    PYCURL_SHARE_API_UNLOCK(self);
+    util_share_cleanup(self, share_handle, PYCURL_TEARDOWN_FINALIZING);
     if (PyErr_Occurred()) {
         return NULL;
     }
@@ -458,7 +535,7 @@ do_share_close(CurlShareObject *self, PyObject *Py_UNUSED(ignored))
 
 static PyObject *do_share_get_closed(CurlShareObject *self, void *Py_UNUSED(closure))
 {
-    /* api_lock prevents a free-threaded data race with util_share_close. */
+    /* api_lock prevents a free-threaded data race with close(). */
     int closed;
     PYCURL_SHARE_API_LOCK(self);
     closed = (self->share_handle == NULL);

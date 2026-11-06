@@ -115,6 +115,14 @@ do_multi_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
         return NULL;
     }
 
+#ifdef HAVE_CURLOPT_CLOSESOCKETFUNCTION
+    self->closesocket_owners = pycurl_closesocket_owners_new();
+    if (self->closesocket_owners == NULL) {
+        Py_DECREF(self);
+        return NULL;
+    }
+#endif
+
     /* Allocate libcurl multi handle */
     self->multi_handle = curl_multi_init();
     if (self->multi_handle == NULL) {
@@ -136,11 +144,21 @@ util_multi_close(CurlMultiObject *self)
 
     if (self->multi_handle != NULL) {
         CURLM *multi_handle = self->multi_handle;
+#ifdef HAVE_CURLOPT_CLOSESOCKETFUNCTION
+        pycurl_closesocket_owners_set_pool_teardown(self->closesocket_owners,
+            self->teardown == PYCURL_TEARDOWN_DEALLOC
+                ? PYCURL_TEARDOWN_DEALLOC : PYCURL_TEARDOWN_FINALIZING);
+#endif
         /* Allow threads because callbacks can be invoked */
         PYCURL_BEGIN_ALLOW_THREADS
         curl_multi_cleanup(multi_handle);
         PYCURL_END_ALLOW_THREADS
         self->multi_handle = NULL;
+#ifdef HAVE_CURLOPT_CLOSESOCKETFUNCTION
+        pycurl_closesocket_owners_set_pool_teardown(self->closesocket_owners,
+                                                    PYCURL_TEARDOWN_NONE);
+        Py_CLEAR(self->closesocket_owners);
+#endif
     }
 }
 
@@ -190,11 +208,11 @@ util_multi_detach_easies(CurlMultiObject *self, int close_handles, int swallow_e
              * of the easy, which this teardown cannot propagate either. */
             int easy_teardown = easy->teardown;
 
-            easy->teardown = PYCURL_TEARDOWN_FINALIZING;
+            pycurl_curl_set_teardown(easy, PYCURL_TEARDOWN_FINALIZING);
             PYCURL_BEGIN_ALLOW_THREADS
             (void)curl_multi_remove_handle(self->multi_handle, easy->handle);
             PYCURL_END_ALLOW_THREADS
-            easy->teardown = easy_teardown;
+            pycurl_curl_set_teardown(easy, easy_teardown);
         }
 
         easy_clear_multi_ref(easy, self);
@@ -292,6 +310,9 @@ do_multi_dealloc(CurlMultiObject *self)
     }
 
     Py_CLEAR(self->easy_object_refs);
+#ifdef HAVE_CURLOPT_CLOSESOCKETFUNCTION
+    Py_CLEAR(self->closesocket_owners);
+#endif
     util_multi_xdecref(self);
 
     CurlMulti_Type.tp_free(self);
@@ -353,6 +374,12 @@ do_multi_traverse(CurlMultiObject *self, visitproc visit, void *arg)
 
     VISIT(self->dict);
     VISIT(self->easy_object_refs);
+#ifdef HAVE_CURLOPT_CLOSESOCKETFUNCTION
+    err = pycurl_closesocket_owners_traverse(self->closesocket_owners, visit, arg);
+    if (err != 0) {
+        return err;
+    }
+#endif
     VISIT(self->socket_object_dict);
     VISIT(self->t_cb);
     VISIT(self->s_cb);
@@ -1146,6 +1173,16 @@ do_multi_add_handle(CurlMultiObject *self, PyObject *args)
         (void) PySet_Discard(self->easy_object_refs, (PyObject *) obj);
         return NULL;
     }
+
+#ifdef HAVE_CURLOPT_CLOSESOCKETFUNCTION
+    if (pycurl_closesocket_owner_join(self->closesocket_owners,
+                                      obj->closesocket_owner) != 0)
+    {
+        easy_clear_multi_ref(obj, self);
+        (void) PySet_Discard(self->easy_object_refs, (PyObject *) obj);
+        return NULL;
+    }
+#endif
 
     /* Allow threads because callbacks can be invoked */
     PYCURL_BEGIN_ALLOW_THREADS
