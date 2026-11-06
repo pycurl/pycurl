@@ -566,6 +566,11 @@ PYCURL_IGNORE_DEPRECATED_END
     if (PyType_Ready(&CurlShare_Type) < 0)
         goto error;
 
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
+    if (pycurl_closesocket_owner_ready() < 0)
+        goto error;
+#endif
+
 #ifdef HAVE_CURL_MIME
     if (PyType_Ready(&CurlMime_Type) < 0)
         goto error;

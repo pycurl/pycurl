@@ -547,8 +547,8 @@ typedef struct CurlObject {
     PyObject *debug_cb;
     PyObject *ioctl_cb;
     PyObject *opensocket_cb;
-#if LIBCURL_VERSION_NUM >= 0x071507 /* check for 7.21.7 or greater */
-    PyObject *closesocket_cb;
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
+    PyObject *closesocket_owner;
 #endif
     PyObject *seek_cb;
     PyObject *sockopt_cb;
@@ -608,6 +608,9 @@ typedef struct CurlMultiObject {
     PyObject *socket_object_dict;
 
     PyObject *easy_object_refs;
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
+    PyObject *closesocket_owners;
+#endif
     int close_handles; /* boolean: False by default */
 } CurlMultiObject;
 
@@ -625,6 +628,9 @@ typedef struct CurlShareObject {
     pycurl_mutex_t api_lock;        /* serialises CurlShare's Python API and easy_weakrefs access */
     /* Set of weakref.ref(CurlObject) */
     PyObject *easy_weakrefs;
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
+    PyObject *closesocket_owners;
+#endif
     int detach_on_close; /* boolean: True by default */
 } CurlShareObject;
 
@@ -817,7 +823,25 @@ sockopt_cb(void *clientp, curl_socket_t curlfd, curlsocktype purpose);
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
 PYCURL_INTERNAL int
 closesocket_callback(void *clientp, curl_socket_t curlfd);
+PYCURL_INTERNAL int
+pycurl_closesocket_owner_ready(void);
+PYCURL_INTERNAL PyObject *
+pycurl_closesocket_owner_new(void);
+PYCURL_INTERNAL void
+pycurl_closesocket_owner_set_cb(PyObject *op, PyObject *cb);
+PYCURL_INTERNAL void
+pycurl_closesocket_owner_set_teardown(PyObject *op, int phase);
+PYCURL_INTERNAL int
+pycurl_closesocket_owner_join(PyObject **owners, PyObject *owner);
+PYCURL_INTERNAL void
+pycurl_closesocket_owners_release(PyObject **owners);
+PYCURL_INTERNAL void
+pycurl_closesocket_owner_copy_cb(PyObject *dst, PyObject *src);
+PYCURL_INTERNAL int
+pycurl_curl_ensure_closesocket_owner(CurlObject *self);
 #endif
+PYCURL_INTERNAL void
+pycurl_curl_set_teardown(CurlObject *self, int phase);
 #ifdef HAVE_CURL_7_19_6_OPTS
 PYCURL_INTERNAL int
 ssh_key_cb(CURL *easy, const struct curl_khkey *knownkey,
