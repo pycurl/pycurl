@@ -382,23 +382,221 @@ verbose_error:
 
 
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
+
+/* libcurl copies CURLOPT_CLOSESOCKETDATA into every connection it opens and
+   closes through that copy, which outlives the Curl object, so the callback is
+   handed this owner instead. CURLOPT_OPENSOCKETDATA and CURLOPT_SOCKOPTDATA
+   are never copied, so they keep passing the easy.
+   See https://curl.se/libcurl/c/CURLOPT_CLOSESOCKETFUNCTION.html */
+typedef struct {
+    PyObject_HEAD
+    pycurl_mutex_t lock;
+    PyObject *closesocket_cb;
+    int teardown;
+} CurlCloseSocketCbOwner;
+
+static PyTypeObject CurlCloseSocketCbOwner_Type;
+
+static int
+closesocket_owner_traverse(CurlCloseSocketCbOwner *self, visitproc visit, void *arg)
+{
+    if (self->closesocket_cb != NULL) {
+        return visit(self->closesocket_cb, arg);
+    }
+    return 0;
+}
+
+static int
+closesocket_owner_clear(CurlCloseSocketCbOwner *self)
+{
+    Py_CLEAR(self->closesocket_cb);
+    return 0;
+}
+
+static void
+closesocket_owner_dealloc(CurlCloseSocketCbOwner *self)
+{
+    PyObject_GC_UnTrack(self);
+    Py_TRASHCAN_BEGIN(self, closesocket_owner_dealloc);
+    closesocket_owner_clear(self);
+#if PY_VERSION_HEX < 0x030D0000
+    if (self->lock) {
+        PyThread_free_lock(self->lock);
+        self->lock = NULL;
+    }
+#endif
+    Py_TYPE(self)->tp_free((PyObject *)self);
+    Py_TRASHCAN_END;
+}
+
+PYCURL_INTERNAL int
+pycurl_closesocket_owner_ready(void)
+{
+    return PyType_Ready(&CurlCloseSocketCbOwner_Type);
+}
+
+PYCURL_INTERNAL PyObject *
+pycurl_closesocket_owner_new(void)
+{
+    CurlCloseSocketCbOwner *owner;
+
+    owner = (CurlCloseSocketCbOwner *)CurlCloseSocketCbOwner_Type.tp_alloc(
+        &CurlCloseSocketCbOwner_Type, 0);
+    if (owner == NULL) {
+        return NULL;
+    }
+    owner->closesocket_cb = NULL;
+    owner->teardown = PYCURL_TEARDOWN_NONE;
+#if PY_VERSION_HEX < 0x030D0000
+    owner->lock = PyThread_allocate_lock();
+    if (owner->lock == NULL) {
+        Py_DECREF(owner);
+        PyErr_NoMemory();
+        return NULL;
+    }
+#endif
+    return (PyObject *)owner;
+}
+
+PYCURL_INTERNAL void
+pycurl_closesocket_owner_set_cb(PyObject *op, PyObject *cb)
+{
+    CurlCloseSocketCbOwner *owner = (CurlCloseSocketCbOwner *)op;
+    PyObject *old;
+
+    PYCURL_MUTEX_LOCK(&owner->lock);
+    old = owner->closesocket_cb;
+    owner->closesocket_cb = Py_XNewRef(cb);
+    PYCURL_MUTEX_UNLOCK(&owner->lock);
+    Py_XDECREF(old);
+}
+
+PYCURL_INTERNAL void
+pycurl_closesocket_owner_copy_cb(PyObject *dst, PyObject *src)
+{
+    CurlCloseSocketCbOwner *owner = (CurlCloseSocketCbOwner *)src;
+    PyObject *cb;
+
+    PYCURL_MUTEX_LOCK(&owner->lock);
+    cb = Py_XNewRef(owner->closesocket_cb);
+    PYCURL_MUTEX_UNLOCK(&owner->lock);
+
+    pycurl_closesocket_owner_set_cb(dst, cb);
+    Py_XDECREF(cb);
+}
+
+PYCURL_INTERNAL void
+pycurl_closesocket_owner_set_teardown(PyObject *op, int phase)
+{
+    CurlCloseSocketCbOwner *owner = (CurlCloseSocketCbOwner *)op;
+
+    PYCURL_MUTEX_LOCK(&owner->lock);
+    owner->teardown = phase;
+    PYCURL_MUTEX_UNLOCK(&owner->lock);
+}
+
+static PyObject *
+closesocket_owner_acquire_cb(void *clientp, int *teardown)
+{
+    CurlCloseSocketCbOwner *owner = (CurlCloseSocketCbOwner *)clientp;
+    PyObject *cb;
+
+    PYCURL_MUTEX_LOCK(&owner->lock);
+    *teardown = owner->teardown;
+    cb = Py_XNewRef(owner->closesocket_cb);
+    PYCURL_MUTEX_UNLOCK(&owner->lock);
+    return cb;
+}
+
+static PyTypeObject CurlCloseSocketCbOwner_Type = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    "pycurl._CloseSocketCbOwner",         /* tp_name */
+    sizeof(CurlCloseSocketCbOwner),       /* tp_basicsize */
+    0,                                    /* tp_itemsize */
+    (destructor)closesocket_owner_dealloc, /* tp_dealloc */
+    0,                                    /* tp_print / tp_vectorcall_offset */
+    0,                                    /* tp_getattr */
+    0,                                    /* tp_setattr */
+    0,                                    /* tp_reserved / tp_as_async */
+    0,                                    /* tp_repr */
+    0,                                    /* tp_as_number */
+    0,                                    /* tp_as_sequence */
+    0,                                    /* tp_as_mapping */
+    0,                                    /* tp_hash */
+    0,                                    /* tp_call */
+    0,                                    /* tp_str */
+    0,                                    /* tp_getattro */
+    0,                                    /* tp_setattro */
+    0,                                    /* tp_as_buffer */
+    PYCURL_TYPE_FLAGS,                    /* tp_flags */
+    "Internal owner for the closesocket callback.", /* tp_doc */
+    (traverseproc)closesocket_owner_traverse, /* tp_traverse */
+    (inquiry)closesocket_owner_clear,     /* tp_clear */
+    0,                                    /* tp_richcompare */
+    0,                                    /* tp_weaklistoffset */
+    0,                                    /* tp_iter */
+    0,                                    /* tp_iternext */
+    0,                                    /* tp_methods */
+    0,                                    /* tp_members */
+    0,                                    /* tp_getset */
+    0,                                    /* tp_base */
+    0,                                    /* tp_dict */
+    0,                                    /* tp_descr_get */
+    0,                                    /* tp_descr_set */
+    0,                                    /* tp_dictoffset */
+    0,                                    /* tp_init */
+    PyType_GenericAlloc,                  /* tp_alloc */
+    0,                                    /* tp_new */
+    PyObject_GC_Del,                      /* tp_free */
+};
+
+PYCURL_INTERNAL int
+pycurl_closesocket_owner_join(PyObject **owners, PyObject *owner)
+{
+    if (owner == NULL) {
+        return 0;
+    }
+    if (*owners == NULL) {
+        *owners = PySet_New(NULL);
+        if (*owners == NULL) {
+            return -1;
+        }
+    }
+    return PySet_Add(*owners, owner);
+}
+
+PYCURL_INTERNAL void
+pycurl_closesocket_owners_release(PyObject **owners)
+{
+    Py_CLEAR(*owners);
+}
+
+/* Unlike the other callbacks this one uses the GIL-state API: it can fire
+   from a pool teardown with no perform() open on any handle, so there is no
+   thread state to find. */
 PYCURL_INTERNAL int
 closesocket_callback(void *clientp, curl_socket_t curlfd)
 {
     PyObject *arglist;
     PyObject *py_curlfd = NULL;
-    CurlObject *self;
+    PyObject *cb;
+    int teardown;
     int ret = 1;
     PyObject *ret_obj = NULL;
-    PYCURL_DECLARE_THREAD_STATE;
+    PyGILState_STATE gil_state;
 
-    self = (CurlObject *)clientp;
-
-    if (self->teardown == PYCURL_TEARDOWN_DEALLOC) {
+    if (Py_IsFinalizing()) {
         return pycurl_close_socket_fallback(curlfd);
     }
 
-    PYCURL_BEGIN_CALLBACK(closesocket_callback, pycurl_close_socket_fallback(curlfd));
+    gil_state = PyGILState_Ensure();
+
+    cb = closesocket_owner_acquire_cb(clientp, &teardown);
+    if (cb == NULL || teardown == PYCURL_TEARDOWN_DEALLOC || PyErr_Occurred()) {
+        Py_XDECREF(cb);
+        PyGILState_Release(gil_state);
+        return pycurl_close_socket_fallback(curlfd);
+    }
 
     py_curlfd = PyLong_FromCurlSocket(curlfd);
     if (py_curlfd == NULL) {
@@ -410,7 +608,7 @@ closesocket_callback(void *clientp, curl_socket_t curlfd)
         goto verbose_error;
     }
 
-    ret_obj = PyObject_Call(self->closesocket_cb, arglist, NULL);
+    ret_obj = PyObject_Call(cb, arglist, NULL);
     Py_DECREF(arglist);
     if (callback_return_value_to_int(ret_obj, "closesocket", &ret) != 0) {
         /* The callback owns the socket once it has run. Closing it here
@@ -424,10 +622,12 @@ silent_error:
     ret = pycurl_close_socket_fallback(curlfd);
 done:
     Py_XDECREF(ret_obj);
-    pycurl_report_teardown_error(self->teardown, self->closesocket_cb);
-    PYCURL_END_CALLBACK(ret);
+    pycurl_report_teardown_error(teardown, cb);
+    Py_DECREF(cb);
+    PyGILState_Release(gil_state);
+    return ret;
 verbose_error:
-    print_callback_error_unless_teardown(self->teardown);
+    print_callback_error_unless_teardown(teardown);
     goto silent_error;
 }
 #endif

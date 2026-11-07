@@ -224,7 +224,15 @@ PYCURL_IGNORE_DEPRECATED_BEGIN
 PYCURL_IGNORE_DEPRECATED_END
     CLEAR_CALLBACK(CURLOPT_OPENSOCKETFUNCTION, CURLOPT_OPENSOCKETDATA, self->opensocket_cb);
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
-    CLEAR_CALLBACK(CURLOPT_CLOSESOCKETFUNCTION, CURLOPT_CLOSESOCKETDATA, self->closesocket_cb);
+    case CURLOPT_CLOSESOCKETFUNCTION:
+        if ((res = curl_easy_setopt(self->handle, CURLOPT_CLOSESOCKETFUNCTION, NULL)) != CURLE_OK)
+            goto error;
+        if ((res = curl_easy_setopt(self->handle, CURLOPT_CLOSESOCKETDATA, NULL)) != CURLE_OK)
+            goto error;
+        if (self->closesocket_owner != NULL) {
+            pycurl_closesocket_owner_set_cb(self->closesocket_owner, NULL);
+        }
+        break;
 #endif
     CLEAR_CALLBACK(CURLOPT_SOCKOPTFUNCTION, CURLOPT_SOCKOPTDATA, self->sockopt_cb);
 #ifdef HAVE_CURL_7_19_6_OPTS
@@ -1076,11 +1084,12 @@ PYCURL_IGNORE_DEPRECATED_END
         break;
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
     case CURLOPT_CLOSESOCKETFUNCTION:
-        Py_INCREF(obj);
-        Py_CLEAR(self->closesocket_cb);
-        self->closesocket_cb = obj;
+        if (pycurl_curl_ensure_closesocket_owner(self) != 0) {
+            return NULL;
+        }
+        pycurl_closesocket_owner_set_cb(self->closesocket_owner, obj);
         curl_easy_setopt(self->handle, CURLOPT_CLOSESOCKETFUNCTION, closesocket_cb);
-        curl_easy_setopt(self->handle, CURLOPT_CLOSESOCKETDATA, self);
+        curl_easy_setopt(self->handle, CURLOPT_CLOSESOCKETDATA, self->closesocket_owner);
         break;
 #endif
     case CURLOPT_SOCKOPTFUNCTION:
