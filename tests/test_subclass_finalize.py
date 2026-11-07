@@ -399,6 +399,14 @@ def test_del_without_super_skips_callback_but_closes_socket(listener):
     assert listener.peer_closed(conn)
 
 
+@pytest.mark.timeout(30, method="thread")
+def test_del_without_super_detaches_from_share():
+    with pycurl.CurlShare() as share:
+        curl = del_override()
+        curl.setopt(pycurl.SHARE, share)
+        del curl
+
+
 def test_del_with_super_invokes_callback(listener):
     calls = []
 

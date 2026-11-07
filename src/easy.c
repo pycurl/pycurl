@@ -610,7 +610,9 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
         /* Decrement refcount for share objects. */
         if (self->share != NULL) {
             CurlShareObject *share = self->share;
-            share_unregister_easy(share, self);
+            if (self->teardown != PYCURL_TEARDOWN_DEALLOC) {
+                share_unregister_easy(share, self);
+            }
             self->share = NULL;
             if (handle != NULL) {
                 curl_easy_setopt(handle, CURLOPT_SHARE, NULL);
