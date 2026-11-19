@@ -330,6 +330,7 @@ insint_worker(PyObject *d, PyObject *extra, char *name, long value)
 PYCURL_INTERNAL char* g_pycurl_autodetected_cainfo = NULL;
 PYCURL_INTERNAL char* g_pycurl_autodetected_capath = NULL;
 static char *cainfos[] = {
+    "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",
     "/etc/ssl/certs/ca-certificates.crt",
     "/etc/pki/tls/certs/ca-bundle.crt",
     "/usr/share/ssl/certs/ca-bundle.crt",
