@@ -141,6 +141,9 @@ util_multi_close(CurlMultiObject *self)
         curl_multi_cleanup(multi_handle);
         PYCURL_END_ALLOW_THREADS
         self->multi_handle = NULL;
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
+        pycurl_closesocket_owners_release(&self->closesocket_owners);
+#endif
     }
 }
 
@@ -190,11 +193,11 @@ util_multi_detach_easies(CurlMultiObject *self, int close_handles, int swallow_e
              * of the easy, which this teardown cannot propagate either. */
             int easy_teardown = easy->teardown;
 
-            easy->teardown = PYCURL_TEARDOWN_FINALIZING;
+            pycurl_curl_set_teardown(easy, PYCURL_TEARDOWN_FINALIZING);
             PYCURL_BEGIN_ALLOW_THREADS
             (void)curl_multi_remove_handle(self->multi_handle, easy->handle);
             PYCURL_END_ALLOW_THREADS
-            easy->teardown = easy_teardown;
+            pycurl_curl_set_teardown(easy, easy_teardown);
         }
 
         easy_clear_multi_ref(easy, self);
@@ -292,6 +295,9 @@ do_multi_dealloc(CurlMultiObject *self)
     }
 
     Py_CLEAR(self->easy_object_refs);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
+    Py_CLEAR(self->closesocket_owners);
+#endif
     util_multi_xdecref(self);
 
     CurlMulti_Type.tp_free(self);
@@ -353,6 +359,9 @@ do_multi_traverse(CurlMultiObject *self, visitproc visit, void *arg)
 
     VISIT(self->dict);
     VISIT(self->easy_object_refs);
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
+    VISIT(self->closesocket_owners);
+#endif
     VISIT(self->socket_object_dict);
     VISIT(self->t_cb);
     VISIT(self->s_cb);
@@ -1146,6 +1155,16 @@ do_multi_add_handle(CurlMultiObject *self, PyObject *args)
         (void) PySet_Discard(self->easy_object_refs, (PyObject *) obj);
         return NULL;
     }
+
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
+    if (pycurl_closesocket_owner_join(&self->closesocket_owners,
+                                      obj->closesocket_owner) != 0)
+    {
+        easy_clear_multi_ref(obj, self);
+        (void) PySet_Discard(self->easy_object_refs, (PyObject *) obj);
+        return NULL;
+    }
+#endif
 
     /* Allow threads because callbacks can be invoked */
     PYCURL_BEGIN_ALLOW_THREADS

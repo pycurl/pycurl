@@ -417,9 +417,16 @@ do_curl_duphandle(CurlObject *self, PyObject *Py_UNUSED(ignored))
         curl_easy_setopt(dup->handle, CURLOPT_OPENSOCKETDATA, dup);
     }
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
-    if (self->closesocket_cb != NULL) {
-        dup->closesocket_cb = Py_NewRef(self->closesocket_cb);
-        curl_easy_setopt(dup->handle, CURLOPT_CLOSESOCKETDATA, dup);
+    if (self->closesocket_owner != NULL) {
+        if (pycurl_curl_ensure_closesocket_owner(dup) != 0) {
+            curl_easy_setopt(dup->handle, CURLOPT_CLOSESOCKETFUNCTION, NULL);
+            curl_easy_setopt(dup->handle, CURLOPT_CLOSESOCKETDATA, NULL);
+            goto error;
+        }
+        pycurl_closesocket_owner_copy_cb(dup->closesocket_owner,
+                                         self->closesocket_owner);
+        curl_easy_setopt(dup->handle, CURLOPT_CLOSESOCKETDATA,
+                         dup->closesocket_owner);
     }
 #endif
     if (self->sockopt_cb != NULL) {
@@ -540,6 +547,49 @@ error:
 }
 
 
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
+PYCURL_INTERNAL int
+pycurl_curl_ensure_closesocket_owner(CurlObject *self)
+{
+    if (self->closesocket_owner != NULL) {
+        return 0;
+    }
+    self->closesocket_owner = pycurl_closesocket_owner_new();
+    if (self->closesocket_owner == NULL) {
+        return -1;
+    }
+    pycurl_closesocket_owner_set_teardown(self->closesocket_owner, self->teardown);
+    if (self->multi_stack != NULL &&
+        pycurl_closesocket_owner_join(&self->multi_stack->closesocket_owners,
+                                      self->closesocket_owner) != 0)
+    {
+        Py_CLEAR(self->closesocket_owner);
+        return -1;
+    }
+    if (self->share != NULL &&
+        pycurl_closesocket_owner_join(&self->share->closesocket_owners,
+                                      self->closesocket_owner) != 0)
+    {
+        Py_CLEAR(self->closesocket_owner);
+        return -1;
+    }
+    return 0;
+}
+#endif
+
+
+PYCURL_INTERNAL void
+pycurl_curl_set_teardown(CurlObject *self, int phase)
+{
+    self->teardown = phase;
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
+    if (self->closesocket_owner != NULL) {
+        pycurl_closesocket_owner_set_teardown(self->closesocket_owner, phase);
+    }
+#endif
+}
+
+
 /* util function shared by close() and clear() */
 PYCURL_INTERNAL void
 util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
@@ -568,9 +618,6 @@ util_curl_xdecref(CurlObject *self, int flags, CURL *handle)
         Py_CLEAR(self->ioctl_cb);
         Py_CLEAR(self->seek_cb);
         Py_CLEAR(self->opensocket_cb);
-#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
-        Py_CLEAR(self->closesocket_cb);
-#endif
         Py_CLEAR(self->sockopt_cb);
         Py_CLEAR(self->ssh_key_cb);
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 84, 0)
@@ -736,6 +783,14 @@ util_curl_close(CurlObject *self)
     /* Decref easy related objects */
     util_curl_xdecref(self, PYCURL_MEMGROUP_EASY, handle);
 
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
+    if (self->closesocket_owner != NULL) {
+        pycurl_closesocket_owner_set_teardown(self->closesocket_owner,
+                                              PYCURL_TEARDOWN_NONE);
+    }
+    Py_CLEAR(self->closesocket_owner);
+#endif
+
     return PyErr_Occurred() ? -1 : 0;
 }
 
@@ -752,11 +807,11 @@ do_curl_finalize(PyObject *op)
     if (check_curl_state(self, PYCURL_REQUIRE_NOT_RUNNING, "__del__") != 0) {
         PyErr_WriteUnraisable(op);
     } else {
-        self->teardown = PYCURL_TEARDOWN_FINALIZING;
+        pycurl_curl_set_teardown(self, PYCURL_TEARDOWN_FINALIZING);
         if (util_curl_close(self) < 0) {
             PyErr_WriteUnraisable(op);
         }
-        self->teardown = PYCURL_TEARDOWN_NONE;
+        pycurl_curl_set_teardown(self, PYCURL_TEARDOWN_NONE);
     }
     PYCURL_END_SAVE_EXC
 }
@@ -784,7 +839,7 @@ do_curl_dealloc(CurlObject *self)
     /* A subclass __del__ that does not call super() replaces our finalizer,
        so the handle can still be open here, with no Python allowed. */
     if (self->handle != NULL) {
-        self->teardown = PYCURL_TEARDOWN_DEALLOC;
+        pycurl_curl_set_teardown(self, PYCURL_TEARDOWN_DEALLOC);
         (void)util_curl_close(self);
     }
     Py_CLEAR(self->dict);
@@ -808,9 +863,9 @@ do_curl_close(CurlObject *self, PyObject *Py_UNUSED(ignored))
     if (check_curl_state(self, PYCURL_REQUIRE_NOT_RUNNING, "close") != 0) {
         return NULL;
     }
-    self->teardown = PYCURL_TEARDOWN_FINALIZING;
+    pycurl_curl_set_teardown(self, PYCURL_TEARDOWN_FINALIZING);
     res = util_curl_close(self);
-    self->teardown = PYCURL_TEARDOWN_NONE;
+    pycurl_curl_set_teardown(self, PYCURL_TEARDOWN_NONE);
     if (res < 0) {
         return NULL;
     }
@@ -863,7 +918,7 @@ do_curl_traverse(CurlObject *self, visitproc visit, void *arg)
     VISIT(self->seek_cb);
     VISIT(self->opensocket_cb);
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
-    VISIT(self->closesocket_cb);
+    VISIT(self->closesocket_owner);
 #endif
     VISIT(self->sockopt_cb);
     VISIT(self->ssh_key_cb);
@@ -943,6 +998,12 @@ do_curl_reset(CurlObject *self, PyObject *Py_UNUSED(ignored))
 
     /* Decref easy interface related objects */
     util_curl_xdecref(self, PYCURL_MEMGROUP_EASY, self->handle);
+
+#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
+    if (self->closesocket_owner != NULL) {
+        pycurl_closesocket_owner_set_cb(self->closesocket_owner, NULL);
+    }
+#endif
 
     res = util_curl_init(self);
     if (res < 0) {
