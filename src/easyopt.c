@@ -223,8 +223,16 @@ PYCURL_IGNORE_DEPRECATED_BEGIN
     CLEAR_CALLBACK(CURLOPT_IOCTLFUNCTION, CURLOPT_IOCTLDATA, self->ioctl_cb);
 PYCURL_IGNORE_DEPRECATED_END
     CLEAR_CALLBACK(CURLOPT_OPENSOCKETFUNCTION, CURLOPT_OPENSOCKETDATA, self->opensocket_cb);
-#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
-    CLEAR_CALLBACK(CURLOPT_CLOSESOCKETFUNCTION, CURLOPT_CLOSESOCKETDATA, self->closesocket_cb);
+#ifdef HAVE_CURLOPT_CLOSESOCKETFUNCTION
+    case CURLOPT_CLOSESOCKETFUNCTION:
+        if ((res = curl_easy_setopt(self->handle, CURLOPT_CLOSESOCKETFUNCTION, NULL)) != CURLE_OK)
+            goto error;
+        if ((res = curl_easy_setopt(self->handle, CURLOPT_CLOSESOCKETDATA, NULL)) != CURLE_OK)
+            goto error;
+        if (self->closesocket_owner != NULL) {
+            pycurl_closesocket_owner_set_cb(self->closesocket_owner, NULL);
+        }
+        break;
 #endif
     CLEAR_CALLBACK(CURLOPT_SOCKOPTFUNCTION, CURLOPT_SOCKOPTDATA, self->sockopt_cb);
 #ifdef HAVE_CURL_7_19_6_OPTS
@@ -975,7 +983,7 @@ do_curl_setopt_callable(CurlObject *self, int option, PyObject *obj, int use_mem
     const curl_debug_callback debug_cb = debug_callback;
     const curl_ioctl_callback ioctl_cb = ioctl_callback;
     const curl_opensocket_callback opensocket_cb = opensocket_callback;
-#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
+#ifdef HAVE_CURLOPT_CLOSESOCKETFUNCTION
     const curl_closesocket_callback closesocket_cb = closesocket_callback;
 #endif
     const curl_seek_callback seek_cb = seek_callback;
@@ -1074,13 +1082,14 @@ PYCURL_IGNORE_DEPRECATED_END
         curl_easy_setopt(self->handle, CURLOPT_OPENSOCKETFUNCTION, opensocket_cb);
         curl_easy_setopt(self->handle, CURLOPT_OPENSOCKETDATA, self);
         break;
-#if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 21, 7)
+#ifdef HAVE_CURLOPT_CLOSESOCKETFUNCTION
     case CURLOPT_CLOSESOCKETFUNCTION:
-        Py_INCREF(obj);
-        Py_CLEAR(self->closesocket_cb);
-        self->closesocket_cb = obj;
+        if (pycurl_curl_ensure_closesocket_owner(self) != 0) {
+            return NULL;
+        }
+        pycurl_closesocket_owner_set_cb(self->closesocket_owner, obj);
         curl_easy_setopt(self->handle, CURLOPT_CLOSESOCKETFUNCTION, closesocket_cb);
-        curl_easy_setopt(self->handle, CURLOPT_CLOSESOCKETDATA, self);
+        curl_easy_setopt(self->handle, CURLOPT_CLOSESOCKETDATA, self->closesocket_owner);
         break;
 #endif
     case CURLOPT_SOCKOPTFUNCTION:

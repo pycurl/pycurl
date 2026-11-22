@@ -383,8 +383,17 @@ CLOSESOCKETFUNCTION
     already handed it over. When the callback cannot run at all, pycurl closes
     the descriptor itself rather than leak it.
 
+    As `CURLOPT_CLOSESOCKETFUNCTION`_ notes, the callback can run after the
+    ``Curl`` object is closed, for a connection it opened that is still pooled
+    in a ``CurlMulti`` or in a ``CurlShare`` sharing ``LOCK_DATA_CONNECT``.
+    A ``CurlMulti`` or ``CurlShare`` subclass whose ``__del__`` does not call
+    ``super().__del__()`` closes those connections without calling it.
+
     The callback may be unset by calling :ref:`setopt <setopt>` with ``None``
-    as the value or by calling :ref:`unsetopt <unsetopt>`.
+    as the value or by calling :ref:`unsetopt <unsetopt>`. Unsetting it, or
+    calling ``reset()``, also stops it being called for connections opened
+    earlier, and pycurl closes their descriptors itself. If a callback is set
+    again later, those connections call the new one.
 
     `close_socket_cb_test.py test`_ shows how to use ``CLOSESOCKETFUNCTION``.
 
