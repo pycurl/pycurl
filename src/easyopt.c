@@ -340,6 +340,27 @@ do_curl_setopt_blob(CurlObject *self, int option, PyObject *obj)
 #endif
 
 
+/* libcurl reads POSTFIELDSIZE bytes from the POST data without checking them
+   against anything, so a larger size sends whatever memory follows it. */
+static int
+check_postfieldsize(CurlObject *self, curl_off_t size)
+{
+    curl_off_t len;
+
+    if (self->postfields_obj == NULL) {
+        return 0;
+    }
+    len = (curl_off_t)PyBytes_GET_SIZE(self->postfields_obj);
+    if (size > len) {
+        PyErr_Format(PyExc_ValueError,
+            "POSTFIELDSIZE %lld exceeds the %lld bytes of POST data that are set",
+            (long long)size, (long long)len);
+        return -1;
+    }
+    return 0;
+}
+
+
 static PyObject *
 do_curl_setopt_string_impl(CurlObject *self, int option, PyObject *obj)
 {
@@ -409,7 +430,6 @@ PYCURL_IGNORE_DEPRECATED_END
     case CURLOPT_FTP_ALTERNATIVE_TO_USER:
     case CURLOPT_SSH_PUBLIC_KEYFILE:
     case CURLOPT_SSH_PRIVATE_KEYFILE:
-    case CURLOPT_COPYPOSTFIELDS:
     case CURLOPT_SSH_HOST_PUBLIC_KEY_MD5:
 #if LIBCURL_VERSION_NUM >= MAKE_LIBCURL_VERSION(7, 80, 0)
     case CURLOPT_SSH_HOST_PUBLIC_KEY_SHA256:
@@ -507,8 +527,14 @@ PYCURL_IGNORE_DEPRECATED_END
             return NULL;
         break;
     case CURLOPT_POSTFIELDS:
+    case CURLOPT_COPYPOSTFIELDS:
         if (PyText_AsStringAndSize(obj, &str, &len, &encoded_obj) != 0)
             return NULL;
+        /* The value is an immutable bytes object that is kept alive below, so
+           libcurl's copy would add nothing but its quirks: it copies a stale
+           POSTFIELDSIZE worth of bytes, and drops the copy when the size grows,
+           after which the body is read from stdin. */
+        option = CURLOPT_POSTFIELDS;
         /* automatically set POSTFIELDSIZE */
         if (len <= INT_MAX) {
             res = curl_easy_setopt(self->handle, CURLOPT_POSTFIELDSIZE, (long)len);
@@ -578,10 +604,18 @@ do_curl_setopt_int(CurlObject *self, int option, PyObject *obj)
         if (d == -1 && PyErr_Occurred()) {
             return NULL;
         }
+        if (option == CURLOPT_POSTFIELDSIZE
+            && check_postfieldsize(self, (curl_off_t)d) != 0) {
+            return NULL;
+        }
         res = curl_easy_setopt(self->handle, (CURLoption)option, (long)d);
     } else if (IS_OFF_T_OPTION(option)) {
         ld = PyLong_AsLongLong(obj);
         if (ld == -1 && PyErr_Occurred()) {
+            return NULL;
+        }
+        if (option == CURLOPT_POSTFIELDSIZE_LARGE
+            && check_postfieldsize(self, (curl_off_t)ld) != 0) {
             return NULL;
         }
         res = curl_easy_setopt(self->handle, (CURLoption)option, (curl_off_t)ld);

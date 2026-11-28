@@ -44,6 +44,12 @@ values of different types:
     c.setopt(pycurl.URL, "http://www.python.org/")
     c.setopt(pycurl.URL, b"http://www.python.org/")
 
+- ``POSTFIELDS`` and ``COPYPOSTFIELDS`` behave the same: PycURL keeps a
+  reference to the data instead of having libcurl copy it, and sets
+  ``POSTFIELDSIZE`` to its length, so the data may contain NUL bytes. While
+  the data is set, ``POSTFIELDSIZE`` and ``POSTFIELDSIZE_LARGE`` raise
+  ``ValueError`` for a size larger than the data.
+
 - Blob options, that is the ``*_BLOB`` options, accept the same values as
   string options, plus any object supporting the buffer protocol such as
   ``bytearray``, ``memoryview`` or ``array.array``. The value is copied, so
